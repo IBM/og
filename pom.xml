@@ -20,6 +20,7 @@
 		</license>
 	</licenses>
 	<modules>
+		<module>oom-statistic</module>
 		<module>oom-operation</module>
 		<module>oom-distribution</module>
 		<module>oom-util</module>
