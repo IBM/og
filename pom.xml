@@ -19,6 +19,9 @@
 			<comments>Cleversafe proprietary license</comments>
 		</license>
 	</licenses>
+	<modules>
+		<module>oom-util</module>
+	</modules>
 	<scm>
 		<url>http://git.cleversafe.net</url>
 	</scm>
