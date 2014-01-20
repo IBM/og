@@ -23,14 +23,14 @@ import org.apache.commons.lang3.Validate;
 
 import com.cleversafe.oom.operation.OperationType;
 import com.cleversafe.oom.statistic.Counter;
-import com.cleversafe.oom.statistic.Stats;
+import com.cleversafe.oom.statistic.Statistics;
 
 /**
  * A <code>StoppingCondition</code> implementation that checks counter values.
  */
 public class CounterStoppingCondition extends RelationalOperatorStoppingCondition
 {
-   private final Stats stats;
+   private final Statistics stats;
    private final OperationType type;
    private final Counter counter;
    private final boolean interval;
@@ -57,7 +57,7 @@ public class CounterStoppingCondition extends RelationalOperatorStoppingConditio
     *            if operator is null
     */
    public CounterStoppingCondition(
-         final Stats stats,
+         final Statistics stats,
          final OperationType type,
          final Counter counter,
          final boolean interval,
@@ -90,7 +90,7 @@ public class CounterStoppingCondition extends RelationalOperatorStoppingConditio
     *            if operator is null
     */
    public CounterStoppingCondition(
-         final Stats stats,
+         final Statistics stats,
          final OperationType type,
          final Counter counter,
          final boolean interval,

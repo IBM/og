@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.Validate;
 
-import com.cleversafe.oom.statistic.Stats;
+import com.cleversafe.oom.statistic.Statistics;
 
 /**
  * A <code>StoppingCondition</code> implementation that triggers when the configured duration has
@@ -31,7 +31,7 @@ import com.cleversafe.oom.statistic.Stats;
  */
 public class DurationStoppingCondition implements StoppingCondition
 {
-   private final Stats stats;
+   private final Statistics stats;
    private final long duration;
    private final TimeUnit unit;
 
@@ -51,7 +51,7 @@ public class DurationStoppingCondition implements StoppingCondition
     * @throws NullPointerException
     *            if unit is null
     */
-   public DurationStoppingCondition(final Stats stats, final long duration, final TimeUnit unit)
+   public DurationStoppingCondition(final Statistics stats, final long duration, final TimeUnit unit)
    {
       Validate.notNull(stats, "stats must not be null");
       Validate.isTrue(duration >= 0, "duration must be >= 0 [%s]", duration);

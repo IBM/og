@@ -23,7 +23,7 @@ import org.apache.commons.lang3.Validate;
 
 import com.cleversafe.oom.operation.OperationType;
 import com.cleversafe.oom.statistic.Counter;
-import com.cleversafe.oom.statistic.Stats;
+import com.cleversafe.oom.statistic.Statistics;
 
 /**
  * A <code>StoppingCondition</code> implementation that checks vault fill. Note: this implementation
@@ -33,7 +33,7 @@ import com.cleversafe.oom.statistic.Stats;
  */
 public class VaultFillStoppingCondition extends RelationalOperatorStoppingCondition
 {
-   private final Stats stats;
+   private final Statistics stats;
    private final long initialObjectCount;
    private final long averageObjectSize;
    private final String toString;
@@ -63,7 +63,7 @@ public class VaultFillStoppingCondition extends RelationalOperatorStoppingCondit
     *            if vaultFill is negative
     */
    public VaultFillStoppingCondition(
-         final Stats stats,
+         final Statistics stats,
          final long initialObjectCount,
          final long averageObjectSize,
          final RelationalOperator operator,
@@ -99,7 +99,7 @@ public class VaultFillStoppingCondition extends RelationalOperatorStoppingCondit
     *            if vaultFill is negative
     */
    public VaultFillStoppingCondition(
-         final Stats stats,
+         final Statistics stats,
          final long initialObjectCount,
          final long averageObjectSize,
          final RelationalOperator operator,

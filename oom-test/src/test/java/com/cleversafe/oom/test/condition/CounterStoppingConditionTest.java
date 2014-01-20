@@ -25,18 +25,19 @@ import org.junit.Test;
 
 import com.cleversafe.oom.operation.OperationType;
 import com.cleversafe.oom.statistic.Counter;
-import com.cleversafe.oom.statistic.Stats;
+import com.cleversafe.oom.statistic.Statistics;
+import com.cleversafe.oom.statistic.StatisticsImpl;
 
 public class CounterStoppingConditionTest
 {
    private OperationType w;
-   private Stats s;
+   private Statistics s;
 
    @Before
    public void setBefore()
    {
       this.w = OperationType.WRITE;
-      this.s = new Stats(0, 1);
+      this.s = new StatisticsImpl(0, 1);
    }
 
    @Test(expected = NullPointerException.class)

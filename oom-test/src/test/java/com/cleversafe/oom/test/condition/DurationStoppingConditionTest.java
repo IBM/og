@@ -25,16 +25,17 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.cleversafe.oom.statistic.Stats;
+import com.cleversafe.oom.statistic.Statistics;
+import com.cleversafe.oom.statistic.StatisticsImpl;
 
 public class DurationStoppingConditionTest
 {
-   private Stats s;
+   private Statistics s;
 
    @Before
    public void setBefore()
    {
-      this.s = new Stats(0, 1);
+      this.s = new StatisticsImpl(0, 1);
    }
 
    @Test(expected = NullPointerException.class)

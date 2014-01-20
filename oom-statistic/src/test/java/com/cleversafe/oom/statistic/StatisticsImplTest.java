@@ -25,9 +25,9 @@ import org.junit.Test;
 
 import com.cleversafe.oom.operation.OperationType;
 
-public class StatsTest
+public class StatisticsImplTest
 {
-   private Stats s;
+   private Statistics s;
    private OperationType w;
    private OperationType r;
    private OperationType a;
@@ -35,7 +35,7 @@ public class StatsTest
    @Before
    public void setBefore()
    {
-      this.s = new Stats(0, 5000);
+      this.s = new StatisticsImpl(0, 5000);
       this.w = OperationType.WRITE;
       this.r = OperationType.READ;
       this.a = OperationType.ALL;
@@ -44,52 +44,52 @@ public class StatsTest
    @Test(expected = IllegalArgumentException.class)
    public void testNegativeInitialObjectCount()
    {
-      new Stats(-10000, 5000);
+      new StatisticsImpl(-10000, 5000);
    }
 
    @Test(expected = IllegalArgumentException.class)
    public void testNegativeInitialObjectCount2()
    {
-      new Stats(-1, 5000);
+      new StatisticsImpl(-1, 5000);
    }
 
    @Test
    public void testZeroInitialObjectCount()
    {
-      final Stats s = new Stats(0, 5000);
+      final Statistics s = new StatisticsImpl(0, 5000);
       Assert.assertEquals(0, s.getVaultFill());
    }
 
    @Test
    public void testPositiveInitialObjectCount()
    {
-      final Stats s = new Stats(100, 5000);
+      final Statistics s = new StatisticsImpl(100, 5000);
       Assert.assertEquals(500000, s.getVaultFill());
    }
 
    @Test(expected = IllegalArgumentException.class)
    public void testNegativeAverageObjectSize()
    {
-      new Stats(0, -10000);
+      new StatisticsImpl(0, -10000);
    }
 
    @Test(expected = IllegalArgumentException.class)
    public void testNegativeAverageObjectSize2()
    {
-      new Stats(0, -1);
+      new StatisticsImpl(0, -1);
    }
 
    @Test
    public void testZeroAverageObjectSize()
    {
-      final Stats s = new Stats(0, 0);
+      final Statistics s = new StatisticsImpl(0, 0);
       Assert.assertEquals(0, s.getVaultFill());
    }
 
    @Test
    public void testPositiveAverageObjectSize()
    {
-      final Stats s = new Stats(1, 10);
+      final Statistics s = new StatisticsImpl(1, 10);
       Assert.assertEquals(10, s.getVaultFill());
    }
 
@@ -107,7 +107,7 @@ public class StatsTest
    @Test
    public void testSnapshotInitialStats()
    {
-      final Stats snap = this.s.snapshot();
+      final Statistics snap = this.s.snapshot();
       for (final OperationType o : OperationType.values())
       {
          allCountersEqual(this.s, o, 0);
@@ -158,7 +158,7 @@ public class StatsTest
    {
       this.s.beginOperation(this.w);
       this.s.beginOperation(this.r);
-      final Stats snap = this.s.snapshot();
+      final Statistics snap = this.s.snapshot();
       this.s.beginOperation(this.w);
 
       bothCounterEquals(snap, this.w, Counter.COUNT, 1);
@@ -500,7 +500,7 @@ public class StatsTest
       final long begin2 = this.s.beginOperation(this.r);
       this.s.completeOperation(this.w, begin1);
       this.s.completeOperation(this.r, begin2);
-      final Stats snap = this.s.snapshot();
+      final Statistics snap = this.s.snapshot();
       final long begin3 = this.s.beginOperation(this.w);
       this.s.completeOperation(this.w, begin3);
 
@@ -515,7 +515,7 @@ public class StatsTest
       iCounterEquals(this.s, this.a, Counter.COMPLETE_COUNT, 1);
    }
 
-   private void allCountersEqual(final Stats s, final OperationType o, final long value)
+   private void allCountersEqual(final Statistics s, final OperationType o, final long value)
    {
       for (final Counter c : Counter.values())
       {
@@ -525,7 +525,7 @@ public class StatsTest
    }
 
    private void counterEquals(
-         final Stats s,
+         final Statistics s,
          final OperationType o,
          final Counter c,
          final long value)
@@ -534,7 +534,7 @@ public class StatsTest
    }
 
    private void iCounterEquals(
-         final Stats s,
+         final Statistics s,
          final OperationType o,
          final Counter c,
          final long value)
@@ -543,7 +543,7 @@ public class StatsTest
    }
 
    private void bothCounterEquals(
-         final Stats s,
+         final Statistics s,
          final OperationType o,
          final Counter c,
          final long value)
@@ -553,7 +553,7 @@ public class StatsTest
    }
 
    private void allCounterEquals(
-         final Stats s,
+         final Statistics s,
          final OperationType o,
          final Counter c,
          final long value)
@@ -562,7 +562,7 @@ public class StatsTest
       bothCounterEquals(s, OperationType.ALL, c, value);
    }
 
-   private void allStatsEqual(final Stats s, final OperationType o, final double value)
+   private void allStatsEqual(final Statistics s, final OperationType o, final double value)
    {
       for (final Stat stat : Stat.values())
       {
@@ -571,13 +571,17 @@ public class StatsTest
       }
    }
 
-   private void statEquals(final Stats s, final OperationType o, final Stat stat, final double value)
+   private void statEquals(
+         final Statistics s,
+         final OperationType o,
+         final Stat stat,
+         final double value)
    {
       Assert.assertEquals(value, s.getStat(o, stat, false), 0.001);
    }
 
    private void iStatEquals(
-         final Stats s,
+         final Statistics s,
          final OperationType o,
          final Stat stat,
          final double value)
@@ -586,7 +590,7 @@ public class StatsTest
    }
 
    private void bothStatEquals(
-         final Stats s,
+         final Statistics s,
          final OperationType o,
          final Stat stat,
          final double value)
@@ -596,7 +600,7 @@ public class StatsTest
    }
 
    private void allStatEquals(
-         final Stats s,
+         final Statistics s,
          final OperationType o,
          final Stat stat,
          final double value)
