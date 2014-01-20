@@ -27,6 +27,102 @@ import com.cleversafe.oom.operation.OperationType;
 public interface Statistics
 {
    /**
+    * Sets counters for a new operation.
+    * 
+    * @param operationType
+    *           the type of operation
+    * @return the timestamp at the time this method was called, in nanoseconds
+    * @throws NullPointerException
+    *            if operationType is null
+    */
+   long beginOperation(final OperationType operationType);
+
+   /**
+    * Sets ttfb counters. This method is optional and does not need to be called for operations that
+    * do not support a notion of ttfb.
+    * 
+    * @param operationType
+    *           the type of operation
+    * @param ttfb
+    *           time to first byte duration, in nanoseconds
+    * @throws NullPointerException
+    *            if operationType is null
+    * @throws IllegalArgumentException
+    *            if ttfb is negative
+    * @throws IllegalStateException
+    *            if no operation of operationType is currently active
+    */
+   void ttfb(final OperationType operationType, final long ttfb);
+
+   /**
+    * Sets bytes counters. This method is optional and does not need to be called for operations
+    * that do not support a notion of bytes. This method may be called multiple times by the caller.
+    * 
+    * @param operationType
+    *           the type of operation
+    * @param bytes
+    *           bytes processed by this operation
+    * @throws NullPointerException
+    *            if operationType is null
+    * @throws IllegalArgumentException
+    *            if bytes is less than one
+    * @throws IllegalStateException
+    *            if no operation of operationType is currently active
+    */
+   void bytes(final OperationType operationType, final long bytes);
+
+   /**
+    * Sets counters for a completed operation.
+    * 
+    * @param operationType
+    *           the type of operation
+    * @param beginTimestamp
+    *           the timestamp returned by <code>beginOperation</code
+    * @return the timestamp at the time this method was called, in nanoseconds
+    * @throws NullPointerException
+    *            if operationType is null
+    * @throws IllegalArgumentException
+    *            if beginTimestamp is negative
+    * @throws IllegalStateException
+    *            if no operation of operationType is currently active
+    */
+   long completeOperation(final OperationType operationType, final long beginTimestamp);
+
+   /**
+    * Sets counters for a failed operation.
+    * 
+    * @param operationType
+    *           the type of operation
+    * @param beginTimestamp
+    *           the timestamp returned by <code>beginOperation</code
+    * @return the timestamp at the time this method was called, in nanoseconds
+    * @throws NullPointerException
+    *            if operationType is null
+    * @throws IllegalArgumentException
+    *            if beginTimestamp is negative
+    * @throws IllegalStateException
+    *            if no operation of operationType is currently active
+    */
+   long failOperation(final OperationType operationType, final long beginTimestamp);
+
+   /**
+    * Sets counters for an aborted operation.
+    * 
+    * @param operationType
+    *           the type of operation
+    * @param beginTimestamp
+    *           the timestamp returned by <code>beginOperation</code
+    * @return the timestamp at the time this method was called, in nanoseconds
+    * @throws NullPointerException
+    *            if operationType is null
+    * @throws IllegalArgumentException
+    *            if beginTimestamp is negative
+    * @throws IllegalStateException
+    *            if no operation of operationType is currently active
+    */
+   long abortOperation(final OperationType operationType, final long beginTimestamp);
+
+   /**
     * Retrieves the value of a counter.
     * 
     * @param operationType
@@ -43,38 +139,6 @@ public interface Statistics
     *            if counter is null
     */
    long getCounter(OperationType operationType, Counter counter, boolean interval);
-
-   /**
-    * Increments the value of a counter by the specified amount.
-    * 
-    * @param operationType
-    *           the operation type of the counter
-    * @param counter
-    *           the counter type
-    * @param amount
-    *           the amount to increment the counter by
-    * @throws NullPointerException
-    *            if operationType is null
-    * @throws NullPointerException
-    *            if counter is null
-    * @throws IllegalArgumentException
-    *            if amount is less than one
-    */
-   void incrementCounter(OperationType operationType, Counter counter, long amount);
-
-   /**
-    * Increments the value of a counter by one.
-    * 
-    * @param operationType
-    *           the operation type of the counter
-    * @param counter
-    *           the counter type
-    * @throws NullPointerException
-    *            if operationType is null
-    * @throws NullPointerException
-    *            if counter is null
-    */
-   void incrementCounter(OperationType operationType, Counter counter);
 
    /**
     * Calculates the value of a stat.
