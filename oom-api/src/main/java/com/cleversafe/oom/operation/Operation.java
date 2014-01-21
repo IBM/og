@@ -113,6 +113,14 @@ public interface Operation
    ObjectName getObjectName();
 
    /**
+    * Sets the object name for this operation
+    * 
+    * @param objectName
+    *           the object name to use for this operation, or null if no object name is required
+    */
+   void setObjectName(ObjectName objectName);
+
+   /**
     * Gets the time spetn on this operation, if finished.
     * 
     * @return the time spent on this operation, in nanoseconds, or -1 if this operation is active
