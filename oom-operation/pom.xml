@@ -16,6 +16,18 @@
 		</dependency>
 		<dependency>
 			<groupId>com.cleversafe</groupId>
+			<artifactId>oom-object</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.cleversafe</groupId>
+			<artifactId>oom-statistic</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.cleversafe</groupId>
 			<artifactId>oom-util</artifactId>
 			<version>1.0.0-SNAPSHOT</version>
 		</dependency>

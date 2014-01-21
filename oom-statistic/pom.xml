@@ -14,10 +14,5 @@
 			<artifactId>oom-api</artifactId>
 			<version>1.0.0-SNAPSHOT</version>
 		</dependency>
-		<dependency>
-			<groupId>com.cleversafe</groupId>
-			<artifactId>oom-operation</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
-		</dependency>
 	</dependencies>
 </project>
