@@ -201,6 +201,12 @@ public class StatisticsImplTest
       iCounterEquals(this.s, this.a, Counter.ACTIVE_COUNT_MAX, 3);
    }
 
+   @Test(expected = IllegalStateException.class)
+   public void testTTFBNoActive()
+   {
+      this.s.ttfb(this.w, 1);
+   }
+
    @Test(expected = NullPointerException.class)
    public void testTTFBNullType()
    {
@@ -231,6 +237,7 @@ public class StatisticsImplTest
    public void testTTFBZero()
    {
       // border
+      this.s.beginOperation(this.w);
       this.s.ttfb(this.w, 0);
    }
 
@@ -238,6 +245,7 @@ public class StatisticsImplTest
    public void testTTFBPositive()
    {
       // positive at border
+      this.s.beginOperation(this.w);
       this.s.ttfb(this.w, 1);
    }
 
@@ -245,6 +253,7 @@ public class StatisticsImplTest
    public void testTTFBPositive2()
    {
       // large positive
+      this.s.beginOperation(this.w);
       this.s.ttfb(this.w, 100);
    }
 
@@ -268,6 +277,12 @@ public class StatisticsImplTest
       this.s.ttfb(this.w, 350);
       allCounterEquals(this.s, this.w, Counter.TTFB, 675);
       allStatEquals(this.s, this.w, Stat.TTFB_AVG, (double) (675) / 3);
+   }
+
+   @Test(expected = IllegalStateException.class)
+   public void testBytesNoActive()
+   {
+      this.s.bytes(this.w, 1);
    }
 
    @Test(expected = NullPointerException.class)
@@ -300,6 +315,7 @@ public class StatisticsImplTest
    public void testBytesZero()
    {
       // border
+      this.s.beginOperation(this.w);
       this.s.bytes(this.w, 0);
    }
 
@@ -307,6 +323,7 @@ public class StatisticsImplTest
    public void testBytesPositive()
    {
       // positive at border
+      this.s.beginOperation(this.w);
       this.s.bytes(this.w, 1);
    }
 
@@ -314,6 +331,7 @@ public class StatisticsImplTest
    public void testBytesPositive2()
    {
       // large positive
+      this.s.beginOperation(this.w);
       this.s.bytes(this.w, 100);
    }
 
@@ -339,6 +357,12 @@ public class StatisticsImplTest
       allCounterEquals(this.s, this.w, Counter.BYTES, 896);
       allStatEquals(this.s, this.w, Stat.BYTES_AVG, (double) (896) / 3);
       Assert.assertEquals(896, this.s.getVaultFill());
+   }
+
+   @Test(expected = IllegalStateException.class)
+   public void testCompleteOperationNoActive()
+   {
+      this.s.completeOperation(this.w, System.nanoTime());
    }
 
    @Test(expected = NullPointerException.class)
@@ -391,6 +415,7 @@ public class StatisticsImplTest
    public void testCompleteOperationPositive2()
    {
       // large positive
+      this.s.beginOperation(this.w);
       this.s.bytes(this.w, 100);
    }
 
@@ -457,6 +482,12 @@ public class StatisticsImplTest
       allCounterEquals(this.s, this.w, Counter.ACTIVE_DURATION, end2 - begin1);
    }
 
+   @Test(expected = IllegalStateException.class)
+   public void testFailOperationNoActive()
+   {
+      this.s.failOperation(this.w, System.nanoTime());
+   }
+
    // failOperation is the same as completeOperation save one counter
    @Test
    public void testFailOperation()
@@ -473,6 +504,12 @@ public class StatisticsImplTest
       allCounterEquals(this.s, this.w, Counter.ABORT_COUNT, 0);
       allCounterEquals(this.s, this.w, Counter.DURATION, end - begin);
       allCounterEquals(this.s, this.w, Counter.ACTIVE_DURATION, end - begin);
+   }
+
+   @Test(expected = IllegalStateException.class)
+   public void testAbortOperationNoActive()
+   {
+      this.s.abortOperation(this.w, System.nanoTime());
    }
 
    // abortOperation is the same as completeOperation save one counter

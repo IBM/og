@@ -104,6 +104,8 @@ public class StatisticsImpl implements Statistics
    {
       validateOperationType(operationType);
       Validate.isTrue(ttfb >= 0, "ttfb must be >= 0 [%s]", ttfb);
+      Validate.validState(getCounter(operationType, Counter.ACTIVE_COUNT, false) > 0,
+            "no operations of this type are active [%s]", operationType);
       modifyAll(operationType, Counter.TTFB, ttfb);
    }
 
@@ -112,6 +114,8 @@ public class StatisticsImpl implements Statistics
    {
       validateOperationType(operationType);
       Validate.isTrue(bytes >= 0, "bytes must be >= 0 [%s]", bytes);
+      Validate.validState(getCounter(operationType, Counter.ACTIVE_COUNT, false) > 0,
+            "no operations of this type are active [%s]", operationType);
       modifyAll(operationType, Counter.BYTES, bytes);
    }
 
@@ -144,6 +148,8 @@ public class StatisticsImpl implements Statistics
       Validate.isTrue(beginTimestamp >= 0, "beginTimestamp must be >= 0 [%s]", beginTimestamp);
       Validate.isTrue(beginTimestamp <= endTimestamp,
             "beginTimestamp must be <= endTimestamp");
+      Validate.validState(getCounter(o, Counter.ACTIVE_COUNT, false) > 0,
+            "no operations of this type are active [%s]", o);
 
       final long duration = endTimestamp - beginTimestamp;
       modifyAll(o, endCounter, 1);
