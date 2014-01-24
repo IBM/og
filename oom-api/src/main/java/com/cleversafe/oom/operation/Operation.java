@@ -20,6 +20,7 @@
 package com.cleversafe.oom.operation;
 
 import com.cleversafe.oom.object.ObjectName;
+import com.cleversafe.oom.operation.entity.Entity;
 
 public interface Operation
 {
@@ -142,4 +143,34 @@ public interface Operation
     * @return the amount of data processed for this operation, in bytes.
     */
    long getBytes();
+
+   /**
+    * Gets the entity to use as source data for this operation.
+    * 
+    * @return the entity for use as source data for this operation, or null if not set
+    */
+   public Entity getRequestEntity();
+
+   /**
+    * Sets the entity for use as source data for this operation.
+    * 
+    * @param entity
+    *           the source entity for this operation
+    */
+   public void setRequestEntity(final Entity entity);
+
+   /**
+    * Gets the response entity for this operation
+    * 
+    * @return the entity generated as response data for this operation, or null if not set
+    */
+   public Entity getResponseEntity();
+
+   /**
+    * Sets the entity to use as response data for this operation.
+    * 
+    * @param entity
+    *           the response entity for this operation
+    */
+   public void setResponseEntity(final Entity entity);
 }

@@ -22,6 +22,7 @@ package com.cleversafe.oom.operation;
 import org.apache.commons.lang3.Validate;
 
 import com.cleversafe.oom.object.ObjectName;
+import com.cleversafe.oom.operation.entity.Entity;
 import com.cleversafe.oom.statistic.Statistics;
 
 /**
@@ -33,6 +34,8 @@ public class BaseOperation implements Operation
    private final OperationType operationType;
    private OperationState operationState;
    private ObjectName objectName;
+   private Entity requestEntity;
+   private Entity responseEntity;
    private long beginTimestamp;
    private long ttfb;
    private long bytes;
@@ -165,5 +168,29 @@ public class BaseOperation implements Operation
    public long getBytes()
    {
       return this.bytes;
+   }
+
+   @Override
+   public Entity getRequestEntity()
+   {
+      return this.requestEntity;
+   }
+
+   @Override
+   public void setRequestEntity(final Entity entity)
+   {
+      this.requestEntity = entity;
+   }
+
+   @Override
+   public Entity getResponseEntity()
+   {
+      return this.responseEntity;
+   }
+
+   @Override
+   public void setResponseEntity(final Entity entity)
+   {
+      this.responseEntity = entity;
    }
 }
