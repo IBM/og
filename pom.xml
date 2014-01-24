@@ -27,6 +27,7 @@
 		<module>oom-object</module>
 		<module>oom-distribution</module>
 		<module>oom-util</module>
+		<module>oom-http</module>
 	</modules>
 	<scm>
 		<url>http://git.cleversafe.net</url>
