@@ -20,6 +20,7 @@
 package com.cleversafe.oom.client;
 
 import com.cleversafe.oom.operation.Operation;
+import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * A client for execution of <code>Operations</code> against a target host.
@@ -30,17 +31,13 @@ import com.cleversafe.oom.operation.Operation;
 public interface Client<T extends Operation>
 {
    /**
-    * Executes an operation asynchronously, invoking the specified callback when the operation has
-    * been fully executed.
+    * Executes an operation asynchronously.
     * 
     * @param operation
     *           the operation to execute
-    * @param callback
-    *           the callback to invoke upon completion of operation execution
     * @throws NullPointerExecption
     *            if operation is null
-    * @throws NullPointerException
-    *            if callback is null
+    * @return A future representing the eventual completion of this operation
     */
-   void execute(T operation, OperationCallback<T> callback);
+   ListenableFuture<T> execute(T operation);
 }
