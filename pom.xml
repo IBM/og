@@ -28,6 +28,7 @@
 		<module>oom-distribution</module>
 		<module>oom-util</module>
 		<module>oom-http</module>
+		<module>oom-client-httpurlconnection</module>
 	</modules>
 	<scm>
 		<url>http://git.cleversafe.net</url>
@@ -133,6 +134,11 @@
 			<dependency>
 				<groupId>com.cleversafe</groupId>
 				<artifactId>oom-distribution</artifactId>
+				<version>1.0.0-SNAPSHOT</version>
+			</dependency>
+			<dependency>
+				<groupId>com.cleversafe</groupId>
+				<artifactId>oom-http</artifactId>
 				<version>1.0.0-SNAPSHOT</version>
 			</dependency>
 			<dependency>
