@@ -37,6 +37,7 @@ public class HTTPOperation extends BaseOperation
    private URL url;
    private HTTPMethod method;
    private final Map<String, String> requestHeaders;
+   private int responseCode;
    private final Map<String, String> responseHeaders;
 
    /**
@@ -68,6 +69,7 @@ public class HTTPOperation extends BaseOperation
       this.url = Validate.notNull(url, "url must not be null");
       this.method = Validate.notNull(method, "method must not be null");
       this.requestHeaders = new HashMap<String, String>();
+      this.responseCode = -1;
       this.responseHeaders = new HashMap<String, String>();
    }
 
@@ -159,6 +161,30 @@ public class HTTPOperation extends BaseOperation
    public Iterator<Entry<String, String>> requestHeaderIterator()
    {
       return this.requestHeaders.entrySet().iterator();
+   }
+
+   /**
+    * Gets the response code for this operation.
+    * 
+    * @return the response code for this operation, or -1 if the response code has not been set
+    */
+   public int getResponseCode()
+   {
+      return this.responseCode;
+   }
+
+   /**
+    * Sets the response code for this operation.
+    * 
+    * @param code
+    *           the response code for this operation
+    * @throws IllegalArgumentException
+    *            if code is less than one
+    */
+   public void setResponseCode(final int code)
+   {
+      Validate.isTrue(code > 0, "code must be > 0 [%s]", code);
+      this.responseCode = code;
    }
 
    /**

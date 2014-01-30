@@ -152,6 +152,44 @@ public class HTTPOperationTest
       }
    }
 
+   @Test
+   public void testGetResponseCode()
+   {
+      Assert.assertEquals(-1, this.o.getResponseCode());
+   }
+
+   @Test(expected = IllegalArgumentException.class)
+   public void testSetResponseCodeNegative()
+   {
+      this.o.setResponseCode(-100);
+   }
+
+   @Test(expected = IllegalArgumentException.class)
+   public void testSetResponseCodeNegative2()
+   {
+      this.o.setResponseCode(-1);
+   }
+
+   @Test(expected = IllegalArgumentException.class)
+   public void testSetResponseCodeZero()
+   {
+      this.o.setResponseCode(0);
+   }
+
+   @Test
+   public void testSetResponseCodePositive()
+   {
+      this.o.setResponseCode(1);
+      Assert.assertEquals(1, this.o.getResponseCode());
+   }
+
+   @Test
+   public void testSetResponseCodePositive2()
+   {
+      this.o.setResponseCode(100);
+      Assert.assertEquals(100, this.o.getResponseCode());
+   }
+
    @Test(expected = NullPointerException.class)
    public void testGetResponseHeaderNullKey()
    {
