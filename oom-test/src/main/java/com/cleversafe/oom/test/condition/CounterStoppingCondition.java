@@ -19,7 +19,7 @@
 
 package com.cleversafe.oom.test.condition;
 
-import org.apache.commons.lang3.Validate;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.cleversafe.oom.operation.OperationType;
 import com.cleversafe.oom.statistic.Counter;
@@ -99,9 +99,9 @@ public class CounterStoppingCondition extends RelationalOperatorStoppingConditio
          final String toString)
    {
       super(operator, rightOperand);
-      Validate.notNull(stats, "stats must not be null");
-      Validate.notNull(type, "type must not be null");
-      Validate.notNull(counter, "counter must not be null");
+      checkNotNull(stats, "stats must not be null");
+      checkNotNull(type, "type must not be null");
+      checkNotNull(counter, "counter must not be null");
       this.stats = stats;
       this.type = type;
       this.counter = counter;

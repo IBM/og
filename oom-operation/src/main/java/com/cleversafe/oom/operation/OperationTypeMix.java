@@ -19,9 +19,10 @@
 
 package com.cleversafe.oom.operation;
 
-import java.util.Random;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
-import org.apache.commons.lang3.Validate;
+import java.util.Random;
 
 import com.cleversafe.oom.util.WeightedRandomChoice;
 
@@ -105,17 +106,17 @@ public class OperationTypeMix
          final long ceiling,
          final Random random)
    {
-      Validate.isTrue(0 <= readPercentage && readPercentage <= 100,
+      checkArgument(0 <= readPercentage && readPercentage <= 100,
             "readPercentage must be in range [0, 100] [%s]", readPercentage);
-      Validate.isTrue(0 <= writePercentage && writePercentage <= 100,
+      checkArgument(0 <= writePercentage && writePercentage <= 100,
             "writePercentage must be in range [0, 100] [%s]", writePercentage);
-      Validate.isTrue(0 <= deletePercentage && deletePercentage <= 100,
+      checkArgument(0 <= deletePercentage && deletePercentage <= 100,
             "deletePercentage must be in range [0, 100] [%s]", deletePercentage);
       final long sumPercentage = readPercentage + writePercentage + deletePercentage;
-      Validate.isTrue(sumPercentage == 100, "Sum of percentages must be 100 [%s]", sumPercentage);
-      Validate.isTrue(floor >= 0, "floor must be >= 0 [%s]", floor);
-      Validate.isTrue(ceiling >= floor, "ceiling must be >= floor [%s]", ceiling);
-      Validate.notNull(random, "random must not be null");
+      checkArgument(sumPercentage == 100, "Sum of percentages must be 100 [%s]", sumPercentage);
+      checkArgument(floor >= 0, "floor must be >= 0 [%s]", floor);
+      checkArgument(ceiling >= floor, "ceiling must be >= floor [%s]", ceiling);
+      checkNotNull(random, "random must not be null");
 
       this.readPercentage = readPercentage;
       this.writePercentage = writePercentage;
@@ -169,7 +170,7 @@ public class OperationTypeMix
     */
    public OperationType getNextOperationType(final long vaultFill)
    {
-      Validate.isTrue(vaultFill >= 0, "vaultFill must be >= 0 [%s]", vaultFill);
+      checkArgument(vaultFill >= 0, "vaultFill must be >= 0 [%s]", vaultFill);
 
       if (vaultFill < this.floor || (this.onlyWrite && vaultFill < this.midpoint))
       {

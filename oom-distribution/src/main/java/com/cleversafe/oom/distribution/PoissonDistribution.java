@@ -19,9 +19,10 @@
 
 package com.cleversafe.oom.distribution;
 
-import java.util.Random;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
-import org.apache.commons.lang3.Validate;
+import java.util.Random;
 
 /**
  * A <code>Distribution</code> implementation that returns values conforming to a poisson
@@ -58,8 +59,8 @@ public class PoissonDistribution implements Distribution
     */
    public PoissonDistribution(final double mean, final Random random)
    {
-      Validate.isTrue(mean >= 0.0, "mean must be >= 0.0 [%s]", mean);
-      Validate.notNull(random, "random must not be null");
+      checkArgument(mean >= 0.0, "mean must be >= 0.0 [%s]", mean);
+      checkNotNull(random, "random must not be null");
       this.mean = mean;
       this.random = random;
    }

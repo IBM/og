@@ -19,7 +19,7 @@
 
 package com.cleversafe.oom.test.condition;
 
-import org.apache.commons.lang3.Validate;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * A <code>StoppingCondition</code> abstract class for relational comparisons
@@ -44,7 +44,7 @@ public abstract class RelationalOperatorStoppingCondition implements StoppingCon
          final RelationalOperator operator,
          final long rightOperand)
    {
-      Validate.notNull(operator, "operator must not be null");
+      checkNotNull(operator, "operator must not be null");
       this.operator = operator;
       this.rightOperand = rightOperand;
    }

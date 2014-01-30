@@ -19,7 +19,9 @@
 
 package com.cleversafe.oom.statistic;
 
-import org.apache.commons.lang3.Validate;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 import com.cleversafe.oom.operation.OperationType;
 
@@ -55,7 +57,7 @@ public class Counters
     */
    public Counters(final Counters counters)
    {
-      Validate.notNull(counters, "counters must not be null");
+      checkNotNull(counters, "counters must not be null");
       this.intervalStride = counters.intervalStride;
       this.operationTypeStride = counters.operationTypeStride;
       this.ctrs = new long[counters.ctrs.length];
@@ -80,8 +82,8 @@ public class Counters
     */
    public long get(final OperationType operationType, final Counter counter, final boolean interval)
    {
-      Validate.notNull(operationType, "operationType must not be null");
-      Validate.notNull(counter, "counter must not be null");
+      checkNotNull(operationType, "operationType must not be null");
+      checkNotNull(counter, "counter must not be null");
       return this.ctrs[idx(operationType, counter, interval)];
    }
 
@@ -110,9 +112,9 @@ public class Counters
          final boolean interval,
          final long value)
    {
-      Validate.notNull(operationType, "operationType must not be null");
-      Validate.notNull(counter, "counter must not be null");
-      Validate.isTrue(value >= 0, "value must be >= 0 [%s]", value);
+      checkNotNull(operationType, "operationType must not be null");
+      checkNotNull(counter, "counter must not be null");
+      checkArgument(value >= 0, "value must be >= 0 [%s]", value);
       this.ctrs[idx(operationType, counter, interval)] = value;
    }
 
@@ -135,9 +137,9 @@ public class Counters
          final boolean interval,
          final long amount)
    {
-      Validate.notNull(operationType, "operationType must not be null");
-      Validate.notNull(counter, "counter must not be null");
-      Validate.validState(get(operationType, counter, interval) + amount >= 0,
+      checkNotNull(operationType, "operationType must not be null");
+      checkNotNull(counter, "counter must not be null");
+      checkState(get(operationType, counter, interval) + amount >= 0,
             "Modifying counter by amount would make it negative [%s]", amount);
 
       final long newValue = get(operationType, counter, interval) + amount;

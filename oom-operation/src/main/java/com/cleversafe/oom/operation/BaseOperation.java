@@ -19,7 +19,9 @@
 
 package com.cleversafe.oom.operation;
 
-import org.apache.commons.lang3.Validate;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 import com.cleversafe.oom.object.ObjectName;
 import com.cleversafe.oom.operation.entity.Entity;
@@ -58,9 +60,9 @@ public class BaseOperation implements Operation
     */
    public BaseOperation(final OperationType operationType, final Statistics statistics)
    {
-      this.operationType = Validate.notNull(operationType, "operationType must not be null");
-      Validate.isTrue(operationType != OperationType.ALL, "operationType must not be ALL");
-      this.stats = Validate.notNull(statistics, "statistics must not be null");
+      this.operationType = checkNotNull(operationType, "operationType must not be null");
+      checkArgument(operationType != OperationType.ALL, "operationType must not be ALL");
+      this.stats = checkNotNull(statistics, "statistics must not be null");
       this.operationState = OperationState.NEW;
       this.ttfb = -1;
    }
@@ -68,8 +70,8 @@ public class BaseOperation implements Operation
    @Override
    public long beginOperation()
    {
-      Validate.validState(this.operationState == OperationState.NEW,
-            "operationState must be NEW [%s]", this.operationState);
+      checkState(this.operationState == OperationState.NEW, "operationState must be NEW [%s]",
+            this.operationState);
       this.operationState = OperationState.ACTIVE;
       this.beginTimestamp = this.stats.beginOperation(this.operationType);
       return this.beginTimestamp;
@@ -78,10 +80,10 @@ public class BaseOperation implements Operation
    @Override
    public void ttfb(final long ttfb)
    {
-      Validate.validState(this.operationState == OperationState.ACTIVE,
+      checkState(this.operationState == OperationState.ACTIVE,
             "operationState must be ACTIVE [%s]", this.operationState);
-      Validate.validState(this.ttfb == -1, "ttfb already called for this operation");
-      Validate.isTrue(ttfb >= 0, "ttfb must be >= 0 [%s]", ttfb);
+      checkState(this.ttfb == -1, "ttfb already called for this operation");
+      checkArgument(ttfb >= 0, "ttfb must be >= 0 [%s]", ttfb);
       this.ttfb = ttfb;
       this.stats.ttfb(this.operationType, ttfb);
    }
@@ -89,9 +91,9 @@ public class BaseOperation implements Operation
    @Override
    public void bytes(final long bytes)
    {
-      Validate.validState(this.operationState == OperationState.ACTIVE,
+      checkState(this.operationState == OperationState.ACTIVE,
             "operationState must be ACTIVE [%s]", this.operationState);
-      Validate.isTrue(bytes >= 0, "bytes must be >= 0 [%s]", bytes);
+      checkArgument(bytes >= 0, "bytes must be >= 0 [%s]", bytes);
       this.bytes += bytes;
       this.stats.bytes(this.operationType, bytes);
    }
@@ -99,7 +101,7 @@ public class BaseOperation implements Operation
    @Override
    public long completeOperation()
    {
-      Validate.validState(this.operationState == OperationState.ACTIVE,
+      checkState(this.operationState == OperationState.ACTIVE,
             "operationState must be ACTIVE [%s]", this.operationState);
       this.operationState = OperationState.COMPLETED;
       this.endTimestamp = this.stats.completeOperation(this.operationType, this.beginTimestamp);
@@ -109,7 +111,7 @@ public class BaseOperation implements Operation
    @Override
    public long failOperation()
    {
-      Validate.validState(this.operationState == OperationState.ACTIVE,
+      checkState(this.operationState == OperationState.ACTIVE,
             "operationState must be ACTIVE [%s]", this.operationState);
       this.operationState = OperationState.FAILED;
       this.endTimestamp = this.stats.failOperation(this.operationType, this.beginTimestamp);
@@ -119,7 +121,7 @@ public class BaseOperation implements Operation
    @Override
    public long abortOperation()
    {
-      Validate.validState(this.operationState == OperationState.ACTIVE,
+      checkState(this.operationState == OperationState.ACTIVE,
             "operationState must be ACTIVE [%s]", this.operationState);
       this.operationState = OperationState.ABORTED;
       this.endTimestamp = this.stats.abortOperation(this.operationType, this.beginTimestamp);

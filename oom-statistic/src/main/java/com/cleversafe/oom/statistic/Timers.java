@@ -19,7 +19,8 @@
 
 package com.cleversafe.oom.statistic;
 
-import org.apache.commons.lang3.Validate;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.cleversafe.oom.operation.OperationType;
 
@@ -52,7 +53,7 @@ public class Timers
     */
    public Timers(final Timers timers)
    {
-      Validate.notNull(timers, "timers must not be null");
+      checkNotNull(timers, "timers must not be null");
       this.intervalStride = timers.intervalStride;
       this.timers = new long[timers.timers.length];
       System.arraycopy(timers.timers, 0, this.timers, 0, timers.timers.length);
@@ -76,8 +77,8 @@ public class Timers
     */
    public long start(final OperationType operationType, final boolean interval, final long timestamp)
    {
-      Validate.notNull(operationType, "operationType must not be null");
-      Validate.isTrue(timestamp >= 0, "timestamp must be >= 0 [%s]", timestamp);
+      checkNotNull(operationType, "operationType must not be null");
+      checkArgument(timestamp >= 0, "timestamp must be >= 0 [%s]", timestamp);
       this.timers[idx(operationType, interval)] = timestamp;
       return timestamp;
    }
@@ -103,9 +104,9 @@ public class Timers
          final boolean interval,
          final long timestamp)
    {
-      Validate.notNull(operationType, "operationType must not be null");
+      checkNotNull(operationType, "operationType must not be null");
       final long startTimestamp = this.timers[idx(operationType, interval)];
-      Validate.isTrue(timestamp >= startTimestamp, "timestamp must be >= start timestamp");
+      checkArgument(timestamp >= startTimestamp, "timestamp must be >= start timestamp");
       return timestamp - startTimestamp;
    }
 
@@ -121,7 +122,7 @@ public class Timers
     */
    public void reset(final boolean interval, final long timestamp)
    {
-      Validate.isTrue(timestamp >= 0, "timestamp must be >= 0 [%s]", timestamp);
+      checkArgument(timestamp >= 0, "timestamp must be >= 0 [%s]", timestamp);
       final int begin = (interval ? this.intervalStride : 0);
       final int end = begin + this.intervalStride;
       for (int i = begin; i < end; i++)

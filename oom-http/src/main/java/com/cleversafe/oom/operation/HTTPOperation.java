@@ -19,13 +19,14 @@
 
 package com.cleversafe.oom.operation;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import org.apache.commons.lang3.Validate;
 
 import com.cleversafe.oom.statistic.Statistics;
 
@@ -66,8 +67,8 @@ public class HTTPOperation extends BaseOperation
          final Statistics statistics)
    {
       super(operationType, statistics);
-      this.url = Validate.notNull(url, "url must not be null");
-      this.method = Validate.notNull(method, "method must not be null");
+      this.url = checkNotNull(url, "url must not be null");
+      this.method = checkNotNull(method, "method must not be null");
       this.requestHeaders = new HashMap<String, String>();
       this.responseCode = -1;
       this.responseHeaders = new HashMap<String, String>();
@@ -93,7 +94,7 @@ public class HTTPOperation extends BaseOperation
     */
    public void setURL(final URL url)
    {
-      this.url = Validate.notNull(url, "url must not be null");
+      this.url = checkNotNull(url, "url must not be null");
    }
 
    /**
@@ -116,7 +117,7 @@ public class HTTPOperation extends BaseOperation
     */
    public void setMethod(final HTTPMethod method)
    {
-      this.method = Validate.notNull(method, "method must not be null");
+      this.method = checkNotNull(method, "method must not be null");
    }
 
    /**
@@ -130,7 +131,7 @@ public class HTTPOperation extends BaseOperation
     */
    public String getRequestHeader(final String key)
    {
-      Validate.notNull(key, "key must not be null");
+      checkNotNull(key, "key must not be null");
       return this.requestHeaders.get(key);
    }
 
@@ -148,8 +149,8 @@ public class HTTPOperation extends BaseOperation
     */
    public void setRequestHeader(final String key, final String value)
    {
-      Validate.notNull(key, "key must not be null");
-      Validate.notNull(value, "value must not be null");
+      checkNotNull(key, "key must not be null");
+      checkNotNull(value, "value must not be null");
       this.requestHeaders.put(key, value);
    }
 
@@ -183,7 +184,7 @@ public class HTTPOperation extends BaseOperation
     */
    public void setResponseCode(final int code)
    {
-      Validate.isTrue(code > 0, "code must be > 0 [%s]", code);
+      checkArgument(code > 0, "code must be > 0 [%s]", code);
       this.responseCode = code;
    }
 
@@ -198,7 +199,7 @@ public class HTTPOperation extends BaseOperation
     */
    public String getResponseHeader(final String key)
    {
-      Validate.notNull(key, "key must not be null");
+      checkNotNull(key, "key must not be null");
       return this.responseHeaders.get(key);
    }
 
@@ -216,8 +217,8 @@ public class HTTPOperation extends BaseOperation
     */
    public void setResponseHeader(final String key, final String value)
    {
-      Validate.notNull(key, "key must not be null");
-      Validate.notNull(value, "value must not be null");
+      checkNotNull(key, "key must not be null");
+      checkNotNull(value, "value must not be null");
       this.responseHeaders.put(key, value);
    }
 

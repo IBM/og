@@ -19,9 +19,10 @@
 
 package com.cleversafe.oom.distribution;
 
-import java.util.Random;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
-import org.apache.commons.lang3.Validate;
+import java.util.Random;
 
 /**
  * A <code>Distribution</code> implementation that returns values conforming to a normal
@@ -67,9 +68,9 @@ public class NormalDistribution implements Distribution
     */
    public NormalDistribution(final double mean, final double spread, final Random random)
    {
-      Validate.isTrue(mean >= 0.0, "mean must be >= 0.0 [%s]", mean);
-      Validate.isTrue(spread >= 0.0, "spread must be >= 0.0 [%s]", spread);
-      Validate.notNull(random, "random must not be null");
+      checkArgument(mean >= 0.0, "mean must be >= 0.0 [%s]", mean);
+      checkArgument(spread >= 0.0, "spread must be >= 0.0 [%s]", spread);
+      checkNotNull(random, "random must not be null");
       this.mean = mean;
       this.spread = spread;
       this.random = random;

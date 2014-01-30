@@ -19,9 +19,10 @@
 
 package com.cleversafe.oom.test.condition;
 
-import java.util.concurrent.TimeUnit;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
-import org.apache.commons.lang3.Validate;
+import java.util.concurrent.TimeUnit;
 
 import com.cleversafe.oom.statistic.Statistics;
 
@@ -53,9 +54,9 @@ public class DurationStoppingCondition implements StoppingCondition
     */
    public DurationStoppingCondition(final Statistics stats, final long duration, final TimeUnit unit)
    {
-      Validate.notNull(stats, "stats must not be null");
-      Validate.isTrue(duration >= 0, "duration must be >= 0 [%s]", duration);
-      Validate.notNull(unit, "unit must not be null");
+      checkNotNull(stats, "stats must not be null");
+      checkArgument(duration >= 0, "duration must be >= 0 [%s]", duration);
+      checkNotNull(unit, "unit must not be null");
       this.stats = stats;
       this.duration = duration;
       this.unit = unit;

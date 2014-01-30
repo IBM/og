@@ -19,7 +19,8 @@
 
 package com.cleversafe.oom.test.condition;
 
-import org.apache.commons.lang3.Validate;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.cleversafe.oom.operation.OperationType;
 import com.cleversafe.oom.statistic.Counter;
@@ -107,12 +108,12 @@ public class VaultFillStoppingCondition extends RelationalOperatorStoppingCondit
          final String toString)
    {
       super(operator, vaultFill);
-      Validate.notNull(stats, "stats must not be null");
-      Validate.isTrue(initialObjectCount >= 0, "initialObjectCount must be >= 0 [%s]",
+      checkNotNull(stats, "stats must not be null");
+      checkArgument(initialObjectCount >= 0, "initialObjectCount must be >= 0 [%s]",
             initialObjectCount);
-      Validate.isTrue(averageObjectSize >= 0, "averageObjectSize must be >= 0 [%s]",
+      checkArgument(averageObjectSize >= 0, "averageObjectSize must be >= 0 [%s]",
             averageObjectSize);
-      Validate.isTrue(vaultFill >= 0, "vaultFill must be >= 0 [%s]", vaultFill);
+      checkArgument(vaultFill >= 0, "vaultFill must be >= 0 [%s]", vaultFill);
       this.stats = stats;
       this.initialObjectCount = initialObjectCount;
       this.averageObjectSize = averageObjectSize;

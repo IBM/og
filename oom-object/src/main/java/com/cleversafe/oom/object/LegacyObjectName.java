@@ -19,11 +19,13 @@
 
 package com.cleversafe.oom.object;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
 import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.lang3.Validate;
 
 /**
  * An <code>ObjectName</code> implementation that represents an object name of a fixed length of 18
@@ -76,7 +78,7 @@ public class LegacyObjectName implements ObjectName
     */
    public static LegacyObjectName forUUID(final UUID objectName)
    {
-      Validate.notNull(objectName, "objectName must not be null");
+      checkNotNull(objectName, "objectName must not be null");
       return new LegacyObjectName(objectName);
    }
 
@@ -96,7 +98,7 @@ public class LegacyObjectName implements ObjectName
 
    public void setName(final UUID objectName)
    {
-      Validate.notNull(objectName, "objectName must not be null");
+      checkNotNull(objectName, "objectName must not be null");
       this.bytes.clear();
       setUUID(objectName);
    }
@@ -115,8 +117,8 @@ public class LegacyObjectName implements ObjectName
 
    private static void validateBytes(final byte[] objectName)
    {
-      Validate.notNull(objectName, "objectName must not be null");
-      Validate.isTrue(objectName.length == ID_LENGTH, "objectName length must be = 0 [%s]",
+      checkNotNull(objectName, "objectName must not be null");
+      checkArgument(objectName.length == ID_LENGTH, "objectName length must be = 0 [%s]",
             objectName.length);
    }
 

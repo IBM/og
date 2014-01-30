@@ -19,12 +19,13 @@
 
 package com.cleversafe.oom.util;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
-
-import org.apache.commons.lang3.Validate;
 
 /**
  * An implementation that randomly chooses an element amongst a collection of items.
@@ -92,7 +93,7 @@ public class WeightedRandomChoice<T>
     */
    public WeightedRandomChoice(final Random random)
    {
-      Validate.notNull(random, "random must not be null");
+      checkNotNull(random, "random must not be null");
       this.choices = new ArrayList<Choice<T>>();
       this.totalWeight = 0;
       this.random = random;
@@ -126,8 +127,8 @@ public class WeightedRandomChoice<T>
     */
    public void addChoice(final T choice, final long weight)
    {
-      Validate.notNull(choice, "choice must not be null");
-      Validate.isTrue(weight > 0, "weight must be > 0 [%s]", weight);
+      checkNotNull(choice, "choice must not be null");
+      checkArgument(weight > 0, "weight must be > 0 [%s]", weight);
       this.choices.add(new Choice<T>(choice, weight));
       this.totalWeight += weight;
    }

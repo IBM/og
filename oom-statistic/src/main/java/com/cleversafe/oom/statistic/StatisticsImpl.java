@@ -19,7 +19,9 @@
 
 package com.cleversafe.oom.statistic;
 
-import org.apache.commons.lang3.Validate;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 import com.cleversafe.oom.operation.OperationType;
 
@@ -48,9 +50,9 @@ public class StatisticsImpl implements Statistics
     */
    public StatisticsImpl(final long initialObjectCount, final long averageObjectSize)
    {
-      Validate.isTrue(initialObjectCount >= 0, "initialObjectCount must be >= 0 [%s]",
+      checkArgument(initialObjectCount >= 0, "initialObjectCount must be >= 0 [%s]",
             initialObjectCount);
-      Validate.isTrue(averageObjectSize >= 0, "averageObjectSize must be >= 0 [%s]",
+      checkArgument(averageObjectSize >= 0, "averageObjectSize must be >= 0 [%s]",
             averageObjectSize);
 
       this.ctrs = new Counters();
@@ -103,8 +105,8 @@ public class StatisticsImpl implements Statistics
    public void ttfb(final OperationType operationType, final long ttfb)
    {
       validateOperationType(operationType);
-      Validate.isTrue(ttfb >= 0, "ttfb must be >= 0 [%s]", ttfb);
-      Validate.validState(getCounter(operationType, Counter.ACTIVE_COUNT, false) > 0,
+      checkArgument(ttfb >= 0, "ttfb must be >= 0 [%s]", ttfb);
+      checkState(getCounter(operationType, Counter.ACTIVE_COUNT, false) > 0,
             "no operations of this type are active [%s]", operationType);
       modifyAll(operationType, Counter.TTFB, ttfb);
    }
@@ -113,8 +115,8 @@ public class StatisticsImpl implements Statistics
    public void bytes(final OperationType operationType, final long bytes)
    {
       validateOperationType(operationType);
-      Validate.isTrue(bytes >= 0, "bytes must be >= 0 [%s]", bytes);
-      Validate.validState(getCounter(operationType, Counter.ACTIVE_COUNT, false) > 0,
+      checkArgument(bytes >= 0, "bytes must be >= 0 [%s]", bytes);
+      checkState(getCounter(operationType, Counter.ACTIVE_COUNT, false) > 0,
             "no operations of this type are active [%s]", operationType);
       modifyAll(operationType, Counter.BYTES, bytes);
    }
@@ -145,10 +147,9 @@ public class StatisticsImpl implements Statistics
    {
       final long endTimestamp = System.nanoTime();
       validateOperationType(o);
-      Validate.isTrue(beginTimestamp >= 0, "beginTimestamp must be >= 0 [%s]", beginTimestamp);
-      Validate.isTrue(beginTimestamp <= endTimestamp,
-            "beginTimestamp must be <= endTimestamp");
-      Validate.validState(getCounter(o, Counter.ACTIVE_COUNT, false) > 0,
+      checkArgument(beginTimestamp >= 0, "beginTimestamp must be >= 0 [%s]", beginTimestamp);
+      checkArgument(beginTimestamp <= endTimestamp, "beginTimestamp must be <= endTimestamp");
+      checkState(getCounter(o, Counter.ACTIVE_COUNT, false) > 0,
             "no operations of this type are active [%s]", o);
 
       final long duration = endTimestamp - beginTimestamp;
@@ -181,8 +182,8 @@ public class StatisticsImpl implements Statistics
    // Convenience method for validating OperationType
    private void validateOperationType(final OperationType o)
    {
-      Validate.notNull(o, "operationType must not be null");
-      Validate.isTrue(o != OperationType.ALL, "operationType must not be ALL");
+      checkNotNull(o, "operationType must not be null");
+      checkArgument(o != OperationType.ALL, "operationType must not be ALL");
    }
 
    private long modify(final OperationType o, final Counter c, final boolean i, final long amt)
@@ -228,8 +229,8 @@ public class StatisticsImpl implements Statistics
          final Counter counter,
          final boolean interval)
    {
-      Validate.notNull(operationType, "operationType must not be null");
-      Validate.notNull(counter, "counter must not be null");
+      checkNotNull(operationType, "operationType must not be null");
+      checkNotNull(counter, "counter must not be null");
       return this.ctrs.get(operationType, counter, interval);
    }
 
@@ -243,8 +244,8 @@ public class StatisticsImpl implements Statistics
    @Override
    public double getStat(final OperationType operationType, final Stat stat, final boolean interval)
    {
-      Validate.notNull(operationType, "operationType must not be null");
-      Validate.notNull(stat, "stat must not be null");
+      checkNotNull(operationType, "operationType must not be null");
+      checkNotNull(stat, "stat must not be null");
       final long timestamp = getTimestamp(interval);
 
       switch (stat)
