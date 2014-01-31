@@ -19,6 +19,8 @@
 
 package com.cleversafe.oom.operation;
 
+import java.nio.ByteBuffer;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -164,81 +166,56 @@ public class BaseOperationTest
       Assert.assertEquals(100, this.o.getTTFB());
    }
 
-   @Test(expected = IllegalArgumentException.class)
-   public void testNegativeBytes()
+   @Test(expected = NullPointerException.class)
+   public void testNullOnReceivedContent()
    {
       this.o.beginOperation();
-      this.o.bytes(-1000);
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testNegativeBytes2()
-   {
-      this.o.beginOperation();
-      this.o.bytes(-1);
-   }
-
-   @Test
-   public void testZeroBytes()
-   {
-      this.o.beginOperation();
-      this.o.bytes(0);
-   }
-
-   @Test
-   public void testPositiveBytes()
-   {
-      this.o.beginOperation();
-      this.o.bytes(1);
-   }
-
-   @Test
-   public void testPositiveBytes2()
-   {
-      this.o.beginOperation();
-      this.o.bytes(1000);
+      this.o.onReceivedContent(null);
    }
 
    @Test(expected = IllegalStateException.class)
-   public void testBytesBeforeBeginOperation()
+   public void testOnReceivedContentBeforeBeginOperation()
    {
-      this.o.bytes(1);
+      this.o.onReceivedContent(ByteBuffer.allocate(0));
    }
 
    @Test(expected = IllegalStateException.class)
-   public void testBytesAfterCompleteOperation()
+   public void testOnReceivedContentAfterCompleteOperation()
    {
       this.o.beginOperation();
       this.o.completeOperation();
-      this.o.bytes(1);
+      this.o.onReceivedContent(ByteBuffer.allocate(0));
    }
 
    @Test(expected = IllegalStateException.class)
-   public void testBytesAfterFailOperation()
+   public void testOnReceivedContentAfterFailOperation()
    {
       this.o.beginOperation();
       this.o.failOperation();
-      this.o.bytes(1);
+      this.o.onReceivedContent(ByteBuffer.allocate(0));
    }
 
    @Test(expected = IllegalStateException.class)
-   public void testBytesAfterAbortOperation()
+   public void testOnReceivedContentAfterAbortOperation()
    {
       this.o.beginOperation();
       this.o.abortOperation();
-      this.o.bytes(1);
+      this.o.onReceivedContent(ByteBuffer.allocate(0));
    }
 
    @Test
-   public void testBytes()
+   public void testOnReceivedContent()
    {
       this.o.beginOperation();
       Assert.assertEquals(OperationState.ACTIVE, this.o.getOperationState());
       Assert.assertEquals(0, this.o.getBytes());
-      this.o.bytes(0);
+      this.o.onReceivedContent(ByteBuffer.allocate(0));
       Assert.assertEquals(OperationState.ACTIVE, this.o.getOperationState());
       Assert.assertEquals(0, this.o.getBytes());
-      this.o.bytes(1024);
+      final ByteBuffer buf = ByteBuffer.allocate(1024);
+      buf.put(new byte[1024]);
+      buf.flip();
+      this.o.onReceivedContent(buf);
       Assert.assertEquals(OperationState.ACTIVE, this.o.getOperationState());
       Assert.assertEquals(1024, this.o.getBytes());
    }

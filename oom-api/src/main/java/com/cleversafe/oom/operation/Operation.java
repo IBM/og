@@ -19,6 +19,8 @@
 
 package com.cleversafe.oom.operation;
 
+import java.nio.ByteBuffer;
+
 import com.cleversafe.oom.object.ObjectName;
 import com.cleversafe.oom.operation.entity.Entity;
 
@@ -48,19 +50,6 @@ public interface Operation
     *            if this method has already been called
     */
    void ttfb(final long ttfb);
-
-   /**
-    * Sets bytes. This method is optional and does not need to be called for operations that do not
-    * support a notion of bytes. This method may be called multiple times by the caller.
-    * 
-    * @param bytes
-    *           bytes processed by this operation
-    * @throws IllegalArgumentException
-    *            if bytes is negative
-    * @throws IllegalStateException
-    *            if operation state is not <code>ACTIVE</code>
-    */
-   void bytes(final long bytes);
 
    /**
     * Transitions the <code>OperationState</code> of this operation from <code>ACTIVE</code> to
@@ -160,17 +149,16 @@ public interface Operation
    public void setRequestEntity(final Entity entity);
 
    /**
-    * Gets the response entity for this operation
+    * Processes response content as it is ready. This method is optional and does not need to be
+    * called for operations that do not support a notion of response content. This method may be
+    * called multiple times by the caller.
     * 
-    * @return the entity generated as response data for this operation, or null if not set
+    * @param bytes
+    *           bytes processed for this operation
+    * @throws NullPointerException
+    *            if bytes is null
+    * @throws IllegalStateException
+    *            if operation state is not <code>ACTIVE</code>
     */
-   public Entity getResponseEntity();
-
-   /**
-    * Sets the entity to use as response data for this operation.
-    * 
-    * @param entity
-    *           the response entity for this operation
-    */
-   public void setResponseEntity(final Entity entity);
+   void onReceivedContent(final ByteBuffer bytes);
 }

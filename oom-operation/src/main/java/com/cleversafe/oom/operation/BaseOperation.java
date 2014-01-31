@@ -23,6 +23,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import java.nio.ByteBuffer;
+
 import com.cleversafe.oom.object.ObjectName;
 import com.cleversafe.oom.operation.entity.Entity;
 import com.cleversafe.oom.statistic.Statistics;
@@ -37,7 +39,6 @@ public class BaseOperation implements Operation
    private OperationState operationState;
    private ObjectName objectName;
    private Entity requestEntity;
-   private Entity responseEntity;
    private long beginTimestamp;
    private long ttfb;
    private long bytes;
@@ -86,16 +87,6 @@ public class BaseOperation implements Operation
       checkArgument(ttfb >= 0, "ttfb must be >= 0 [%s]", ttfb);
       this.ttfb = ttfb;
       this.stats.ttfb(this.operationType, ttfb);
-   }
-
-   @Override
-   public void bytes(final long bytes)
-   {
-      checkState(this.operationState == OperationState.ACTIVE,
-            "operationState must be ACTIVE [%s]", this.operationState);
-      checkArgument(bytes >= 0, "bytes must be >= 0 [%s]", bytes);
-      this.bytes += bytes;
-      this.stats.bytes(this.operationType, bytes);
    }
 
    @Override
@@ -185,14 +176,12 @@ public class BaseOperation implements Operation
    }
 
    @Override
-   public Entity getResponseEntity()
+   public void onReceivedContent(final ByteBuffer bytes)
    {
-      return this.responseEntity;
-   }
-
-   @Override
-   public void setResponseEntity(final Entity entity)
-   {
-      this.responseEntity = entity;
+      checkState(this.operationState == OperationState.ACTIVE,
+            "operationState must be ACTIVE [%s]", this.operationState);
+      checkNotNull(bytes, "bytes must not be null");
+      this.bytes += bytes.remaining();
+      this.stats.bytes(this.operationType, bytes.remaining());
    }
 }
