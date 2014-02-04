@@ -19,285 +19,217 @@
 
 package com.cleversafe.oom.operation;
 
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.cleversafe.oom.object.LegacyObjectName;
-import com.cleversafe.oom.statistic.Statistics;
-import com.cleversafe.oom.statistic.StatisticsImpl;
+import com.cleversafe.oom.object.ObjectName;
+import com.cleversafe.oom.operation.entity.Entity;
 
 public class BaseOperationTest
 {
-   private BaseOperation o;
-   private Statistics stats;
+   private BaseOperation operation;
 
    @Before
    public void setBefore()
    {
-      this.stats = new StatisticsImpl(0, 5000);
-      this.o = new BaseOperation(OperationType.WRITE, this.stats);
+      this.operation = new BaseOperation(OperationType.WRITE);
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullOperationType()
    {
-      new BaseOperation(null, this.stats);
+      new BaseOperation(null);
    }
 
    @Test(expected = IllegalArgumentException.class)
    public void testALLOperationType()
    {
-      new BaseOperation(OperationType.ALL, this.stats);
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void testNullStats()
-   {
-      new BaseOperation(OperationType.WRITE, null);
+      new BaseOperation(OperationType.ALL);
    }
 
    @Test
    public void testBaseOperation()
    {
-      final BaseOperation o = new BaseOperation(OperationType.WRITE, this.stats);
+      final BaseOperation o = new BaseOperation(OperationType.WRITE);
       Assert.assertEquals(OperationType.WRITE, o.getOperationType());
-   }
-
-   @Test(expected = IllegalStateException.class)
-   public void testBeginOperationTwice()
-   {
-      this.o.beginOperation();
-      this.o.beginOperation();
-   }
-
-   @Test
-   public void testBeginOperation()
-   {
-      Assert.assertEquals(OperationState.NEW, this.o.getOperationState());
-      final long beginTimestamp = this.o.beginOperation();
-      Assert.assertEquals(OperationState.ACTIVE, this.o.getOperationState());
-      Assert.assertTrue(beginTimestamp > 0);
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testNegativeTTFB()
-   {
-      this.o.beginOperation();
-      this.o.ttfb(-1000);
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testNegativeTTFB2()
-   {
-      this.o.beginOperation();
-      this.o.ttfb(-1);
-   }
-
-   @Test
-   public void testZeroTTFB()
-   {
-      this.o.beginOperation();
-      this.o.ttfb(0);
-   }
-
-   @Test
-   public void testPositiveTTFB()
-   {
-      this.o.beginOperation();
-      this.o.ttfb(1);
-   }
-
-   @Test
-   public void testPositiveTTFB2()
-   {
-      this.o.beginOperation();
-      this.o.ttfb(1000);
-   }
-
-   @Test(expected = IllegalStateException.class)
-   public void testTTFBBeforeBeginOperation()
-   {
-      this.o.ttfb(1);
-   }
-
-   @Test(expected = IllegalStateException.class)
-   public void testTTFBTwice()
-   {
-      this.o.beginOperation();
-      this.o.ttfb(1);
-      this.o.ttfb(1);
-   }
-
-   @Test(expected = IllegalStateException.class)
-   public void testTTFBAfterCompleteOperation()
-   {
-      this.o.beginOperation();
-      this.o.completeOperation();
-      this.o.ttfb(1);
-   }
-
-   @Test(expected = IllegalStateException.class)
-   public void testTTFBAfterFailOperation()
-   {
-      this.o.beginOperation();
-      this.o.failOperation();
-      this.o.ttfb(1);
-   }
-
-   @Test(expected = IllegalStateException.class)
-   public void testTTFBAfterAbortOperation()
-   {
-      this.o.beginOperation();
-      this.o.abortOperation();
-      this.o.ttfb(1);
-   }
-
-   @Test
-   public void testTTFB()
-   {
-      this.o.beginOperation();
-      Assert.assertEquals(OperationState.ACTIVE, this.o.getOperationState());
-      Assert.assertEquals(-1, this.o.getTTFB());
-      this.o.ttfb(100);
-      Assert.assertEquals(OperationState.ACTIVE, this.o.getOperationState());
-      Assert.assertEquals(100, this.o.getTTFB());
+      Assert.assertEquals(OperationState.NEW, o.getOperationState());
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullOnReceivedContent()
+   public void testSetNullOperationType()
    {
-      this.o.beginOperation();
-      this.o.onReceivedContent(null);
+      this.operation.setOperationType(null);
    }
 
-   @Test(expected = IllegalStateException.class)
-   public void testOnReceivedContentBeforeBeginOperation()
+   @Test(expected = IllegalArgumentException.class)
+   public void testSetALLOperationType()
    {
-      this.o.onReceivedContent(ByteBuffer.allocate(0));
-   }
-
-   @Test(expected = IllegalStateException.class)
-   public void testOnReceivedContentAfterCompleteOperation()
-   {
-      this.o.beginOperation();
-      this.o.completeOperation();
-      this.o.onReceivedContent(ByteBuffer.allocate(0));
-   }
-
-   @Test(expected = IllegalStateException.class)
-   public void testOnReceivedContentAfterFailOperation()
-   {
-      this.o.beginOperation();
-      this.o.failOperation();
-      this.o.onReceivedContent(ByteBuffer.allocate(0));
-   }
-
-   @Test(expected = IllegalStateException.class)
-   public void testOnReceivedContentAfterAbortOperation()
-   {
-      this.o.beginOperation();
-      this.o.abortOperation();
-      this.o.onReceivedContent(ByteBuffer.allocate(0));
+      this.operation.setOperationType(OperationType.ALL);
    }
 
    @Test
-   public void testOnReceivedContent()
+   public void testSetOperationType()
    {
-      this.o.beginOperation();
-      Assert.assertEquals(OperationState.ACTIVE, this.o.getOperationState());
-      Assert.assertEquals(0, this.o.getBytes());
-      this.o.onReceivedContent(ByteBuffer.allocate(0));
-      Assert.assertEquals(OperationState.ACTIVE, this.o.getOperationState());
-      Assert.assertEquals(0, this.o.getBytes());
-      final ByteBuffer buf = ByteBuffer.allocate(1024);
-      buf.put(new byte[1024]);
-      buf.flip();
-      this.o.onReceivedContent(buf);
-      Assert.assertEquals(OperationState.ACTIVE, this.o.getOperationState());
-      Assert.assertEquals(1024, this.o.getBytes());
+      this.operation.setOperationType(OperationType.READ);
+      Assert.assertEquals(OperationType.READ, this.operation.getOperationType());
    }
 
-   @Test(expected = IllegalStateException.class)
-   public void testCompleteOperationBeforeBeginOperation()
+   @Test(expected = NullPointerException.class)
+   public void testSetNullOperationState()
    {
-      this.o.completeOperation();
-   }
-
-   @Test(expected = IllegalStateException.class)
-   public void testCompleteOperationTwice()
-   {
-      this.o.beginOperation();
-      this.o.completeOperation();
-      this.o.completeOperation();
+      this.operation.setOperationState(null);
    }
 
    @Test
-   public void testCompleteOperation()
+   public void testSetOperationState()
    {
-      final long beginTimestamp = this.o.beginOperation();
-      Assert.assertEquals(OperationState.ACTIVE, this.o.getOperationState());
-      final long endTimestamp = this.o.completeOperation();
-      Assert.assertEquals(OperationState.COMPLETED, this.o.getOperationState());
-      Assert.assertEquals(endTimestamp - beginTimestamp, this.o.getDuration());
-   }
-
-   @Test(expected = IllegalStateException.class)
-   public void testFailOperationBeforeBeginOperation()
-   {
-      this.o.failOperation();
-   }
-
-   @Test(expected = IllegalStateException.class)
-   public void testFailOperationTwice()
-   {
-      this.o.beginOperation();
-      this.o.failOperation();
-      this.o.failOperation();
-   }
-
-   @Test
-   public void testFailOperation()
-   {
-      final long beginTimestamp = this.o.beginOperation();
-      Assert.assertEquals(OperationState.ACTIVE, this.o.getOperationState());
-      final long endTimestamp = this.o.failOperation();
-      Assert.assertEquals(OperationState.FAILED, this.o.getOperationState());
-      Assert.assertEquals(endTimestamp - beginTimestamp, this.o.getDuration());
-   }
-
-   @Test(expected = IllegalStateException.class)
-   public void testAbortOperationBeforeBeginOperation()
-   {
-      this.o.abortOperation();
-   }
-
-   @Test(expected = IllegalStateException.class)
-   public void testAbortOperationTwice()
-   {
-      this.o.beginOperation();
-      this.o.abortOperation();
-      this.o.abortOperation();
-   }
-
-   @Test
-   public void testAbortOperation()
-   {
-      final long beginTimestamp = this.o.beginOperation();
-      Assert.assertEquals(OperationState.ACTIVE, this.o.getOperationState());
-      final long endTimestamp = this.o.abortOperation();
-      Assert.assertEquals(OperationState.ABORTED, this.o.getOperationState());
-      Assert.assertEquals(endTimestamp - beginTimestamp, this.o.getDuration());
+      this.operation.setOperationState(OperationState.COMPLETED);
+      Assert.assertEquals(OperationState.COMPLETED, this.operation.getOperationState());
    }
 
    @Test
    public void testGetSetObjectName()
    {
-      Assert.assertEquals(null, this.o.getObjectName());
-      final LegacyObjectName objectName = LegacyObjectName.forBytes(new byte[18]);
-      this.o.setObjectName(objectName);
-      Assert.assertEquals(objectName, this.o.getObjectName());
+      final ObjectName objectName = new ObjectName()
+      {
+         @Override
+         public void setName(final byte[] objectName)
+         {}
+
+         @Override
+         public byte[] toBytes()
+         {
+            return null;
+         }
+      };
+      Assert.assertEquals(null, this.operation.getObjectName());
+      this.operation.setObjectName(objectName);
+      Assert.assertEquals(objectName, this.operation.getObjectName());
+   }
+
+   @Test(expected = NullPointerException.class)
+   public void testSetNullRequestEntity()
+   {
+      this.operation.setRequestEntity(null);
+   }
+
+   @Test
+   public void testSetRequestEntity()
+   {
+      final Entity e = new Entity()
+      {
+         @Override
+         public InputStream getInputStream()
+         {
+            return null;
+         }
+
+         @Override
+         public long getSize()
+         {
+            return 0;
+         }
+      };
+      this.operation.setRequestEntity(e);
+      Assert.assertEquals(e, this.operation.getRequestEntity());
+   }
+
+   @Test(expected = IllegalArgumentException.class)
+   public void testNegativeTTFB()
+   {
+      this.operation.setTTFB(-1000);
+   }
+
+   @Test(expected = IllegalArgumentException.class)
+   public void testNegativeTTFB2()
+   {
+      this.operation.setTTFB(-1);
+   }
+
+   @Test
+   public void testZeroTTFB()
+   {
+      this.operation.setTTFB(0);
+   }
+
+   @Test
+   public void testPositiveTTFB()
+   {
+      this.operation.setTTFB(1);
+   }
+
+   @Test
+   public void testPositiveTTFB2()
+   {
+      this.operation.setTTFB(1000);
+   }
+
+   @Test
+   public void testTTFB()
+   {
+      Assert.assertEquals(0, this.operation.getTTFB());
+      this.operation.setTTFB(100);
+      Assert.assertEquals(100, this.operation.getTTFB());
+   }
+
+   @Test(expected = NullPointerException.class)
+   public void testNullOnReceivedContent()
+   {
+      this.operation.onReceivedContent(null);
+   }
+
+   @Test
+   public void testOnReceivedContent()
+   {
+      Assert.assertEquals(0, this.operation.getBytes());
+      this.operation.onReceivedContent(ByteBuffer.allocate(0));
+      Assert.assertEquals(0, this.operation.getBytes());
+      final ByteBuffer buf = ByteBuffer.allocate(1024);
+      buf.put(new byte[1024]);
+      buf.flip();
+      this.operation.onReceivedContent(buf);
+      Assert.assertEquals(1024, this.operation.getBytes());
+   }
+
+   @Test(expected = IllegalArgumentException.class)
+   public void testNegativeDuration()
+   {
+      this.operation.setDuration(-1000);
+   }
+
+   @Test(expected = IllegalArgumentException.class)
+   public void testNegativeDuration2()
+   {
+      this.operation.setDuration(-1);
+   }
+
+   @Test
+   public void testZeroDuration()
+   {
+      this.operation.setDuration(0);
+   }
+
+   @Test
+   public void testPositiveDuration()
+   {
+      this.operation.setDuration(1);
+   }
+
+   @Test
+   public void testPositiveDuration2()
+   {
+      this.operation.setDuration(1000);
+   }
+
+   @Test
+   public void testDuration()
+   {
+      Assert.assertEquals(0, this.operation.getDuration());
+      this.operation.setDuration(100);
+      Assert.assertEquals(100, this.operation.getDuration());
    }
 }

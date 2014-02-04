@@ -21,102 +21,40 @@ package com.cleversafe.oom.operation;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
 
 import java.nio.ByteBuffer;
 
 import com.cleversafe.oom.object.ObjectName;
 import com.cleversafe.oom.operation.entity.Entity;
-import com.cleversafe.oom.statistic.Statistics;
 
 /**
  * A basic <code>Operation</code> implementation.
  */
 public class BaseOperation implements Operation
 {
-   private final Statistics stats;
-   private final OperationType operationType;
+   private OperationType operationType;
    private OperationState operationState;
    private ObjectName objectName;
    private Entity requestEntity;
-   private long beginTimestamp;
    private long ttfb;
    private long bytes;
-   private long endTimestamp;
+   private long duration;
 
    /**
-    * Constructs a <code>BaseOperation</code> instance. operation calls will delegate statistics
-    * updates to the specified statistics instance.
+    * Constructs a <code>BaseOperation</code> instance.
     * 
     * @param operationType
     *           the type of operation
-    * @param statistics
-    *           the statistics instance to delegate statistics updates to
     * @throws NullPointerException
     *            if operationType is null
     * @throws IllegalArgumentException
     *            if operationType is ALL
-    * @throws NullPointerException
-    *            if statistics is null
     */
-   public BaseOperation(final OperationType operationType, final Statistics statistics)
+   public BaseOperation(final OperationType operationType)
    {
       this.operationType = checkNotNull(operationType, "operationType must not be null");
       checkArgument(operationType != OperationType.ALL, "operationType must not be ALL");
-      this.stats = checkNotNull(statistics, "statistics must not be null");
       this.operationState = OperationState.NEW;
-      this.ttfb = -1;
-   }
-
-   @Override
-   public long beginOperation()
-   {
-      checkState(this.operationState == OperationState.NEW, "operationState must be NEW [%s]",
-            this.operationState);
-      this.operationState = OperationState.ACTIVE;
-      this.beginTimestamp = this.stats.beginOperation(this.operationType);
-      return this.beginTimestamp;
-   }
-
-   @Override
-   public void ttfb(final long ttfb)
-   {
-      checkState(this.operationState == OperationState.ACTIVE,
-            "operationState must be ACTIVE [%s]", this.operationState);
-      checkState(this.ttfb == -1, "ttfb already called for this operation");
-      checkArgument(ttfb >= 0, "ttfb must be >= 0 [%s]", ttfb);
-      this.ttfb = ttfb;
-      this.stats.ttfb(this.operationType, ttfb);
-   }
-
-   @Override
-   public long completeOperation()
-   {
-      checkState(this.operationState == OperationState.ACTIVE,
-            "operationState must be ACTIVE [%s]", this.operationState);
-      this.operationState = OperationState.COMPLETED;
-      this.endTimestamp = this.stats.completeOperation(this.operationType, this.beginTimestamp);
-      return this.endTimestamp;
-   }
-
-   @Override
-   public long failOperation()
-   {
-      checkState(this.operationState == OperationState.ACTIVE,
-            "operationState must be ACTIVE [%s]", this.operationState);
-      this.operationState = OperationState.FAILED;
-      this.endTimestamp = this.stats.failOperation(this.operationType, this.beginTimestamp);
-      return this.endTimestamp;
-   }
-
-   @Override
-   public long abortOperation()
-   {
-      checkState(this.operationState == OperationState.ACTIVE,
-            "operationState must be ACTIVE [%s]", this.operationState);
-      this.operationState = OperationState.ABORTED;
-      this.endTimestamp = this.stats.abortOperation(this.operationType, this.beginTimestamp);
-      return this.endTimestamp;
    }
 
    @Override
@@ -126,9 +64,22 @@ public class BaseOperation implements Operation
    }
 
    @Override
+   public void setOperationType(final OperationType operationType)
+   {
+      this.operationType = checkNotNull(operationType, "operationType must not be null");
+      checkArgument(operationType != OperationType.ALL, "operationType must not be ALL");
+   }
+
+   @Override
    public OperationState getOperationState()
    {
       return this.operationState;
+   }
+
+   @Override
+   public void setOperationState(final OperationState operationState)
+   {
+      this.operationState = checkNotNull(operationState, "operationState must not be null");
    }
 
    @Override
@@ -144,11 +95,15 @@ public class BaseOperation implements Operation
    }
 
    @Override
-   public long getDuration()
+   public Entity getRequestEntity()
    {
-      if (this.operationState == OperationState.NEW || this.operationState == OperationState.ACTIVE)
-         return -1;
-      return this.endTimestamp - this.beginTimestamp;
+      return this.requestEntity;
+   }
+
+   @Override
+   public void setRequestEntity(final Entity entity)
+   {
+      this.requestEntity = checkNotNull(entity, "entity must not be null");
    }
 
    @Override
@@ -158,30 +113,35 @@ public class BaseOperation implements Operation
    }
 
    @Override
+   public void setTTFB(final long ttfb)
+   {
+      checkArgument(ttfb >= 0, "ttfb must be >= 0 [%s]", ttfb);
+      this.ttfb = ttfb;
+   }
+
+   @Override
    public long getBytes()
    {
       return this.bytes;
    }
 
    @Override
-   public Entity getRequestEntity()
-   {
-      return this.requestEntity;
-   }
-
-   @Override
-   public void setRequestEntity(final Entity entity)
-   {
-      this.requestEntity = entity;
-   }
-
-   @Override
    public void onReceivedContent(final ByteBuffer bytes)
    {
-      checkState(this.operationState == OperationState.ACTIVE,
-            "operationState must be ACTIVE [%s]", this.operationState);
       checkNotNull(bytes, "bytes must not be null");
       this.bytes += bytes.remaining();
-      this.stats.bytes(this.operationType, bytes.remaining());
+   }
+
+   @Override
+   public long getDuration()
+   {
+      return this.duration;
+   }
+
+   @Override
+   public void setDuration(final long duration)
+   {
+      checkArgument(duration >= 0, "duration must be >= 0 [%s]", duration);
+      this.duration = duration;
    }
 }

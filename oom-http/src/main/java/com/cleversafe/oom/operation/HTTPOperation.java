@@ -28,8 +28,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.cleversafe.oom.statistic.Statistics;
-
 /**
  * An <code>Operation</code> implementation for HTTP requests and responses.
  */
@@ -42,13 +40,10 @@ public class HTTPOperation extends BaseOperation
    private final Map<String, String> responseHeaders;
 
    /**
-    * Constructs an <code>HTTPOperation</code> instance. operation calls will delegate statistics
-    * updates to the specified statistics instance.
+    * Constructs an <code>HTTPOperation</code> instance.
     * 
     * @param operationType
     *           the type of operation
-    * @param statistics
-    *           the statistics instance to delegate statistics updates to
     * @param url
     *           the url for this request
     * @throws NullPointerException
@@ -56,17 +51,11 @@ public class HTTPOperation extends BaseOperation
     * @throws IllegalArgumentException
     *            if operationType is ALL
     * @throws NullPointerException
-    *            if statistics is null
-    * @throws NullPointerException
     *            if url is null
     */
-   public HTTPOperation(
-         final OperationType operationType,
-         final URL url,
-         final HTTPMethod method,
-         final Statistics statistics)
+   public HTTPOperation(final OperationType operationType, final URL url, final HTTPMethod method)
    {
-      super(operationType, statistics);
+      super(operationType);
       this.url = checkNotNull(url, "url must not be null");
       this.method = checkNotNull(method, "method must not be null");
       this.requestHeaders = new HashMap<String, String>();

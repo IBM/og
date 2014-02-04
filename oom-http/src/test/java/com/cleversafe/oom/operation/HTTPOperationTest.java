@@ -29,33 +29,28 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.cleversafe.oom.statistic.Statistics;
-import com.cleversafe.oom.statistic.StatisticsImpl;
-
 public class HTTPOperationTest
 {
    private HTTPOperation o;
-   private Statistics stats;
    private URL url;
 
    @Before
    public void setBefore() throws MalformedURLException
    {
-      this.stats = new StatisticsImpl(0, 5000);
       this.url = new URL("http://cleversafe.com/index.html");
-      this.o = new HTTPOperation(OperationType.WRITE, this.url, HTTPMethod.PUT, this.stats);
+      this.o = new HTTPOperation(OperationType.WRITE, this.url, HTTPMethod.PUT);
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullURL()
    {
-      new HTTPOperation(OperationType.WRITE, null, HTTPMethod.PUT, this.stats);
+      new HTTPOperation(OperationType.WRITE, null, HTTPMethod.PUT);
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullHTTPMethod()
    {
-      new HTTPOperation(OperationType.WRITE, this.url, null, this.stats);
+      new HTTPOperation(OperationType.WRITE, this.url, null);
    }
 
    @Test
