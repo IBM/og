@@ -108,12 +108,16 @@ public interface Operation
     */
    void setTTFB(long ttfb);
 
+   long getBytesSent();
+
+   void setBytesSent(long bytes);
+
    /**
     * Gets the amount of data processed for this operation, in bytes.
     * 
     * @return the amount of data processed for this operation, in bytes.
     */
-   long getBytes();
+   long getBytesReceived();
 
    /**
     * Processes response content as it is ready. This method is optional and does not need to be

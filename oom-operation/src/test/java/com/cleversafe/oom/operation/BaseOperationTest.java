@@ -176,6 +176,36 @@ public class BaseOperationTest
       Assert.assertEquals(100, this.operation.getTTFB());
    }
 
+   @Test(expected = IllegalArgumentException.class)
+   public void testNegativeBytesSent()
+   {
+      this.operation.setBytesSent(-1000);
+   }
+
+   @Test(expected = IllegalArgumentException.class)
+   public void testNegativeBytesSent2()
+   {
+      this.operation.setBytesSent(-1);
+   }
+
+   @Test
+   public void testZeroBytesSent()
+   {
+      this.operation.setBytesSent(0);
+   }
+
+   @Test
+   public void testPositiveBytesSent()
+   {
+      this.operation.setBytesSent(1);
+   }
+
+   @Test
+   public void testPositiveBytesSent2()
+   {
+      this.operation.setBytesSent(1000);
+   }
+
    @Test(expected = NullPointerException.class)
    public void testNullOnReceivedContent()
    {
@@ -183,16 +213,24 @@ public class BaseOperationTest
    }
 
    @Test
+   public void testBytesSent()
+   {
+      Assert.assertEquals(0, this.operation.getBytesSent());
+      this.operation.setBytesSent(100);
+      Assert.assertEquals(100, this.operation.getBytesSent());
+   }
+
+   @Test
    public void testOnReceivedContent()
    {
-      Assert.assertEquals(0, this.operation.getBytes());
+      Assert.assertEquals(0, this.operation.getBytesReceived());
       this.operation.onReceivedContent(ByteBuffer.allocate(0));
-      Assert.assertEquals(0, this.operation.getBytes());
+      Assert.assertEquals(0, this.operation.getBytesReceived());
       final ByteBuffer buf = ByteBuffer.allocate(1024);
       buf.put(new byte[1024]);
       buf.flip();
       this.operation.onReceivedContent(buf);
-      Assert.assertEquals(1024, this.operation.getBytes());
+      Assert.assertEquals(1024, this.operation.getBytesReceived());
    }
 
    @Test(expected = IllegalArgumentException.class)

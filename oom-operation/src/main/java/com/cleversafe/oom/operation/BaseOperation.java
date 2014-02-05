@@ -37,7 +37,8 @@ public class BaseOperation implements Operation
    private ObjectName objectName;
    private Entity requestEntity;
    private long ttfb;
-   private long bytes;
+   private long bytesSent;
+   private long bytesReceived;
    private long duration;
 
    /**
@@ -120,16 +121,29 @@ public class BaseOperation implements Operation
    }
 
    @Override
-   public long getBytes()
+   public long getBytesSent()
    {
-      return this.bytes;
+      return this.bytesSent;
+   }
+
+   @Override
+   public void setBytesSent(final long bytes)
+   {
+      checkArgument(bytes >= 0, "bytes must be >= 0 [%s]", bytes);
+      this.bytesSent = bytes;
+   }
+
+   @Override
+   public long getBytesReceived()
+   {
+      return this.bytesReceived;
    }
 
    @Override
    public void onReceivedContent(final ByteBuffer bytes)
    {
       checkNotNull(bytes, "bytes must not be null");
-      this.bytes += bytes.remaining();
+      this.bytesReceived += bytes.remaining();
    }
 
    @Override
