@@ -40,4 +40,10 @@ public interface Client<T extends Operation>
     * @return A future representing the eventual completion of this operation
     */
    ListenableFuture<T> execute(T operation);
+
+   /**
+    * Terminates all in progress requests and returns immediately.
+    * 
+    */
+   void shutdownNow();
 }
