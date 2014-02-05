@@ -29,7 +29,7 @@ import java.io.InputStream;
 public class MonitoringInputStream extends FilterInputStream
 {
    private boolean firstRead;
-   private long firstReadTime;
+   private long ttfb;
 
    /**
     * Constructs a <code>MonitoringInputStream</code> instance using the provided stream
@@ -41,7 +41,6 @@ public class MonitoringInputStream extends FilterInputStream
    {
       super(in);
       this.firstRead = true;
-      this.firstReadTime = -1;
    }
 
    @Override
@@ -77,24 +76,25 @@ public class MonitoringInputStream extends FilterInputStream
 
    private int firstRead() throws IOException
    {
+      final long beginTTFB = System.nanoTime();
       final int size = super.read();
-      this.firstReadTime = System.nanoTime();
+      this.ttfb = System.nanoTime() - beginTTFB;
       return size;
    }
 
    private int firstRead(final byte[] b, final int off, final int len) throws IOException
    {
+      final long beginTTFB = System.nanoTime();
       final int size = super.read(b, off, len);
-      this.firstReadTime = System.nanoTime();
+      this.ttfb = System.nanoTime() - beginTTFB;
       return size;
    }
 
    /**
-    * @return the timestamp for the completion time of the first read call, in nanoseconds as
-    *         returned by <code>System.nanoTime()</code>
+    * @return ttfb, in nanoseconds
     */
-   public long getFirstReadTime()
+   public long getTTFB()
    {
-      return this.firstReadTime;
+      return this.ttfb;
    }
 }
