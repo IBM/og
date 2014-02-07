@@ -8,4 +8,10 @@
 	<artifactId>oom-distribution</artifactId>
 	<name>OOM Distribution</name>
 	<description>Distribution algorithms</description>
+	<dependencies>
+		<dependency>
+			<groupId>com.cleversafe</groupId>
+			<artifactId>oom-api</artifactId>
+		</dependency>
+	</dependencies>
 </project>
