@@ -83,7 +83,7 @@ public class RequestRateSchedulerTest
       final long delta = max - min;
 
       // TODO establish performance criteria
-      final long validMax = TimeUnit.MICROSECONDS.toNanos(2500);
+      final long validMax = TimeUnit.MICROSECONDS.toNanos(5000);
       final long validDelta = TimeUnit.MICROSECONDS.toNanos(1500);
       Assert.assertTrue("max exceeded, " + max, max < validMax);
       Assert.assertTrue("validDelta exceeded, " + delta, delta < validDelta);
