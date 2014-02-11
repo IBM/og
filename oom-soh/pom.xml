@@ -1,0 +1,21 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.cleversafe</groupId>
+		<artifactId>oom</artifactId>
+		<version>1.0.0-SNAPSHOT</version>
+	</parent>
+	<artifactId>oom-soh</artifactId>
+	<name>OOM SOH</name>
+	<description>Components for the Simple Object (SOH) HTTP API</description>
+	<dependencies>
+		<dependency>
+			<groupId>com.cleversafe</groupId>
+			<artifactId>oom-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.cleversafe</groupId>
+			<artifactId>oom-http</artifactId>
+		</dependency>
+	</dependencies>
+</project>

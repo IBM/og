@@ -30,6 +30,7 @@
 		<module>oom-http</module>
 		<module>oom-client-httpurlconnection</module>
 		<module>oom-scheduling</module>
+		<module>oom-soh</module>
 	</modules>
 	<scm>
 		<url>http://git.cleversafe.net</url>
