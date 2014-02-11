@@ -30,6 +30,7 @@ public class RequestRateScheduler<T extends Operation> implements Scheduler<T>
 {
    private final Distribution sleepDuration;
    private final TimeUnit unit;
+   private long lastCalledTimestamp;
 
    public RequestRateScheduler(final Distribution sleepDuration, final TimeUnit unit)
    {
@@ -40,21 +41,38 @@ public class RequestRateScheduler<T extends Operation> implements Scheduler<T>
    @Override
    public void waitForNext()
    {
-      final long nextSleepDuration = (long) this.sleepDuration.nextSample();
-      long sleepRemaining = nextSleepDuration;
+      long timestamp = System.nanoTime();
+      long sleepRemaining = nextSleepDuration() - adjustment(timestamp);
       while (sleepRemaining > 0)
       {
-         final long beginSleepTime = System.nanoTime();
          try
          {
-            this.unit.sleep(sleepRemaining);
+            TimeUnit.NANOSECONDS.sleep(sleepRemaining);
          }
          catch (final InterruptedException e)
          {
+            this.lastCalledTimestamp = System.nanoTime();
+            return;
          }
-         final long sleptTime = System.nanoTime() - beginSleepTime;
-         sleepRemaining -= TimeUnit.NANOSECONDS.convert(sleptTime, this.unit);
+         final long endTimestamp = System.nanoTime();
+         final long sleptTime = endTimestamp - timestamp;
+         timestamp = endTimestamp;
+         sleepRemaining -= sleptTime;
       }
+      this.lastCalledTimestamp = timestamp;
+   }
+
+   private final long nextSleepDuration()
+   {
+      final long nextSleepDuration = (long) this.sleepDuration.nextSample();
+      return TimeUnit.NANOSECONDS.convert(nextSleepDuration, this.unit);
+   }
+
+   private final long adjustment(final long timestamp)
+   {
+      if (this.lastCalledTimestamp > 0)
+         return timestamp - this.lastCalledTimestamp;
+      return 0;
    }
 
    @Override
