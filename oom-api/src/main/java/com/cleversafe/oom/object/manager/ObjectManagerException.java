@@ -45,4 +45,9 @@ public class ObjectManagerException extends Exception
    {
       super(message);
    }
+
+   public ObjectManagerException(final Throwable cause)
+   {
+      super(cause);
+   }
 }
