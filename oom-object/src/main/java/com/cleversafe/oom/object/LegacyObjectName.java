@@ -23,6 +23,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.UUID;
 
 import org.apache.commons.codec.binary.Hex;
@@ -127,5 +128,32 @@ public class LegacyObjectName implements ObjectName
       this.bytes.putLong(objectName.getMostSignificantBits());
       this.bytes.putLong(objectName.getLeastSignificantBits());
       this.bytes.putShort((short) 0);
+   }
+
+   @Override
+   public boolean equals(final Object obj)
+   {
+      if (obj == null)
+         return false;
+
+      if (!(obj instanceof ObjectName))
+         return false;
+
+      final ObjectName other = (ObjectName) obj;
+      return Arrays.equals(toBytes(), other.toBytes());
+   }
+
+   @Override
+   public int hashCode()
+   {
+      return Arrays.hashCode(toBytes());
+   }
+
+   @Override
+   public int compareTo(final ObjectName o)
+   {
+      checkNotNull(o, "o must not be null");
+      // TODO compareTo that does not require creation of String objects every time
+      return toString().compareTo(o.toString());
    }
 }

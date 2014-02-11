@@ -19,6 +19,8 @@
 
 package com.cleversafe.oom.operation;
 
+import static org.mockito.Mockito.mock;
+
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
@@ -94,18 +96,7 @@ public class BaseOperationTest
    @Test
    public void testGetSetObjectName()
    {
-      final ObjectName objectName = new ObjectName()
-      {
-         @Override
-         public void setName(final byte[] objectName)
-         {}
-
-         @Override
-         public byte[] toBytes()
-         {
-            return null;
-         }
-      };
+      final ObjectName objectName = mock(ObjectName.class);
       Assert.assertEquals(null, this.operation.getObjectName());
       this.operation.setObjectName(objectName);
       Assert.assertEquals(objectName, this.operation.getObjectName());

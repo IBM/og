@@ -24,7 +24,7 @@ package com.cleversafe.oom.object;
  * provide a string representation of this name.
  * 
  */
-public interface ObjectName
+public interface ObjectName extends Comparable<ObjectName>
 {
    /**
     * Sets the name for this object, using the provided bytes
