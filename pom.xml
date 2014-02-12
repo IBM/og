@@ -195,6 +195,11 @@
 				<artifactId>commons-codec</artifactId>
 				<version>1.8</version>
 			</dependency>
+			<dependency>
+				<groupId>com.cleversafe</groupId>
+				<artifactId>dsnet-util</artifactId>
+				<version>3.14.23</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 	<dependencies>
@@ -214,6 +219,10 @@
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.cleversafe</groupId>
+			<artifactId>dsnet-util</artifactId>
 		</dependency>
 	</dependencies>
 </project>
