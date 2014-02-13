@@ -21,6 +21,7 @@
 	</licenses>
 	<modules>
 		<module>oom-api</module>
+		<module>oom-assembly</module>
 		<module>oom-client-httpurlconnection</module>
 		<module>oom-configuration</module>
 		<module>oom-distribution</module>
