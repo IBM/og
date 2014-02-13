@@ -221,6 +221,16 @@
 				<artifactId>dsnet-util</artifactId>
 				<version>3.14.23</version>
 			</dependency>
+			<dependency>
+				<groupId>com.martiansoftware</groupId>
+				<artifactId>jsap</artifactId>
+				<version>2.1</version>
+			</dependency>
+			<dependency>
+				<groupId>com.thoughtworks.xstream</groupId>
+				<artifactId>xstream</artifactId>
+				<version>1.4.7</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 	<dependencies>
