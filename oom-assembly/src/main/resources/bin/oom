@@ -1,0 +1,32 @@
+#!/bin/sh
+
+BASE=`dirname ${0}`
+BASE=`(cd ${BASE}/..; pwd)`
+
+MEMORY_PERCENT=25
+MAX_MEMORY=32000
+ulimit -n 4096
+
+if [ "x$MEMORY" = "x" ]; then
+    if [ `uname` = "Darwin" ]; then
+        MEMORY=`sysctl hw.memsize | awk -v memPercent=$MEMORY_PERCENT  '{ print int(memPercent * $2 / 104857600) }'`
+    else
+        MEMORY=`awk -v memPercent=$MEMORY_PERCENT  '/MemTotal/ { print int(memPercent * $2 / 102400) }' /proc/meminfo`
+    fi
+
+    if [ $MEMORY -gt $MAX_MEMORY ]; then
+	    MEMORY=$MAX_MEMORY
+    fi
+fi
+
+if [ "x${JAVA}" = "x" ]; then
+    JAVA=java
+fi
+
+export CLASSPATH=${BASE}/conf/:${BASE}/lib/*:${BASE}/bundles/
+
+CLASS='com.cleversafe.oom.cli.OOM'
+
+VMOPTS="-XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:gc.log -XX:+UseParallelOldGC -XX:+UseCompressedOops -XX:MaxGCPauseMillis=5000 -Xss256k -Xmx${MEMORY}m -Xms${MEMORY}m -XX:MaxDirectMemorySize=${MEMORY}m"
+
+exec ${JAVA} ${VMOPTS} ${CLASS} "$@"
