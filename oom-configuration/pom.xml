@@ -54,6 +54,10 @@
 			<artifactId>oom-util</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>com.cleversafe</groupId>
+			<artifactId>dsnet-platform</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>com.martiansoftware</groupId>
 			<artifactId>jsap</artifactId>
 		</dependency>

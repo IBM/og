@@ -23,7 +23,7 @@ if [ "x${JAVA}" = "x" ]; then
     JAVA=java
 fi
 
-export CLASSPATH=${BASE}/conf/:${BASE}/lib/*:${BASE}/bundles/
+export CLASSPATH=${BASE}/conf/:${BASE}/conf/jsap/:${BASE}/lib/*:${BASE}/bundles/
 
 CLASS='com.cleversafe.oom.cli.OOM'
 

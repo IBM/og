@@ -223,6 +223,11 @@
 			</dependency>
 			<dependency>
 				<groupId>com.cleversafe</groupId>
+				<artifactId>dsnet-platform</artifactId>
+				<version>3.14.23</version>
+			</dependency>
+			<dependency>
+				<groupId>com.cleversafe</groupId>
 				<artifactId>dsnet-util</artifactId>
 				<version>3.14.23</version>
 			</dependency>
