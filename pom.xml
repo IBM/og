@@ -21,16 +21,17 @@
 	</licenses>
 	<modules>
 		<module>oom-api</module>
-		<module>oom-test</module>
-		<module>oom-statistic</module>
-		<module>oom-operation</module>
-		<module>oom-object</module>
-		<module>oom-distribution</module>
-		<module>oom-util</module>
-		<module>oom-http</module>
 		<module>oom-client-httpurlconnection</module>
+		<module>oom-configuration</module>
+		<module>oom-distribution</module>
+		<module>oom-http</module>
+		<module>oom-object</module>
+		<module>oom-operation</module>
 		<module>oom-scheduling</module>
 		<module>oom-soh</module>
+		<module>oom-statistic</module>
+		<module>oom-test</module>
+		<module>oom-util</module>
 	</modules>
 	<scm>
 		<url>http://git.cleversafe.net</url>
@@ -135,6 +136,16 @@
 			</dependency>
 			<dependency>
 				<groupId>com.cleversafe</groupId>
+				<artifactId>oom-client-httpurlconnection</artifactId>
+				<version>1.0.0-SNAPSHOT</version>
+			</dependency>
+			<dependency>
+				<groupId>com.cleversafe</groupId>
+				<artifactId>oom-configuration</artifactId>
+				<version>1.0.0-SNAPSHOT</version>
+			</dependency>
+			<dependency>
+				<groupId>com.cleversafe</groupId>
 				<artifactId>oom-distribution</artifactId>
 				<version>1.0.0-SNAPSHOT</version>
 			</dependency>
@@ -151,6 +162,16 @@
 			<dependency>
 				<groupId>com.cleversafe</groupId>
 				<artifactId>oom-operation</artifactId>
+				<version>1.0.0-SNAPSHOT</version>
+			</dependency>
+			<dependency>
+				<groupId>com.cleversafe</groupId>
+				<artifactId>oom-scheduling</artifactId>
+				<version>1.0.0-SNAPSHOT</version>
+			</dependency>
+			<dependency>
+				<groupId>com.cleversafe</groupId>
+				<artifactId>oom-soh</artifactId>
 				<version>1.0.0-SNAPSHOT</version>
 			</dependency>
 			<dependency>
