@@ -261,9 +261,5 @@
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>com.cleversafe</groupId>
-			<artifactId>dsnet-util</artifactId>
-		</dependency>
 	</dependencies>
 </project>
