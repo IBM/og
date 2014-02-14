@@ -5,20 +5,12 @@
 	<formats>
 		<format>tar.gz</format>
 	</formats>
-	<moduleSets>
-		<moduleSet>
-			<useAllReactorProjects>true</useAllReactorProjects>
-			<binaries>
-				<outputDirectory>lib</outputDirectory>
-				<unpack>false</unpack>
-				<dependencySets>
-					<dependencySet>
-						<unpack>false</unpack>
-					</dependencySet>
-				</dependencySets>
-			</binaries>
-		</moduleSet>
-	</moduleSets>
+	<dependencySets>
+		<dependencySet>
+			<outputDirectory>lib</outputDirectory>
+			<useProjectArtifact>false</useProjectArtifact>
+		</dependencySet>
+	</dependencySets>
 	<fileSets>
 		<fileSet>
 			<directory>src/main/resources/conf/jsap</directory>
