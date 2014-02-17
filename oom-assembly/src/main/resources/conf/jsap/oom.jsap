@@ -1,506 +1,322 @@
 <?xml version="1.0"?>
 <jsap>
-   <parameters>
-      <flaggedOption>
-         <id>configuration_file</id>
-         <shortFlag>D</shortFlag>
-      </flaggedOption>
-
-      <flaggedOption>
-         <id>vault_type</id>
-         <longFlag>vault-type</longFlag>
-         <stringParser>
-            <classname>org.cleversafe.jsap.EnumStringParser</classname>
+	<parameters>
+		<flaggedOption>
+			<id>accesser</id>
+			<shortFlag>a</shortFlag>
+			<longFlag>accesser</longFlag>
+			<help>The host name or IP address of a specific accesser to use. Multiple comma-separated accessers may be passed in and used in a round-robin. The format is accesser1[,accesser2,...accesserN]</help>
+		</flaggedOption>
+		<flaggedOption>
+			<id>api</id>
+			<longFlag>api</longFlag>
+			<defaults>
+				<string>soh</string>
+			</defaults>
+			<help>API to use, one of "soh", "s3", "openstack" or "webdav"</help>
+		</flaggedOption>
+		<flaggedOption>
+			<id>vault</id>
+			<shortFlag>v</shortFlag>
+			<longFlag>vault</longFlag>
+			<help>Name of the vault to perform I/O operations to.</help>
+		</flaggedOption>
+		<flaggedOption>
+			<id>write_percentage</id>
+			<shortFlag>w</shortFlag>
+			<longFlag>write-percentage</longFlag>
+			<stringParser>
+				<classname>LongStringParser</classname>
+			</stringParser>
+			<defaults>
+				<string>100</string>
+			</defaults>
+			<help>Write percentage</help>
+		</flaggedOption>
+		<flaggedOption>
+			<id>read_percentage</id>
+			<shortFlag>r</shortFlag>
+			<longFlag>read-percentage</longFlag>
+			<stringParser>
+				<classname>LongStringParser</classname>
+			</stringParser>
+			<defaults>
+				<string>0</string>
+			</defaults>
+			<help>Read percentage</help>
+		</flaggedOption>
+		<flaggedOption>
+			<id>delete_percentage</id>
+			<shortFlag>e</shortFlag>
+			<longFlag>delete-percentage</longFlag>
+			<stringParser>
+				<classname>LongStringParser</classname>
+			</stringParser>
+			<defaults>
+				<string>0</string>
+			</defaults>
+			<help>Delete percentage</help>
+		</flaggedOption>
+		<flaggedOption>
+			<id>size_distribution</id>
+			<shortFlag>s</shortFlag>
+			<longFlag>size-distribution</longFlag>
+			<stringParser>
+				<classname>org.cleversafe.jsap.TypedArrayParser</classname>
 				<properties>
 					<property>
-						<name>values</name>
-						<value>sdk:accesser:memory:directories:partitions</value>
+						<name>separator</name>
+						<value>*</value>
+					</property>
+					<property>
+						<name>max</name>
+						<value>4</value>
+					</property>
+					<property>
+						<name>min</name>
+						<value>2</value>
+					</property>
+					<property>
+						<name>1</name>
+						<value>EnumString:uniform:normal:lognormal</value>
+					</property>
+					<property>
+						<name>2</name>
+						<value>Unit</value>
+					</property>
+					<property>
+						<name>3</name>
+						<value>Unit</value>
+					</property>
+					<property>
+						<name>4</name>
+						<value>Integer</value>
 					</property>
 				</properties>
-		</stringParser>
-		<defaults>
-            <string>accesser</string>
-         </defaults>
-         <help>The type of vault to use (sdk, accesser, directories, partitions).
-         Use "partitions" type and "partition-count" to split into N directories. (/data/1 /data/2 ... /data/N).
-         To explicitly specify the directories, use "directories" type and "dir-list".</help>
-      </flaggedOption>
+			</stringParser>
+			<defaults>
+				<string>normal*5MB*1.25MB*1</string>
+			</defaults>
+			<list>true</list>
+			<listSeparator>,</listSeparator>
+			<help>Object size distribution type*mean object size[*spread[*weight]]. The possible distribution types are uniform, normal, lognormal. The "spread" is 0 by default, resulting in a single fixed size. For uniform distributions it represents width, otherwise it specifies a standard deviation. Weight is the relative likelihood that a particular distribution will be chosen from</help>
+		</flaggedOption>
+		<flaggedOption>
+			<id>num_threads</id>
+			<shortFlag>t</shortFlag>
+			<longFlag>num-threads</longFlag>
+			<stringParser>
+				<classname>IntegerStringParser</classname>
+			</stringParser>
+			<defaults>
+				<string>1</string>
+			</defaults>
+			<help>Level of concurrency</help>
+		</flaggedOption>
+		<flaggedOption>
+			<id>thread_rampup</id>
+			<stringParser>
+				<classname>IntegerStringParser</classname>
+			</stringParser>
+			<longFlag>thread-rampup</longFlag>
+			<help>Delay in milliseconds between creation of each thread</help>
+			<defaults>
+				<string>0</string>
+			</defaults>
+		</flaggedOption>
+		<flaggedOption>
+			<id>requests_per_minute</id>
+			<shortFlag>m</shortFlag>
+			<longFlag>requests-per-minute</longFlag>
+			<stringParser>
+				<classname>IntegerStringParser</classname>
+			</stringParser>
+			<defaults>
+				<string>0</string>
+			</defaults>
+			<help>Number of requests to issue per minute (if set, ignores num threads)</help>
+		</flaggedOption>
+		<flaggedOption>
+			<id>user</id>
+			<shortFlag>u</shortFlag>
+			<longFlag>user</longFlag>
+			<help>The user of a storage network account.</help>
+		</flaggedOption>
+		<flaggedOption>
+			<id>password</id>
+			<shortFlag>p</shortFlag>
+			<longFlag>password</longFlag>
+			<help>The password for a storage network account.</help>
+		</flaggedOption>
+		<flaggedOption>
+			<id>floor</id>
+			<longFlag>floor</longFlag>
+			<stringParser>
+				<classname>FloatStringParser</classname>
+			</stringParser>
+			<defaults>
+				<string>0</string>
+			</defaults>
+			<help>The minimum percent of the vault filled for deletes to take place</help>
+		</flaggedOption>
+		<flaggedOption>
+			<id>ceiling</id>
+			<longFlag>ceiling</longFlag>
+			<stringParser>
+				<classname>FloatStringParser</classname>
+			</stringParser>
+			<defaults>
+				<string>100</string>
+			</defaults>
+			<help>The maximum percent of the vault filled beyond which writes should not take place</help>
+		</flaggedOption>
+		<flaggedOption>
+			<id>capacity</id>
+			<longFlag>capacity</longFlag>
+			<stringParser>
+				<classname>org.cleversafe.jsap.UnitStringParser</classname>
+			</stringParser>
+			<defaults>
+				<string>9223372036854775807</string>
+			</defaults>
+			<help>The capacity of the vault in bytes (or MB, GB, TB). You should specify this when using the floor or ceiling</help>
+		</flaggedOption>
+		<flaggedOption>
+			<id>operation_count</id>
+			<longFlag>operation-count</longFlag>
+			<stringParser>
+				<classname>IntegerStringParser</classname>
+			</stringParser>
+			<defaults>
+				<string>0</string>
+			</defaults>
+			<help>Total number of operations until stopping test</help>
+		</flaggedOption>
+		<flaggedOption>
+			<id>run_time</id>
+			<shortFlag>q</shortFlag>
+			<longFlag>run-time</longFlag>
+			<stringParser>
+				<classname>org.cleversafe.jsap.UnitStringParser</classname>
+			</stringParser>
+			<defaults>
+				<string>0</string>
+			</defaults>
+			<help>Run time (default unit is ms, other possible units are sec, minute, hour, day, week, year). Default no-time limit</help>
+		</flaggedOption>
+		<flaggedOption>
+			<id>fill_floor</id>
+			<longFlag>fill-floor</longFlag>
+			<stringParser>
+				<classname>FloatStringParser</classname>
+			</stringParser>
+			<defaults>
+				<string>0</string>
+			</defaults>
+			<help>Lower bound capacity filled to stop test (default - never)</help>
+		</flaggedOption>
+		<flaggedOption>
+			<id>fill_ceiling</id>
+			<longFlag>fill-ceiling</longFlag>
+			<stringParser>
+				<classname>FloatStringParser</classname>
+			</stringParser>
+			<defaults>
+				<string>100</string>
+			</defaults>
+			<help>Upper bound capacity filled to stop test (default - never)</help>
+		</flaggedOption>
+		<flaggedOption>
+			<id>save_file</id>
+			<shortFlag>f</shortFlag>
+			<longFlag>save-file</longFlag>
+			<defaults>
+				<string></string>
+			</defaults>
+			<help>Prefix of destination files for object ids ([X]id_[number].bin)</help>
+		</flaggedOption>
+		<flaggedOption>
+			<id>latency_frequency</id>
+			<longFlag>latency-frequency</longFlag>
+			<stringParser>
+				<classname>IntegerStringParser</classname>
+			</stringParser>
+			<defaults>
+				<string>0</string>
+			</defaults>
+			<help>Print operation time every Nth operation (no printing by default).</help>
+		</flaggedOption>
+		<flaggedOption>
+			<id>interval</id>
+			<longFlag>interval</longFlag>
+			<stringParser>
+				<classname>org.cleversafe.jsap.UnitStringParser</classname>
+			</stringParser>
+			<defaults>
+				<string>0</string>
+			</defaults>
+			<help>Time interval to print output with any time units - default in msec (e.g 2min, 30sec, without space)</help>
+		</flaggedOption>
+		<switch>
+			<id>help</id>
+			<shortFlag>h</shortFlag>
+			<longFlag>help</longFlag>
+			<help>Prints this help and exits</help>
+		</switch>
 
-      <flaggedOption>
-         <id>vault_name</id>
-         <shortFlag>n</shortFlag>
-         <longFlag>vault-name</longFlag>
-         <required>true</required>
-         <help>Name of the vault to perform I/O operations to.</help>
-      </flaggedOption>
-
-      <flaggedOption>
-         <id>read_percentage</id>
-         <shortFlag>r</shortFlag>
-         <longFlag>read-percentage</longFlag>
-         <stringParser>
-            <classname>LongStringParser</classname>
-         </stringParser>
-         <defaults>
-            <string>0</string>
-         </defaults>
-         <help>Read percentage</help>
-      </flaggedOption>
-
-      <flaggedOption>
-         <id>write_percentage</id>
-         <shortFlag>w</shortFlag>
-         <longFlag>write-percentage</longFlag>
-         <stringParser>
-            <classname>LongStringParser</classname>
-         </stringParser>
-         <defaults>
-            <string>100</string>
-         </defaults>
-         <help>Write percentage</help>
-      </flaggedOption>
-
-      <flaggedOption>
-         <id>delete_percentage</id>
-         <shortFlag>e</shortFlag>
-         <longFlag>delete-percentage</longFlag>
-         <stringParser>
-            <classname>LongStringParser</classname>
-         </stringParser>
-         <defaults>
-            <string>0</string>
-         </defaults>
-         <help>Delete percentage</help>
-      </flaggedOption>
-
-      <flaggedOption>
-         <id>floor</id>
-         <longFlag>floor</longFlag>
-         <stringParser>
-            <classname>FloatStringParser</classname>
-         </stringParser>
-         <defaults>
-            <string>0</string>
-         </defaults>
-         <help>The minimum percent of the vault filled for deletes to take place</help>
-      </flaggedOption>
-
-      <flaggedOption>
-         <id>ceiling</id>
-         <longFlag>ceiling</longFlag>
-         <stringParser>
-            <classname>FloatStringParser</classname>
-         </stringParser>
-         <defaults>
-            <string>100</string>
-         </defaults>
-         <help>The maximum percent of the vault filled beyond which writes should not take place</help>
-      </flaggedOption>
-
-      <flaggedOption>
-         <id>capacity</id>
-         <longFlag>capacity</longFlag>
-         <stringParser>
-            <classname>org.cleversafe.jsap.UnitStringParser</classname>
-         </stringParser>
-         <defaults>
-            <string>9223372036854775807</string>
-         </defaults>
-         <help>The capacity of the vault in bytes (or MB, GB, TB). You should specify this when using the floor or ceiling</help>
-      </flaggedOption>
-
-      <flaggedOption>
-         <id>read_throughput</id>
-         <longFlag>read-throughput</longFlag>
-         <stringParser>
-            <classname>com.cleversafe.oom.cli.jsap.ThroughputParser</classname>
-         </stringParser>
-         <defaults>
-            <string>0MB/sec</string>
-         </defaults>
-         <help>Maximum throughput on reads. No throttling by default</help>
-      </flaggedOption>
-
-      <flaggedOption>
-         <id>write_throughput</id>
-         <longFlag>write-throughput</longFlag>
-         <stringParser>
-            <classname>com.cleversafe.oom.cli.jsap.ThroughputParser</classname>
-         </stringParser>
-         <defaults>
-            <string>0MB/sec</string>
-         </defaults>
-         <help>Maximum throughput on writes. No throttling by default</help>
-      </flaggedOption>
-
-      <flaggedOption>
-        <id>size_distribution</id>
-        <shortFlag>s</shortFlag>
-        <longFlag>size-distribution</longFlag>
-        <stringParser>
-        <classname>org.cleversafe.jsap.TypedArrayParser</classname>
-          <properties>
-            <property>
-              <name>separator</name>
-              <value>*</value>
-            </property>
-            <property>
-              <name>max</name>
-              <value>4</value>
-            </property>
-            <property>
-              <name>min</name>
-              <value>2</value>
-            </property>
-            <property>
-              <name>1</name>
-              <value>EnumString:uniform:normal:lognormal</value>
-            </property>
-            <property>
-              <name>2</name>
-              <value>Unit</value>
-            </property>
-            <property>
-              <name>3</name>
-              <value>Unit</value>
-            </property>
-            <property>
-              <name>4</name>
-              <value>Integer</value>
-            </property>
-          </properties>
-        </stringParser>
-        <defaults>
-          <string>normal*5MB*1.25MB*1</string>
-        </defaults>
-        <list>true</list>
-        <listSeparator>,</listSeparator>
-        <help>Object size distribution type*mean object size[*spread[*weight]]
-        The possible distribution types are uniform, normal, lognormal
-        The "spread" is 0 by default, resulting in a single fixed size.
-        For uniform distributions it represents width,
-        otherwise it specifies a standard deviation.
-        Weight is the relative likelihood that a particular
-        distribution will be chosen from</help>
-      </flaggedOption>
-
-      <flaggedOption>
-        <id>sleep_distribution</id>
-        <longFlag>sleep-distribution</longFlag>
-        <stringParser>
-        <classname>org.cleversafe.jsap.TypedArrayParser</classname>
-          <properties>
-            <property>
-              <name>separator</name>
-              <value>*</value>
-            </property>
-            <property>
-              <name>max</name>
-              <value>4</value>
-            </property>
-            <property>
-              <name>min</name>
-              <value>2</value>
-            </property>
-            <property>
-              <name>1</name>
-              <value>EnumString:uniform:normal:lognormal</value>
-            </property>
-            <property>
-              <name>2</name>
-              <value>Unit</value>
-            </property>
-            <property>
-              <name>3</name>
-              <value>Unit</value>
-            </property>
-            <property>
-              <name>4</name>
-              <value>Integer</value>
-            </property>
-          </properties>
-        </stringParser>
-        <defaults>
-          <string>uniform*0sec*0sec*1</string>
-        </defaults>
-        <list>true</list>
-        <listSeparator>,</listSeparator>
-        <help>Wait length distribution type*mean sleep time[*spread[*weight]]
-        Works like size-distribution, but determines the amount of time
-        a thread sleeps after performing an action (no waiting by default).</help>
-      </flaggedOption>
-
-      <switch>
-         <id>multipart_upload</id>
-         <longFlag>multipart-upload</longFlag>
-         <help>Enable the use of multipart upload for large objects</help>
-      </switch>
-
-      <flaggedOption>
-         <id>part_size</id>
-         <longFlag>part-size</longFlag>
-         <stringParser>
-            <classname>org.cleversafe.jsap.UnitStringParser</classname>
-         </stringParser>
-         <defaults>
-            <string>5GB</string>
-         </defaults>
-         <help>Part size to use for multipart upload. Objects less than part-size will not use multipart upload.</help>
-      </flaggedOption>
-
-      <flaggedOption>
-         <id>num_threads</id>
-         <shortFlag>t</shortFlag>
-         <longFlag>num-threads</longFlag>
-         <stringParser>
-            <classname>IntegerStringParser</classname>
-         </stringParser>
-         <defaults>
-            <string>1</string>
-         </defaults>
-         <help>Level of concurrency (default 1)</help>
-      </flaggedOption>
-
-      <flaggedOption>
-         <id>thread_rampup</id>
-         <stringParser>
-            <classname>IntegerStringParser</classname>
-         </stringParser>
-         <longFlag>thread-rampup</longFlag>
-         <help>Delay in milliseconds between creation of each thread</help>
-         <defaults>
-            <string>0</string>
-         </defaults>
-      </flaggedOption>
-
-      <flaggedOption>
-         <id>requests_per_minute</id>
-         <shortFlag>m</shortFlag>
-         <longFlag>requests-per-minute</longFlag>
-         <stringParser>
-            <classname>IntegerStringParser</classname>
-         </stringParser>
-         <defaults>
-            <string>0</string>
-         </defaults>
-         <help>Number of requests to issue per minute (if set, ignores num threads)</help>
-      </flaggedOption>
-
-      <flaggedOption>
-         <id>org.cleversafe.security.login</id>
-         <shortFlag>u</shortFlag>
-         <longFlag>login</longFlag>
-         <help>The login name of a storage network account.</help>
-      </flaggedOption>
-
-      <flaggedOption>
-         <id>org.cleversafe.security.password</id>
-         <shortFlag>p</shortFlag>
-         <longFlag>password</longFlag>
-         <help>The password for a storage network account.</help>
-      </flaggedOption>
-
-      <flaggedOption>
-         <id>operation_count</id>
-         <longFlag>operation-count</longFlag>
-         <stringParser>
-            <classname>IntegerStringParser</classname>
-         </stringParser>
-         <defaults>
-            <string>0</string>
-         </defaults>
-         <help>Total number of operations until stopping test</help>
-      </flaggedOption>
-
-      <flaggedOption>
-         <id>run_time</id>
-         <shortFlag>q</shortFlag>
-         <longFlag>run-time</longFlag>
-         <stringParser>
-            <classname>org.cleversafe.jsap.UnitStringParser</classname>
-         </stringParser>
-         <defaults>
-            <string>0</string>
-         </defaults>
-         <help>Run time (default unit is ms, other possible units are sec, minute, hour, day, week, year). Default no-time limit</help>
-      </flaggedOption>
-
-      <flaggedOption>
-         <id>fill_floor</id>
-         <longFlag>fill-floor</longFlag>
-         <stringParser>
-            <classname>FloatStringParser</classname>
-         </stringParser>
-         <defaults>
-            <string>0</string>
-         </defaults>
-         <help>Lower bound capacity filled to stop test (default - never) </help>
-      </flaggedOption>
-
-      <flaggedOption>
-         <id>fill_ceiling</id>
-         <longFlag>fill-ceiling</longFlag>
-         <stringParser>
-            <classname>FloatStringParser</classname>
-         </stringParser>
-         <defaults>
-            <string>100</string>
-         </defaults>
-         <help>Upper bound capacity filled to stop test (default - never) </help>
-      </flaggedOption>
-
-      <flaggedOption>
-         <id>save_file</id>
-         <shortFlag>f</shortFlag>
-         <longFlag>save-file</longFlag>
-         <defaults>
-            <string></string>
-         </defaults>
-         <help>Prefix of destination files for object ids ([X]id_[number].bin)</help>
-      </flaggedOption>
-
-      <flaggedOption>
-         <id>latency_frequency</id>
-         <longFlag>latency-frequency</longFlag>
-         <stringParser>
-            <classname>IntegerStringParser</classname>
-         </stringParser>
-         <defaults>
-            <string>0</string>
-         </defaults>
-         <help>Print operation time every Nth operation (no printing by default).</help>
-      </flaggedOption>
-      
-      <flaggedOption>
-         <id>interval</id>
-         <longFlag>interval</longFlag>
-         <stringParser>
-            <classname>org.cleversafe.jsap.UnitStringParser</classname>
-         </stringParser>
-         <defaults>
-           <string>0</string>
-         </defaults>
-         <help>Time interval to print output with any time units - default in msec (e.g 2min, 30sec, without space) </help>
-      </flaggedOption>
-
-      <switch>
-         <id>csv</id>
-         <longFlag>csv</longFlag>
-         <help>Output performance data as comma-separated values rather than human readable text</help>
-      </switch>
-
-      <flaggedOption>
-         <id>accesser_name</id>
-         <longFlag>accesser-name</longFlag>
-         <help>The host name or IP address of a specific accesser to use for SOH testing. Ignored if vault-type is not 'accesser'.
-         Recommended for testing high-availability configurations.
-         Multiple comma-separated accessers may be passed in and used in a round-robin.
-         The format is accesser1[,accesser2,...accesserN]</help>
-      </flaggedOption>
-
-      <flaggedOption>
-         <id>client-type</id>
-         <longFlag>client-type</longFlag>
-         <defaults>
-            <string>soh</string>
-         </defaults>
-         <help>Type of client, one of "soh", "s3", "openstack" or "webdav"</help>
-      </flaggedOption>
-
-      <flaggedOption>
-         <id>port</id>
-         <longFlag>port</longFlag>
-         <stringParser>
-            <classname>IntegerStringParser</classname>
-         </stringParser>
-         <defaults>
-            <string>80</string>
-         </defaults>
-         <help>Http port number to use</help>
-      </flaggedOption>
-
-      <flaggedOption>
-         <id>storage_type</id>
-         <longFlag>storage-type</longFlag>
-         <defaults>
-            <string>file</string>
-         </defaults>
-         <help>The type of storage to use (file, packed).</help>
-      </flaggedOption>
-
-      <flaggedOption>
-         <id>dir_list</id>
-         <longFlag>dir-list</longFlag>
-         <help>Comma separated list of directories. Should be used with "directories" vault-type.</help>
-      </flaggedOption>
-
-      <flaggedOption>
-         <id>partition_count</id>
-         <longFlag>partition-count</longFlag>
-         <stringParser>
-            <classname>IntegerStringParser</classname>
-         </stringParser>
-         <defaults>
-            <string>1</string>
-         </defaults>
-         <help>Number of partitions (directories) used for "partitions" vault-type.</help>
-      </flaggedOption>
-
-      <flaggedOption>
-         <id>org.cleversafe.network.bootstrap_location</id>
-         <shortFlag>b</shortFlag>
-         <longFlag>bootstrap-uri</longFlag>
-         <help>The address of the storage network registry.</help>
-      </flaggedOption>
-
-      <flaggedOption>
-         <id>security_policy</id>
-         <longFlag>security-policy</longFlag>
-         <stringParser>
-            <classname>org.cleversafe.jsap.EnumStringParser</classname>
-				<properties>
-					<property>
-						<name>values</name>
-						<value>NONE:INTEGRITY:ENCRYPTION</value>
-					</property>
-				</properties>            
-         </stringParser>
-         <defaults>
-            <string>none</string>
-         </defaults>
-         <help>The degree of security used by this client (none, integrity or encryption).
-         This cannot be none if you want to use pki</help>
-      </flaggedOption>
-      <flaggedOption>
-         <id>test_type</id>
-         <shortFlag>y</shortFlag>
-         <longFlag>test-type</longFlag>
-         <help>Deprecated: Test type to run (performance, or remote).</help>
-      </flaggedOption>
-
-      <flaggedOption>
-         <id>listing_threads</id>
-         <stringParser>
-            <classname>IntegerStringParser</classname>
-         </stringParser>
-         <longFlag>listing-threads</longFlag>
-         <help>Listing storage thread count. Works only in local mode.</help>
-         <defaults>
-            <string>0</string>
-         </defaults>
-      </flaggedOption>
-
-      <flaggedOption>
-         <id>listing_throughput</id>
-         <stringParser>
-            <classname>com.cleversafe.oom.cli.jsap.ThroughputParser</classname>
-         </stringParser>
-         <longFlag>listing-throughput</longFlag>
-         <help>Maximum throughput on lists. No throttling by default</help>
-         <defaults>
-            <string>0MB/sec</string>
-         </defaults>
-      </flaggedOption>
-      
-   </parameters>
+		<!-- deprecated below this line -->
+		<flaggedOption>
+			<id>vault_type</id>
+			<longFlag>vault-type</longFlag>
+			<help>Deprecated; has no effect</help>
+		</flaggedOption>
+		<flaggedOption>
+			<id>vault_name</id>
+			<shortFlag>n</shortFlag>
+			<longFlag>vault-name</longFlag>
+			<help>Deprecated; has no effect. Use vault flag instead</help>
+		</flaggedOption>
+		<flaggedOption>
+			<id>read_throughput</id>
+			<longFlag>read-throughput</longFlag>
+			<help>Deprecated; has no effect</help>
+		</flaggedOption>
+		<flaggedOption>
+			<id>write_throughput</id>
+			<longFlag>write-throughput</longFlag>
+			<help>Deprecated; has no effect</help>
+		</flaggedOption>
+		<flaggedOption>
+			<id>login</id>
+			<longFlag>login</longFlag>
+			<help>Deprecated; has no effect. Use user flag instead</help>
+		</flaggedOption>
+		<switch>
+			<id>csv</id>
+			<longFlag>csv</longFlag>
+			<help>Deprecated; has no effect</help>
+		</switch>
+		<flaggedOption>
+			<id>accesser_name</id>
+			<longFlag>accesser-name</longFlag>
+			<help>Deprecated; has no effect. Use accesser flag instead</help>
+		</flaggedOption>
+		<flaggedOption>
+			<id>client-type</id>
+			<longFlag>client-type</longFlag>
+			<help>Deprecated; has no effect. Use api flag instead</help>
+		</flaggedOption>
+		<flaggedOption>
+			<id>bootstrap_uri</id>
+			<shortFlag>b</shortFlag>
+			<longFlag>bootstrap-uri</longFlag>
+			<help>Deprecated; has no effect</help>
+		</flaggedOption>
+		<flaggedOption>
+			<id>test_type</id>
+			<shortFlag>y</shortFlag>
+			<longFlag>test-type</longFlag>
+			<help>Deprecated; has no effect</help>
+		</flaggedOption>
+	</parameters>
 </jsap>
