@@ -19,7 +19,7 @@
 
 package com.cleversafe.oom.client;
 
-public class HTTPURLConnectionClientConfiguration
+public class JavaClientConfiguration
 {
    // http://docs.oracle.com/javase/7/docs/api/java/net/doc-files/net-properties.html
    private final boolean keepAlive;
@@ -35,7 +35,7 @@ public class HTTPURLConnectionClientConfiguration
    private final int chunkLength;
    private final int bufferSize;
 
-   public HTTPURLConnectionClientConfiguration()
+   public JavaClientConfiguration()
    {
       this.keepAlive = true;
       this.keepAliveMaxConnections = 5000;

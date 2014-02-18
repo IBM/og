@@ -45,14 +45,14 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
-public class HTTPURLConnectionClient implements Client<HTTPOperation>
+public class JavaClient implements Client<HTTPOperation>
 {
-   private final HTTPURLConnectionClientConfiguration config;
+   private final JavaClientConfiguration config;
    private final Statistics stats;
    private final ListeningExecutorService executorService;
 
-   public HTTPURLConnectionClient(
-         final HTTPURLConnectionClientConfiguration config,
+   public JavaClient(
+         final JavaClientConfiguration config,
          final Statistics stats)
    {
       this.config = checkNotNull(config, "config must not be null");
@@ -79,7 +79,7 @@ public class HTTPURLConnectionClient implements Client<HTTPOperation>
 
    private static class BlockingHTTPOperation implements Callable<HTTPOperation>
    {
-      private final HTTPURLConnectionClientConfiguration config;
+      private final JavaClientConfiguration config;
       private final Statistics stats;
       private final HTTPOperation operation;
       private final byte[] buf;
@@ -87,7 +87,7 @@ public class HTTPURLConnectionClient implements Client<HTTPOperation>
       private static final Joiner joiner = Joiner.on(',').skipNulls();
 
       public BlockingHTTPOperation(
-            final HTTPURLConnectionClientConfiguration config,
+            final JavaClientConfiguration config,
             final Statistics stats,
             final HTTPOperation operation)
       {
