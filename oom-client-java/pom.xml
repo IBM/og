@@ -5,8 +5,8 @@
 		<artifactId>oom</artifactId>
 		<version>1.0.0-SNAPSHOT</version>
 	</parent>
-	<artifactId>oom-client-httpurlconnection</artifactId>
-	<name>OOM Client HttpURLConnection</name>
+	<artifactId>oom-client-java</artifactId>
+	<name>OOM Client Java</name>
 	<description>HTTP Client implementation using the Java standard library</description>
 	<dependencies>
 		<dependency>

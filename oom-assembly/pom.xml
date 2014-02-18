@@ -16,7 +16,7 @@
 		</dependency>
 		<dependency>
 			<groupId>com.cleversafe</groupId>
-			<artifactId>oom-client-httpurlconnection</artifactId>
+			<artifactId>oom-client-java</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.cleversafe</groupId>

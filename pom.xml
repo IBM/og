@@ -22,7 +22,7 @@
 	<modules>
 		<module>oom-api</module>
 		<module>oom-assembly</module>
-		<module>oom-client-httpurlconnection</module>
+		<module>oom-client-java</module>
 		<module>oom-configuration</module>
 		<module>oom-distribution</module>
 		<module>oom-http</module>
@@ -141,7 +141,7 @@
 			</dependency>
 			<dependency>
 				<groupId>com.cleversafe</groupId>
-				<artifactId>oom-client-httpurlconnection</artifactId>
+				<artifactId>oom-client-java</artifactId>
 				<version>1.0.0-SNAPSHOT</version>
 			</dependency>
 			<dependency>
