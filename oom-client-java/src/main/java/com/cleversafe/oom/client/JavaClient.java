@@ -37,8 +37,6 @@ import java.util.concurrent.Executors;
 
 import com.cleversafe.oom.operation.HTTPOperation;
 import com.cleversafe.oom.operation.OperationState;
-import com.cleversafe.oom.operation.OperationType;
-import com.cleversafe.oom.statistic.Statistics;
 import com.cleversafe.oom.util.MonitoringInputStream;
 import com.google.common.base.Joiner;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -48,15 +46,11 @@ import com.google.common.util.concurrent.MoreExecutors;
 public class JavaClient implements Client<HTTPOperation>
 {
    private final JavaClientConfiguration config;
-   private final Statistics stats;
    private final ListeningExecutorService executorService;
 
-   public JavaClient(
-         final JavaClientConfiguration config,
-         final Statistics stats)
+   public JavaClient(final JavaClientConfiguration config)
    {
       this.config = checkNotNull(config, "config must not be null");
-      this.stats = checkNotNull(stats, "stats must not be null");
       System.setProperty("http.keepalive", String.valueOf(config.getKeepAlive()));
       System.setProperty("http.maxConnections", String.valueOf(config.getKeepAliveMaxConnections()));
       System.setProperty("http.maxRedirects", String.valueOf(config.getMaxRedirects()));
@@ -67,8 +61,7 @@ public class JavaClient implements Client<HTTPOperation>
    public ListenableFuture<HTTPOperation> execute(final HTTPOperation operation)
    {
       checkNotNull(operation, "operation must not be null");
-      return this.executorService.submit(new BlockingHTTPOperation(this.config, this.stats,
-            operation));
+      return this.executorService.submit(new BlockingHTTPOperation(this.config, operation));
    }
 
    @Override
@@ -80,19 +73,14 @@ public class JavaClient implements Client<HTTPOperation>
    private static class BlockingHTTPOperation implements Callable<HTTPOperation>
    {
       private final JavaClientConfiguration config;
-      private final Statistics stats;
       private final HTTPOperation operation;
       private final byte[] buf;
       private final ByteBuffer byteBuf;
       private static final Joiner joiner = Joiner.on(',').skipNulls();
 
-      public BlockingHTTPOperation(
-            final JavaClientConfiguration config,
-            final Statistics stats,
-            final HTTPOperation operation)
+      public BlockingHTTPOperation(final JavaClientConfiguration config, final HTTPOperation operation)
       {
          this.config = config;
-         this.stats = stats;
          this.operation = operation;
          this.buf = new byte[config.getBufferSize()];
          this.byteBuf = ByteBuffer.allocate(config.getBufferSize());
@@ -101,8 +89,6 @@ public class JavaClient implements Client<HTTPOperation>
       @Override
       public HTTPOperation call() throws Exception
       {
-         final long beginTimestamp = this.stats.beginOperation(this.operation.getOperationType());
-         final long endTimestamp;
          try
          {
             final HttpURLConnection connection = getConnection();
@@ -121,25 +107,6 @@ public class JavaClient implements Client<HTTPOperation>
          {
             closeStream(this.operation.getRequestEntity().getInputStream());
          }
-
-         switch (this.operation.getOperationState())
-         {
-            case ABORTED :
-               endTimestamp =
-                     this.stats.abortOperation(this.operation.getOperationType(), beginTimestamp);
-
-               break;
-            case FAILED :
-               endTimestamp =
-                     this.stats.failOperation(this.operation.getOperationType(), beginTimestamp);
-               break;
-            default :
-               this.operation.setOperationState(OperationState.COMPLETED);
-               endTimestamp =
-                     this.stats.completeOperation(this.operation.getOperationType(), beginTimestamp);
-               break;
-         }
-         this.operation.setDuration(endTimestamp - beginTimestamp);
          return this.operation;
       }
 
@@ -197,8 +164,6 @@ public class JavaClient implements Client<HTTPOperation>
                {
                   contentDestination.write(this.buf, 0, bytesRead);
                   this.operation.setBytesSent(bytesRead + this.operation.getBytesSent());
-                  if (this.operation.getOperationType() == OperationType.WRITE)
-                     this.stats.bytes(OperationType.WRITE, bytesRead);
                }
             }
             finally
@@ -258,7 +223,6 @@ public class JavaClient implements Client<HTTPOperation>
          if (bytesRead > 0)
          {
             this.operation.setTTFB(responseContent.getTTFB());
-            this.stats.ttfb(this.operation.getOperationType(), responseContent.getTTFB());
             processReceivedBytes(bytesRead);
          }
          return bytesRead;
@@ -279,9 +243,6 @@ public class JavaClient implements Client<HTTPOperation>
          this.byteBuf.flip();
          this.operation.onReceivedContent(this.byteBuf);
          this.byteBuf.clear();
-
-         if (this.operation.getOperationType() == OperationType.READ)
-            this.stats.bytes(OperationType.READ, bytesRead);
       }
 
       private void consumeErrorStream(final InputStream in) throws IOException
