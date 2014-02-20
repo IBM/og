@@ -24,13 +24,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.io.File;
 import java.io.InputStream;
 
-import org.cleversafe.util.RandomInputStream;
+import com.cleversafe.oom.util.FixedBufferInputStream;
 
-public class RandomInputStreamEntity implements Entity
+public class FixedBufferInputStreamEntity implements Entity
 {
-   private final RandomInputStream in;
+   private final FixedBufferInputStream in;
 
-   public RandomInputStreamEntity(final RandomInputStream in)
+   public FixedBufferInputStreamEntity(final FixedBufferInputStream in)
    {
       this.in = checkNotNull(in, "in must not be null");
    }

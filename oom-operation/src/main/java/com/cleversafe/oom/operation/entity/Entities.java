@@ -21,11 +21,13 @@ package com.cleversafe.oom.operation.entity;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.Random;
 
-import org.cleversafe.util.RandomInputStream;
+import com.cleversafe.oom.util.FixedBufferInputStream;
 
 public class Entities
 {
+   private static final int BUF_SIZE = 1024;
    private static final Entity EMPTY = new Entity()
    {
       @Override
@@ -59,7 +61,10 @@ public class Entities
 
    public static Entity random(final long size)
    {
-      return new RandomInputStreamEntity(new RandomInputStream(size));
+      final byte[] buf = new byte[Entities.BUF_SIZE];
+      final Random random = new Random(System.currentTimeMillis());
+      random.nextBytes(buf);
+      return new FixedBufferInputStreamEntity(new FixedBufferInputStream(buf, size));
    }
 
    public static Entity empty()
