@@ -53,7 +53,7 @@ public interface Entity
    /**
     * Gets the size of this entity.
     * 
-    * @return the size of this entity, or -1 if the size is not known
+    * @return the size of this entity
     */
    long getSize();
 }
