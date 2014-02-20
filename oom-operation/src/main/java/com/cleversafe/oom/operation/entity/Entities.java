@@ -28,12 +28,21 @@ import com.cleversafe.oom.util.FixedBufferInputStream;
 public class Entities
 {
    private static final int BUF_SIZE = 1024;
-   private static final Entity EMPTY = new Entity()
+   private static final Entity EMPTY_ENTITY = new Entity()
    {
+      private final InputStream in = new InputStream()
+      {
+         @Override
+         public int read()
+         {
+            return -1;
+         }
+      };
+
       @Override
       public InputStream asInputStream()
       {
-         return null;
+         return this.in;
       }
 
       @Override
@@ -53,7 +62,6 @@ public class Entities
       {
          return 0;
       }
-
    };
 
    private Entities()
@@ -69,6 +77,6 @@ public class Entities
 
    public static Entity empty()
    {
-      return Entities.EMPTY;
+      return Entities.EMPTY_ENTITY;
    }
 }
