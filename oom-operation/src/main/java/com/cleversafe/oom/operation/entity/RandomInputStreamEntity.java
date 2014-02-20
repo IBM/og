@@ -36,7 +36,7 @@ public class RandomInputStreamEntity implements Entity
    }
 
    @Override
-   public InputStream getInputStream()
+   public InputStream asInputStream()
    {
       return this.in;
    }

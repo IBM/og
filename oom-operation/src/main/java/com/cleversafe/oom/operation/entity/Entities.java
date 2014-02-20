@@ -29,7 +29,7 @@ public class Entities
    private static final Entity EMPTY = new Entity()
    {
       @Override
-      public InputStream getInputStream()
+      public InputStream asInputStream()
       {
          return null;
       }

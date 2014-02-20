@@ -105,7 +105,7 @@ public class JavaClient implements Client<HTTPOperation>
          }
          finally
          {
-            closeStream(this.operation.getRequestEntity().getInputStream());
+            closeStream(this.operation.getRequestEntity().asInputStream());
          }
          return this.operation;
       }
@@ -120,7 +120,7 @@ public class JavaClient implements Client<HTTPOperation>
          connection.setAllowUserInteraction(this.config.getAllowUserInteraction());
          connection.setUseCaches(this.config.getUseCaches());
          connection.setDoInput(true);
-         if (this.operation.getRequestEntity().getInputStream() != null)
+         if (this.operation.getRequestEntity().asInputStream() != null)
             connection.setDoOutput(true);
          return connection;
       }
@@ -151,7 +151,7 @@ public class JavaClient implements Client<HTTPOperation>
 
       private void sendRequestContent(final HttpURLConnection connection) throws IOException
       {
-         final InputStream requestContent = this.operation.getRequestEntity().getInputStream();
+         final InputStream requestContent = this.operation.getRequestEntity().asInputStream();
          OutputStream contentDestination = null;
          if (requestContent != null)
          {

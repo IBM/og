@@ -20,6 +20,7 @@
 package com.cleversafe.oom.operation.entity;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 
 /**
@@ -28,11 +29,11 @@ import java.io.InputStream;
 public interface Entity
 {
    /**
-    * Gets the input stream for this entity
+    * Constructs an input stream for this entity
     * 
-    * @return this entity's input stream
+    * @return this entity, as an input stream
     */
-   InputStream getInputStream();
+   InputStream asInputStream() throws IOException;
 
    /**
     * Gets whether this entity is backed by a file
