@@ -227,11 +227,6 @@
 				<version>3.14.23</version>
 			</dependency>
 			<dependency>
-				<groupId>com.cleversafe</groupId>
-				<artifactId>dsnet-util</artifactId>
-				<version>3.14.23</version>
-			</dependency>
-			<dependency>
 				<groupId>com.martiansoftware</groupId>
 				<artifactId>jsap</artifactId>
 				<version>2.1</version>
