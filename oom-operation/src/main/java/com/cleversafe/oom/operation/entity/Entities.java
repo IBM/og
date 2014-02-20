@@ -19,6 +19,7 @@
 
 package com.cleversafe.oom.operation.entity;
 
+import java.io.File;
 import java.io.InputStream;
 
 import org.cleversafe.util.RandomInputStream;
@@ -34,10 +35,23 @@ public class Entities
       }
 
       @Override
+      public boolean isFile()
+      {
+         return false;
+      }
+
+      @Override
+      public File getFile()
+      {
+         return null;
+      }
+
+      @Override
       public long getSize()
       {
          return 0;
       }
+
    };
 
    private Entities()

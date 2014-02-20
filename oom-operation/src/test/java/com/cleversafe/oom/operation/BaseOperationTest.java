@@ -21,7 +21,6 @@ package com.cleversafe.oom.operation;
 
 import static org.mockito.Mockito.mock;
 
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 import org.junit.Assert;
@@ -111,20 +110,7 @@ public class BaseOperationTest
    @Test
    public void testSetRequestEntity()
    {
-      final Entity e = new Entity()
-      {
-         @Override
-         public InputStream getInputStream()
-         {
-            return null;
-         }
-
-         @Override
-         public long getSize()
-         {
-            return 0;
-         }
-      };
+      final Entity e = mock(Entity.class);
       this.operation.setRequestEntity(e);
       Assert.assertEquals(e, this.operation.getRequestEntity());
    }

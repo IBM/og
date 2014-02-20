@@ -19,6 +19,7 @@
 
 package com.cleversafe.oom.operation.entity;
 
+import java.io.File;
 import java.io.InputStream;
 
 /**
@@ -32,6 +33,21 @@ public interface Entity
     * @return this entity's input stream
     */
    InputStream getInputStream();
+
+   /**
+    * Gets whether this entity is backed by a file
+    * 
+    * @return true if this entity is backed by a file, else false
+    */
+   boolean isFile();
+
+   /**
+    * Gets the file for a file backed entity. Callers should first call <code>isFile</code> to
+    * determine if this entity is file backed or not.
+    * 
+    * @return the file for this entity if it is backed by a file, else null
+    */
+   File getFile();
 
    /**
     * Gets the size of this entity.

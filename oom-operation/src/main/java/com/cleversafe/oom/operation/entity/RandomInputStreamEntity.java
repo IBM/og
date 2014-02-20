@@ -21,6 +21,7 @@ package com.cleversafe.oom.operation.entity;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.io.File;
 import java.io.InputStream;
 
 import org.cleversafe.util.RandomInputStream;
@@ -41,9 +42,20 @@ public class RandomInputStreamEntity implements Entity
    }
 
    @Override
+   public boolean isFile()
+   {
+      return false;
+   }
+
+   @Override
+   public File getFile()
+   {
+      return null;
+   }
+
+   @Override
    public long getSize()
    {
       return this.in.getSize();
    }
-
 }
