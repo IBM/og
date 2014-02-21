@@ -60,28 +60,14 @@ public class LoadTest<T extends Operation>
    {
       while (shouldSchedule())
       {
+         final T nextOperation = this.operationManager.next();
+         final ListenableFuture<T> future = this.client.execute(nextOperation);
+         future.addListener(getListener(nextOperation), this.executorService);
+
          this.scheduler.waitForNext();
-         if (shouldSchedule())
-         {
-            final T nextOperation = this.operationManager.next();
-            final ListenableFuture<T> future = this.client.execute(nextOperation);
-            future.addListener(getListener(nextOperation), this.executorService);
-         }
       }
       // clean up test
       this.executorService.shutdownNow();
-   }
-
-   public void stopTest()
-   {
-      this.stoppingConditions.add(new StoppingCondition()
-      {
-         @Override
-         public boolean triggered()
-         {
-            return true;
-         }
-      });
    }
 
    private boolean shouldSchedule()
@@ -96,6 +82,18 @@ public class LoadTest<T extends Operation>
             return false;
       }
       return true;
+   }
+
+   public void stopTest()
+   {
+      this.stoppingConditions.add(new StoppingCondition()
+      {
+         @Override
+         public boolean triggered()
+         {
+            return true;
+         }
+      });
    }
 
    private Runnable getListener(final T operation)
