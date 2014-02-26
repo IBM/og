@@ -39,8 +39,13 @@ public interface Client
    ListenableFuture<Response> execute(Request request);
 
    /**
-    * Terminates all in progress requests and returns immediately.
+    * Shuts down this client.
     * 
+    * @param graceful
+    *           if true, shuts down this client gracefully, else shuts down this client immediately
+    * @return a future representing the eventual shutdown of this client. When the future has
+    *         completed, a value of true indicates a successful shutdown, while a value of false
+    *         indicates some error in the shutdown process
     */
-   void shutdownNow();
+   ListenableFuture<Boolean> shutdown(boolean graceful);
 }
