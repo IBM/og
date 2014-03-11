@@ -27,6 +27,7 @@ import java.util.Map.Entry;
 import java.util.SortedMap;
 
 import com.cleversafe.oom.operation.Response;
+import com.google.common.collect.ImmutableSortedMap;
 
 public class HttpResponse implements Response
 {
@@ -35,7 +36,7 @@ public class HttpResponse implements Response
    private final SortedMap<String, String> headers;
    private final SortedMap<String, String> metadata;
 
-   public HttpResponse(
+   private HttpResponse(
          final long requestId,
          final int statusCode,
          final SortedMap<String, String> headers,
@@ -83,5 +84,49 @@ public class HttpResponse implements Response
    public Iterator<Entry<String, String>> metaData()
    {
       return this.metadata.entrySet().iterator();
+   }
+
+   public static class Builder
+   {
+      private long requestId;
+      private int statusCode;
+      private final ImmutableSortedMap.Builder<String, String> headersBuilder;
+      private final ImmutableSortedMap.Builder<String, String> metadataBuilder;
+
+      public Builder()
+      {
+         this.headersBuilder = ImmutableSortedMap.naturalOrder();
+         this.metadataBuilder = ImmutableSortedMap.naturalOrder();
+      }
+
+      public HttpResponse.Builder withRequestId(final long requestId)
+      {
+         this.requestId = requestId;
+         return this;
+      }
+
+      public HttpResponse.Builder withStatusCode(final int statusCode)
+      {
+         this.statusCode = statusCode;
+         return this;
+      }
+
+      public HttpResponse.Builder withHeader(final String key, final String value)
+      {
+         this.headersBuilder.put(key, value);
+         return this;
+      }
+
+      public HttpResponse.Builder withMetaDataEntry(final String key, final String value)
+      {
+         this.metadataBuilder.put(key, value);
+         return this;
+      }
+
+      public HttpResponse build()
+      {
+         return new HttpResponse(this.requestId, this.statusCode, this.headersBuilder.build(),
+               this.metadataBuilder.build());
+      }
    }
 }
