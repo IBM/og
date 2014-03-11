@@ -17,10 +17,15 @@
 // Date: Feb 21, 2014
 // ---------------------
 
-package com.cleversafe.oom.api;
+package com.cleversafe.oom.operation;
 
 import java.net.URL;
 import java.util.Iterator;
+
+import com.cleversafe.oom.api.Entity;
+import com.cleversafe.oom.api.Header;
+import com.cleversafe.oom.api.MetaDataEntry;
+import com.cleversafe.oom.api.Method;
 
 /**
  * An object that describes an http request.
