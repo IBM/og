@@ -24,6 +24,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URL;
 import java.util.Iterator;
+import java.util.Map.Entry;
 import java.util.SortedMap;
 
 public class RequestImpl implements Request
@@ -32,18 +33,18 @@ public class RequestImpl implements Request
    private final String customRequestKey;
    private final Method method;
    private final URL url;
-   private final SortedMap<String, Header> headers;
+   private final SortedMap<String, String> headers;
    private final Entity entity;
-   private final SortedMap<String, MetaDataEntry> metadata;
+   private final SortedMap<String, String> metadata;
 
    public RequestImpl(
          final long id,
          final String customRequestKey,
          final Method method,
          final URL url,
-         final SortedMap<String, Header> headers,
+         final SortedMap<String, String> headers,
          final Entity entity,
-         final SortedMap<String, MetaDataEntry> metadata)
+         final SortedMap<String, String> metadata)
    {
       checkArgument(id >= 0, "id must be >= 0 [%s]", id);
       this.id = id;
@@ -82,38 +83,13 @@ public class RequestImpl implements Request
    @Override
    public String getHeader(final String key)
    {
-      final Header header = this.headers.get(key);
-      if (header != null)
-         return header.getValue();
-      return null;
+      return this.headers.get(key);
    }
 
    @Override
-   public Iterator<Header> headers()
+   public Iterator<Entry<String, String>> headers()
    {
-      return new Iterator<Header>()
-      {
-         private final Iterator<Header> parent = RequestImpl.this.headers.values().iterator();
-
-         @Override
-         public boolean hasNext()
-         {
-            return this.parent.hasNext();
-         }
-
-         @Override
-         public Header next()
-         {
-            return this.parent.next();
-         }
-
-         @Override
-         public void remove()
-         {
-            throw new UnsupportedOperationException(
-                  "header iterator does not support remove operation");
-         }
-      };
+      return this.headers.entrySet().iterator();
    }
 
    @Override
@@ -125,38 +101,12 @@ public class RequestImpl implements Request
    @Override
    public String getMetaDataEntry(final String key)
    {
-      final MetaDataEntry metadataEntry = this.metadata.get(key);
-      if (metadataEntry != null)
-         return metadataEntry.getValue();
-      return null;
+      return this.metadata.get(key);
    }
 
    @Override
-   public Iterator<MetaDataEntry> metaData()
+   public Iterator<Entry<String, String>> metaData()
    {
-      return new Iterator<MetaDataEntry>()
-      {
-         private final Iterator<MetaDataEntry> parent =
-               RequestImpl.this.metadata.values().iterator();
-
-         @Override
-         public boolean hasNext()
-         {
-            return this.parent.hasNext();
-         }
-
-         @Override
-         public MetaDataEntry next()
-         {
-            return this.parent.next();
-         }
-
-         @Override
-         public void remove()
-         {
-            throw new UnsupportedOperationException(
-                  "metadata iterator does not support remove operation");
-         }
-      };
+      return this.metadata.entrySet().iterator();
    }
 }

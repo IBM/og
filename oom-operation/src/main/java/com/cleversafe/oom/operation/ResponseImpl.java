@@ -23,20 +23,21 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Iterator;
+import java.util.Map.Entry;
 import java.util.SortedMap;
 
 public class ResponseImpl implements Response
 {
    private final long requestId;
    private final int statusCode;
-   private final SortedMap<String, Header> headers;
-   private final SortedMap<String, MetaDataEntry> metadata;
+   private final SortedMap<String, String> headers;
+   private final SortedMap<String, String> metadata;
 
    public ResponseImpl(
          final long requestId,
          final int statusCode,
-         final SortedMap<String, Header> headers,
-         final SortedMap<String, MetaDataEntry> metadata)
+         final SortedMap<String, String> headers,
+         final SortedMap<String, String> metadata)
    {
       checkArgument(requestId >= 0, "requestId must be >= 0 [%s]", requestId);
       this.requestId = requestId;
@@ -61,75 +62,24 @@ public class ResponseImpl implements Response
    @Override
    public String getHeader(final String key)
    {
-      final Header header = this.headers.get(key);
-      if (header != null)
-         return header.getValue();
-      return null;
+      return this.headers.get(key);
    }
 
    @Override
-   public Iterator<Header> headers()
+   public Iterator<Entry<String, String>> headers()
    {
-      return new Iterator<Header>()
-      {
-         private final Iterator<Header> parent = ResponseImpl.this.headers.values().iterator();
-
-         @Override
-         public boolean hasNext()
-         {
-            return this.parent.hasNext();
-         }
-
-         @Override
-         public Header next()
-         {
-            return this.parent.next();
-         }
-
-         @Override
-         public void remove()
-         {
-            throw new UnsupportedOperationException(
-                  "header iterator does not support remove operation");
-         }
-      };
+      return this.headers.entrySet().iterator();
    }
 
    @Override
    public String getMetaDataEntry(final String key)
    {
-      final MetaDataEntry metadataEntry = this.metadata.get(key);
-      if (metadataEntry != null)
-         return metadataEntry.getValue();
-      return null;
+      return this.metadata.get(key);
    }
 
    @Override
-   public Iterator<MetaDataEntry> metaData()
+   public Iterator<Entry<String, String>> metaData()
    {
-      return new Iterator<MetaDataEntry>()
-      {
-         private final Iterator<MetaDataEntry> parent =
-               ResponseImpl.this.metadata.values().iterator();
-
-         @Override
-         public boolean hasNext()
-         {
-            return this.parent.hasNext();
-         }
-
-         @Override
-         public MetaDataEntry next()
-         {
-            return this.parent.next();
-         }
-
-         @Override
-         public void remove()
-         {
-            throw new UnsupportedOperationException(
-                  "metadata iterator does not support remove operation");
-         }
-      };
+      return this.metadata.entrySet().iterator();
    }
 }

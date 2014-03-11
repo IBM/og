@@ -20,6 +20,7 @@
 package com.cleversafe.oom.operation;
 
 import java.util.Iterator;
+import java.util.Map.Entry;
 
 /**
  * An object that describes an http response.
@@ -52,11 +53,12 @@ public interface Response
    public String getHeader(String key);
 
    /**
-    * Returns an iterator over the response headers for this response.
+    * Returns an iterator over the request headers for this request. The returned iterator must not
+    * support remove operations and should throw <code>UnsupportedOperationException</code> instead.
     * 
-    * @return a response header iterator
+    * @return a request header iterator
     */
-   public Iterator<Header> headers();
+   Iterator<Entry<String, String>> headers();
 
    /**
     * Gets the value of the response metadata entry with the specified key.
@@ -71,9 +73,10 @@ public interface Response
    public String getMetaDataEntry(String key);
 
    /**
-    * Returns an iterator over the response metadata for this response.
+    * Returns an iterator over the request metadata for this request. The returned iterator must not
+    * support remove operations and should throw <code>UnsupportedOperationException</code> instead.
     * 
-    * @return a response metadata iterator
+    * @return a request metadata iterator
     */
-   public Iterator<MetaDataEntry> metaData();
+   public Iterator<Entry<String, String>> metaData();
 }

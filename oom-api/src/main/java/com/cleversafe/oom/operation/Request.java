@@ -21,6 +21,7 @@ package com.cleversafe.oom.operation;
 
 import java.net.URL;
 import java.util.Iterator;
+import java.util.Map.Entry;
 
 /**
  * An object that describes an http request.
@@ -70,11 +71,12 @@ public interface Request
    String getHeader(String key);
 
    /**
-    * Returns an iterator over the request headers for this request.
+    * Returns an iterator over the request headers for this request. The returned iterator must not
+    * support remove operations and should throw <code>UnsupportedOperationException</code> instead.
     * 
     * @return a request header iterator
     */
-   Iterator<Header> headers();
+   Iterator<Entry<String, String>> headers();
 
    /**
     * Gets the description of the entity for this request.
@@ -96,9 +98,10 @@ public interface Request
    public String getMetaDataEntry(String key);
 
    /**
-    * Returns an iterator over the request metadata for this request.
+    * Returns an iterator over the request metadata for this request. The returned iterator must not
+    * support remove operations and should throw <code>UnsupportedOperationException</code> instead.
     * 
     * @return a request metadata iterator
     */
-   public Iterator<MetaDataEntry> metaData();
+   public Iterator<Entry<String, String>> metaData();
 }
