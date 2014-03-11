@@ -14,28 +14,27 @@
 // -----------------------
 // @author: rveitch
 //
-// Date: Jan 24, 2014
+// Date: Feb 25, 2014
 // ---------------------
 
-package com.cleversafe.oom.api;
+package com.cleversafe.oom.operation;
 
 /**
- * A description of an http request entity.
+ * A key value pair that describes an http header.
  */
-public interface Entity
+public interface Header
 {
    /**
-    * Gets the type of this entity.
+    * Gets the key of this header.
     * 
-    * @return the type of this entity
-    * @see EntityType
+    * @return the key of this header
     */
-   EntityType getType();
+   String getKey();
 
    /**
-    * Gets the size of this entity.
+    * Gets the value of this header.
     * 
-    * @return the size of this entity
+    * @return the value of this header
     */
-   long getSize();
+   String getValue();
 }

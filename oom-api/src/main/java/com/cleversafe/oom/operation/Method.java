@@ -17,7 +17,7 @@
 // Date: Jan 29, 2014
 // ---------------------
 
-package com.cleversafe.oom.api;
+package com.cleversafe.oom.operation;
 
 /**
  * An enumeration of supported http methods.

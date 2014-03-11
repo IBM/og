@@ -21,8 +21,6 @@ package com.cleversafe.oom.operation;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.cleversafe.oom.api.Header;
-
 public class MetaDataEntryImpl implements Header
 {
    private final String key;

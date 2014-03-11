@@ -25,9 +25,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Iterator;
 import java.util.SortedMap;
 
-import com.cleversafe.oom.api.Header;
-import com.cleversafe.oom.api.MetaDataEntry;
-
 public class ResponseImpl implements Response
 {
    private final long requestId;

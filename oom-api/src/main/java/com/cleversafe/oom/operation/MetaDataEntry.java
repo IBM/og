@@ -17,24 +17,24 @@
 // Date: Feb 25, 2014
 // ---------------------
 
-package com.cleversafe.oom.api;
+package com.cleversafe.oom.operation;
 
 /**
- * A key value pair that describes an http header.
+ * A key value pair that describes a metadata entry.
  */
-public interface Header
+public interface MetaDataEntry
 {
    /**
-    * Gets the key of this header.
+    * Gets the key of this metadata entry.
     * 
-    * @return the key of this header
+    * @return the key of this metadata entry
     */
    String getKey();
 
    /**
-    * Gets the value of this header.
+    * Gets the value of this metadata entry.
     * 
-    * @return the value of this header
+    * @return the value of this metadata entry
     */
    String getValue();
 }

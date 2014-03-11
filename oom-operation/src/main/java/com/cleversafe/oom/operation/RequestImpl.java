@@ -26,11 +26,6 @@ import java.net.URL;
 import java.util.Iterator;
 import java.util.SortedMap;
 
-import com.cleversafe.oom.api.Entity;
-import com.cleversafe.oom.api.Header;
-import com.cleversafe.oom.api.MetaDataEntry;
-import com.cleversafe.oom.api.Method;
-
 public class RequestImpl implements Request
 {
    private final long id;

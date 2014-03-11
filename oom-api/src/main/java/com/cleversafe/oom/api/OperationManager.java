@@ -19,6 +19,9 @@
 
 package com.cleversafe.oom.api;
 
+import com.cleversafe.oom.operation.Request;
+import com.cleversafe.oom.operation.Response;
+
 /**
  * A producer of requests and consumer of responses.
  */

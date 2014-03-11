@@ -14,27 +14,29 @@
 // -----------------------
 // @author: rveitch
 //
-// Date: Feb 25, 2014
+// Date: Jan 24, 2014
 // ---------------------
 
-package com.cleversafe.oom.api;
+package com.cleversafe.oom.operation;
+
 
 /**
- * A key value pair that describes a metadata entry.
+ * A description of an http request entity.
  */
-public interface MetaDataEntry
+public interface Entity
 {
    /**
-    * Gets the key of this metadata entry.
+    * Gets the type of this entity.
     * 
-    * @return the key of this metadata entry
+    * @return the type of this entity
+    * @see EntityType
     */
-   String getKey();
+   EntityType getType();
 
    /**
-    * Gets the value of this metadata entry.
+    * Gets the size of this entity.
     * 
-    * @return the value of this metadata entry
+    * @return the size of this entity
     */
-   String getValue();
+   long getSize();
 }
