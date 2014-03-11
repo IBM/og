@@ -19,12 +19,12 @@
 
 package com.cleversafe.oom.scheduling;
 
-import com.cleversafe.oom.operation.Operation;
+import com.cleversafe.oom.operation.Response;
 
-public interface Scheduler<T extends Operation>
+public interface Scheduler
 {
 
    void waitForNext();
 
-   void complete(T operation);
+   void complete(Response response);
 }

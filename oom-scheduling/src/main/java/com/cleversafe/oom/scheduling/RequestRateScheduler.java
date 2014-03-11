@@ -24,9 +24,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.concurrent.TimeUnit;
 
 import com.cleversafe.oom.distribution.Distribution;
-import com.cleversafe.oom.operation.Operation;
+import com.cleversafe.oom.operation.Response;
 
-public class RequestRateScheduler<T extends Operation> implements Scheduler<T>
+public class RequestRateScheduler implements Scheduler
 {
    private final Distribution sleepDuration;
    private final TimeUnit unit;
@@ -76,7 +76,7 @@ public class RequestRateScheduler<T extends Operation> implements Scheduler<T>
    }
 
    @Override
-   public void complete(final T operation)
+   public void complete(final Response response)
    {
       // do nothing, request rate is independent of operation completion
    }

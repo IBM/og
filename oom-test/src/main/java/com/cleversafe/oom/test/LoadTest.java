@@ -25,26 +25,28 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.cleversafe.oom.api.OperationManager;
+import com.cleversafe.oom.api.OperationManagerException;
 import com.cleversafe.oom.client.Client;
-import com.cleversafe.oom.operation.Operation;
-import com.cleversafe.oom.operation.manager.OperationManager;
+import com.cleversafe.oom.operation.Request;
+import com.cleversafe.oom.operation.Response;
 import com.cleversafe.oom.scheduling.Scheduler;
 import com.cleversafe.oom.test.condition.StoppingCondition;
 import com.google.common.util.concurrent.ListenableFuture;
 
-public class LoadTest<T extends Operation>
+public class LoadTest
 {
-   private final OperationManager<T> operationManager;
-   private final Scheduler<T> scheduler;
-   private final Client<T> client;
+   private final OperationManager operationManager;
+   private final Scheduler scheduler;
+   private final Client client;
    private final List<StoppingCondition> stoppingConditions;
    private final boolean shouldSchedule;
    private final ExecutorService executorService;
 
    public LoadTest(
-         final OperationManager<T> operationManager,
-         final Scheduler<T> scheduler,
-         final Client<T> client,
+         final OperationManager operationManager,
+         final Scheduler scheduler,
+         final Client client,
          final List<StoppingCondition> stoppingConditions)
    {
       this.operationManager = checkNotNull(operationManager, "operationManager must not be null");
@@ -56,13 +58,14 @@ public class LoadTest<T extends Operation>
       this.executorService = Executors.newCachedThreadPool();
    }
 
-   public void runTest()
+   // TODO runTest should not throw an exception
+   public void runTest() throws OperationManagerException
    {
       while (shouldSchedule())
       {
-         final T nextOperation = this.operationManager.next();
-         final ListenableFuture<T> future = this.client.execute(nextOperation);
-         future.addListener(getListener(nextOperation), this.executorService);
+         final Request nextRequest = this.operationManager.next();
+         final ListenableFuture<Response> future = this.client.execute(nextRequest);
+         future.addListener(getListener(future), this.executorService);
 
          this.scheduler.waitForNext();
       }
@@ -96,25 +99,32 @@ public class LoadTest<T extends Operation>
       });
    }
 
-   private Runnable getListener(final T operation)
+   private Runnable getListener(final ListenableFuture<Response> future)
    {
-      return new OperationCallback(operation);
+      return new RequestCallback(future);
    }
 
-   private class OperationCallback implements Runnable
+   private class RequestCallback implements Runnable
    {
-      private final T operation;
+      private final ListenableFuture<Response> future;
 
-      public OperationCallback(final T operation)
+      public RequestCallback(final ListenableFuture<Response> future)
       {
-         this.operation = operation;
+         this.future = future;
       }
 
       @Override
       public void run()
       {
-         LoadTest.this.operationManager.complete(this.operation);
-         LoadTest.this.scheduler.complete(this.operation);
+         try
+         {
+            LoadTest.this.operationManager.complete(this.future.get());
+            LoadTest.this.scheduler.complete(this.future.get());
+         }
+         catch (final Exception e)
+         {
+            // TODO fix this
+         }
       }
    }
 }

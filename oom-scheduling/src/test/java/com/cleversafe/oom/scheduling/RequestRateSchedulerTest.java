@@ -33,38 +33,36 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import com.cleversafe.oom.distribution.Distribution;
-import com.cleversafe.oom.operation.Operation;
 
 public class RequestRateSchedulerTest
 {
    private Distribution mockDistribution;
-   private Scheduler<Operation> scheduler;
+   private Scheduler scheduler;
 
    @Before
    public void setBefore()
    {
       this.mockDistribution = mock(Distribution.class);
       when(this.mockDistribution.nextSample()).thenReturn(1.0);
-      this.scheduler =
-            new RequestRateScheduler<Operation>(this.mockDistribution, TimeUnit.MILLISECONDS);
+      this.scheduler = new RequestRateScheduler(this.mockDistribution, TimeUnit.MILLISECONDS);
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullDistribution()
    {
-      new RequestRateScheduler<Operation>(null, TimeUnit.MILLISECONDS);
+      new RequestRateScheduler(null, TimeUnit.MILLISECONDS);
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullTimeUnit()
    {
-      new RequestRateScheduler<Operation>(this.mockDistribution, null);
+      new RequestRateScheduler(this.mockDistribution, null);
    }
 
    @Test
    public void testRequestRateScheduler()
    {
-      new RequestRateScheduler<Operation>(this.mockDistribution, TimeUnit.MILLISECONDS);
+      new RequestRateScheduler(this.mockDistribution, TimeUnit.MILLISECONDS);
    }
 
    @Ignore
