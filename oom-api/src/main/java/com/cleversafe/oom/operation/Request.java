@@ -95,7 +95,7 @@ public interface Request
     * @throws NullPointerException
     *            if key is null
     */
-   public String getMetaDataEntry(String key);
+   String getMetaDataEntry(String key);
 
    /**
     * Returns an iterator over the request metadata for this request. The returned iterator must not
@@ -103,5 +103,5 @@ public interface Request
     * 
     * @return a request metadata iterator
     */
-   public Iterator<Entry<String, String>> metaData();
+   Iterator<Entry<String, String>> metaData();
 }

@@ -39,7 +39,7 @@ public interface Response
     * 
     * @return the status code for this response
     */
-   public int getStatusCode();
+   int getStatusCode();
 
    /**
     * Gets the value of the response header with the specified key.
@@ -50,7 +50,7 @@ public interface Response
     * @throws NullPointerException
     *            if key is null
     */
-   public String getHeader(String key);
+   String getHeader(String key);
 
    /**
     * Returns an iterator over the request headers for this request. The returned iterator must not
@@ -70,7 +70,7 @@ public interface Response
     * @throws NullPointerException
     *            if key is null
     */
-   public String getMetaDataEntry(String key);
+   String getMetaDataEntry(String key);
 
    /**
     * Returns an iterator over the request metadata for this request. The returned iterator must not
@@ -78,5 +78,5 @@ public interface Response
     * 
     * @return a request metadata iterator
     */
-   public Iterator<Entry<String, String>> metaData();
+   Iterator<Entry<String, String>> metaData();
 }
