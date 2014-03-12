@@ -8,4 +8,10 @@
 	<artifactId>oom-util</artifactId>
 	<name>OOM Util</name>
 	<description>Reusable utility components</description>
+	<dependencies>
+		<dependency>
+			<groupId>com.cleversafe</groupId>
+			<artifactId>oom-api</artifactId>
+		</dependency>
+	</dependencies>
 </project>

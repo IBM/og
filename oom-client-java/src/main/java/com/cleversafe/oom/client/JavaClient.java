@@ -35,15 +35,20 @@ import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 
-import com.cleversafe.oom.operation.HTTPOperation;
-import com.cleversafe.oom.operation.OperationState;
+import com.cleversafe.oom.api.ByteBufferConsumer;
+import com.cleversafe.oom.http.HttpResponse;
+import com.cleversafe.oom.operation.Request;
+import com.cleversafe.oom.operation.Response;
+import com.cleversafe.oom.util.ByteBufferConsumers;
+import com.cleversafe.oom.util.Entities;
 import com.cleversafe.oom.util.MonitoringInputStream;
 import com.google.common.base.Joiner;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.SettableFuture;
 
-public class JavaClient implements Client<HTTPOperation>
+public class JavaClient implements Client
 {
    private final JavaClientConfiguration config;
    private final ListeningExecutorService executorService;
@@ -58,81 +63,94 @@ public class JavaClient implements Client<HTTPOperation>
    }
 
    @Override
-   public ListenableFuture<HTTPOperation> execute(final HTTPOperation operation)
+   public ListenableFuture<Response> execute(final Request request)
    {
-      checkNotNull(operation, "operation must not be null");
-      return this.executorService.submit(new BlockingHTTPOperation(this.config, operation));
+      checkNotNull(request, "request must not be null");
+      return this.executorService.submit(new BlockingHTTPOperation(this.config, request));
    }
 
    @Override
-   public void shutdownNow()
+   public ListenableFuture<Boolean> shutdown(final boolean graceful)
    {
-      this.executorService.shutdownNow();
+      final SettableFuture<Boolean> future = SettableFuture.create();
+      if (!graceful)
+      {
+         this.executorService.shutdownNow();
+         future.set(true);
+      }
+
+      return future;
    }
 
-   private static class BlockingHTTPOperation implements Callable<HTTPOperation>
+   private static class BlockingHTTPOperation implements Callable<Response>
    {
       private final JavaClientConfiguration config;
-      private final HTTPOperation operation;
+      private final Request request;
+      private final HttpResponse.Builder responseBuilder;
       private final byte[] buf;
       private final ByteBuffer byteBuf;
       private static final Joiner joiner = Joiner.on(',').skipNulls();
 
-      public BlockingHTTPOperation(final JavaClientConfiguration config, final HTTPOperation operation)
+      public BlockingHTTPOperation(
+            final JavaClientConfiguration config,
+            final Request request)
       {
          this.config = config;
-         this.operation = operation;
+         this.request = request;
+         this.responseBuilder = new HttpResponse.Builder();
          this.buf = new byte[config.getBufferSize()];
          this.byteBuf = ByteBuffer.allocate(config.getBufferSize());
       }
 
       @Override
-      public HTTPOperation call() throws Exception
+      public Response call() throws Exception
       {
+         this.responseBuilder.withRequestId(this.request.getId());
+         final InputStream src = Entities.createInputStream(this.request.getEntity());
          try
          {
             final HttpURLConnection connection = getConnection();
             setRequestMethod(connection);
             setRequestHeaders(connection);
-            sendRequestContent(connection);
+            sendRequestContent(connection, src);
             receiveResponseCode(connection);
             receiveResponseHeaders(connection);
             receiveResponseContent(connection);
          }
          catch (final IOException e)
          {
-            this.operation.setOperationState(OperationState.ABORTED);
+            // TODO add metadata to response, indicating a network exception event
          }
          finally
          {
-            closeStream(this.operation.getRequestEntity().asInputStream());
+            closeStream(src);
          }
-         return this.operation;
+         return this.responseBuilder.build();
       }
 
       private HttpURLConnection getConnection() throws IOException
       {
          final HttpURLConnection connection =
-               (HttpURLConnection) this.operation.getURL().openConnection();
+               (HttpURLConnection) this.request.getURL().openConnection();
          connection.setConnectTimeout(this.config.getConnectTimeout());
          connection.setReadTimeout(this.config.getReadTimeout());
          connection.setInstanceFollowRedirects(this.config.getFollowRedirects());
          connection.setAllowUserInteraction(this.config.getAllowUserInteraction());
          connection.setUseCaches(this.config.getUseCaches());
          connection.setDoInput(true);
-         if (this.operation.getRequestEntity().asInputStream() != null)
+         if (this.request.getEntity().getSize() > 0)
             connection.setDoOutput(true);
          return connection;
       }
 
       private void setRequestMethod(final HttpURLConnection connection) throws ProtocolException
       {
-         connection.setRequestMethod(this.operation.getMethod().toString());
+         connection.setRequestMethod(this.request.getMethod().toString());
       }
 
       private void setRequestHeaders(final HttpURLConnection connection)
       {
-         final Iterator<Entry<String, String>> headers = this.operation.requestHeaderIterator();
+         final Iterator<Entry<String, String>> headers = this.request.headers();
          while (headers.hasNext())
          {
             final Entry<String, String> header = headers.next();
@@ -143,27 +161,26 @@ public class JavaClient implements Client<HTTPOperation>
       private void setContentStreamingMode(final HttpURLConnection connection)
       {
          if (this.config.getStreamingMode().equals("fixed")
-               && this.operation.getRequestEntity().getSize() > -1)
-            connection.setFixedLengthStreamingMode(this.operation.getRequestEntity().getSize());
+               && this.request.getEntity().getSize() > -1)
+            connection.setFixedLengthStreamingMode(this.request.getEntity().getSize());
          else
             connection.setChunkedStreamingMode(this.config.getChunkLength());
       }
 
-      private void sendRequestContent(final HttpURLConnection connection) throws IOException
+      private void sendRequestContent(final HttpURLConnection connection, final InputStream src)
+            throws IOException
       {
-         final InputStream requestContent = this.operation.getRequestEntity().asInputStream();
          OutputStream contentDestination = null;
-         if (requestContent != null)
+         if (src != null)
          {
             setContentStreamingMode(connection);
             try
             {
                contentDestination = connection.getOutputStream();
                int bytesRead;
-               while ((bytesRead = requestContent.read(this.buf)) > 0)
+               while ((bytesRead = src.read(this.buf)) > 0)
                {
                   contentDestination.write(this.buf, 0, bytesRead);
-                  this.operation.setBytesSent(bytesRead + this.operation.getBytesSent());
                }
             }
             finally
@@ -175,7 +192,7 @@ public class JavaClient implements Client<HTTPOperation>
 
       private void receiveResponseCode(final HttpURLConnection connection) throws IOException
       {
-         this.operation.setResponseCode(connection.getResponseCode());
+         this.responseBuilder.withStatusCode(connection.getResponseCode());
       }
 
       private void receiveResponseHeaders(final HttpURLConnection connection)
@@ -185,9 +202,9 @@ public class JavaClient implements Client<HTTPOperation>
             if (h.getKey() == null || h.getValue() == null)
                continue;
             if (h.getValue().size() == 1)
-               this.operation.setResponseHeader(h.getKey(), h.getValue().get(0));
+               this.responseBuilder.withHeader(h.getKey(), h.getValue().get(0));
             else if (h.getValue().size() > 1)
-               this.operation.setResponseHeader(h.getKey(), joiner.join(h.getValue()));
+               this.responseBuilder.withHeader(h.getKey(), joiner.join(h.getValue()));
          }
       }
 
@@ -198,11 +215,7 @@ public class JavaClient implements Client<HTTPOperation>
          try
          {
             responseContent = new MonitoringInputStream(connection.getInputStream());
-            final int bytesRead = receiveFirstBytes(responseContent);
-            if (bytesRead > 0)
-            {
-               receiveBytes(responseContent);
-            }
+            receiveBytes(responseContent);
          }
          catch (final IOException e)
          {
@@ -217,31 +230,22 @@ public class JavaClient implements Client<HTTPOperation>
          }
       }
 
-      private int receiveFirstBytes(final MonitoringInputStream responseContent) throws IOException
-      {
-         final int bytesRead = responseContent.read(this.buf);
-         if (bytesRead > 0)
-         {
-            this.operation.setTTFB(responseContent.getTTFB());
-            processReceivedBytes(bytesRead);
-         }
-         return bytesRead;
-      }
-
       private void receiveBytes(final InputStream responseContent) throws IOException
       {
          int bytesRead;
+         final ByteBufferConsumer consumer =
+               ByteBufferConsumers.create(this.request.getCustomRequestKey());
          while ((bytesRead = responseContent.read(this.buf)) > 0)
          {
-            processReceivedBytes(bytesRead);
+            processReceivedBytes(bytesRead, consumer);
          }
       }
 
-      private void processReceivedBytes(final int bytesRead)
+      private void processReceivedBytes(final int bytesRead, final ByteBufferConsumer consumer)
       {
          this.byteBuf.put(this.buf, 0, bytesRead);
          this.byteBuf.flip();
-         this.operation.onReceivedContent(this.byteBuf);
+         consumer.consume(this.byteBuf);
          this.byteBuf.clear();
       }
 
