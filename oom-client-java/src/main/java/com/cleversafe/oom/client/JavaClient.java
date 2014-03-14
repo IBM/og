@@ -39,9 +39,9 @@ import com.cleversafe.oom.api.ByteBufferConsumer;
 import com.cleversafe.oom.http.HttpResponse;
 import com.cleversafe.oom.operation.Request;
 import com.cleversafe.oom.operation.Response;
-import com.cleversafe.oom.util.ByteBufferConsumers;
 import com.cleversafe.oom.util.Entities;
 import com.cleversafe.oom.util.MonitoringInputStream;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -51,11 +51,16 @@ import com.google.common.util.concurrent.SettableFuture;
 public class JavaClient implements Client
 {
    private final JavaClientConfiguration config;
+   private final Function<String, ByteBufferConsumer> byteBufferConsumers;
    private final ListeningExecutorService executorService;
 
-   public JavaClient(final JavaClientConfiguration config)
+   public JavaClient(
+         final JavaClientConfiguration config,
+         final Function<String, ByteBufferConsumer> byteBufferConsumers)
    {
       this.config = checkNotNull(config, "config must not be null");
+      this.byteBufferConsumers =
+            checkNotNull(byteBufferConsumers, "byteBufferConsumers must not be null");
       System.setProperty("http.keepalive", String.valueOf(config.getKeepAlive()));
       System.setProperty("http.maxConnections", String.valueOf(config.getKeepAliveMaxConnections()));
       System.setProperty("http.maxRedirects", String.valueOf(config.getMaxRedirects()));
@@ -66,7 +71,9 @@ public class JavaClient implements Client
    public ListenableFuture<Response> execute(final Request request)
    {
       checkNotNull(request, "request must not be null");
-      return this.executorService.submit(new BlockingHTTPOperation(this.config, request));
+      final ByteBufferConsumer consumer =
+            this.byteBufferConsumers.apply(request.getCustomRequestKey());
+      return this.executorService.submit(new BlockingHTTPOperation(this.config, request, consumer));
    }
 
    @Override
@@ -86,6 +93,7 @@ public class JavaClient implements Client
    {
       private final JavaClientConfiguration config;
       private final Request request;
+      private final ByteBufferConsumer consumer;
       private final HttpResponse.Builder responseBuilder;
       private final byte[] buf;
       private final ByteBuffer byteBuf;
@@ -93,10 +101,12 @@ public class JavaClient implements Client
 
       public BlockingHTTPOperation(
             final JavaClientConfiguration config,
-            final Request request)
+            final Request request,
+            final ByteBufferConsumer consumer)
       {
          this.config = config;
          this.request = request;
+         this.consumer = consumer;
          this.responseBuilder = new HttpResponse.Builder();
          this.buf = new byte[config.getBufferSize()];
          this.byteBuf = ByteBuffer.allocate(config.getBufferSize());
@@ -233,19 +243,17 @@ public class JavaClient implements Client
       private void receiveBytes(final InputStream responseContent) throws IOException
       {
          int bytesRead;
-         final ByteBufferConsumer consumer =
-               ByteBufferConsumers.create(this.request.getCustomRequestKey());
          while ((bytesRead = responseContent.read(this.buf)) > 0)
          {
-            processReceivedBytes(bytesRead, consumer);
+            processReceivedBytes(bytesRead);
          }
       }
 
-      private void processReceivedBytes(final int bytesRead, final ByteBufferConsumer consumer)
+      private void processReceivedBytes(final int bytesRead)
       {
          this.byteBuf.put(this.buf, 0, bytesRead);
          this.byteBuf.flip();
-         consumer.consume(this.byteBuf);
+         this.consumer.consume(this.byteBuf);
          this.byteBuf.clear();
       }
 
