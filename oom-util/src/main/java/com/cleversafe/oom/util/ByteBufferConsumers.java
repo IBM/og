@@ -53,7 +53,7 @@ public class ByteBufferConsumers
    private ByteBufferConsumers()
    {}
 
-   public static ByteBufferConsumer create(final String customRequestKey)
+   public static ByteBufferConsumer noOp()
    {
       return ByteBufferConsumers.NO_OP_CONSUMER;
    }
