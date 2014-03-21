@@ -30,7 +30,6 @@ import java.util.SortedMap;
 import com.cleversafe.oom.operation.Entity;
 import com.cleversafe.oom.operation.Method;
 import com.cleversafe.oom.operation.Request;
-import com.google.common.collect.ImmutableSortedMap;
 
 public class HttpRequest implements Request
 {
@@ -113,70 +112,5 @@ public class HttpRequest implements Request
    public Iterator<Entry<String, String>> metaData()
    {
       return this.metadata.entrySet().iterator();
-   }
-
-   public static class Builder
-   {
-      private long id;
-      private String customRequestKey;
-      private Method method;
-      private URL url;
-      private final ImmutableSortedMap.Builder<String, String> headersBuilder;
-      private Entity entity;
-      private final ImmutableSortedMap.Builder<String, String> metadataBuilder;
-
-      public Builder()
-      {
-         this.headersBuilder = ImmutableSortedMap.naturalOrder();
-         this.metadataBuilder = ImmutableSortedMap.naturalOrder();
-      }
-
-      public HttpRequest.Builder withId(final long id)
-      {
-         this.id = id;
-         return this;
-      }
-
-      public HttpRequest.Builder withId(final String customRequestKey)
-      {
-         this.customRequestKey = customRequestKey;
-         return this;
-      }
-
-      public HttpRequest.Builder withMethod(final Method method)
-      {
-         this.method = method;
-         return this;
-      }
-
-      public HttpRequest.Builder withURL(final URL url)
-      {
-         this.url = url;
-         return this;
-      }
-
-      public HttpRequest.Builder withHeader(final String key, final String value)
-      {
-         this.headersBuilder.put(key, value);
-         return this;
-      }
-
-      public HttpRequest.Builder withEntity(final Entity entity)
-      {
-         this.entity = entity;
-         return this;
-      }
-
-      public HttpRequest.Builder withMetaDataEntry(final String key, final String value)
-      {
-         this.metadataBuilder.put(key, value);
-         return this;
-      }
-
-      public HttpRequest build()
-      {
-         return new HttpRequest(this.id, this.customRequestKey, this.method, this.url,
-               this.headersBuilder.build(), this.entity, this.metadataBuilder.build());
-      }
    }
 }
