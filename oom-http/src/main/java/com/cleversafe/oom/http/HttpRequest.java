@@ -42,7 +42,7 @@ public class HttpRequest implements Request
    private final Entity entity;
    private final Map<String, String> metadata;
 
-   private HttpRequest(
+   public HttpRequest(
          final long id,
          final String customRequestKey,
          final Method method,
