@@ -24,8 +24,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URL;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Map.Entry;
-import java.util.SortedMap;
 
 import com.cleversafe.oom.operation.Entity;
 import com.cleversafe.oom.operation.Method;
@@ -37,18 +37,18 @@ public class HttpRequest implements Request
    private final String customRequestKey;
    private final Method method;
    private final URL url;
-   private final SortedMap<String, String> headers;
+   private final Map<String, String> headers;
    private final Entity entity;
-   private final SortedMap<String, String> metadata;
+   private final Map<String, String> metadata;
 
    private HttpRequest(
          final long id,
          final String customRequestKey,
          final Method method,
          final URL url,
-         final SortedMap<String, String> headers,
+         final Map<String, String> headers,
          final Entity entity,
-         final SortedMap<String, String> metadata)
+         final Map<String, String> metadata)
    {
       checkArgument(id >= 0, "id must be >= 0 [%s]", id);
       this.id = id;
