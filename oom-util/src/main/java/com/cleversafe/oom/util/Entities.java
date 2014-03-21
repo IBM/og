@@ -19,6 +19,7 @@
 
 package com.cleversafe.oom.util;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.InputStream;
@@ -33,6 +34,29 @@ public class Entities
 
    private Entities()
    {}
+
+   public static Entity of(final EntityType type, final long size)
+   {
+      checkNotNull(type, "type must not be null");
+      checkArgument(size >= 0, "size must be >= 0 [%s]", size);
+      return new Entity()
+      {
+         private final EntityType entityType = type;
+         private final long entitySize = size;
+
+         @Override
+         public EntityType getType()
+         {
+            return this.entityType;
+         }
+
+         @Override
+         public long getSize()
+         {
+            return this.entitySize;
+         }
+      };
+   }
 
    public static InputStream createInputStream(final Entity entity)
    {
