@@ -23,6 +23,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URL;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -55,9 +56,12 @@ public class HttpRequest implements Request
       this.customRequestKey = customRequestKey;
       this.method = checkNotNull(method, "method must not be null");
       this.url = checkNotNull(url, "url must not be null");
-      this.headers = checkNotNull(headers, "headers must not be null");
+      checkNotNull(headers, "headers must not be null");
+      this.headers = Collections.unmodifiableMap(headers);
       this.entity = checkNotNull(entity, "entity must not be null");
-      this.metadata = checkNotNull(metadata, "metadata must not be null");
+      checkNotNull(metadata, "metadata must not be null");
+      this.metadata = Collections.unmodifiableMap(metadata);
+
    }
 
    @Override
