@@ -19,7 +19,9 @@
 
 package com.cleversafe.oom.api;
 
+import com.cleversafe.oom.operation.RequestContext;
+
 public interface Producer<T>
 {
-   T produce();
+   T produce(RequestContext context);
 }
