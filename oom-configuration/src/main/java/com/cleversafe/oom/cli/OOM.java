@@ -19,6 +19,9 @@
 
 package com.cleversafe.oom.cli;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.Reader;
@@ -37,8 +40,7 @@ public class OOM
 {
    private static Logger _logger = LoggerFactory.getLogger(OOM.class);
    private static String TEST_JSON_RESOURCE_NAME = "test.json";
-   public static int ERROR_MISSING_RESOURCE = 1;
-   public static int ERROR_PARSE_EXCEPTION = 2;
+   public static int ERROR_CONFIGURATION = 1;
 
    public static void main(final String[] args)
    {
@@ -48,6 +50,7 @@ public class OOM
             .setPrettyPrinting()
             .create();
       final JSONConfiguration config = createJSONConfiguration(gson);
+      verifyJSONConfiguration(config);
       _logger.info(gson.toJson(config));
    }
 
@@ -63,7 +66,7 @@ public class OOM
       catch (final Exception e)
       {
          _logger.error("", e);
-         System.exit(ERROR_PARSE_EXCEPTION);
+         System.exit(ERROR_CONFIGURATION);
       }
       return config;
    }
@@ -74,7 +77,7 @@ public class OOM
       if (configURL == null)
       {
          _logger.error("Could not find configuration file on classpath [{}]", resourceName);
-         System.exit(ERROR_MISSING_RESOURCE);
+         System.exit(ERROR_CONFIGURATION);
       }
       return configURL;
    }
@@ -89,8 +92,22 @@ public class OOM
       catch (final Exception e)
       {
          _logger.error("", e);
-         System.exit(ERROR_MISSING_RESOURCE);
+         System.exit(ERROR_CONFIGURATION);
       }
       return configReader;
+   }
+
+   private static void verifyJSONConfiguration(final JSONConfiguration config)
+   {
+      try
+      {
+         checkArgument(config.getAccessers().size() > 0, "At least one accesser must be specified");
+         checkNotNull(config.getVault(), "vault must not be null");
+      }
+      catch (final Exception e)
+      {
+         _logger.error("", e);
+         System.exit(ERROR_CONFIGURATION);
+      }
    }
 }
