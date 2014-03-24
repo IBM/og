@@ -19,7 +19,6 @@
 
 package com.cleversafe.oom.cli.json;
 
-
 public class RunTime
 {
    long duration;
@@ -27,4 +26,20 @@ public class RunTime
 
    public RunTime()
    {}
+
+   /**
+    * @return the duration
+    */
+   public long getDuration()
+   {
+      return this.duration;
+   }
+
+   /**
+    * @return the unit
+    */
+   public String getUnit()
+   {
+      return this.unit;
+   }
 }

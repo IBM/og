@@ -33,4 +33,44 @@ public class Concurrency
       this.count = 1;
    }
 
+   /**
+    * @return the type
+    */
+   public String getType()
+   {
+      return this.type;
+   }
+
+   /**
+    * @return the count
+    */
+   public long getCount()
+   {
+      return this.count;
+   }
+
+   /**
+    * @return the unit
+    */
+   public String getUnit()
+   {
+      return this.unit;
+   }
+
+   /**
+    * @return the rampup
+    */
+   public long getRampup()
+   {
+      return this.rampup;
+   }
+
+   /**
+    * @return the rampupUnit
+    */
+   public String getRampupUnit()
+   {
+      return this.rampupUnit;
+   }
+
 }

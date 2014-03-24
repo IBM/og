@@ -37,4 +37,52 @@ public class FileSize
       this.spreadUnit = "mb";
       this.weight = 1;
    }
+
+   /**
+    * @return the distribution
+    */
+   public String getDistribution()
+   {
+      return this.distribution;
+   }
+
+   /**
+    * @return the average
+    */
+   public double getAverage()
+   {
+      return this.average;
+   }
+
+   /**
+    * @return the averageUnit
+    */
+   public String getAverageUnit()
+   {
+      return this.averageUnit;
+   }
+
+   /**
+    * @return the spread
+    */
+   public double getSpread()
+   {
+      return this.spread;
+   }
+
+   /**
+    * @return the spreadUnit
+    */
+   public String getSpreadUnit()
+   {
+      return this.spreadUnit;
+   }
+
+   /**
+    * @return the weight
+    */
+   public long getWeight()
+   {
+      return this.weight;
+   }
 }

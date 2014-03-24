@@ -54,4 +54,156 @@ public class JSONConfiguration
       this.idFile = "";
       this.port = 80;
    }
+
+   /**
+    * @return the accessers
+    */
+   public List<String> getAccessers()
+   {
+      return this.accessers;
+   }
+
+   /**
+    * @return the api
+    */
+   public String getApi()
+   {
+      return this.api;
+   }
+
+   /**
+    * @return the vault
+    */
+   public String getVault()
+   {
+      return this.vault;
+   }
+
+   /**
+    * @return the write
+    */
+   public Double getWrite()
+   {
+      return this.write;
+   }
+
+   /**
+    * @return the read
+    */
+   public Double getRead()
+   {
+      return this.read;
+   }
+
+   /**
+    * @return the delete
+    */
+   public Double getDelete()
+   {
+      return this.delete;
+   }
+
+   /**
+    * @return the filesizes
+    */
+   public List<FileSize> getFilesizes()
+   {
+      return this.filesizes;
+   }
+
+   /**
+    * @return the concurrency
+    */
+   public Concurrency getConcurrency()
+   {
+      return this.concurrency;
+   }
+
+   /**
+    * @return the username
+    */
+   public String getUsername()
+   {
+      return this.username;
+   }
+
+   /**
+    * @return the password
+    */
+   public String getPassword()
+   {
+      return this.password;
+   }
+
+   /**
+    * @return the floor
+    */
+   public Double getFloor()
+   {
+      return this.floor;
+   }
+
+   /**
+    * @return the ceiling
+    */
+   public Double getCeiling()
+   {
+      return this.ceiling;
+   }
+
+   /**
+    * @return the capacity
+    */
+   public Double getCapacity()
+   {
+      return this.capacity;
+   }
+
+   /**
+    * @return the operatons
+    */
+   public Long getOperatons()
+   {
+      return this.operatons;
+   }
+
+   /**
+    * @return the runtime
+    */
+   public RunTime getRuntime()
+   {
+      return this.runtime;
+   }
+
+   /**
+    * @return the fillFloor
+    */
+   public Long getFillFloor()
+   {
+      return this.fillFloor;
+   }
+
+   /**
+    * @return the fillCeiling
+    */
+   public Long getFillCeiling()
+   {
+      return this.fillCeiling;
+   }
+
+   /**
+    * @return the idFile
+    */
+   public String getIdFile()
+   {
+      return this.idFile;
+   }
+
+   /**
+    * @return the port
+    */
+   public int getPort()
+   {
+      return this.port;
+   }
 }
