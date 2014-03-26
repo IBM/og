@@ -22,8 +22,11 @@ package com.cleversafe.oom.cli.json;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.cleversafe.oom.http.Scheme;
+
 public class JSONConfiguration
 {
+   Scheme scheme;
    List<String> accessers;
    String api;
    String vault;
@@ -46,6 +49,7 @@ public class JSONConfiguration
 
    public JSONConfiguration()
    {
+      this.scheme = Scheme.HTTP;
       this.accessers = new ArrayList<String>();
       this.api = "soh";
       this.filesizes = new ArrayList<FileSize>();
@@ -53,6 +57,14 @@ public class JSONConfiguration
       this.concurrency = new Concurrency();
       this.idFile = "";
       this.port = 80;
+   }
+
+   /**
+    * @return the scheme
+    */
+   public Scheme getScheme()
+   {
+      return this.scheme;
    }
 
    /**
