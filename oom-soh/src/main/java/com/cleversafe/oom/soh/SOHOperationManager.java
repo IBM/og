@@ -28,12 +28,12 @@ import com.cleversafe.oom.api.Consumer;
 import com.cleversafe.oom.api.OperationManager;
 import com.cleversafe.oom.api.OperationManagerException;
 import com.cleversafe.oom.http.HttpRequestContext;
+import com.cleversafe.oom.http.producer.RequestProducer;
 import com.cleversafe.oom.operation.OperationType;
 import com.cleversafe.oom.operation.OperationTypeMix;
 import com.cleversafe.oom.operation.Request;
 import com.cleversafe.oom.operation.RequestContext;
 import com.cleversafe.oom.operation.Response;
-import com.cleversafe.oom.util.producer.RequestProducer;
 
 public class SOHOperationManager implements OperationManager
 {
