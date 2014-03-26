@@ -29,7 +29,7 @@ public class JSONConfiguration
    Scheme scheme;
    List<String> hosts;
    String api;
-   String vault;
+   String container;
    Double write;
    Double read;
    Double delete;
@@ -84,11 +84,11 @@ public class JSONConfiguration
    }
 
    /**
-    * @return the vault
+    * @return the container
     */
-   public String getVault()
+   public String getContainer()
    {
-      return this.vault;
+      return this.container;
    }
 
    /**
