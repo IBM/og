@@ -27,8 +27,8 @@ import java.util.Map;
 import com.cleversafe.oom.api.Consumer;
 import com.cleversafe.oom.api.OperationManager;
 import com.cleversafe.oom.api.OperationManagerException;
+import com.cleversafe.oom.api.Producer;
 import com.cleversafe.oom.http.HttpRequestContext;
-import com.cleversafe.oom.http.producer.RequestProducer;
 import com.cleversafe.oom.operation.OperationType;
 import com.cleversafe.oom.operation.OperationTypeMix;
 import com.cleversafe.oom.operation.Request;
@@ -38,12 +38,12 @@ import com.cleversafe.oom.operation.Response;
 public class SOHOperationManager implements OperationManager
 {
    private final OperationTypeMix operationTypeMix;
-   private final Map<OperationType, RequestProducer> producers;
+   private final Map<OperationType, Producer<Request>> producers;
    private final List<Consumer<Response>> consumers;
 
    public SOHOperationManager(
          final OperationTypeMix mix,
-         final Map<OperationType, RequestProducer> producers,
+         final Map<OperationType, Producer<Request>> producers,
          final List<Consumer<Response>> consumers)
    {
       this.operationTypeMix = checkNotNull(mix, "operationTypeMix must not be null");
@@ -57,7 +57,7 @@ public class SOHOperationManager implements OperationManager
       final RequestContext context = new HttpRequestContext();
       // TODO create stats object and use it to pass an appropriate fill to getNextOperationType
       final OperationType operationType = this.operationTypeMix.getNextOperationType(1);
-      final RequestProducer producer = this.producers.get(operationType);
+      final Producer<Request> producer = this.producers.get(operationType);
       try
       {
          return producer.produce(context);
