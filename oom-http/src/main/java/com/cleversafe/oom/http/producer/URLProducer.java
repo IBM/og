@@ -36,16 +36,15 @@ public class URLProducer implements Producer<URL>
    private final Producer<Scheme> scheme;
    private final Producer<String> host;
    private final Producer<Integer> port;
-   private final Producer<List<String>> parts;
+   private final List<Producer<String>> parts;
    private final Producer<Map<String, String>> queryParameters;
-   private static final Joiner partJoiner = Joiner.on('/').skipNulls();
    private static final Joiner.MapJoiner paramJoiner = Joiner.on('&').withKeyValueSeparator("=");
 
    public URLProducer(
          final Producer<Scheme> scheme,
          final Producer<String> host,
          final Producer<Integer> port,
-         final Producer<List<String>> parts,
+         final List<Producer<String>> parts,
          final Producer<Map<String, String>> queryParameters)
    {
       this.scheme = checkNotNull(scheme, "scheme must not be null");
@@ -63,9 +62,13 @@ public class URLProducer implements Producer<URL>
             .append("://")
             .append(this.host.produce(context))
             .append(":")
-            .append(this.port.produce(context))
-            .append("/")
-            .append(partJoiner.join(this.parts.produce(context)));
+            .append(this.port.produce(context));
+
+      for (final Producer<String> part : this.parts)
+      {
+         builder.append("/").append(part.produce(context));
+      }
+      // TODO add optional configuration for adding a trailing slash between parts and query params
 
       final String queryParams = paramJoiner.join(this.queryParameters.produce(context));
       if (queryParams.length() > 0)
