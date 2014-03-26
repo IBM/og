@@ -27,7 +27,7 @@ import com.cleversafe.oom.http.Scheme;
 public class JSONConfiguration
 {
    Scheme scheme;
-   List<String> accessers;
+   List<String> hosts;
    String api;
    String vault;
    Double write;
@@ -50,7 +50,7 @@ public class JSONConfiguration
    public JSONConfiguration()
    {
       this.scheme = Scheme.HTTP;
-      this.accessers = new ArrayList<String>();
+      this.hosts = new ArrayList<String>();
       this.api = "soh";
       this.filesizes = new ArrayList<FileSize>();
       this.filesizes.add(new FileSize());
@@ -68,11 +68,11 @@ public class JSONConfiguration
    }
 
    /**
-    * @return the accessers
+    * @return the hosts
     */
-   public List<String> getAccessers()
+   public List<String> getHosts()
    {
-      return this.accessers;
+      return this.hosts;
    }
 
    /**
