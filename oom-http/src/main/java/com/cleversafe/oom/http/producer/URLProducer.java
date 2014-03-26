@@ -27,12 +27,13 @@ import java.util.List;
 import java.util.Map;
 
 import com.cleversafe.oom.api.Producer;
+import com.cleversafe.oom.http.Scheme;
 import com.cleversafe.oom.operation.RequestContext;
 import com.google.common.base.Joiner;
 
 public class URLProducer implements Producer<URL>
 {
-   private final Producer<String> scheme;
+   private final Producer<Scheme> scheme;
    private final Producer<String> host;
    private final Producer<Integer> port;
    private final Producer<List<String>> parts;
@@ -41,7 +42,7 @@ public class URLProducer implements Producer<URL>
    private static final Joiner.MapJoiner paramJoiner = Joiner.on('&').withKeyValueSeparator("=");
 
    public URLProducer(
-         final Producer<String> scheme,
+         final Producer<Scheme> scheme,
          final Producer<String> host,
          final Producer<Integer> port,
          final Producer<List<String>> parts,
