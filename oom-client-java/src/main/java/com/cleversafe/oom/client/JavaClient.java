@@ -85,7 +85,7 @@ public class JavaClient implements Client
          this.executorService.shutdownNow();
          future.set(true);
       }
-
+      // TODO implement graceful shutdown
       return future;
    }
 
