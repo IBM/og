@@ -34,26 +34,32 @@ import com.cleversafe.oom.operation.OperationTypeMix;
 import com.cleversafe.oom.operation.Request;
 import com.cleversafe.oom.operation.RequestContext;
 import com.cleversafe.oom.operation.Response;
+import com.cleversafe.oom.scheduling.Scheduler;
 
 public class SOHOperationManager implements OperationManager
 {
    private final OperationTypeMix operationTypeMix;
    private final Map<OperationType, Producer<Request>> producers;
    private final List<Consumer<Response>> consumers;
+   private final Scheduler scheduler;
 
    public SOHOperationManager(
          final OperationTypeMix mix,
          final Map<OperationType, Producer<Request>> producers,
-         final List<Consumer<Response>> consumers)
+         final List<Consumer<Response>> consumers,
+         final Scheduler scheduler)
    {
       this.operationTypeMix = checkNotNull(mix, "operationTypeMix must not be null");
       this.producers = checkNotNull(producers, "producers must not be null");
       this.consumers = checkNotNull(consumers, "consumers must not be null");
+      this.scheduler = checkNotNull(scheduler, "scheduler must not be null");
    }
 
    @Override
    public Request next() throws OperationManagerException
    {
+      this.scheduler.waitForNext();
+
       final RequestContext context = new HttpRequestContext();
       // TODO create stats object and use it to pass an appropriate fill to getNextOperationType
       final OperationType operationType = this.operationTypeMix.getNextOperationType(1);
@@ -75,5 +81,6 @@ public class SOHOperationManager implements OperationManager
       {
          consumer.consume(response);
       }
+      this.scheduler.complete(response);
    }
 }
