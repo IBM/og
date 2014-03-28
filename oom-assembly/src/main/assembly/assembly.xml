@@ -13,6 +13,14 @@
 	</dependencySets>
 	<fileSets>
 		<fileSet>
+			<directory>src/main/resources/conf</directory>
+			<outputDirectory>conf</outputDirectory>
+			<includes>
+				<include>log4j2.xml</include>
+				<include>test.json</include>
+			</includes>
+		</fileSet>
+		<fileSet>
 			<directory>src/main/resources/conf/jsap</directory>
 			<outputDirectory>conf/jsap</outputDirectory>
 			<includes>
