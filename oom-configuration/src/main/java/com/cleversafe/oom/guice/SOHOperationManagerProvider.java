@@ -31,8 +31,19 @@ import com.cleversafe.oom.api.Producer;
 import com.cleversafe.oom.cli.json.JSONConfiguration;
 import com.cleversafe.oom.distribution.Distribution;
 import com.cleversafe.oom.distribution.UniformDistribution;
+import com.cleversafe.oom.guice.annotation.DefaultContainer;
+import com.cleversafe.oom.guice.annotation.DefaultEntity;
+import com.cleversafe.oom.guice.annotation.DefaultHeaders;
+import com.cleversafe.oom.guice.annotation.DefaultHost;
+import com.cleversafe.oom.guice.annotation.DefaultId;
+import com.cleversafe.oom.guice.annotation.DefaultMetaData;
+import com.cleversafe.oom.guice.annotation.DefaultPort;
+import com.cleversafe.oom.guice.annotation.DefaultQueryParams;
+import com.cleversafe.oom.guice.annotation.DefaultScheme;
+import com.cleversafe.oom.http.Scheme;
 import com.cleversafe.oom.http.producer.RequestProducer;
 import com.cleversafe.oom.http.producer.URLProducer;
+import com.cleversafe.oom.operation.Entity;
 import com.cleversafe.oom.operation.Method;
 import com.cleversafe.oom.operation.OperationType;
 import com.cleversafe.oom.operation.OperationTypeMix;
@@ -48,18 +59,51 @@ import com.google.inject.Provider;
 public class SOHOperationManagerProvider implements Provider<SOHOperationManager>
 {
    private final JSONConfiguration config;
-   private final DefaultProducers defaults;
    private final OperationTypeMix mix;
+   private final Producer<Long> id;
+   private final Producer<Scheme> scheme;
+   private final Producer<String> host;
+   private final Producer<Integer> port;
+   private final Producer<String> container;
+   private final Producer<Map<String, String>> queryParams;
+   private final Producer<Map<String, String>> headers;
+   private final Producer<Entity> entity;
+   private final Producer<Map<String, String>> metadata;
 
    @Inject
    public SOHOperationManagerProvider(
          final JSONConfiguration config,
-         final DefaultProducers defaults,
-         final OperationTypeMix mix)
+         final OperationTypeMix mix,
+         @DefaultId
+         final Producer<Long> id,
+         @DefaultScheme
+         final Producer<Scheme> scheme,
+         @DefaultHost
+         final Producer<String> host,
+         @DefaultPort
+         final Producer<Integer> port,
+         @DefaultContainer
+         final Producer<String> container,
+         @DefaultQueryParams
+         final Producer<Map<String, String>> queryParams,
+         @DefaultHeaders
+         final Producer<Map<String, String>> headers,
+         @DefaultEntity
+         final Producer<Entity> entity,
+         @DefaultMetaData
+         final Producer<Map<String, String>> metadata)
    {
       this.config = config;
-      this.defaults = defaults;
       this.mix = mix;
+      this.id = id;
+      this.scheme = scheme;
+      this.host = host;
+      this.port = port;
+      this.container = container;
+      this.queryParams = queryParams;
+      this.headers = headers;
+      this.entity = entity;
+      this.metadata = metadata;
    }
 
    @Override
@@ -83,19 +127,17 @@ public class SOHOperationManagerProvider implements Provider<SOHOperationManager
    private Producer<Request> createSOHWriteProducer()
    {
       final List<Producer<String>> parts = new ArrayList<Producer<String>>();
-      parts.add(this.defaults.getContainer());
+      parts.add(this.container);
       final Producer<URL> writeURL =
-            new URLProducer(this.defaults.getScheme(), this.defaults.getHost(),
-                  this.defaults.getPort(), parts,
-                  this.defaults.getQueryParameters());
+            new URLProducer(this.scheme, this.host, this.port, parts, this.queryParams);
 
-      return new RequestProducer(this.defaults.getId(),
+      return new RequestProducer(this.id,
             Producers.of("soh.put_object"),
             Producers.of(Method.PUT),
             writeURL,
-            this.defaults.getHeaders(),
-            this.defaults.getEntity(),
-            this.defaults.getMetaData());
+            this.headers,
+            this.entity,
+            this.metadata);
    }
 
    private Producer<Request> createSOHReadProducer()

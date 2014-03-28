@@ -21,15 +21,42 @@ package com.cleversafe.oom.guice;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
+
 import com.cleversafe.oom.api.ByteBufferConsumer;
 import com.cleversafe.oom.api.OperationManager;
+import com.cleversafe.oom.api.Producer;
+import com.cleversafe.oom.cli.json.FileSize;
 import com.cleversafe.oom.cli.json.JSONConfiguration;
 import com.cleversafe.oom.client.Client;
 import com.cleversafe.oom.client.JavaClient;
 import com.cleversafe.oom.client.JavaClientConfiguration;
+import com.cleversafe.oom.distribution.Distribution;
+import com.cleversafe.oom.distribution.DistributionType;
+import com.cleversafe.oom.distribution.LogNormalDistribution;
+import com.cleversafe.oom.distribution.NormalDistribution;
+import com.cleversafe.oom.distribution.UniformDistribution;
+import com.cleversafe.oom.guice.annotation.DefaultContainer;
+import com.cleversafe.oom.guice.annotation.DefaultEntity;
+import com.cleversafe.oom.guice.annotation.DefaultHeaders;
+import com.cleversafe.oom.guice.annotation.DefaultHost;
+import com.cleversafe.oom.guice.annotation.DefaultId;
+import com.cleversafe.oom.guice.annotation.DefaultMetaData;
+import com.cleversafe.oom.guice.annotation.DefaultPort;
+import com.cleversafe.oom.guice.annotation.DefaultQueryParams;
+import com.cleversafe.oom.guice.annotation.DefaultScheme;
+import com.cleversafe.oom.http.Scheme;
+import com.cleversafe.oom.operation.Entity;
+import com.cleversafe.oom.operation.EntityType;
 import com.cleversafe.oom.operation.OperationTypeMix;
+import com.cleversafe.oom.operation.RequestContext;
 import com.cleversafe.oom.soh.SOHOperationManager;
 import com.cleversafe.oom.util.ByteBufferConsumers;
+import com.cleversafe.oom.util.Entities;
+import com.cleversafe.oom.util.WeightedRandomChoice;
+import com.cleversafe.oom.util.producer.Producers;
 import com.google.common.base.Function;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provider;
@@ -60,21 +87,134 @@ public class OOMModule extends AbstractModule
 
    @Provides
    @Singleton
-   DefaultProducers provideDefaultProducers(final JSONConfiguration config)
+   @DefaultId
+   Producer<Long> provideDefaultIdProducer()
    {
-      return new DefaultProducers(config);
+      return new Producer<Long>()
+      {
+         private final AtomicLong id = new AtomicLong();
+
+         @Override
+         public Long produce(final RequestContext context)
+         {
+            return this.id.getAndIncrement();
+         }
+      };
    }
 
    @Provides
    @Singleton
-   OperationTypeMix provideOperationTypeMix(final JSONConfiguration config)
+   @DefaultScheme
+   Producer<Scheme> provideDefaultScheme()
+   {
+      return Producers.of(this.config.getScheme());
+   }
+
+   @Provides
+   @Singleton
+   @DefaultHost
+   Producer<String> provideDefaultHost()
+   {
+      final WeightedRandomChoice<String> wrc = new WeightedRandomChoice<String>();
+      for (final String host : this.config.getHosts())
+      {
+         wrc.addChoice(host);
+      }
+      return Producers.of(wrc);
+   }
+
+   @Provides
+   @Singleton
+   @DefaultPort
+   Producer<Integer> provideDefaultPort()
+   {
+      return Producers.of(this.config.getPort());
+   }
+
+   @Provides
+   @Singleton
+   @DefaultContainer
+   Producer<String> provideDefaultContainer()
+   {
+      return Producers.of(this.config.getContainer());
+   }
+
+   @Provides
+   @Singleton
+   @DefaultQueryParams
+   Producer<Map<String, String>> provideDefaultQueryParams()
+   {
+      final Map<String, String> queryParams = new HashMap<String, String>();
+      return Producers.of(queryParams);
+   }
+
+   @Provides
+   @Singleton
+   @DefaultHeaders
+   Producer<Map<String, String>> provideDefaultHeaders()
+   {
+      final Map<String, String> headers = new HashMap<String, String>();
+      return Producers.of(headers);
+   }
+
+   @Provides
+   @Singleton
+   @DefaultEntity
+   Producer<Entity> provideDefaultEntity()
+   {
+      final WeightedRandomChoice<Distribution> wrc = new WeightedRandomChoice<Distribution>();
+      for (final FileSize f : this.config.getFilesizes())
+      {
+         wrc.addChoice(createDistribution(f), f.getWeight());
+      }
+
+      return new Producer<Entity>()
+      {
+         private final WeightedRandomChoice<Distribution> sizes = wrc;
+
+         @Override
+         public Entity produce(final RequestContext context)
+         {
+            return Entities.of(EntityType.RANDOM, (long) this.sizes.nextChoice().nextSample());
+         }
+      };
+   }
+
+   private static Distribution createDistribution(final FileSize filesize)
+   {
+      final DistributionType type =
+            DistributionType.parseDistribution(filesize.getDistribution());
+      switch (type)
+      {
+      // TODO account for size and spread units
+         case NORMAL :
+            return new NormalDistribution(filesize.getAverage(), filesize.getSpread());
+         case LOGNORMAL :
+            return new LogNormalDistribution(filesize.getAverage(), filesize.getSpread());
+         default :
+            return new UniformDistribution(filesize.getAverage(), filesize.getSpread());
+      }
+   }
+
+   @Provides
+   @Singleton
+   @DefaultMetaData
+   Producer<Map<String, String>> provideDefaultMetaData()
+   {
+      final Map<String, String> metadata = new HashMap<String, String>();
+      return Producers.of(metadata);
+   }
+
+   @Provides
+   @Singleton
+   OperationTypeMix provideOperationTypeMix()
    {
       // TODO make decision on integer or decimal percentages
-      final long write = (long) getDouble(config.getWrite(), 100.0);
-      final long read = (long) getDouble(config.getRead(), 0.0);
-      final long delete = (long) getDouble(config.getDelete(), 0.0);
-      final long floor = (long) getDouble(config.getFloor(), 0.0);
-      final long ceiling = (long) getDouble(config.getCeiling(), 100.0);
+      final long write = (long) getDouble(this.config.getWrite(), 100.0);
+      final long read = (long) getDouble(this.config.getRead(), 0.0);
+      final long delete = (long) getDouble(this.config.getDelete(), 0.0);
+      final long floor = (long) getDouble(this.config.getFloor(), 0.0);
+      final long ceiling = (long) getDouble(this.config.getCeiling(), 100.0);
       return new OperationTypeMix(read, write, delete, floor, ceiling);
    }
 
@@ -94,7 +234,7 @@ public class OOMModule extends AbstractModule
 
    @Provides
    @Singleton
-   Client provideClient(final JSONConfiguration config)
+   Client provideClient()
    {
       final JavaClientConfiguration clientConfig = new JavaClientConfiguration();
       final Function<String, ByteBufferConsumer> byteBufferConsumers =
