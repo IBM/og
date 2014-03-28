@@ -58,7 +58,7 @@ import com.google.gson.LongSerializationPolicy;
 
 public class JavaClient implements Client
 {
-   private static Logger _requestLogger = LoggerFactory.getLogger("RequestLog");
+   private static Logger _requestLogger = LoggerFactory.getLogger("RequestLogger");
    private final JavaClientConfiguration config;
    private final Function<String, ByteBufferConsumer> byteBufferConsumers;
    private final ListeningExecutorService executorService;

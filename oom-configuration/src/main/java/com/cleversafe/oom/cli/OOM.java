@@ -47,11 +47,13 @@ import com.google.inject.Injector;
 public class OOM
 {
    private static Logger _logger = LoggerFactory.getLogger(OOM.class);
+   private static Logger _configJsonLogger = LoggerFactory.getLogger("ConfigJsonLogger");
    private static String TEST_JSON_RESOURCE_NAME = "test.json";
    public static int ERROR_CONFIGURATION = 1;
 
    public static void main(final String[] args)
    {
+      _logger.info("configuring test");
       final Gson gson = new GsonBuilder()
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
             .setLongSerializationPolicy(LongSerializationPolicy.STRING)
@@ -59,12 +61,13 @@ public class OOM
             .create();
       final JSONConfiguration config = createJSONConfiguration(gson);
       verifyJSONConfiguration(config);
-      _logger.info(gson.toJson(config));
+      _configJsonLogger.info(gson.toJson(config));
       final Injector injector = Guice.createInjector(new OOMModule(config));
       final OperationManager operationManager = injector.getInstance(OperationManager.class);
       final Client client = injector.getInstance(Client.class);
       final ExecutorService executorService = Executors.newCachedThreadPool();
       final LoadTest test = new LoadTest(operationManager, client, executorService);
+      _logger.info("running test");
       test.runTest();
    }
 

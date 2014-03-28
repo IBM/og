@@ -1,14 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration>
+	<Properties>
+		<Property name="application.log">application.log</Property>
+		<Property name="request.log">request.log</Property>
+		<Property name="config.json">config.json</Property>
+	</Properties>
 	<Appenders>
 		<Console name="Console" target="SYSTEM_OUT">
-			<PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%t] %l - %m%n"/>
-			<ThresholdFilter level="all"/>
+			<PatternLayout pattern="%m%n" />
 		</Console>
+		<RollingRandomAccessFile name="ApplicationLog" append="true"
+			fileName="${application.log}"
+			filePattern="${application.log}-$${date:yyyy-MM-dd'T'HHmmssSSS}.gz">
+			<PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%t] %l - %m%n"/>
+			<SizeBasedTriggeringPolicy size="100MB" />
+			<DefaultRolloverStrategy max="20"/>
+		</RollingRandomAccessFile>
+		<RollingRandomAccessFile name="RequestLog" append="true"
+			fileName="${request.log}"
+			filePattern="${request.log}-$${date:yyyy-MM-dd'T'HHmmssSSS}.gz">
+			<PatternLayout pattern="%m%n" />
+			<SizeBasedTriggeringPolicy size="100MB" />
+			<DefaultRolloverStrategy max="20"/>
+		</RollingRandomAccessFile>
+		<File name="ConfigJson" append="true" fileName="${config.json}">
+			<PatternLayout pattern="%m%n" />
+		</File>
 	</Appenders>
 	<Loggers>
-		<Root level="debug">
+		<Logger name="RequestLogger" level="info" additivity="false">
+			<AppenderRef ref="RequestLog" />
+		</Logger>
+		<Logger name="ConfigJsonLogger" level="info" additivity="false">
+			<AppenderRef ref="ConfigJson" />
+		</Logger>
+		<Logger name="com.cleversafe.oom.cli.OOM" level="info">
 			<AppenderRef ref="Console" />
+		</Logger>
+		<Root level="debug">
+			<AppenderRef ref="ApplicationLog" />
 		</Root>
 	</Loggers>
 </Configuration>
