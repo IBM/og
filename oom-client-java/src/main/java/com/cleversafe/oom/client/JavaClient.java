@@ -35,7 +35,11 @@ import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.cleversafe.oom.api.ByteBufferConsumer;
+import com.cleversafe.oom.http.HttpRequestAccessLogEntry;
 import com.cleversafe.oom.http.HttpResponse;
 import com.cleversafe.oom.operation.Request;
 import com.cleversafe.oom.operation.Response;
@@ -47,12 +51,18 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
+import com.google.gson.FieldNamingPolicy;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.LongSerializationPolicy;
 
 public class JavaClient implements Client
 {
+   private static Logger _requestLogger = LoggerFactory.getLogger("RequestLog");
    private final JavaClientConfiguration config;
    private final Function<String, ByteBufferConsumer> byteBufferConsumers;
    private final ListeningExecutorService executorService;
+   private final Gson gson;
 
    public JavaClient(
          final JavaClientConfiguration config,
@@ -65,6 +75,10 @@ public class JavaClient implements Client
       System.setProperty("http.maxConnections", String.valueOf(config.getKeepAliveMaxConnections()));
       System.setProperty("http.maxRedirects", String.valueOf(config.getMaxRedirects()));
       this.executorService = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
+      this.gson = new GsonBuilder()
+            .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+            .setLongSerializationPolicy(LongSerializationPolicy.STRING)
+            .create();
    }
 
    @Override
@@ -73,7 +87,8 @@ public class JavaClient implements Client
       checkNotNull(request, "request must not be null");
       final ByteBufferConsumer consumer =
             this.byteBufferConsumers.apply(request.getCustomRequestKey());
-      return this.executorService.submit(new BlockingHTTPOperation(this.config, request, consumer));
+      return this.executorService.submit(new BlockingHTTPOperation(this.config, request, consumer,
+            this.gson));
    }
 
    @Override
@@ -97,12 +112,14 @@ public class JavaClient implements Client
       private final HttpResponse.Builder responseBuilder;
       private final byte[] buf;
       private final ByteBuffer byteBuf;
+      final Gson gson;
       private static final Joiner joiner = Joiner.on(',').skipNulls();
 
       public BlockingHTTPOperation(
             final JavaClientConfiguration config,
             final Request request,
-            final ByteBufferConsumer consumer)
+            final ByteBufferConsumer consumer,
+            final Gson gson)
       {
          this.config = config;
          this.request = request;
@@ -110,6 +127,7 @@ public class JavaClient implements Client
          this.responseBuilder = new HttpResponse.Builder();
          this.buf = new byte[config.getBufferSize()];
          this.byteBuf = ByteBuffer.allocate(config.getBufferSize());
+         this.gson = gson;
       }
 
       @Override
@@ -135,7 +153,9 @@ public class JavaClient implements Client
          {
             closeStream(src);
          }
-         return this.responseBuilder.build();
+         final Response response = this.responseBuilder.build();
+         _requestLogger.info(this.gson.toJson(new HttpRequestAccessLogEntry(this.request, response)));
+         return response;
       }
 
       private HttpURLConnection getConnection() throws IOException

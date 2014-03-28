@@ -21,5 +21,9 @@
 			<groupId>com.cleversafe</groupId>
 			<artifactId>oom-util</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+		</dependency>
 	</dependencies>
 </project>
