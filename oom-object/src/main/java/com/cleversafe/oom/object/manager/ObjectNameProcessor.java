@@ -37,7 +37,7 @@ import com.cleversafe.oom.operation.RequestContext;
 import com.cleversafe.oom.operation.Response;
 import com.google.common.base.Splitter;
 
-public class ObjectNameProcessor implements Producer<ObjectName>, Consumer<Response>
+public class ObjectNameProcessor implements Producer<String>, Consumer<Response>
 {
    private final ObjectManager objectManager;
    private final Map<Long, Request> pendingRequests;
@@ -52,16 +52,17 @@ public class ObjectNameProcessor implements Producer<ObjectName>, Consumer<Respo
    }
 
    @Override
-   public ObjectName produce(final RequestContext context)
+   public String produce(final RequestContext context)
    {
       try
       {
          switch (context.getMethod())
          {
             case GET :
-               return this.objectManager.acquireNameForRead();
+               final ObjectName o = this.objectManager.acquireNameForRead();
+               return o.toString();
             case DELETE :
-               return this.objectManager.getNameForDelete();
+               return this.objectManager.getNameForDelete().toString();
             default :
                throw new RuntimeException(String.format("http method unsupported [%s]",
                      context.getMethod()));

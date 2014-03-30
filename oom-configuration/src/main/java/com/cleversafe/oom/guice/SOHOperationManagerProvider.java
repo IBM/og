@@ -44,10 +44,10 @@ import com.cleversafe.oom.guice.annotation.DefaultScheme;
 import com.cleversafe.oom.http.Scheme;
 import com.cleversafe.oom.http.producer.RequestProducer;
 import com.cleversafe.oom.http.producer.URLProducer;
-import com.cleversafe.oom.object.ObjectName;
 import com.cleversafe.oom.object.manager.ObjectManager;
 import com.cleversafe.oom.object.manager.ObjectNameProcessor;
 import com.cleversafe.oom.operation.Entity;
+import com.cleversafe.oom.operation.EntityType;
 import com.cleversafe.oom.operation.Method;
 import com.cleversafe.oom.operation.OperationType;
 import com.cleversafe.oom.operation.OperationTypeMix;
@@ -56,6 +56,7 @@ import com.cleversafe.oom.operation.Response;
 import com.cleversafe.oom.scheduling.RequestRateScheduler;
 import com.cleversafe.oom.scheduling.Scheduler;
 import com.cleversafe.oom.soh.SOHOperationManager;
+import com.cleversafe.oom.util.Entities;
 import com.cleversafe.oom.util.producer.Producers;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -75,7 +76,7 @@ public class SOHOperationManagerProvider implements Provider<SOHOperationManager
    private final Producer<Map<String, String>> metadata;
    private final ObjectManager objectManager;
    private final Map<Long, Request> pendingRequests;
-   private final Producer<ObjectName> object;
+   private final Producer<String> object;
 
    @Inject
    public SOHOperationManagerProvider(
@@ -156,7 +157,19 @@ public class SOHOperationManagerProvider implements Provider<SOHOperationManager
 
    private Producer<Request> createSOHReadProducer()
    {
-      return null;
+      final List<Producer<String>> parts = new ArrayList<Producer<String>>();
+      parts.add(this.container);
+      parts.add(this.object);
+      final Producer<URL> readURL =
+            new URLProducer(this.scheme, this.host, this.port, parts, this.queryParams);
+
+      return new RequestProducer(this.id,
+            Producers.of("soh.get_object"),
+            Producers.of(Method.GET),
+            readURL,
+            this.headers,
+            Producers.of(Entities.of(EntityType.NONE, 0)),
+            this.metadata);
    }
 
    private Producer<Request> createSOHDeleteProducer()

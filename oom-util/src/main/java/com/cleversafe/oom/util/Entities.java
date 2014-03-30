@@ -62,6 +62,10 @@ public class Entities
    {
       checkNotNull(entity, "entity must not be null");
 
+      // TODO should we allow null return?
+      if (entity.getType() == EntityType.NONE)
+         return null;
+
       final byte[] buf = createBuffer(entity.getType());
       return new FixedBufferInputStream(buf, entity.getSize());
    }
