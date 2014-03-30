@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration>
+<Configuration shutdownHook="disable">
 	<Properties>
 		<Property name="application.log">application.log</Property>
 		<Property name="request.log">request.log</Property>
