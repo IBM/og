@@ -33,6 +33,7 @@
 			<fileMode>0755</fileMode>
 			<includes>
 				<include>oom</include>
+				<include>oom-reader</include>
 			</includes>
 		</fileSet>
 	</fileSets>
