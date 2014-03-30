@@ -25,6 +25,9 @@ import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
+
 import com.cleversafe.oom.api.Consumer;
 import com.cleversafe.oom.api.Producer;
 import com.cleversafe.oom.object.LegacyObjectName;
@@ -38,7 +41,7 @@ public class ObjectNameProcessor implements Producer<ObjectName>, Consumer<Respo
 {
    private final ObjectManager objectManager;
    private final Map<Long, Request> pendingRequests;
-   private static final Splitter urlSplitter = Splitter.on("/");
+   private static final Splitter urlSplitter = Splitter.on("/").omitEmptyStrings();
 
    public ObjectNameProcessor(
          final ObjectManager objectManager,
@@ -85,7 +88,7 @@ public class ObjectNameProcessor implements Producer<ObjectName>, Consumer<Respo
          try
          {
             // TODO fix ObjectManager interface to take strings?
-            this.objectManager.writeNameComplete(LegacyObjectName.forBytes(responseObjectName.getBytes()));
+            this.objectManager.writeNameComplete(objectNameFromString(responseObjectName));
          }
          catch (final ObjectManagerException e)
          {
@@ -114,7 +117,21 @@ public class ObjectNameProcessor implements Producer<ObjectName>, Consumer<Respo
    {
       final List<String> parts = urlSplitter.splitToList(url.getPath());
       if (parts.size() == 2)
-         return LegacyObjectName.forBytes(parts.get(1).getBytes());
+         return objectNameFromString(parts.get(1));
       return null;
+   }
+
+   private static ObjectName objectNameFromString(final String objectName)
+   {
+      try
+      {
+         return LegacyObjectName.forBytes(Hex.decodeHex(objectName.toCharArray()));
+      }
+      catch (final DecoderException e)
+      {
+         // TODO Auto-generated catch block
+         e.printStackTrace();
+         return null;
+      }
    }
 }

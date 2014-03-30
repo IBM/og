@@ -23,6 +23,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.cleversafe.oom.api.ByteBufferConsumer;
@@ -48,11 +49,14 @@ import com.cleversafe.oom.guice.annotation.DefaultPort;
 import com.cleversafe.oom.guice.annotation.DefaultQueryParams;
 import com.cleversafe.oom.guice.annotation.DefaultScheme;
 import com.cleversafe.oom.http.Scheme;
+import com.cleversafe.oom.object.manager.ObjectManager;
+import com.cleversafe.oom.object.manager.RandomObjectPopulator;
 import com.cleversafe.oom.operation.Entity;
 import com.cleversafe.oom.operation.EntityType;
 import com.cleversafe.oom.operation.OperationTypeMix;
 import com.cleversafe.oom.operation.RequestContext;
 import com.cleversafe.oom.soh.SOHOperationManager;
+import com.cleversafe.oom.soh.SOHWriteObjectNameConsumer;
 import com.cleversafe.oom.util.ByteBufferConsumers;
 import com.cleversafe.oom.util.Entities;
 import com.cleversafe.oom.util.WeightedRandomChoice;
@@ -244,10 +248,23 @@ public class OOMModule extends AbstractModule
                @Override
                public ByteBufferConsumer apply(final String input)
                {
+                  // TODO rework how ByteBufferConsumers are injected into a client
+                  if ("soh.put_object".equals(input))
+                  {
+                     return new SOHWriteObjectNameConsumer();
+                  }
                   return ByteBufferConsumers.noOp();
                }
 
             };
       return new JavaClient(clientConfig, byteBufferConsumers);
+   }
+
+   @Provides
+   @Singleton
+   ObjectManager provideObjectManager()
+   {
+      // TODO configure via test.json
+      return new RandomObjectPopulator(UUID.randomUUID());
    }
 }

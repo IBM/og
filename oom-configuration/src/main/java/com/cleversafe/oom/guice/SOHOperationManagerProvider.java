@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import com.cleversafe.oom.api.Consumer;
@@ -43,6 +44,9 @@ import com.cleversafe.oom.guice.annotation.DefaultScheme;
 import com.cleversafe.oom.http.Scheme;
 import com.cleversafe.oom.http.producer.RequestProducer;
 import com.cleversafe.oom.http.producer.URLProducer;
+import com.cleversafe.oom.object.ObjectName;
+import com.cleversafe.oom.object.manager.ObjectManager;
+import com.cleversafe.oom.object.manager.ObjectNameProcessor;
 import com.cleversafe.oom.operation.Entity;
 import com.cleversafe.oom.operation.Method;
 import com.cleversafe.oom.operation.OperationType;
@@ -69,6 +73,9 @@ public class SOHOperationManagerProvider implements Provider<SOHOperationManager
    private final Producer<Map<String, String>> headers;
    private final Producer<Entity> entity;
    private final Producer<Map<String, String>> metadata;
+   private final ObjectManager objectManager;
+   private final Map<Long, Request> pendingRequests;
+   private final Producer<ObjectName> object;
 
    @Inject
    public SOHOperationManagerProvider(
@@ -91,7 +98,8 @@ public class SOHOperationManagerProvider implements Provider<SOHOperationManager
          @DefaultEntity
          final Producer<Entity> entity,
          @DefaultMetaData
-         final Producer<Map<String, String>> metadata)
+         final Producer<Map<String, String>> metadata,
+         final ObjectManager objectManager)
    {
       this.config = config;
       this.mix = mix;
@@ -104,6 +112,9 @@ public class SOHOperationManagerProvider implements Provider<SOHOperationManager
       this.headers = headers;
       this.entity = entity;
       this.metadata = metadata;
+      this.objectManager = objectManager;
+      this.pendingRequests = new ConcurrentHashMap<Long, Request>();
+      this.object = new ObjectNameProcessor(this.objectManager, this.pendingRequests);
    }
 
    @Override
@@ -116,12 +127,15 @@ public class SOHOperationManagerProvider implements Provider<SOHOperationManager
       producers.put(OperationType.DELETE, createSOHDeleteProducer());
 
       final List<Consumer<Response>> consumers = new ArrayList<Consumer<Response>>();
+      // TODO remove cast, possible need for Processor interface (Producer + Consumer)
+      consumers.add((Consumer<Response>) this.object);
 
       // TODO account for scheduler units and threaded vs iops scheduling
       final Distribution sleepDuration =
             new UniformDistribution(this.config.getConcurrency().getCount(), 0);
       final Scheduler scheduler = new RequestRateScheduler(sleepDuration, TimeUnit.SECONDS);
-      return new SOHOperationManager(this.mix, producers, consumers, scheduler);
+      return new SOHOperationManager(this.mix, producers, consumers, scheduler,
+            this.pendingRequests);
    }
 
    private Producer<Request> createSOHWriteProducer()

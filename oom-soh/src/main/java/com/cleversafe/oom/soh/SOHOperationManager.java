@@ -42,17 +42,20 @@ public class SOHOperationManager implements OperationManager
    private final Map<OperationType, Producer<Request>> producers;
    private final List<Consumer<Response>> consumers;
    private final Scheduler scheduler;
+   private final Map<Long, Request> pendingRequests;
 
    public SOHOperationManager(
          final OperationTypeMix mix,
          final Map<OperationType, Producer<Request>> producers,
          final List<Consumer<Response>> consumers,
-         final Scheduler scheduler)
+         final Scheduler scheduler,
+         final Map<Long, Request> pendingRequests)
    {
       this.operationTypeMix = checkNotNull(mix, "operationTypeMix must not be null");
       this.producers = checkNotNull(producers, "producers must not be null");
       this.consumers = checkNotNull(consumers, "consumers must not be null");
       this.scheduler = checkNotNull(scheduler, "scheduler must not be null");
+      this.pendingRequests = checkNotNull(pendingRequests, "pendingRequests must not be null");
    }
 
    @Override
@@ -66,7 +69,9 @@ public class SOHOperationManager implements OperationManager
       final Producer<Request> producer = this.producers.get(operationType);
       try
       {
-         return producer.produce(context);
+         final Request request = producer.produce(context);
+         this.pendingRequests.put(request.getId(), request);
+         return request;
       }
       catch (final Exception e)
       {
@@ -82,5 +87,6 @@ public class SOHOperationManager implements OperationManager
          consumer.consume(response);
       }
       this.scheduler.complete(response);
+      this.pendingRequests.remove(response.getRequestId());
    }
 }

@@ -267,6 +267,12 @@ public class JavaClient implements Client
          {
             processReceivedBytes(bytesRead);
          }
+         final Iterator<Entry<String, String>> it = this.consumer.metaData();
+         while (it.hasNext())
+         {
+            final Entry<String, String> e = it.next();
+            this.responseBuilder.withMetaDataEntry(e.getKey(), e.getValue());
+         }
       }
 
       private void processReceivedBytes(final int bytesRead)
