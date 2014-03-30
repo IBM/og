@@ -36,6 +36,8 @@ import com.cleversafe.oom.api.OperationManager;
 import com.cleversafe.oom.cli.json.JSONConfiguration;
 import com.cleversafe.oom.client.Client;
 import com.cleversafe.oom.guice.OOMModule;
+import com.cleversafe.oom.object.manager.ObjectManager;
+import com.cleversafe.oom.object.manager.ObjectManagerException;
 import com.cleversafe.oom.test.LoadTest;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
@@ -65,8 +67,26 @@ public class OOM
       final Injector injector = Guice.createInjector(new OOMModule(config));
       final OperationManager operationManager = injector.getInstance(OperationManager.class);
       final Client client = injector.getInstance(Client.class);
+      final ObjectManager objectManager = injector.getInstance(ObjectManager.class);
       final ExecutorService executorService = Executors.newCachedThreadPool();
       final LoadTest test = new LoadTest(operationManager, client, executorService);
+      Runtime.getRuntime().addShutdownHook(new Thread()
+      {
+         @Override
+         public void run()
+         {
+            _logger.info("shutting down");
+            try
+            {
+               objectManager.testComplete();
+            }
+            catch (final ObjectManagerException e)
+            {
+               // TODO Auto-generated catch block
+               e.printStackTrace();
+            }
+         }
+      });
       _logger.info("running test");
       test.runTest();
    }
