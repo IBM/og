@@ -239,7 +239,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager
     * @see org.cleversafe.simpleobject.performance.ObjectManager#getIdForDelete()
     */
    @Override
-   public ObjectName getNameForDelete() throws ObjectManagerException
+   public ObjectName getNameForDelete()
    {
       this.persistLock.readLock().lock();
       try
@@ -283,7 +283,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager
     * @see org.cleversafe.simpleobject.performance.ObjectManager#getIdForRead()
     */
    @Override
-   public ObjectName acquireNameForRead() throws ObjectManagerException
+   public ObjectName acquireNameForRead()
    {
       if (this.testEnded)
       {
@@ -464,7 +464,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager
     * @see org.cleversafe.simpleobject.performance.ObjectManager#testComplete()
     */
    @Override
-   public void testComplete() throws ObjectManagerException
+   public void testComplete()
    {
       this.testEnded = true;
       try

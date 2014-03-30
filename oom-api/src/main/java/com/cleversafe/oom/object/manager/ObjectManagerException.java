@@ -23,7 +23,7 @@ package com.cleversafe.oom.object.manager;
  * Signals that an unexpected event occurred in an object manager instance while attempting to
  * service a request.
  */
-public class ObjectManagerException extends Exception
+public class ObjectManagerException extends RuntimeException
 {
    private static final long serialVersionUID = 1L;
 

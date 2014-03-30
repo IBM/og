@@ -33,20 +33,16 @@ public interface ObjectManager
     * object name remains available for concurrent reading or not.
     * 
     * @return an available object name for deletion
-    * @throws ObjectManagerException
-    *            if the request cannot be fulfilled
     */
-   ObjectName getNameForDelete() throws ObjectManagerException;
+   ObjectName getNameForDelete();
 
    /**
     * Selects an existing object name for reading. Implementations may define whether the returned
     * object name remains available for concurrent reading or not.
     * 
     * @return an available object name for reading
-    * @throws ObjectManagerException
-    *            if the request cannot be fulfilled
     */
-   ObjectName acquireNameForRead() throws ObjectManagerException;
+   ObjectName acquireNameForRead();
 
    /**
     * Informs this object manager that the caller is done reading the provided object name.
@@ -68,19 +64,15 @@ public interface ObjectManager
     *           the name of the object that the caller has finished writing
     * @throws NullPointerException
     *            if objectName is null
-    * @throws ObjectManagerException
-    *            if the request cannot be fulfilled
     */
-   void writeNameComplete(ObjectName objectName) throws ObjectManagerException;
+   void writeNameComplete(ObjectName objectName);
 
    /**
     * Informs this object manager that the test has ended and it should persist any in-memory object
     * names and clean up any important resources.
     * 
-    * @throws ObjectManagerException
-    *            if the request cannot be fulfilled.
     */
-   void testComplete() throws ObjectManagerException;
+   void testComplete();
 
    /**
     * Calculates the value of the current number of objects that are persisted to disk. This method

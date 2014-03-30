@@ -54,24 +54,16 @@ public class ObjectNameProcessor implements Producer<String>, Consumer<Response>
    @Override
    public String produce(final RequestContext context)
    {
-      try
+      switch (context.getMethod())
       {
-         switch (context.getMethod())
-         {
-            case GET :
-               final ObjectName o = this.objectManager.acquireNameForRead();
-               return o.toString();
-            case DELETE :
-               return this.objectManager.getNameForDelete().toString();
-            default :
-               throw new RuntimeException(String.format("http method unsupported [%s]",
-                     context.getMethod()));
-         }
-      }
-      catch (final ObjectManagerException e)
-      {
-         // TODO ObjectManager should not throw checked exceptions?
-         return null;
+         case GET :
+            final ObjectName o = this.objectManager.acquireNameForRead();
+            return o.toString();
+         case DELETE :
+            return this.objectManager.getNameForDelete().toString();
+         default :
+            throw new RuntimeException(String.format("http method unsupported [%s]",
+                  context.getMethod()));
       }
    }
 
@@ -86,15 +78,8 @@ public class ObjectNameProcessor implements Producer<String>, Consumer<Response>
       if (responseObjectName != null)
       {
          // SOH writes
-         try
-         {
-            // TODO fix ObjectManager interface to take strings?
-            this.objectManager.writeNameComplete(objectNameFromString(responseObjectName));
-         }
-         catch (final ObjectManagerException e)
-         {
-            // TODO again, ObjectManagerException is annoying and no reasonable recovery from this
-         }
+         // TODO fix ObjectManager interface to take strings?
+         this.objectManager.writeNameComplete(objectNameFromString(responseObjectName));
       }
       else
       {
