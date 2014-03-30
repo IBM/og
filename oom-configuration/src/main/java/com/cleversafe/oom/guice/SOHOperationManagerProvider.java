@@ -174,6 +174,18 @@ public class SOHOperationManagerProvider implements Provider<SOHOperationManager
 
    private Producer<Request> createSOHDeleteProducer()
    {
-      return null;
+      final List<Producer<String>> parts = new ArrayList<Producer<String>>();
+      parts.add(this.container);
+      parts.add(this.object);
+      final Producer<URL> deleteURL =
+            new URLProducer(this.scheme, this.host, this.port, parts, this.queryParams);
+
+      return new RequestProducer(this.id,
+            Producers.of("soh.delete_object"),
+            Producers.of(Method.DELETE),
+            deleteURL,
+            this.headers,
+            Producers.of(Entities.of(EntityType.NONE, 0)),
+            this.metadata);
    }
 }
