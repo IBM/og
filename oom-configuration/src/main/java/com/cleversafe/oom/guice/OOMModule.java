@@ -62,6 +62,7 @@ import com.cleversafe.oom.util.Entities;
 import com.cleversafe.oom.util.WeightedRandomChoice;
 import com.cleversafe.oom.util.producer.Producers;
 import com.google.common.base.Function;
+import com.google.common.math.DoubleMath;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provider;
 import com.google.inject.Provides;
@@ -213,18 +214,26 @@ public class OOMModule extends AbstractModule
    @Singleton
    OperationTypeMix provideOperationTypeMix()
    {
-      // TODO make decision on integer or decimal percentages
-      final long write = (long) getDouble(this.config.getWrite(), 100.0);
-      final long read = (long) getDouble(this.config.getRead(), 0.0);
-      final long delete = (long) getDouble(this.config.getDelete(), 0.0);
-      final long floor = (long) getDouble(this.config.getFloor(), 0.0);
-      final long ceiling = (long) getDouble(this.config.getCeiling(), 100.0);
-      return new OperationTypeMix(write, read, delete, floor, ceiling);
+      double write = this.config.getWrite();
+      final double read = this.config.getRead();
+      final double delete = this.config.getDelete();
+      if (allEqual(0.0, write, read, delete))
+         write = 100.0;
+
+      final long floorBytes = (long) (this.config.getFloor() / 100.0 * this.config.getCapacity());
+      final long ceilBytes = (long) (this.config.getCeiling() / 100.0 * this.config.getCapacity());
+      return new OperationTypeMix(write, read, delete, floorBytes, ceilBytes);
    }
 
-   private static double getDouble(final Double candidate, final double defaultDouble)
+   private boolean allEqual(final double compare, final double... values)
    {
-      return candidate != null ? candidate.doubleValue() : defaultDouble;
+      final double err = Math.pow(0.1, 6);
+      for (final double v : values)
+      {
+         if (!DoubleMath.fuzzyEquals(v, compare, err))
+            return false;
+      }
+      return true;
    }
 
    @Provides

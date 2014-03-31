@@ -30,16 +30,16 @@ public class JSONConfiguration
    List<String> hosts;
    String api;
    String container;
-   Double write;
-   Double read;
-   Double delete;
+   double write;
+   double read;
+   double delete;
    List<FileSize> filesizes;
    Concurrency concurrency;
    String username;
    String password;
-   Double floor;
-   Double ceiling;
-   Double capacity;
+   double floor;
+   double ceiling;
+   long capacity;
    Long operatons;
    RunTime runtime;
    Long fillFloor;
@@ -55,6 +55,8 @@ public class JSONConfiguration
       this.filesizes = new ArrayList<FileSize>();
       this.filesizes.add(new FileSize());
       this.concurrency = new Concurrency();
+      this.ceiling = 100.0;
+      this.capacity = 9223372036854775807L;
       this.idFile = "";
       this.port = 80;
    }
@@ -94,7 +96,7 @@ public class JSONConfiguration
    /**
     * @return the write
     */
-   public Double getWrite()
+   public double getWrite()
    {
       return this.write;
    }
@@ -102,7 +104,7 @@ public class JSONConfiguration
    /**
     * @return the read
     */
-   public Double getRead()
+   public double getRead()
    {
       return this.read;
    }
@@ -110,7 +112,7 @@ public class JSONConfiguration
    /**
     * @return the delete
     */
-   public Double getDelete()
+   public double getDelete()
    {
       return this.delete;
    }
@@ -150,7 +152,7 @@ public class JSONConfiguration
    /**
     * @return the floor
     */
-   public Double getFloor()
+   public double getFloor()
    {
       return this.floor;
    }
@@ -158,7 +160,7 @@ public class JSONConfiguration
    /**
     * @return the ceiling
     */
-   public Double getCeiling()
+   public double getCeiling()
    {
       return this.ceiling;
    }
@@ -166,7 +168,7 @@ public class JSONConfiguration
    /**
     * @return the capacity
     */
-   public Double getCapacity()
+   public long getCapacity()
    {
       return this.capacity;
    }
