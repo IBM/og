@@ -32,8 +32,8 @@ import com.google.common.math.DoubleMath;
  */
 public class OperationTypeMix
 {
-   private final double readPercentage;
    private final double writePercentage;
+   private final double readPercentage;
    private final double deletePercentage;
    private final long floor;
    private final long midpoint;
@@ -47,17 +47,17 @@ public class OperationTypeMix
     * Constructs an <code>OperationTypeMix</code> instance for generating <code>OperationType</code>
     * values according to the configured IO mix
     * 
-    * @param readPercentage
     * @param writePercentage
+    * @param readPercentage
     * @param deletePercentage
     * @param floor
     *           the lowest vault fill for deletes to take place, in bytes
     * @param ceiling
     *           the highest vault fill for writes to take places, in bytes
     * @throws IllegalArgumentException
-    *            if readPercentage is negative
-    * @throws IllegalArgumentException
     *            if writePercentage is negative
+    * @throws IllegalArgumentException
+    *            if readPercentage is negative
     * @throws IllegalArgumentException
     *            if deletePercentage is negative
     * @throws IllegalArgumentException
@@ -66,13 +66,13 @@ public class OperationTypeMix
     *            if ceiling is less than floor
     */
    public OperationTypeMix(
-         final double readPercentage,
          final double writePercentage,
+         final double readPercentage,
          final double deletePercentage,
          final long floor,
          final long ceiling)
    {
-      this(readPercentage, writePercentage, deletePercentage, floor, ceiling, new Random());
+      this(writePercentage, readPercentage, deletePercentage, floor, ceiling, new Random());
    }
 
    /**
@@ -80,17 +80,17 @@ public class OperationTypeMix
     * values according to the configured IO mix and using the provided <code>Random</code> instance
     * for random seed data
     * 
-    * @param readPercentage
     * @param writePercentage
+    * @param readPercentage
     * @param deletePercentage
     * @param floor
     *           the lowest vault fill for deletes to take place, in bytes
     * @param ceiling
     *           the highest vault fill for writes to take places, in bytes
     * @throws IllegalArgumentException
-    *            if readPercentage is negative
-    * @throws IllegalArgumentException
     *            if writePercentage is negative
+    * @throws IllegalArgumentException
+    *            if readPercentage is negative
     * @throws IllegalArgumentException
     *            if deletePercentage is negative
     * @throws IllegalArgumentException
@@ -101,17 +101,17 @@ public class OperationTypeMix
     *            if random is null
     */
    public OperationTypeMix(
-         final double readPercentage,
          final double writePercentage,
+         final double readPercentage,
          final double deletePercentage,
          final long floor,
          final long ceiling,
          final Random random)
    {
-      checkArgument(inRange(readPercentage), "readPercentage must be in range [0.0, 100.0] [%s]",
-            readPercentage);
       checkArgument(inRange(writePercentage), "writePercentage must be in range [0.0, 100.0] [%s]",
             writePercentage);
+      checkArgument(inRange(readPercentage), "readPercentage must be in range [0.0, 100.0] [%s]",
+            readPercentage);
       checkArgument(inRange(deletePercentage),
             "deletePercentage must be in range [0.0, 100.0] [%s]",
             deletePercentage);
@@ -122,14 +122,14 @@ public class OperationTypeMix
       checkArgument(ceiling >= floor, "ceiling must be >= floor [%s]", ceiling);
       checkNotNull(random, "random must not be null");
 
-      this.readPercentage = readPercentage;
       this.writePercentage = writePercentage;
+      this.readPercentage = readPercentage;
       this.deletePercentage = deletePercentage;
       this.operationMix = new WeightedRandomChoice<OperationType>(random);
-      if (readPercentage > 0)
-         this.operationMix.addChoice(OperationType.READ, readPercentage);
       if (writePercentage > 0)
          this.operationMix.addChoice(OperationType.WRITE, writePercentage);
+      if (readPercentage > 0)
+         this.operationMix.addChoice(OperationType.READ, readPercentage);
       if (deletePercentage > 0)
          this.operationMix.addChoice(OperationType.DELETE, deletePercentage);
       this.floor = floor;
@@ -146,19 +146,19 @@ public class OperationTypeMix
    }
 
    /**
-    * @return the configured read percentage
-    */
-   public double getReadPercentage()
-   {
-      return this.readPercentage;
-   }
-
-   /**
     * @return the configured write percentage
     */
    public double getWritePercentage()
    {
       return this.writePercentage;
+   }
+
+   /**
+    * @return the configured read percentage
+    */
+   public double getReadPercentage()
+   {
+      return this.readPercentage;
    }
 
    /**

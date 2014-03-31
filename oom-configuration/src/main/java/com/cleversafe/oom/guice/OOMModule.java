@@ -219,7 +219,7 @@ public class OOMModule extends AbstractModule
       final long delete = (long) getDouble(this.config.getDelete(), 0.0);
       final long floor = (long) getDouble(this.config.getFloor(), 0.0);
       final long ceiling = (long) getDouble(this.config.getCeiling(), 100.0);
-      return new OperationTypeMix(read, write, delete, floor, ceiling);
+      return new OperationTypeMix(write, read, delete, floor, ceiling);
    }
 
    private static double getDouble(final Double candidate, final double defaultDouble)

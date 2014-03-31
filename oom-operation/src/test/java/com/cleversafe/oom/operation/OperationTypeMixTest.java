@@ -41,13 +41,13 @@ public class OperationTypeMixTest
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testNegativeReadPercentage()
+   public void testNegativeWritePercentage()
    {
       new OperationTypeMix(-1, 50, 50, 0, 100);
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testNegativeWritePercentage()
+   public void testNegativeReadPercentage()
    {
       new OperationTypeMix(50, -1, 50, 0, 100);
    }
@@ -59,13 +59,13 @@ public class OperationTypeMixTest
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testLargeReadPercentage()
+   public void testLargeWritePercentage()
    {
       new OperationTypeMix(101, 50, 50, 0, 100);
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testLargeWritePercentage()
+   public void testLargeReadPercentage()
    {
       new OperationTypeMix(50, 101, 50, 0, 100);
    }
@@ -155,22 +155,22 @@ public class OperationTypeMixTest
    }
 
    @Test
-   public void test100PercentRead()
+   public void test100PercentWrite()
    {
       final OperationTypeMix mix = new OperationTypeMix(100, 0, 0, 0, 100);
       for (int i = 0; i < 100; i++)
       {
-         Assert.assertEquals(OperationType.READ, mix.getNextOperationType(50));
+         Assert.assertEquals(OperationType.WRITE, mix.getNextOperationType(50));
       }
    }
 
    @Test
-   public void test100PercentWrite()
+   public void test100PercentRead()
    {
       final OperationTypeMix mix = new OperationTypeMix(0, 100, 0, 0, 100);
       for (int i = 0; i < 100; i++)
       {
-         Assert.assertEquals(OperationType.WRITE, mix.getNextOperationType(50));
+         Assert.assertEquals(OperationType.READ, mix.getNextOperationType(50));
       }
    }
 
@@ -185,7 +185,7 @@ public class OperationTypeMixTest
    }
 
    @Test
-   public void testReadWriteMix()
+   public void testWriteReadMix()
    {
       final OperationTypeMix mix = new OperationTypeMix(50, 50, 0, 0, 100);
 
@@ -195,29 +195,13 @@ public class OperationTypeMixTest
          final int count = this.countMap.get(type);
          this.countMap.put(type, count + 1);
       }
-      Assert.assertTrue(this.countMap.get(OperationType.READ) > 0);
       Assert.assertTrue(this.countMap.get(OperationType.WRITE) > 0);
+      Assert.assertTrue(this.countMap.get(OperationType.READ) > 0);
       Assert.assertTrue(this.countMap.get(OperationType.DELETE) == 0);
    }
 
    @Test
    public void testReadDeleteMix()
-   {
-      final OperationTypeMix mix = new OperationTypeMix(50, 0, 50, 0, 100);
-
-      for (int i = 0; i < 100; i++)
-      {
-         final OperationType type = mix.getNextOperationType(50);
-         final int count = this.countMap.get(type);
-         this.countMap.put(type, count + 1);
-      }
-      Assert.assertTrue(this.countMap.get(OperationType.READ) > 0);
-      Assert.assertTrue(this.countMap.get(OperationType.WRITE) == 0);
-      Assert.assertTrue(this.countMap.get(OperationType.DELETE) > 0);
-   }
-
-   @Test
-   public void testWriteDeleteMix()
    {
       final OperationTypeMix mix = new OperationTypeMix(0, 50, 50, 0, 100);
 
@@ -227,13 +211,29 @@ public class OperationTypeMixTest
          final int count = this.countMap.get(type);
          this.countMap.put(type, count + 1);
       }
-      Assert.assertTrue(this.countMap.get(OperationType.READ) == 0);
-      Assert.assertTrue(this.countMap.get(OperationType.WRITE) > 0);
+      Assert.assertTrue(this.countMap.get(OperationType.WRITE) == 0);
+      Assert.assertTrue(this.countMap.get(OperationType.READ) > 0);
       Assert.assertTrue(this.countMap.get(OperationType.DELETE) > 0);
    }
 
    @Test
-   public void testReadWriteDeleteMix()
+   public void testWriteDeleteMix()
+   {
+      final OperationTypeMix mix = new OperationTypeMix(50, 0, 50, 0, 100);
+
+      for (int i = 0; i < 100; i++)
+      {
+         final OperationType type = mix.getNextOperationType(50);
+         final int count = this.countMap.get(type);
+         this.countMap.put(type, count + 1);
+      }
+      Assert.assertTrue(this.countMap.get(OperationType.WRITE) > 0);
+      Assert.assertTrue(this.countMap.get(OperationType.READ) == 0);
+      Assert.assertTrue(this.countMap.get(OperationType.DELETE) > 0);
+   }
+
+   @Test
+   public void testWriteReadDeleteMix()
    {
       final OperationTypeMix mix = new OperationTypeMix(33, 33, 34, 0, 100);
 
@@ -243,15 +243,15 @@ public class OperationTypeMixTest
          final int count = this.countMap.get(type);
          this.countMap.put(type, count + 1);
       }
-      Assert.assertTrue(this.countMap.get(OperationType.READ) > 0);
       Assert.assertTrue(this.countMap.get(OperationType.WRITE) > 0);
+      Assert.assertTrue(this.countMap.get(OperationType.READ) > 0);
       Assert.assertTrue(this.countMap.get(OperationType.DELETE) > 0);
    }
 
    @Test
    public void testFloorCeiling()
    {
-      final OperationTypeMix mix = new OperationTypeMix(0, 100, 0, 100, 200);
+      final OperationTypeMix mix = new OperationTypeMix(100, 0, 0, 100, 200);
       Assert.assertEquals(OperationType.WRITE, mix.getNextOperationType(150));
       Assert.assertEquals(OperationType.DELETE, mix.getNextOperationType(201));
       Assert.assertEquals(OperationType.DELETE, mix.getNextOperationType(151));
