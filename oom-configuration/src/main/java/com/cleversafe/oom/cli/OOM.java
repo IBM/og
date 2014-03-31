@@ -23,9 +23,12 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.Reader;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Iterator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -37,7 +40,6 @@ import com.cleversafe.oom.cli.json.JSONConfiguration;
 import com.cleversafe.oom.client.Client;
 import com.cleversafe.oom.guice.OOMModule;
 import com.cleversafe.oom.object.manager.ObjectManager;
-import com.cleversafe.oom.object.manager.ObjectManagerException;
 import com.cleversafe.oom.test.LoadTest;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
@@ -45,31 +47,47 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.LongSerializationPolicy;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.martiansoftware.jsap.JSAP;
+import com.martiansoftware.jsap.JSAPResult;
 
 public class OOM
 {
    private static Logger _logger = LoggerFactory.getLogger(OOM.class);
    private static Logger _configJsonLogger = LoggerFactory.getLogger("ConfigJsonLogger");
-   private static String TEST_JSON_RESOURCE_NAME = "test.json";
-   public static int ERROR_CONFIGURATION = 1;
+   private static final String JSAP_RESOURCE_NAME = "oom.jsap";
+   private static final String TEST_JSON_RESOURCE_NAME = "test.json";
+   public static final int NORMAL_TERMINATION = 0;
+   public static final int ERROR_CONFIGURATION = 1;
 
    public static void main(final String[] args)
    {
+      final JSAP jsap = getJSAP();
+      final JSAPResult jsapResult = jsap.parse(args);
+      if (!jsapResult.success())
+         printErrorsAndExit(jsap, jsapResult);
+
+      if (jsapResult.getBoolean("help"))
+      {
+         printUsage(jsap);
+         System.exit(NORMAL_TERMINATION);
+      }
+
+      final File testConfig = getTestConfig(jsapResult);
       _logger.info("configuring test");
-      final Gson gson = new GsonBuilder()
-            .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
-            .setLongSerializationPolicy(LongSerializationPolicy.STRING)
-            .setPrettyPrinting()
-            .create();
-      final JSONConfiguration config = createJSONConfiguration(gson);
+
+      final Gson gson = getGson();
+      final JSONConfiguration config = createJSONConfiguration(gson, testConfig);
       verifyJSONConfiguration(config);
+
       _configJsonLogger.info(gson.toJson(config));
+
       final Injector injector = Guice.createInjector(new OOMModule(config));
       final OperationManager operationManager = injector.getInstance(OperationManager.class);
       final Client client = injector.getInstance(Client.class);
       final ObjectManager objectManager = injector.getInstance(ObjectManager.class);
       final ExecutorService executorService = Executors.newCachedThreadPool();
       final LoadTest test = new LoadTest(operationManager, client, executorService);
+
       Runtime.getRuntime().addShutdownHook(new Thread()
       {
          @Override
@@ -80,21 +98,70 @@ public class OOM
             {
                objectManager.testComplete();
             }
-            catch (final ObjectManagerException e)
+            catch (final Exception e)
             {
-               // TODO Auto-generated catch block
-               e.printStackTrace();
+               _logger.error("Error shutting down object manager", e);
             }
          }
       });
+
       _logger.info("running test");
       test.runTest();
    }
 
-   private static JSONConfiguration createJSONConfiguration(final Gson gson)
+   private static JSAP getJSAP()
    {
-      final URL configURL = createConfigURL(TEST_JSON_RESOURCE_NAME);
-      final Reader configReader = createConfigReader(configURL);
+      JSAP jsap = null;
+      try
+      {
+         jsap = new JSAP(getResource(JSAP_RESOURCE_NAME));
+      }
+      catch (final Exception e)
+      {
+         _logger.error("Error creating JSAP", e);
+         System.exit(ERROR_CONFIGURATION);
+      }
+      return jsap;
+   }
+
+   private static void printErrorsAndExit(final JSAP jsap, final JSAPResult jsapResult)
+   {
+      @SuppressWarnings("rawtypes")
+      final Iterator errs = jsapResult.getErrorMessageIterator();
+      while (errs.hasNext())
+      {
+         _logger.error(errs.next().toString());
+         printUsage(jsap);
+      }
+      System.exit(ERROR_CONFIGURATION);
+   }
+
+   private static void printUsage(final JSAP jsap)
+   {
+      _logger.info("Usage: oom " + jsap.getUsage());
+      _logger.info(jsap.getHelp());
+   }
+
+   private static File getTestConfig(final JSAPResult jsapResult)
+   {
+      File testConfig = jsapResult.getFile("config");
+      if (testConfig == null)
+         testConfig = getConfigFile(getResource(TEST_JSON_RESOURCE_NAME));
+      return testConfig;
+   }
+
+   private static Gson getGson()
+   {
+      return new GsonBuilder()
+            .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+            .setLongSerializationPolicy(LongSerializationPolicy.STRING)
+            .setPrettyPrinting()
+            .create();
+   }
+
+   private static JSONConfiguration createJSONConfiguration(final Gson gson, final File testConfig)
+   {
+      final Reader configReader = getConfigReader(testConfig);
       JSONConfiguration config = null;
       try
       {
@@ -102,33 +169,48 @@ public class OOM
       }
       catch (final Exception e)
       {
-         _logger.error("", e);
+         _logger.error("Error parsing configuration", e);
          System.exit(ERROR_CONFIGURATION);
       }
       return config;
    }
 
-   private static URL createConfigURL(final String resourceName)
+   private static URL getResource(final String resourceName)
    {
-      final URL configURL = ClassLoader.getSystemResource(resourceName);
-      if (configURL == null)
+      final URL url = ClassLoader.getSystemResource(resourceName);
+      if (url == null)
       {
          _logger.error("Could not find configuration file on classpath [{}]", resourceName);
          System.exit(ERROR_CONFIGURATION);
       }
-      return configURL;
+      return url;
    }
 
-   private static Reader createConfigReader(final URL configURL)
+   private static File getConfigFile(final URL resource)
+   {
+      File configFile = null;
+      try
+      {
+         configFile = new File(resource.toURI());
+      }
+      catch (final URISyntaxException e)
+      {
+         _logger.error("Error creating config file", e);
+         System.exit(ERROR_CONFIGURATION);
+      }
+      return configFile;
+   }
+
+   private static Reader getConfigReader(final File testConfig)
    {
       Reader configReader = null;
       try
       {
-         configReader = new FileReader(new File(configURL.toURI()));
+         configReader = new FileReader(testConfig);
       }
-      catch (final Exception e)
+      catch (final FileNotFoundException e)
       {
-         _logger.error("", e);
+         _logger.error(String.format("Could not find file [%s]", testConfig));
          System.exit(ERROR_CONFIGURATION);
       }
       return configReader;
