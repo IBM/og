@@ -1,4 +1,40 @@
 {
 "hosts": [],
-"container": ""
+"api": "soh",
+"container": "",
+/*
+"write": 100.0,
+"read": 0.0,
+"delete": 0.0,
+"filesizes": [
+	{
+		"distribution": "uniform",
+		"average": 5,
+		"average_unit": "mb",
+		"spread": 1.25,
+		"spread_unit": "mb",
+		"weight": 1
+	}
+],
+"concurrency": {
+	"type": "iops",
+	"count": 1,
+	"unit": "seconds"
+},
+
+"username": "",
+"password": "",
+
+"floor": 0.0,
+"ceiling": 100.0,
+"capacity": 9223372036854775807,
+
+"operations": 100,
+"runtime": {"duration": 60, "unit": "sec"},
+"fill_floor": 0.0,
+"fill_ceiling": 100.0,
+*/
+
+"id_file": "",
+"port": 80
 }
