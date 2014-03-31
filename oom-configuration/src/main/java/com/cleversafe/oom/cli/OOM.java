@@ -81,29 +81,25 @@ public class OOM
 
       _configJsonLogger.info(gson.toJson(config));
 
-      final Injector injector = Guice.createInjector(new OOMModule(config));
-      final OperationManager operationManager = injector.getInstance(OperationManager.class);
-      final Client client = injector.getInstance(Client.class);
-      final ObjectManager objectManager = injector.getInstance(ObjectManager.class);
+      OperationManager operationManager = null;
+      ObjectManager objectManager = null;
+      Client client = null;
+      try
+      {
+         final Injector injector = Guice.createInjector(new OOMModule(config));
+         operationManager = injector.getInstance(OperationManager.class);
+         client = injector.getInstance(Client.class);
+         objectManager = injector.getInstance(ObjectManager.class);
+         Runtime.getRuntime().addShutdownHook(new ShutdownHook(objectManager));
+      }
+      catch (final RuntimeException e)
+      {
+         _logger.error("Error provisioning dependencies", e);
+         System.exit(ERROR_CONFIGURATION);
+      }
+
       final ExecutorService executorService = Executors.newCachedThreadPool();
       final LoadTest test = new LoadTest(operationManager, client, executorService);
-
-      Runtime.getRuntime().addShutdownHook(new Thread()
-      {
-         @Override
-         public void run()
-         {
-            _logger.info("shutting down");
-            try
-            {
-               objectManager.testComplete();
-            }
-            catch (final Exception e)
-            {
-               _logger.error("Error shutting down object manager", e);
-            }
-         }
-      });
 
       _logger.info("running test");
       test.runTest();
@@ -227,6 +223,30 @@ public class OOM
       {
          _logger.error("", e);
          System.exit(ERROR_CONFIGURATION);
+      }
+   }
+
+   private static class ShutdownHook extends Thread
+   {
+      private final ObjectManager objectManager;
+
+      public ShutdownHook(final ObjectManager objectManager)
+      {
+         this.objectManager = checkNotNull(objectManager);
+      }
+
+      @Override
+      public void run()
+      {
+         _logger.info("shutting down");
+         try
+         {
+            this.objectManager.testComplete();
+         }
+         catch (final Exception e)
+         {
+            _logger.error("Error shutting down object manager", e);
+         }
       }
    }
 }
