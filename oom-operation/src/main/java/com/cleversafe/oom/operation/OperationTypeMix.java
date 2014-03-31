@@ -25,20 +25,22 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Random;
 
 import com.cleversafe.oom.util.WeightedRandomChoice;
+import com.google.common.math.DoubleMath;
 
 /**
  * An implementation for generating a sequence of <code>OperationType</code> values.
  */
 public class OperationTypeMix
 {
-   private final long readPercentage;
-   private final long writePercentage;
-   private final long deletePercentage;
+   private final double readPercentage;
+   private final double writePercentage;
+   private final double deletePercentage;
    private final long floor;
    private final long midpoint;
    private final long ceiling;
    private boolean onlyWrite;
    private boolean onlyDelete;
+   private final static double err = Math.pow(0.1, 6);
    private final WeightedRandomChoice<OperationType> operationMix;
 
    /**
@@ -64,9 +66,9 @@ public class OperationTypeMix
     *            if ceiling is less than floor
     */
    public OperationTypeMix(
-         final long readPercentage,
-         final long writePercentage,
-         final long deletePercentage,
+         final double readPercentage,
+         final double writePercentage,
+         final double deletePercentage,
          final long floor,
          final long ceiling)
    {
@@ -99,21 +101,23 @@ public class OperationTypeMix
     *            if random is null
     */
    public OperationTypeMix(
-         final long readPercentage,
-         final long writePercentage,
-         final long deletePercentage,
+         final double readPercentage,
+         final double writePercentage,
+         final double deletePercentage,
          final long floor,
          final long ceiling,
          final Random random)
    {
-      checkArgument(0 <= readPercentage && readPercentage <= 100,
-            "readPercentage must be in range [0, 100] [%s]", readPercentage);
-      checkArgument(0 <= writePercentage && writePercentage <= 100,
-            "writePercentage must be in range [0, 100] [%s]", writePercentage);
-      checkArgument(0 <= deletePercentage && deletePercentage <= 100,
-            "deletePercentage must be in range [0, 100] [%s]", deletePercentage);
-      final long sumPercentage = readPercentage + writePercentage + deletePercentage;
-      checkArgument(sumPercentage == 100, "Sum of percentages must be 100 [%s]", sumPercentage);
+      checkArgument(inRange(readPercentage), "readPercentage must be in range [0.0, 100.0] [%s]",
+            readPercentage);
+      checkArgument(inRange(writePercentage), "writePercentage must be in range [0.0, 100.0] [%s]",
+            writePercentage);
+      checkArgument(inRange(deletePercentage),
+            "deletePercentage must be in range [0.0, 100.0] [%s]",
+            deletePercentage);
+      final double sumPercentage = readPercentage + writePercentage + deletePercentage;
+      checkArgument(DoubleMath.fuzzyEquals(sumPercentage, 100.0, err),
+            "Sum of percentages must be 100.0 [%s]", sumPercentage);
       checkArgument(floor >= 0, "floor must be >= 0 [%s]", floor);
       checkArgument(ceiling >= floor, "ceiling must be >= floor [%s]", ceiling);
       checkNotNull(random, "random must not be null");
@@ -135,10 +139,16 @@ public class OperationTypeMix
       this.onlyDelete = false;
    }
 
+   private boolean inRange(final double v)
+   {
+      return DoubleMath.fuzzyCompare(v, 0.0, err) >= 0
+            && DoubleMath.fuzzyCompare(v, 100.0, err) <= 0;
+   }
+
    /**
     * @return the configured read percentage
     */
-   public long getReadPercentage()
+   public double getReadPercentage()
    {
       return this.readPercentage;
    }
@@ -146,7 +156,7 @@ public class OperationTypeMix
    /**
     * @return the configured write percentage
     */
-   public long getWritePercentage()
+   public double getWritePercentage()
    {
       return this.writePercentage;
    }
@@ -154,7 +164,7 @@ public class OperationTypeMix
    /**
     * @return the configured delete percentage
     */
-   public long getDeletePercentage()
+   public double getDeletePercentage()
    {
       return this.deletePercentage;
    }
