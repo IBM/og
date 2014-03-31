@@ -70,25 +70,25 @@ public class WeightedRandomChoiceTest
    @Test(expected = NullPointerException.class)
    public void testNullChoice()
    {
-      this.wrc.addChoice(null, 1);
+      this.wrc.addChoice(null, 1.0);
    }
 
    @Test(expected = IllegalArgumentException.class)
    public void testNegativeWeight()
    {
-      this.wrc.addChoice(new Object(), -1);
+      this.wrc.addChoice(new Object(), -0.0001);
    }
 
    @Test(expected = IllegalArgumentException.class)
    public void testZeroWeight()
    {
-      this.wrc.addChoice(new Object(), 0);
+      this.wrc.addChoice(new Object(), 0.0);
    }
 
    @Test
    public void testAddChoice()
    {
-      this.wrc.addChoice(new Object(), 1);
+      this.wrc.addChoice(new Object(), 0.0001);
    }
 
    @Test(expected = IllegalStateException.class)
@@ -117,9 +117,9 @@ public class WeightedRandomChoiceTest
       m.put(one, 0);
       m.put(two, 0);
       m.put(three, 0);
-      wrc.addChoice(one, 1);
-      wrc.addChoice(two, 1);
-      wrc.addChoice(three, 1);
+      wrc.addChoice(one, 1.0);
+      wrc.addChoice(two, 1.0);
+      wrc.addChoice(three, 1.0);
 
       for (int i = 0; i < 100; i++)
       {

@@ -36,7 +36,7 @@ import java.util.Random;
 public class WeightedRandomChoice<T>
 {
    private final List<Choice<T>> choices;
-   private long totalWeight;
+   private double totalWeight;
    private final Random random;
 
    /**
@@ -48,9 +48,9 @@ public class WeightedRandomChoice<T>
    public class Choice<S>
    {
       private final S value;
-      private final long weight;
+      private final double weight;
 
-      private Choice(final S choice, final long weight)
+      private Choice(final S choice, final double weight)
       {
          this.value = choice;
          this.weight = weight;
@@ -67,7 +67,7 @@ public class WeightedRandomChoice<T>
       /**
        * @return the weight of this choice
        */
-      public long getWeight()
+      public double getWeight()
       {
          return this.weight;
       }
@@ -95,13 +95,13 @@ public class WeightedRandomChoice<T>
    {
       checkNotNull(random, "random must not be null");
       this.choices = new ArrayList<Choice<T>>();
-      this.totalWeight = 0;
+      this.totalWeight = 0.0;
       this.random = random;
    }
 
    /**
-    * Adds a choice to the collection of elements to randomly choose from. A default weight of 1 is
-    * applied to this choice
+    * Adds a choice to the collection of elements to randomly choose from. A default weight of 1.0
+    * is applied to this choice
     * 
     * @param choice
     *           the choice to add
@@ -110,7 +110,7 @@ public class WeightedRandomChoice<T>
     */
    public void addChoice(final T choice)
    {
-      addChoice(choice, 1);
+      addChoice(choice, 1.0);
    }
 
    /**
@@ -123,12 +123,12 @@ public class WeightedRandomChoice<T>
     * @throws NullPointerException
     *            if choice is null
     * @throws IllegalArgumentException
-    *            if weight is less than 1
+    *            if weight is negative
     */
-   public void addChoice(final T choice, final long weight)
+   public void addChoice(final T choice, final double weight)
    {
       checkNotNull(choice, "choice must not be null");
-      checkArgument(weight > 0, "weight must be > 0 [%s]", weight);
+      checkArgument(weight > 0.0, "weight must be > 0.0 [%s]", weight);
       this.choices.add(new Choice<T>(choice, weight));
       this.totalWeight += weight;
    }
@@ -149,8 +149,8 @@ public class WeightedRandomChoice<T>
          throw new IllegalStateException("at least one choice must be added");
       }
 
-      final long rnd = Math.round(this.random.nextDouble() * this.totalWeight);
-      long previousWeights = 0;
+      final double rnd = this.random.nextDouble() * this.totalWeight;
+      double previousWeights = 0.0;
 
       for (final Choice<T> choice : this.choices)
       {
