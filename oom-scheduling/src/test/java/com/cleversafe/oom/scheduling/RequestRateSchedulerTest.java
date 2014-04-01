@@ -22,14 +22,9 @@ package com.cleversafe.oom.scheduling;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.cleversafe.oom.distribution.Distribution;
@@ -37,14 +32,12 @@ import com.cleversafe.oom.distribution.Distribution;
 public class RequestRateSchedulerTest
 {
    private Distribution mockDistribution;
-   private Scheduler scheduler;
 
    @Before
    public void setBefore()
    {
       this.mockDistribution = mock(Distribution.class);
       when(this.mockDistribution.nextSample()).thenReturn(1.0);
-      this.scheduler = new RequestRateScheduler(this.mockDistribution, TimeUnit.MILLISECONDS);
    }
 
    @Test(expected = NullPointerException.class)
@@ -63,48 +56,5 @@ public class RequestRateSchedulerTest
    public void testRequestRateScheduler()
    {
       new RequestRateScheduler(this.mockDistribution, TimeUnit.MILLISECONDS);
-   }
-
-   @Ignore
-   @Test
-   public void testWaitForNext()
-   {
-      final List<Long> durations = new ArrayList<Long>();
-      for (int i = 0; i < 1000; i++)
-      {
-         final long beginTime = System.nanoTime();
-         this.scheduler.waitForNext();
-         final long endTime = System.nanoTime();
-         durations.add(endTime - beginTime);
-      }
-
-      final long max = Collections.max(durations);
-      final long min = Collections.min(durations);
-      final long delta = max - min;
-
-      // TODO establish performance criteria
-      final long validMax = TimeUnit.MICROSECONDS.toNanos(5000);
-      final long validDelta = TimeUnit.MICROSECONDS.toNanos(1500);
-      Assert.assertTrue("max exceeded, " + max, max < validMax);
-      Assert.assertTrue("validDelta exceeded, " + delta, delta < validDelta);
-   }
-
-   @Ignore
-   @Test
-   public void testDelayedWaitForNext() throws InterruptedException
-   {
-      this.scheduler.waitForNext();
-      Thread.sleep(5);
-
-      // waitForNext should return immediately if elapsed time between
-      // successive calls is longer than the sleepDuration of the scheduler
-      final long beginTime = System.nanoTime();
-      this.scheduler.waitForNext();
-      final long endTime = System.nanoTime();
-      final long delta = endTime - beginTime;
-
-      // TODO establish performance criteria
-      final long validDelta = TimeUnit.MICROSECONDS.toNanos(200);
-      Assert.assertTrue("validDelta2 exceeded, " + delta, delta < validDelta);
    }
 }
