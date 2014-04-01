@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import com.cleversafe.oom.api.ByteBufferConsumer;
 import com.cleversafe.oom.api.OperationManager;
 import com.cleversafe.oom.api.Producer;
+import com.cleversafe.oom.cli.json.Concurrency;
 import com.cleversafe.oom.cli.json.FileSize;
 import com.cleversafe.oom.cli.json.JSONConfiguration;
 import com.cleversafe.oom.client.Client;
@@ -55,6 +56,8 @@ import com.cleversafe.oom.operation.Entity;
 import com.cleversafe.oom.operation.EntityType;
 import com.cleversafe.oom.operation.OperationTypeMix;
 import com.cleversafe.oom.operation.RequestContext;
+import com.cleversafe.oom.scheduling.RequestRateScheduler;
+import com.cleversafe.oom.scheduling.Scheduler;
 import com.cleversafe.oom.soh.SOHOperationManager;
 import com.cleversafe.oom.soh.SOHWriteObjectNameConsumer;
 import com.cleversafe.oom.util.ByteBufferConsumers;
@@ -234,6 +237,15 @@ public class OOMModule extends AbstractModule
             return false;
       }
       return true;
+   }
+
+   @Provides
+   @Singleton
+   Scheduler provideScheduler()
+   {
+      final Concurrency concurrency = this.config.getConcurrency();
+      final Distribution count = new UniformDistribution(concurrency.getCount(), 0.0);
+      return new RequestRateScheduler(count, concurrency.getUnit());
    }
 
    @Provides
