@@ -28,13 +28,13 @@ import com.cleversafe.oom.operation.Response;
 
 public class RequestRateScheduler implements Scheduler
 {
-   private final Distribution sleepDuration;
+   private final Distribution count;
    private final TimeUnit unit;
    private long lastCalledTimestamp;
 
-   public RequestRateScheduler(final Distribution sleepDuration, final TimeUnit unit)
+   public RequestRateScheduler(final Distribution count, final TimeUnit unit)
    {
-      this.sleepDuration = checkNotNull(sleepDuration, "sleepDuration must not be null");
+      this.count = checkNotNull(count, "count must not be null");
       this.unit = checkNotNull(unit, "unit must not be null");
    }
 
@@ -64,8 +64,7 @@ public class RequestRateScheduler implements Scheduler
 
    private final long nextSleepDuration()
    {
-      final long nextSleepDuration = (long) this.sleepDuration.nextSample();
-      return TimeUnit.NANOSECONDS.convert(nextSleepDuration, this.unit);
+      return (long) (this.unit.toNanos(1) / this.count.nextSample());
    }
 
    private final long adjustment(final long timestamp)
