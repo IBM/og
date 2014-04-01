@@ -19,18 +19,22 @@
 
 package com.cleversafe.oom.cli.json;
 
+import java.util.concurrent.TimeUnit;
+
 public class Concurrency
 {
    String type;
    long count;
-   String unit;
+   TimeUnit unit;
    long rampup;
-   String rampupUnit;
+   TimeUnit rampupUnit;
 
    public Concurrency()
    {
       this.type = "threads";
       this.count = 1;
+      this.unit = TimeUnit.SECONDS;
+      this.rampupUnit = TimeUnit.SECONDS;
    }
 
    /**
@@ -52,7 +56,7 @@ public class Concurrency
    /**
     * @return the unit
     */
-   public String getUnit()
+   public TimeUnit getUnit()
    {
       return this.unit;
    }
@@ -68,7 +72,7 @@ public class Concurrency
    /**
     * @return the rampupUnit
     */
-   public String getRampupUnit()
+   public TimeUnit getRampupUnit()
    {
       return this.rampupUnit;
    }

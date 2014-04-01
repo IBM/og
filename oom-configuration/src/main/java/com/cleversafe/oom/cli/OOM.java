@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import com.cleversafe.oom.api.OperationManager;
 import com.cleversafe.oom.cli.json.JSONConfiguration;
+import com.cleversafe.oom.cli.json.TimeUnitTypeAdapterFactory;
 import com.cleversafe.oom.client.Client;
 import com.cleversafe.oom.guice.OOMModule;
 import com.cleversafe.oom.object.manager.ObjectManager;
@@ -151,6 +152,7 @@ public class OOM
       return new GsonBuilder()
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
             .setLongSerializationPolicy(LongSerializationPolicy.STRING)
+            .registerTypeAdapterFactory(new TimeUnitTypeAdapterFactory())
             .setPrettyPrinting()
             .create();
    }

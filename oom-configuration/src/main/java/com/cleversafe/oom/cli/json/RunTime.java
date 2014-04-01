@@ -19,13 +19,17 @@
 
 package com.cleversafe.oom.cli.json;
 
+import java.util.concurrent.TimeUnit;
+
 public class RunTime
 {
    long duration;
-   String unit;
+   TimeUnit unit;
 
    public RunTime()
-   {}
+   {
+      this.unit = TimeUnit.SECONDS;
+   }
 
    /**
     * @return the duration
@@ -38,7 +42,7 @@ public class RunTime
    /**
     * @return the unit
     */
-   public String getUnit()
+   public TimeUnit getUnit()
    {
       return this.unit;
    }
