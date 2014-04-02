@@ -19,22 +19,25 @@
 
 package com.cleversafe.oom.cli.json;
 
+import com.cleversafe.oom.util.SizeUnit;
+
+// TODO decimal sizes?
 public class FileSize
 {
    String distribution;
-   double average;
-   String averageUnit;
-   double spread;
-   String spreadUnit;
+   long average;
+   SizeUnit averageUnit;
+   long spread;
+   SizeUnit spreadUnit;
    long weight;
 
    public FileSize()
    {
       this.distribution = "normal";
-      this.average = 5.0;
-      this.averageUnit = "mb";
-      this.spread = 1.25;
-      this.spreadUnit = "mb";
+      this.average = 5;
+      this.averageUnit = SizeUnit.MEBIBYTES;
+      this.spread = 1;
+      this.spreadUnit = SizeUnit.MEBIBYTES;
       this.weight = 1;
    }
 
@@ -49,7 +52,7 @@ public class FileSize
    /**
     * @return the average
     */
-   public double getAverage()
+   public long getAverage()
    {
       return this.average;
    }
@@ -57,7 +60,7 @@ public class FileSize
    /**
     * @return the averageUnit
     */
-   public String getAverageUnit()
+   public SizeUnit getAverageUnit()
    {
       return this.averageUnit;
    }
@@ -65,7 +68,7 @@ public class FileSize
    /**
     * @return the spread
     */
-   public double getSpread()
+   public long getSpread()
    {
       return this.spread;
    }
@@ -73,7 +76,7 @@ public class FileSize
    /**
     * @return the spreadUnit
     */
-   public String getSpreadUnit()
+   public SizeUnit getSpreadUnit()
    {
       return this.spreadUnit;
    }

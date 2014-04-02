@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import com.cleversafe.oom.api.OperationManager;
 import com.cleversafe.oom.cli.json.JSONConfiguration;
+import com.cleversafe.oom.cli.json.SizeUnitTypeAdapterFactory;
 import com.cleversafe.oom.cli.json.TimeUnitTypeAdapterFactory;
 import com.cleversafe.oom.client.Client;
 import com.cleversafe.oom.guice.OOMModule;
@@ -152,9 +153,14 @@ public class OOM
       return new GsonBuilder()
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
             .setLongSerializationPolicy(LongSerializationPolicy.STRING)
+            // TODO refactor into an abstract adapter for enums with behavior
             .registerTypeAdapterFactory(new TimeUnitTypeAdapterFactory())
+            .registerTypeAdapterFactory(new SizeUnitTypeAdapterFactory())
             .setPrettyPrinting()
             .create();
+      // TODO gson is deserializing into null if an enum could not be parsed. Should throw an
+      // exception instead? Otherwise verification can take place in a verification method after
+      // json deserialization
    }
 
    private static JSONConfiguration createJSONConfiguration(final Gson gson, final File testConfig)
