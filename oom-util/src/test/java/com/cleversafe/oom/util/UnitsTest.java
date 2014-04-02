@@ -35,13 +35,13 @@ public class UnitsTest
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testEmptyString()
+   public void testEmptyTimeString()
    {
       Units.time("");
    }
 
    @Test
-   public void testCaseInsensitive()
+   public void testCaseInsensitiveTime()
    {
       final TimeUnit t1 = Units.time("seconds");
       final TimeUnit t2 = Units.time("sECONds");
@@ -59,7 +59,7 @@ public class UnitsTest
       input.add("nanosecs");
       input.add("nanosecond");
       input.add("nanoseconds");
-      testUnit(input, TimeUnit.NANOSECONDS);
+      testTimeUnit(input, TimeUnit.NANOSECONDS);
    }
 
    @Test
@@ -72,7 +72,7 @@ public class UnitsTest
       input.add("microsecs");
       input.add("microsecond");
       input.add("microseconds");
-      testUnit(input, TimeUnit.MICROSECONDS);
+      testTimeUnit(input, TimeUnit.MICROSECONDS);
    }
 
    @Test
@@ -86,7 +86,7 @@ public class UnitsTest
       input.add("millisecs");
       input.add("millisecond");
       input.add("milliseconds");
-      testUnit(input, TimeUnit.MILLISECONDS);
+      testTimeUnit(input, TimeUnit.MILLISECONDS);
    }
 
    @Test
@@ -98,7 +98,7 @@ public class UnitsTest
       input.add("secs");
       input.add("second");
       input.add("seconds");
-      testUnit(input, TimeUnit.SECONDS);
+      testTimeUnit(input, TimeUnit.SECONDS);
    }
 
    @Test
@@ -110,7 +110,7 @@ public class UnitsTest
       input.add("mins");
       input.add("minute");
       input.add("minutes");
-      testUnit(input, TimeUnit.MINUTES);
+      testTimeUnit(input, TimeUnit.MINUTES);
    }
 
    @Test
@@ -122,7 +122,7 @@ public class UnitsTest
       input.add("hrs");
       input.add("hour");
       input.add("hours");
-      testUnit(input, TimeUnit.HOURS);
+      testTimeUnit(input, TimeUnit.HOURS);
    }
 
    @Test
@@ -132,10 +132,10 @@ public class UnitsTest
       input.add("d");
       input.add("day");
       input.add("days");
-      testUnit(input, TimeUnit.DAYS);
+      testTimeUnit(input, TimeUnit.DAYS);
    }
 
-   private void testUnit(final List<String> input, final TimeUnit unit)
+   private void testTimeUnit(final List<String> input, final TimeUnit unit)
    {
       for (final String i : input)
       {
@@ -144,7 +144,7 @@ public class UnitsTest
    }
 
    @Test
-   public void testBadInput()
+   public void testBadTimeInput()
    {
       final List<String> input = new ArrayList<String>();
       input.add("foo");
@@ -156,6 +156,166 @@ public class UnitsTest
          try
          {
             Units.time(i);
+            // should never get here
+            Assert.assertTrue(false);
+         }
+         catch (final IllegalArgumentException e)
+         {
+         }
+      }
+   }
+
+   @Test(expected = NullPointerException.class)
+   public void testNullSize()
+   {
+      Units.size(null);
+   }
+
+   @Test(expected = IllegalArgumentException.class)
+   public void testEmptySizeString()
+   {
+      Units.size("");
+   }
+
+   @Test
+   public void testCaseInsensitiveSize()
+   {
+      final SizeUnit s1 = Units.size("bytes");
+      final SizeUnit s2 = Units.size("bYTEs");
+      Assert.assertEquals(s1, s2);
+   }
+
+   @Test
+   public void testBytes()
+   {
+      final List<String> input = new ArrayList<String>();
+      input.add("b");
+      input.add("byte");
+      input.add("bytes");
+      testSizeUnit(input, SizeUnit.BYTES);
+   }
+
+   @Test
+   public void testKilobytes()
+   {
+      final List<String> input = new ArrayList<String>();
+      input.add("kb");
+      input.add("kilobyte");
+      input.add("kilobytes");
+      testSizeUnit(input, SizeUnit.KILOBYTES);
+   }
+
+   @Test
+   public void testKibibytes()
+   {
+      final List<String> input = new ArrayList<String>();
+      input.add("kib");
+      input.add("kibibyte");
+      input.add("kibibytes");
+      testSizeUnit(input, SizeUnit.KIBIBYTES);
+   }
+
+   @Test
+   public void testMegabytes()
+   {
+      final List<String> input = new ArrayList<String>();
+      input.add("mb");
+      input.add("megabyte");
+      input.add("megabytes");
+      testSizeUnit(input, SizeUnit.MEGABYTES);
+   }
+
+   @Test
+   public void testMebibytes()
+   {
+      final List<String> input = new ArrayList<String>();
+      input.add("mib");
+      input.add("mebibyte");
+      input.add("mebibytes");
+      testSizeUnit(input, SizeUnit.MEBIBYTES);
+   }
+
+   @Test
+   public void testGigabytes()
+   {
+      final List<String> input = new ArrayList<String>();
+      input.add("gb");
+      input.add("gigabyte");
+      input.add("gigabytes");
+      testSizeUnit(input, SizeUnit.GIGABYTES);
+   }
+
+   @Test
+   public void testGibibytes()
+   {
+      final List<String> input = new ArrayList<String>();
+      input.add("gib");
+      input.add("gibibyte");
+      input.add("gibibytes");
+      testSizeUnit(input, SizeUnit.GIBIBYTES);
+   }
+
+   @Test
+   public void testTerabytes()
+   {
+      final List<String> input = new ArrayList<String>();
+      input.add("tb");
+      input.add("terabyte");
+      input.add("terabytes");
+      testSizeUnit(input, SizeUnit.TERABYTES);
+   }
+
+   @Test
+   public void testTebibytes()
+   {
+      final List<String> input = new ArrayList<String>();
+      input.add("tib");
+      input.add("tebibyte");
+      input.add("tebibytes");
+      testSizeUnit(input, SizeUnit.TEBIBYTES);
+   }
+
+   @Test
+   public void testPetabytes()
+   {
+      final List<String> input = new ArrayList<String>();
+      input.add("pb");
+      input.add("petabyte");
+      input.add("petabytes");
+      testSizeUnit(input, SizeUnit.PETABYTES);
+   }
+
+   @Test
+   public void testPebibytes()
+   {
+      final List<String> input = new ArrayList<String>();
+      input.add("pib");
+      input.add("pebibyte");
+      input.add("pebibytes");
+      testSizeUnit(input, SizeUnit.PEBIBYTES);
+   }
+
+   private void testSizeUnit(final List<String> input, final SizeUnit unit)
+   {
+      for (final String i : input)
+      {
+         Assert.assertEquals(unit, Units.size(i));
+      }
+   }
+
+   @Test
+   public void testBadSizeInput()
+   {
+      final List<String> input = new ArrayList<String>();
+      input.add("cleverbyte");
+      input.add("_");
+      input.add("mega_byte");
+
+      for (final String i : input)
+      {
+         try
+         {
+            Units.size(i);
             // should never get here
             Assert.assertTrue(false);
          }

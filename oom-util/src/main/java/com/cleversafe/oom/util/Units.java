@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 public class Units
 {
    private static final Map<String, TimeUnit> TIME_UNITS;
+   private static final Map<String, SizeUnit> SIZE_UNITS;
 
    static
    {
@@ -77,6 +78,51 @@ public class Units
       TIME_UNITS.put("D", TimeUnit.DAYS);
       TIME_UNITS.put("DAY", TimeUnit.DAYS);
       TIME_UNITS.put("DAYS", TimeUnit.DAYS);
+
+      SIZE_UNITS = new HashMap<String, SizeUnit>();
+      SIZE_UNITS.put("B", SizeUnit.BYTES);
+      SIZE_UNITS.put("BYTE", SizeUnit.BYTES);
+      SIZE_UNITS.put("BYTES", SizeUnit.BYTES);
+
+      SIZE_UNITS.put("KB", SizeUnit.KILOBYTES);
+      SIZE_UNITS.put("KILOBYTE", SizeUnit.KILOBYTES);
+      SIZE_UNITS.put("KILOBYTES", SizeUnit.KILOBYTES);
+
+      SIZE_UNITS.put("KIB", SizeUnit.KIBIBYTES);
+      SIZE_UNITS.put("KIBIBYTE", SizeUnit.KIBIBYTES);
+      SIZE_UNITS.put("KIBIBYTES", SizeUnit.KIBIBYTES);
+
+      SIZE_UNITS.put("MB", SizeUnit.MEGABYTES);
+      SIZE_UNITS.put("MEGABYTE", SizeUnit.MEGABYTES);
+      SIZE_UNITS.put("MEGABYTES", SizeUnit.MEGABYTES);
+
+      SIZE_UNITS.put("MIB", SizeUnit.MEBIBYTES);
+      SIZE_UNITS.put("MEBIBYTE", SizeUnit.MEBIBYTES);
+      SIZE_UNITS.put("MEBIBYTES", SizeUnit.MEBIBYTES);
+
+      SIZE_UNITS.put("GB", SizeUnit.GIGABYTES);
+      SIZE_UNITS.put("GIGABYTE", SizeUnit.GIGABYTES);
+      SIZE_UNITS.put("GIGABYTES", SizeUnit.GIGABYTES);
+
+      SIZE_UNITS.put("GIB", SizeUnit.GIBIBYTES);
+      SIZE_UNITS.put("GIBIBYTE", SizeUnit.GIBIBYTES);
+      SIZE_UNITS.put("GIBIBYTES", SizeUnit.GIBIBYTES);
+
+      SIZE_UNITS.put("TB", SizeUnit.TERABYTES);
+      SIZE_UNITS.put("TERABYTE", SizeUnit.TERABYTES);
+      SIZE_UNITS.put("TERABYTES", SizeUnit.TERABYTES);
+
+      SIZE_UNITS.put("TIB", SizeUnit.TEBIBYTES);
+      SIZE_UNITS.put("TEBIBYTE", SizeUnit.TEBIBYTES);
+      SIZE_UNITS.put("TEBIBYTES", SizeUnit.TEBIBYTES);
+
+      SIZE_UNITS.put("PB", SizeUnit.PETABYTES);
+      SIZE_UNITS.put("PETABYTE", SizeUnit.PETABYTES);
+      SIZE_UNITS.put("PETABYTES", SizeUnit.PETABYTES);
+
+      SIZE_UNITS.put("PIB", SizeUnit.PEBIBYTES);
+      SIZE_UNITS.put("PEBIBYTE", SizeUnit.PEBIBYTES);
+      SIZE_UNITS.put("PEBIBYTES", SizeUnit.PEBIBYTES);
    }
 
    private Units()
@@ -87,6 +133,14 @@ public class Units
       checkNotNull(time, "time must not be null");
       final TimeUnit unit = TIME_UNITS.get(time.toUpperCase());
       checkArgument(unit != null, "Could not parse time [%s]", time);
+      return unit;
+   }
+
+   public static SizeUnit size(final String size)
+   {
+      checkNotNull(size, "size must not be null");
+      final SizeUnit unit = SIZE_UNITS.get(size.toUpperCase());
+      checkArgument(unit != null, "Could not parse size [%s]", size);
       return unit;
    }
 }
