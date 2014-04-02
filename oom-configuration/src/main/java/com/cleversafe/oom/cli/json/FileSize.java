@@ -25,18 +25,18 @@ import com.cleversafe.oom.util.SizeUnit;
 public class FileSize
 {
    String distribution;
-   long average;
+   double average;
    SizeUnit averageUnit;
-   long spread;
+   double spread;
    SizeUnit spreadUnit;
    long weight;
 
    public FileSize()
    {
       this.distribution = "normal";
-      this.average = 5;
+      this.average = 5.0;
       this.averageUnit = SizeUnit.MEBIBYTES;
-      this.spread = 1;
+      this.spread = 0.0;
       this.spreadUnit = SizeUnit.MEBIBYTES;
       this.weight = 1;
    }
@@ -52,7 +52,7 @@ public class FileSize
    /**
     * @return the average
     */
-   public long getAverage()
+   public double getAverage()
    {
       return this.average;
    }
@@ -68,7 +68,7 @@ public class FileSize
    /**
     * @return the spread
     */
-   public long getSpread()
+   public double getSpread()
    {
       return this.spread;
    }
