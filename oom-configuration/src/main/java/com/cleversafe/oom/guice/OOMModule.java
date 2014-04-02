@@ -173,7 +173,7 @@ public class OOMModule extends AbstractModule
       final WeightedRandomChoice<Distribution> wrc = new WeightedRandomChoice<Distribution>();
       for (final FileSize f : this.config.getFilesizes())
       {
-         wrc.addChoice(createDistribution(f), f.getWeight());
+         wrc.addChoice(createSizeDistribution(f), f.getWeight());
       }
 
       return new Producer<Entity>()
@@ -188,19 +188,23 @@ public class OOMModule extends AbstractModule
       };
    }
 
-   private static Distribution createDistribution(final FileSize filesize)
+   private static Distribution createSizeDistribution(final FileSize filesize)
    {
       final DistributionType type =
             DistributionType.parseDistribution(filesize.getDistribution());
+      // TODO standardize terminology; mean or average
+      final double mean = filesize.getAverage() * filesize.getAverageUnit().toBytes(1);
+      final double spread = filesize.getSpread() * filesize.getSpreadUnit().toBytes(1);
       switch (type)
       {
-      // TODO account for size and spread units
+      // TODO determine how to expose these in json configuration in a way that makes sense
+      // mean/average/min/max?
          case NORMAL :
-            return new NormalDistribution(filesize.getAverage(), filesize.getSpread());
+            return new NormalDistribution(mean, spread);
          case LOGNORMAL :
-            return new LogNormalDistribution(filesize.getAverage(), filesize.getSpread());
+            return new LogNormalDistribution(mean, spread);
          default :
-            return new UniformDistribution(filesize.getAverage(), filesize.getSpread());
+            return new UniformDistribution(mean, spread);
       }
    }
 
