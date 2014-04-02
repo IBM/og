@@ -22,9 +22,6 @@ package com.cleversafe.oom.cli.json;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.cleversafe.oom.util.Units;
 import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
@@ -33,9 +30,12 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
+// This factory is fragile - TimeUnit is not an ordinary enum in the sense
+// that TimeUnit instances (eg TimeUnit.NANOSECONDS) are TimeUnit subtypes.
+// This contrasts with a basic enum where the instance and the class are
+// interchangeable
 public class TimeUnitTypeAdapterFactory implements TypeAdapterFactory
 {
-   private static Logger _logger = LoggerFactory.getLogger(TimeUnitTypeAdapterFactory.class);
 
    public TimeUnitTypeAdapterFactory()
    {}
@@ -45,6 +45,7 @@ public class TimeUnitTypeAdapterFactory implements TypeAdapterFactory
    {
       @SuppressWarnings("unchecked")
       final Class<T> rawType = (Class<T>) type.getRawType();
+      // use this type adapter for the TimeUnit type and all of its elements (subtypes)
       if (rawType.equals(TimeUnit.class) || parentEquals(rawType, TimeUnit.class))
       {
          return new TypeAdapter<T>()
