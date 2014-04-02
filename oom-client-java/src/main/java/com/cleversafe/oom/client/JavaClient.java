@@ -134,6 +134,8 @@ public class JavaClient implements Client
       public Response call() throws Exception
       {
          this.responseBuilder.withRequestId(this.request.getId());
+         // TODO src should be created and closed in sendRequestContent. Any IOException
+         // can still bubble up
          final InputStream src = Entities.createInputStream(this.request.getEntity());
          try
          {
@@ -168,6 +170,7 @@ public class JavaClient implements Client
          connection.setAllowUserInteraction(this.config.getAllowUserInteraction());
          connection.setUseCaches(this.config.getUseCaches());
          connection.setDoInput(true);
+         // TODO check based on EntityType == NONE rather than size
          if (this.request.getEntity().getSize() > 0)
             connection.setDoOutput(true);
          return connection;
@@ -304,6 +307,7 @@ public class JavaClient implements Client
             }
             catch (final IOException e)
             {
+               // TODO either log or throw
             }
          }
       }
