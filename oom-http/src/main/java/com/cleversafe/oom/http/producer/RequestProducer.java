@@ -22,6 +22,7 @@ package com.cleversafe.oom.http.producer;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URL;
+import java.util.List;
 import java.util.Map;
 
 import com.cleversafe.oom.api.Producer;
@@ -29,6 +30,7 @@ import com.cleversafe.oom.operation.Entity;
 import com.cleversafe.oom.operation.Method;
 import com.cleversafe.oom.operation.Request;
 import com.cleversafe.oom.operation.RequestContext;
+import com.cleversafe.oom.util.Pair;
 
 public class RequestProducer implements Producer<Request>
 {
@@ -36,7 +38,7 @@ public class RequestProducer implements Producer<Request>
    private final Producer<String> customRequestKey;
    private final Producer<Method> method;
    private final Producer<URL> url;
-   private final Producer<Map<String, String>> headers;
+   private final List<Producer<Pair<String, String>>> headers;
    private final Producer<Entity> entity;
    private final Producer<Map<String, String>> metadata;
 
@@ -45,7 +47,7 @@ public class RequestProducer implements Producer<Request>
          final Producer<String> customRequestKey,
          final Producer<Method> method,
          final Producer<URL> url,
-         final Producer<Map<String, String>> headers,
+         final List<Producer<Pair<String, String>>> headers,
          final Producer<Entity> entity,
          final Producer<Map<String, String>> metadata)
    {
@@ -61,13 +63,21 @@ public class RequestProducer implements Producer<Request>
    @Override
    public Request produce(final RequestContext context)
    {
-      return context.withId(this.id.produce(context))
+      context.withId(this.id.produce(context))
             .withCustomRequestKey(this.customRequestKey.produce(context))
             .withMethod(this.method.produce(context))
-            .withURL(this.url.produce(context))
-            .withHeaders(this.headers.produce(context))
-            .withEntity(this.entity.produce(context))
+            .withURL(this.url.produce(context));
+
+      for (final Producer<Pair<String, String>> producer : this.headers)
+      {
+         final Pair<String, String> pair = producer.produce(context);
+         context.withHeader(pair.getKey(), pair.getValue());
+      }
+
+      context.withEntity(this.entity.produce(context))
             .withMetaData(this.metadata.produce(context))
             .build();
+
+      return context.build();
    }
 }

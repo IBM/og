@@ -52,6 +52,7 @@ import com.cleversafe.oom.operation.Response;
 import com.cleversafe.oom.scheduling.Scheduler;
 import com.cleversafe.oom.soh.SOHOperationManager;
 import com.cleversafe.oom.util.Entities;
+import com.cleversafe.oom.util.Pair;
 import com.cleversafe.oom.util.producer.Producers;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -65,7 +66,7 @@ public class SOHOperationManagerProvider implements Provider<SOHOperationManager
    private final Producer<Integer> port;
    private final Producer<String> container;
    private final Producer<Map<String, String>> queryParams;
-   private final Producer<Map<String, String>> headers;
+   private final List<Producer<Pair<String, String>>> headers;
    private final Producer<Entity> entity;
    private final Producer<Map<String, String>> metadata;
    private final Scheduler scheduler;
@@ -89,7 +90,7 @@ public class SOHOperationManagerProvider implements Provider<SOHOperationManager
          @DefaultQueryParams
          final Producer<Map<String, String>> queryParams,
          @DefaultHeaders
-         final Producer<Map<String, String>> headers,
+         final List<Producer<Pair<String, String>>> headers,
          @DefaultEntity
          final Producer<Entity> entity,
          @DefaultMetaData

@@ -21,7 +21,9 @@ package com.cleversafe.oom.guice;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -33,6 +35,7 @@ import com.cleversafe.oom.distribution.Distribution;
 import com.cleversafe.oom.distribution.LogNormalDistribution;
 import com.cleversafe.oom.distribution.NormalDistribution;
 import com.cleversafe.oom.distribution.UniformDistribution;
+import com.cleversafe.oom.guice.annotation.DefaultAuth;
 import com.cleversafe.oom.guice.annotation.DefaultContainer;
 import com.cleversafe.oom.guice.annotation.DefaultEntity;
 import com.cleversafe.oom.guice.annotation.DefaultHeaders;
@@ -43,6 +46,7 @@ import com.cleversafe.oom.guice.annotation.DefaultPort;
 import com.cleversafe.oom.guice.annotation.DefaultQueryParams;
 import com.cleversafe.oom.guice.annotation.DefaultScheme;
 import com.cleversafe.oom.http.Scheme;
+import com.cleversafe.oom.http.producer.BasicAuthProducer;
 import com.cleversafe.oom.operation.Entity;
 import com.cleversafe.oom.operation.EntityType;
 import com.cleversafe.oom.operation.OperationTypeMix;
@@ -50,6 +54,7 @@ import com.cleversafe.oom.operation.RequestContext;
 import com.cleversafe.oom.scheduling.RequestRateScheduler;
 import com.cleversafe.oom.scheduling.Scheduler;
 import com.cleversafe.oom.util.Entities;
+import com.cleversafe.oom.util.Pair;
 import com.cleversafe.oom.util.WeightedRandomChoice;
 import com.cleversafe.oom.util.producer.Producers;
 import com.google.common.math.DoubleMath;
@@ -141,11 +146,29 @@ public class JsonModule extends AbstractModule
 
    @Provides
    @Singleton
-   @DefaultHeaders
-   Producer<Map<String, String>> provideDefaultHeaders()
+   @DefaultAuth
+   Producer<Pair<String, String>> providesDefaultAuth()
    {
-      final Map<String, String> headers = new HashMap<String, String>();
-      return Producers.of(headers);
+      final String username = this.config.getUsername();
+      final String password = this.config.getPassword();
+      if (username != null && password != null)
+         return new BasicAuthProducer(username, password);
+      else if (username == null && password == null)
+         return null;
+      throw new IllegalArgumentException("If username is not null password must also be not null");
+   }
+
+   @Provides
+   @Singleton
+   @DefaultHeaders
+   List<Producer<Pair<String, String>>> provideDefaultHeaders(@DefaultAuth
+   final Producer<Pair<String, String>> auth)
+   {
+      final List<Producer<Pair<String, String>>> headers =
+            new ArrayList<Producer<Pair<String, String>>>();
+      if (auth != null)
+         headers.add(auth);
+      return headers;
    }
 
    @Provides
