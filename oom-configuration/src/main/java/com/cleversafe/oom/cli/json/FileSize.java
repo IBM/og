@@ -19,12 +19,13 @@
 
 package com.cleversafe.oom.cli.json;
 
+import com.cleversafe.oom.distribution.DistributionType;
 import com.cleversafe.oom.util.SizeUnit;
 
 // TODO decimal sizes?
 public class FileSize
 {
-   String distribution;
+   DistributionType distribution;
    double average;
    SizeUnit averageUnit;
    double spread;
@@ -33,7 +34,7 @@ public class FileSize
 
    public FileSize()
    {
-      this.distribution = "normal";
+      this.distribution = DistributionType.NORMAL;
       this.average = 5.0;
       this.averageUnit = SizeUnit.MEBIBYTES;
       this.spread = 0.0;
@@ -44,7 +45,7 @@ public class FileSize
    /**
     * @return the distribution
     */
-   public String getDistribution()
+   public DistributionType getDistribution()
    {
       return this.distribution;
    }

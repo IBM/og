@@ -36,7 +36,6 @@ import com.cleversafe.oom.client.Client;
 import com.cleversafe.oom.client.JavaClient;
 import com.cleversafe.oom.client.JavaClientConfiguration;
 import com.cleversafe.oom.distribution.Distribution;
-import com.cleversafe.oom.distribution.DistributionType;
 import com.cleversafe.oom.distribution.LogNormalDistribution;
 import com.cleversafe.oom.distribution.NormalDistribution;
 import com.cleversafe.oom.distribution.UniformDistribution;
@@ -190,12 +189,10 @@ public class OOMModule extends AbstractModule
 
    private static Distribution createSizeDistribution(final FileSize filesize)
    {
-      final DistributionType type =
-            DistributionType.parseDistribution(filesize.getDistribution());
       // TODO standardize terminology; mean or average
       final double mean = filesize.getAverage() * filesize.getAverageUnit().toBytes(1);
       final double spread = filesize.getSpread() * filesize.getSpreadUnit().toBytes(1);
-      switch (type)
+      switch (filesize.getDistribution())
       {
       // TODO determine how to expose these in json configuration in a way that makes sense
       // mean/average/min/max?
