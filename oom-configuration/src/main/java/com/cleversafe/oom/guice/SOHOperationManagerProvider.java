@@ -28,7 +28,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.cleversafe.oom.api.Consumer;
 import com.cleversafe.oom.api.Producer;
-import com.cleversafe.oom.cli.json.JSONConfiguration;
 import com.cleversafe.oom.guice.annotation.DefaultContainer;
 import com.cleversafe.oom.guice.annotation.DefaultEntity;
 import com.cleversafe.oom.guice.annotation.DefaultHeaders;
@@ -59,7 +58,6 @@ import com.google.inject.Provider;
 
 public class SOHOperationManagerProvider implements Provider<SOHOperationManager>
 {
-   private final JSONConfiguration config;
    private final OperationTypeMix mix;
    private final Producer<Long> id;
    private final Producer<Scheme> scheme;
@@ -77,7 +75,6 @@ public class SOHOperationManagerProvider implements Provider<SOHOperationManager
 
    @Inject
    public SOHOperationManagerProvider(
-         final JSONConfiguration config,
          final OperationTypeMix mix,
          @DefaultId
          final Producer<Long> id,
@@ -100,7 +97,6 @@ public class SOHOperationManagerProvider implements Provider<SOHOperationManager
          final Scheduler scheduler,
          final ObjectManager objectManager)
    {
-      this.config = config;
       this.mix = mix;
       this.id = id;
       this.scheme = scheme;
