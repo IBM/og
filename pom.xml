@@ -33,6 +33,9 @@
 		<module>oom-statistic</module>
 		<module>oom-test</module>
 		<module>oom-util</module>
+		<module>oom-s3</module>
+		<module>oom-openstack</module>
+		<module>oom-webdav</module>
 	</modules>
 	<scm>
 		<url>http://git.cleversafe.net</url>
