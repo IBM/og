@@ -29,42 +29,24 @@ import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
 import com.cleversafe.oom.api.Consumer;
-import com.cleversafe.oom.api.Producer;
 import com.cleversafe.oom.object.LegacyObjectName;
 import com.cleversafe.oom.object.ObjectName;
 import com.cleversafe.oom.operation.Request;
-import com.cleversafe.oom.operation.RequestContext;
 import com.cleversafe.oom.operation.Response;
 import com.google.common.base.Splitter;
 
-public class ObjectNameProcessor implements Producer<String>, Consumer<Response>
+public class ObjectNameConsumer implements Consumer<Response>
 {
    private final ObjectManager objectManager;
    private final Map<Long, Request> pendingRequests;
    private static final Splitter urlSplitter = Splitter.on("/").omitEmptyStrings();
 
-   public ObjectNameProcessor(
+   public ObjectNameConsumer(
          final ObjectManager objectManager,
          final Map<Long, Request> pendingRequests)
    {
       this.objectManager = checkNotNull(objectManager, "objectManager must not be null");
       this.pendingRequests = checkNotNull(pendingRequests, "pendingRequests must not be null");
-   }
-
-   @Override
-   public String produce(final RequestContext context)
-   {
-      switch (context.getMethod())
-      {
-         case GET :
-            final ObjectName o = this.objectManager.acquireNameForRead();
-            return o.toString();
-         case DELETE :
-            return this.objectManager.getNameForDelete().toString();
-         default :
-            throw new RuntimeException(String.format("http method unsupported [%s]",
-                  context.getMethod()));
-      }
    }
 
    @Override

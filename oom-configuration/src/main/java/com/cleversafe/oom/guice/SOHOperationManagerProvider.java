@@ -41,7 +41,8 @@ import com.cleversafe.oom.http.Scheme;
 import com.cleversafe.oom.http.producer.RequestProducer;
 import com.cleversafe.oom.http.producer.URLProducer;
 import com.cleversafe.oom.object.manager.ObjectManager;
-import com.cleversafe.oom.object.manager.ObjectNameProcessor;
+import com.cleversafe.oom.object.manager.ObjectNameConsumer;
+import com.cleversafe.oom.object.manager.ObjectNameProducer;
 import com.cleversafe.oom.operation.Entity;
 import com.cleversafe.oom.operation.EntityType;
 import com.cleversafe.oom.operation.Method;
@@ -72,7 +73,8 @@ public class SOHOperationManagerProvider implements Provider<SOHOperationManager
    private final Scheduler scheduler;
    private final ObjectManager objectManager;
    private final Map<Long, Request> pendingRequests;
-   private final Producer<String> object;
+   private final Producer<String> objectProducer;
+   private final Consumer<Response> objectConsumer;
 
    @Inject
    public SOHOperationManagerProvider(
@@ -111,7 +113,8 @@ public class SOHOperationManagerProvider implements Provider<SOHOperationManager
       this.scheduler = scheduler;
       this.objectManager = objectManager;
       this.pendingRequests = new ConcurrentHashMap<Long, Request>();
-      this.object = new ObjectNameProcessor(this.objectManager, this.pendingRequests);
+      this.objectProducer = new ObjectNameProducer(this.objectManager);
+      this.objectConsumer = new ObjectNameConsumer(this.objectManager, this.pendingRequests);
    }
 
    @Override
@@ -124,8 +127,7 @@ public class SOHOperationManagerProvider implements Provider<SOHOperationManager
       producers.put(OperationType.DELETE, createSOHDeleteProducer());
 
       final List<Consumer<Response>> consumers = new ArrayList<Consumer<Response>>();
-      // TODO remove cast, possible need for Processor interface (Producer + Consumer)
-      consumers.add((Consumer<Response>) this.object);
+      consumers.add(this.objectConsumer);
 
       // TODO account for threaded vs iops
       return new SOHOperationManager(this.mix, producers, consumers, this.scheduler,
@@ -152,7 +154,7 @@ public class SOHOperationManagerProvider implements Provider<SOHOperationManager
    {
       final List<Producer<String>> parts = new ArrayList<Producer<String>>();
       parts.add(this.container);
-      parts.add(this.object);
+      parts.add(this.objectProducer);
       final Producer<URL> readURL =
             new URLProducer(this.scheme, this.host, this.port, parts, this.queryParams);
 
@@ -169,7 +171,7 @@ public class SOHOperationManagerProvider implements Provider<SOHOperationManager
    {
       final List<Producer<String>> parts = new ArrayList<Producer<String>>();
       parts.add(this.container);
-      parts.add(this.object);
+      parts.add(this.objectProducer);
       final Producer<URL> deleteURL =
             new URLProducer(this.scheme, this.host, this.port, parts, this.queryParams);
 
