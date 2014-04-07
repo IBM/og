@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 public class Concurrency
 {
    String type;
-   long count;
+   double count;
    TimeUnit unit;
    long rampup;
    TimeUnit rampupUnit;
@@ -32,7 +32,7 @@ public class Concurrency
    public Concurrency()
    {
       this.type = "threads";
-      this.count = 1;
+      this.count = 1.0;
       this.unit = TimeUnit.SECONDS;
       this.rampupUnit = TimeUnit.SECONDS;
    }
@@ -48,7 +48,7 @@ public class Concurrency
    /**
     * @return the count
     */
-   public long getCount()
+   public double getCount()
    {
       return this.count;
    }
