@@ -43,6 +43,7 @@ import com.cleversafe.oom.cli.json.TimeUnitTypeAdapterFactory;
 import com.cleversafe.oom.client.Client;
 import com.cleversafe.oom.guice.JsonModule;
 import com.cleversafe.oom.guice.OOMModule;
+import com.cleversafe.oom.guice.SOHModule;
 import com.cleversafe.oom.object.manager.ObjectManager;
 import com.cleversafe.oom.test.LoadTest;
 import com.google.gson.FieldNamingPolicy;
@@ -90,7 +91,8 @@ public class OOM
       Client client = null;
       try
       {
-         final Injector injector = Guice.createInjector(new JsonModule(config), new OOMModule());
+         final Injector injector =
+               Guice.createInjector(new JsonModule(config), new OOMModule(), new SOHModule());
          operationManager = injector.getInstance(OperationManager.class);
          client = injector.getInstance(Client.class);
          objectManager = injector.getInstance(ObjectManager.class);
