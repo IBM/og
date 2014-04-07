@@ -20,7 +20,9 @@
 package com.cleversafe.oom.cli.json;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.cleversafe.oom.http.Scheme;
 
@@ -30,6 +32,7 @@ public class JSONConfiguration
    List<String> hosts;
    String api;
    String container;
+   Map<String, String> headers;
    double write;
    double read;
    double delete;
@@ -52,6 +55,7 @@ public class JSONConfiguration
       this.scheme = Scheme.HTTP;
       this.hosts = new ArrayList<String>();
       this.api = "soh";
+      this.headers = new HashMap<String, String>();
       this.filesizes = new ArrayList<FileSize>();
       this.filesizes.add(new FileSize());
       this.concurrency = new Concurrency();
@@ -91,6 +95,14 @@ public class JSONConfiguration
    public String getContainer()
    {
       return this.container;
+   }
+
+   /**
+    * @return the headers
+    */
+   public Map<String, String> getHeaders()
+   {
+      return this.headers;
    }
 
    /**

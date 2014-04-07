@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.cleversafe.oom.api.Producer;
@@ -166,6 +167,11 @@ public class JsonModule extends AbstractModule
    {
       final List<Producer<Pair<String, String>>> headers =
             new ArrayList<Producer<Pair<String, String>>>();
+      for (final Entry<String, String> e : this.config.getHeaders().entrySet())
+      {
+         headers.add(Producers.of(new Pair<String, String>(e.getKey(), e.getValue())));
+      }
+
       if (auth != null)
          headers.add(auth);
       return headers;
