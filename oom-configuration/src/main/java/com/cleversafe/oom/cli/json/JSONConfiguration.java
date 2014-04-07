@@ -65,6 +65,7 @@ public class JSONConfiguration
       this.capacity = 9223372036854775807L;
       this.idFile = "";
       this.port = 80;
+      // TODO OperationType is not being lowercased when serialized
       this.operationConfig = new LinkedHashMap<OperationType, OperationConfig>();
    }
 
