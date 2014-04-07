@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.cleversafe.oom.http.Scheme;
+import com.cleversafe.oom.operation.OperationType;
 
 public class JSONConfiguration
 {
@@ -49,6 +50,7 @@ public class JSONConfiguration
    Long fillCeiling;
    String idFile;
    int port;
+   Map<OperationType, OperationConfig> operationConfig;
 
    public JSONConfiguration()
    {
@@ -63,6 +65,7 @@ public class JSONConfiguration
       this.capacity = 9223372036854775807L;
       this.idFile = "";
       this.port = 80;
+      this.operationConfig = new HashMap<OperationType, OperationConfig>();
    }
 
    /**
@@ -231,5 +234,13 @@ public class JSONConfiguration
    public int getPort()
    {
       return this.port;
+   }
+
+   /**
+    * @return the operationConfig
+    */
+   public Map<OperationType, OperationConfig> getOperationConfig()
+   {
+      return this.operationConfig;
    }
 }
