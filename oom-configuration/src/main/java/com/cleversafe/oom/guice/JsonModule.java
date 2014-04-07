@@ -32,6 +32,7 @@ import com.cleversafe.oom.api.Producer;
 import com.cleversafe.oom.cli.json.Concurrency;
 import com.cleversafe.oom.cli.json.FileSize;
 import com.cleversafe.oom.cli.json.JSONConfiguration;
+import com.cleversafe.oom.cli.json.OperationConfig;
 import com.cleversafe.oom.distribution.Distribution;
 import com.cleversafe.oom.distribution.LogNormalDistribution;
 import com.cleversafe.oom.distribution.NormalDistribution;
@@ -46,10 +47,32 @@ import com.cleversafe.oom.guice.annotation.DefaultMetaData;
 import com.cleversafe.oom.guice.annotation.DefaultPort;
 import com.cleversafe.oom.guice.annotation.DefaultQueryParams;
 import com.cleversafe.oom.guice.annotation.DefaultScheme;
+import com.cleversafe.oom.guice.annotation.DeleteAuth;
+import com.cleversafe.oom.guice.annotation.DeleteContainer;
+import com.cleversafe.oom.guice.annotation.DeleteHeaders;
+import com.cleversafe.oom.guice.annotation.DeleteHost;
+import com.cleversafe.oom.guice.annotation.DeletePort;
+import com.cleversafe.oom.guice.annotation.DeleteQueryParams;
+import com.cleversafe.oom.guice.annotation.DeleteScheme;
+import com.cleversafe.oom.guice.annotation.ReadAuth;
+import com.cleversafe.oom.guice.annotation.ReadContainer;
+import com.cleversafe.oom.guice.annotation.ReadHeaders;
+import com.cleversafe.oom.guice.annotation.ReadHost;
+import com.cleversafe.oom.guice.annotation.ReadPort;
+import com.cleversafe.oom.guice.annotation.ReadQueryParams;
+import com.cleversafe.oom.guice.annotation.ReadScheme;
+import com.cleversafe.oom.guice.annotation.WriteAuth;
+import com.cleversafe.oom.guice.annotation.WriteContainer;
+import com.cleversafe.oom.guice.annotation.WriteHeaders;
+import com.cleversafe.oom.guice.annotation.WriteHost;
+import com.cleversafe.oom.guice.annotation.WritePort;
+import com.cleversafe.oom.guice.annotation.WriteQueryParams;
+import com.cleversafe.oom.guice.annotation.WriteScheme;
 import com.cleversafe.oom.http.Scheme;
 import com.cleversafe.oom.http.producer.BasicAuthProducer;
 import com.cleversafe.oom.operation.Entity;
 import com.cleversafe.oom.operation.EntityType;
+import com.cleversafe.oom.operation.OperationType;
 import com.cleversafe.oom.operation.OperationTypeMix;
 import com.cleversafe.oom.operation.RequestContext;
 import com.cleversafe.oom.scheduling.RequestRateScheduler;
@@ -109,11 +132,84 @@ public class JsonModule extends AbstractModule
 
    @Provides
    @Singleton
+   @WriteScheme
+   Producer<Scheme> provideWriteScheme(@DefaultScheme final Producer<Scheme> scheme)
+   {
+      return provideScheme(OperationType.WRITE, scheme);
+   }
+
+   @Provides
+   @Singleton
+   @ReadScheme
+   Producer<Scheme> provideReadScheme(@DefaultScheme final Producer<Scheme> scheme)
+   {
+      return provideScheme(OperationType.READ, scheme);
+   }
+
+   @Provides
+   @Singleton
+   @DeleteScheme
+   Producer<Scheme> provideDeleteScheme(@DefaultScheme final Producer<Scheme> scheme)
+   {
+      return provideScheme(OperationType.DELETE, scheme);
+   }
+
+   private Producer<Scheme> provideScheme(
+         final OperationType operationType,
+         final Producer<Scheme> defaultScheme)
+   {
+      final OperationConfig config = this.config.getOperationConfig().get(operationType);
+      if (config != null && config.getScheme() != null)
+         return Producers.of(config.getScheme());
+      return defaultScheme;
+   }
+
+   @Provides
+   @Singleton
    @DefaultHost
    Producer<String> provideDefaultHost()
    {
+      return createHost(this.config.getHosts());
+   }
+
+   @Provides
+   @Singleton
+   @WriteHost
+   Producer<String> provideWriteHost(@DefaultHost final Producer<String> host)
+   {
+      return provideHost(OperationType.WRITE, host);
+   }
+
+   @Provides
+   @Singleton
+   @ReadHost
+   Producer<String> provideReadHost(@DefaultHost final Producer<String> host)
+   {
+      return provideHost(OperationType.READ, host);
+   }
+
+   @Provides
+   @Singleton
+   @DeleteHost
+   Producer<String> provideDeleteHost(@DefaultHost final Producer<String> host)
+   {
+      return provideHost(OperationType.DELETE, host);
+   }
+
+   private Producer<String> provideHost(
+         final OperationType operationType,
+         final Producer<String> defaultHost)
+   {
+      final OperationConfig config = this.config.getOperationConfig().get(operationType);
+      if (config != null && config.getHosts() != null)
+         return createHost(config.getHosts());
+      return defaultHost;
+   }
+
+   private Producer<String> createHost(final List<String> hosts)
+   {
       final WeightedRandomChoice<String> wrc = new WeightedRandomChoice<String>();
-      for (final String host : this.config.getHosts())
+      for (final String host : hosts)
       {
          wrc.addChoice(host);
       }
@@ -130,10 +226,78 @@ public class JsonModule extends AbstractModule
 
    @Provides
    @Singleton
+   @WritePort
+   Producer<Integer> provideWritePort(@DefaultPort final Producer<Integer> port)
+   {
+      return providePort(OperationType.WRITE, port);
+   }
+
+   @Provides
+   @Singleton
+   @ReadPort
+   Producer<Integer> provideReadPort(@DefaultPort final Producer<Integer> port)
+   {
+      return providePort(OperationType.READ, port);
+   }
+
+   @Provides
+   @Singleton
+   @DeletePort
+   Producer<Integer> provideDeletePort(@DefaultPort final Producer<Integer> port)
+   {
+      return providePort(OperationType.DELETE, port);
+   }
+
+   private Producer<Integer> providePort(
+         final OperationType operationType,
+         final Producer<Integer> defaultPort)
+   {
+      final OperationConfig config = this.config.getOperationConfig().get(operationType);
+      if (config != null && config.getPort() != null)
+         return Producers.of(config.getPort());
+      return defaultPort;
+   }
+
+   @Provides
+   @Singleton
    @DefaultContainer
    Producer<String> provideDefaultContainer()
    {
       return Producers.of(this.config.getContainer());
+   }
+
+   @Provides
+   @Singleton
+   @WriteContainer
+   Producer<String> provideWriteContainer(@DefaultContainer final Producer<String> container)
+   {
+      return provideContainer(OperationType.WRITE, container);
+   }
+
+   @Provides
+   @Singleton
+   @ReadContainer
+   Producer<String> provideReadContainer(@DefaultContainer final Producer<String> container)
+   {
+      return provideContainer(OperationType.READ, container);
+   }
+
+   @Provides
+   @Singleton
+   @DeleteContainer
+   Producer<String> provideDeleteContainer(@DefaultContainer final Producer<String> container)
+   {
+      return provideContainer(OperationType.DELETE, container);
+   }
+
+   private Producer<String> provideContainer(
+         final OperationType operationType,
+         final Producer<String> defaultContainer)
+   {
+      final OperationConfig config = this.config.getOperationConfig().get(operationType);
+      if (config != null && config.getContainer() != null)
+         return Producers.of(config.getContainer());
+      return defaultContainer;
    }
 
    @Provides
@@ -147,11 +311,83 @@ public class JsonModule extends AbstractModule
 
    @Provides
    @Singleton
+   @WriteQueryParams
+   Producer<Map<String, String>> provideWriteQueryParams(
+         @DefaultQueryParams final Producer<Map<String, String>> defaultQueryParams)
+   {
+      return defaultQueryParams;
+   }
+
+   @Provides
+   @Singleton
+   @ReadQueryParams
+   Producer<Map<String, String>> provideReadQueryParams(
+         @DefaultQueryParams final Producer<Map<String, String>> defaultQueryParams)
+   {
+      return defaultQueryParams;
+   }
+
+   @Provides
+   @Singleton
+   @DeleteQueryParams
+   Producer<Map<String, String>> provideDeleteQueryParams(
+         @DefaultQueryParams final Producer<Map<String, String>> defaultQueryParams)
+   {
+      return defaultQueryParams;
+   }
+
+   @Provides
+   @Singleton
    @DefaultAuth
    Producer<Pair<String, String>> providesDefaultAuth()
    {
-      final String username = this.config.getUsername();
-      final String password = this.config.getPassword();
+      return createAuth(this.config.getUsername(), this.config.getPassword());
+   }
+
+   @Provides
+   @Singleton
+   @WriteAuth
+   Producer<Pair<String, String>> providesWriteAuth(
+         @DefaultAuth final Producer<Pair<String, String>> auth)
+   {
+      return provideAuth(OperationType.WRITE, auth);
+   }
+
+   @Provides
+   @Singleton
+   @ReadAuth
+   Producer<Pair<String, String>> providesReadAuth(
+         @DefaultAuth final Producer<Pair<String, String>> auth)
+   {
+      return provideAuth(OperationType.READ, auth);
+   }
+
+   @Provides
+   @Singleton
+   @DeleteAuth
+   Producer<Pair<String, String>> providesDeleteAuth(
+         @DefaultAuth final Producer<Pair<String, String>> auth)
+   {
+      return provideAuth(OperationType.DELETE, auth);
+   }
+
+   private Producer<Pair<String, String>> provideAuth(
+         final OperationType operationType,
+         final Producer<Pair<String, String>> defaultAuth)
+   {
+      final OperationConfig config = this.config.getOperationConfig().get(operationType);
+      if (config != null)
+      {
+         final Producer<Pair<String, String>> auth =
+               createAuth(config.getUsername(), config.getPassword());
+         if (auth != null)
+            return auth;
+      }
+      return defaultAuth;
+   }
+
+   private Producer<Pair<String, String>> createAuth(final String username, final String password)
+   {
       if (username != null && password != null)
          return new BasicAuthProducer(username, password);
       else if (username == null && password == null)
@@ -162,19 +398,68 @@ public class JsonModule extends AbstractModule
    @Provides
    @Singleton
    @DefaultHeaders
-   List<Producer<Pair<String, String>>> provideDefaultHeaders(@DefaultAuth
-   final Producer<Pair<String, String>> auth)
+   List<Producer<Pair<String, String>>> provideDefaultHeaders(
+         @DefaultAuth final Producer<Pair<String, String>> auth)
    {
-      final List<Producer<Pair<String, String>>> headers =
-            new ArrayList<Producer<Pair<String, String>>>();
-      for (final Entry<String, String> e : this.config.getHeaders().entrySet())
-      {
-         headers.add(Producers.of(new Pair<String, String>(e.getKey(), e.getValue())));
-      }
+      return addAuth(createHeaders(this.config.getHeaders()), auth);
+   }
 
+   @Provides
+   @Singleton
+   @WriteHeaders
+   List<Producer<Pair<String, String>>> provideWriteHeaders(
+         @WriteAuth final Producer<Pair<String, String>> auth)
+   {
+      return provideHeaders(OperationType.WRITE, auth);
+   }
+
+   @Provides
+   @Singleton
+   @ReadHeaders
+   List<Producer<Pair<String, String>>> provideReadHeaders(
+         @ReadAuth final Producer<Pair<String, String>> auth)
+   {
+      return provideHeaders(OperationType.READ, auth);
+   }
+
+   @Provides
+   @Singleton
+   @DeleteHeaders
+   List<Producer<Pair<String, String>>> provideDeleteHeaders(
+         @DeleteAuth final Producer<Pair<String, String>> auth)
+   {
+      return provideHeaders(OperationType.DELETE, auth);
+   }
+
+   private List<Producer<Pair<String, String>>> provideHeaders(
+         final OperationType operationType,
+         final Producer<Pair<String, String>> auth)
+   {
+      final Map<String, String> headers = this.config.getHeaders();
+      final OperationConfig config = this.config.getOperationConfig().get(operationType);
+      if (config != null && config.getHeaders() != null)
+         headers.putAll(config.getHeaders());
+      return addAuth(createHeaders(headers), auth);
+   }
+
+   private List<Producer<Pair<String, String>>> addAuth(
+         final List<Producer<Pair<String, String>>> headers,
+         final Producer<Pair<String, String>> auth)
+   {
       if (auth != null)
          headers.add(auth);
       return headers;
+   }
+
+   private List<Producer<Pair<String, String>>> createHeaders(final Map<String, String> headers)
+   {
+      final List<Producer<Pair<String, String>>> h =
+            new ArrayList<Producer<Pair<String, String>>>();
+      for (final Entry<String, String> e : headers.entrySet())
+      {
+         h.add(Producers.of(new Pair<String, String>(e.getKey(), e.getValue())));
+      }
+      return h;
    }
 
    @Provides
