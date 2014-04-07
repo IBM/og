@@ -48,6 +48,8 @@ public class CaseInsensitiveEnumTypeAdapterFactory implements TypeAdapterFactory
          {
             if (value != null)
                out.value(value.toString().toLowerCase());
+            else
+               out.nullValue();
          }
 
          @SuppressWarnings("unchecked")
