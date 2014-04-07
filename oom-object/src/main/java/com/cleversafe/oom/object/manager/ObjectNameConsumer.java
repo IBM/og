@@ -73,6 +73,10 @@ public class ObjectNameConsumer implements Consumer<Response>
                case GET :
                   this.objectManager.releaseNameFromRead(objectName);
                   break;
+               // TODO need to account for response codes
+               case PUT :
+                  this.objectManager.writeNameComplete(objectName);
+                  break;
                default :
                   throw new RuntimeException(String.format("http method unsupported [%s]",
                         request.getMethod()));
