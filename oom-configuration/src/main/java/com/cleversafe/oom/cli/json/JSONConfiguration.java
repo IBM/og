@@ -30,7 +30,7 @@ public class JSONConfiguration
 {
    Scheme scheme;
    List<String> hosts;
-   String api;
+   API api;
    String container;
    Map<String, String> headers;
    double write;
@@ -54,7 +54,7 @@ public class JSONConfiguration
    {
       this.scheme = Scheme.HTTP;
       this.hosts = new ArrayList<String>();
-      this.api = "soh";
+      this.api = API.SOH;
       this.headers = new HashMap<String, String>();
       this.filesizes = new ArrayList<FileSize>();
       this.filesizes.add(new FileSize());
@@ -84,7 +84,7 @@ public class JSONConfiguration
    /**
     * @return the api
     */
-   public String getApi()
+   public API getApi()
    {
       return this.api;
    }
