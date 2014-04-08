@@ -83,4 +83,51 @@ public class URLProducer implements Producer<URL>
          return null;
       }
    }
+
+   public static class Builder
+   {
+      private Producer<Scheme> scheme;
+      private Producer<String> host;
+      private Producer<Integer> port;
+      private List<Producer<String>> path;
+      private Producer<Map<String, String>> queryParams;
+
+      public Builder()
+      {}
+
+      public Builder withScheme(final Producer<Scheme> scheme)
+      {
+         this.scheme = scheme;
+         return this;
+      }
+
+      public Builder toHost(final Producer<String> host)
+      {
+         this.host = host;
+         return this;
+      }
+
+      public Builder onPort(final Producer<Integer> port)
+      {
+         this.port = port;
+         return this;
+      }
+
+      public Builder atPath(final List<Producer<String>> path)
+      {
+         this.path = path;
+         return this;
+      }
+
+      public Builder withQueryParams(final Producer<Map<String, String>> queryParams)
+      {
+         this.queryParams = queryParams;
+         return this;
+      }
+
+      public URLProducer build()
+      {
+         return new URLProducer(this.scheme, this.host, this.port, this.path, this.queryParams);
+      }
+   }
 }
