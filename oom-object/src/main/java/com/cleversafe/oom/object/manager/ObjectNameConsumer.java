@@ -88,7 +88,7 @@ public class ObjectNameConsumer implements Consumer<Response>
    private static ObjectName objectNameFromURL(final URL url)
    {
       final List<String> parts = urlSplitter.splitToList(url.getPath());
-      if (parts.size() == 2)
+      if (parts.size() == 2 || parts.size() == 3)
          return objectNameFromString(parts.get(1));
       return null;
    }
