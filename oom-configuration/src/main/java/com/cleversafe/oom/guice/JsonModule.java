@@ -47,6 +47,7 @@ import com.cleversafe.oom.guice.annotation.DefaultMetaData;
 import com.cleversafe.oom.guice.annotation.DefaultPort;
 import com.cleversafe.oom.guice.annotation.DefaultQueryParams;
 import com.cleversafe.oom.guice.annotation.DefaultScheme;
+import com.cleversafe.oom.guice.annotation.DefaultUrlRoot;
 import com.cleversafe.oom.guice.annotation.DeleteAuth;
 import com.cleversafe.oom.guice.annotation.DeleteContainer;
 import com.cleversafe.oom.guice.annotation.DeleteHeaders;
@@ -81,6 +82,7 @@ import com.cleversafe.oom.util.Entities;
 import com.cleversafe.oom.util.Pair;
 import com.cleversafe.oom.util.WeightedRandomChoice;
 import com.cleversafe.oom.util.producer.Producers;
+import com.google.common.base.CharMatcher;
 import com.google.common.math.DoubleMath;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -258,6 +260,24 @@ public class JsonModule extends AbstractModule
       if (config != null && config.getPort() != null)
          return Producers.of(config.getPort());
       return defaultPort;
+   }
+
+   @Provides
+   @Singleton
+   @DefaultUrlRoot
+   Producer<String> provideDefaultUrlRoot()
+   {
+      if (this.config.getUrlRoot() != null)
+      {
+         final String root = CharMatcher.is('/').trimFrom(this.config.getUrlRoot());
+         if (root.length() > 0)
+            return Producers.of(root);
+      }
+      else
+      {
+         return Producers.of(this.config.getApi().toString().toLowerCase());
+      }
+      return null;
    }
 
    @Provides

@@ -29,6 +29,7 @@ import com.cleversafe.oom.guice.annotation.DefaultEntity;
 import com.cleversafe.oom.guice.annotation.DefaultId;
 import com.cleversafe.oom.guice.annotation.DefaultMetaData;
 import com.cleversafe.oom.guice.annotation.DefaultObjectName;
+import com.cleversafe.oom.guice.annotation.DefaultUrlRoot;
 import com.cleversafe.oom.guice.annotation.Delete;
 import com.cleversafe.oom.guice.annotation.DeleteContainer;
 import com.cleversafe.oom.guice.annotation.DeleteHeaders;
@@ -78,6 +79,7 @@ public class SOHModule extends AbstractModule
          @WriteScheme final Producer<Scheme> scheme,
          @WriteHost final Producer<String> host,
          @WritePort final Producer<Integer> port,
+         @DefaultUrlRoot final Producer<String> urlRoot,
          @WriteContainer final Producer<String> container,
          @WriteQueryParams final Producer<Map<String, String>> queryParams,
          @WriteHeaders final List<Producer<Pair<String, String>>> headers,
@@ -85,6 +87,7 @@ public class SOHModule extends AbstractModule
          @DefaultMetaData final Producer<Map<String, String>> metadata)
    {
       final List<Producer<String>> parts = new ArrayList<Producer<String>>();
+      addUrlRoot(parts, urlRoot);
       parts.add(container);
       final Producer<URL> writeURL = new URLProducer.Builder()
             .withScheme(scheme)
@@ -111,6 +114,7 @@ public class SOHModule extends AbstractModule
          @ReadScheme final Producer<Scheme> scheme,
          @ReadHost final Producer<String> host,
          @ReadPort final Producer<Integer> port,
+         @DefaultUrlRoot final Producer<String> urlRoot,
          @ReadContainer final Producer<String> container,
          @DefaultObjectName final Producer<String> object,
          @ReadQueryParams final Producer<Map<String, String>> queryParams,
@@ -118,6 +122,7 @@ public class SOHModule extends AbstractModule
          @DefaultMetaData final Producer<Map<String, String>> metadata)
    {
       final List<Producer<String>> parts = new ArrayList<Producer<String>>();
+      addUrlRoot(parts, urlRoot);
       parts.add(container);
       parts.add(object);
       final Producer<URL> readURL = new URLProducer.Builder()
@@ -145,6 +150,7 @@ public class SOHModule extends AbstractModule
          @DeleteScheme final Producer<Scheme> scheme,
          @DeleteHost final Producer<String> host,
          @DeletePort final Producer<Integer> port,
+         @DefaultUrlRoot final Producer<String> urlRoot,
          @DeleteContainer final Producer<String> container,
          @DefaultObjectName final Producer<String> object,
          @DeleteQueryParams final Producer<Map<String, String>> queryParams,
@@ -152,6 +158,7 @@ public class SOHModule extends AbstractModule
          @DefaultMetaData final Producer<Map<String, String>> metadata)
    {
       final List<Producer<String>> parts = new ArrayList<Producer<String>>();
+      addUrlRoot(parts, urlRoot);
       parts.add(container);
       parts.add(object);
       final Producer<URL> deleteURL = new URLProducer.Builder()
@@ -169,5 +176,13 @@ public class SOHModule extends AbstractModule
             headers,
             Producers.of(Entities.of(EntityType.NONE, 0)),
             metadata);
+   }
+
+   // TODO better way to do this? Maybe urlRoot should never be null and/or should be propagated
+   // all the way to URLProducer
+   private void addUrlRoot(final List<Producer<String>> parts, final Producer<String> urlRoot)
+   {
+      if (urlRoot != null)
+         parts.add(urlRoot);
    }
 }

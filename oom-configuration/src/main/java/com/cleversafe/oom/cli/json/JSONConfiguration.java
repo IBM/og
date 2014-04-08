@@ -32,6 +32,7 @@ public class JSONConfiguration
    Scheme scheme;
    List<String> hosts;
    API api;
+   String urlRoot;
    String container;
    Map<String, String> headers;
    double write;
@@ -90,6 +91,14 @@ public class JSONConfiguration
    public API getApi()
    {
       return this.api;
+   }
+
+   /**
+    * @return the urlRoot
+    */
+   public String getUrlRoot()
+   {
+      return this.urlRoot;
    }
 
    /**
