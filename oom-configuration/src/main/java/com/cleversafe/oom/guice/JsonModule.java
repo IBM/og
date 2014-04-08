@@ -221,7 +221,9 @@ public class JsonModule extends AbstractModule
    @DefaultPort
    Producer<Integer> provideDefaultPort()
    {
-      return Producers.of(this.config.getPort());
+      if (this.config.getPort() != null)
+         return Producers.of(this.config.getPort());
+      return null;
    }
 
    @Provides

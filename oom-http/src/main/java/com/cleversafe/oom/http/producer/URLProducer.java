@@ -49,7 +49,7 @@ public class URLProducer implements Producer<URL>
    {
       this.scheme = checkNotNull(scheme, "scheme must not be null");
       this.host = checkNotNull(host, "host must not be null");
-      this.port = checkNotNull(port, "port must not be null");
+      this.port = port;
       this.parts = checkNotNull(parts, "parts must not be null");
       this.queryParameters = checkNotNull(queryParameters, "queryParameters must not be null");
    }
@@ -60,19 +60,12 @@ public class URLProducer implements Producer<URL>
       final StringBuilder builder = new StringBuilder()
             .append(this.scheme.produce(context))
             .append("://")
-            .append(this.host.produce(context))
-            .append(":")
-            .append(this.port.produce(context));
-
-      for (final Producer<String> part : this.parts)
-      {
-         builder.append("/").append(part.produce(context));
-      }
+            .append(this.host.produce(context));
+      appendPort(context, builder);
+      appendPath(context, builder);
       // TODO add optional configuration for adding a trailing slash between parts and query params
+      appendQueryParams(context, builder);
 
-      final String queryParams = paramJoiner.join(this.queryParameters.produce(context));
-      if (queryParams.length() > 0)
-         builder.append("?").append(queryParams);
       try
       {
          return new URL(builder.toString());
@@ -82,6 +75,27 @@ public class URLProducer implements Producer<URL>
          // TODO fix this
          return null;
       }
+   }
+
+   private void appendPort(final RequestContext context, final StringBuilder builder)
+   {
+      if (this.port != null)
+         builder.append(":").append(this.port.produce(context));
+   }
+
+   private void appendPath(final RequestContext context, final StringBuilder builder)
+   {
+      for (final Producer<String> part : this.parts)
+      {
+         builder.append("/").append(part.produce(context));
+      }
+   }
+
+   private void appendQueryParams(final RequestContext context, final StringBuilder builder)
+   {
+      final String queryParams = paramJoiner.join(this.queryParameters.produce(context));
+      if (queryParams.length() > 0)
+         builder.append("?").append(queryParams);
    }
 
    public static class Builder
