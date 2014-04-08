@@ -38,6 +38,7 @@ public class URLProducer implements Producer<URL>
    private final Producer<Integer> port;
    private final List<Producer<String>> parts;
    private final Producer<Map<String, String>> queryParameters;
+   private final boolean trailingSlash;
    private static final Joiner.MapJoiner paramJoiner = Joiner.on('&').withKeyValueSeparator("=");
 
    private URLProducer(
@@ -45,13 +46,15 @@ public class URLProducer implements Producer<URL>
          final Producer<String> host,
          final Producer<Integer> port,
          final List<Producer<String>> parts,
-         final Producer<Map<String, String>> queryParameters)
+         final Producer<Map<String, String>> queryParameters,
+         final boolean trailingSlash)
    {
       this.scheme = checkNotNull(scheme, "scheme must not be null");
       this.host = checkNotNull(host, "host must not be null");
       this.port = port;
       this.parts = checkNotNull(parts, "parts must not be null");
       this.queryParameters = checkNotNull(queryParameters, "queryParameters must not be null");
+      this.trailingSlash = trailingSlash;
    }
 
    @Override
@@ -63,7 +66,7 @@ public class URLProducer implements Producer<URL>
             .append(this.host.produce(context));
       appendPort(context, builder);
       appendPath(context, builder);
-      // TODO add optional configuration for adding a trailing slash between parts and query params
+      appendTrailingSlash(builder);
       appendQueryParams(context, builder);
 
       try
@@ -91,6 +94,12 @@ public class URLProducer implements Producer<URL>
       }
    }
 
+   private void appendTrailingSlash(final StringBuilder builder)
+   {
+      if (this.trailingSlash)
+         builder.append("/");
+   }
+
    private void appendQueryParams(final RequestContext context, final StringBuilder builder)
    {
       final String queryParams = paramJoiner.join(this.queryParameters.produce(context));
@@ -105,6 +114,7 @@ public class URLProducer implements Producer<URL>
       private Producer<Integer> port;
       private List<Producer<String>> path;
       private Producer<Map<String, String>> queryParams;
+      private boolean trailingSlash;
 
       public Builder()
       {}
@@ -139,9 +149,16 @@ public class URLProducer implements Producer<URL>
          return this;
       }
 
+      public Builder withTrailingSlash()
+      {
+         this.trailingSlash = true;
+         return this;
+      }
+
       public URLProducer build()
       {
-         return new URLProducer(this.scheme, this.host, this.port, this.path, this.queryParams);
+         return new URLProducer(this.scheme, this.host, this.port, this.path, this.queryParams,
+               this.trailingSlash);
       }
    }
 }
