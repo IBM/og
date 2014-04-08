@@ -157,8 +157,6 @@ public class OOM
       return new GsonBuilder()
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
             .setLongSerializationPolicy(LongSerializationPolicy.STRING)
-            // TODO this factory MUST be registered before TimeUnit and SizeUnit, otherwise
-            // it picks up those cases as well if registered last
             .registerTypeAdapterFactory(new CaseInsensitiveEnumTypeAdapterFactory())
             // TODO refactor into an abstract adapter for enums with behavior
             .registerTypeAdapterFactory(new TimeUnitTypeAdapterFactory())
