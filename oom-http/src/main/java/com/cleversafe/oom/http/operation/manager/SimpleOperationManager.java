@@ -28,6 +28,7 @@ import com.cleversafe.oom.api.Consumer;
 import com.cleversafe.oom.api.OperationManager;
 import com.cleversafe.oom.api.OperationManagerException;
 import com.cleversafe.oom.api.Producer;
+import com.cleversafe.oom.api.ProducerException;
 import com.cleversafe.oom.http.HttpRequestContext;
 import com.cleversafe.oom.operation.OperationType;
 import com.cleversafe.oom.operation.OperationTypeMix;
@@ -73,7 +74,7 @@ public class SimpleOperationManager implements OperationManager
          this.pendingRequests.put(request.getId(), request);
          return request;
       }
-      catch (final Exception e)
+      catch (final ProducerException e)
       {
          throw new OperationManagerException(e);
       }

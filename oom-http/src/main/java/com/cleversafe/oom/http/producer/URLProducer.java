@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.cleversafe.oom.api.Producer;
+import com.cleversafe.oom.api.ProducerException;
 import com.cleversafe.oom.http.Scheme;
 import com.cleversafe.oom.operation.RequestContext;
 import com.google.common.base.Joiner;
@@ -75,8 +76,9 @@ public class URLProducer implements Producer<URL>
       }
       catch (final MalformedURLException e)
       {
-         // TODO fix this
-         return null;
+         // Wrapping checked exception as unchecked because most callers will not be able to handle
+         // it and I don't want to include MalformedURLException in the entire signature chain
+         throw new ProducerException(e);
       }
    }
 
