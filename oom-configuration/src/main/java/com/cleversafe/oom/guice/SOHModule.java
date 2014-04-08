@@ -86,8 +86,13 @@ public class SOHModule extends AbstractModule
    {
       final List<Producer<String>> parts = new ArrayList<Producer<String>>();
       parts.add(container);
-      final Producer<URL> writeURL =
-            new URLProducer(scheme, host, port, parts, queryParams);
+      final Producer<URL> writeURL = new URLProducer.Builder()
+            .withScheme(scheme)
+            .toHost(host)
+            .onPort(port)
+            .atPath(parts)
+            .withQueryParams(queryParams)
+            .build();
 
       return new RequestProducer(id,
             Producers.of("soh.put_object"),
@@ -115,8 +120,13 @@ public class SOHModule extends AbstractModule
       final List<Producer<String>> parts = new ArrayList<Producer<String>>();
       parts.add(container);
       parts.add(object);
-      final Producer<URL> readURL =
-            new URLProducer(scheme, host, port, parts, queryParams);
+      final Producer<URL> readURL = new URLProducer.Builder()
+            .withScheme(scheme)
+            .toHost(host)
+            .onPort(port)
+            .atPath(parts)
+            .withQueryParams(queryParams)
+            .build();
 
       return new RequestProducer(id,
             Producers.of("soh.get_object"),
@@ -144,8 +154,13 @@ public class SOHModule extends AbstractModule
       final List<Producer<String>> parts = new ArrayList<Producer<String>>();
       parts.add(container);
       parts.add(object);
-      final Producer<URL> deleteURL =
-            new URLProducer(scheme, host, port, parts, queryParams);
+      final Producer<URL> deleteURL = new URLProducer.Builder()
+            .withScheme(scheme)
+            .toHost(host)
+            .onPort(port)
+            .atPath(parts)
+            .withQueryParams(queryParams)
+            .build();
 
       return new RequestProducer(id,
             Producers.of("soh.delete_object"),

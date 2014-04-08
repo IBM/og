@@ -40,7 +40,7 @@ public class URLProducer implements Producer<URL>
    private final Producer<Map<String, String>> queryParameters;
    private static final Joiner.MapJoiner paramJoiner = Joiner.on('&').withKeyValueSeparator("=");
 
-   public URLProducer(
+   private URLProducer(
          final Producer<Scheme> scheme,
          final Producer<String> host,
          final Producer<Integer> port,
