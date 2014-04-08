@@ -22,7 +22,6 @@ package com.cleversafe.oom.cli.json;
 import com.cleversafe.oom.distribution.DistributionType;
 import com.cleversafe.oom.util.SizeUnit;
 
-// TODO decimal sizes?
 public class FileSize
 {
    DistributionType distribution;

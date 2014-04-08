@@ -28,7 +28,6 @@ import com.cleversafe.oom.operation.RequestContext;
 import com.cleversafe.oom.util.Pair;
 import com.google.common.io.BaseEncoding;
 
-// TODO create Pair class rather than List of 2 elements?
 public class BasicAuthProducer implements Producer<Pair<String, String>>
 {
    Pair<String, String> header;
