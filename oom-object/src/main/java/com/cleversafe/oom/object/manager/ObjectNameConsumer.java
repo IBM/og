@@ -88,8 +88,10 @@ public class ObjectNameConsumer implements Consumer<Response>
    private static ObjectName objectNameFromURL(final URL url)
    {
       final List<String> parts = urlSplitter.splitToList(url.getPath());
-      if (parts.size() == 2 || parts.size() == 3)
-         return objectNameFromString(parts.get(1));
+      // TODO this will break for soh writes rooted at /soh, need a better approach
+      // for consumption in general
+      if (parts.size() >= 2)
+         return objectNameFromString(parts.get(parts.size() - 1));
       return null;
    }
 
