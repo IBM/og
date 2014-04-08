@@ -15,3 +15,7 @@ target
 .metadata
 .repository
 .project
+
+oom-configuration/*.bin
+oom-configuration/*.log
+oom-configuration/*.json
