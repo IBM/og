@@ -32,6 +32,7 @@ public class JSONConfiguration
 {
    Scheme scheme;
    List<String> hosts;
+   Integer port;
    API api;
    String urlRoot;
    String container;
@@ -44,15 +45,10 @@ public class JSONConfiguration
    Concurrency concurrency;
    String username;
    String password;
-   double floor;
-   double ceiling;
-   long capacity;
    Long operatons;
    RunTime runtime;
-   Long fillFloor;
-   Long fillCeiling;
    String idFile;
-   Integer port;
+
    Map<OperationType, OperationConfig> operationConfig;
 
    public JSONConfiguration()
@@ -65,8 +61,6 @@ public class JSONConfiguration
       this.filesizes.add(new FileSize());
       this.source = EntityType.RANDOM;
       this.concurrency = new Concurrency();
-      this.ceiling = 100.0;
-      this.capacity = 9223372036854775807L;
       this.idFile = "";
       // TODO OperationType is not being lowercased when serialized
       this.operationConfig = new LinkedHashMap<OperationType, OperationConfig>();
@@ -86,6 +80,14 @@ public class JSONConfiguration
    public List<String> getHosts()
    {
       return this.hosts;
+   }
+
+   /**
+    * @return the port
+    */
+   public Integer getPort()
+   {
+      return this.port;
    }
 
    /**
@@ -185,30 +187,6 @@ public class JSONConfiguration
    }
 
    /**
-    * @return the floor
-    */
-   public double getFloor()
-   {
-      return this.floor;
-   }
-
-   /**
-    * @return the ceiling
-    */
-   public double getCeiling()
-   {
-      return this.ceiling;
-   }
-
-   /**
-    * @return the capacity
-    */
-   public long getCapacity()
-   {
-      return this.capacity;
-   }
-
-   /**
     * @return the operatons
     */
    public Long getOperatons()
@@ -225,35 +203,11 @@ public class JSONConfiguration
    }
 
    /**
-    * @return the fillFloor
-    */
-   public Long getFillFloor()
-   {
-      return this.fillFloor;
-   }
-
-   /**
-    * @return the fillCeiling
-    */
-   public Long getFillCeiling()
-   {
-      return this.fillCeiling;
-   }
-
-   /**
     * @return the idFile
     */
    public String getIdFile()
    {
       return this.idFile;
-   }
-
-   /**
-    * @return the port
-    */
-   public Integer getPort()
-   {
-      return this.port;
    }
 
    /**

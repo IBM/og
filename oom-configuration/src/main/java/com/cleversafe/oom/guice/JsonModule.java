@@ -544,8 +544,8 @@ public class JsonModule extends AbstractModule
       if (allEqual(0.0, write, read, delete))
          write = 100.0;
 
-      final long floorBytes = (long) (this.config.getFloor() / 100.0 * this.config.getCapacity());
-      final long ceilBytes = (long) (this.config.getCeiling() / 100.0 * this.config.getCapacity());
+      final long floorBytes = 0;
+      final long ceilBytes = Long.MAX_VALUE;
       return new OperationTypeMix(write, read, delete, floorBytes, ceilBytes);
    }
 

@@ -29,11 +29,12 @@ public class FileSize
    SizeUnit averageUnit;
    double spread;
    SizeUnit spreadUnit;
+   // TODO weight should be decimal
    long weight;
 
    public FileSize()
    {
-      this.distribution = DistributionType.NORMAL;
+      this.distribution = DistributionType.UNIFORM;
       this.average = 5.0;
       this.averageUnit = SizeUnit.MEBIBYTES;
       this.spread = 0.0;
