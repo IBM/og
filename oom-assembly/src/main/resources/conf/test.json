@@ -1,40 +1,151 @@
 {
+// test.json is a json-formatted test configuration file for the OOM tool.
+// See http://www.json.org/ for more details regarding the json format.
+//
+// All required fields are uncommented. Optional fields are commented out, with
+// their respective default values present.
+
+
+// The scheme to use for requests. Valid values are: "http", "https". Values
+// are case insensitive.
+
+//"scheme": "http",
+
+
+// A list of hosts for the tool to send http requests to. Hosts are selected
+// randomly on a per-request basis.
+//
+// Example1: "hosts": ["192.168.8.10"]
+// Example2: "hosts": ["dc-a2100-3838.cleversafelabs.com", "10.10.1.56"]
+
 "hosts": [],
-"api": "soh",
+
+
+// The http port to send requests on. Valid values are positive integers.
+
+// "port": 80,
+
+
+// The object api to use for requests. Valid values are:
+// soh, s3, openstack, webdav. Values are case insensitive.
+
+// "api": "soh",
+
+
+// The path at which the root of the object api resides. Object apis can be
+// rooted at arbitrary base paths.
+//
+// Example1: "/" -> the root of the object api under test resides at /
+// Example2: "/soh/" -> the root of the object api under test resides at /soh/
+
+// "url_root": "/<api>/", // where <api> is the api under test
+
+
+// The container to use for requests.
+
 "container": "",
-/*
-"write": 100.0,
-"read": 0.0,
-"delete": 0.0,
-"filesizes": [
-	{
-		"distribution": "uniform",
-		"average": 5,
-		"average_unit": "mb",
-		"spread": 1.25,
-		"spread_unit": "mb",
-		"weight": 1
-	}
-],
-"concurrency": {
-	"type": "iops",
-	"count": 1,
-	"unit": "seconds"
-},
 
-"username": "",
-"password": "",
 
-"floor": 0.0,
-"ceiling": 100.0,
-"capacity": 9223372036854775807,
+// Request headers to set for all operations. Keys and Values are strings.
+//
+// Example1 (s3 canned object acl):
+// "headers": {
+//	"x-amz-acl": "public-read"
+// }
 
-"operations": 100,
-"runtime": {"duration": 60, "unit": "sec"},
-"fill_floor": 0.0,
-"fill_ceiling": 100.0,
-*/
+// "headers": {},
 
-"id_file": "",
-"port": 80
+
+// Percentage of write operations to perform. Valid Values are integers or
+// decimals in the range [0.0, 100.0]
+
+// "write": 100.0,
+
+
+// Percentage of read operations to perform. Valid Values are integers or
+// decimals in the range [0.0, 100.0]
+
+// "read": 0.0,
+
+
+// Percentage of delete operations to perform. Valid Values are integers or
+// decimals in the range [0.0, 100.0]
+
+// "delete": 0.0,
+
+
+// File size(s) to use for write operations. File sizes are described in terms
+// of a mathematical distribution. If multiple distributions are configured, a
+// distribution is randomly selected on a per-request basis based on the
+// weights of each configured distribution.
+//
+// A distribution is constructed from six parameters:
+//
+// "distribution"->	the type of mathematical distribution to use. Valid
+//			values are: uniform, normal, lognormal. Values are
+//			case insensitive.
+//
+// "average" ->		the average file size for this distribution. Valid
+//			value are integers or decimals >= 0.0.
+//
+// "average_unit" ->	the unit for the average file size for this
+//			distribution. //TODO describe valid values.
+//
+// "spread" ->		//TODO describe spread.
+//
+// "spread_unit" ->	//TODO describe spread_unit.
+//
+// "weight" ->		the weight of this distribution relative to all others.
+//			Used for randomly selecting a distribution on a
+//			per-request basis. Valid values are positive integers.
+//			If only a single distribution is configured this value
+//			is ignored.
+//
+// Example1: A single, constant file size of 10 kilobytes.
+// "file_sizes": [
+// {
+// "average": 10,
+// "average_unit": "kb"
+// }
+// ]
+// TODO more complex example
+
+// "file_sizes": [
+// {
+// "distribution": "uniform",
+// "average": 5.0,
+// "average_unit": "mebibytes",
+// "spread": 0.0,
+// "spread_unit": "mebibytes",
+// "weight": 1
+// }
+// ],
+
+
+// The type of generated source data to use for writes. Valid values are:
+// random, zeroes. Values are case insensitive.
+
+// "source": "random",
+
+
+// The type of concurrency to use for the test.
+// TODO fuller explanation.
+
+// "concurrency": {
+// "type": "iops",
+// "count": 1.0,
+// "unit": "seconds"
+// },
+
+
+// The credentials to use for the test. If username is set, password must
+// also be set.
+// TODO fuller explanation.
+
+// "username": "",
+// "password": "",
+
+// TODO not wired up
+"idFile": ""
 }
+
