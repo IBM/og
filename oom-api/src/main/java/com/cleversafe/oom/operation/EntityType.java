@@ -25,5 +25,6 @@ package com.cleversafe.oom.operation;
 public enum EntityType
 {
    NONE,
-   RANDOM;
+   RANDOM,
+   ZEROES;
 }

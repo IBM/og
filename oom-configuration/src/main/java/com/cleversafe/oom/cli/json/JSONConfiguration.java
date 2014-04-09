@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.cleversafe.oom.http.Scheme;
+import com.cleversafe.oom.operation.EntityType;
 import com.cleversafe.oom.operation.OperationType;
 
 public class JSONConfiguration
@@ -39,6 +40,7 @@ public class JSONConfiguration
    double read;
    double delete;
    List<FileSize> filesizes;
+   EntityType source;
    Concurrency concurrency;
    String username;
    String password;
@@ -61,6 +63,7 @@ public class JSONConfiguration
       this.headers = new LinkedHashMap<String, String>();
       this.filesizes = new ArrayList<FileSize>();
       this.filesizes.add(new FileSize());
+      this.source = EntityType.RANDOM;
       this.concurrency = new Concurrency();
       this.ceiling = 100.0;
       this.capacity = 9223372036854775807L;
@@ -147,6 +150,14 @@ public class JSONConfiguration
    public List<FileSize> getFilesizes()
    {
       return this.filesizes;
+   }
+
+   /**
+    * @return the source
+    */
+   public EntityType getSource()
+   {
+      return this.source;
    }
 
    /**

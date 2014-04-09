@@ -31,6 +31,9 @@ import com.cleversafe.oom.operation.EntityType;
 public class Entities
 {
    private static final int BUF_SIZE = 1024;
+   private static final byte[] ZERO_BUF = new byte[BUF_SIZE];
+   // TODO performance of single random instance used by multiple threads? Need to quantify
+   private static final Random RANDOM = new Random();
 
    private Entities()
    {}
@@ -61,25 +64,27 @@ public class Entities
    public static InputStream createInputStream(final Entity entity)
    {
       checkNotNull(entity, "entity must not be null");
+      byte[] buf;
 
-      // TODO should we allow null return?
-      if (entity.getType() == EntityType.NONE)
-         return null;
-
-      final byte[] buf = createBuffer(entity.getType());
+      switch (entity.getType())
+      {
+         case NONE :
+            // TODO should we allow null return?
+            return null;
+         case ZEROES :
+            buf = ZERO_BUF;
+            break;
+         default :
+            buf = createRandomBuffer();
+            break;
+      }
       return new FixedBufferInputStream(buf, entity.getSize());
    }
 
-   private static byte[] createBuffer(final EntityType type)
+   private static byte[] createRandomBuffer()
    {
       final byte[] buf = new byte[Entities.BUF_SIZE];
-      switch (type)
-      {
-         default :
-            final Random random = new Random(System.currentTimeMillis());
-            random.nextBytes(buf);
-            break;
-      }
+      RANDOM.nextBytes(buf);
       return buf;
    }
 }

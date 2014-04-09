@@ -72,7 +72,6 @@ import com.cleversafe.oom.guice.annotation.WriteScheme;
 import com.cleversafe.oom.http.Scheme;
 import com.cleversafe.oom.http.producer.BasicAuthProducer;
 import com.cleversafe.oom.operation.Entity;
-import com.cleversafe.oom.operation.EntityType;
 import com.cleversafe.oom.operation.OperationType;
 import com.cleversafe.oom.operation.OperationTypeMix;
 import com.cleversafe.oom.operation.RequestContext;
@@ -495,6 +494,7 @@ public class JsonModule extends AbstractModule
          wrc.addChoice(createSizeDistribution(f), f.getWeight());
       }
 
+      final JSONConfiguration config = this.config;
       return new Producer<Entity>()
       {
          private final WeightedRandomChoice<Distribution> sizes = wrc;
@@ -502,7 +502,7 @@ public class JsonModule extends AbstractModule
          @Override
          public Entity produce(final RequestContext context)
          {
-            return Entities.of(EntityType.RANDOM, (long) this.sizes.nextChoice().nextSample());
+            return Entities.of(config.getSource(), (long) this.sizes.nextChoice().nextSample());
          }
       };
    }
