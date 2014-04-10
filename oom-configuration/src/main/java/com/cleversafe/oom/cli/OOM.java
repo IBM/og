@@ -43,6 +43,7 @@ import com.cleversafe.oom.cli.json.TimeUnitTypeAdapterFactory;
 import com.cleversafe.oom.client.Client;
 import com.cleversafe.oom.guice.JsonModule;
 import com.cleversafe.oom.guice.OOMModule;
+import com.cleversafe.oom.guice.S3Module;
 import com.cleversafe.oom.guice.SOHModule;
 import com.cleversafe.oom.object.manager.ObjectManager;
 import com.cleversafe.oom.test.LoadTest;
@@ -50,6 +51,7 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.LongSerializationPolicy;
+import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.martiansoftware.jsap.JSAP;
@@ -89,10 +91,21 @@ public class OOM
       OperationManager operationManager = null;
       ObjectManager objectManager = null;
       Client client = null;
+      AbstractModule apiModule;
+      // TODO better way to do this?
+      switch (config.getApi())
+      {
+         case S3 :
+            apiModule = new S3Module();
+            break;
+         default :
+            apiModule = new SOHModule();
+            break;
+      }
       try
       {
          final Injector injector =
-               Guice.createInjector(new JsonModule(config), new OOMModule(), new SOHModule());
+               Guice.createInjector(new JsonModule(config), new OOMModule(), apiModule);
          operationManager = injector.getInstance(OperationManager.class);
          client = injector.getInstance(Client.class);
          objectManager = injector.getInstance(ObjectManager.class);
