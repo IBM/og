@@ -16,6 +16,10 @@
 		</dependency>
 		<dependency>
 			<groupId>com.cleversafe</groupId>
+			<artifactId>oom-client</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.cleversafe</groupId>
 			<artifactId>oom-client-java</artifactId>
 		</dependency>
 		<dependency>
