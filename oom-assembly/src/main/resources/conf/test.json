@@ -145,7 +145,8 @@
 // "username": "",
 // "password": "",
 
-// TODO not wired up
-"idFile": ""
+// TODO fix this description
+// The location to store object names. Default is current working directory.
+"object_location": "."
 }
 

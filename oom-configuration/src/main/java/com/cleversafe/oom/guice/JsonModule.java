@@ -21,6 +21,8 @@ package com.cleversafe.oom.guice;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,6 +31,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.cleversafe.oom.api.Producer;
+import com.cleversafe.oom.cli.json.API;
 import com.cleversafe.oom.cli.json.Concurrency;
 import com.cleversafe.oom.cli.json.FileSize;
 import com.cleversafe.oom.cli.json.JSONConfiguration;
@@ -44,6 +47,7 @@ import com.cleversafe.oom.guice.annotation.DefaultHeaders;
 import com.cleversafe.oom.guice.annotation.DefaultHost;
 import com.cleversafe.oom.guice.annotation.DefaultId;
 import com.cleversafe.oom.guice.annotation.DefaultMetaData;
+import com.cleversafe.oom.guice.annotation.DefaultObjectLocation;
 import com.cleversafe.oom.guice.annotation.DefaultPort;
 import com.cleversafe.oom.guice.annotation.DefaultQueryParams;
 import com.cleversafe.oom.guice.annotation.DefaultScheme;
@@ -259,6 +263,12 @@ public class JsonModule extends AbstractModule
       if (config != null && config.getPort() != null)
          return Producers.of(config.getPort());
       return defaultPort;
+   }
+
+   @Provides
+   API provideApi()
+   {
+      return this.config.getApi();
    }
 
    @Provides
@@ -532,6 +542,33 @@ public class JsonModule extends AbstractModule
    {
       final Map<String, String> metadata = new HashMap<String, String>();
       return Producers.of(metadata);
+   }
+
+   // TODO simplify this method if possible
+   @Provides
+   @Singleton
+   @DefaultObjectLocation
+   String provideObjectLocation() throws IOException
+   {
+
+      String path = this.config.getObjectLocation();
+      if (path == null || path.length() == 0)
+         path = ".";
+
+      final File f = new File(path).getCanonicalFile();
+      if (!f.exists())
+      {
+         final boolean created = f.mkdirs();
+         if (!created)
+            throw new RuntimeException(String.format(
+                  "Failed to create object location directory [%s]", f.toString()));
+      }
+      else if (!f.isDirectory())
+      {
+         throw new RuntimeException(String.format("Object location is not a directory [%s]",
+               f.toString()));
+      }
+      return f.toString();
    }
 
    @Provides

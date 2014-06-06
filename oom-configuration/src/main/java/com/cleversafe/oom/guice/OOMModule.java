@@ -30,9 +30,12 @@ import com.cleversafe.oom.api.ByteBufferConsumer;
 import com.cleversafe.oom.api.Consumer;
 import com.cleversafe.oom.api.OperationManager;
 import com.cleversafe.oom.api.Producer;
+import com.cleversafe.oom.cli.json.API;
 import com.cleversafe.oom.client.Client;
 import com.cleversafe.oom.client.JavaClient;
 import com.cleversafe.oom.client.JavaClientConfiguration;
+import com.cleversafe.oom.guice.annotation.DefaultContainer;
+import com.cleversafe.oom.guice.annotation.DefaultObjectLocation;
 import com.cleversafe.oom.guice.annotation.DefaultObjectName;
 import com.cleversafe.oom.guice.annotation.Delete;
 import com.cleversafe.oom.guice.annotation.Read;
@@ -115,10 +118,14 @@ public class OOMModule extends AbstractModule
 
    @Provides
    @Singleton
-   ObjectManager provideObjectManager()
+   ObjectManager provideObjectManager(
+         @DefaultObjectLocation final String objectLocation,
+         @DefaultContainer final Producer<String> container,
+         final API api)
    {
-      // TODO configure via test.json
-      return new RandomObjectPopulator(UUID.randomUUID());
+      // FIXME this naming scheme will break unless @DefaultContainer is a constant producer
+      final String aContainer = container.produce(null);
+      return new RandomObjectPopulator(UUID.randomUUID(), objectLocation, aContainer + "-" + api);
    }
 
    @Provides

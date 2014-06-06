@@ -47,7 +47,7 @@ public class JSONConfiguration
    String password;
    Long operatons;
    RunTime runtime;
-   String idFile;
+   String objectLocation;
 
    Map<OperationType, OperationConfig> operationConfig;
 
@@ -61,7 +61,7 @@ public class JSONConfiguration
       this.filesizes.add(new FileSize());
       this.source = EntityType.RANDOM;
       this.concurrency = new Concurrency();
-      this.idFile = "";
+      this.objectLocation = ".";
       // TODO OperationType is not being lowercased when serialized
       this.operationConfig = new LinkedHashMap<OperationType, OperationConfig>();
    }
@@ -203,11 +203,11 @@ public class JSONConfiguration
    }
 
    /**
-    * @return the idFile
+    * @return the objectLocation
     */
-   public String getIdFile()
+   public String getObjectLocation()
    {
-      return this.idFile;
+      return this.objectLocation;
    }
 
    /**

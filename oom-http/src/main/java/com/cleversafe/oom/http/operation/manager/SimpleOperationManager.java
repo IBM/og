@@ -45,6 +45,7 @@ public class SimpleOperationManager implements OperationManager
    private final Scheduler scheduler;
    private final Map<Long, Request> pendingRequests;
 
+   // TODO get rid of OperationTypeMix
    public SimpleOperationManager(
          final OperationTypeMix mix,
          final Map<OperationType, Producer<Request>> producers,

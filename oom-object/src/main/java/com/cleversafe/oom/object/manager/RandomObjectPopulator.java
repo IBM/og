@@ -67,6 +67,7 @@ import com.cleversafe.oom.object.ObjectName;
 public class RandomObjectPopulator extends Thread implements ObjectManager
 {
    private static final int MAX_PERSIST_ARG = 30 * 1000 * 60;
+   private final String directory;
    public final String prefix;
    static final String suffix = ".bin";
    private final Pattern filenamePattern;
@@ -118,28 +119,35 @@ public class RandomObjectPopulator extends Thread implements ObjectManager
       this(vaultId, "");
    }
 
+   public RandomObjectPopulator(final UUID vaultId, final String directory, final String prefix)
+   {
+      this(vaultId, directory, prefix, MAX_OBJECT_ARG, MAX_PERSIST_ARG);
+   }
+
    public RandomObjectPopulator(final UUID vaultId, final String prefix)
    {
-      this(vaultId, prefix, MAX_OBJECT_ARG, MAX_PERSIST_ARG);
+      this(vaultId, ".", prefix, MAX_OBJECT_ARG, MAX_PERSIST_ARG);
    }
 
    public RandomObjectPopulator(final UUID vaultId, final int maxObjects)
    {
-      this(vaultId, "", maxObjects, MAX_PERSIST_ARG);
+      this(vaultId, ".", "", maxObjects, MAX_PERSIST_ARG);
    }
 
    public RandomObjectPopulator(final UUID vaultId, final String prefix, final int maxObjects)
    {
-      this(vaultId, prefix, maxObjects, MAX_PERSIST_ARG);
+      this(vaultId, ".", prefix, maxObjects, MAX_PERSIST_ARG);
    }
 
    public RandomObjectPopulator(
          final UUID vaultId,
+         final String directory,
          final String prefix,
          final int maxObjects,
          final long persistTime)
    {
       this.vaultId = vaultId;
+      this.directory = directory;
       if (prefix != null && !prefix.isEmpty())
       {
          this.prefix = prefix;
@@ -161,7 +169,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager
       {
          this.idFileIndex = 0;
       }
-      this.saveFile = new File(this.prefix + this.idFileIndex + suffix);
+      this.saveFile = createFile(this.idFileIndex);
 
       loadObjects();
 
@@ -211,7 +219,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager
 
    private File[] getIdFiles()
    {
-      final File dir = new File(".");
+      final File dir = new File(this.directory);
       final File[] files = dir.listFiles(new IdFilter());
       return files;
    }
@@ -364,12 +372,12 @@ public class RandomObjectPopulator extends Thread implements ObjectManager
          for (int size = this.objects.size(); size > this.MAX_OBJECTS; size = this.objects.size())
          {
             final int numFiles = getIdFiles().length;
-            File surplus = new File(this.prefix + (numFiles - 1) + suffix);
+            File surplus = createFile(numFiles - 1);
             if (surplus.equals(this.saveFile)
                   || (surplus.length() / OBJECT_SIZE) >= this.MAX_OBJECTS)
             {
                // Create a new file
-               surplus = new File(this.prefix + numFiles + suffix);
+               surplus = createFile(numFiles);
             }
             final DataOutputStream dos = new DataOutputStream(new FileOutputStream(surplus, true));
             final int remaining = getRemaining(size, surplus);
@@ -393,7 +401,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager
             // When borrowing, add to this.objects
             // Count the number of objects to borrow and truncate file by that amount
             final int numFiles = getIdFiles().length;
-            final File surplus = new File(this.prefix + (numFiles - 1) + suffix);
+            final File surplus = createFile(numFiles - 1);
             // Need to ensure last file is not current file
             // If it is, don't borrow at all
             if (this.saveFile.equals(surplus))
@@ -456,6 +464,11 @@ public class RandomObjectPopulator extends Thread implements ObjectManager
       final int slotsAvailable = this.MAX_OBJECTS - size;
       final int surplusAvailable = ((int) (surplus.length() / OBJECT_SIZE));
       return Math.min(slotsAvailable, surplusAvailable);
+   }
+
+   private File createFile(final int idx)
+   {
+      return new File(this.directory + "/" + this.prefix + idx + suffix);
    }
 
    /*

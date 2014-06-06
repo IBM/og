@@ -349,7 +349,7 @@ public class RandomObjectPopulatorTest
          ObjectManagerException
    {
       final RandomObjectPopulator rop =
-            new RandomObjectPopulator(this.vaultId, "", 100000, 5 * 1000);
+            new RandomObjectPopulator(this.vaultId, ".", "", 100000, 5 * 1000);
       final ConcurrentHashMap<ObjectName, ObjectName> ids =
             new ConcurrentHashMap<ObjectName, ObjectName>();
 
@@ -451,7 +451,7 @@ public class RandomObjectPopulatorTest
       RandomObjectPopulator verify;
       do
       {
-         verify = new RandomObjectPopulator(this.vaultId, "", 100000, 5 * 1000);
+         verify = new RandomObjectPopulator(this.vaultId, ".", "", 100000, 5 * 1000);
          final long objectCount = verify.getSavedObjectCount();
          Assert.assertEquals(ids.size(), objectCount);
          while (true)
