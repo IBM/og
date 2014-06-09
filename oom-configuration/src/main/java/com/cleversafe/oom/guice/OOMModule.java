@@ -31,9 +31,8 @@ import com.cleversafe.oom.api.Consumer;
 import com.cleversafe.oom.api.OperationManager;
 import com.cleversafe.oom.api.Producer;
 import com.cleversafe.oom.cli.json.API;
+import com.cleversafe.oom.client.ApacheClient;
 import com.cleversafe.oom.client.Client;
-import com.cleversafe.oom.client.JavaClient;
-import com.cleversafe.oom.client.JavaClientConfiguration;
 import com.cleversafe.oom.guice.annotation.DefaultContainer;
 import com.cleversafe.oom.guice.annotation.DefaultObjectLocation;
 import com.cleversafe.oom.guice.annotation.DefaultObjectName;
@@ -96,7 +95,6 @@ public class OOMModule extends AbstractModule
    @Singleton
    Client provideClient()
    {
-      final JavaClientConfiguration clientConfig = new JavaClientConfiguration();
       final Function<String, ByteBufferConsumer> byteBufferConsumers =
             new Function<String, ByteBufferConsumer>()
             {
@@ -113,7 +111,7 @@ public class OOMModule extends AbstractModule
                }
 
             };
-      return new JavaClient(clientConfig, byteBufferConsumers);
+      return new ApacheClient(byteBufferConsumers);
    }
 
    @Provides
