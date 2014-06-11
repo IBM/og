@@ -111,7 +111,9 @@ public class OOMModule extends AbstractModule
                }
 
             };
-      return new ApacheClient(byteBufferConsumers);
+      return new ApacheClient.Builder()
+            .withByteBufferConsumers(byteBufferConsumers)
+            .build();
    }
 
    @Provides

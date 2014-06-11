@@ -75,7 +75,7 @@ public class ApacheClient implements Client
    private final ListeningExecutorService executorService;
    private final Gson gson;
 
-   public ApacheClient(final Function<String, ByteBufferConsumer> byteBufferConsumers)
+   private ApacheClient(final Function<String, ByteBufferConsumer> byteBufferConsumers)
    {
       this.client = HttpClients.createDefault();
       this.byteBufferConsumers =
@@ -277,6 +277,26 @@ public class ApacheClient implements Client
          this.byteBuf.flip();
          this.consumer.consume(this.byteBuf);
          this.byteBuf.clear();
+      }
+   }
+
+   public static class Builder
+   {
+      private Function<String, ByteBufferConsumer> byteBufferConsumers;
+
+      public Builder()
+      {}
+
+      public ApacheClient.Builder withByteBufferConsumers(
+            final Function<String, ByteBufferConsumer> byteBufferConsumers)
+      {
+         this.byteBufferConsumers = byteBufferConsumers;
+         return this;
+      }
+
+      public ApacheClient build()
+      {
+         return new ApacheClient(this.byteBufferConsumers);
       }
    }
 }
