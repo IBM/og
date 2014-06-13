@@ -21,13 +21,13 @@ package com.cleversafe.oom.guice;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.cleversafe.oom.api.Producer;
 import com.cleversafe.oom.guice.annotation.DefaultEntity;
 import com.cleversafe.oom.guice.annotation.DefaultId;
-import com.cleversafe.oom.guice.annotation.DefaultMetaData;
 import com.cleversafe.oom.guice.annotation.DefaultObjectName;
 import com.cleversafe.oom.guice.annotation.DefaultUriRoot;
 import com.cleversafe.oom.guice.annotation.Delete;
@@ -85,8 +85,7 @@ public class S3Module extends AbstractModule
          @WriteContainer final Producer<String> container,
          @WriteQueryParams final Producer<Map<String, String>> queryParams,
          @WriteHeaders final List<Producer<Pair<String, String>>> headers,
-         @DefaultEntity final Producer<Entity> entity,
-         @DefaultMetaData final Producer<Map<String, String>> metadata)
+         @DefaultEntity final Producer<Entity> entity)
    {
       final List<Producer<String>> parts = new ArrayList<Producer<String>>();
       addUriRoot(parts, uriRoot);
@@ -99,13 +98,14 @@ public class S3Module extends AbstractModule
             .atPath(parts)
             .withQueryParams(queryParams)
             .build();
+      final Map<String, String> metadata = new HashMap<String, String>();
 
       return new RequestProducer(id,
             Producers.of(Method.PUT),
             writeURI,
             headers,
             entity,
-            metadata);
+            Producers.of(metadata));
    }
 
    @Provides
@@ -120,8 +120,7 @@ public class S3Module extends AbstractModule
          @ReadContainer final Producer<String> container,
          @DefaultObjectName final Producer<String> object,
          @ReadQueryParams final Producer<Map<String, String>> queryParams,
-         @ReadHeaders final List<Producer<Pair<String, String>>> headers,
-         @DefaultMetaData final Producer<Map<String, String>> metadata)
+         @ReadHeaders final List<Producer<Pair<String, String>>> headers)
    {
       final List<Producer<String>> parts = new ArrayList<Producer<String>>();
       addUriRoot(parts, uriRoot);
@@ -134,13 +133,14 @@ public class S3Module extends AbstractModule
             .atPath(parts)
             .withQueryParams(queryParams)
             .build();
+      final Map<String, String> metadata = new HashMap<String, String>();
 
       return new RequestProducer(id,
             Producers.of(Method.GET),
             readURI,
             headers,
             Producers.of(Entities.of(EntityType.NONE, 0)),
-            metadata);
+            Producers.of(metadata));
    }
 
    @Provides
@@ -155,8 +155,7 @@ public class S3Module extends AbstractModule
          @DeleteContainer final Producer<String> container,
          @DefaultObjectName final Producer<String> object,
          @DeleteQueryParams final Producer<Map<String, String>> queryParams,
-         @DeleteHeaders final List<Producer<Pair<String, String>>> headers,
-         @DefaultMetaData final Producer<Map<String, String>> metadata)
+         @DeleteHeaders final List<Producer<Pair<String, String>>> headers)
    {
       final List<Producer<String>> parts = new ArrayList<Producer<String>>();
       addUriRoot(parts, uriRoot);
@@ -169,13 +168,14 @@ public class S3Module extends AbstractModule
             .atPath(parts)
             .withQueryParams(queryParams)
             .build();
+      final Map<String, String> metadata = new HashMap<String, String>();
 
       return new RequestProducer(id,
             Producers.of(Method.DELETE),
             deleteURI,
             headers,
             Producers.of(Entities.of(EntityType.NONE, 0)),
-            metadata);
+            Producers.of(metadata));
    }
 
    // TODO better way to do this? Maybe uriRoot should never be null and/or should be propagated

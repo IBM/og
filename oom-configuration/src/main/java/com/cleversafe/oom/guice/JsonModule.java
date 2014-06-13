@@ -46,7 +46,6 @@ import com.cleversafe.oom.guice.annotation.DefaultEntity;
 import com.cleversafe.oom.guice.annotation.DefaultHeaders;
 import com.cleversafe.oom.guice.annotation.DefaultHost;
 import com.cleversafe.oom.guice.annotation.DefaultId;
-import com.cleversafe.oom.guice.annotation.DefaultMetaData;
 import com.cleversafe.oom.guice.annotation.DefaultObjectLocation;
 import com.cleversafe.oom.guice.annotation.DefaultPort;
 import com.cleversafe.oom.guice.annotation.DefaultQueryParams;
@@ -533,15 +532,6 @@ public class JsonModule extends AbstractModule
          default :
             return new UniformDistribution(mean, spread);
       }
-   }
-
-   @Provides
-   @Singleton
-   @DefaultMetaData
-   Producer<Map<String, String>> provideDefaultMetaData()
-   {
-      final Map<String, String> metadata = new HashMap<String, String>();
-      return Producers.of(metadata);
    }
 
    // TODO simplify this method if possible
