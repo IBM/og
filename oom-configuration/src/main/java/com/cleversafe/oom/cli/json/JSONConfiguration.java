@@ -34,7 +34,7 @@ public class JSONConfiguration
    List<String> hosts;
    Integer port;
    API api;
-   String urlRoot;
+   String uriRoot;
    String container;
    Map<String, String> headers;
    double write;
@@ -99,11 +99,11 @@ public class JSONConfiguration
    }
 
    /**
-    * @return the urlRoot
+    * @return the uriRoot
     */
-   public String getUrlRoot()
+   public String getUriRoot()
    {
-      return this.urlRoot;
+      return this.uriRoot;
    }
 
    /**

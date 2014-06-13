@@ -21,8 +21,8 @@ package com.cleversafe.oom.http.producer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 
@@ -32,7 +32,7 @@ import com.cleversafe.oom.http.Scheme;
 import com.cleversafe.oom.operation.RequestContext;
 import com.google.common.base.Joiner;
 
-public class URLProducer implements Producer<URL>
+public class URIProducer implements Producer<URI>
 {
    private final Producer<Scheme> scheme;
    private final Producer<String> host;
@@ -42,7 +42,7 @@ public class URLProducer implements Producer<URL>
    private final boolean trailingSlash;
    private static final Joiner.MapJoiner paramJoiner = Joiner.on('&').withKeyValueSeparator("=");
 
-   private URLProducer(
+   private URIProducer(
          final Producer<Scheme> scheme,
          final Producer<String> host,
          final Producer<Integer> port,
@@ -59,7 +59,7 @@ public class URLProducer implements Producer<URL>
    }
 
    @Override
-   public URL produce(final RequestContext context)
+   public URI produce(final RequestContext context)
    {
       final StringBuilder builder = new StringBuilder()
             .append(this.scheme.produce(context))
@@ -72,12 +72,12 @@ public class URLProducer implements Producer<URL>
 
       try
       {
-         return new URL(builder.toString());
+         return new URI(builder.toString());
       }
-      catch (final MalformedURLException e)
+      catch (final URISyntaxException e)
       {
          // Wrapping checked exception as unchecked because most callers will not be able to handle
-         // it and I don't want to include MalformedURLException in the entire signature chain
+         // it and I don't want to include URISyntaxException in the entire signature chain
          throw new ProducerException(e);
       }
    }
@@ -157,9 +157,9 @@ public class URLProducer implements Producer<URL>
          return this;
       }
 
-      public URLProducer build()
+      public URIProducer build()
       {
-         return new URLProducer(this.scheme, this.host, this.port, this.path, this.queryParams,
+         return new URIProducer(this.scheme, this.host, this.port, this.path, this.queryParams,
                this.trailingSlash);
       }
    }

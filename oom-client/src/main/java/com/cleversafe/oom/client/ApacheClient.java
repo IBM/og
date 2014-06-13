@@ -24,7 +24,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.Map.Entry;
@@ -230,10 +229,9 @@ public class ApacheClient implements Client
 
       }
 
-      private void setRequestURI(final HttpRequestBase request) throws URISyntaxException
+      private void setRequestURI(final HttpRequestBase request)
       {
-         // FIXME Request should use URI instead of URL? avoid URISyntaxException checked exception
-         request.setURI(this.request.getURL().toURI());
+         request.setURI(this.request.getURI());
       }
 
       private void setRequestHeaders(final HttpRequestBase request)

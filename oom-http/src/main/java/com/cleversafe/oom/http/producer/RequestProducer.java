@@ -21,7 +21,7 @@ package com.cleversafe.oom.http.producer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
@@ -37,7 +37,7 @@ public class RequestProducer implements Producer<Request>
    private final Producer<Long> id;
    private final Producer<String> customRequestKey;
    private final Producer<Method> method;
-   private final Producer<URL> url;
+   private final Producer<URI> uri;
    private final List<Producer<Pair<String, String>>> headers;
    private final Producer<Entity> entity;
    private final Producer<Map<String, String>> metadata;
@@ -46,7 +46,7 @@ public class RequestProducer implements Producer<Request>
          final Producer<Long> id,
          final Producer<String> customRequestKey,
          final Producer<Method> method,
-         final Producer<URL> url,
+         final Producer<URI> uri,
          final List<Producer<Pair<String, String>>> headers,
          final Producer<Entity> entity,
          final Producer<Map<String, String>> metadata)
@@ -54,7 +54,7 @@ public class RequestProducer implements Producer<Request>
       this.id = checkNotNull(id, "id must not be null");
       this.customRequestKey = checkNotNull(customRequestKey, "customRequestKey must not be null");
       this.method = checkNotNull(method, "method must not be null");
-      this.url = checkNotNull(url, "url must not be null");
+      this.uri = checkNotNull(uri, "uri must not be null");
       this.headers = checkNotNull(headers, "headers must not be null");
       this.entity = checkNotNull(entity, "entity must not be null");
       this.metadata = checkNotNull(metadata, "metadata must not be null");
@@ -66,7 +66,7 @@ public class RequestProducer implements Producer<Request>
       context.withId(this.id.produce(context))
             .withCustomRequestKey(this.customRequestKey.produce(context))
             .withMethod(this.method.produce(context))
-            .withURL(this.url.produce(context));
+            .withURI(this.uri.produce(context));
 
       for (final Producer<Pair<String, String>> producer : this.headers)
       {

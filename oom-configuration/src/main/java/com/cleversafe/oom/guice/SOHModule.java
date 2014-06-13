@@ -19,7 +19,7 @@
 
 package com.cleversafe.oom.guice;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +29,7 @@ import com.cleversafe.oom.guice.annotation.DefaultEntity;
 import com.cleversafe.oom.guice.annotation.DefaultId;
 import com.cleversafe.oom.guice.annotation.DefaultMetaData;
 import com.cleversafe.oom.guice.annotation.DefaultObjectName;
-import com.cleversafe.oom.guice.annotation.DefaultUrlRoot;
+import com.cleversafe.oom.guice.annotation.DefaultUriRoot;
 import com.cleversafe.oom.guice.annotation.Delete;
 import com.cleversafe.oom.guice.annotation.DeleteContainer;
 import com.cleversafe.oom.guice.annotation.DeleteHeaders;
@@ -53,7 +53,7 @@ import com.cleversafe.oom.guice.annotation.WriteQueryParams;
 import com.cleversafe.oom.guice.annotation.WriteScheme;
 import com.cleversafe.oom.http.Scheme;
 import com.cleversafe.oom.http.producer.RequestProducer;
-import com.cleversafe.oom.http.producer.URLProducer;
+import com.cleversafe.oom.http.producer.URIProducer;
 import com.cleversafe.oom.operation.Entity;
 import com.cleversafe.oom.operation.EntityType;
 import com.cleversafe.oom.operation.Method;
@@ -79,7 +79,7 @@ public class SOHModule extends AbstractModule
          @WriteScheme final Producer<Scheme> scheme,
          @WriteHost final Producer<String> host,
          @WritePort final Producer<Integer> port,
-         @DefaultUrlRoot final Producer<String> urlRoot,
+         @DefaultUriRoot final Producer<String> uriRoot,
          @WriteContainer final Producer<String> container,
          @WriteQueryParams final Producer<Map<String, String>> queryParams,
          @WriteHeaders final List<Producer<Pair<String, String>>> headers,
@@ -87,9 +87,9 @@ public class SOHModule extends AbstractModule
          @DefaultMetaData final Producer<Map<String, String>> metadata)
    {
       final List<Producer<String>> parts = new ArrayList<Producer<String>>();
-      addUrlRoot(parts, urlRoot);
+      addUriRoot(parts, uriRoot);
       parts.add(container);
-      final Producer<URL> writeURL = new URLProducer.Builder()
+      final Producer<URI> writeURI = new URIProducer.Builder()
             .withScheme(scheme)
             .toHost(host)
             .onPort(port)
@@ -100,7 +100,7 @@ public class SOHModule extends AbstractModule
       return new RequestProducer(id,
             Producers.of("soh.put_object"),
             Producers.of(Method.PUT),
-            writeURL,
+            writeURI,
             headers,
             entity,
             metadata);
@@ -114,7 +114,7 @@ public class SOHModule extends AbstractModule
          @ReadScheme final Producer<Scheme> scheme,
          @ReadHost final Producer<String> host,
          @ReadPort final Producer<Integer> port,
-         @DefaultUrlRoot final Producer<String> urlRoot,
+         @DefaultUriRoot final Producer<String> uriRoot,
          @ReadContainer final Producer<String> container,
          @DefaultObjectName final Producer<String> object,
          @ReadQueryParams final Producer<Map<String, String>> queryParams,
@@ -122,10 +122,10 @@ public class SOHModule extends AbstractModule
          @DefaultMetaData final Producer<Map<String, String>> metadata)
    {
       final List<Producer<String>> parts = new ArrayList<Producer<String>>();
-      addUrlRoot(parts, urlRoot);
+      addUriRoot(parts, uriRoot);
       parts.add(container);
       parts.add(object);
-      final Producer<URL> readURL = new URLProducer.Builder()
+      final Producer<URI> readURI = new URIProducer.Builder()
             .withScheme(scheme)
             .toHost(host)
             .onPort(port)
@@ -136,7 +136,7 @@ public class SOHModule extends AbstractModule
       return new RequestProducer(id,
             Producers.of("soh.get_object"),
             Producers.of(Method.GET),
-            readURL,
+            readURI,
             headers,
             Producers.of(Entities.of(EntityType.NONE, 0)),
             metadata);
@@ -150,7 +150,7 @@ public class SOHModule extends AbstractModule
          @DeleteScheme final Producer<Scheme> scheme,
          @DeleteHost final Producer<String> host,
          @DeletePort final Producer<Integer> port,
-         @DefaultUrlRoot final Producer<String> urlRoot,
+         @DefaultUriRoot final Producer<String> uriRoot,
          @DeleteContainer final Producer<String> container,
          @DefaultObjectName final Producer<String> object,
          @DeleteQueryParams final Producer<Map<String, String>> queryParams,
@@ -158,10 +158,10 @@ public class SOHModule extends AbstractModule
          @DefaultMetaData final Producer<Map<String, String>> metadata)
    {
       final List<Producer<String>> parts = new ArrayList<Producer<String>>();
-      addUrlRoot(parts, urlRoot);
+      addUriRoot(parts, uriRoot);
       parts.add(container);
       parts.add(object);
-      final Producer<URL> deleteURL = new URLProducer.Builder()
+      final Producer<URI> deleteURI = new URIProducer.Builder()
             .withScheme(scheme)
             .toHost(host)
             .onPort(port)
@@ -172,17 +172,17 @@ public class SOHModule extends AbstractModule
       return new RequestProducer(id,
             Producers.of("soh.delete_object"),
             Producers.of(Method.DELETE),
-            deleteURL,
+            deleteURI,
             headers,
             Producers.of(Entities.of(EntityType.NONE, 0)),
             metadata);
    }
 
-   // TODO better way to do this? Maybe urlRoot should never be null and/or should be propagated
-   // all the way to URLProducer
-   private void addUrlRoot(final List<Producer<String>> parts, final Producer<String> urlRoot)
+   // TODO better way to do this? Maybe uriRoot should never be null and/or should be propagated
+   // all the way to URIProducer
+   private void addUriRoot(final List<Producer<String>> parts, final Producer<String> uriRoot)
    {
-      if (urlRoot != null)
-         parts.add(urlRoot);
+      if (uriRoot != null)
+         parts.add(uriRoot);
    }
 }

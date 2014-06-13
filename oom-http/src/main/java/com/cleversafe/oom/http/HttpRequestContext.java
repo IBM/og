@@ -19,7 +19,7 @@
 
 package com.cleversafe.oom.http;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -35,7 +35,7 @@ public class HttpRequestContext implements RequestContext
    private long id;
    private String customRequestKey;
    private Method method;
-   private URL url;
+   private URI uri;
    private final Map<String, String> headers;
    private Entity entity;
    private final Map<String, String> metadata;
@@ -65,9 +65,9 @@ public class HttpRequestContext implements RequestContext
    }
 
    @Override
-   public URL getURL()
+   public URI getURI()
    {
-      return this.url;
+      return this.uri;
    }
 
    @Override
@@ -122,9 +122,9 @@ public class HttpRequestContext implements RequestContext
    }
 
    @Override
-   public RequestContext withURL(final URL url)
+   public RequestContext withURI(final URI uri)
    {
-      this.url = url;
+      this.uri = uri;
       return this;
    }
 
@@ -166,7 +166,7 @@ public class HttpRequestContext implements RequestContext
    @Override
    public Request build()
    {
-      return new HttpRequest(this.id, this.customRequestKey, this.method, this.url, this.headers,
+      return new HttpRequest(this.id, this.customRequestKey, this.method, this.uri, this.headers,
             this.entity, this.metadata);
    }
 }

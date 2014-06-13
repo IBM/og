@@ -38,7 +38,7 @@
 // Example1: "/" -> the root of the object api under test resides at /
 // Example2: "/soh/" -> the root of the object api under test resides at /soh/
 
-// "url_root": "/<api>/", // where <api> is the api under test
+// "uri_root": "/<api>/", // where <api> is the api under test
 
 
 // The container to use for requests.

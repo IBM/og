@@ -21,7 +21,7 @@ package com.cleversafe.oom.object.manager;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
@@ -39,7 +39,7 @@ public class ObjectNameConsumer implements Consumer<Response>
 {
    private final ObjectManager objectManager;
    private final Map<Long, Request> pendingRequests;
-   private static final Splitter urlSplitter = Splitter.on("/").omitEmptyStrings();
+   private static final Splitter uriSplitter = Splitter.on("/").omitEmptyStrings();
 
    public ObjectNameConsumer(
          final ObjectManager objectManager,
@@ -65,7 +65,7 @@ public class ObjectNameConsumer implements Consumer<Response>
       }
       else
       {
-         final ObjectName objectName = objectNameFromURL(request.getURL());
+         final ObjectName objectName = objectNameFromURI(request.getURI());
          if (objectName != null)
          {
             switch (request.getMethod())
@@ -85,9 +85,9 @@ public class ObjectNameConsumer implements Consumer<Response>
       }
    }
 
-   private static ObjectName objectNameFromURL(final URL url)
+   private static ObjectName objectNameFromURI(final URI uri)
    {
-      final List<String> parts = urlSplitter.splitToList(url.getPath());
+      final List<String> parts = uriSplitter.splitToList(uri.getPath());
       // TODO this will break for soh writes rooted at /soh, need a better approach
       // for consumption in general
       if (parts.size() >= 2)

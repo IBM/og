@@ -20,6 +20,7 @@
 package com.cleversafe.oom.http;
 
 import java.net.InetAddress;
+import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.Locale;
@@ -80,8 +81,9 @@ public class HttpRequestAccessLogEntry
       catch (final UnknownHostException e)
       {
       }
+      final URI uri = request.getURI();
       this.serverName = serverName;
-      this.remoteAddress = request.getURL().getHost();
+      this.remoteAddress = uri.getHost();
       this.forwardedFor = request.getHeader(HttpHeaders.X_FORWARDED_FOR);
       this.user = null;
       this.timestampStart = 0;
@@ -89,9 +91,10 @@ public class HttpRequestAccessLogEntry
       this.timeStart = HttpRequestAccessLogEntry.formatter.print(this.timestampStart);
       this.timeFinish = HttpRequestAccessLogEntry.formatter.print(this.timestampFinish);
       this.requestMethod = request.getMethod().toString();
-      this.requestUri = request.getURL().getFile();
+
+      this.requestUri = uri.getPath() + (uri.getQuery() != null ? uri.getQuery() : "");
       this.object_id = null;
-      this.protocol = request.getURL().getProtocol();
+      this.protocol = uri.getScheme();
       this.status = response.getStatusCode();
       this.requestLength = null;
       this.responseLength = 0;

@@ -19,7 +19,7 @@
 
 package com.cleversafe.oom.operation;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.Map;
 
 public interface RequestContext extends Request
@@ -30,7 +30,7 @@ public interface RequestContext extends Request
 
    public RequestContext withMethod(final Method method);
 
-   public RequestContext withURL(final URL url);
+   public RequestContext withURI(final URI uri);
 
    public RequestContext withHeader(final String key, final String value);
 

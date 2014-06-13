@@ -22,7 +22,7 @@ package com.cleversafe.oom.http;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
@@ -37,7 +37,7 @@ public class HttpRequest implements Request
    private final long id;
    private final String customRequestKey;
    private final Method method;
-   private final URL url;
+   private final URI uri;
    private final Map<String, String> headers;
    private final Entity entity;
    private final Map<String, String> metadata;
@@ -46,7 +46,7 @@ public class HttpRequest implements Request
          final long id,
          final String customRequestKey,
          final Method method,
-         final URL url,
+         final URI uri,
          final Map<String, String> headers,
          final Entity entity,
          final Map<String, String> metadata)
@@ -55,7 +55,7 @@ public class HttpRequest implements Request
       this.id = id;
       this.customRequestKey = customRequestKey;
       this.method = checkNotNull(method, "method must not be null");
-      this.url = checkNotNull(url, "url must not be null");
+      this.uri = checkNotNull(uri, "uri must not be null");
       checkNotNull(headers, "headers must not be null");
       this.headers = Collections.unmodifiableMap(headers);
       this.entity = checkNotNull(entity, "entity must not be null");
@@ -83,9 +83,9 @@ public class HttpRequest implements Request
    }
 
    @Override
-   public URL getURL()
+   public URI getURI()
    {
-      return this.url;
+      return this.uri;
    }
 
    @Override

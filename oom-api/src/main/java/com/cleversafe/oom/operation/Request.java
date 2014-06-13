@@ -19,7 +19,7 @@
 
 package com.cleversafe.oom.operation;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.Iterator;
 import java.util.Map.Entry;
 
@@ -53,11 +53,11 @@ public interface Request
    Method getMethod();
 
    /**
-    * Gets the url for this request.
+    * Gets the uri for this request.
     * 
-    * @return the url for this request
+    * @return the uri for this request
     */
-   URL getURL();
+   URI getURI();
 
    /**
     * Gets the value of the request header with the specified key.

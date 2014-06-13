@@ -51,7 +51,7 @@ import com.cleversafe.oom.guice.annotation.DefaultObjectLocation;
 import com.cleversafe.oom.guice.annotation.DefaultPort;
 import com.cleversafe.oom.guice.annotation.DefaultQueryParams;
 import com.cleversafe.oom.guice.annotation.DefaultScheme;
-import com.cleversafe.oom.guice.annotation.DefaultUrlRoot;
+import com.cleversafe.oom.guice.annotation.DefaultUriRoot;
 import com.cleversafe.oom.guice.annotation.DeleteAuth;
 import com.cleversafe.oom.guice.annotation.DeleteContainer;
 import com.cleversafe.oom.guice.annotation.DeleteHeaders;
@@ -273,12 +273,12 @@ public class JsonModule extends AbstractModule
 
    @Provides
    @Singleton
-   @DefaultUrlRoot
-   Producer<String> provideDefaultUrlRoot()
+   @DefaultUriRoot
+   Producer<String> provideDefaultUriRoot()
    {
-      if (this.config.getUrlRoot() != null)
+      if (this.config.getUriRoot() != null)
       {
-         final String root = CharMatcher.is('/').trimFrom(this.config.getUrlRoot());
+         final String root = CharMatcher.is('/').trimFrom(this.config.getUriRoot());
          if (root.length() > 0)
             return Producers.of(root);
       }
