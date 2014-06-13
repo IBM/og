@@ -19,6 +19,7 @@
 
 package com.cleversafe.oom.client;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.IOException;
@@ -79,8 +80,19 @@ public class ApacheClient implements Client
    private final ListeningExecutorService executorService;
    private final Gson gson;
 
-   private ApacheClient(final Function<String, ByteBufferConsumer> byteBufferConsumers)
+   private ApacheClient(
+         final int soTimeout,
+         final boolean soReuseAddress,
+         final int soLinger,
+         final boolean soKeepAlive,
+         final boolean tcpNoDelay,
+         final Function<String, ByteBufferConsumer> byteBufferConsumers)
    {
+      checkArgument(soTimeout >= 0, "soTimeout must be >= 0 [%s]", soTimeout);
+      checkArgument(soLinger >= -1, "soLinger must be >= -1 [%s]", soLinger);
+      this.byteBufferConsumers =
+            checkNotNull(byteBufferConsumers, "byteBufferConsumers must not be null");
+
       this.client = HttpClients.custom()
             // TODO investigate effect of waitForContinue duration in HttpRequestExecutor
             // TODO HTTPS: setHostnameVerifier, setSslcontext, and SetSSLSocketFactory methods
@@ -90,11 +102,11 @@ public class ApacheClient implements Client
             .setMaxConnTotal(Integer.MAX_VALUE)
             .setMaxConnPerRoute(Integer.MAX_VALUE)
             .setDefaultSocketConfig(SocketConfig.custom()
-                  .setSoTimeout(0)
-                  .setSoReuseAddress(false)
-                  .setSoLinger(-1)
-                  .setSoKeepAlive(true)
-                  .setTcpNoDelay(true)
+                  .setSoTimeout(soTimeout)
+                  .setSoReuseAddress(soReuseAddress)
+                  .setSoLinger(soLinger)
+                  .setSoKeepAlive(soKeepAlive)
+                  .setTcpNoDelay(tcpNoDelay)
                   .build())
             .setConnectionReuseStrategy(DefaultConnectionReuseStrategy.INSTANCE)
             .setKeepAliveStrategy(DefaultConnectionKeepAliveStrategy.INSTANCE)
@@ -107,8 +119,6 @@ public class ApacheClient implements Client
             .setRedirectStrategy(new LaxRedirectStrategy())
             .build();
 
-      this.byteBufferConsumers =
-            checkNotNull(byteBufferConsumers, "byteBufferConsumers must not be null");
       this.executorService = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
       this.gson = new GsonBuilder()
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
@@ -311,12 +321,54 @@ public class ApacheClient implements Client
 
    public static class Builder
    {
+      private int soTimeout;
+      private boolean soReuseAddress;
+      private int soLinger;
+      private boolean soKeepAlive;
+      private boolean tcpNoDelay;
       private Function<String, ByteBufferConsumer> byteBufferConsumers;
 
       public Builder()
-      {}
+      {
+         // defaults
+         this.soTimeout = 0;
+         this.soReuseAddress = false;
+         this.soLinger = -1;
+         this.soKeepAlive = true;
+         this.tcpNoDelay = true;
+      }
 
-      public ApacheClient.Builder withByteBufferConsumers(
+      public Builder withSoTimeout(final int soTimeout)
+      {
+         this.soTimeout = soTimeout;
+         return this;
+      }
+
+      public Builder usingSoReuseAddress(final boolean soReuseAddress)
+      {
+         this.soReuseAddress = soReuseAddress;
+         return this;
+      }
+
+      public Builder withSoLinger(final int soLinger)
+      {
+         this.soLinger = soLinger;
+         return this;
+      }
+
+      public Builder usingSoKeepAlive(final boolean soKeepAlive)
+      {
+         this.soKeepAlive = soKeepAlive;
+         return this;
+      }
+
+      public Builder usingTcpNoDelay(final boolean tcpNoDelay)
+      {
+         this.tcpNoDelay = tcpNoDelay;
+         return this;
+      }
+
+      public Builder withByteBufferConsumers(
             final Function<String, ByteBufferConsumer> byteBufferConsumers)
       {
          this.byteBufferConsumers = byteBufferConsumers;
@@ -325,7 +377,8 @@ public class ApacheClient implements Client
 
       public ApacheClient build()
       {
-         return new ApacheClient(this.byteBufferConsumers);
+         return new ApacheClient(this.soTimeout, this.soReuseAddress, this.soLinger,
+               this.soKeepAlive, this.tcpNoDelay, this.byteBufferConsumers);
       }
    }
 }
