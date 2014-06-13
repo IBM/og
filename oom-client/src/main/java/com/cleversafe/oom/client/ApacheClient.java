@@ -36,6 +36,7 @@ import org.apache.http.HeaderIterator;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpGet;
@@ -69,8 +70,7 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.LongSerializationPolicy;
-// TODO investigate stale connection check configuration, which may reduce performance
-// http://hc.apache.org/httpcomponents-client-ga/tutorial/html/connmgmt.html
+
 public class ApacheClient implements Client
 {
    private static Logger _logger = LoggerFactory.getLogger(ApacheClient.class);
@@ -81,6 +81,7 @@ public class ApacheClient implements Client
    private final Gson gson;
 
    private ApacheClient(
+         final int connectTimeout,
          final int soTimeout,
          final boolean soReuseAddress,
          final int soLinger,
@@ -88,6 +89,7 @@ public class ApacheClient implements Client
          final boolean tcpNoDelay,
          final Function<String, ByteBufferConsumer> byteBufferConsumers)
    {
+      checkArgument(connectTimeout >= 0, "connectTimeout must be >= 0 [%s]", connectTimeout);
       checkArgument(soTimeout >= 0, "soTimeout must be >= 0 [%s]", soTimeout);
       checkArgument(soLinger >= -1, "soLinger must be >= -1 [%s]", soLinger);
       this.byteBufferConsumers =
@@ -117,6 +119,18 @@ public class ApacheClient implements Client
             .disableAutomaticRetries()
             // TODO need to implement a redirectStrategy that will redirect PUT and POST
             .setRedirectStrategy(new LaxRedirectStrategy())
+            .setDefaultRequestConfig(RequestConfig.custom()
+                  .setExpectContinueEnabled(false)
+                  // TODO investigate performance impact of stale check (30ms reported)
+                  .setStaleConnectionCheckEnabled(true)
+                  .setRedirectsEnabled(true)
+                  .setRelativeRedirectsAllowed(true)
+                  .setConnectTimeout(connectTimeout)
+                  .setSocketTimeout(soTimeout)
+                  // TODO should this be infinite? length of time allowed to request a connection
+                  // from the pool
+                  .setConnectionRequestTimeout(0)
+                  .build())
             .build();
 
       this.executorService = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
@@ -321,6 +335,7 @@ public class ApacheClient implements Client
 
    public static class Builder
    {
+      private int connectTimeout;
       private int soTimeout;
       private boolean soReuseAddress;
       private int soLinger;
@@ -331,11 +346,18 @@ public class ApacheClient implements Client
       public Builder()
       {
          // defaults
+         this.connectTimeout = 0;
          this.soTimeout = 0;
          this.soReuseAddress = false;
          this.soLinger = -1;
          this.soKeepAlive = true;
          this.tcpNoDelay = true;
+      }
+
+      public Builder withConnectTimeout(final int connectTimeout)
+      {
+         this.connectTimeout = connectTimeout;
+         return this;
       }
 
       public Builder withSoTimeout(final int soTimeout)
@@ -377,8 +399,8 @@ public class ApacheClient implements Client
 
       public ApacheClient build()
       {
-         return new ApacheClient(this.soTimeout, this.soReuseAddress, this.soLinger,
-               this.soKeepAlive, this.tcpNoDelay, this.byteBufferConsumers);
+         return new ApacheClient(this.connectTimeout, this.soTimeout, this.soReuseAddress,
+               this.soLinger, this.soKeepAlive, this.tcpNoDelay, this.byteBufferConsumers);
       }
    }
 }
