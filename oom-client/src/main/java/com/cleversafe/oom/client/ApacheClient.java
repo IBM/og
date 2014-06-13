@@ -79,6 +79,7 @@ public class ApacheClient implements Client
    private final Function<String, ByteBufferConsumer> byteBufferConsumers;
    private final ListeningExecutorService executorService;
    private final Gson gson;
+   private final boolean chunkedEncoding;
 
    private ApacheClient(
          final int connectTimeout,
@@ -87,6 +88,7 @@ public class ApacheClient implements Client
          final int soLinger,
          final boolean soKeepAlive,
          final boolean tcpNoDelay,
+         final boolean chunkedEncoding,
          final Function<String, ByteBufferConsumer> byteBufferConsumers)
    {
       checkArgument(connectTimeout >= 0, "connectTimeout must be >= 0 [%s]", connectTimeout);
@@ -138,6 +140,7 @@ public class ApacheClient implements Client
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
             .setLongSerializationPolicy(LongSerializationPolicy.STRING)
             .create();
+      this.chunkedEncoding = chunkedEncoding;
    }
 
    @Override
@@ -147,7 +150,7 @@ public class ApacheClient implements Client
       final ByteBufferConsumer consumer =
             this.byteBufferConsumers.apply(request.getCustomRequestKey());
       return this.executorService.submit(new BlockingHttpOperation(this.client, request, consumer,
-            this.gson));
+            this.gson, this.chunkedEncoding));
    }
 
    @Override
@@ -173,12 +176,14 @@ public class ApacheClient implements Client
       private final ByteBuffer byteBuf;
       final Gson gson;
       private static final Joiner joiner = Joiner.on(',').skipNulls();
+      private final boolean chunkedEncoding;
 
       public BlockingHttpOperation(
             final CloseableHttpClient client,
             final Request request,
             final ByteBufferConsumer consumer,
-            final Gson gson)
+            final Gson gson,
+            final boolean chunkedEncoding)
       {
          this.client = client;
          this.request = request;
@@ -187,6 +192,7 @@ public class ApacheClient implements Client
          this.buf = new byte[4096];
          this.byteBuf = ByteBuffer.allocate(4096);
          this.gson = gson;
+         this.chunkedEncoding = chunkedEncoding;
       }
 
       @Override
@@ -255,7 +261,12 @@ public class ApacheClient implements Client
          // TODO may need to implement a custom HttpEntity that returns false for isStreaming call,
          // if this makes a performance difference
          final InputStream stream = Entities.createInputStream(this.request.getEntity());
-         return new InputStreamEntity(stream, this.request.getEntity().getSize());
+         final InputStreamEntity entity =
+               new InputStreamEntity(stream, this.request.getEntity().getSize());
+         // TODO chunk size for chunked encoding is hardcoded to 2048 bytes. Can only be overridden
+         // by implementing a custom connection factory
+         entity.setChunked(this.chunkedEncoding);
+         return entity;
       }
 
       private Response sendRequest(final HttpRequestBase request)
@@ -341,6 +352,7 @@ public class ApacheClient implements Client
       private int soLinger;
       private boolean soKeepAlive;
       private boolean tcpNoDelay;
+      private boolean chunkedEncoding;
       private Function<String, ByteBufferConsumer> byteBufferConsumers;
 
       public Builder()
@@ -352,6 +364,7 @@ public class ApacheClient implements Client
          this.soLinger = -1;
          this.soKeepAlive = true;
          this.tcpNoDelay = true;
+         this.chunkedEncoding = false;
       }
 
       public Builder withConnectTimeout(final int connectTimeout)
@@ -390,6 +403,12 @@ public class ApacheClient implements Client
          return this;
       }
 
+      public Builder usingChunkedEncoding(final boolean chunkedEncoding)
+      {
+         this.chunkedEncoding = chunkedEncoding;
+         return this;
+      }
+
       public Builder withByteBufferConsumers(
             final Function<String, ByteBufferConsumer> byteBufferConsumers)
       {
@@ -400,7 +419,8 @@ public class ApacheClient implements Client
       public ApacheClient build()
       {
          return new ApacheClient(this.connectTimeout, this.soTimeout, this.soReuseAddress,
-               this.soLinger, this.soKeepAlive, this.tcpNoDelay, this.byteBufferConsumers);
+               this.soLinger, this.soKeepAlive, this.tcpNoDelay, this.chunkedEncoding,
+               this.byteBufferConsumers);
       }
    }
 }
