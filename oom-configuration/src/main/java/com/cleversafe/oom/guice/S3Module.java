@@ -101,7 +101,6 @@ public class S3Module extends AbstractModule
             .build();
 
       return new RequestProducer(id,
-            Producers.of("s3.put_object"),
             Producers.of(Method.PUT),
             writeURI,
             headers,
@@ -137,7 +136,6 @@ public class S3Module extends AbstractModule
             .build();
 
       return new RequestProducer(id,
-            Producers.of("s3.get_object"),
             Producers.of(Method.GET),
             readURI,
             headers,
@@ -173,7 +171,6 @@ public class S3Module extends AbstractModule
             .build();
 
       return new RequestProducer(id,
-            Producers.of("s3.delete_object"),
             Producers.of(Method.DELETE),
             deleteURI,
             headers,

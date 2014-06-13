@@ -26,8 +26,6 @@ public interface RequestContext extends Request
 {
    public RequestContext withId(final long id);
 
-   public RequestContext withCustomRequestKey(final String customRequestKey);
-
    public RequestContext withMethod(final Method method);
 
    public RequestContext withURI(final URI uri);

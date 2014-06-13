@@ -37,14 +37,6 @@ public interface Request
    long getId();
 
    /**
-    * Gets the custom request key defined for this request, e.g. {@code "soh.put_object"}.
-    * Components can use this key to direct processing of this request.
-    * 
-    * @return the custom request key for this request, or null if no key is defined
-    */
-   String getCustomRequestKey();
-
-   /**
     * Gets the http method for this request.
     * 
     * @return the http method for this request

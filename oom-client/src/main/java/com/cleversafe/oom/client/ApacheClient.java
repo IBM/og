@@ -56,6 +56,7 @@ import org.slf4j.LoggerFactory;
 import com.cleversafe.oom.api.ByteBufferConsumer;
 import com.cleversafe.oom.http.HttpRequestAccessLogEntry;
 import com.cleversafe.oom.http.HttpResponse;
+import com.cleversafe.oom.operation.MetaDataConstants;
 import com.cleversafe.oom.operation.Request;
 import com.cleversafe.oom.operation.Response;
 import com.cleversafe.oom.util.Entities;
@@ -147,7 +148,7 @@ public class ApacheClient implements Client
    {
       checkNotNull(request, "request must not be null");
       final ByteBufferConsumer consumer =
-            this.byteBufferConsumers.apply(request.getCustomRequestKey());
+            this.byteBufferConsumers.apply(request.getMetaDataEntry(MetaDataConstants.RESPONSE_BODY_PROCESSOR.toString()));
       return this.executorService.submit(new BlockingHttpOperation(this.client, request, consumer,
             this.gson, this.chunkedEncoding));
    }

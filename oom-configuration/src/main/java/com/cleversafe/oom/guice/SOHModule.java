@@ -21,6 +21,7 @@ package com.cleversafe.oom.guice;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -56,6 +57,7 @@ import com.cleversafe.oom.http.producer.RequestProducer;
 import com.cleversafe.oom.http.producer.URIProducer;
 import com.cleversafe.oom.operation.Entity;
 import com.cleversafe.oom.operation.EntityType;
+import com.cleversafe.oom.operation.MetaDataConstants;
 import com.cleversafe.oom.operation.Method;
 import com.cleversafe.oom.operation.Request;
 import com.cleversafe.oom.util.Entities;
@@ -83,8 +85,7 @@ public class SOHModule extends AbstractModule
          @WriteContainer final Producer<String> container,
          @WriteQueryParams final Producer<Map<String, String>> queryParams,
          @WriteHeaders final List<Producer<Pair<String, String>>> headers,
-         @DefaultEntity final Producer<Entity> entity,
-         @DefaultMetaData final Producer<Map<String, String>> metadata)
+         @DefaultEntity final Producer<Entity> entity)
    {
       final List<Producer<String>> parts = new ArrayList<Producer<String>>();
       addUriRoot(parts, uriRoot);
@@ -96,14 +97,15 @@ public class SOHModule extends AbstractModule
             .atPath(parts)
             .withQueryParams(queryParams)
             .build();
+      final Map<String, String> metadata = new HashMap<String, String>();
+      metadata.put(MetaDataConstants.RESPONSE_BODY_PROCESSOR.toString(), "soh.put_object");
 
       return new RequestProducer(id,
-            Producers.of("soh.put_object"),
             Producers.of(Method.PUT),
             writeURI,
             headers,
             entity,
-            metadata);
+            Producers.of(metadata));
    }
 
    @Provides
@@ -134,7 +136,6 @@ public class SOHModule extends AbstractModule
             .build();
 
       return new RequestProducer(id,
-            Producers.of("soh.get_object"),
             Producers.of(Method.GET),
             readURI,
             headers,
@@ -170,7 +171,6 @@ public class SOHModule extends AbstractModule
             .build();
 
       return new RequestProducer(id,
-            Producers.of("soh.delete_object"),
             Producers.of(Method.DELETE),
             deleteURI,
             headers,

@@ -35,7 +35,6 @@ import com.cleversafe.oom.operation.Request;
 public class HttpRequest implements Request
 {
    private final long id;
-   private final String customRequestKey;
    private final Method method;
    private final URI uri;
    private final Map<String, String> headers;
@@ -44,7 +43,6 @@ public class HttpRequest implements Request
 
    public HttpRequest(
          final long id,
-         final String customRequestKey,
          final Method method,
          final URI uri,
          final Map<String, String> headers,
@@ -53,7 +51,6 @@ public class HttpRequest implements Request
    {
       checkArgument(id >= 0, "id must be >= 0 [%s]", id);
       this.id = id;
-      this.customRequestKey = customRequestKey;
       this.method = checkNotNull(method, "method must not be null");
       this.uri = checkNotNull(uri, "uri must not be null");
       checkNotNull(headers, "headers must not be null");
@@ -68,12 +65,6 @@ public class HttpRequest implements Request
    public long getId()
    {
       return this.id;
-   }
-
-   @Override
-   public String getCustomRequestKey()
-   {
-      return this.customRequestKey;
    }
 
    @Override

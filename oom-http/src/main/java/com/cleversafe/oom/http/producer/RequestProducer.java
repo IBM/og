@@ -35,7 +35,6 @@ import com.cleversafe.oom.util.Pair;
 public class RequestProducer implements Producer<Request>
 {
    private final Producer<Long> id;
-   private final Producer<String> customRequestKey;
    private final Producer<Method> method;
    private final Producer<URI> uri;
    private final List<Producer<Pair<String, String>>> headers;
@@ -44,7 +43,6 @@ public class RequestProducer implements Producer<Request>
 
    public RequestProducer(
          final Producer<Long> id,
-         final Producer<String> customRequestKey,
          final Producer<Method> method,
          final Producer<URI> uri,
          final List<Producer<Pair<String, String>>> headers,
@@ -52,7 +50,6 @@ public class RequestProducer implements Producer<Request>
          final Producer<Map<String, String>> metadata)
    {
       this.id = checkNotNull(id, "id must not be null");
-      this.customRequestKey = checkNotNull(customRequestKey, "customRequestKey must not be null");
       this.method = checkNotNull(method, "method must not be null");
       this.uri = checkNotNull(uri, "uri must not be null");
       this.headers = checkNotNull(headers, "headers must not be null");
@@ -64,7 +61,6 @@ public class RequestProducer implements Producer<Request>
    public Request produce(final RequestContext context)
    {
       context.withId(this.id.produce(context))
-            .withCustomRequestKey(this.customRequestKey.produce(context))
             .withMethod(this.method.produce(context))
             .withURI(this.uri.produce(context));
 

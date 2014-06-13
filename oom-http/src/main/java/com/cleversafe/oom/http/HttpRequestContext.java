@@ -33,7 +33,6 @@ import com.cleversafe.oom.operation.RequestContext;
 public class HttpRequestContext implements RequestContext
 {
    private long id;
-   private String customRequestKey;
    private Method method;
    private URI uri;
    private final Map<String, String> headers;
@@ -50,12 +49,6 @@ public class HttpRequestContext implements RequestContext
    public long getId()
    {
       return this.id;
-   }
-
-   @Override
-   public String getCustomRequestKey()
-   {
-      return this.customRequestKey;
    }
 
    @Override
@@ -104,13 +97,6 @@ public class HttpRequestContext implements RequestContext
    public RequestContext withId(final long id)
    {
       this.id = id;
-      return this;
-   }
-
-   @Override
-   public RequestContext withCustomRequestKey(final String customRequestKey)
-   {
-      this.customRequestKey = customRequestKey;
       return this;
    }
 
@@ -166,7 +152,7 @@ public class HttpRequestContext implements RequestContext
    @Override
    public Request build()
    {
-      return new HttpRequest(this.id, this.customRequestKey, this.method, this.uri, this.headers,
+      return new HttpRequest(this.id, this.method, this.uri, this.headers,
             this.entity, this.metadata);
    }
 }
