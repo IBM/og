@@ -19,10 +19,6 @@
 		</dependency>
 		<dependency>
 			<groupId>com.cleversafe</groupId>
-			<artifactId>oom-distribution</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.cleversafe</groupId>
 			<artifactId>oom-http</artifactId>
 		</dependency>
 		<dependency>

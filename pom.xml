@@ -23,7 +23,6 @@
 		<module>oom-api</module>
 		<module>oom-assembly</module>
 		<module>oom-configuration</module>
-		<module>oom-distribution</module>
 		<module>oom-http</module>
 		<module>oom-object</module>
 		<module>oom-operation</module>
@@ -161,11 +160,6 @@
 			<dependency>
 				<groupId>com.cleversafe</groupId>
 				<artifactId>oom-configuration</artifactId>
-				<version>1.0.0-SNAPSHOT</version>
-			</dependency>
-			<dependency>
-				<groupId>com.cleversafe</groupId>
-				<artifactId>oom-distribution</artifactId>
 				<version>1.0.0-SNAPSHOT</version>
 			</dependency>
 			<dependency>
