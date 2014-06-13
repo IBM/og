@@ -42,9 +42,13 @@ import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.config.SocketConfig;
 import org.apache.http.entity.InputStreamEntity;
+import org.apache.http.impl.DefaultConnectionReuseStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.DefaultConnectionKeepAliveStrategy;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.LaxRedirectStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,7 +81,32 @@ public class ApacheClient implements Client
 
    private ApacheClient(final Function<String, ByteBufferConsumer> byteBufferConsumers)
    {
-      this.client = HttpClients.createDefault();
+      this.client = HttpClients.custom()
+            // TODO investigate effect of waitForContinue duration in HttpRequestExecutor
+            // TODO HTTPS: setHostnameVerifier, setSslcontext, and SetSSLSocketFactory methods
+            // TODO investigate ConnectionConfig, particularly bufferSize and fragmentSizeHint
+            // TODO setUserAgent to equal "tool name/tool version"
+            // TODO defaultCredentialsProvider and defaultAuthSchemeRegistry for pre/passive auth?
+            .setMaxConnTotal(Integer.MAX_VALUE)
+            .setMaxConnPerRoute(Integer.MAX_VALUE)
+            .setDefaultSocketConfig(SocketConfig.custom()
+                  .setSoTimeout(0)
+                  .setSoReuseAddress(false)
+                  .setSoLinger(-1)
+                  .setSoKeepAlive(true)
+                  .setTcpNoDelay(true)
+                  .build())
+            .setConnectionReuseStrategy(DefaultConnectionReuseStrategy.INSTANCE)
+            .setKeepAliveStrategy(DefaultConnectionKeepAliveStrategy.INSTANCE)
+            .disableConnectionState()
+            .disableCookieManagement()
+            .disableContentCompression()
+            .disableAuthCaching()
+            .disableAutomaticRetries()
+            // TODO need to implement a redirectStrategy that will redirect PUT and POST
+            .setRedirectStrategy(new LaxRedirectStrategy())
+            .build();
+
       this.byteBufferConsumers =
             checkNotNull(byteBufferConsumers, "byteBufferConsumers must not be null");
       this.executorService = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
