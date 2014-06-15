@@ -30,8 +30,6 @@ import com.cleversafe.oom.api.OperationManagerException;
 import com.cleversafe.oom.api.Producer;
 import com.cleversafe.oom.api.ProducerException;
 import com.cleversafe.oom.http.HttpRequestContext;
-import com.cleversafe.oom.operation.OperationType;
-import com.cleversafe.oom.operation.OperationTypeMix;
 import com.cleversafe.oom.operation.Request;
 import com.cleversafe.oom.operation.RequestContext;
 import com.cleversafe.oom.operation.Response;
@@ -39,22 +37,18 @@ import com.cleversafe.oom.scheduling.Scheduler;
 
 public class SimpleOperationManager implements OperationManager
 {
-   private final OperationTypeMix operationTypeMix;
-   private final Map<OperationType, Producer<Request>> producers;
+   private final Producer<Producer<Request>> requestMix;
    private final List<Consumer<Response>> consumers;
    private final Scheduler scheduler;
    private final Map<Long, Request> pendingRequests;
 
-   // TODO get rid of OperationTypeMix
    public SimpleOperationManager(
-         final OperationTypeMix mix,
-         final Map<OperationType, Producer<Request>> producers,
+         final Producer<Producer<Request>> requestMix,
          final List<Consumer<Response>> consumers,
          final Scheduler scheduler,
          final Map<Long, Request> pendingRequests)
    {
-      this.operationTypeMix = checkNotNull(mix, "operationTypeMix must not be null");
-      this.producers = checkNotNull(producers, "producers must not be null");
+      this.requestMix = checkNotNull(requestMix, "requestMix must not be null");
       this.consumers = checkNotNull(consumers, "consumers must not be null");
       this.scheduler = checkNotNull(scheduler, "scheduler must not be null");
       this.pendingRequests = checkNotNull(pendingRequests, "pendingRequests must not be null");
@@ -66,9 +60,7 @@ public class SimpleOperationManager implements OperationManager
       this.scheduler.waitForNext();
 
       final RequestContext context = new HttpRequestContext();
-      // TODO create stats object and use it to pass an appropriate fill to getNextOperationType
-      final OperationType operationType = this.operationTypeMix.getNextOperationType(1);
-      final Producer<Request> producer = this.producers.get(operationType);
+      final Producer<Request> producer = this.requestMix.produce(null);
       try
       {
          final Request request = producer.produce(context);

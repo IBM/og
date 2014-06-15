@@ -19,6 +19,7 @@
 
 package com.cleversafe.oom.guice;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.File;
@@ -58,6 +59,7 @@ import com.cleversafe.oom.guice.annotation.DeleteHost;
 import com.cleversafe.oom.guice.annotation.DeletePort;
 import com.cleversafe.oom.guice.annotation.DeleteQueryParams;
 import com.cleversafe.oom.guice.annotation.DeleteScheme;
+import com.cleversafe.oom.guice.annotation.DeleteWeight;
 import com.cleversafe.oom.guice.annotation.ReadAuth;
 import com.cleversafe.oom.guice.annotation.ReadContainer;
 import com.cleversafe.oom.guice.annotation.ReadHeaders;
@@ -65,6 +67,7 @@ import com.cleversafe.oom.guice.annotation.ReadHost;
 import com.cleversafe.oom.guice.annotation.ReadPort;
 import com.cleversafe.oom.guice.annotation.ReadQueryParams;
 import com.cleversafe.oom.guice.annotation.ReadScheme;
+import com.cleversafe.oom.guice.annotation.ReadWeight;
 import com.cleversafe.oom.guice.annotation.WriteAuth;
 import com.cleversafe.oom.guice.annotation.WriteContainer;
 import com.cleversafe.oom.guice.annotation.WriteHeaders;
@@ -72,11 +75,11 @@ import com.cleversafe.oom.guice.annotation.WriteHost;
 import com.cleversafe.oom.guice.annotation.WritePort;
 import com.cleversafe.oom.guice.annotation.WriteQueryParams;
 import com.cleversafe.oom.guice.annotation.WriteScheme;
+import com.cleversafe.oom.guice.annotation.WriteWeight;
 import com.cleversafe.oom.http.Scheme;
 import com.cleversafe.oom.http.producer.BasicAuthProducer;
 import com.cleversafe.oom.operation.Entity;
 import com.cleversafe.oom.operation.OperationType;
-import com.cleversafe.oom.operation.OperationTypeMix;
 import com.cleversafe.oom.operation.RequestContext;
 import com.cleversafe.oom.scheduling.RequestRateScheduler;
 import com.cleversafe.oom.scheduling.Scheduler;
@@ -93,6 +96,7 @@ import com.google.inject.Singleton;
 public class JsonModule extends AbstractModule
 {
    private final JSONConfiguration config;
+   private final static double err = Math.pow(0.1, 6);
 
    public JsonModule(final JSONConfiguration config)
    {
@@ -562,18 +566,40 @@ public class JsonModule extends AbstractModule
    }
 
    @Provides
-   @Singleton
-   OperationTypeMix provideOperationTypeMix()
+   @WriteWeight
+   double provideWriteWeight()
    {
-      double write = this.config.getWrite();
+      final double write = this.config.getWrite();
+      checkArgument(inRange(write), "write must be in range [0.0, 100.0] [%s]", write);
       final double read = this.config.getRead();
       final double delete = this.config.getDelete();
       if (allEqual(0.0, write, read, delete))
-         write = 100.0;
+         return 100.0;
+      return write;
+   }
 
-      final long floorBytes = 0;
-      final long ceilBytes = Long.MAX_VALUE;
-      return new OperationTypeMix(write, read, delete, floorBytes, ceilBytes);
+   @Provides
+   @ReadWeight
+   double provideReadWeight()
+   {
+      final double read = this.config.getRead();
+      checkArgument(inRange(read), "read must be in range [0.0, 100.0] [%s]", read);
+      return read;
+   }
+
+   @Provides
+   @DeleteWeight
+   double provideDeleteWeight()
+   {
+      final double delete = this.config.getDelete();
+      checkArgument(inRange(delete), "delete must be in range [0.0, 100.0] [%s]", delete);
+      return delete;
+   }
+
+   private boolean inRange(final double v)
+   {
+      return DoubleMath.fuzzyCompare(v, 0.0, err) >= 0
+            && DoubleMath.fuzzyCompare(v, 100.0, err) <= 0;
    }
 
    private boolean allEqual(final double compare, final double... values)

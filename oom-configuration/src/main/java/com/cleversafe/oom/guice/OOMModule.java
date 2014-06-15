@@ -19,8 +19,9 @@
 
 package com.cleversafe.oom.guice;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -37,27 +38,33 @@ import com.cleversafe.oom.guice.annotation.DefaultContainer;
 import com.cleversafe.oom.guice.annotation.DefaultObjectLocation;
 import com.cleversafe.oom.guice.annotation.DefaultObjectName;
 import com.cleversafe.oom.guice.annotation.Delete;
+import com.cleversafe.oom.guice.annotation.DeleteWeight;
 import com.cleversafe.oom.guice.annotation.Read;
+import com.cleversafe.oom.guice.annotation.ReadWeight;
 import com.cleversafe.oom.guice.annotation.Write;
+import com.cleversafe.oom.guice.annotation.WriteWeight;
 import com.cleversafe.oom.http.operation.manager.SimpleOperationManager;
 import com.cleversafe.oom.object.manager.ObjectManager;
 import com.cleversafe.oom.object.manager.ObjectNameConsumer;
 import com.cleversafe.oom.object.manager.ObjectNameProducer;
 import com.cleversafe.oom.object.manager.RandomObjectPopulator;
-import com.cleversafe.oom.operation.OperationType;
-import com.cleversafe.oom.operation.OperationTypeMix;
 import com.cleversafe.oom.operation.Request;
 import com.cleversafe.oom.operation.Response;
 import com.cleversafe.oom.scheduling.Scheduler;
 import com.cleversafe.oom.soh.SOHWriteObjectNameConsumer;
 import com.cleversafe.oom.util.ByteBufferConsumers;
+import com.cleversafe.oom.util.WeightedRandomChoice;
+import com.cleversafe.oom.util.producer.Producers;
 import com.google.common.base.Function;
+import com.google.common.math.DoubleMath;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 
 public class OOMModule extends AbstractModule
 {
+   private final static double err = Math.pow(0.1, 6);
+
    public OOMModule()
    {}
 
@@ -71,24 +78,33 @@ public class OOMModule extends AbstractModule
          @Write final Producer<Request> write,
          @Read final Producer<Request> read,
          @Delete final Producer<Request> delete,
-         final OperationTypeMix mix,
+         @WriteWeight final double writeWeight,
+         @ReadWeight final double readWeight,
+         @DeleteWeight final double deleteWeight,
          final ObjectManager objectManager,
          final Scheduler scheduler)
    {
-      final Map<OperationType, Producer<Request>> producers =
-            new HashMap<OperationType, Producer<Request>>();
-      final Map<Long, Request> pendingRequests = new ConcurrentHashMap<Long, Request>();
-      producers.put(OperationType.WRITE, write);
-      producers.put(OperationType.READ, read);
-      producers.put(OperationType.DELETE, delete);
+      final double sum = readWeight + writeWeight + deleteWeight;
+      checkArgument(DoubleMath.fuzzyEquals(sum, 100.0, err),
+            "Sum of percentages must be 100.0 [%s]", sum);
 
+      final WeightedRandomChoice<Producer<Request>> wrc =
+            new WeightedRandomChoice<Producer<Request>>();
+      if (writeWeight > 0.0)
+         wrc.addChoice(write, writeWeight);
+      if (readWeight > 0.0)
+         wrc.addChoice(read, readWeight);
+      if (deleteWeight > 0.0)
+         wrc.addChoice(delete, deleteWeight);
+
+      final Map<Long, Request> pendingRequests = new ConcurrentHashMap<Long, Request>();
       final List<Consumer<Response>> consumers = new ArrayList<Consumer<Response>>();
       final Consumer<Response> objectConsumer =
             new ObjectNameConsumer(objectManager, pendingRequests);
       consumers.add(objectConsumer);
 
       // TODO account for threaded vs iops
-      return new SimpleOperationManager(mix, producers, consumers, scheduler, pendingRequests);
+      return new SimpleOperationManager(Producers.of(wrc), consumers, scheduler, pendingRequests);
    }
 
    @Provides
