@@ -67,7 +67,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 
 // TODO this module could probably be used for all named object apis
-public class S3Module extends AbstractModule
+public class NOHModule extends AbstractModule
 {
    @Override
    protected void configure()

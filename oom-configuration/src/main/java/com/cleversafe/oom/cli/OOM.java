@@ -42,8 +42,8 @@ import com.cleversafe.oom.cli.json.SizeUnitTypeAdapterFactory;
 import com.cleversafe.oom.cli.json.TimeUnitTypeAdapterFactory;
 import com.cleversafe.oom.client.Client;
 import com.cleversafe.oom.guice.JsonModule;
+import com.cleversafe.oom.guice.NOHModule;
 import com.cleversafe.oom.guice.OOMModule;
-import com.cleversafe.oom.guice.S3Module;
 import com.cleversafe.oom.guice.SOHModule;
 import com.cleversafe.oom.object.manager.ObjectManager;
 import com.cleversafe.oom.test.LoadTest;
@@ -95,11 +95,11 @@ public class OOM
       // TODO better way to do this?
       switch (config.getApi())
       {
-         case S3 :
-            apiModule = new S3Module();
+         case SOH :
+            apiModule = new SOHModule();
             break;
          default :
-            apiModule = new SOHModule();
+            apiModule = new NOHModule();
             break;
       }
       try
