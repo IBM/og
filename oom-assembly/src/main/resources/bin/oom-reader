@@ -1,7 +1,6 @@
 #!/bin/sh
 
 BASE=`dirname ${0}`
-BASE=`(cd ${BASE}/..; pwd)`
 
 export CLASSPATH=${BASE}/conf/*:${BASE}/lib/*
 

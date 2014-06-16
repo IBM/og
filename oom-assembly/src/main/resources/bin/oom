@@ -1,7 +1,6 @@
 #!/bin/sh
 
 BASE=`dirname ${0}`
-BASE=`(cd ${BASE}/..; pwd)`
 
 MEMORY_PERCENT=25
 MAX_MEMORY=32000
@@ -10,7 +9,7 @@ ulimit -n 4096
 if [ "x$MEMORY" = "x" ]; then
     if [ `uname` = "Darwin" ]; then
         MEMORY=`sysctl hw.memsize | awk -v memPercent=$MEMORY_PERCENT  '{ print int(memPercent * $2 / 104857600) }'`
-    else
+    else	
         MEMORY=`awk -v memPercent=$MEMORY_PERCENT  '/MemTotal/ { print int(memPercent * $2 / 102400) }' /proc/meminfo`
     fi
 

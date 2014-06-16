@@ -13,28 +13,36 @@
 	</dependencySets>
 	<fileSets>
 		<fileSet>
-			<directory>src/main/resources/conf</directory>
-			<outputDirectory>conf</outputDirectory>
-			<includes>
-				<include>log4j2.xml</include>
-				<include>test.json</include>
-			</includes>
-		</fileSet>
-		<fileSet>
-			<directory>src/main/resources/conf/jsap</directory>
-			<outputDirectory>conf/jsap</outputDirectory>
-			<includes>
-				<include>oom.jsap</include>
-			</includes>
-		</fileSet>
-		<fileSet>
 			<directory>src/main/resources/bin</directory>
-			<outputDirectory>bin</outputDirectory>
+			<outputDirectory></outputDirectory>
 			<fileMode>0755</fileMode>
 			<includes>
 				<include>oom</include>
 				<include>oom-reader</include>
 			</includes>
+		</fileSet>
+		<fileSet>
+			<directory>src/main/resources/conf</directory>
+			<outputDirectory>conf</outputDirectory>
+			<includes>
+				<include>log4j2.xml</include>
+				<include>oom.jsap</include>
+				<include>test.json</include>
+			</includes>
+		</fileSet>
+		<fileSet>
+			<directory></directory>
+			<outputDirectory>log</outputDirectory>
+			<excludes>
+				<exclude>*/**</exclude>
+			</excludes>
+		</fileSet>
+		<fileSet>
+			<directory></directory>
+			<outputDirectory>object</outputDirectory>
+			<excludes>
+				<exclude>*/**</exclude>
+			</excludes>
 		</fileSet>
 	</fileSets>
 </assembly>
