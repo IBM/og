@@ -32,8 +32,6 @@
 		<module>oom-test</module>
 		<module>oom-util</module>
 		<module>oom-s3</module>
-		<module>oom-openstack</module>
-		<module>oom-webdav</module>
 		<module>oom-client</module>
 	</modules>
 	<scm>
@@ -200,6 +198,11 @@
 			<dependency>
 				<groupId>com.cleversafe</groupId>
 				<artifactId>oom-util</artifactId>
+				<version>1.0.0-SNAPSHOT</version>
+			</dependency>
+			<dependency>
+				<groupId>com.cleversafe</groupId>
+				<artifactId>oom-s3</artifactId>
 				<version>1.0.0-SNAPSHOT</version>
 			</dependency>
 			<dependency>

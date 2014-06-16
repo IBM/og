@@ -54,6 +54,10 @@
 			<groupId>com.cleversafe</groupId>
 			<artifactId>oom-util</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>com.cleversafe</groupId>
+			<artifactId>oom-s3</artifactId>
+		</dependency>
 	</dependencies>
 	<build>
 		<finalName>${project.parent.artifactId}-${project.parent.version}</finalName>
