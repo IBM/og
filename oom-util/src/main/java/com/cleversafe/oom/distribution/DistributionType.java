@@ -21,7 +21,7 @@ package com.cleversafe.oom.distribution;
 
 public enum DistributionType
 {
-   UNIFORM, NORMAL, LOGNORMAL;
+   UNIFORM, NORMAL;
 
    public static DistributionType parseDistribution(final String distribution)
    {

@@ -39,7 +39,6 @@ import com.cleversafe.oom.cli.json.FileSize;
 import com.cleversafe.oom.cli.json.JSONConfiguration;
 import com.cleversafe.oom.cli.json.OperationConfig;
 import com.cleversafe.oom.distribution.Distribution;
-import com.cleversafe.oom.distribution.LogNormalDistribution;
 import com.cleversafe.oom.distribution.NormalDistribution;
 import com.cleversafe.oom.distribution.UniformDistribution;
 import com.cleversafe.oom.guice.annotation.DefaultAuth;
@@ -532,8 +531,6 @@ public class JsonModule extends AbstractModule
       // mean/average/min/max?
          case NORMAL :
             return new NormalDistribution(mean, spread);
-         case LOGNORMAL :
-            return new LogNormalDistribution(mean, spread);
          default :
             return new UniformDistribution(mean, spread);
       }
