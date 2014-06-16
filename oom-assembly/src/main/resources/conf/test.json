@@ -102,15 +102,15 @@
 //			is ignored.
 //
 // Example1: A single, constant file size of 10 kilobytes.
-// "file_sizes": [
+// "filesizes": [
 // {
 // "average": 10,
 // "average_unit": "kb"
 // }
-// ]
+// ],
 // TODO more complex example
 
-// "file_sizes": [
+// "filesizes": [
 // {
 // "distribution": "uniform",
 // "average": 5.0,
