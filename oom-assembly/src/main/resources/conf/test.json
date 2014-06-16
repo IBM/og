@@ -145,8 +145,21 @@
 // "username": "",
 // "password": "",
 
+
 // TODO fix this description
 // The location to store object names. Default is current working directory.
-"object_location": "."
-}
+// "object_location": "."
+// },
 
+
+// TODO description
+"client": {
+	"connect_timeout": 0,
+	"so_timeout": 0,
+	"so_reuse_address": false,
+	"so_linger": -1,
+	"so_keep_alive": true,
+	"tcp_no_delay": true,
+	"chunked_encoding": false
+}
+}

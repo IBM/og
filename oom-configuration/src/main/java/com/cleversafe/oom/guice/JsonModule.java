@@ -33,6 +33,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import com.cleversafe.oom.api.Producer;
 import com.cleversafe.oom.cli.json.API;
+import com.cleversafe.oom.cli.json.ClientConfig;
 import com.cleversafe.oom.cli.json.Concurrency;
 import com.cleversafe.oom.cli.json.FileSize;
 import com.cleversafe.oom.cli.json.JSONConfiguration;
@@ -620,5 +621,11 @@ public class JsonModule extends AbstractModule
       final Concurrency concurrency = this.config.getConcurrency();
       final Distribution count = new UniformDistribution(concurrency.getCount(), 0.0);
       return new RequestRateScheduler(count, concurrency.getUnit());
+   }
+
+   @Provides
+   ClientConfig provideClientConfig()
+   {
+      return this.config.getClient();
    }
 }

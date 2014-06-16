@@ -355,16 +355,7 @@ public class ApacheClient implements Client
       private Function<String, ByteBufferConsumer> byteBufferConsumers;
 
       public Builder()
-      {
-         // defaults
-         this.connectTimeout = 0;
-         this.soTimeout = 0;
-         this.soReuseAddress = false;
-         this.soLinger = -1;
-         this.soKeepAlive = true;
-         this.tcpNoDelay = true;
-         this.chunkedEncoding = false;
-      }
+      {}
 
       public Builder withConnectTimeout(final int connectTimeout)
       {

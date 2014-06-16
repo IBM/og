@@ -32,6 +32,7 @@ import com.cleversafe.oom.api.Consumer;
 import com.cleversafe.oom.api.OperationManager;
 import com.cleversafe.oom.api.Producer;
 import com.cleversafe.oom.cli.json.API;
+import com.cleversafe.oom.cli.json.ClientConfig;
 import com.cleversafe.oom.client.ApacheClient;
 import com.cleversafe.oom.client.Client;
 import com.cleversafe.oom.guice.annotation.DefaultContainer;
@@ -109,7 +110,7 @@ public class OOMModule extends AbstractModule
 
    @Provides
    @Singleton
-   Client provideClient()
+   Client provideClient(final ClientConfig clientConfig)
    {
       final Function<String, ByteBufferConsumer> byteBufferConsumers =
             new Function<String, ByteBufferConsumer>()
@@ -128,6 +129,13 @@ public class OOMModule extends AbstractModule
 
             };
       return new ApacheClient.Builder()
+            .withConnectTimeout(clientConfig.getConnectTimeout())
+            .withSoTimeout(clientConfig.getSoTimeout())
+            .usingSoReuseAddress(clientConfig.isSoReuseAddress())
+            .withSoLinger(clientConfig.getSoLinger())
+            .usingSoKeepAlive(clientConfig.isSoKeepAlive())
+            .usingTcpNoDelay(clientConfig.isTcpNoDelay())
+            .usingChunkedEncoding(clientConfig.isChunkedEncoding())
             .withByteBufferConsumers(byteBufferConsumers)
             .build();
    }

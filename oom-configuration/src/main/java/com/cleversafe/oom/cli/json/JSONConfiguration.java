@@ -48,6 +48,7 @@ public class JSONConfiguration
    Long operatons;
    RunTime runtime;
    String objectLocation;
+   ClientConfig client;
 
    Map<OperationType, OperationConfig> operationConfig;
 
@@ -64,6 +65,7 @@ public class JSONConfiguration
       this.objectLocation = ".";
       // TODO OperationType is not being lowercased when serialized
       this.operationConfig = new LinkedHashMap<OperationType, OperationConfig>();
+      this.client = new ClientConfig();
    }
 
    /**
@@ -216,5 +218,13 @@ public class JSONConfiguration
    public Map<OperationType, OperationConfig> getOperationConfig()
    {
       return this.operationConfig;
+   }
+
+   /**
+    * @return the client
+    */
+   public ClientConfig getClient()
+   {
+      return this.client;
    }
 }
