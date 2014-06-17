@@ -26,7 +26,6 @@
 			<outputDirectory>conf</outputDirectory>
 			<includes>
 				<include>log4j2.xml</include>
-				<include>oom.jsap</include>
 				<include>test.json</include>
 			</includes>
 		</fileSet>
