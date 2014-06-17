@@ -15,7 +15,7 @@
 		</dependency>
 		<dependency>
 			<groupId>com.cleversafe</groupId>
-			<artifactId>oom-operation</artifactId>
+			<artifactId>oom-util</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>joda-time</groupId>

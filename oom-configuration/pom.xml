@@ -27,10 +27,6 @@
 		</dependency>
 		<dependency>
 			<groupId>com.cleversafe</groupId>
-			<artifactId>oom-operation</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.cleversafe</groupId>
 			<artifactId>oom-scheduling</artifactId>
 		</dependency>
 		<dependency>
