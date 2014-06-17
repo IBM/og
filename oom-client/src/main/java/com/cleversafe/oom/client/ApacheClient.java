@@ -56,10 +56,12 @@ import org.slf4j.LoggerFactory;
 import com.cleversafe.oom.api.ByteBufferConsumer;
 import com.cleversafe.oom.http.HttpRequestAccessLogEntry;
 import com.cleversafe.oom.http.HttpResponse;
+import com.cleversafe.oom.http.auth.HttpAuth;
 import com.cleversafe.oom.operation.MetaDataConstants;
 import com.cleversafe.oom.operation.Request;
 import com.cleversafe.oom.operation.Response;
 import com.cleversafe.oom.util.Entities;
+import com.cleversafe.oom.util.Pair;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -79,9 +81,11 @@ public class ApacheClient implements Client
    private final Function<String, ByteBufferConsumer> byteBufferConsumers;
    private final ListeningExecutorService executorService;
    private final Gson gson;
+   private final HttpAuth auth;
    private final boolean chunkedEncoding;
 
    private ApacheClient(
+         final HttpAuth auth,
          final int connectTimeout,
          final int soTimeout,
          final boolean soReuseAddress,
@@ -91,6 +95,7 @@ public class ApacheClient implements Client
          final boolean chunkedEncoding,
          final Function<String, ByteBufferConsumer> byteBufferConsumers)
    {
+      this.auth = auth; // optional
       checkArgument(connectTimeout >= 0, "connectTimeout must be >= 0 [%s]", connectTimeout);
       checkArgument(soTimeout >= 0, "soTimeout must be >= 0 [%s]", soTimeout);
       checkArgument(soLinger >= -1, "soLinger must be >= -1 [%s]", soLinger);
@@ -149,8 +154,8 @@ public class ApacheClient implements Client
       checkNotNull(request, "request must not be null");
       final ByteBufferConsumer consumer =
             this.byteBufferConsumers.apply(request.getMetaDataEntry(MetaDataConstants.RESPONSE_BODY_PROCESSOR.toString()));
-      return this.executorService.submit(new BlockingHttpOperation(this.client, request, consumer,
-            this.gson, this.chunkedEncoding));
+      return this.executorService.submit(new BlockingHttpOperation(this.client, this.auth, request,
+            consumer, this.gson, this.chunkedEncoding));
    }
 
    @Override
@@ -169,6 +174,7 @@ public class ApacheClient implements Client
    private static class BlockingHttpOperation implements Callable<Response>
    {
       private final CloseableHttpClient client;
+      private final HttpAuth auth;
       private final Request request;
       private final ByteBufferConsumer consumer;
 
@@ -180,12 +186,14 @@ public class ApacheClient implements Client
 
       public BlockingHttpOperation(
             final CloseableHttpClient client,
+            final HttpAuth auth,
             final Request request,
             final ByteBufferConsumer consumer,
             final Gson gson,
             final boolean chunkedEncoding)
       {
          this.client = client;
+         this.auth = auth;
          this.request = request;
          this.consumer = consumer;
          // TODO inject buf size from config
@@ -237,12 +245,23 @@ public class ApacheClient implements Client
 
       private void setRequestHeaders(final HttpRequestBase request)
       {
+         setAuthHeader(request);
          final Iterator<Entry<String, String>> headers = this.request.headers();
          while (headers.hasNext())
          {
             final Entry<String, String> header = headers.next();
             request.addHeader(header.getKey(), header.getValue());
          }
+      }
+
+      private void setAuthHeader(final HttpRequestBase request)
+      {
+         if (this.auth != null)
+         {
+            final Pair<String, String> authHeader = this.auth.nextAuthorizationHeader(this.request);
+            request.addHeader(authHeader.getKey(), authHeader.getValue());
+         }
+
       }
 
       private void setRequestContent(final HttpRequestBase request)
@@ -345,6 +364,7 @@ public class ApacheClient implements Client
 
    public static class Builder
    {
+      private HttpAuth auth;
       private int connectTimeout;
       private int soTimeout;
       private boolean soReuseAddress;
@@ -356,6 +376,12 @@ public class ApacheClient implements Client
 
       public Builder()
       {}
+
+      public Builder withAuth(final HttpAuth auth)
+      {
+         this.auth = auth;
+         return this;
+      }
 
       public Builder withConnectTimeout(final int connectTimeout)
       {
@@ -408,9 +434,9 @@ public class ApacheClient implements Client
 
       public ApacheClient build()
       {
-         return new ApacheClient(this.connectTimeout, this.soTimeout, this.soReuseAddress,
-               this.soLinger, this.soKeepAlive, this.tcpNoDelay, this.chunkedEncoding,
-               this.byteBufferConsumers);
+         return new ApacheClient(this.auth, this.connectTimeout, this.soTimeout,
+               this.soReuseAddress, this.soLinger, this.soKeepAlive, this.tcpNoDelay,
+               this.chunkedEncoding, this.byteBufferConsumers);
       }
    }
 }
