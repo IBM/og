@@ -32,8 +32,6 @@ public class OperationConfig
    String container;
    Map<String, String> queryParams;
    Map<String, String> headers;
-   String username;
-   String password;
    Integer port;
 
    public OperationConfig()
@@ -80,22 +78,6 @@ public class OperationConfig
    public Map<String, String> getHeaders()
    {
       return this.headers;
-   }
-
-   /**
-    * @return the username
-    */
-   public String getUsername()
-   {
-      return this.username;
-   }
-
-   /**
-    * @return the password
-    */
-   public String getPassword()
-   {
-      return this.password;
    }
 
    /**

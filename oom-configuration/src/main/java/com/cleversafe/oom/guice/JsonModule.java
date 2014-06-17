@@ -41,7 +41,6 @@ import com.cleversafe.oom.cli.json.OperationConfig;
 import com.cleversafe.oom.distribution.Distribution;
 import com.cleversafe.oom.distribution.NormalDistribution;
 import com.cleversafe.oom.distribution.UniformDistribution;
-import com.cleversafe.oom.guice.annotation.DefaultAuth;
 import com.cleversafe.oom.guice.annotation.DefaultContainer;
 import com.cleversafe.oom.guice.annotation.DefaultEntity;
 import com.cleversafe.oom.guice.annotation.DefaultHeaders;
@@ -52,7 +51,6 @@ import com.cleversafe.oom.guice.annotation.DefaultPort;
 import com.cleversafe.oom.guice.annotation.DefaultQueryParams;
 import com.cleversafe.oom.guice.annotation.DefaultScheme;
 import com.cleversafe.oom.guice.annotation.DefaultUriRoot;
-import com.cleversafe.oom.guice.annotation.DeleteAuth;
 import com.cleversafe.oom.guice.annotation.DeleteContainer;
 import com.cleversafe.oom.guice.annotation.DeleteHeaders;
 import com.cleversafe.oom.guice.annotation.DeleteHost;
@@ -60,7 +58,6 @@ import com.cleversafe.oom.guice.annotation.DeletePort;
 import com.cleversafe.oom.guice.annotation.DeleteQueryParams;
 import com.cleversafe.oom.guice.annotation.DeleteScheme;
 import com.cleversafe.oom.guice.annotation.DeleteWeight;
-import com.cleversafe.oom.guice.annotation.ReadAuth;
 import com.cleversafe.oom.guice.annotation.ReadContainer;
 import com.cleversafe.oom.guice.annotation.ReadHeaders;
 import com.cleversafe.oom.guice.annotation.ReadHost;
@@ -68,7 +65,6 @@ import com.cleversafe.oom.guice.annotation.ReadPort;
 import com.cleversafe.oom.guice.annotation.ReadQueryParams;
 import com.cleversafe.oom.guice.annotation.ReadScheme;
 import com.cleversafe.oom.guice.annotation.ReadWeight;
-import com.cleversafe.oom.guice.annotation.WriteAuth;
 import com.cleversafe.oom.guice.annotation.WriteContainer;
 import com.cleversafe.oom.guice.annotation.WriteHeaders;
 import com.cleversafe.oom.guice.annotation.WriteHost;
@@ -77,7 +73,8 @@ import com.cleversafe.oom.guice.annotation.WriteQueryParams;
 import com.cleversafe.oom.guice.annotation.WriteScheme;
 import com.cleversafe.oom.guice.annotation.WriteWeight;
 import com.cleversafe.oom.http.Scheme;
-import com.cleversafe.oom.http.producer.BasicAuthProducer;
+import com.cleversafe.oom.http.auth.BasicAuth;
+import com.cleversafe.oom.http.auth.HttpAuth;
 import com.cleversafe.oom.operation.Entity;
 import com.cleversafe.oom.operation.OperationType;
 import com.cleversafe.oom.operation.RequestContext;
@@ -372,58 +369,13 @@ public class JsonModule extends AbstractModule
 
    @Provides
    @Singleton
-   @DefaultAuth
-   Producer<Pair<String, String>> providesDefaultAuth()
+   HttpAuth providesDefaultAuth()
    {
-      return createAuth(this.config.getUsername(), this.config.getPassword());
-   }
+      final String username = this.config.getUsername();
+      final String password = this.config.getPassword();
 
-   @Provides
-   @Singleton
-   @WriteAuth
-   Producer<Pair<String, String>> providesWriteAuth(
-         @DefaultAuth final Producer<Pair<String, String>> auth)
-   {
-      return provideAuth(OperationType.WRITE, auth);
-   }
-
-   @Provides
-   @Singleton
-   @ReadAuth
-   Producer<Pair<String, String>> providesReadAuth(
-         @DefaultAuth final Producer<Pair<String, String>> auth)
-   {
-      return provideAuth(OperationType.READ, auth);
-   }
-
-   @Provides
-   @Singleton
-   @DeleteAuth
-   Producer<Pair<String, String>> providesDeleteAuth(
-         @DefaultAuth final Producer<Pair<String, String>> auth)
-   {
-      return provideAuth(OperationType.DELETE, auth);
-   }
-
-   private Producer<Pair<String, String>> provideAuth(
-         final OperationType operationType,
-         final Producer<Pair<String, String>> defaultAuth)
-   {
-      final OperationConfig config = this.config.getOperationConfig().get(operationType);
-      if (config != null)
-      {
-         final Producer<Pair<String, String>> auth =
-               createAuth(config.getUsername(), config.getPassword());
-         if (auth != null)
-            return auth;
-      }
-      return defaultAuth;
-   }
-
-   private Producer<Pair<String, String>> createAuth(final String username, final String password)
-   {
       if (username != null && password != null)
-         return new BasicAuthProducer(username, password);
+         return new BasicAuth(Producers.of(username), Producers.of(password));
       else if (username == null && password == null)
          return null;
       throw new IllegalArgumentException("If username is not null password must also be not null");
@@ -432,57 +384,42 @@ public class JsonModule extends AbstractModule
    @Provides
    @Singleton
    @DefaultHeaders
-   List<Producer<Pair<String, String>>> provideDefaultHeaders(
-         @DefaultAuth final Producer<Pair<String, String>> auth)
+   List<Producer<Pair<String, String>>> provideDefaultHeaders()
    {
-      return addAuth(createHeaders(this.config.getHeaders()), auth);
+      return createHeaders(this.config.getHeaders());
    }
 
    @Provides
    @Singleton
    @WriteHeaders
-   List<Producer<Pair<String, String>>> provideWriteHeaders(
-         @WriteAuth final Producer<Pair<String, String>> auth)
+   List<Producer<Pair<String, String>>> provideWriteHeaders()
    {
-      return provideHeaders(OperationType.WRITE, auth);
+      return provideHeaders(OperationType.WRITE);
    }
 
    @Provides
    @Singleton
    @ReadHeaders
-   List<Producer<Pair<String, String>>> provideReadHeaders(
-         @ReadAuth final Producer<Pair<String, String>> auth)
+   List<Producer<Pair<String, String>>> provideReadHeaders()
    {
-      return provideHeaders(OperationType.READ, auth);
+      return provideHeaders(OperationType.READ);
    }
 
    @Provides
    @Singleton
    @DeleteHeaders
-   List<Producer<Pair<String, String>>> provideDeleteHeaders(
-         @DeleteAuth final Producer<Pair<String, String>> auth)
+   List<Producer<Pair<String, String>>> provideDeleteHeaders()
    {
-      return provideHeaders(OperationType.DELETE, auth);
+      return provideHeaders(OperationType.DELETE);
    }
 
-   private List<Producer<Pair<String, String>>> provideHeaders(
-         final OperationType operationType,
-         final Producer<Pair<String, String>> auth)
+   private List<Producer<Pair<String, String>>> provideHeaders(final OperationType operationType)
    {
       final Map<String, String> headers = this.config.getHeaders();
       final OperationConfig config = this.config.getOperationConfig().get(operationType);
       if (config != null && config.getHeaders() != null)
          headers.putAll(config.getHeaders());
-      return addAuth(createHeaders(headers), auth);
-   }
-
-   private List<Producer<Pair<String, String>>> addAuth(
-         final List<Producer<Pair<String, String>>> headers,
-         final Producer<Pair<String, String>> auth)
-   {
-      if (auth != null)
-         headers.add(auth);
-      return headers;
+      return createHeaders(headers);
    }
 
    private List<Producer<Pair<String, String>>> createHeaders(final Map<String, String> headers)

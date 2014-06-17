@@ -44,6 +44,7 @@ import com.cleversafe.oom.guice.annotation.Read;
 import com.cleversafe.oom.guice.annotation.ReadWeight;
 import com.cleversafe.oom.guice.annotation.Write;
 import com.cleversafe.oom.guice.annotation.WriteWeight;
+import com.cleversafe.oom.http.auth.HttpAuth;
 import com.cleversafe.oom.http.operation.manager.SimpleOperationManager;
 import com.cleversafe.oom.object.manager.ObjectManager;
 import com.cleversafe.oom.object.manager.ObjectNameConsumer;
@@ -110,7 +111,7 @@ public class OOMModule extends AbstractModule
 
    @Provides
    @Singleton
-   Client provideClient(final ClientConfig clientConfig)
+   Client provideClient(final ClientConfig clientConfig, final HttpAuth auth)
    {
       final Function<String, ByteBufferConsumer> byteBufferConsumers =
             new Function<String, ByteBufferConsumer>()
@@ -129,6 +130,7 @@ public class OOMModule extends AbstractModule
 
             };
       return new ApacheClient.Builder()
+            .withAuth(auth)
             .withConnectTimeout(clientConfig.getConnectTimeout())
             .withSoTimeout(clientConfig.getSoTimeout())
             .usingSoReuseAddress(clientConfig.isSoReuseAddress())
