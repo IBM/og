@@ -26,7 +26,6 @@ import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
 
-import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
@@ -67,9 +66,8 @@ public class HttpRequestAccessLogEntry
    final Map<String, String> principals;
    final String type = "http";
 
-   private static final DateTimeFormatter formatter =
-         DateTimeFormat.forPattern("dd/MMM/yyyy:HH:mm:ss Z").withZone(DateTimeZone.UTC).withLocale(
-               Locale.US);
+   private static final DateTimeFormatter formatter = DateTimeFormat.forPattern(
+         "dd/MMM/yyyy:HH:mm:ss Z").withLocale(Locale.US);
 
    public HttpRequestAccessLogEntry(final Request request, final Response response)
    {
