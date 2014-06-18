@@ -26,9 +26,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import com.cleversafe.oom.operation.Entity;
+import com.cleversafe.oom.operation.EntityType;
 import com.cleversafe.oom.operation.Method;
 import com.cleversafe.oom.operation.Request;
 import com.cleversafe.oom.operation.RequestContext;
+import com.cleversafe.oom.util.Entities;
 
 public class HttpRequestContext implements RequestContext
 {
@@ -42,6 +44,7 @@ public class HttpRequestContext implements RequestContext
    public HttpRequestContext()
    {
       this.headers = new HashMap<String, String>();
+      this.entity = Entities.of(EntityType.NONE, 0);
       this.metadata = new HashMap<String, String>();
    }
 
