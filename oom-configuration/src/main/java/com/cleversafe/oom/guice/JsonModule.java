@@ -33,6 +33,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import com.cleversafe.oom.api.Producer;
 import com.cleversafe.oom.cli.json.API;
+import com.cleversafe.oom.cli.json.AuthConfig;
+import com.cleversafe.oom.cli.json.AuthType;
 import com.cleversafe.oom.cli.json.ClientConfig;
 import com.cleversafe.oom.cli.json.Concurrency;
 import com.cleversafe.oom.cli.json.FileSize;
@@ -78,6 +80,7 @@ import com.cleversafe.oom.http.auth.HttpAuth;
 import com.cleversafe.oom.operation.Entity;
 import com.cleversafe.oom.operation.OperationType;
 import com.cleversafe.oom.operation.RequestContext;
+import com.cleversafe.oom.s3.auth.AWSAuthV2;
 import com.cleversafe.oom.scheduling.RequestRateScheduler;
 import com.cleversafe.oom.scheduling.Scheduler;
 import com.cleversafe.oom.util.Entities;
@@ -371,11 +374,18 @@ public class JsonModule extends AbstractModule
    @Singleton
    HttpAuth providesDefaultAuth()
    {
-      final String username = this.config.getUsername();
-      final String password = this.config.getPassword();
+      final AuthConfig authConfig = this.config.getAuthentication();
+      final AuthType authType = authConfig.getAuthType();
+      final String username = authConfig.getUsername();
+      final String password = authConfig.getPassword();
 
       if (username != null && password != null)
-         return new BasicAuth(Producers.of(username), Producers.of(password));
+      {
+         if (AuthType.AWSV2 == authType)
+            return new AWSAuthV2(Producers.of(username), Producers.of(password));
+         else
+            return new BasicAuth(Producers.of(username), Producers.of(password));
+      }
       else if (username == null && password == null)
          return null;
       throw new IllegalArgumentException("If username is not null password must also be not null");

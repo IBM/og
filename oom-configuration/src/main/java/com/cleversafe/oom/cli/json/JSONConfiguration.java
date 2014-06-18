@@ -43,8 +43,7 @@ public class JSONConfiguration
    List<FileSize> filesizes;
    EntityType source;
    Concurrency concurrency;
-   String username;
-   String password;
+   AuthConfig authentication;
    Long operatons;
    RunTime runtime;
    String objectLocation;
@@ -173,19 +172,11 @@ public class JSONConfiguration
    }
 
    /**
-    * @return the username
+    * @return the authentication
     */
-   public String getUsername()
+   public AuthConfig getAuthentication()
    {
-      return this.username;
-   }
-
-   /**
-    * @return the password
-    */
-   public String getPassword()
-   {
-      return this.password;
+      return this.authentication;
    }
 
    /**

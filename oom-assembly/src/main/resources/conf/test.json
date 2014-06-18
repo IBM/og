@@ -142,8 +142,11 @@
 // also be set.
 // TODO fuller explanation.
 
-// "username": "",
-// "password": "",
+// "authentication": {
+// 	"auth_type": "basic",
+// 	"username": "",
+// 	"password": ""
+// },
 
 
 // TODO fix this description
