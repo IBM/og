@@ -22,8 +22,13 @@ package com.cleversafe.oom.http;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 import com.cleversafe.oom.operation.Entity;
 import com.cleversafe.oom.operation.EntityType;
@@ -40,10 +45,13 @@ public class HttpRequestContext implements RequestContext
    private final Map<String, String> headers;
    private Entity entity;
    private final Map<String, String> metadata;
+   private static final DateTimeFormatter RFC1123 =
+         DateTimeFormat.forPattern("EEE, dd MMM yyyy HH:mm:ss zzz").withLocale(Locale.US);
 
    public HttpRequestContext()
    {
       this.headers = new HashMap<String, String>();
+      this.headers.put("Date", RFC1123.print(new DateTime()));
       this.entity = Entities.of(EntityType.NONE, 0);
       this.metadata = new HashMap<String, String>();
    }
