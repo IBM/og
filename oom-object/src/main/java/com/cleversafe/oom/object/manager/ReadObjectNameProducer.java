@@ -22,7 +22,6 @@ package com.cleversafe.oom.object.manager;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.cleversafe.oom.api.Producer;
-import com.cleversafe.oom.operation.RequestContext;
 
 public class ReadObjectNameProducer implements Producer<String>
 {
@@ -34,7 +33,7 @@ public class ReadObjectNameProducer implements Producer<String>
    }
 
    @Override
-   public String produce(final RequestContext context)
+   public String produce()
    {
       return this.objectManager.acquireNameForRead().toString();
    }

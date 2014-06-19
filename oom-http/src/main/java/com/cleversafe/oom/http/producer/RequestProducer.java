@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.cleversafe.oom.api.Producer;
+import com.cleversafe.oom.http.HttpRequestContext;
 import com.cleversafe.oom.operation.Entity;
 import com.cleversafe.oom.operation.Method;
 import com.cleversafe.oom.operation.Request;
@@ -58,20 +59,21 @@ public class RequestProducer implements Producer<Request>
    }
 
    @Override
-   public Request produce(final RequestContext context)
+   public Request produce()
    {
-      context.withId(this.id.produce(context))
-            .withMethod(this.method.produce(context))
-            .withURI(this.uri.produce(context));
+      final RequestContext context = new HttpRequestContext();
+      context.withId(this.id.produce())
+            .withMethod(this.method.produce())
+            .withURI(this.uri.produce());
 
       for (final Producer<Pair<String, String>> producer : this.headers)
       {
-         final Pair<String, String> pair = producer.produce(context);
+         final Pair<String, String> pair = producer.produce();
          context.withHeader(pair.getKey(), pair.getValue());
       }
 
-      context.withEntity(this.entity.produce(context))
-            .withMetaData(this.metadata.produce(context))
+      context.withEntity(this.entity.produce())
+            .withMetaData(this.metadata.produce())
             .build();
 
       return context.build();

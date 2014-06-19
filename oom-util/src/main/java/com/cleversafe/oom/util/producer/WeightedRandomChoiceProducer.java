@@ -22,7 +22,6 @@ package com.cleversafe.oom.util.producer;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.cleversafe.oom.api.Producer;
-import com.cleversafe.oom.operation.RequestContext;
 import com.cleversafe.oom.util.WeightedRandomChoice;
 
 public class WeightedRandomChoiceProducer<T> implements Producer<T>
@@ -40,7 +39,7 @@ public class WeightedRandomChoiceProducer<T> implements Producer<T>
    }
 
    @Override
-   public T produce(final RequestContext context)
+   public T produce()
    {
       return this.wrc.nextChoice();
    }

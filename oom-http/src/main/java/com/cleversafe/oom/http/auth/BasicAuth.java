@@ -47,8 +47,8 @@ public class BasicAuth implements HttpAuth
    public Pair<String, String> nextAuthorizationHeader(final Request request)
    {
       // TODO cache header in common case of constant username and password
-      final String username = this.username.produce(null);
-      final String password = this.password.produce(null);
+      final String username = this.username.produce();
+      final String password = this.password.produce();
       final String credentials = username + ":" + password;
       final String b64 = BaseEncoding.base64().encode(credentials.getBytes(StandardCharsets.UTF_8));
       return new Pair<String, String>("Authorization", "Basic " + b64);

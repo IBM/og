@@ -22,12 +22,11 @@ package com.cleversafe.oom.object.manager;
 import java.util.UUID;
 
 import com.cleversafe.oom.api.Producer;
-import com.cleversafe.oom.operation.RequestContext;
 
 public class UUIDObjectNameProducer implements Producer<String>
 {
    @Override
-   public String produce(final RequestContext context)
+   public String produce()
    {
       return UUID.randomUUID().toString().replace("-", "") + "0000";
    }

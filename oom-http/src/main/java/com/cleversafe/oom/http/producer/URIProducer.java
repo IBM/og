@@ -29,7 +29,6 @@ import java.util.Map;
 import com.cleversafe.oom.api.Producer;
 import com.cleversafe.oom.api.ProducerException;
 import com.cleversafe.oom.http.Scheme;
-import com.cleversafe.oom.operation.RequestContext;
 import com.google.common.base.Joiner;
 
 public class URIProducer implements Producer<URI>
@@ -59,16 +58,16 @@ public class URIProducer implements Producer<URI>
    }
 
    @Override
-   public URI produce(final RequestContext context)
+   public URI produce()
    {
       final StringBuilder builder = new StringBuilder()
-            .append(this.scheme.produce(context))
+            .append(this.scheme.produce())
             .append("://")
-            .append(this.host.produce(context));
-      appendPort(context, builder);
-      appendPath(context, builder);
+            .append(this.host.produce());
+      appendPort(builder);
+      appendPath(builder);
       appendTrailingSlash(builder);
-      appendQueryParams(context, builder);
+      appendQueryParams(builder);
 
       try
       {
@@ -82,17 +81,17 @@ public class URIProducer implements Producer<URI>
       }
    }
 
-   private void appendPort(final RequestContext context, final StringBuilder builder)
+   private void appendPort(final StringBuilder builder)
    {
       if (this.port != null)
-         builder.append(":").append(this.port.produce(context));
+         builder.append(":").append(this.port.produce());
    }
 
-   private void appendPath(final RequestContext context, final StringBuilder builder)
+   private void appendPath(final StringBuilder builder)
    {
       for (final Producer<String> part : this.parts)
       {
-         builder.append("/").append(part.produce(context));
+         builder.append("/").append(part.produce());
       }
    }
 
@@ -102,9 +101,9 @@ public class URIProducer implements Producer<URI>
          builder.append("/");
    }
 
-   private void appendQueryParams(final RequestContext context, final StringBuilder builder)
+   private void appendQueryParams(final StringBuilder builder)
    {
-      final String queryParams = paramJoiner.join(this.queryParameters.produce(context));
+      final String queryParams = paramJoiner.join(this.queryParameters.produce());
       if (queryParams.length() > 0)
          builder.append("?").append(queryParams);
    }

@@ -29,9 +29,7 @@ import com.cleversafe.oom.api.OperationManager;
 import com.cleversafe.oom.api.OperationManagerException;
 import com.cleversafe.oom.api.Producer;
 import com.cleversafe.oom.api.ProducerException;
-import com.cleversafe.oom.http.HttpRequestContext;
 import com.cleversafe.oom.operation.Request;
-import com.cleversafe.oom.operation.RequestContext;
 import com.cleversafe.oom.operation.Response;
 import com.cleversafe.oom.scheduling.Scheduler;
 
@@ -59,11 +57,10 @@ public class SimpleOperationManager implements OperationManager
    {
       this.scheduler.waitForNext();
 
-      final RequestContext context = new HttpRequestContext();
-      final Producer<Request> producer = this.requestMix.produce(null);
+      final Producer<Request> producer = this.requestMix.produce();
       try
       {
-         final Request request = producer.produce(context);
+         final Request request = producer.produce();
          this.pendingRequests.put(request.getId(), request);
          return request;
       }

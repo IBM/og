@@ -22,7 +22,6 @@ package com.cleversafe.oom.util.producer;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.cleversafe.oom.api.Producer;
-import com.cleversafe.oom.operation.RequestContext;
 public class ConstantProducer<T> implements Producer<T>
 {
    private final T item;
@@ -38,7 +37,7 @@ public class ConstantProducer<T> implements Producer<T>
    }
 
    @Override
-   public T produce(final RequestContext context)
+   public T produce()
    {
       return this.item;
    }

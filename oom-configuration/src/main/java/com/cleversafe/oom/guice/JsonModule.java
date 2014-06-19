@@ -79,7 +79,6 @@ import com.cleversafe.oom.http.auth.BasicAuth;
 import com.cleversafe.oom.http.auth.HttpAuth;
 import com.cleversafe.oom.operation.Entity;
 import com.cleversafe.oom.operation.OperationType;
-import com.cleversafe.oom.operation.RequestContext;
 import com.cleversafe.oom.s3.auth.AWSAuthV2;
 import com.cleversafe.oom.scheduling.RequestRateScheduler;
 import com.cleversafe.oom.scheduling.Scheduler;
@@ -123,7 +122,7 @@ public class JsonModule extends AbstractModule
          private final AtomicLong id = new AtomicLong();
 
          @Override
-         public Long produce(final RequestContext context)
+         public Long produce()
          {
             return this.id.getAndIncrement();
          }
@@ -460,7 +459,7 @@ public class JsonModule extends AbstractModule
          private final WeightedRandomChoice<Distribution> sizes = wrc;
 
          @Override
-         public Entity produce(final RequestContext context)
+         public Entity produce()
          {
             return Entities.of(config.getSource(), (long) this.sizes.nextChoice().nextSample());
          }
