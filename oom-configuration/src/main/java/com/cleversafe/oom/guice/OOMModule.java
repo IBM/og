@@ -44,6 +44,7 @@ import com.cleversafe.oom.guice.annotation.Read;
 import com.cleversafe.oom.guice.annotation.ReadObjectName;
 import com.cleversafe.oom.guice.annotation.ReadWeight;
 import com.cleversafe.oom.guice.annotation.Write;
+import com.cleversafe.oom.guice.annotation.WriteObjectName;
 import com.cleversafe.oom.guice.annotation.WriteWeight;
 import com.cleversafe.oom.http.auth.HttpAuth;
 import com.cleversafe.oom.http.operation.manager.SimpleOperationManager;
@@ -52,6 +53,7 @@ import com.cleversafe.oom.object.manager.ObjectManager;
 import com.cleversafe.oom.object.manager.ObjectNameConsumer;
 import com.cleversafe.oom.object.manager.RandomObjectPopulator;
 import com.cleversafe.oom.object.manager.ReadObjectNameProducer;
+import com.cleversafe.oom.object.manager.UUIDObjectNameProducer;
 import com.cleversafe.oom.operation.Request;
 import com.cleversafe.oom.operation.Response;
 import com.cleversafe.oom.scheduling.Scheduler;
@@ -155,6 +157,14 @@ public class OOMModule extends AbstractModule
       final String aContainer = container.produce();
       return new RandomObjectPopulator(UUID.randomUUID(), objectLocation, aContainer + "-"
             + api.toString().toLowerCase());
+   }
+
+   @Provides
+   @Singleton
+   @WriteObjectName
+   Producer<String> provideWriteObjectName()
+   {
+      return new UUIDObjectNameProducer();
    }
 
    @Provides

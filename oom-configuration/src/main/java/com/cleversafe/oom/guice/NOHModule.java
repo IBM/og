@@ -49,13 +49,13 @@ import com.cleversafe.oom.guice.annotation.Write;
 import com.cleversafe.oom.guice.annotation.WriteContainer;
 import com.cleversafe.oom.guice.annotation.WriteHeaders;
 import com.cleversafe.oom.guice.annotation.WriteHost;
+import com.cleversafe.oom.guice.annotation.WriteObjectName;
 import com.cleversafe.oom.guice.annotation.WritePort;
 import com.cleversafe.oom.guice.annotation.WriteQueryParams;
 import com.cleversafe.oom.guice.annotation.WriteScheme;
 import com.cleversafe.oom.http.Scheme;
 import com.cleversafe.oom.http.producer.RequestProducer;
 import com.cleversafe.oom.http.producer.URIProducer;
-import com.cleversafe.oom.object.manager.UUIDObjectNameProducer;
 import com.cleversafe.oom.operation.Entity;
 import com.cleversafe.oom.operation.EntityType;
 import com.cleversafe.oom.operation.Method;
@@ -84,6 +84,7 @@ public class NOHModule extends AbstractModule
          @WritePort final Producer<Integer> port,
          @DefaultUriRoot final Producer<String> uriRoot,
          @WriteContainer final Producer<String> container,
+         @WriteObjectName final Producer<String> object,
          @WriteQueryParams final Producer<Map<String, String>> queryParams,
          @WriteHeaders final List<Producer<Pair<String, String>>> headers,
          @DefaultEntity final Producer<Entity> entity)
@@ -91,7 +92,7 @@ public class NOHModule extends AbstractModule
       final List<Producer<String>> parts = new ArrayList<Producer<String>>();
       addUriRoot(parts, uriRoot);
       parts.add(container);
-      parts.add(new UUIDObjectNameProducer());
+      parts.add(object);
       final Producer<URI> writeURI = new URIProducer.Builder()
             .withScheme(scheme)
             .toHost(host)
