@@ -26,7 +26,7 @@
 			<outputDirectory>conf</outputDirectory>
 			<includes>
 				<include>log4j2.xml</include>
-				<include>test.json</include>
+				<include>config.sample.json</include>
 			</includes>
 		</fileSet>
 		<fileSet>
