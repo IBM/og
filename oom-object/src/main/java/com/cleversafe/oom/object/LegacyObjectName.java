@@ -26,7 +26,7 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.UUID;
 
-import org.apache.commons.codec.binary.Hex;
+import com.google.common.io.BaseEncoding;
 
 /**
  * An <code>ObjectName</code> implementation that represents an object name of a fixed length of 18
@@ -113,7 +113,7 @@ public class LegacyObjectName implements ObjectName
    @Override
    public String toString()
    {
-      return new String(Hex.encodeHex(toBytes()));
+      return new String(BaseEncoding.base16().lowerCase().encode(toBytes()));
    }
 
    private static void validateBytes(final byte[] objectName)

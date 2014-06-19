@@ -38,7 +38,7 @@ package com.cleversafe.oom.cli;
 import java.io.FileInputStream;
 import java.io.IOException;
 
-import org.apache.commons.codec.binary.Hex;
+import com.google.common.io.BaseEncoding;
 
 public class OOMReader
 {
@@ -72,7 +72,7 @@ public class OOMReader
          while (in.read(objectID, 0, ID_LENGTH) == ID_LENGTH)
          {
             numRecords++;
-            final String id = new String(Hex.encodeHex(objectID));
+            final String id = new String(BaseEncoding.base16().lowerCase().encode(objectID));
             System.out.println(id);
          }
          System.out.println(numRecords + " records");

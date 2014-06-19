@@ -25,15 +25,13 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Hex;
-
 import com.cleversafe.oom.api.Consumer;
 import com.cleversafe.oom.object.LegacyObjectName;
 import com.cleversafe.oom.object.ObjectName;
 import com.cleversafe.oom.operation.Request;
 import com.cleversafe.oom.operation.Response;
 import com.google.common.base.Splitter;
+import com.google.common.io.BaseEncoding;
 
 public class ObjectNameConsumer implements Consumer<Response>
 {
@@ -97,15 +95,6 @@ public class ObjectNameConsumer implements Consumer<Response>
 
    private static ObjectName objectNameFromString(final String objectName)
    {
-      try
-      {
-         return LegacyObjectName.forBytes(Hex.decodeHex(objectName.toCharArray()));
-      }
-      catch (final DecoderException e)
-      {
-         // TODO Auto-generated catch block
-         e.printStackTrace();
-         return null;
-      }
+      return LegacyObjectName.forBytes(BaseEncoding.base16().lowerCase().decode(objectName));
    }
 }
