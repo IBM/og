@@ -37,7 +37,6 @@ import com.cleversafe.oom.client.ApacheClient;
 import com.cleversafe.oom.client.Client;
 import com.cleversafe.oom.guice.annotation.DefaultContainer;
 import com.cleversafe.oom.guice.annotation.DefaultObjectLocation;
-import com.cleversafe.oom.guice.annotation.DefaultObjectName;
 import com.cleversafe.oom.guice.annotation.Delete;
 import com.cleversafe.oom.guice.annotation.DeleteObjectName;
 import com.cleversafe.oom.guice.annotation.DeleteWeight;
@@ -51,7 +50,6 @@ import com.cleversafe.oom.http.operation.manager.SimpleOperationManager;
 import com.cleversafe.oom.object.manager.DeleteObjectNameProducer;
 import com.cleversafe.oom.object.manager.ObjectManager;
 import com.cleversafe.oom.object.manager.ObjectNameConsumer;
-import com.cleversafe.oom.object.manager.ObjectNameProducer;
 import com.cleversafe.oom.object.manager.RandomObjectPopulator;
 import com.cleversafe.oom.object.manager.ReadObjectNameProducer;
 import com.cleversafe.oom.operation.Request;
@@ -156,14 +154,6 @@ public class OOMModule extends AbstractModule
       // FIXME this naming scheme will break unless @DefaultContainer is a constant producer
       final String aContainer = container.produce(null);
       return new RandomObjectPopulator(UUID.randomUUID(), objectLocation, aContainer + "-" + api);
-   }
-
-   @Provides
-   @Singleton
-   @DefaultObjectName
-   Producer<String> provideDefaultObjectName(final ObjectManager objectManager)
-   {
-      return new ObjectNameProducer(objectManager);
    }
 
    @Provides
