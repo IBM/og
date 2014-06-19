@@ -39,17 +39,21 @@ import com.cleversafe.oom.guice.annotation.DefaultContainer;
 import com.cleversafe.oom.guice.annotation.DefaultObjectLocation;
 import com.cleversafe.oom.guice.annotation.DefaultObjectName;
 import com.cleversafe.oom.guice.annotation.Delete;
+import com.cleversafe.oom.guice.annotation.DeleteObjectName;
 import com.cleversafe.oom.guice.annotation.DeleteWeight;
 import com.cleversafe.oom.guice.annotation.Read;
+import com.cleversafe.oom.guice.annotation.ReadObjectName;
 import com.cleversafe.oom.guice.annotation.ReadWeight;
 import com.cleversafe.oom.guice.annotation.Write;
 import com.cleversafe.oom.guice.annotation.WriteWeight;
 import com.cleversafe.oom.http.auth.HttpAuth;
 import com.cleversafe.oom.http.operation.manager.SimpleOperationManager;
+import com.cleversafe.oom.object.manager.DeleteObjectNameProducer;
 import com.cleversafe.oom.object.manager.ObjectManager;
 import com.cleversafe.oom.object.manager.ObjectNameConsumer;
 import com.cleversafe.oom.object.manager.ObjectNameProducer;
 import com.cleversafe.oom.object.manager.RandomObjectPopulator;
+import com.cleversafe.oom.object.manager.ReadObjectNameProducer;
 import com.cleversafe.oom.operation.Request;
 import com.cleversafe.oom.operation.Response;
 import com.cleversafe.oom.scheduling.Scheduler;
@@ -160,5 +164,21 @@ public class OOMModule extends AbstractModule
    Producer<String> provideDefaultObjectName(final ObjectManager objectManager)
    {
       return new ObjectNameProducer(objectManager);
+   }
+
+   @Provides
+   @Singleton
+   @ReadObjectName
+   Producer<String> provideReadObjectName(final ObjectManager objectManager)
+   {
+      return new ReadObjectNameProducer(objectManager);
+   }
+
+   @Provides
+   @Singleton
+   @DeleteObjectName
+   Producer<String> provideDeleteObjectName(final ObjectManager objectManager)
+   {
+      return new DeleteObjectNameProducer(objectManager);
    }
 }

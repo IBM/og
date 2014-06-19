@@ -28,12 +28,12 @@ import java.util.Map;
 import com.cleversafe.oom.api.Producer;
 import com.cleversafe.oom.guice.annotation.DefaultEntity;
 import com.cleversafe.oom.guice.annotation.DefaultId;
-import com.cleversafe.oom.guice.annotation.DefaultObjectName;
 import com.cleversafe.oom.guice.annotation.DefaultUriRoot;
 import com.cleversafe.oom.guice.annotation.Delete;
 import com.cleversafe.oom.guice.annotation.DeleteContainer;
 import com.cleversafe.oom.guice.annotation.DeleteHeaders;
 import com.cleversafe.oom.guice.annotation.DeleteHost;
+import com.cleversafe.oom.guice.annotation.DeleteObjectName;
 import com.cleversafe.oom.guice.annotation.DeletePort;
 import com.cleversafe.oom.guice.annotation.DeleteQueryParams;
 import com.cleversafe.oom.guice.annotation.DeleteScheme;
@@ -41,6 +41,7 @@ import com.cleversafe.oom.guice.annotation.Read;
 import com.cleversafe.oom.guice.annotation.ReadContainer;
 import com.cleversafe.oom.guice.annotation.ReadHeaders;
 import com.cleversafe.oom.guice.annotation.ReadHost;
+import com.cleversafe.oom.guice.annotation.ReadObjectName;
 import com.cleversafe.oom.guice.annotation.ReadPort;
 import com.cleversafe.oom.guice.annotation.ReadQueryParams;
 import com.cleversafe.oom.guice.annotation.ReadScheme;
@@ -117,7 +118,7 @@ public class SOHModule extends AbstractModule
          @ReadPort final Producer<Integer> port,
          @DefaultUriRoot final Producer<String> uriRoot,
          @ReadContainer final Producer<String> container,
-         @DefaultObjectName final Producer<String> object,
+         @ReadObjectName final Producer<String> object,
          @ReadQueryParams final Producer<Map<String, String>> queryParams,
          @ReadHeaders final List<Producer<Pair<String, String>>> headers)
    {
@@ -152,7 +153,7 @@ public class SOHModule extends AbstractModule
          @DeletePort final Producer<Integer> port,
          @DefaultUriRoot final Producer<String> uriRoot,
          @DeleteContainer final Producer<String> container,
-         @DefaultObjectName final Producer<String> object,
+         @DeleteObjectName final Producer<String> object,
          @DeleteQueryParams final Producer<Map<String, String>> queryParams,
          @DeleteHeaders final List<Producer<Pair<String, String>>> headers)
    {
