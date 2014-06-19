@@ -298,7 +298,7 @@ public class ApacheClient implements Client
             public Response handleResponse(final org.apache.http.HttpResponse response)
                   throws ClientProtocolException, IOException
             {
-               final HttpResponse.Builder responseBuilder = new HttpResponse.Builder()
+               final HttpResponse.Builder responseBuilder = HttpResponse.custom()
                      .withRequestId(BlockingHttpOperation.this.request.getId());
                setResponseStatusCode(responseBuilder, response);
                setResponseHeaders(responseBuilder, response);
@@ -364,6 +364,11 @@ public class ApacheClient implements Client
       }
    }
 
+   public static Builder custom()
+   {
+      return new Builder();
+   }
+
    public static class Builder
    {
       private HttpAuth auth;
@@ -376,7 +381,7 @@ public class ApacheClient implements Client
       private boolean chunkedEncoding;
       private Function<String, ByteBufferConsumer> byteBufferConsumers;
 
-      public Builder()
+      private Builder()
       {}
 
       public Builder withAuth(final HttpAuth auth)

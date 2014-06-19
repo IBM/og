@@ -87,6 +87,11 @@ public class HttpResponse implements Response
       return this.metadata.entrySet().iterator();
    }
 
+   public static Builder custom()
+   {
+      return new Builder();
+   }
+
    public static class Builder
    {
       private long requestId;
@@ -94,7 +99,7 @@ public class HttpResponse implements Response
       private final SortedMap<String, String> headers;
       private final SortedMap<String, String> metadata;
 
-      public Builder()
+      private Builder()
       {
          this.headers = new TreeMap<String, String>();
          this.metadata = new TreeMap<String, String>();

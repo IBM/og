@@ -90,7 +90,7 @@ public class SOHModule extends AbstractModule
       final List<Producer<String>> parts = new ArrayList<Producer<String>>();
       addUriRoot(parts, uriRoot);
       parts.add(container);
-      final Producer<URI> writeURI = new URIProducer.Builder()
+      final Producer<URI> writeURI = URIProducer.custom()
             .withScheme(scheme)
             .toHost(host)
             .onPort(port)
@@ -126,7 +126,7 @@ public class SOHModule extends AbstractModule
       addUriRoot(parts, uriRoot);
       parts.add(container);
       parts.add(object);
-      final Producer<URI> readURI = new URIProducer.Builder()
+      final Producer<URI> readURI = URIProducer.custom()
             .withScheme(scheme)
             .toHost(host)
             .onPort(port)
@@ -161,7 +161,7 @@ public class SOHModule extends AbstractModule
       addUriRoot(parts, uriRoot);
       parts.add(container);
       parts.add(object);
-      final Producer<URI> deleteURI = new URIProducer.Builder()
+      final Producer<URI> deleteURI = URIProducer.custom()
             .withScheme(scheme)
             .toHost(host)
             .onPort(port)

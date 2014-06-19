@@ -116,6 +116,11 @@ public class HttpRequest implements Request
       return this.metadata.entrySet().iterator();
    }
 
+   public static Builder custom()
+   {
+      return new Builder();
+   }
+
    public static class Builder
    {
       private long id;
@@ -125,7 +130,7 @@ public class HttpRequest implements Request
       private Entity entity;
       private final SortedMap<String, String> metadata;
 
-      public Builder()
+      private Builder()
       {
          this.headers = new TreeMap<String, String>();
          this.headers.put("Date", RFC1123.print(new DateTime()));

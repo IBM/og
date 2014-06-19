@@ -93,7 +93,7 @@ public class NOHModule extends AbstractModule
       addUriRoot(parts, uriRoot);
       parts.add(container);
       parts.add(object);
-      final Producer<URI> writeURI = new URIProducer.Builder()
+      final Producer<URI> writeURI = URIProducer.custom()
             .withScheme(scheme)
             .toHost(host)
             .onPort(port)
@@ -128,7 +128,7 @@ public class NOHModule extends AbstractModule
       addUriRoot(parts, uriRoot);
       parts.add(container);
       parts.add(object);
-      final Producer<URI> readURI = new URIProducer.Builder()
+      final Producer<URI> readURI = URIProducer.custom()
             .withScheme(scheme)
             .toHost(host)
             .onPort(port)
@@ -163,7 +163,7 @@ public class NOHModule extends AbstractModule
       addUriRoot(parts, uriRoot);
       parts.add(container);
       parts.add(object);
-      final Producer<URI> deleteURI = new URIProducer.Builder()
+      final Producer<URI> deleteURI = URIProducer.custom()
             .withScheme(scheme)
             .toHost(host)
             .onPort(port)

@@ -37,6 +37,7 @@ public class URIProducer implements Producer<URI>
    private final Producer<String> host;
    private final Producer<Integer> port;
    private final List<Producer<String>> parts;
+   // TODO this type is awkward
    private final Producer<Map<String, String>> queryParameters;
    private final boolean trailingSlash;
    private static final Joiner.MapJoiner paramJoiner = Joiner.on('&').withKeyValueSeparator("=");
@@ -108,6 +109,11 @@ public class URIProducer implements Producer<URI>
          builder.append("?").append(queryParams);
    }
 
+   public static Builder custom()
+   {
+      return new Builder();
+   }
+
    public static class Builder
    {
       private Producer<Scheme> scheme;
@@ -117,7 +123,7 @@ public class URIProducer implements Producer<URI>
       private Producer<Map<String, String>> queryParams;
       private boolean trailingSlash;
 
-      public Builder()
+      private Builder()
       {}
 
       public Builder withScheme(final Producer<Scheme> scheme)

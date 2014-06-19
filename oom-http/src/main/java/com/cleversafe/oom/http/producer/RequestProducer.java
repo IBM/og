@@ -62,7 +62,7 @@ public class RequestProducer implements Producer<Request>
    @Override
    public Request produce()
    {
-      final HttpRequest.Builder context = new HttpRequest.Builder();
+      final HttpRequest.Builder context = HttpRequest.custom();
       context.withId(this.id.produce())
             .withMethod(this.method.produce())
             .withURI(this.uri.produce());

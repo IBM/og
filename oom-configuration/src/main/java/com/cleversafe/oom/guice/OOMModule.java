@@ -133,7 +133,7 @@ public class OOMModule extends AbstractModule
                }
 
             };
-      return new ApacheClient.Builder()
+      return ApacheClient.custom()
             .withAuth(auth)
             .withConnectTimeout(clientConfig.getConnectTimeout())
             .withSoTimeout(clientConfig.getSoTimeout())
