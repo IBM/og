@@ -62,7 +62,7 @@ public class OOM
    private static Logger _logger = LoggerFactory.getLogger(OOM.class);
    private static Logger _configJsonLogger = LoggerFactory.getLogger("ConfigJsonLogger");
    private static final String JSAP_RESOURCE_NAME = "oom.jsap";
-   private static final String TEST_JSON_RESOURCE_NAME = "test.json";
+   private static final String CONFIG_JSON = "config.json";
    public static final int NORMAL_TERMINATION = 0;
    public static final int ERROR_CONFIGURATION = 1;
 
@@ -161,7 +161,7 @@ public class OOM
    {
       File testConfig = jsapResult.getFile("config");
       if (testConfig == null)
-         testConfig = getConfigFile(getResource(TEST_JSON_RESOURCE_NAME));
+         testConfig = getConfigFile(getResource(CONFIG_JSON));
       return testConfig;
    }
 
