@@ -19,16 +19,13 @@
 
 package com.cleversafe.oom.client;
 
-import java.net.InetAddress;
 import java.net.URI;
-import java.net.UnknownHostException;
-import java.util.Collections;
 import java.util.Locale;
-import java.util.Map;
 
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
+import com.cleversafe.oom.operation.EntityType;
 import com.cleversafe.oom.operation.Request;
 import com.cleversafe.oom.operation.Response;
 import com.google.common.net.HttpHeaders;
@@ -37,7 +34,6 @@ public class RequestLogEntry
 {
    final String serverName;
    final String remoteAddress;
-   final String forwardedFor;
    final String user;
    final long timestampStart;
    final long timestampFinish;
@@ -45,70 +41,60 @@ public class RequestLogEntry
    final String timeFinish;
    final String requestMethod;
    final String requestUri;
-   final String object_id;
-   final String protocol;
+   final String objectId;
    final int status;
    final Long requestLength;
    final long responseLength;
-   final String referer;
    final String userAgent;
    final long requestLatency;
 
    final String requestId;
+   final String clvRequestId;
    final String stat;
-   final String midstreamError;
    final Long objectLength;
-   final String interfaceType;
-   final String versionName;
-   final Boolean versionTransient;
-   final Boolean deleteMarker;
-
-   final Map<String, String> principals;
-   final String type = "http";
 
    private static final DateTimeFormatter formatter = DateTimeFormat.forPattern(
          "dd/MMM/yyyy:HH:mm:ss Z").withLocale(Locale.US);
+   private static final String X_CLV_REQUEST_ID = "X-Clv-Request-Id";
 
-   public RequestLogEntry(final Request request, final Response response)
+   public RequestLogEntry(
+         final Request request,
+         final Response response,
+         final long timestampStart,
+         final long timestampFinish)
    {
-      String serverName = null;
-      try
-      {
-         serverName = InetAddress.getLocalHost().getHostAddress();
-      }
-      catch (final UnknownHostException e)
-      {
-      }
+      // FIXME reliably get localaddress? Name should be clientName? Do we even need this field?
+      final String serverName = null;
       final URI uri = request.getURI();
       this.serverName = serverName;
       this.remoteAddress = uri.getHost();
-      this.forwardedFor = request.getHeader(HttpHeaders.X_FORWARDED_FOR);
+      // TODO get user from HttpAuth?
       this.user = null;
-      this.timestampStart = 0;
-      this.timestampFinish = 0;
+      this.timestampStart = timestampStart;
+      this.timestampFinish = timestampFinish;
       this.timeStart = RequestLogEntry.formatter.print(this.timestampStart);
       this.timeFinish = RequestLogEntry.formatter.print(this.timestampFinish);
       this.requestMethod = request.getMethod().toString();
 
       this.requestUri = uri.getPath() + (uri.getQuery() != null ? uri.getQuery() : "");
-      this.object_id = null;
-      this.protocol = uri.getScheme();
+      // TODO not sure how to get this, could parse from uri but error prone
+      this.objectId = null;
       this.status = response.getStatusCode();
-      this.requestLength = null;
+      // TODO requestLength calculation will break with awsv4; content-length is modified
+      if (EntityType.NONE != request.getEntity().getType())
+         this.requestLength = request.getEntity().getSize();
+      else
+         this.requestLength = null;
+      // TODO fix response body consumption in Client so that this can be passed in
       this.responseLength = 0;
-      this.referer = request.getHeader(HttpHeaders.REFERER);
       this.userAgent = request.getHeader(HttpHeaders.USER_AGENT);
-      this.requestLatency = 0;
+      // TODO ask: dsnet access.log uses System.currentTimeMillis() - request.getTimeStamp();
+      this.requestLatency = this.timestampFinish - this.timestampStart;
 
-      this.requestId = null;
+      // custom
+      this.requestId = String.valueOf(request.getId());
+      this.clvRequestId = response.getHeader(X_CLV_REQUEST_ID);
       this.stat = null;
-      this.midstreamError = null;
       this.objectLength = null;
-      this.interfaceType = null;
-      this.versionName = null;
-      this.versionTransient = null;
-      this.deleteMarker = null;
-
-      this.principals = Collections.emptyMap();
    }
 }

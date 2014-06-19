@@ -205,19 +205,22 @@ public class ApacheClient implements Client
       @Override
       public Response call() throws Exception
       {
+         final long timestampStart = System.currentTimeMillis();
          final HttpRequestBase baseRequest = createRequest();
          setRequestURI(baseRequest);
          setRequestHeaders(baseRequest);
          setRequestContent(baseRequest);
          final Response response = sendRequest(baseRequest);
+         final long timestampFinish = System.currentTimeMillis();
 
-         _requestLogger.info(this.gson.toJson(new RequestLogEntry(this.request, response)));
+         _requestLogger.info(this.gson.toJson(new RequestLogEntry(this.request, response,
+               timestampStart, timestampFinish)));
+
          return response;
       }
 
       private HttpRequestBase createRequest()
       {
-
          switch (this.request.getMethod())
          {
             case GET :
