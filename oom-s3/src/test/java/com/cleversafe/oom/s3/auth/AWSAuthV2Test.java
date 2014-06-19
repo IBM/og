@@ -32,7 +32,7 @@ import org.junit.runners.Parameterized.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.cleversafe.oom.http.HttpRequestContext;
+import com.cleversafe.oom.http.HttpRequest;
 import com.cleversafe.oom.operation.Method;
 import com.cleversafe.oom.operation.Request;
 import com.cleversafe.oom.util.producer.Producers;
@@ -68,7 +68,7 @@ public class AWSAuthV2Test
 
    public static Object[] generateGET() throws URISyntaxException
    {
-      final Request request = new HttpRequestContext()
+      final Request request = new HttpRequest.Builder()
             .withMethod(Method.GET)
             .withURI(new URI("/johnsmith/photos/puppy.jpg"))
             .withHeader("Date", "Tue, 27 Mar 2007 19:36:42 +0000")
@@ -82,7 +82,7 @@ public class AWSAuthV2Test
 
    public static Object[] generatePUT() throws URISyntaxException
    {
-      final Request request = new HttpRequestContext()
+      final Request request = new HttpRequest.Builder()
             .withMethod(Method.PUT)
             .withURI(new URI("/johnsmith/photos/puppy.jpg"))
             .withHeader("Content-Type", "image/jpeg")
@@ -98,7 +98,7 @@ public class AWSAuthV2Test
 
    public static Object[] generateList() throws URISyntaxException
    {
-      final Request request = new HttpRequestContext()
+      final Request request = new HttpRequest.Builder()
             .withMethod(Method.GET)
             .withURI(new URI("/johnsmith/?prefix=photos&max-keys=50&marker=puppy"))
             .withHeader("User-Agent", "Mozilla/5.0")
@@ -113,7 +113,7 @@ public class AWSAuthV2Test
 
    public static Object[] generateDELETE() throws URISyntaxException
    {
-      final Request request = new HttpRequestContext()
+      final Request request = new HttpRequest.Builder()
             .withMethod(Method.DELETE)
             .withURI(new URI("/johnsmith/photos/puppy.jpg"))
             .withHeader("User-Agent", "dotnet")
