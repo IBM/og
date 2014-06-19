@@ -31,6 +31,7 @@ import java.util.Map.Entry;
 import com.cleversafe.oom.operation.Entity;
 import com.cleversafe.oom.operation.Method;
 import com.cleversafe.oom.operation.Request;
+import com.google.common.collect.ImmutableSortedMap;
 
 public class HttpRequest implements Request
 {
@@ -107,5 +108,63 @@ public class HttpRequest implements Request
    public Iterator<Entry<String, String>> metaData()
    {
       return this.metadata.entrySet().iterator();
+   }
+
+   public static class Builder
+   {
+      private long id;
+      private Method method;
+      private URI uri;
+      private final ImmutableSortedMap.Builder<String, String> headersBuilder;
+      private Entity entity;
+      private final ImmutableSortedMap.Builder<String, String> metadataBuilder;
+
+      public Builder()
+      {
+         this.headersBuilder = ImmutableSortedMap.naturalOrder();
+         this.metadataBuilder = ImmutableSortedMap.naturalOrder();
+      }
+
+      public Builder withId(final long id)
+      {
+         this.id = id;
+         return this;
+      }
+
+      public Builder withMethod(final Method method)
+      {
+         this.method = method;
+         return this;
+      }
+
+      public Builder withURI(final URI uri)
+      {
+         this.uri = uri;
+         return this;
+      }
+
+      public Builder withHeader(final String key, final String value)
+      {
+         this.headersBuilder.put(key, value);
+         return this;
+      }
+
+      public Builder withEntity(final Entity entity)
+      {
+         this.entity = entity;
+         return this;
+      }
+
+      public Builder withMetaDataEntry(final String key, final String value)
+      {
+         this.metadataBuilder.put(key, value);
+         return this;
+      }
+
+      public HttpRequest build()
+      {
+         return new HttpRequest(this.id, this.method, this.uri, this.headersBuilder.build(),
+               this.entity, this.metadataBuilder.build());
+      }
    }
 }
