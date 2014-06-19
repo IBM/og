@@ -22,12 +22,13 @@ package com.cleversafe.oom.http;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.SortedMap;
+import java.util.TreeMap;
 
 import com.cleversafe.oom.operation.Response;
-import com.google.common.collect.ImmutableSortedMap;
 
 public class HttpResponse implements Response
 {
@@ -90,43 +91,44 @@ public class HttpResponse implements Response
    {
       private long requestId;
       private int statusCode;
-      private final ImmutableSortedMap.Builder<String, String> headersBuilder;
-      private final ImmutableSortedMap.Builder<String, String> metadataBuilder;
+      private final SortedMap<String, String> headers;
+      private final SortedMap<String, String> metadata;
 
       public Builder()
       {
-         this.headersBuilder = ImmutableSortedMap.naturalOrder();
-         this.metadataBuilder = ImmutableSortedMap.naturalOrder();
+         this.headers = new TreeMap<String, String>();
+         this.metadata = new TreeMap<String, String>();
       }
 
-      public HttpResponse.Builder withRequestId(final long requestId)
+      public Builder withRequestId(final long requestId)
       {
          this.requestId = requestId;
          return this;
       }
 
-      public HttpResponse.Builder withStatusCode(final int statusCode)
+      public Builder withStatusCode(final int statusCode)
       {
          this.statusCode = statusCode;
          return this;
       }
 
-      public HttpResponse.Builder withHeader(final String key, final String value)
+      public Builder withHeader(final String key, final String value)
       {
-         this.headersBuilder.put(key, value);
+         this.headers.put(key, value);
          return this;
       }
 
-      public HttpResponse.Builder withMetaDataEntry(final String key, final String value)
+      public Builder withMetaDataEntry(final String key, final String value)
       {
-         this.metadataBuilder.put(key, value);
+         this.metadata.put(key, value);
          return this;
       }
 
       public HttpResponse build()
       {
-         return new HttpResponse(this.requestId, this.statusCode, this.headersBuilder.build(),
-               this.metadataBuilder.build());
+         return new HttpResponse(this.requestId, this.statusCode,
+               Collections.unmodifiableSortedMap(this.headers),
+               Collections.unmodifiableSortedMap(this.metadata));
       }
    }
 }
