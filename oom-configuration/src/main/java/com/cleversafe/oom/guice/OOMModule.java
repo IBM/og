@@ -153,7 +153,8 @@ public class OOMModule extends AbstractModule
    {
       // FIXME this naming scheme will break unless @DefaultContainer is a constant producer
       final String aContainer = container.produce();
-      return new RandomObjectPopulator(UUID.randomUUID(), objectLocation, aContainer + "-" + api);
+      return new RandomObjectPopulator(UUID.randomUUID(), objectLocation, aContainer + "-"
+            + api.toString().toLowerCase());
    }
 
    @Provides
