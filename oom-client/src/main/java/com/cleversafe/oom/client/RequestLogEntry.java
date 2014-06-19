@@ -17,7 +17,7 @@
 // Date: Aug 19, 2013
 // ---------------------
 
-package com.cleversafe.oom.http;
+package com.cleversafe.oom.client;
 
 import java.net.InetAddress;
 import java.net.URI;
@@ -33,7 +33,7 @@ import com.cleversafe.oom.operation.Request;
 import com.cleversafe.oom.operation.Response;
 import com.google.common.net.HttpHeaders;
 
-public class HttpRequestAccessLogEntry
+public class RequestLogEntry
 {
    final String serverName;
    final String remoteAddress;
@@ -69,7 +69,7 @@ public class HttpRequestAccessLogEntry
    private static final DateTimeFormatter formatter = DateTimeFormat.forPattern(
          "dd/MMM/yyyy:HH:mm:ss Z").withLocale(Locale.US);
 
-   public HttpRequestAccessLogEntry(final Request request, final Response response)
+   public RequestLogEntry(final Request request, final Response response)
    {
       String serverName = null;
       try
@@ -86,8 +86,8 @@ public class HttpRequestAccessLogEntry
       this.user = null;
       this.timestampStart = 0;
       this.timestampFinish = 0;
-      this.timeStart = HttpRequestAccessLogEntry.formatter.print(this.timestampStart);
-      this.timeFinish = HttpRequestAccessLogEntry.formatter.print(this.timestampFinish);
+      this.timeStart = RequestLogEntry.formatter.print(this.timestampStart);
+      this.timeFinish = RequestLogEntry.formatter.print(this.timestampFinish);
       this.requestMethod = request.getMethod().toString();
 
       this.requestUri = uri.getPath() + (uri.getQuery() != null ? uri.getQuery() : "");

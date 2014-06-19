@@ -54,7 +54,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.cleversafe.oom.api.ByteBufferConsumer;
-import com.cleversafe.oom.http.HttpRequestAccessLogEntry;
 import com.cleversafe.oom.http.HttpResponse;
 import com.cleversafe.oom.http.auth.HttpAuth;
 import com.cleversafe.oom.operation.MetaDataConstants;
@@ -212,7 +211,7 @@ public class ApacheClient implements Client
          setRequestContent(baseRequest);
          final Response response = sendRequest(baseRequest);
 
-         _requestLogger.info(this.gson.toJson(new HttpRequestAccessLogEntry(this.request, response)));
+         _requestLogger.info(this.gson.toJson(new RequestLogEntry(this.request, response)));
          return response;
       }
 
