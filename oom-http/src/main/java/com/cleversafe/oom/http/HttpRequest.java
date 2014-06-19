@@ -25,41 +25,47 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.net.URI;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.Map;
+import java.util.Locale;
 import java.util.Map.Entry;
+import java.util.SortedMap;
+import java.util.TreeMap;
+
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 import com.cleversafe.oom.operation.Entity;
+import com.cleversafe.oom.operation.EntityType;
 import com.cleversafe.oom.operation.Method;
 import com.cleversafe.oom.operation.Request;
-import com.google.common.collect.ImmutableSortedMap;
+import com.cleversafe.oom.util.Entities;
 
 public class HttpRequest implements Request
 {
    private final long id;
    private final Method method;
    private final URI uri;
-   private final Map<String, String> headers;
+   private final SortedMap<String, String> headers;
    private final Entity entity;
-   private final Map<String, String> metadata;
+   private final SortedMap<String, String> metadata;
+   private static final DateTimeFormatter RFC1123 =
+         DateTimeFormat.forPattern("EEE, dd MMM yyyy HH:mm:ss zzz").withLocale(Locale.US);
 
-   public HttpRequest(
+   private HttpRequest(
          final long id,
          final Method method,
          final URI uri,
-         final Map<String, String> headers,
+         final SortedMap<String, String> headers,
          final Entity entity,
-         final Map<String, String> metadata)
+         final SortedMap<String, String> metadata)
    {
       checkArgument(id >= 0, "id must be >= 0 [%s]", id);
       this.id = id;
       this.method = checkNotNull(method, "method must not be null");
       this.uri = checkNotNull(uri, "uri must not be null");
-      checkNotNull(headers, "headers must not be null");
-      this.headers = Collections.unmodifiableMap(headers);
+      this.headers = checkNotNull(headers, "headers must not be null");
       this.entity = checkNotNull(entity, "entity must not be null");
-      checkNotNull(metadata, "metadata must not be null");
-      this.metadata = Collections.unmodifiableMap(metadata);
-
+      this.metadata = checkNotNull(metadata, "metadata must not be null");
    }
 
    @Override
@@ -115,14 +121,16 @@ public class HttpRequest implements Request
       private long id;
       private Method method;
       private URI uri;
-      private final ImmutableSortedMap.Builder<String, String> headersBuilder;
+      private final SortedMap<String, String> headers;
       private Entity entity;
-      private final ImmutableSortedMap.Builder<String, String> metadataBuilder;
+      private final SortedMap<String, String> metadata;
 
       public Builder()
       {
-         this.headersBuilder = ImmutableSortedMap.naturalOrder();
-         this.metadataBuilder = ImmutableSortedMap.naturalOrder();
+         this.headers = new TreeMap<String, String>();
+         this.headers.put("Date", RFC1123.print(new DateTime()));
+         this.entity = Entities.of(EntityType.NONE, 0);
+         this.metadata = new TreeMap<String, String>();
       }
 
       public Builder withId(final long id)
@@ -145,7 +153,7 @@ public class HttpRequest implements Request
 
       public Builder withHeader(final String key, final String value)
       {
-         this.headersBuilder.put(key, value);
+         this.headers.put(key, value);
          return this;
       }
 
@@ -157,14 +165,15 @@ public class HttpRequest implements Request
 
       public Builder withMetaDataEntry(final String key, final String value)
       {
-         this.metadataBuilder.put(key, value);
+         this.metadata.put(key, value);
          return this;
       }
 
       public HttpRequest build()
       {
-         return new HttpRequest(this.id, this.method, this.uri, this.headersBuilder.build(),
-               this.entity, this.metadataBuilder.build());
+         return new HttpRequest(this.id, this.method, this.uri,
+               Collections.unmodifiableSortedMap(this.headers), this.entity,
+               Collections.unmodifiableSortedMap(this.metadata));
       }
    }
 }
