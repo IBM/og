@@ -36,13 +36,8 @@ import org.apache.http.HttpEntity;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpHead;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.config.SocketConfig;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.DefaultConnectionReuseStrategy;
@@ -56,6 +51,7 @@ import org.slf4j.LoggerFactory;
 import com.cleversafe.oom.api.ByteBufferConsumer;
 import com.cleversafe.oom.http.HttpResponse;
 import com.cleversafe.oom.http.auth.HttpAuth;
+import com.cleversafe.oom.operation.EntityType;
 import com.cleversafe.oom.operation.MetaDataConstants;
 import com.cleversafe.oom.operation.Request;
 import com.cleversafe.oom.operation.Response;
@@ -206,11 +202,12 @@ public class ApacheClient implements Client
       public Response call() throws Exception
       {
          final long timestampStart = System.currentTimeMillis();
-         final HttpRequestBase baseRequest = createRequest();
-         setRequestURI(baseRequest);
-         setRequestHeaders(baseRequest);
-         setRequestContent(baseRequest);
-         final Response response = sendRequest(baseRequest);
+         final RequestBuilder requestBuilder =
+               RequestBuilder.create(this.request.getMethod().toString());
+         setRequestURI(requestBuilder);
+         setRequestHeaders(requestBuilder);
+         setRequestContent(requestBuilder);
+         final Response response = sendRequest(requestBuilder.build());
          final long timestampFinish = System.currentTimeMillis();
 
          _requestLogger.info(this.gson.toJson(new RequestLogEntry(this.request, response,
@@ -219,60 +216,36 @@ public class ApacheClient implements Client
          return response;
       }
 
-      private HttpRequestBase createRequest()
+      private void setRequestURI(final RequestBuilder requestBuilder)
       {
-         switch (this.request.getMethod())
-         {
-            case GET :
-               return new HttpGet();
-            case HEAD :
-               return new HttpHead();
-            case POST :
-               return new HttpPost();
-            case PUT :
-               return new HttpPut();
-            case DELETE :
-               return new HttpDelete();
-            default :
-               throw new RuntimeException(String.format("Unrecognized Http Method [%s]",
-                     this.request.getMethod()));
-         }
-
+         requestBuilder.setUri(this.request.getURI());
       }
 
-      private void setRequestURI(final HttpRequestBase request)
+      private void setRequestHeaders(final RequestBuilder requestBuilder)
       {
-         request.setURI(this.request.getURI());
-      }
-
-      private void setRequestHeaders(final HttpRequestBase request)
-      {
-         setAuthHeader(request);
+         setAuthHeader(requestBuilder);
          final Iterator<Entry<String, String>> headers = this.request.headers();
          while (headers.hasNext())
          {
             final Entry<String, String> header = headers.next();
-            request.addHeader(header.getKey(), header.getValue());
+            requestBuilder.addHeader(header.getKey(), header.getValue());
          }
       }
 
-      private void setAuthHeader(final HttpRequestBase request)
+      private void setAuthHeader(final RequestBuilder requestBuilder)
       {
          if (this.auth != null)
          {
             final Pair<String, String> authHeader = this.auth.nextAuthorizationHeader(this.request);
-            request.addHeader(authHeader.getKey(), authHeader.getValue());
+            requestBuilder.addHeader(authHeader.getKey(), authHeader.getValue());
          }
 
       }
 
-      private void setRequestContent(final HttpRequestBase request)
+      private void setRequestContent(final RequestBuilder requestBuilder)
       {
-         if (request instanceof HttpEntityEnclosingRequestBase)
-         {
-            final HttpEntityEnclosingRequestBase r = (HttpEntityEnclosingRequestBase) request;
-            r.setEntity(createEntity());
-         }
+         if (EntityType.NONE != this.request.getEntity().getType())
+            requestBuilder.setEntity(createEntity());
       }
 
       private HttpEntity createEntity()
@@ -289,10 +262,10 @@ public class ApacheClient implements Client
          return entity;
       }
 
-      private Response sendRequest(final HttpRequestBase request)
+      private Response sendRequest(final HttpUriRequest _request)
             throws ClientProtocolException, IOException
       {
-         return this.client.execute(request, new ResponseHandler<Response>()
+         return this.client.execute(_request, new ResponseHandler<Response>()
          {
             @Override
             public Response handleResponse(final org.apache.http.HttpResponse response)
