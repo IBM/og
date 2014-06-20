@@ -1,13 +1,21 @@
 #!/bin/sh
 
-ulimit -n 4096
+ULIMIT=4096
+MEMORY=2048
+
+if [ "x${OOM_ULIMIT}" != "x" ]; then
+	ULIMIT=${OOM_ULIMIT}
+fi
+
+if [ "x${OOM_MEMORY}" != "x" ]; then
+	MEMORY=${OOM_MEMORY}
+fi
+
+ulimit -n ${ULIMIT}
 
 BASE=`dirname ${0}`
 CP=${BASE}/lib/*:${BASE}/conf/
 CLASS='com.cleversafe.oom.cli.OOM'
-
-# TODO allow MEMORY to be overridden via environment variable
-MEMORY=2048
 
 # TODO analyze which jvm parameters should be set
 VMOPTS="-XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:gc.log -XX:+UseParallelOldGC -XX:+UseCompressedOops -XX:MaxGCPauseMillis=5000 -Xss256k -Xmx${MEMORY}m -Xms${MEMORY}m -XX:MaxDirectMemorySize=${MEMORY}m"
