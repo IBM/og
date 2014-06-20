@@ -17,7 +17,7 @@
 // Date: Oct 23, 2013
 // ---------------------
 
-package com.cleversafe.oom.distribution;
+package com.cleversafe.oom.cli.json;
 
 public enum DistributionType
 {
