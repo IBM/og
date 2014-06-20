@@ -1,67 +1,122 @@
 //
-// Cleversafe open-source code header - Version 1.3 - January 2, 2009
+// Copyright (C) 2005-2011 Cleversafe, Inc. All rights reserved.
 //
-// Cleversafe Dispersed Storage(TM) is software for secure, private and
-// reliable storage of the world's data using information dispersal.
+// Contact Information:
+// Cleversafe, Inc.
+// 222 South Riverside Plaza
+// Suite 1700
+// Chicago, IL 60606, USA
 //
-// Copyright (C) 2005-2009 Cleversafe, Inc. All rights reserved.
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
-// of the License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,
-// USA.
-//
-// Contact Information: Cleversafe, 224 North Desplaines Street, Suite 500
-// Chicago, IL 60661, USA.
-// email licensing@cleversafe.org
+// licensing@cleversafe.com
 //
 // END-OF-HEADER
 //
 // -----------------------
-// @author: ilya
+// @author: rveitch
 //
-// Date: Jun 13, 2010
+// Date: Feb 13, 2014
 // ---------------------
 
 package com.cleversafe.oom.cli;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URL;
+import java.util.Iterator;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.cleversafe.oom.util.Version;
 import com.google.common.io.BaseEncoding;
+import com.martiansoftware.jsap.JSAP;
+import com.martiansoftware.jsap.JSAPResult;
 
 public class OOMReader
 {
+   private static Logger _logger = LoggerFactory.getLogger(OOMReader.class);
+   private static final String JSAP_RESOURCE_NAME = "oomreader.jsap";
+   public static final int NORMAL_TERMINATION = 0;
+   public static final int ERROR_CONFIGURATION = 1;
+   // TODO place this constant in util somewhere?
    private static int ID_LENGTH = 18;
 
-   /**
-    * @param args
-    * @throws IOException
-    */
-   public static void main(final String[] args) throws IOException
+   public static void main(final String[] args)
    {
-      if (args.length < 1)
+      final JSAP jsap = getJSAP();
+      final JSAPResult jsapResult = jsap.parse(args);
+      if (!jsapResult.success())
+         printErrorsAndExit(jsap, jsapResult);
+
+      if (jsapResult.getBoolean("version"))
       {
-         System.out.println("Usage: file1 ... [fileN]");
-         System.exit(1);
+         _logger.info(Version.displayVersion());
+         System.exit(NORMAL_TERMINATION);
       }
-      for (int i = 0; i < args.length; i++)
+
+      if (jsapResult.getBoolean("help"))
       {
-         OOMReader.readIdFile(args[i]);
+         printUsage(jsap);
+         System.exit(NORMAL_TERMINATION);
+      }
+
+      try
+      {
+         readIdFile(jsapResult.getFile("object_file"));
+      }
+      catch (final IOException e)
+      {
+         _logger.error("Exception reading object file:", e);
+         System.exit(ERROR_CONFIGURATION);
       }
    }
 
-   public static void readIdFile(final String filename) throws IOException
+   private static JSAP getJSAP()
+   {
+      JSAP jsap = null;
+      try
+      {
+         jsap = new JSAP(getResource(JSAP_RESOURCE_NAME));
+      }
+      catch (final Exception e)
+      {
+         _logger.error("Error creating JSAP", e);
+         System.exit(ERROR_CONFIGURATION);
+      }
+      return jsap;
+   }
+
+   private static void printErrorsAndExit(final JSAP jsap, final JSAPResult jsapResult)
+   {
+      @SuppressWarnings("rawtypes")
+      final Iterator errs = jsapResult.getErrorMessageIterator();
+      while (errs.hasNext())
+      {
+         _logger.error(errs.next().toString());
+         printUsage(jsap);
+      }
+      System.exit(ERROR_CONFIGURATION);
+   }
+
+   private static void printUsage(final JSAP jsap)
+   {
+      _logger.info("Usage: oom-reader " + jsap.getUsage());
+      _logger.info(jsap.getHelp());
+   }
+
+   private static URL getResource(final String resourceName)
+   {
+      final URL url = ClassLoader.getSystemResource(resourceName);
+      if (url == null)
+      {
+         _logger.error("Could not find configuration file on classpath [{}]", resourceName);
+         System.exit(ERROR_CONFIGURATION);
+      }
+      return url;
+   }
+
+   public static void readIdFile(final File filename) throws IOException
    {
       FileInputStream in = null;
       try
@@ -73,16 +128,14 @@ public class OOMReader
          {
             numRecords++;
             final String id = new String(BaseEncoding.base16().lowerCase().encode(objectID));
-            System.out.println(id);
+            _logger.info(id);
          }
-         System.out.println(numRecords + " records");
+         _logger.info(numRecords + " records");
       }
       finally
       {
          if (in != null)
-         {
             in.close();
-         }
       }
    }
 }
