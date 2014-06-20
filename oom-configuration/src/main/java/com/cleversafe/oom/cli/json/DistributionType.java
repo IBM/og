@@ -21,10 +21,5 @@ package com.cleversafe.oom.cli.json;
 
 public enum DistributionType
 {
-   UNIFORM, NORMAL;
-
-   public static DistributionType parseDistribution(final String distribution)
-   {
-      return DistributionType.valueOf(distribution.toUpperCase());
-   }
+   UNIFORM, NORMAL, POISSON;
 }
