@@ -26,33 +26,25 @@ import java.util.List;
 import java.util.Map;
 
 import com.cleversafe.oom.api.Producer;
+import com.cleversafe.oom.guice.annotation.DefaultContainer;
 import com.cleversafe.oom.guice.annotation.DefaultEntity;
 import com.cleversafe.oom.guice.annotation.DefaultId;
+import com.cleversafe.oom.guice.annotation.DefaultPort;
+import com.cleversafe.oom.guice.annotation.DefaultQueryParams;
+import com.cleversafe.oom.guice.annotation.DefaultScheme;
 import com.cleversafe.oom.guice.annotation.DefaultUriRoot;
 import com.cleversafe.oom.guice.annotation.Delete;
-import com.cleversafe.oom.guice.annotation.DeleteContainer;
 import com.cleversafe.oom.guice.annotation.DeleteHeaders;
 import com.cleversafe.oom.guice.annotation.DeleteHost;
 import com.cleversafe.oom.guice.annotation.DeleteObjectName;
-import com.cleversafe.oom.guice.annotation.DeletePort;
-import com.cleversafe.oom.guice.annotation.DeleteQueryParams;
-import com.cleversafe.oom.guice.annotation.DeleteScheme;
 import com.cleversafe.oom.guice.annotation.Read;
-import com.cleversafe.oom.guice.annotation.ReadContainer;
 import com.cleversafe.oom.guice.annotation.ReadHeaders;
 import com.cleversafe.oom.guice.annotation.ReadHost;
 import com.cleversafe.oom.guice.annotation.ReadObjectName;
-import com.cleversafe.oom.guice.annotation.ReadPort;
-import com.cleversafe.oom.guice.annotation.ReadQueryParams;
-import com.cleversafe.oom.guice.annotation.ReadScheme;
 import com.cleversafe.oom.guice.annotation.Write;
-import com.cleversafe.oom.guice.annotation.WriteContainer;
 import com.cleversafe.oom.guice.annotation.WriteHeaders;
 import com.cleversafe.oom.guice.annotation.WriteHost;
 import com.cleversafe.oom.guice.annotation.WriteObjectName;
-import com.cleversafe.oom.guice.annotation.WritePort;
-import com.cleversafe.oom.guice.annotation.WriteQueryParams;
-import com.cleversafe.oom.guice.annotation.WriteScheme;
 import com.cleversafe.oom.http.Scheme;
 import com.cleversafe.oom.http.producer.RequestProducer;
 import com.cleversafe.oom.http.producer.URIProducer;
@@ -79,13 +71,13 @@ public class NOHModule extends AbstractModule
    @Write
    private Producer<Request> provideWrite(
          @DefaultId final Producer<Long> id,
-         @WriteScheme final Producer<Scheme> scheme,
+         @DefaultScheme final Producer<Scheme> scheme,
          @WriteHost final Producer<String> host,
-         @WritePort final Producer<Integer> port,
+         @DefaultPort final Producer<Integer> port,
          @DefaultUriRoot final Producer<String> uriRoot,
-         @WriteContainer final Producer<String> container,
+         @DefaultContainer final Producer<String> container,
          @WriteObjectName final Producer<String> object,
-         @WriteQueryParams final Producer<Map<String, String>> queryParams,
+         @DefaultQueryParams final Producer<Map<String, String>> queryParams,
          @WriteHeaders final List<Producer<Pair<String, String>>> headers,
          @DefaultEntity final Producer<Entity> entity)
    {
@@ -115,13 +107,13 @@ public class NOHModule extends AbstractModule
    @Read
    private Producer<Request> provideRead(
          @DefaultId final Producer<Long> id,
-         @ReadScheme final Producer<Scheme> scheme,
+         @DefaultScheme final Producer<Scheme> scheme,
          @ReadHost final Producer<String> host,
-         @ReadPort final Producer<Integer> port,
+         @DefaultPort final Producer<Integer> port,
          @DefaultUriRoot final Producer<String> uriRoot,
-         @ReadContainer final Producer<String> container,
+         @DefaultContainer final Producer<String> container,
          @ReadObjectName final Producer<String> object,
-         @ReadQueryParams final Producer<Map<String, String>> queryParams,
+         @DefaultQueryParams final Producer<Map<String, String>> queryParams,
          @ReadHeaders final List<Producer<Pair<String, String>>> headers)
    {
       final List<Producer<String>> parts = new ArrayList<Producer<String>>();
@@ -150,13 +142,13 @@ public class NOHModule extends AbstractModule
    @Delete
    private Producer<Request> provideDelete(
          @DefaultId final Producer<Long> id,
-         @DeleteScheme final Producer<Scheme> scheme,
+         @DefaultScheme final Producer<Scheme> scheme,
          @DeleteHost final Producer<String> host,
-         @DeletePort final Producer<Integer> port,
+         @DefaultPort final Producer<Integer> port,
          @DefaultUriRoot final Producer<String> uriRoot,
-         @DeleteContainer final Producer<String> container,
+         @DefaultContainer final Producer<String> container,
          @DeleteObjectName final Producer<String> object,
-         @DeleteQueryParams final Producer<Map<String, String>> queryParams,
+         @DefaultQueryParams final Producer<Map<String, String>> queryParams,
          @DeleteHeaders final List<Producer<Pair<String, String>>> headers)
    {
       final List<Producer<String>> parts = new ArrayList<Producer<String>>();

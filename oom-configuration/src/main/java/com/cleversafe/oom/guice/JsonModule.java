@@ -53,26 +53,14 @@ import com.cleversafe.oom.guice.annotation.DefaultPort;
 import com.cleversafe.oom.guice.annotation.DefaultQueryParams;
 import com.cleversafe.oom.guice.annotation.DefaultScheme;
 import com.cleversafe.oom.guice.annotation.DefaultUriRoot;
-import com.cleversafe.oom.guice.annotation.DeleteContainer;
 import com.cleversafe.oom.guice.annotation.DeleteHeaders;
 import com.cleversafe.oom.guice.annotation.DeleteHost;
-import com.cleversafe.oom.guice.annotation.DeletePort;
-import com.cleversafe.oom.guice.annotation.DeleteQueryParams;
-import com.cleversafe.oom.guice.annotation.DeleteScheme;
 import com.cleversafe.oom.guice.annotation.DeleteWeight;
-import com.cleversafe.oom.guice.annotation.ReadContainer;
 import com.cleversafe.oom.guice.annotation.ReadHeaders;
 import com.cleversafe.oom.guice.annotation.ReadHost;
-import com.cleversafe.oom.guice.annotation.ReadPort;
-import com.cleversafe.oom.guice.annotation.ReadQueryParams;
-import com.cleversafe.oom.guice.annotation.ReadScheme;
 import com.cleversafe.oom.guice.annotation.ReadWeight;
-import com.cleversafe.oom.guice.annotation.WriteContainer;
 import com.cleversafe.oom.guice.annotation.WriteHeaders;
 import com.cleversafe.oom.guice.annotation.WriteHost;
-import com.cleversafe.oom.guice.annotation.WritePort;
-import com.cleversafe.oom.guice.annotation.WriteQueryParams;
-import com.cleversafe.oom.guice.annotation.WriteScheme;
 import com.cleversafe.oom.guice.annotation.WriteWeight;
 import com.cleversafe.oom.http.Scheme;
 import com.cleversafe.oom.http.auth.BasicAuth;
@@ -139,40 +127,6 @@ public class JsonModule extends AbstractModule
 
    @Provides
    @Singleton
-   @WriteScheme
-   Producer<Scheme> provideWriteScheme(@DefaultScheme final Producer<Scheme> scheme)
-   {
-      return provideScheme(OperationType.WRITE, scheme);
-   }
-
-   @Provides
-   @Singleton
-   @ReadScheme
-   Producer<Scheme> provideReadScheme(@DefaultScheme final Producer<Scheme> scheme)
-   {
-      return provideScheme(OperationType.READ, scheme);
-   }
-
-   @Provides
-   @Singleton
-   @DeleteScheme
-   Producer<Scheme> provideDeleteScheme(@DefaultScheme final Producer<Scheme> scheme)
-   {
-      return provideScheme(OperationType.DELETE, scheme);
-   }
-
-   private Producer<Scheme> provideScheme(
-         final OperationType operationType,
-         final Producer<Scheme> defaultScheme)
-   {
-      final OperationConfig config = this.config.getOperationConfig().get(operationType);
-      if (config != null && config.getScheme() != null)
-         return Producers.of(config.getScheme());
-      return defaultScheme;
-   }
-
-   @Provides
-   @Singleton
    @DefaultHost
    Producer<String> provideDefaultHost()
    {
@@ -234,40 +188,6 @@ public class JsonModule extends AbstractModule
    }
 
    @Provides
-   @Singleton
-   @WritePort
-   Producer<Integer> provideWritePort(@DefaultPort final Producer<Integer> port)
-   {
-      return providePort(OperationType.WRITE, port);
-   }
-
-   @Provides
-   @Singleton
-   @ReadPort
-   Producer<Integer> provideReadPort(@DefaultPort final Producer<Integer> port)
-   {
-      return providePort(OperationType.READ, port);
-   }
-
-   @Provides
-   @Singleton
-   @DeletePort
-   Producer<Integer> provideDeletePort(@DefaultPort final Producer<Integer> port)
-   {
-      return providePort(OperationType.DELETE, port);
-   }
-
-   private Producer<Integer> providePort(
-         final OperationType operationType,
-         final Producer<Integer> defaultPort)
-   {
-      final OperationConfig config = this.config.getOperationConfig().get(operationType);
-      if (config != null && config.getPort() != null)
-         return Producers.of(config.getPort());
-      return defaultPort;
-   }
-
-   @Provides
    API provideApi()
    {
       return this.config.getApi();
@@ -301,72 +221,11 @@ public class JsonModule extends AbstractModule
 
    @Provides
    @Singleton
-   @WriteContainer
-   Producer<String> provideWriteContainer(@DefaultContainer final Producer<String> container)
-   {
-      return provideContainer(OperationType.WRITE, container);
-   }
-
-   @Provides
-   @Singleton
-   @ReadContainer
-   Producer<String> provideReadContainer(@DefaultContainer final Producer<String> container)
-   {
-      return provideContainer(OperationType.READ, container);
-   }
-
-   @Provides
-   @Singleton
-   @DeleteContainer
-   Producer<String> provideDeleteContainer(@DefaultContainer final Producer<String> container)
-   {
-      return provideContainer(OperationType.DELETE, container);
-   }
-
-   private Producer<String> provideContainer(
-         final OperationType operationType,
-         final Producer<String> defaultContainer)
-   {
-      final OperationConfig config = this.config.getOperationConfig().get(operationType);
-      if (config != null && config.getContainer() != null)
-         return Producers.of(config.getContainer());
-      return defaultContainer;
-   }
-
-   @Provides
-   @Singleton
    @DefaultQueryParams
    Producer<Map<String, String>> provideDefaultQueryParams()
    {
       final Map<String, String> queryParams = new HashMap<String, String>();
       return Producers.of(queryParams);
-   }
-
-   @Provides
-   @Singleton
-   @WriteQueryParams
-   Producer<Map<String, String>> provideWriteQueryParams(
-         @DefaultQueryParams final Producer<Map<String, String>> defaultQueryParams)
-   {
-      return defaultQueryParams;
-   }
-
-   @Provides
-   @Singleton
-   @ReadQueryParams
-   Producer<Map<String, String>> provideReadQueryParams(
-         @DefaultQueryParams final Producer<Map<String, String>> defaultQueryParams)
-   {
-      return defaultQueryParams;
-   }
-
-   @Provides
-   @Singleton
-   @DeleteQueryParams
-   Producer<Map<String, String>> provideDeleteQueryParams(
-         @DefaultQueryParams final Producer<Map<String, String>> defaultQueryParams)
-   {
-      return defaultQueryParams;
    }
 
    @Provides

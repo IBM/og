@@ -23,29 +23,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.cleversafe.oom.http.Scheme;
-
 public class OperationConfig
 {
-   Scheme scheme;
    List<String> hosts;
-   String container;
-   Map<String, String> queryParams;
    Map<String, String> headers;
-   Integer port;
 
    public OperationConfig()
    {
-      this.queryParams = new HashMap<String, String>();
       this.headers = new HashMap<String, String>();
-   }
-
-   /**
-    * @return the scheme
-    */
-   public Scheme getScheme()
-   {
-      return this.scheme;
    }
 
    /**
@@ -57,34 +42,10 @@ public class OperationConfig
    }
 
    /**
-    * @return the container
-    */
-   public String getContainer()
-   {
-      return this.container;
-   }
-
-   /**
-    * @return the queryParams
-    */
-   public Map<String, String> getQueryParams()
-   {
-      return this.queryParams;
-   }
-
-   /**
     * @return the headers
     */
    public Map<String, String> getHeaders()
    {
       return this.headers;
-   }
-
-   /**
-    * @return the port
-    */
-   public Integer getPort()
-   {
-      return this.port;
    }
 }
