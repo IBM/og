@@ -36,10 +36,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.cleversafe.oom.api.OperationManager;
-import com.cleversafe.oom.cli.json.CaseInsensitiveEnumTypeAdapterFactory;
 import com.cleversafe.oom.cli.json.JsonConfig;
-import com.cleversafe.oom.cli.json.SizeUnitTypeAdapterFactory;
-import com.cleversafe.oom.cli.json.TimeUnitTypeAdapterFactory;
+import com.cleversafe.oom.cli.json.type.CaseInsensitiveEnumTypeAdapterFactory;
+import com.cleversafe.oom.cli.json.type.SizeUnitTypeAdapterFactory;
+import com.cleversafe.oom.cli.json.type.TimeUnitTypeAdapterFactory;
 import com.cleversafe.oom.client.Client;
 import com.cleversafe.oom.guice.JsonModule;
 import com.cleversafe.oom.guice.NOHModule;

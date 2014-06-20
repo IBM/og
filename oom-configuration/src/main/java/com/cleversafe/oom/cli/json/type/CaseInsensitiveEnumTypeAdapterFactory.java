@@ -17,7 +17,7 @@
 // Date: Apr 2, 2014
 // ---------------------
 
-package com.cleversafe.oom.cli.json;
+package com.cleversafe.oom.cli.json.type;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
