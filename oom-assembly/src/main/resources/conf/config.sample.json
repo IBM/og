@@ -163,6 +163,7 @@
 	"so_linger": -1,
 	"so_keep_alive": true,
 	"tcp_no_delay": true,
-	"chunked_encoding": false
+	"chunked_encoding": false,
+	"expect_continue": false
 }
 }

@@ -88,6 +88,7 @@ public class ApacheClient implements Client
          final boolean soKeepAlive,
          final boolean tcpNoDelay,
          final boolean chunkedEncoding,
+         final boolean expectContinue,
          final Function<String, ByteBufferConsumer> byteBufferConsumers)
    {
       this.auth = auth; // optional
@@ -122,7 +123,7 @@ public class ApacheClient implements Client
             // TODO need to implement a redirectStrategy that will redirect PUT and POST
             .setRedirectStrategy(new LaxRedirectStrategy())
             .setDefaultRequestConfig(RequestConfig.custom()
-                  .setExpectContinueEnabled(false)
+                  .setExpectContinueEnabled(expectContinue)
                   // TODO investigate performance impact of stale check (30ms reported)
                   .setStaleConnectionCheckEnabled(true)
                   .setRedirectsEnabled(true)
@@ -352,6 +353,7 @@ public class ApacheClient implements Client
       private boolean soKeepAlive;
       private boolean tcpNoDelay;
       private boolean chunkedEncoding;
+      private boolean expectContinue;
       private Function<String, ByteBufferConsumer> byteBufferConsumers;
 
       private Builder()
@@ -405,6 +407,12 @@ public class ApacheClient implements Client
          return this;
       }
 
+      public Builder usingExpectContinue(final boolean expectContinue)
+      {
+         this.expectContinue = expectContinue;
+         return this;
+      }
+
       public Builder withByteBufferConsumers(
             final Function<String, ByteBufferConsumer> byteBufferConsumers)
       {
@@ -416,7 +424,7 @@ public class ApacheClient implements Client
       {
          return new ApacheClient(this.auth, this.connectTimeout, this.soTimeout,
                this.soReuseAddress, this.soLinger, this.soKeepAlive, this.tcpNoDelay,
-               this.chunkedEncoding, this.byteBufferConsumers);
+               this.chunkedEncoding, this.expectContinue, this.byteBufferConsumers);
       }
    }
 }

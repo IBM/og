@@ -28,6 +28,7 @@ public class ClientConfig
    private final boolean soKeepAlive;
    private final boolean tcpNoDelay;
    private final boolean chunkedEncoding;
+   private final boolean expectContinue;
 
    public ClientConfig()
    {
@@ -38,6 +39,7 @@ public class ClientConfig
       this.soKeepAlive = true;
       this.tcpNoDelay = true;
       this.chunkedEncoding = false;
+      this.expectContinue = false;
    }
 
    /**
@@ -96,4 +98,11 @@ public class ClientConfig
       return this.chunkedEncoding;
    }
 
+   /**
+    * @return the expectContinue
+    */
+   public boolean isExpectContinue()
+   {
+      return this.expectContinue;
+   }
 }
