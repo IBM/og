@@ -19,6 +19,7 @@
 
 package com.cleversafe.oom.cli.json;
 
+import com.cleversafe.oom.cli.json.enums.DistributionType;
 import com.cleversafe.oom.util.SizeUnit;
 
 public class FileSize

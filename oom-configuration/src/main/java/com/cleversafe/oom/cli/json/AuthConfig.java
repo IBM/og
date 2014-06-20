@@ -19,6 +19,8 @@
 
 package com.cleversafe.oom.cli.json;
 
+import com.cleversafe.oom.cli.json.enums.AuthType;
+
 public class AuthConfig
 {
    private final AuthType authType;

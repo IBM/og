@@ -14,15 +14,12 @@
 // -----------------------
 // @author: rveitch
 //
-// Date: Apr 7, 2014
+// Date: Oct 23, 2013
 // ---------------------
 
-package com.cleversafe.oom.cli.json;
+package com.cleversafe.oom.cli.json.enums;
 
-public enum API
+public enum DistributionType
 {
-   SOH,
-   S3,
-   OPENSTACK,
-   WEBDAV;
+   UNIFORM, NORMAL, POISSON;
 }

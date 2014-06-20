@@ -14,12 +14,15 @@
 // -----------------------
 // @author: rveitch
 //
-// Date: Jun 18, 2014
+// Date: Apr 7, 2014
 // ---------------------
 
-package com.cleversafe.oom.cli.json;
+package com.cleversafe.oom.cli.json.enums;
 
-public enum AuthType
+public enum API
 {
-   BASIC, AWSV2;
+   SOH,
+   S3,
+   OPENSTACK,
+   WEBDAV;
 }

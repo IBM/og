@@ -33,7 +33,7 @@
 // Date: May 11, 2013
 // ---------------------
 
-package com.cleversafe.oom.operation;
+package com.cleversafe.oom.cli.json.enums;
 
 public enum OperationType
 {

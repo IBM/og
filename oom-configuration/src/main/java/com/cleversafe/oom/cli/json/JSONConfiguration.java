@@ -24,9 +24,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.cleversafe.oom.cli.json.enums.API;
+import com.cleversafe.oom.cli.json.enums.OperationType;
 import com.cleversafe.oom.http.Scheme;
 import com.cleversafe.oom.operation.EntityType;
-import com.cleversafe.oom.operation.OperationType;
 
 public class JSONConfiguration
 {

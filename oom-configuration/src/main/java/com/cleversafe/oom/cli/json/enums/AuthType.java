@@ -14,12 +14,12 @@
 // -----------------------
 // @author: rveitch
 //
-// Date: Oct 23, 2013
+// Date: Jun 18, 2014
 // ---------------------
 
-package com.cleversafe.oom.cli.json;
+package com.cleversafe.oom.cli.json.enums;
 
-public enum DistributionType
+public enum AuthType
 {
-   UNIFORM, NORMAL, POISSON;
+   BASIC, AWSV2;
 }
