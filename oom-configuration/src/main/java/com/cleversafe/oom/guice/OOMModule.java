@@ -80,7 +80,7 @@ public class OOMModule extends AbstractModule
 
    @Provides
    @Singleton
-   OperationManager provideOperationManager(
+   public OperationManager provideOperationManager(
          @Write final Producer<Request> write,
          @Read final Producer<Request> read,
          @Delete final Producer<Request> delete,
@@ -115,7 +115,7 @@ public class OOMModule extends AbstractModule
 
    @Provides
    @Singleton
-   Client provideClient(final ClientConfig clientConfig, final HttpAuth auth)
+   public Client provideClient(final ClientConfig clientConfig, final HttpAuth auth)
    {
       final Function<String, ByteBufferConsumer> byteBufferConsumers =
             new Function<String, ByteBufferConsumer>()
@@ -150,7 +150,7 @@ public class OOMModule extends AbstractModule
 
    @Provides
    @Singleton
-   ObjectManager provideObjectManager(
+   public ObjectManager provideObjectManager(
          @DefaultObjectLocation final String objectLocation,
          @DefaultContainer final Producer<String> container,
          final API api)
@@ -164,7 +164,7 @@ public class OOMModule extends AbstractModule
    @Provides
    @Singleton
    @WriteObjectName
-   Producer<String> provideWriteObjectName()
+   public Producer<String> provideWriteObjectName()
    {
       return new UUIDObjectNameProducer();
    }
@@ -172,7 +172,7 @@ public class OOMModule extends AbstractModule
    @Provides
    @Singleton
    @ReadObjectName
-   Producer<String> provideReadObjectName(final ObjectManager objectManager)
+   public Producer<String> provideReadObjectName(final ObjectManager objectManager)
    {
       return new ReadObjectNameProducer(objectManager);
    }
@@ -180,7 +180,7 @@ public class OOMModule extends AbstractModule
    @Provides
    @Singleton
    @DeleteObjectName
-   Producer<String> provideDeleteObjectName(final ObjectManager objectManager)
+   public Producer<String> provideDeleteObjectName(final ObjectManager objectManager)
    {
       return new DeleteObjectNameProducer(objectManager);
    }

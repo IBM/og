@@ -69,7 +69,7 @@ public class NOHModule extends AbstractModule
    @Provides
    @Singleton
    @Write
-   private Producer<Request> provideWrite(
+   public Producer<Request> provideWrite(
          @DefaultId final Producer<Long> id,
          @DefaultScheme final Producer<Scheme> scheme,
          @WriteHost final Producer<String> host,
@@ -105,7 +105,7 @@ public class NOHModule extends AbstractModule
    @Provides
    @Singleton
    @Read
-   private Producer<Request> provideRead(
+   public Producer<Request> provideRead(
          @DefaultId final Producer<Long> id,
          @DefaultScheme final Producer<Scheme> scheme,
          @ReadHost final Producer<String> host,
@@ -140,7 +140,7 @@ public class NOHModule extends AbstractModule
    @Provides
    @Singleton
    @Delete
-   private Producer<Request> provideDelete(
+   public Producer<Request> provideDelete(
          @DefaultId final Producer<Long> id,
          @DefaultScheme final Producer<Scheme> scheme,
          @DeleteHost final Producer<String> host,

@@ -95,7 +95,7 @@ public class JsonModule extends AbstractModule
    {}
 
    @Provides
-   JSONConfiguration provideJSONConfiguration()
+   public JSONConfiguration provideJSONConfiguration()
    {
       return this.config;
    }
@@ -103,7 +103,7 @@ public class JsonModule extends AbstractModule
    @Provides
    @Singleton
    @DefaultId
-   Producer<Long> provideDefaultIdProducer()
+   public Producer<Long> provideDefaultIdProducer()
    {
       return new Producer<Long>()
       {
@@ -120,7 +120,7 @@ public class JsonModule extends AbstractModule
    @Provides
    @Singleton
    @DefaultScheme
-   Producer<Scheme> provideDefaultScheme()
+   public Producer<Scheme> provideDefaultScheme()
    {
       return Producers.of(this.config.getScheme());
    }
@@ -128,7 +128,7 @@ public class JsonModule extends AbstractModule
    @Provides
    @Singleton
    @DefaultHost
-   Producer<String> provideDefaultHost()
+   public Producer<String> provideDefaultHost()
    {
       return createHost(this.config.getHosts());
    }
@@ -136,7 +136,7 @@ public class JsonModule extends AbstractModule
    @Provides
    @Singleton
    @WriteHost
-   Producer<String> provideWriteHost(@DefaultHost final Producer<String> host)
+   public Producer<String> provideWriteHost(@DefaultHost final Producer<String> host)
    {
       return provideHost(OperationType.WRITE, host);
    }
@@ -144,7 +144,7 @@ public class JsonModule extends AbstractModule
    @Provides
    @Singleton
    @ReadHost
-   Producer<String> provideReadHost(@DefaultHost final Producer<String> host)
+   public Producer<String> provideReadHost(@DefaultHost final Producer<String> host)
    {
       return provideHost(OperationType.READ, host);
    }
@@ -152,7 +152,7 @@ public class JsonModule extends AbstractModule
    @Provides
    @Singleton
    @DeleteHost
-   Producer<String> provideDeleteHost(@DefaultHost final Producer<String> host)
+   public Producer<String> provideDeleteHost(@DefaultHost final Producer<String> host)
    {
       return provideHost(OperationType.DELETE, host);
    }
@@ -180,7 +180,7 @@ public class JsonModule extends AbstractModule
    @Provides
    @Singleton
    @DefaultPort
-   Producer<Integer> provideDefaultPort()
+   public Producer<Integer> provideDefaultPort()
    {
       if (this.config.getPort() != null)
          return Producers.of(this.config.getPort());
@@ -188,7 +188,7 @@ public class JsonModule extends AbstractModule
    }
 
    @Provides
-   API provideApi()
+   public API provideApi()
    {
       return this.config.getApi();
    }
@@ -196,7 +196,7 @@ public class JsonModule extends AbstractModule
    @Provides
    @Singleton
    @DefaultUriRoot
-   Producer<String> provideDefaultUriRoot()
+   public Producer<String> provideDefaultUriRoot()
    {
       if (this.config.getUriRoot() != null)
       {
@@ -214,7 +214,7 @@ public class JsonModule extends AbstractModule
    @Provides
    @Singleton
    @DefaultContainer
-   Producer<String> provideDefaultContainer()
+   public Producer<String> provideDefaultContainer()
    {
       return Producers.of(this.config.getContainer());
    }
@@ -222,7 +222,7 @@ public class JsonModule extends AbstractModule
    @Provides
    @Singleton
    @DefaultQueryParams
-   Producer<Map<String, String>> provideDefaultQueryParams()
+   public Producer<Map<String, String>> provideDefaultQueryParams()
    {
       final Map<String, String> queryParams = new HashMap<String, String>();
       return Producers.of(queryParams);
@@ -230,7 +230,7 @@ public class JsonModule extends AbstractModule
 
    @Provides
    @Singleton
-   HttpAuth providesDefaultAuth()
+   public HttpAuth providesDefaultAuth()
    {
       final AuthConfig authConfig = this.config.getAuthentication();
       final AuthType authType = authConfig.getAuthType();
@@ -252,7 +252,7 @@ public class JsonModule extends AbstractModule
    @Provides
    @Singleton
    @DefaultHeaders
-   List<Producer<Pair<String, String>>> provideDefaultHeaders()
+   public List<Producer<Pair<String, String>>> provideDefaultHeaders()
    {
       return createHeaders(this.config.getHeaders());
    }
@@ -260,7 +260,7 @@ public class JsonModule extends AbstractModule
    @Provides
    @Singleton
    @WriteHeaders
-   List<Producer<Pair<String, String>>> provideWriteHeaders()
+   public List<Producer<Pair<String, String>>> provideWriteHeaders()
    {
       return provideHeaders(OperationType.WRITE);
    }
@@ -268,7 +268,7 @@ public class JsonModule extends AbstractModule
    @Provides
    @Singleton
    @ReadHeaders
-   List<Producer<Pair<String, String>>> provideReadHeaders()
+   public List<Producer<Pair<String, String>>> provideReadHeaders()
    {
       return provideHeaders(OperationType.READ);
    }
@@ -276,7 +276,7 @@ public class JsonModule extends AbstractModule
    @Provides
    @Singleton
    @DeleteHeaders
-   List<Producer<Pair<String, String>>> provideDeleteHeaders()
+   public List<Producer<Pair<String, String>>> provideDeleteHeaders()
    {
       return provideHeaders(OperationType.DELETE);
    }
@@ -304,7 +304,7 @@ public class JsonModule extends AbstractModule
    @Provides
    @Singleton
    @DefaultEntity
-   Producer<Entity> provideDefaultEntity()
+   public Producer<Entity> provideDefaultEntity()
    {
       final WeightedRandomChoice<Distribution> wrc = new WeightedRandomChoice<Distribution>();
       for (final FileSize f : this.config.getFilesizes())
@@ -345,7 +345,7 @@ public class JsonModule extends AbstractModule
    @Provides
    @Singleton
    @DefaultObjectLocation
-   String provideObjectLocation() throws IOException
+   public String provideObjectLocation() throws IOException
    {
 
       String path = this.config.getObjectLocation();
@@ -370,7 +370,7 @@ public class JsonModule extends AbstractModule
 
    @Provides
    @WriteWeight
-   double provideWriteWeight()
+   public double provideWriteWeight()
    {
       final double write = this.config.getWrite();
       checkArgument(inRange(write), "write must be in range [0.0, 100.0] [%s]", write);
@@ -383,7 +383,7 @@ public class JsonModule extends AbstractModule
 
    @Provides
    @ReadWeight
-   double provideReadWeight()
+   public double provideReadWeight()
    {
       final double read = this.config.getRead();
       checkArgument(inRange(read), "read must be in range [0.0, 100.0] [%s]", read);
@@ -392,7 +392,7 @@ public class JsonModule extends AbstractModule
 
    @Provides
    @DeleteWeight
-   double provideDeleteWeight()
+   public double provideDeleteWeight()
    {
       final double delete = this.config.getDelete();
       checkArgument(inRange(delete), "delete must be in range [0.0, 100.0] [%s]", delete);
@@ -418,7 +418,7 @@ public class JsonModule extends AbstractModule
 
    @Provides
    @Singleton
-   Scheduler provideScheduler()
+   public Scheduler provideScheduler()
    {
       final Concurrency concurrency = this.config.getConcurrency();
       final Distribution count = new UniformDistribution(concurrency.getCount(), 0.0);
@@ -426,7 +426,7 @@ public class JsonModule extends AbstractModule
    }
 
    @Provides
-   ClientConfig provideClientConfig()
+   public ClientConfig provideClientConfig()
    {
       return this.config.getClient();
    }
