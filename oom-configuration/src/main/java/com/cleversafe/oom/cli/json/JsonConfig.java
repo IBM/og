@@ -29,7 +29,7 @@ import com.cleversafe.oom.cli.json.enums.OperationType;
 import com.cleversafe.oom.http.Scheme;
 import com.cleversafe.oom.operation.EntityType;
 
-public class JSONConfiguration
+public class JsonConfig
 {
    Scheme scheme;
    List<String> hosts;
@@ -41,9 +41,9 @@ public class JSONConfiguration
    double write;
    double read;
    double delete;
-   List<FileSize> filesizes;
+   List<FileSizeConfig> filesizes;
    EntityType source;
-   Concurrency concurrency;
+   ConcurrencyConfig concurrency;
    AuthConfig authentication;
    Long operatons;
    RunTime runtime;
@@ -52,16 +52,16 @@ public class JSONConfiguration
 
    Map<OperationType, OperationConfig> operationConfig;
 
-   public JSONConfiguration()
+   public JsonConfig()
    {
       this.scheme = Scheme.HTTP;
       this.hosts = new ArrayList<String>();
       this.api = ApiType.SOH;
       this.headers = new LinkedHashMap<String, String>();
-      this.filesizes = new ArrayList<FileSize>();
-      this.filesizes.add(new FileSize());
+      this.filesizes = new ArrayList<FileSizeConfig>();
+      this.filesizes.add(new FileSizeConfig());
       this.source = EntityType.RANDOM;
-      this.concurrency = new Concurrency();
+      this.concurrency = new ConcurrencyConfig();
       this.authentication = new AuthConfig();
       this.objectLocation = "./object";
       // TODO OperationType is not being lowercased when serialized
@@ -152,7 +152,7 @@ public class JSONConfiguration
    /**
     * @return the filesizes
     */
-   public List<FileSize> getFilesizes()
+   public List<FileSizeConfig> getFilesizes()
    {
       return this.filesizes;
    }
@@ -168,7 +168,7 @@ public class JSONConfiguration
    /**
     * @return the concurrency
     */
-   public Concurrency getConcurrency()
+   public ConcurrencyConfig getConcurrency()
    {
       return this.concurrency;
    }

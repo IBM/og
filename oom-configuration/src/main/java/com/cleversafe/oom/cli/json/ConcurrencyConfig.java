@@ -21,7 +21,7 @@ package com.cleversafe.oom.cli.json;
 
 import java.util.concurrent.TimeUnit;
 
-public class Concurrency
+public class ConcurrencyConfig
 {
    String type;
    double count;
@@ -29,7 +29,7 @@ public class Concurrency
    long rampup;
    TimeUnit rampupUnit;
 
-   public Concurrency()
+   public ConcurrencyConfig()
    {
       this.type = "threads";
       this.count = 1.0;

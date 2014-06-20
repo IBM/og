@@ -34,9 +34,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import com.cleversafe.oom.api.Producer;
 import com.cleversafe.oom.cli.json.AuthConfig;
 import com.cleversafe.oom.cli.json.ClientConfig;
-import com.cleversafe.oom.cli.json.Concurrency;
-import com.cleversafe.oom.cli.json.FileSize;
-import com.cleversafe.oom.cli.json.JSONConfiguration;
+import com.cleversafe.oom.cli.json.ConcurrencyConfig;
+import com.cleversafe.oom.cli.json.FileSizeConfig;
+import com.cleversafe.oom.cli.json.JsonConfig;
 import com.cleversafe.oom.cli.json.OperationConfig;
 import com.cleversafe.oom.cli.json.enums.ApiType;
 import com.cleversafe.oom.cli.json.enums.AuthType;
@@ -82,10 +82,10 @@ import com.google.inject.Singleton;
 
 public class JsonModule extends AbstractModule
 {
-   private final JSONConfiguration config;
+   private final JsonConfig config;
    private final static double err = Math.pow(0.1, 6);
 
-   public JsonModule(final JSONConfiguration config)
+   public JsonModule(final JsonConfig config)
    {
       this.config = checkNotNull(config, "config must not be null");
    }
@@ -95,7 +95,7 @@ public class JsonModule extends AbstractModule
    {}
 
    @Provides
-   public JSONConfiguration provideJSONConfiguration()
+   public JsonConfig provideJsonConfig()
    {
       return this.config;
    }
@@ -307,12 +307,12 @@ public class JsonModule extends AbstractModule
    public Producer<Entity> provideDefaultEntity()
    {
       final WeightedRandomChoice<Distribution> wrc = new WeightedRandomChoice<Distribution>();
-      for (final FileSize f : this.config.getFilesizes())
+      for (final FileSizeConfig f : this.config.getFilesizes())
       {
          wrc.addChoice(createSizeDistribution(f), f.getWeight());
       }
 
-      final JSONConfiguration config = this.config;
+      final JsonConfig config = this.config;
       return new Producer<Entity>()
       {
          private final WeightedRandomChoice<Distribution> sizes = wrc;
@@ -325,7 +325,7 @@ public class JsonModule extends AbstractModule
       };
    }
 
-   private static Distribution createSizeDistribution(final FileSize filesize)
+   private static Distribution createSizeDistribution(final FileSizeConfig filesize)
    {
       // TODO standardize terminology; mean or average
       final double mean = filesize.getAverage() * filesize.getAverageUnit().toBytes(1);
@@ -420,7 +420,7 @@ public class JsonModule extends AbstractModule
    @Singleton
    public Scheduler provideScheduler()
    {
-      final Concurrency concurrency = this.config.getConcurrency();
+      final ConcurrencyConfig concurrency = this.config.getConcurrency();
       final Distribution count = new UniformDistribution(concurrency.getCount(), 0.0);
       return new RequestRateScheduler(count, concurrency.getUnit());
    }

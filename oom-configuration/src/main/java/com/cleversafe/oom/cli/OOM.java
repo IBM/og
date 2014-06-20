@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import com.cleversafe.oom.api.OperationManager;
 import com.cleversafe.oom.cli.json.CaseInsensitiveEnumTypeAdapterFactory;
-import com.cleversafe.oom.cli.json.JSONConfiguration;
+import com.cleversafe.oom.cli.json.JsonConfig;
 import com.cleversafe.oom.cli.json.SizeUnitTypeAdapterFactory;
 import com.cleversafe.oom.cli.json.TimeUnitTypeAdapterFactory;
 import com.cleversafe.oom.client.Client;
@@ -83,8 +83,8 @@ public class OOM
       _logger.info("configuring test");
 
       final Gson gson = getGson();
-      final JSONConfiguration config = createJSONConfiguration(gson, testConfig);
-      verifyJSONConfiguration(config);
+      final JsonConfig config = createJsonConfig(gson, testConfig);
+      verifyJsonConfig(config);
 
       _configJsonLogger.info(gson.toJson(config));
 
@@ -178,13 +178,13 @@ public class OOM
             .create();
    }
 
-   private static JSONConfiguration createJSONConfiguration(final Gson gson, final File testConfig)
+   private static JsonConfig createJsonConfig(final Gson gson, final File testConfig)
    {
       final Reader configReader = getConfigReader(testConfig);
-      JSONConfiguration config = null;
+      JsonConfig config = null;
       try
       {
-         config = gson.fromJson(configReader, JSONConfiguration.class);
+         config = gson.fromJson(configReader, JsonConfig.class);
       }
       catch (final Exception e)
       {
@@ -235,7 +235,7 @@ public class OOM
       return configReader;
    }
 
-   private static void verifyJSONConfiguration(final JSONConfiguration config)
+   private static void verifyJsonConfig(final JsonConfig config)
    {
       try
       {

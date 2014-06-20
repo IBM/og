@@ -22,7 +22,7 @@ package com.cleversafe.oom.cli.json;
 import com.cleversafe.oom.cli.json.enums.DistributionType;
 import com.cleversafe.oom.util.SizeUnit;
 
-public class FileSize
+public class FileSizeConfig
 {
    DistributionType distribution;
    double average;
@@ -32,7 +32,7 @@ public class FileSize
    // TODO weight should be decimal
    long weight;
 
-   public FileSize()
+   public FileSizeConfig()
    {
       this.distribution = DistributionType.UNIFORM;
       this.average = 5.0;
