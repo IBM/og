@@ -62,7 +62,7 @@ public class JSONConfiguration
       this.source = EntityType.RANDOM;
       this.concurrency = new Concurrency();
       this.authentication = new AuthConfig();
-      this.objectLocation = ".";
+      this.objectLocation = "./object";
       // TODO OperationType is not being lowercased when serialized
       this.operationConfig = new LinkedHashMap<OperationType, OperationConfig>();
       this.client = new ClientConfig();

@@ -491,7 +491,7 @@ public class JsonModule extends AbstractModule
 
       String path = this.config.getObjectLocation();
       if (path == null || path.length() == 0)
-         path = ".";
+         path = "./object";
 
       final File f = new File(path).getCanonicalFile();
       if (!f.exists())

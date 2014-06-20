@@ -151,7 +151,7 @@
 
 // TODO fix this description
 // The location to store object names. Default is current working directory.
-// "object_location": "."
+// "object_location": "./object"
 // },
 
 
