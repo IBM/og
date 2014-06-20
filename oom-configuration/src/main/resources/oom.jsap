@@ -10,6 +10,12 @@
 			<help>A relative or absolute path to an OOM configuration file. If not specified, OOM will search for a config file named "test.json" on the classpath</help>
 		</unflaggedOption>
 		<switch>
+			<id>version</id>
+			<shortFlag>v</shortFlag>
+			<longFlag>version</longFlag>
+			<help>Prints the oom version and exits</help>
+		</switch>
+		<switch>
 			<id>help</id>
 			<shortFlag>h</shortFlag>
 			<longFlag>help</longFlag>

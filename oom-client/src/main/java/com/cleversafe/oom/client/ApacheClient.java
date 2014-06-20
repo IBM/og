@@ -58,6 +58,7 @@ import com.cleversafe.oom.operation.Request;
 import com.cleversafe.oom.operation.Response;
 import com.cleversafe.oom.util.Entities;
 import com.cleversafe.oom.util.Pair;
+import com.cleversafe.oom.util.Version;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -104,8 +105,8 @@ public class ApacheClient implements Client
       this.client = HttpClients.custom()
             // TODO HTTPS: setHostnameVerifier, setSslcontext, and SetSSLSocketFactory methods
             // TODO investigate ConnectionConfig, particularly bufferSize and fragmentSizeHint
-            // TODO setUserAgent to equal "tool name/tool version"
             // TODO defaultCredentialsProvider and defaultAuthSchemeRegistry for pre/passive auth?
+            .setUserAgent(Version.displayVersion())
             .setRequestExecutor(new HttpRequestExecutor(waitForContinue))
             .setMaxConnTotal(Integer.MAX_VALUE)
             .setMaxConnPerRoute(Integer.MAX_VALUE)

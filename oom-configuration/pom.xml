@@ -8,6 +8,14 @@
 	<artifactId>oom-configuration</artifactId>
 	<name>OOM Configuration</name>
 	<description>CLI and Configuration components</description>
+	<build>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
+	</build>
 	<dependencies>
 		<dependency>
 			<groupId>com.cleversafe</groupId>

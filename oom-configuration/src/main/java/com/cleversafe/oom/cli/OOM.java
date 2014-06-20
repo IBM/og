@@ -47,6 +47,7 @@ import com.cleversafe.oom.guice.OOMModule;
 import com.cleversafe.oom.guice.SOHModule;
 import com.cleversafe.oom.object.manager.ObjectManager;
 import com.cleversafe.oom.test.LoadTest;
+import com.cleversafe.oom.util.Version;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -72,6 +73,12 @@ public class OOM
       final JSAPResult jsapResult = jsap.parse(args);
       if (!jsapResult.success())
          printErrorsAndExit(jsap, jsapResult);
+
+      if (jsapResult.getBoolean("version"))
+      {
+         _logger.info(Version.displayVersion());
+         System.exit(NORMAL_TERMINATION);
+      }
 
       if (jsapResult.getBoolean("help"))
       {
