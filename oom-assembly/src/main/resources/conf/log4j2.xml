@@ -38,6 +38,8 @@
 		<Logger name="com.cleversafe.oom.cli.OOM" level="info">
 			<AppenderRef ref="Console" />
 		</Logger>
+		<Logger name="org.apache.http.wire" level="error"/>
+		<Logger name="org.apache.http.headers" level="error"/>
 		<Root level="debug">
 			<AppenderRef ref="ApplicationLog" />
 		</Root>
