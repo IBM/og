@@ -24,7 +24,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.cleversafe.oom.cli.json.enums.API;
+import com.cleversafe.oom.cli.json.enums.ApiType;
 import com.cleversafe.oom.cli.json.enums.OperationType;
 import com.cleversafe.oom.http.Scheme;
 import com.cleversafe.oom.operation.EntityType;
@@ -34,7 +34,7 @@ public class JSONConfiguration
    Scheme scheme;
    List<String> hosts;
    Integer port;
-   API api;
+   ApiType api;
    String uriRoot;
    String container;
    Map<String, String> headers;
@@ -56,7 +56,7 @@ public class JSONConfiguration
    {
       this.scheme = Scheme.HTTP;
       this.hosts = new ArrayList<String>();
-      this.api = API.SOH;
+      this.api = ApiType.SOH;
       this.headers = new LinkedHashMap<String, String>();
       this.filesizes = new ArrayList<FileSize>();
       this.filesizes.add(new FileSize());
@@ -96,7 +96,7 @@ public class JSONConfiguration
    /**
     * @return the api
     */
-   public API getApi()
+   public ApiType getApi()
    {
       return this.api;
    }

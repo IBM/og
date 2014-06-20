@@ -21,5 +21,7 @@ package com.cleversafe.oom.cli.json.enums;
 
 public enum DistributionType
 {
-   UNIFORM, NORMAL, POISSON;
+   UNIFORM,
+   NORMAL,
+   POISSON;
 }

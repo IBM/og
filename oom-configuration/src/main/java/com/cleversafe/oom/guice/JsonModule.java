@@ -38,7 +38,7 @@ import com.cleversafe.oom.cli.json.Concurrency;
 import com.cleversafe.oom.cli.json.FileSize;
 import com.cleversafe.oom.cli.json.JSONConfiguration;
 import com.cleversafe.oom.cli.json.OperationConfig;
-import com.cleversafe.oom.cli.json.enums.API;
+import com.cleversafe.oom.cli.json.enums.ApiType;
 import com.cleversafe.oom.cli.json.enums.AuthType;
 import com.cleversafe.oom.cli.json.enums.OperationType;
 import com.cleversafe.oom.distribution.Distribution;
@@ -188,7 +188,7 @@ public class JsonModule extends AbstractModule
    }
 
    @Provides
-   public API provideApi()
+   public ApiType provideApi()
    {
       return this.config.getApi();
    }

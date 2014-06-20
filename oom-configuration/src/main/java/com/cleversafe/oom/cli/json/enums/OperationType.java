@@ -37,5 +37,7 @@ package com.cleversafe.oom.cli.json.enums;
 
 public enum OperationType
 {
-   READ, WRITE, DELETE, LIST, ALL
+   WRITE,
+   READ,
+   DELETE;
 }

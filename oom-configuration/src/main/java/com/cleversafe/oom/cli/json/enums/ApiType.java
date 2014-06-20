@@ -19,7 +19,7 @@
 
 package com.cleversafe.oom.cli.json.enums;
 
-public enum API
+public enum ApiType
 {
    SOH,
    S3,

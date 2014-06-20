@@ -32,7 +32,7 @@ import com.cleversafe.oom.api.Consumer;
 import com.cleversafe.oom.api.OperationManager;
 import com.cleversafe.oom.api.Producer;
 import com.cleversafe.oom.cli.json.ClientConfig;
-import com.cleversafe.oom.cli.json.enums.API;
+import com.cleversafe.oom.cli.json.enums.ApiType;
 import com.cleversafe.oom.client.ApacheClient;
 import com.cleversafe.oom.client.Client;
 import com.cleversafe.oom.guice.annotation.DefaultContainer;
@@ -153,7 +153,7 @@ public class OOMModule extends AbstractModule
    public ObjectManager provideObjectManager(
          @DefaultObjectLocation final String objectLocation,
          @DefaultContainer final Producer<String> container,
-         final API api)
+         final ApiType api)
    {
       // FIXME this naming scheme will break unless @DefaultContainer is a constant producer
       final String aContainer = container.produce();

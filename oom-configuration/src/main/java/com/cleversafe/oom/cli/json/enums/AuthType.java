@@ -21,5 +21,6 @@ package com.cleversafe.oom.cli.json.enums;
 
 public enum AuthType
 {
-   BASIC, AWSV2;
+   BASIC,
+   AWSV2;
 }
