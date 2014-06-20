@@ -164,6 +164,7 @@
 	"so_keep_alive": true,
 	"tcp_no_delay": true,
 	"chunked_encoding": false,
-	"expect_continue": false
+	"expect_continue": false,
+	"wait_for_continue": 3000
 }
 }

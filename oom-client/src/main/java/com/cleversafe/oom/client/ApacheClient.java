@@ -45,6 +45,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultConnectionKeepAliveStrategy;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.client.LaxRedirectStrategy;
+import org.apache.http.protocol.HttpRequestExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -89,21 +90,23 @@ public class ApacheClient implements Client
          final boolean tcpNoDelay,
          final boolean chunkedEncoding,
          final boolean expectContinue,
+         final int waitForContinue,
          final Function<String, ByteBufferConsumer> byteBufferConsumers)
    {
       this.auth = auth; // optional
       checkArgument(connectTimeout >= 0, "connectTimeout must be >= 0 [%s]", connectTimeout);
       checkArgument(soTimeout >= 0, "soTimeout must be >= 0 [%s]", soTimeout);
       checkArgument(soLinger >= -1, "soLinger must be >= -1 [%s]", soLinger);
+      checkArgument(waitForContinue >= 0, "waitForContinue must be >= 0 [%s]", waitForContinue);
       this.byteBufferConsumers =
             checkNotNull(byteBufferConsumers, "byteBufferConsumers must not be null");
 
       this.client = HttpClients.custom()
-            // TODO investigate effect of waitForContinue duration in HttpRequestExecutor
             // TODO HTTPS: setHostnameVerifier, setSslcontext, and SetSSLSocketFactory methods
             // TODO investigate ConnectionConfig, particularly bufferSize and fragmentSizeHint
             // TODO setUserAgent to equal "tool name/tool version"
             // TODO defaultCredentialsProvider and defaultAuthSchemeRegistry for pre/passive auth?
+            .setRequestExecutor(new HttpRequestExecutor(waitForContinue))
             .setMaxConnTotal(Integer.MAX_VALUE)
             .setMaxConnPerRoute(Integer.MAX_VALUE)
             .setDefaultSocketConfig(SocketConfig.custom()
@@ -354,6 +357,7 @@ public class ApacheClient implements Client
       private boolean tcpNoDelay;
       private boolean chunkedEncoding;
       private boolean expectContinue;
+      private int waitForContinue;
       private Function<String, ByteBufferConsumer> byteBufferConsumers;
 
       private Builder()
@@ -413,6 +417,12 @@ public class ApacheClient implements Client
          return this;
       }
 
+      public Builder withWaitForContinue(final int waitForContinue)
+      {
+         this.waitForContinue = waitForContinue;
+         return this;
+      }
+
       public Builder withByteBufferConsumers(
             final Function<String, ByteBufferConsumer> byteBufferConsumers)
       {
@@ -424,7 +434,8 @@ public class ApacheClient implements Client
       {
          return new ApacheClient(this.auth, this.connectTimeout, this.soTimeout,
                this.soReuseAddress, this.soLinger, this.soKeepAlive, this.tcpNoDelay,
-               this.chunkedEncoding, this.expectContinue, this.byteBufferConsumers);
+               this.chunkedEncoding, this.expectContinue, this.waitForContinue,
+               this.byteBufferConsumers);
       }
    }
 }

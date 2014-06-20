@@ -143,6 +143,7 @@ public class OOMModule extends AbstractModule
             .usingTcpNoDelay(clientConfig.isTcpNoDelay())
             .usingChunkedEncoding(clientConfig.isChunkedEncoding())
             .usingExpectContinue(clientConfig.isExpectContinue())
+            .withWaitForContinue(clientConfig.getWaitForContinue())
             .withByteBufferConsumers(byteBufferConsumers)
             .build();
    }

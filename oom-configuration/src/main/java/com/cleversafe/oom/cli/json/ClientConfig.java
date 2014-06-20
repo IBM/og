@@ -29,6 +29,7 @@ public class ClientConfig
    private final boolean tcpNoDelay;
    private final boolean chunkedEncoding;
    private final boolean expectContinue;
+   private final int waitForContinue;
 
    public ClientConfig()
    {
@@ -40,6 +41,7 @@ public class ClientConfig
       this.tcpNoDelay = true;
       this.chunkedEncoding = false;
       this.expectContinue = false;
+      this.waitForContinue = 3000;
    }
 
    /**
@@ -104,5 +106,13 @@ public class ClientConfig
    public boolean isExpectContinue()
    {
       return this.expectContinue;
+   }
+
+   /**
+    * @return the waitForContinue
+    */
+   public int getWaitForContinue()
+   {
+      return this.waitForContinue;
    }
 }
