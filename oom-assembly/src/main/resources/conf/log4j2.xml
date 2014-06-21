@@ -35,10 +35,10 @@
 		<Logger name="ConfigJsonLogger" level="info" additivity="false">
 			<AppenderRef ref="ConfigJson" />
 		</Logger>
-		<Logger name="com.cleversafe.oom.cli.OOM" level="info">
+		<Logger name="com.cleversafe.og.cli.OG" level="info">
 			<AppenderRef ref="Console" />
 		</Logger>
-		<Logger name="com.cleversafe.oom.cli.OOMReader" level="info" additivity="false">
+		<Logger name="com.cleversafe.og.cli.OGReader" level="info" additivity="false">
 			<AppenderRef ref="Console" />
 		</Logger>
 		<Logger name="org.apache.http.wire" level="error"/>

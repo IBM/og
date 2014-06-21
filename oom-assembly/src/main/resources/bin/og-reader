@@ -2,7 +2,7 @@
 
 BASE=`dirname ${0}`
 CP=${BASE}/lib/*:${BASE}/conf/
-CLASS='com.cleversafe.og.cli.OOMReader'
+CLASS='com.cleversafe.og.cli.OGReader'
 
 VMOPTS='-Xms64M -Xmx512M'
 java -cp ${CP} ${VMOPTS} ${CLASS} "$@"

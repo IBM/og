@@ -17,8 +17,8 @@
 			<outputDirectory></outputDirectory>
 			<fileMode>0755</fileMode>
 			<includes>
-				<include>oom</include>
-				<include>oom-reader</include>
+				<include>og</include>
+				<include>og-reader</include>
 			</includes>
 		</fileSet>
 		<fileSet>

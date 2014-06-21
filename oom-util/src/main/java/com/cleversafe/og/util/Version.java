@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 public class Version
 {
    private static Logger _logger = LoggerFactory.getLogger(Version.class);
-   private static String DISPLAY_VERSION = ResourceBundle.getBundle("oom")
+   private static String DISPLAY_VERSION = ResourceBundle.getBundle("og")
          .getString("display.version");
 
    private Version()

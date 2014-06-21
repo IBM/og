@@ -33,10 +33,10 @@ import com.google.common.io.BaseEncoding;
 import com.martiansoftware.jsap.JSAP;
 import com.martiansoftware.jsap.JSAPResult;
 
-public class OOMReader
+public class OGReader
 {
-   private static Logger _logger = LoggerFactory.getLogger(OOMReader.class);
-   private static final String JSAP_RESOURCE_NAME = "oomreader.jsap";
+   private static Logger _logger = LoggerFactory.getLogger(OGReader.class);
+   private static final String JSAP_RESOURCE_NAME = "ogreader.jsap";
    public static final int NORMAL_TERMINATION = 0;
    public static final int ERROR_CONFIGURATION = 1;
    // TODO place this constant in util somewhere?
@@ -101,7 +101,7 @@ public class OOMReader
 
    private static void printUsage(final JSAP jsap)
    {
-      _logger.info("Usage: oom-reader " + jsap.getUsage());
+      _logger.info("Usage: og-reader " + jsap.getUsage());
       _logger.info(jsap.getHelp());
    }
 

@@ -2,18 +2,18 @@
 <jsap>
 	<parameters>
 		<unflaggedOption>
-			<id>object_file</id>
-			<required>true</required>
+			<id>config</id>
+			<required>false</required>
 			<stringParser>
 				<classname>FileStringParser</classname>
 			</stringParser>
-			<help>A relative or absolute path to an OOM object file</help>
+			<help>A relative or absolute path to an og configuration file. If not specified, og will search for a config file named "test.json" on the classpath</help>
 		</unflaggedOption>
 		<switch>
 			<id>version</id>
 			<shortFlag>v</shortFlag>
 			<longFlag>version</longFlag>
-			<help>Prints the oom-reader version and exits</help>
+			<help>Prints the og version and exits</help>
 		</switch>
 		<switch>
 			<id>help</id>

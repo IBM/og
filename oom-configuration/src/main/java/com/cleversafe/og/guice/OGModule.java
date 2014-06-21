@@ -67,11 +67,11 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 
-public class OOMModule extends AbstractModule
+public class OGModule extends AbstractModule
 {
    private final static double err = Math.pow(0.1, 6);
 
-   public OOMModule()
+   public OGModule()
    {}
 
    @Override

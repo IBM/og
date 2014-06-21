@@ -43,7 +43,7 @@ import com.cleversafe.og.cli.json.type.TimeUnitTypeAdapterFactory;
 import com.cleversafe.og.client.Client;
 import com.cleversafe.og.guice.JsonModule;
 import com.cleversafe.og.guice.NOHModule;
-import com.cleversafe.og.guice.OOMModule;
+import com.cleversafe.og.guice.OGModule;
 import com.cleversafe.og.guice.SOHModule;
 import com.cleversafe.og.object.manager.ObjectManager;
 import com.cleversafe.og.test.LoadTest;
@@ -58,11 +58,11 @@ import com.google.inject.Injector;
 import com.martiansoftware.jsap.JSAP;
 import com.martiansoftware.jsap.JSAPResult;
 
-public class OOM
+public class OG
 {
-   private static Logger _logger = LoggerFactory.getLogger(OOM.class);
+   private static Logger _logger = LoggerFactory.getLogger(OG.class);
    private static Logger _configJsonLogger = LoggerFactory.getLogger("ConfigJsonLogger");
-   private static final String JSAP_RESOURCE_NAME = "oom.jsap";
+   private static final String JSAP_RESOURCE_NAME = "og.jsap";
    private static final String CONFIG_JSON = "config.json";
    public static final int NORMAL_TERMINATION = 0;
    public static final int ERROR_CONFIGURATION = 1;
@@ -112,7 +112,7 @@ public class OOM
       try
       {
          final Injector injector =
-               Guice.createInjector(new JsonModule(config), new OOMModule(), apiModule);
+               Guice.createInjector(new JsonModule(config), new OGModule(), apiModule);
          operationManager = injector.getInstance(OperationManager.class);
          client = injector.getInstance(Client.class);
          objectManager = injector.getInstance(ObjectManager.class);
@@ -160,7 +160,7 @@ public class OOM
 
    private static void printUsage(final JSAP jsap)
    {
-      _logger.info("Usage: oom " + jsap.getUsage());
+      _logger.info("Usage: og " + jsap.getUsage());
       _logger.info(jsap.getHelp());
    }
 
