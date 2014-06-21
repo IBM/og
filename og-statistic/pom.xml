@@ -2,16 +2,16 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>com.cleversafe</groupId>
-		<artifactId>oom</artifactId>
+		<artifactId>og</artifactId>
 		<version>1.0.0-SNAPSHOT</version>
 	</parent>
-	<artifactId>oom-statistic</artifactId>
-	<name>OOM Statistic</name>
+	<artifactId>og-statistic</artifactId>
+	<name>OG Statistic</name>
 	<description>Counters and statistics implementations</description>
 	<dependencies>
 		<dependency>
 			<groupId>com.cleversafe</groupId>
-			<artifactId>oom-api</artifactId>
+			<artifactId>og-api</artifactId>
 		</dependency>
 	</dependencies>
 </project>

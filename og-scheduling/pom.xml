@@ -2,16 +2,16 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>com.cleversafe</groupId>
-		<artifactId>oom</artifactId>
+		<artifactId>og</artifactId>
 		<version>1.0.0-SNAPSHOT</version>
 	</parent>
-	<artifactId>oom-api</artifactId>
-	<name>OOM API</name>
-	<description>Major interfaces, enums, and other components</description>
+	<artifactId>og-scheduling</artifactId>
+	<name>OG Scheduling</name>
+	<description>Components for operation scheduling</description>
 	<dependencies>
-	<dependency>
-		<groupId>com.google.guava</groupId>
-		<artifactId>guava</artifactId>
-	</dependency>
+		<dependency>
+			<groupId>com.cleversafe</groupId>
+			<artifactId>og-api</artifactId>
+		</dependency>
 	</dependencies>
 </project>

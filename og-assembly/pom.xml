@@ -2,57 +2,57 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>com.cleversafe</groupId>
-		<artifactId>oom</artifactId>
+		<artifactId>og</artifactId>
 		<version>1.0.0-SNAPSHOT</version>
 	</parent>
-	<artifactId>oom-assembly</artifactId>
+	<artifactId>og-assembly</artifactId>
 	<packaging>pom</packaging>
-	<name>OOM Assembly</name>
+	<name>OG Assembly</name>
 	<description>Packaging components</description>
 	<dependencies>
 		<dependency>
 			<groupId>com.cleversafe</groupId>
-			<artifactId>oom-api</artifactId>
+			<artifactId>og-api</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.cleversafe</groupId>
-			<artifactId>oom-client</artifactId>
+			<artifactId>og-client</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.cleversafe</groupId>
-			<artifactId>oom-configuration</artifactId>
+			<artifactId>og-configuration</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.cleversafe</groupId>
-			<artifactId>oom-http</artifactId>
+			<artifactId>og-http</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.cleversafe</groupId>
-			<artifactId>oom-object</artifactId>
+			<artifactId>og-object</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.cleversafe</groupId>
-			<artifactId>oom-scheduling</artifactId>
+			<artifactId>og-scheduling</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.cleversafe</groupId>
-			<artifactId>oom-soh</artifactId>
+			<artifactId>og-soh</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.cleversafe</groupId>
-			<artifactId>oom-statistic</artifactId>
+			<artifactId>og-statistic</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.cleversafe</groupId>
-			<artifactId>oom-test</artifactId>
+			<artifactId>og-test</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.cleversafe</groupId>
-			<artifactId>oom-util</artifactId>
+			<artifactId>og-util</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.cleversafe</groupId>
-			<artifactId>oom-s3</artifactId>
+			<artifactId>og-s3</artifactId>
 		</dependency>
 	</dependencies>
 	<build>

@@ -2,24 +2,24 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>com.cleversafe</groupId>
-		<artifactId>oom</artifactId>
+		<artifactId>og</artifactId>
 		<version>1.0.0-SNAPSHOT</version>
 	</parent>
-	<artifactId>oom-s3</artifactId>
-	<name>OOM S3</name>
-	<description>Components for the Amazon S3 HTTP API</description>
+	<artifactId>og-http</artifactId>
+	<name>OG HTTP</name>
+	<description>HTTP protocol components</description>
 	<dependencies>
 		<dependency>
 			<groupId>com.cleversafe</groupId>
-			<artifactId>oom-api</artifactId>
+			<artifactId>og-api</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.cleversafe</groupId>
-			<artifactId>oom-http</artifactId>
+			<artifactId>og-util</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.cleversafe</groupId>
-			<artifactId>oom-util</artifactId>
+			<groupId>joda-time</groupId>
+			<artifactId>joda-time</artifactId>
 		</dependency>
 	</dependencies>
 </project>

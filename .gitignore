@@ -16,6 +16,6 @@ target
 .repository
 .project
 
-oom-configuration/*.bin
-oom-configuration/*.log
-oom-configuration/*.json
+og-configuration/*.bin
+og-configuration/*.log
+og-configuration/*.json
