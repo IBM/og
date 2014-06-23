@@ -23,6 +23,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
@@ -37,21 +38,29 @@ import com.google.common.eventbus.EventBus;
 public class Statistics
 {
    private static Logger _logger = LoggerFactory.getLogger(Statistics.class);
-   Map<OperationType, Map<Counter, AtomicLong>> counters;
-   EventBus eventBus;
+   private final Map<OperationType, Map<Counter, AtomicLong>> counters;
+   // use concurrent hashmap at status code level, as additional status code keys may be mapped
+   // concurrently during the lifetime of the test
+   private final Map<OperationType, ConcurrentHashMap<Integer, AtomicLong>> scCounters;
+   private final EventBus eventBus;
+   private AtomicLong unmappedSC;
 
    public Statistics(final EventBus eventBus)
    {
       this.counters = new HashMap<OperationType, Map<Counter, AtomicLong>>();
+      this.scCounters = new HashMap<OperationType, ConcurrentHashMap<Integer, AtomicLong>>();
       for (final OperationType operation : OperationType.values())
       {
          this.counters.put(operation, new HashMap<Counter, AtomicLong>());
+
+         this.scCounters.put(operation, new ConcurrentHashMap<Integer, AtomicLong>());
          for (final Counter counter : Counter.values())
          {
             this.counters.get(operation).put(counter, new AtomicLong());
          }
       }
       this.eventBus = checkNotNull(eventBus, "eventBus must not be null");
+      this.unmappedSC = new AtomicLong(1);
    }
 
    public void update(final Request request, final Response response)
@@ -59,7 +68,20 @@ public class Statistics
       final OperationType operation = fromMethod(request.getMethod());
       this.counters.get(operation).get(Counter.OPERATIONS).addAndGet(1);
       this.counters.get(OperationType.ALL).get(Counter.OPERATIONS).addAndGet(1);
+      updateStatusCode(operation, response.getStatusCode());
+      updateStatusCode(OperationType.ALL, response.getStatusCode());
       this.eventBus.post(this);
+   }
+
+   private void updateStatusCode(final OperationType operation, final int statusCode)
+   {
+      final AtomicLong existingSC =
+            this.scCounters.get(operation).putIfAbsent(statusCode, this.unmappedSC);
+
+      if (existingSC != null)
+         existingSC.incrementAndGet();
+      else
+         this.unmappedSC = new AtomicLong(1);
    }
 
    public long get(final OperationType operation, final Counter counter)
@@ -67,6 +89,14 @@ public class Statistics
       checkNotNull(operation, "operation must not be null");
       checkNotNull(counter, "counter must not be null");
       return this.counters.get(operation).get(counter).get();
+   }
+
+   public long getStatusCode(final OperationType operation, final int statusCode)
+   {
+      final AtomicLong sc = this.scCounters.get(operation).get(statusCode);
+      if (sc != null)
+         return sc.get();
+      return 0;
    }
 
    private OperationType fromMethod(final Method method)

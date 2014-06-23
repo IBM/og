@@ -24,6 +24,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -66,6 +67,7 @@ import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.test.LoadTest;
 import com.cleversafe.og.test.RuntimeListener;
 import com.cleversafe.og.test.StatisticsListener;
+import com.cleversafe.og.test.StatusCodeListener;
 import com.cleversafe.og.util.ByteBufferConsumers;
 import com.cleversafe.og.util.OperationType;
 import com.cleversafe.og.util.WeightedRandomChoice;
@@ -197,6 +199,7 @@ public class OGModule extends AbstractModule
       return new DeleteObjectNameProducer(objectManager);
    }
 
+   // TODO refactor stopping condition creation
    @Provides
    @Singleton
    LoadTest provideLoadTest(
@@ -207,10 +210,11 @@ public class OGModule extends AbstractModule
    {
       final ExecutorService executorService = Executors.newCachedThreadPool();
       final LoadTest test = new LoadTest(operationManager, client, executorService);
-      final List<StatisticsListener> listeners = new ArrayList<StatisticsListener>();
+      final List<StatisticsListener> statsListeners = new ArrayList<StatisticsListener>();
+      final List<StatusCodeListener> statusCodeListeners = new ArrayList<StatusCodeListener>();
 
       if (stoppingConditions.getOperations() > 0)
-         listeners.add(new StatisticsListener(test, OperationType.ALL, Counter.OPERATIONS,
+         statsListeners.add(new StatisticsListener(test, OperationType.ALL, Counter.OPERATIONS,
                stoppingConditions.getOperations()));
 
       // RuntimeListener does not need to be registered with the event bus
@@ -218,7 +222,20 @@ public class OGModule extends AbstractModule
          new RuntimeListener(test, stoppingConditions.getRuntime(),
                stoppingConditions.getRuntimeUnit());
 
-      for (final StatisticsListener listener : listeners)
+      final Map<Integer, Integer> scMap = stoppingConditions.getStatusCodes();
+      for (final Entry<Integer, Integer> sc : scMap.entrySet())
+      {
+         if (sc.getValue() > 0)
+            statusCodeListeners.add(new StatusCodeListener(test, OperationType.ALL, sc.getKey(),
+                  sc.getValue()));
+      }
+
+      for (final StatisticsListener listener : statsListeners)
+      {
+         eventBus.register(listener);
+      }
+
+      for (final StatusCodeListener listener : statusCodeListeners)
       {
          eventBus.register(listener);
       }

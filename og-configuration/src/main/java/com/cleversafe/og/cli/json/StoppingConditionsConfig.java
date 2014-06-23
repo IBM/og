@@ -19,6 +19,8 @@
 
 package com.cleversafe.og.cli.json;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -30,10 +32,12 @@ public class StoppingConditionsConfig
    private long operations;
    private double runtime;
    private final TimeUnit runtimeUnit;
+   private final Map<Integer, Integer> statusCodes;
 
    public StoppingConditionsConfig()
    {
       this.runtimeUnit = TimeUnit.SECONDS;
+      this.statusCodes = new HashMap<Integer, Integer>();
    }
 
    /**
@@ -58,5 +62,13 @@ public class StoppingConditionsConfig
    public TimeUnit getRuntimeUnit()
    {
       return this.runtimeUnit;
+   }
+
+   /**
+    * @return the statusCodes
+    */
+   public Map<Integer, Integer> getStatusCodes()
+   {
+      return this.statusCodes;
    }
 }

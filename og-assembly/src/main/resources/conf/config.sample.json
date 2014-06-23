@@ -152,7 +152,10 @@
 // "stopping_conditions": {
 // 	"operations": 0,
 // 	"runtime": 0,
-// 	"runtime_unit": "seconds"
+// 	"runtime_unit": "seconds",
+// 	"status_codes": {
+// 		"201": 0
+// 	}
 // },
 
 
