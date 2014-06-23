@@ -50,7 +50,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.api.ByteBufferConsumer;
-import com.cleversafe.og.client.Client;
 import com.cleversafe.og.http.HttpResponse;
 import com.cleversafe.og.http.auth.HttpAuth;
 import com.cleversafe.og.operation.EntityType;
@@ -205,7 +204,7 @@ public class ApacheClient implements Client
       }
 
       @Override
-      public Response call() throws Exception
+      public Response call()
       {
          final long timestampStart = System.currentTimeMillis();
          final RequestBuilder requestBuilder =
@@ -213,7 +212,19 @@ public class ApacheClient implements Client
          setRequestURI(requestBuilder);
          setRequestHeaders(requestBuilder);
          setRequestContent(requestBuilder);
-         final Response response = sendRequest(requestBuilder.build());
+         Response response;
+         try
+         {
+            response = sendRequest(requestBuilder.build());
+         }
+         catch (final Exception e)
+         {
+            _logger.error("Exception executing request:", e);
+            response = HttpResponse.custom()
+                  .withRequestId(this.request.getId())
+                  .withMetaDataEntry("exception", "1")
+                  .build();
+         }
          final long timestampFinish = System.currentTimeMillis();
 
          _requestLogger.info(this.gson.toJson(new RequestLogEntry(this.request, response,
