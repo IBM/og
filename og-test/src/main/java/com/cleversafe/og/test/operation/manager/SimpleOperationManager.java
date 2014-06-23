@@ -17,7 +17,7 @@
 // Date: Apr 7, 2014
 // ---------------------
 
-package com.cleversafe.og.http.operation.manager;
+package com.cleversafe.og.test.operation.manager;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

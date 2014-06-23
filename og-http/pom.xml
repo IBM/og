@@ -21,9 +21,5 @@
 			<groupId>joda-time</groupId>
 			<artifactId>joda-time</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>com.cleversafe</groupId>
-			<artifactId>og-statistic</artifactId>
-		</dependency>
 	</dependencies>
 </project>
