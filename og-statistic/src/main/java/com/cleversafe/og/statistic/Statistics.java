@@ -22,8 +22,11 @@ package com.cleversafe.og.statistic;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentNavigableMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
@@ -41,19 +44,19 @@ public class Statistics
    private final Map<OperationType, Map<Counter, AtomicLong>> counters;
    // use concurrent hashmap at status code level, as additional status code keys may be mapped
    // concurrently during the lifetime of the test
-   private final Map<OperationType, ConcurrentHashMap<Integer, AtomicLong>> scCounters;
+   private final Map<OperationType, ConcurrentNavigableMap<Integer, AtomicLong>> scCounters;
    private final EventBus eventBus;
    private AtomicLong unmappedSC;
 
    public Statistics(final EventBus eventBus)
    {
       this.counters = new HashMap<OperationType, Map<Counter, AtomicLong>>();
-      this.scCounters = new HashMap<OperationType, ConcurrentHashMap<Integer, AtomicLong>>();
+      this.scCounters = new HashMap<OperationType, ConcurrentNavigableMap<Integer, AtomicLong>>();
       for (final OperationType operation : OperationType.values())
       {
          this.counters.put(operation, new HashMap<Counter, AtomicLong>());
 
-         this.scCounters.put(operation, new ConcurrentHashMap<Integer, AtomicLong>());
+         this.scCounters.put(operation, new ConcurrentSkipListMap<Integer, AtomicLong>());
          for (final Counter counter : Counter.values())
          {
             this.counters.get(operation).put(counter, new AtomicLong());
@@ -97,6 +100,13 @@ public class Statistics
       if (sc != null)
          return sc.get();
       return 0;
+   }
+
+   // TODO clean this up, would be nice not to expose AtomicLong and other internal details
+   public Iterator<Entry<Integer, AtomicLong>> statusCodeIterator(final OperationType operation)
+   {
+      checkNotNull(operation, "operation must not be null");
+      return this.scCounters.get(operation).entrySet().iterator();
    }
 
    private OperationType fromMethod(final Method method)

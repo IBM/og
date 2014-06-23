@@ -28,7 +28,6 @@ import java.util.Map;
 import com.cleversafe.og.api.Consumer;
 import com.cleversafe.og.object.LegacyObjectName;
 import com.cleversafe.og.object.ObjectName;
-import com.cleversafe.og.object.manager.ObjectManager;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.google.common.base.Splitter;
@@ -77,8 +76,7 @@ public class ObjectNameConsumer implements Consumer<Response>
                   this.objectManager.writeNameComplete(objectName);
                   break;
                default :
-                  throw new RuntimeException(String.format("http method unsupported [%s]",
-                        request.getMethod()));
+                  break;
             }
          }
       }
