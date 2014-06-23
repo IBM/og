@@ -29,18 +29,14 @@ import java.io.Reader;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Iterator;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.cleversafe.og.api.OperationManager;
 import com.cleversafe.og.cli.json.JsonConfig;
 import com.cleversafe.og.cli.json.type.CaseInsensitiveEnumTypeAdapterFactory;
 import com.cleversafe.og.cli.json.type.SizeUnitTypeAdapterFactory;
 import com.cleversafe.og.cli.json.type.TimeUnitTypeAdapterFactory;
-import com.cleversafe.og.client.Client;
 import com.cleversafe.og.guice.JsonModule;
 import com.cleversafe.og.guice.NOHModule;
 import com.cleversafe.og.guice.OGModule;
@@ -95,9 +91,8 @@ public class OG
 
       _configJsonLogger.info(gson.toJson(config));
 
-      OperationManager operationManager = null;
       ObjectManager objectManager = null;
-      Client client = null;
+      LoadTest test = null;
       AbstractModule apiModule;
       // TODO better way to do this?
       switch (config.getApi())
@@ -113,22 +108,20 @@ public class OG
       {
          final Injector injector =
                Guice.createInjector(new JsonModule(config), new OGModule(), apiModule);
-         operationManager = injector.getInstance(OperationManager.class);
-         client = injector.getInstance(Client.class);
          objectManager = injector.getInstance(ObjectManager.class);
+         test = injector.getInstance(LoadTest.class);
          Runtime.getRuntime().addShutdownHook(new ShutdownHook(objectManager));
+         _logger.info("running test");
+         test.runTest();
+         // FIXME this call should be unnecessary as testComplete is already called in the shutdown
+         // hook, but may be due to buggy implementation in RandomObjectPopulator join call
+         objectManager.testComplete();
       }
       catch (final RuntimeException e)
       {
          _logger.error("Error provisioning dependencies", e);
          System.exit(ERROR_CONFIGURATION);
       }
-
-      final ExecutorService executorService = Executors.newCachedThreadPool();
-      final LoadTest test = new LoadTest(operationManager, client, executorService);
-
-      _logger.info("running test");
-      test.runTest();
    }
 
    private static JSAP getJSAP()

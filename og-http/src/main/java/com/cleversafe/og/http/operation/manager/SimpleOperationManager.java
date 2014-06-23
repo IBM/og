@@ -32,6 +32,7 @@ import com.cleversafe.og.api.ProducerException;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.scheduling.Scheduler;
+import com.cleversafe.og.statistic.Statistics;
 
 public class SimpleOperationManager implements OperationManager
 {
@@ -39,17 +40,20 @@ public class SimpleOperationManager implements OperationManager
    private final List<Consumer<Response>> consumers;
    private final Scheduler scheduler;
    private final Map<Long, Request> pendingRequests;
+   private final Statistics stats;
 
    public SimpleOperationManager(
          final Producer<Producer<Request>> requestMix,
          final List<Consumer<Response>> consumers,
          final Scheduler scheduler,
-         final Map<Long, Request> pendingRequests)
+         final Map<Long, Request> pendingRequests,
+         final Statistics stats)
    {
       this.requestMix = checkNotNull(requestMix, "requestMix must not be null");
       this.consumers = checkNotNull(consumers, "consumers must not be null");
       this.scheduler = checkNotNull(scheduler, "scheduler must not be null");
       this.pendingRequests = checkNotNull(pendingRequests, "pendingRequests must not be null");
+      this.stats = checkNotNull(stats, "stats must not be null");
    }
 
    @Override
@@ -78,6 +82,7 @@ public class SimpleOperationManager implements OperationManager
          consumer.consume(response);
       }
       this.scheduler.complete(response);
-      this.pendingRequests.remove(response.getRequestId());
+      final Request request = this.pendingRequests.remove(response.getRequestId());
+      this.stats.update(request, response);
    }
 }

@@ -38,9 +38,9 @@ import com.cleversafe.og.cli.json.ConcurrencyConfig;
 import com.cleversafe.og.cli.json.FileSizeConfig;
 import com.cleversafe.og.cli.json.JsonConfig;
 import com.cleversafe.og.cli.json.OperationConfig;
+import com.cleversafe.og.cli.json.StoppingConditionsConfig;
 import com.cleversafe.og.cli.json.enums.ApiType;
 import com.cleversafe.og.cli.json.enums.AuthType;
-import com.cleversafe.og.cli.json.enums.OperationType;
 import com.cleversafe.og.distribution.Distribution;
 import com.cleversafe.og.distribution.NormalDistribution;
 import com.cleversafe.og.distribution.UniformDistribution;
@@ -71,6 +71,7 @@ import com.cleversafe.og.s3.auth.AWSAuthV2;
 import com.cleversafe.og.scheduling.RequestRateScheduler;
 import com.cleversafe.og.scheduling.Scheduler;
 import com.cleversafe.og.util.Entities;
+import com.cleversafe.og.util.OperationType;
 import com.cleversafe.og.util.Pair;
 import com.cleversafe.og.util.WeightedRandomChoice;
 import com.cleversafe.og.util.producer.Producers;
@@ -247,6 +248,12 @@ public class JsonModule extends AbstractModule
       else if (username == null && password == null)
          return null;
       throw new IllegalArgumentException("If username is not null password must also be not null");
+   }
+
+   @Provides
+   public StoppingConditionsConfig provideStoppingConditionsConfig()
+   {
+      return this.config.getStoppingConditions();
    }
 
    @Provides

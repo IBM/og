@@ -26,12 +26,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import com.cleversafe.og.api.ByteBufferConsumer;
 import com.cleversafe.og.api.Consumer;
 import com.cleversafe.og.api.OperationManager;
 import com.cleversafe.og.api.Producer;
 import com.cleversafe.og.cli.json.ClientConfig;
+import com.cleversafe.og.cli.json.StoppingConditionsConfig;
 import com.cleversafe.og.cli.json.enums.ApiType;
 import com.cleversafe.og.client.ApacheClient;
 import com.cleversafe.og.client.Client;
@@ -58,10 +61,16 @@ import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.scheduling.Scheduler;
 import com.cleversafe.og.soh.SOHWriteObjectNameConsumer;
+import com.cleversafe.og.statistic.Counter;
+import com.cleversafe.og.statistic.Statistics;
+import com.cleversafe.og.test.LoadTest;
+import com.cleversafe.og.test.StatisticsListener;
 import com.cleversafe.og.util.ByteBufferConsumers;
+import com.cleversafe.og.util.OperationType;
 import com.cleversafe.og.util.WeightedRandomChoice;
 import com.cleversafe.og.util.producer.Producers;
 import com.google.common.base.Function;
+import com.google.common.eventbus.EventBus;
 import com.google.common.math.DoubleMath;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -88,7 +97,8 @@ public class OGModule extends AbstractModule
          @ReadWeight final double readWeight,
          @DeleteWeight final double deleteWeight,
          final ObjectManager objectManager,
-         final Scheduler scheduler)
+         final Scheduler scheduler,
+         final Statistics stats)
    {
       final double sum = readWeight + writeWeight + deleteWeight;
       checkArgument(DoubleMath.fuzzyEquals(sum, 100.0, err),
@@ -110,7 +120,8 @@ public class OGModule extends AbstractModule
       consumers.add(objectConsumer);
 
       // TODO account for threaded vs iops
-      return new SimpleOperationManager(Producers.of(wrc), consumers, scheduler, pendingRequests);
+      return new SimpleOperationManager(Producers.of(wrc), consumers, scheduler, pendingRequests,
+            stats);
    }
 
    @Provides
@@ -183,5 +194,43 @@ public class OGModule extends AbstractModule
    public Producer<String> provideDeleteObjectName(final ObjectManager objectManager)
    {
       return new DeleteObjectNameProducer(objectManager);
+   }
+
+   @Provides
+   @Singleton
+   LoadTest provideLoadTest(
+         final OperationManager operationManager,
+         final Client client,
+         final StoppingConditionsConfig stoppingConditions,
+         final EventBus eventBus)
+   {
+      final ExecutorService executorService = Executors.newCachedThreadPool();
+      final LoadTest test = new LoadTest(operationManager, client, executorService);
+      final List<StatisticsListener> listeners = new ArrayList<StatisticsListener>();
+
+      if (stoppingConditions.getOperations() > 0)
+         listeners.add(new StatisticsListener(test, OperationType.ALL, Counter.OPERATIONS,
+               stoppingConditions.getOperations()));
+
+      for (final StatisticsListener listener : listeners)
+      {
+         eventBus.register(listener);
+      }
+
+      return test;
+   }
+
+   @Provides
+   @Singleton
+   public EventBus provideEventBus()
+   {
+      return new EventBus();
+   }
+
+   @Provides
+   @Singleton
+   public Statistics provideStatistics(final EventBus eventBus)
+   {
+      return new Statistics(eventBus);
    }
 }

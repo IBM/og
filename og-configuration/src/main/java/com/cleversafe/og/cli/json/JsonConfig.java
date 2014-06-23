@@ -25,9 +25,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.cleversafe.og.cli.json.enums.ApiType;
-import com.cleversafe.og.cli.json.enums.OperationType;
 import com.cleversafe.og.http.Scheme;
 import com.cleversafe.og.operation.EntityType;
+import com.cleversafe.og.util.OperationType;
 
 public class JsonConfig
 {
@@ -45,8 +45,7 @@ public class JsonConfig
    EntityType source;
    ConcurrencyConfig concurrency;
    AuthConfig authentication;
-   Long operatons;
-   RunTime runtime;
+   StoppingConditionsConfig stoppingConditions;
    String objectLocation;
    ClientConfig client;
 
@@ -63,6 +62,7 @@ public class JsonConfig
       this.source = EntityType.RANDOM;
       this.concurrency = new ConcurrencyConfig();
       this.authentication = new AuthConfig();
+      this.stoppingConditions = new StoppingConditionsConfig();
       this.objectLocation = "./object";
       // TODO OperationType is not being lowercased when serialized
       this.operationConfig = new LinkedHashMap<OperationType, OperationConfig>();
@@ -182,19 +182,11 @@ public class JsonConfig
    }
 
    /**
-    * @return the operatons
+    * @return the stoppingConditions
     */
-   public Long getOperatons()
+   public StoppingConditionsConfig getStoppingConditions()
    {
-      return this.operatons;
-   }
-
-   /**
-    * @return the runtime
-    */
-   public RunTime getRuntime()
-   {
-      return this.runtime;
+      return this.stoppingConditions;
    }
 
    /**
