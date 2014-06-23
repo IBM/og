@@ -33,10 +33,11 @@
 // Date: May 11, 2013
 // ---------------------
 
-package com.cleversafe.og.cli.json.enums;
+package com.cleversafe.og.util;
 
 public enum OperationType
 {
+   ALL,
    WRITE,
    READ,
    DELETE;
