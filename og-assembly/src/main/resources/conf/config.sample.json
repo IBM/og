@@ -150,7 +150,9 @@
 
 
 // "stopping_conditions": {
-// 	"operations": 0
+// 	"operations": 0,
+// 	"runtime": 0,
+// 	"runtime_unit": "seconds"
 // },
 
 

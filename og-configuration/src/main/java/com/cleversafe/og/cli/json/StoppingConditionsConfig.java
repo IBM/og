@@ -19,6 +19,8 @@
 
 package com.cleversafe.og.cli.json;
 
+import java.util.concurrent.TimeUnit;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +28,13 @@ public class StoppingConditionsConfig
 {
    private static Logger _logger = LoggerFactory.getLogger(StoppingConditionsConfig.class);
    private long operations;
+   private double runtime;
+   private final TimeUnit runtimeUnit;
+
+   public StoppingConditionsConfig()
+   {
+      this.runtimeUnit = TimeUnit.SECONDS;
+   }
 
    /**
     * @return the operations
@@ -33,5 +42,21 @@ public class StoppingConditionsConfig
    public long getOperations()
    {
       return this.operations;
+   }
+
+   /**
+    * @return the runtime
+    */
+   public double getRuntime()
+   {
+      return this.runtime;
+   }
+
+   /**
+    * @return the runtime_unit
+    */
+   public TimeUnit getRuntimeUnit()
+   {
+      return this.runtimeUnit;
    }
 }

@@ -64,6 +64,7 @@ import com.cleversafe.og.soh.SOHWriteObjectNameConsumer;
 import com.cleversafe.og.statistic.Counter;
 import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.test.LoadTest;
+import com.cleversafe.og.test.RuntimeListener;
 import com.cleversafe.og.test.StatisticsListener;
 import com.cleversafe.og.util.ByteBufferConsumers;
 import com.cleversafe.og.util.OperationType;
@@ -211,6 +212,11 @@ public class OGModule extends AbstractModule
       if (stoppingConditions.getOperations() > 0)
          listeners.add(new StatisticsListener(test, OperationType.ALL, Counter.OPERATIONS,
                stoppingConditions.getOperations()));
+
+      // RuntimeListener does not need to be registered with the event bus
+      if (stoppingConditions.getRuntime() > 0)
+         new RuntimeListener(test, stoppingConditions.getRuntime(),
+               stoppingConditions.getRuntimeUnit());
 
       for (final StatisticsListener listener : listeners)
       {
