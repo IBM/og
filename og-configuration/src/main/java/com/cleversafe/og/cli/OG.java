@@ -291,6 +291,7 @@ public class OG
                final Entry<Integer, AtomicLong> sc = scIterator.next();
                _logger.info(sc.getKey() + ": " + sc.getValue());
             }
+            _logger.info("aborts: " + this.stats.get(operation, Counter.ABORTS));
             _logger.info("");
          }
       }

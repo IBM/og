@@ -69,11 +69,24 @@ public class Statistics
    public void update(final Request request, final Response response)
    {
       final OperationType operation = MethodUtil.toOperationType(request.getMethod());
-      this.counters.get(operation).get(Counter.OPERATIONS).addAndGet(1);
-      this.counters.get(OperationType.ALL).get(Counter.OPERATIONS).addAndGet(1);
-      updateStatusCode(operation, response.getStatusCode());
-      updateStatusCode(OperationType.ALL, response.getStatusCode());
+      updateCounter(operation, Counter.OPERATIONS, 1);
+      updateCounter(OperationType.ALL, Counter.OPERATIONS, 1);
+      if (response.getMetaDataEntry("exception") != null)
+      {
+         updateCounter(operation, Counter.ABORTS, 1);
+         updateCounter(OperationType.ALL, Counter.ABORTS, 1);
+      }
+      else
+      {
+         updateStatusCode(operation, response.getStatusCode());
+         updateStatusCode(OperationType.ALL, response.getStatusCode());
+      }
       this.eventBus.post(this);
+   }
+
+   private void updateCounter(final OperationType operation, final Counter counter, final long value)
+   {
+      this.counters.get(operation).get(counter).addAndGet(value);
    }
 
    private void updateStatusCode(final OperationType operation, final int statusCode)

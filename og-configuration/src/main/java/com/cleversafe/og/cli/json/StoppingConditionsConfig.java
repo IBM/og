@@ -33,6 +33,7 @@ public class StoppingConditionsConfig
    private double runtime;
    private final TimeUnit runtimeUnit;
    private final Map<Integer, Integer> statusCodes;
+   private long aborts;
 
    public StoppingConditionsConfig()
    {
@@ -70,5 +71,13 @@ public class StoppingConditionsConfig
    public Map<Integer, Integer> getStatusCodes()
    {
       return this.statusCodes;
+   }
+
+   /**
+    * @return the aborts
+    */
+   public long getAborts()
+   {
+      return this.aborts;
    }
 }

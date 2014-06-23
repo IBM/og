@@ -218,6 +218,10 @@ public class OGModule extends AbstractModule
          statsListeners.add(new StatisticsListener(test, OperationType.ALL, Counter.OPERATIONS,
                stoppingConditions.getOperations()));
 
+      if (stoppingConditions.getAborts() > 0)
+         statsListeners.add(new StatisticsListener(test, OperationType.ALL, Counter.ABORTS,
+               stoppingConditions.getAborts()));
+
       // RuntimeListener does not need to be registered with the event bus
       if (stoppingConditions.getRuntime() > 0)
          new RuntimeListener(test, stoppingConditions.getRuntime(),
