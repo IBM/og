@@ -27,13 +27,13 @@ import java.util.Map.Entry;
 
 import com.cleversafe.og.api.ByteBufferConsumer;
 
-public class SOHWriteObjectNameConsumer implements ByteBufferConsumer
+public class SOHWriteByteBufferConsumer implements ByteBufferConsumer
 {
    private final byte[] objectNameBytes;
    private int idx;
    private final Map<String, String> metadata;
 
-   public SOHWriteObjectNameConsumer()
+   public SOHWriteByteBufferConsumer()
    {
       // TODO byte[] reuse? So we don't have to allocate a new byte[] for each request
       this.objectNameBytes = new byte[36];

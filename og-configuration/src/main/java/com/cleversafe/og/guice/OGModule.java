@@ -60,7 +60,7 @@ import com.cleversafe.og.object.manager.UUIDObjectNameProducer;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.scheduling.Scheduler;
-import com.cleversafe.og.soh.SOHWriteObjectNameConsumer;
+import com.cleversafe.og.soh.SOHWriteByteBufferConsumer;
 import com.cleversafe.og.statistic.Counter;
 import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.test.LoadTest;
@@ -141,7 +141,7 @@ public class OGModule extends AbstractModule
                   // TODO rework how ByteBufferConsumers are injected into a client
                   if ("soh.put_object".equals(input))
                   {
-                     return new SOHWriteObjectNameConsumer();
+                     return new SOHWriteByteBufferConsumer();
                   }
                   return ByteBufferConsumers.noOp();
                }
