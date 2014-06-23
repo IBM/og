@@ -17,5 +17,9 @@
 			<groupId>com.cleversafe</groupId>
 			<artifactId>og-util</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>com.cleversafe</groupId>
+			<artifactId>og-http</artifactId>
+		</dependency>
 	</dependencies>
 </project>

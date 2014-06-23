@@ -32,7 +32,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.cleversafe.og.operation.Method;
+import com.cleversafe.og.http.util.MethodUtil;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.OperationType;
@@ -68,7 +68,7 @@ public class Statistics
 
    public void update(final Request request, final Response response)
    {
-      final OperationType operation = fromMethod(request.getMethod());
+      final OperationType operation = MethodUtil.toOperationType(request.getMethod());
       this.counters.get(operation).get(Counter.OPERATIONS).addAndGet(1);
       this.counters.get(OperationType.ALL).get(Counter.OPERATIONS).addAndGet(1);
       updateStatusCode(operation, response.getStatusCode());
@@ -107,22 +107,5 @@ public class Statistics
    {
       checkNotNull(operation, "operation must not be null");
       return this.scCounters.get(operation).entrySet().iterator();
-   }
-
-   private OperationType fromMethod(final Method method)
-   {
-      switch (method)
-      {
-         case GET :
-         case HEAD :
-            return OperationType.READ;
-         case POST :
-         case PUT :
-            return OperationType.WRITE;
-         case DELETE :
-            return OperationType.DELETE;
-         default :
-            throw new RuntimeException(String.format("Unrecognized method [%s]", method));
-      }
    }
 }
