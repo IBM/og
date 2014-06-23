@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.cleversafe.og.api.Consumer;
 import com.cleversafe.og.api.Producer;
 import com.cleversafe.og.guice.annotation.DefaultContainer;
 import com.cleversafe.og.guice.annotation.DefaultEntity;
@@ -47,12 +48,17 @@ import com.cleversafe.og.guice.annotation.WriteHost;
 import com.cleversafe.og.http.Scheme;
 import com.cleversafe.og.http.producer.RequestProducer;
 import com.cleversafe.og.http.producer.URIProducer;
+import com.cleversafe.og.object.manager.ObjectManager;
+import com.cleversafe.og.object.manager.ObjectNameConsumer;
 import com.cleversafe.og.operation.Entity;
 import com.cleversafe.og.operation.EntityType;
 import com.cleversafe.og.operation.MetaDataConstants;
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
+import com.cleversafe.og.operation.Response;
+import com.cleversafe.og.soh.object.manager.SOHWriteObjectNameConsumer;
 import com.cleversafe.og.util.Entities;
+import com.cleversafe.og.util.OperationType;
 import com.cleversafe.og.util.Pair;
 import com.cleversafe.og.util.producer.Producers;
 import com.google.inject.AbstractModule;
@@ -168,6 +174,29 @@ public class SOHModule extends AbstractModule
             headers,
             Producers.of(Entities.of(EntityType.NONE, 0)),
             Producers.of(metadata));
+   }
+
+   @Provides
+   @Singleton
+   public List<Consumer<Response>> provideObjectNameConsumers(
+         final ObjectManager objectManager,
+         final Map<Long, Request> pendingRequests)
+   {
+      final List<Consumer<Response>> list = new ArrayList<Consumer<Response>>();
+
+      // TODO static util class for generating an objectName consumer?
+      final List<Integer> laxStatusCodes = new ArrayList<Integer>();
+      laxStatusCodes.add(200);
+      laxStatusCodes.add(201);
+      laxStatusCodes.add(204);
+
+      list.add(new SOHWriteObjectNameConsumer(objectManager, pendingRequests, OperationType.WRITE,
+            laxStatusCodes));
+      list.add(new ObjectNameConsumer(objectManager, pendingRequests, OperationType.READ,
+            laxStatusCodes));
+      list.add(new ObjectNameConsumer(objectManager, pendingRequests, OperationType.DELETE,
+            laxStatusCodes));
+      return list;
    }
 
    // TODO better way to do this? Maybe uriRoot should never be null and/or should be propagated

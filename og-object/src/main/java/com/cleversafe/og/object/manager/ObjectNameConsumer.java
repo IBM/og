@@ -19,81 +19,81 @@
 
 package com.cleversafe.og.object.manager;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
 import com.cleversafe.og.api.Consumer;
+import com.cleversafe.og.http.util.MethodUtil;
+import com.cleversafe.og.http.util.UriUtil;
 import com.cleversafe.og.object.LegacyObjectName;
 import com.cleversafe.og.object.ObjectName;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
-import com.google.common.base.Splitter;
+import com.cleversafe.og.util.OperationType;
+import com.google.common.collect.Iterables;
 import com.google.common.io.BaseEncoding;
 
 public class ObjectNameConsumer implements Consumer<Response>
 {
    private final ObjectManager objectManager;
    private final Map<Long, Request> pendingRequests;
-   private static final Splitter uriSplitter = Splitter.on("/").omitEmptyStrings();
+   private final OperationType operation;
+   private final List<Integer> statusCodes;
 
    public ObjectNameConsumer(
          final ObjectManager objectManager,
-         final Map<Long, Request> pendingRequests)
+         final Map<Long, Request> pendingRequests,
+         final OperationType operation,
+         final List<Integer> statusCodes)
    {
       this.objectManager = checkNotNull(objectManager, "objectManager must not be null");
       this.pendingRequests = checkNotNull(pendingRequests, "pendingRequests must not be null");
+      this.operation = checkNotNull(operation, "operation must not be null");
+      checkNotNull(statusCodes, "statusCodes must not be null");
+      checkArgument(statusCodes.size() > 0, "statusCodes size must be > 0");
+      for (final int statusCode : statusCodes)
+      {
+         // TODO use guava range
+         checkArgument(statusCode >= 100 && statusCode <= 599,
+               "all statusCodes in list must be in range [100, 599] [%s]", statusCode);
+      }
+      this.statusCodes = statusCodes;
    }
 
    @Override
    public void consume(final Response response)
    {
-      // must be non-null
+      checkNotNull(response, "response must not be null");
       final Request request = this.pendingRequests.get(response.getRequestId());
-      // TODO metadata constants?
-      final String responseObjectName = response.getMetaDataEntry("object_name");
-      // TODO move processing for SOH write object name response somewhere else
-      if (responseObjectName != null)
-      {
-         // SOH writes
-         // TODO fix ObjectManager interface to take strings?
-         this.objectManager.writeNameComplete(objectNameFromString(responseObjectName));
-      }
-      else
-      {
-         final ObjectName objectName = objectNameFromURI(request.getURI());
-         if (objectName != null)
-         {
-            switch (request.getMethod())
-            {
-               case GET :
-                  this.objectManager.releaseNameFromRead(objectName);
-                  break;
-               // TODO need to account for response codes
-               case PUT :
-                  this.objectManager.writeNameComplete(objectName);
-                  break;
-               default :
-                  break;
-            }
-         }
-      }
+
+      // if this consumer is not relevant for the current response, ignore
+      if (this.operation != MethodUtil.toOperationType(request.getMethod()))
+         return;
+
+      // if the status code of this response does not match what can be consumed, ignore
+      if (!Iterables.contains(this.statusCodes, response.getStatusCode()))
+         return;
+
+      // TODO check for null?
+      final String s = getObjectString(request, response);
+      final ObjectName objectName =
+            LegacyObjectName.forBytes(BaseEncoding.base16().lowerCase().decode(s));
+      updateObjectManager(objectName);
    }
 
-   private static ObjectName objectNameFromURI(final URI uri)
+   protected String getObjectString(final Request request, final Response response)
    {
-      final List<String> parts = uriSplitter.splitToList(uri.getPath());
-      // TODO this will break for soh writes rooted at /soh, need a better approach
-      // for consumption in general
-      if (parts.size() >= 2)
-         return objectNameFromString(parts.get(parts.size() - 1));
-      return null;
+      return UriUtil.getObjectName(request.getURI());
    }
 
-   private static ObjectName objectNameFromString(final String objectName)
+   private void updateObjectManager(final ObjectName objectName)
    {
-      return LegacyObjectName.forBytes(BaseEncoding.base16().lowerCase().decode(objectName));
+      if (OperationType.WRITE == this.operation)
+         this.objectManager.writeNameComplete(objectName);
+      else if (OperationType.READ == this.operation)
+         this.objectManager.releaseNameFromRead(objectName);
    }
 }

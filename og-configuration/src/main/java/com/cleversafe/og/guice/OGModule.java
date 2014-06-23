@@ -53,7 +53,6 @@ import com.cleversafe.og.http.auth.HttpAuth;
 import com.cleversafe.og.http.util.ApiType;
 import com.cleversafe.og.object.manager.DeleteObjectNameProducer;
 import com.cleversafe.og.object.manager.ObjectManager;
-import com.cleversafe.og.object.manager.ObjectNameConsumer;
 import com.cleversafe.og.object.manager.RandomObjectPopulator;
 import com.cleversafe.og.object.manager.ReadObjectNameProducer;
 import com.cleversafe.og.object.manager.UUIDObjectNameProducer;
@@ -100,7 +99,9 @@ public class OGModule extends AbstractModule
          @ReadWeight final double readWeight,
          @DeleteWeight final double deleteWeight,
          final ObjectManager objectManager,
+         final Map<Long, Request> pendingRequests,
          final Scheduler scheduler,
+         final List<Consumer<Response>> consumers,
          final Statistics stats)
    {
       final double sum = readWeight + writeWeight + deleteWeight;
@@ -116,15 +117,15 @@ public class OGModule extends AbstractModule
       if (deleteWeight > 0.0)
          wrc.addChoice(delete, deleteWeight);
 
-      final Map<Long, Request> pendingRequests = new ConcurrentHashMap<Long, Request>();
-      final List<Consumer<Response>> consumers = new ArrayList<Consumer<Response>>();
-      final Consumer<Response> objectConsumer =
-            new ObjectNameConsumer(objectManager, pendingRequests);
-      consumers.add(objectConsumer);
-
-      // TODO account for threaded vs iops
       return new SimpleOperationManager(Producers.of(wrc), consumers, scheduler, pendingRequests,
             stats);
+   }
+
+   @Provides
+   @Singleton
+   public Map<Long, Request> providePendingRequests()
+   {
+      return new ConcurrentHashMap<Long, Request>();
    }
 
    @Provides
