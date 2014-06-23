@@ -17,7 +17,7 @@
 // Date: Apr 7, 2014
 // ---------------------
 
-package com.cleversafe.og.cli.json.enums;
+package com.cleversafe.og.http.util;
 
 public enum ApiType
 {

@@ -24,8 +24,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.cleversafe.og.cli.json.enums.ApiType;
 import com.cleversafe.og.http.Scheme;
+import com.cleversafe.og.http.util.ApiType;
 import com.cleversafe.og.operation.EntityType;
 import com.cleversafe.og.util.OperationType;
 
