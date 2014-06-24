@@ -40,6 +40,7 @@ import com.cleversafe.og.cli.json.JsonConfig;
 import com.cleversafe.og.cli.json.OperationConfig;
 import com.cleversafe.og.cli.json.StoppingConditionsConfig;
 import com.cleversafe.og.cli.json.enums.AuthType;
+import com.cleversafe.og.cli.json.enums.CollectionAlgorithmType;
 import com.cleversafe.og.cli.json.enums.ConcurrencyType;
 import com.cleversafe.og.distribution.Distribution;
 import com.cleversafe.og.distribution.NormalDistribution;
@@ -133,7 +134,7 @@ public class JsonModule extends AbstractModule
    @DefaultHost
    public Producer<String> provideDefaultHost()
    {
-      return createHost(this.config.getHosts());
+      return createHost(this.config.getHostAlgorithm(), this.config.getHosts());
    }
 
    @Provides
@@ -166,18 +167,25 @@ public class JsonModule extends AbstractModule
    {
       final OperationConfig config = this.config.getOperationConfig().get(operationType);
       if (config != null && config.getHosts() != null)
-         return createHost(config.getHosts());
+         return createHost(config.getHostAlgorithm(), config.getHosts());
       return defaultHost;
    }
 
-   private Producer<String> createHost(final List<String> hosts)
+   private Producer<String> createHost(
+         final CollectionAlgorithmType algorithm,
+         final List<String> hosts)
    {
-      final WeightedRandomChoice<String> wrc = new WeightedRandomChoice<String>();
-      for (final String host : hosts)
+      if (CollectionAlgorithmType.ROUNDROBIN == algorithm)
+         return Producers.roundRobin(hosts);
+      else
       {
-         wrc.addChoice(host);
+         final WeightedRandomChoice<String> wrc = new WeightedRandomChoice<String>();
+         for (final String host : hosts)
+         {
+            wrc.addChoice(host);
+         }
+         return Producers.of(wrc);
       }
-      return Producers.of(wrc);
    }
 
    @Provides

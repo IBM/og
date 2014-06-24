@@ -23,14 +23,26 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.cleversafe.og.cli.json.enums.CollectionAlgorithmType;
+
 public class OperationConfig
 {
+   CollectionAlgorithmType hostAlgorithm;
    List<String> hosts;
    Map<String, String> headers;
 
    public OperationConfig()
    {
+      this.hostAlgorithm = CollectionAlgorithmType.ROUNDROBIN;
       this.headers = new HashMap<String, String>();
+   }
+
+   /**
+    * @return the hostAlgorithm
+    */
+   public CollectionAlgorithmType getHostAlgorithm()
+   {
+      return this.hostAlgorithm;
    }
 
    /**

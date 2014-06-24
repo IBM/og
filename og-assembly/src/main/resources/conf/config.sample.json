@@ -12,6 +12,10 @@
 //"scheme": "http",
 
 
+// TODO description
+// "host_algorithm": "roundrobin",
+
+
 // A list of hosts for the tool to send http requests to. Hosts are selected
 // randomly on a per-request basis.
 //

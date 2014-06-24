@@ -24,6 +24,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.cleversafe.og.cli.json.enums.CollectionAlgorithmType;
 import com.cleversafe.og.http.Scheme;
 import com.cleversafe.og.http.util.ApiType;
 import com.cleversafe.og.operation.EntityType;
@@ -32,6 +33,7 @@ import com.cleversafe.og.util.OperationType;
 public class JsonConfig
 {
    Scheme scheme;
+   CollectionAlgorithmType hostAlgorithm;
    List<String> hosts;
    Integer port;
    ApiType api;
@@ -54,6 +56,7 @@ public class JsonConfig
    public JsonConfig()
    {
       this.scheme = Scheme.HTTP;
+      this.hostAlgorithm = CollectionAlgorithmType.ROUNDROBIN;
       this.hosts = new ArrayList<String>();
       this.api = ApiType.SOH;
       this.headers = new LinkedHashMap<String, String>();
@@ -75,6 +78,14 @@ public class JsonConfig
    public Scheme getScheme()
    {
       return this.scheme;
+   }
+
+   /**
+    * @return the hostAlgorithm
+    */
+   public CollectionAlgorithmType getHostAlgorithm()
+   {
+      return this.hostAlgorithm;
    }
 
    /**
