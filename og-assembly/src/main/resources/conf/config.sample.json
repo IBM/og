@@ -1,37 +1,39 @@
 {
-// test.json is a json-formatted test configuration file for the OOM tool.
-// See http://www.json.org/ for more details regarding the json format.
+// config.sample.json is a json-formatted test configuration file for the OG
+// tool. See http://www.json.org/ for more details regarding the json format.
 //
-// All required fields are uncommented. Optional fields are commented out, with
-// their respective default values present.
+// All required fields are uncommented. Each optional field is present but
+// commented out, and contains a configuration line showing its respective
+// default value.
+//
+// Note: All configuration names are strings and must be quoted e.g. "scheme"
 
 
-// The scheme to use for requests. Valid values are: "http", "https". Values
-// are case insensitive.
+// The httpe scheme to use. One of ("http", "https")
 
-//"scheme": "http",
+// "scheme": "http",
 
 
-// TODO description
+// the algorithm to use when determining which host to use for the next request.
+// One of ("random", "roundrobin"). Ignored if only one host is specified. 
+
 // "host_algorithm": "roundrobin",
 
 
-// A list of hosts for the tool to send http requests to. Hosts are selected
-// randomly on a per-request basis.
+// A list of hosts to use.
 //
-// Example1: "hosts": ["192.168.8.10"]
-// Example2: "hosts": ["dc-a2100-3838.cleversafelabs.com", "10.10.1.56"]
+// Example1 "hosts": ["192.168.8.10"]
+// Example2 "hosts": ["dc-a2100-3838.cleversafelabs.com", "10.10.1.56"]
 
 "hosts": [],
 
 
-// The http port to send requests on. Valid values are positive integers.
+// The http port to use.
 
 // "port": 80,
 
 
-// The object api to use for requests. Valid values are:
-// soh, s3, openstack, webdav. Values are case insensitive.
+// The object api to use. One of ("soh", "s3", "openstack", "webdav") 
 
 // "api": "soh",
 
@@ -39,18 +41,18 @@
 // The path at which the root of the object api resides. Object apis can be
 // rooted at arbitrary base paths.
 //
-// Example1: "/" -> the root of the object api under test resides at /
-// Example2: "/soh/" -> the root of the object api under test resides at /soh/
+// Example1 "uri_root": "/"
+// Example2 "uri_root": "/soh/"
 
 // "uri_root": "/<api>/", // where <api> is the api under test
 
 
-// The container to use for requests.
+// The container to use.
 
 "container": "",
 
 
-// Request headers to set for all operations. Keys and Values are strings.
+// Request headers to set for every request.
 //
 // Example1 (s3 canned object acl):
 // "headers": {
@@ -60,20 +62,17 @@
 // "headers": {},
 
 
-// Percentage of write operations to perform. Valid Values are integers or
-// decimals in the range [0.0, 100.0]
+// Percentage of write requests.
 
 // "write": 100.0,
 
 
-// Percentage of read operations to perform. Valid Values are integers or
-// decimals in the range [0.0, 100.0]
+// Percentage of read requests.
 
 // "read": 0.0,
 
 
-// Percentage of delete operations to perform. Valid Values are integers or
-// decimals in the range [0.0, 100.0]
+// Percentage of delete requests.
 
 // "delete": 0.0,
 
@@ -83,36 +82,15 @@
 // distribution is randomly selected on a per-request basis based on the
 // weights of each configured distribution.
 //
-// A distribution is constructed from six parameters:
+// Distribution is one of ("uniform", "normal")
 //
-// "distribution"->	the type of mathematical distribution to use. Valid
-//			values are: uniform, normal, lognormal. Values are
-//			case insensitive.
-//
-// "average" ->		the average file size for this distribution. Valid
-//			value are integers or decimals >= 0.0.
-//
-// "average_unit" ->	the unit for the average file size for this
-//			distribution. //TODO describe valid values.
-//
-// "spread" ->		//TODO describe spread.
-//
-// "spread_unit" ->	//TODO describe spread_unit.
-//
-// "weight" ->		the weight of this distribution relative to all others.
-//			Used for randomly selecting a distribution on a
-//			per-request basis. Valid values are positive integers.
-//			If only a single distribution is configured this value
-//			is ignored.
-//
-// Example1: A single, constant file size of 10 kilobytes.
+// Example1 A single, constant file size of 10 kilobytes.
 // "filesizes": [
 // {
 // "average": 10,
 // "average_unit": "kb"
 // }
 // ],
-// TODO more complex example
 
 // "filesizes": [
 // {
@@ -126,14 +104,12 @@
 // ],
 
 
-// The type of generated source data to use for writes. Valid values are:
-// random, zeroes. Values are case insensitive.
+// The generated source data to use for writes. One of ("random", "zeroes")
 
 // "source": "random",
 
 
-// The type of concurrency to use for the test.
-// TODO fuller explanation.
+// The type of concurrency to use. One of ("iops", "threads").
 
 // "concurrency": {
 // "type": "iops",
@@ -144,33 +120,36 @@
 
 // The credentials to use for the test. If username is set, password must
 // also be set.
-// TODO fuller explanation.
+//
+// "auth_type" is one of ("basic", "awsv2").
 
 // "authentication": {
-// 	"auth_type": "basic",
-// 	"username": "",
-// 	"password": ""
+// "auth_type": "basic",
+// "username": "",
+// "password": ""
 // },
 
+
+// Stopping conditions that trigger the end of the test.
 
 // "stopping_conditions": {
-// 	"operations": 0,
-// 	"runtime": 0,
-// 	"runtime_unit": "seconds",
-// 	"status_codes": {
-// 		"201": 0
-// 	},
-//	"aborts": 0
+// "operations": 0,
+// "runtime": 0.0,
+// "runtime_unit": "seconds",
+// "status_codes": {
+// "201": 0
+// },
+// "aborts": 0
 // },
 
 
-// TODO fix this description
-// The location to store object names. Default is current working directory.
-// "object_location": "./object"
-// },
+// The root directory to store object names.
+
+// "object_location": "./object",
 
 
-// TODO description
+// Advanced client configuration options
+
 "client": {
 	"connect_timeout": 0,
 	"so_timeout": 0,
@@ -182,4 +161,5 @@
 	"expect_continue": false,
 	"wait_for_continue": 3000
 }
+
 }
