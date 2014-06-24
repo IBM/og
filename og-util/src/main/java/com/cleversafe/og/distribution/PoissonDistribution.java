@@ -24,8 +24,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Random;
 
-import com.cleversafe.og.distribution.Distribution;
-
 /**
  * A <code>Distribution</code> implementation that returns values conforming to a poisson
  * distribution.
@@ -62,7 +60,7 @@ public class PoissonDistribution implements Distribution
    public PoissonDistribution(final double mean, final Random random)
    {
       checkArgument(mean >= 0.0, "mean must be >= 0.0 [%s]", mean);
-      checkNotNull(random, "random must not be null");
+      checkNotNull(random);
       this.mean = mean;
       this.random = random;
    }

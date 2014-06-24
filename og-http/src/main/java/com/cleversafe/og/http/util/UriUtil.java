@@ -40,7 +40,7 @@ public class UriUtil
 
    public static String getObjectName(final URI uri)
    {
-      checkNotNull(uri, "uri must not be null");
+      checkNotNull(uri);
       final List<String> parts = uriSplitter.splitToList(uri.getPath());
 
       if (parts.size() == 3)

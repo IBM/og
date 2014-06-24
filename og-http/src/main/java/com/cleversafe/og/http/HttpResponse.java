@@ -47,8 +47,8 @@ public class HttpResponse implements Response
       this.requestId = requestId;
       checkArgument(statusCode >= 0, "statusCode must be >= 0 [%s]", statusCode);
       this.statusCode = statusCode;
-      this.headers = checkNotNull(headers, "headers must not be null");
-      this.metadata = checkNotNull(metadata, "metadata must not be null");
+      this.headers = checkNotNull(headers);
+      this.metadata = checkNotNull(metadata);
    }
 
    @Override

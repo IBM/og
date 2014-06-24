@@ -50,11 +50,11 @@ public class URIProducer implements Producer<URI>
          final Producer<Map<String, String>> queryParameters,
          final boolean trailingSlash)
    {
-      this.scheme = checkNotNull(scheme, "scheme must not be null");
-      this.host = checkNotNull(host, "host must not be null");
+      this.scheme = checkNotNull(scheme);
+      this.host = checkNotNull(host);
       this.port = port;
-      this.parts = checkNotNull(parts, "parts must not be null");
-      this.queryParameters = checkNotNull(queryParameters, "queryParameters must not be null");
+      this.parts = checkNotNull(parts);
+      this.queryParameters = checkNotNull(queryParameters);
       this.trailingSlash = trailingSlash;
    }
 

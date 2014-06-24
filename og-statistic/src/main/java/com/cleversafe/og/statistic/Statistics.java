@@ -62,7 +62,7 @@ public class Statistics
             this.counters.get(operation).put(counter, new AtomicLong());
          }
       }
-      this.eventBus = checkNotNull(eventBus, "eventBus must not be null");
+      this.eventBus = checkNotNull(eventBus);
       this.unmappedSC = new AtomicLong(1);
    }
 
@@ -102,8 +102,8 @@ public class Statistics
 
    public long get(final OperationType operation, final Counter counter)
    {
-      checkNotNull(operation, "operation must not be null");
-      checkNotNull(counter, "counter must not be null");
+      checkNotNull(operation);
+      checkNotNull(counter);
       return this.counters.get(operation).get(counter).get();
    }
 
@@ -118,7 +118,7 @@ public class Statistics
    // TODO clean this up, would be nice not to expose AtomicLong and other internal details
    public Iterator<Entry<Integer, AtomicLong>> statusCodeIterator(final OperationType operation)
    {
-      checkNotNull(operation, "operation must not be null");
+      checkNotNull(operation);
       return this.scCounters.get(operation).entrySet().iterator();
    }
 }

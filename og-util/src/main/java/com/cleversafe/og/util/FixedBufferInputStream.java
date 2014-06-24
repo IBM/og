@@ -51,7 +51,7 @@ public class FixedBufferInputStream extends InputStream
 
    public FixedBufferInputStream(final byte[] buf, final long size)
    {
-      this.buf = checkNotNull(buf, "buf must not be null");
+      this.buf = checkNotNull(buf);
       checkArgument(buf.length > 0, "buf length must be > 0 [%s]", buf.length);
       checkArgument(size >= 0, "size must be >= 0, [%s]", size);
 
@@ -82,7 +82,7 @@ public class FixedBufferInputStream extends InputStream
    // TODO: implement internal state that tracks our cursor or offset position
    public int read(final byte[] b, final int off, final int len)
    {
-      checkNotNull(b, "b must not be null");
+      checkNotNull(b);
       if (off < 0 || len < 0 || len > b.length - off)
       {
          throw new IndexOutOfBoundsException();

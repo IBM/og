@@ -38,7 +38,7 @@ public class RoundRobinProducer<T> implements Producer<T>
 
    public RoundRobinProducer(final List<T> items)
    {
-      this.items = checkNotNull(items, "items must not be null");
+      this.items = checkNotNull(items);
       checkArgument(items.size() > 0, "items size must be > 0");
       this.counter = new AtomicLong(0);
    }

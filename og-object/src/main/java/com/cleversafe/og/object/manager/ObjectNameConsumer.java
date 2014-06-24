@@ -49,10 +49,10 @@ public class ObjectNameConsumer implements Consumer<Response>
          final OperationType operation,
          final List<Integer> statusCodes)
    {
-      this.objectManager = checkNotNull(objectManager, "objectManager must not be null");
-      this.pendingRequests = checkNotNull(pendingRequests, "pendingRequests must not be null");
-      this.operation = checkNotNull(operation, "operation must not be null");
-      checkNotNull(statusCodes, "statusCodes must not be null");
+      this.objectManager = checkNotNull(objectManager);
+      this.pendingRequests = checkNotNull(pendingRequests);
+      this.operation = checkNotNull(operation);
+      checkNotNull(statusCodes);
       checkArgument(statusCodes.size() > 0, "statusCodes size must be > 0");
       for (final int statusCode : statusCodes)
       {
@@ -66,7 +66,7 @@ public class ObjectNameConsumer implements Consumer<Response>
    @Override
    public void consume(final Response response)
    {
-      checkNotNull(response, "response must not be null");
+      checkNotNull(response);
       final Request request = this.pendingRequests.get(response.getRequestId());
 
       // if this consumer is not relevant for the current response, ignore

@@ -91,7 +91,7 @@ public class JsonModule extends AbstractModule
 
    public JsonModule(final JsonConfig config)
    {
-      this.config = checkNotNull(config, "config must not be null");
+      this.config = checkNotNull(config);
    }
 
    @Override

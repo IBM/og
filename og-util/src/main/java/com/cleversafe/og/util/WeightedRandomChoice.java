@@ -93,7 +93,7 @@ public class WeightedRandomChoice<T>
     */
    public WeightedRandomChoice(final Random random)
    {
-      checkNotNull(random, "random must not be null");
+      checkNotNull(random);
       this.choices = new ArrayList<Choice<T>>();
       this.totalWeight = 0.0;
       this.random = random;
@@ -127,7 +127,7 @@ public class WeightedRandomChoice<T>
     */
    public void addChoice(final T choice, final double weight)
    {
-      checkNotNull(choice, "choice must not be null");
+      checkNotNull(choice);
       checkArgument(weight > 0.0, "weight must be > 0.0 [%s]", weight);
       this.choices.add(new Choice<T>(choice, weight));
       this.totalWeight += weight;

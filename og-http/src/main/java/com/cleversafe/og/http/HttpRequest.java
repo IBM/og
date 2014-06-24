@@ -61,11 +61,11 @@ public class HttpRequest implements Request
    {
       checkArgument(id >= 0, "id must be >= 0 [%s]", id);
       this.id = id;
-      this.method = checkNotNull(method, "method must not be null");
-      this.uri = checkNotNull(uri, "uri must not be null");
-      this.headers = checkNotNull(headers, "headers must not be null");
-      this.entity = checkNotNull(entity, "entity must not be null");
-      this.metadata = checkNotNull(metadata, "metadata must not be null");
+      this.method = checkNotNull(method);
+      this.uri = checkNotNull(uri);
+      this.headers = checkNotNull(headers);
+      this.entity = checkNotNull(entity);
+      this.metadata = checkNotNull(metadata);
    }
 
    @Override

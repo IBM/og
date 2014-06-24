@@ -47,9 +47,9 @@ public class LoadTest
          final Client client,
          final ExecutorService executorService)
    {
-      this.operationManager = checkNotNull(operationManager, "operationManager must not be null");
-      this.client = checkNotNull(client, "client must not be null");
-      this.executorService = checkNotNull(executorService, "executorService must not be null");
+      this.operationManager = checkNotNull(operationManager);
+      this.client = checkNotNull(client);
+      this.executorService = checkNotNull(executorService);
       this.running = new AtomicBoolean(true);
    }
 

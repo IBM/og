@@ -30,7 +30,7 @@ public class WeightedRandomChoiceProducer<T> implements Producer<T>
 
    private WeightedRandomChoiceProducer(final WeightedRandomChoice<T> wrc)
    {
-      this.wrc = checkNotNull(wrc, "wrc must not be null");
+      this.wrc = checkNotNull(wrc);
    }
 
    public static <K> WeightedRandomChoiceProducer<K> of(final WeightedRandomChoice<K> item)

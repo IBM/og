@@ -28,8 +28,8 @@ public class Pair<K, V>
 
    public Pair(final K key, final V value)
    {
-      this.key = checkNotNull(key, "key must not be null");
-      this.value = checkNotNull(value, "value must not be null");
+      this.key = checkNotNull(key);
+      this.value = checkNotNull(value);
    }
 
    public K getKey()

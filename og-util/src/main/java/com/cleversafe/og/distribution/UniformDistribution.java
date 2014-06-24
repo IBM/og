@@ -24,8 +24,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Random;
 
-import com.cleversafe.og.distribution.Distribution;
-
 /**
  * A <code>Distribution</code> implementation that returns values conforming to a uniform
  * distribution.
@@ -73,7 +71,7 @@ public class UniformDistribution implements Distribution
    {
       checkArgument(mean >= 0.0, "mean must be >= 0.0 [%s]", mean);
       checkArgument(spread >= 0.0, "spread must be >= 0.0 [%s]", spread);
-      checkNotNull(random, "random must not be null");
+      checkNotNull(random);
       this.mean = mean;
       this.spread = spread;
       this.random = random;

@@ -25,7 +25,6 @@ import java.util.concurrent.TimeUnit;
 
 import com.cleversafe.og.distribution.Distribution;
 import com.cleversafe.og.operation.Response;
-import com.cleversafe.og.scheduling.Scheduler;
 
 public class RequestRateScheduler implements Scheduler
 {
@@ -35,8 +34,8 @@ public class RequestRateScheduler implements Scheduler
 
    public RequestRateScheduler(final Distribution count, final TimeUnit unit)
    {
-      this.count = checkNotNull(count, "count must not be null");
-      this.unit = checkNotNull(unit, "unit must not be null");
+      this.count = checkNotNull(count);
+      this.unit = checkNotNull(unit);
    }
 
    @Override

@@ -39,8 +39,8 @@ public class BasicAuth implements HttpAuth
 
    public BasicAuth(final Producer<String> username, final Producer<String> password)
    {
-      this.username = checkNotNull(username, "username must not be null");
-      this.password = checkNotNull(password, "password must not be null");
+      this.username = checkNotNull(username);
+      this.password = checkNotNull(password);
    }
 
    @Override

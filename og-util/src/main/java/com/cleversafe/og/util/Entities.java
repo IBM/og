@@ -40,7 +40,7 @@ public class Entities
 
    public static Entity of(final EntityType type, final long size)
    {
-      checkNotNull(type, "type must not be null");
+      checkNotNull(type);
       checkArgument(size >= 0, "size must be >= 0 [%s]", size);
       return new Entity()
       {
@@ -63,7 +63,7 @@ public class Entities
 
    public static InputStream createInputStream(final Entity entity)
    {
-      checkNotNull(entity, "entity must not be null");
+      checkNotNull(entity);
       byte[] buf;
 
       switch (entity.getType())

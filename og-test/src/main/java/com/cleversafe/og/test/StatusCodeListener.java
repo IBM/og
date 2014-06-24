@@ -43,8 +43,8 @@ public class StatusCodeListener
          final int statusCode,
          final long thresholdValue)
    {
-      this.test = checkNotNull(test, "test must not be null");
-      this.operation = checkNotNull(operation, "operation must not be null");
+      this.test = checkNotNull(test);
+      this.operation = checkNotNull(operation);
       // TODO use guava range
       checkArgument(statusCode >= 100 && statusCode <= 599,
             "statusCode must be in range [100, 599] [%s]", statusCode);

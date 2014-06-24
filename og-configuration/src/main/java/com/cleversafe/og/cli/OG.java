@@ -246,7 +246,7 @@ public class OG
       try
       {
          checkArgument(config.getHosts().size() > 0, "At least one accesser must be specified");
-         checkNotNull(config.getContainer(), "vault must not be null");
+         checkNotNull(config.getContainer());
       }
       catch (final Exception e)
       {
@@ -262,7 +262,7 @@ public class OG
 
       public ShutdownHook(final Statistics stats, final ObjectManager objectManager)
       {
-         this.stats = checkNotNull(stats, "stats must not be null");
+         this.stats = checkNotNull(stats);
          this.objectManager = checkNotNull(objectManager);
       }
 

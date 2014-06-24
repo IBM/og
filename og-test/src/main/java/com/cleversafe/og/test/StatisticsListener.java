@@ -44,9 +44,9 @@ public class StatisticsListener
          final Counter counter,
          final long thresholdValue)
    {
-      this.test = checkNotNull(test, "test must not be null");
-      this.operation = checkNotNull(operation, "operation must not be null");
-      this.counter = checkNotNull(counter, "counter must not be null");
+      this.test = checkNotNull(test);
+      this.operation = checkNotNull(operation);
+      this.counter = checkNotNull(counter);
       checkArgument(thresholdValue > 0, "thresholdValue must be > 0 [%s]", thresholdValue);
       this.thresholdValue = thresholdValue;
    }

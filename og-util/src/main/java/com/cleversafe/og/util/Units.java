@@ -130,7 +130,7 @@ public class Units
 
    public static TimeUnit time(final String time)
    {
-      checkNotNull(time, "time must not be null");
+      checkNotNull(time);
       final TimeUnit unit = TIME_UNITS.get(time.toUpperCase());
       checkArgument(unit != null, "Could not parse time [%s]", time);
       return unit;
@@ -138,7 +138,7 @@ public class Units
 
    public static SizeUnit size(final String size)
    {
-      checkNotNull(size, "size must not be null");
+      checkNotNull(size);
       final SizeUnit unit = SIZE_UNITS.get(size.toUpperCase());
       checkArgument(unit != null, "Could not parse size [%s]", size);
       return unit;

@@ -99,8 +99,7 @@ public class ApacheClient implements Client
       checkArgument(soTimeout >= 0, "soTimeout must be >= 0 [%s]", soTimeout);
       checkArgument(soLinger >= -1, "soLinger must be >= -1 [%s]", soLinger);
       checkArgument(waitForContinue >= 0, "waitForContinue must be >= 0 [%s]", waitForContinue);
-      this.byteBufferConsumers =
-            checkNotNull(byteBufferConsumers, "byteBufferConsumers must not be null");
+      this.byteBufferConsumers = checkNotNull(byteBufferConsumers);
 
       this.client = HttpClients.custom()
             // TODO HTTPS: setHostnameVerifier, setSslcontext, and SetSSLSocketFactory methods
@@ -151,7 +150,7 @@ public class ApacheClient implements Client
    @Override
    public ListenableFuture<Response> execute(final Request request)
    {
-      checkNotNull(request, "request must not be null");
+      checkNotNull(request);
       final ByteBufferConsumer consumer =
             this.byteBufferConsumers.apply(request.getMetaDataEntry(MetaDataConstants.RESPONSE_BODY_PROCESSOR.toString()));
       return this.executorService.submit(new BlockingHttpOperation(this.client, this.auth, request,

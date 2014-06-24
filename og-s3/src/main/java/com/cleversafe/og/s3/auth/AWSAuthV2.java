@@ -48,9 +48,8 @@ public class AWSAuthV2 implements HttpAuth
 
    public AWSAuthV2(final Producer<String> awsAccessKeyId, final Producer<String> awsSecretAccessKey)
    {
-      this.awsAccessKeyId = checkNotNull(awsAccessKeyId, "awsAccessKeyId must not be null");
-      this.awsSecretAccessKey =
-            checkNotNull(awsSecretAccessKey, "awsSecretAccessKey must not be null");
+      this.awsAccessKeyId = checkNotNull(awsAccessKeyId);
+      this.awsSecretAccessKey = checkNotNull(awsSecretAccessKey);
    }
 
    @Override

@@ -22,7 +22,6 @@ package com.cleversafe.og.object.manager;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.cleversafe.og.api.Producer;
-import com.cleversafe.og.object.manager.ObjectManager;
 
 public class DeleteObjectNameProducer implements Producer<String>
 {
@@ -30,7 +29,7 @@ public class DeleteObjectNameProducer implements Producer<String>
 
    public DeleteObjectNameProducer(final ObjectManager objectManager)
    {
-      this.objectManager = checkNotNull(objectManager, "objectManager must not be null");
+      this.objectManager = checkNotNull(objectManager);
    }
 
    @Override

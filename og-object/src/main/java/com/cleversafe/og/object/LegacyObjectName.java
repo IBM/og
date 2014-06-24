@@ -26,7 +26,6 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.UUID;
 
-import com.cleversafe.og.object.ObjectName;
 import com.google.common.io.BaseEncoding;
 
 /**
@@ -80,7 +79,7 @@ public class LegacyObjectName implements ObjectName
     */
    public static LegacyObjectName forUUID(final UUID objectName)
    {
-      checkNotNull(objectName, "objectName must not be null");
+      checkNotNull(objectName);
       return new LegacyObjectName(objectName);
    }
 
@@ -100,7 +99,7 @@ public class LegacyObjectName implements ObjectName
 
    public void setName(final UUID objectName)
    {
-      checkNotNull(objectName, "objectName must not be null");
+      checkNotNull(objectName);
       this.bytes.clear();
       setUUID(objectName);
    }
@@ -119,7 +118,7 @@ public class LegacyObjectName implements ObjectName
 
    private static void validateBytes(final byte[] objectName)
    {
-      checkNotNull(objectName, "objectName must not be null");
+      checkNotNull(objectName);
       checkArgument(objectName.length == ID_LENGTH, "objectName length must be = 0 [%s]",
             objectName.length);
    }
@@ -153,7 +152,7 @@ public class LegacyObjectName implements ObjectName
    @Override
    public int compareTo(final ObjectName o)
    {
-      checkNotNull(o, "o must not be null");
+      checkNotNull(o);
       // TODO compareTo that does not require creation of String objects every time
       return toString().compareTo(o.toString());
    }

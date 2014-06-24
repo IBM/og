@@ -36,10 +36,10 @@ public class RuntimeListener
 
    public RuntimeListener(final LoadTest test, final double duration, final TimeUnit unit)
    {
-      this.test = checkNotNull(test, "test must not be null");
+      this.test = checkNotNull(test);
       checkArgument(duration > 0.0, "duration must be > 0.0 [%s]", duration);
       this.duration = duration;
-      this.unit = checkNotNull(unit, "unit must not be null");
+      this.unit = checkNotNull(unit);
 
       final Thread t = new Thread(new Runnable()
       {

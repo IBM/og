@@ -28,7 +28,7 @@ public class ConstantProducer<T> implements Producer<T>
 
    private ConstantProducer(final T item)
    {
-      this.item = checkNotNull(item, "item must not be null");
+      this.item = checkNotNull(item);
    }
 
    public static <K> ConstantProducer<K> of(final K item)

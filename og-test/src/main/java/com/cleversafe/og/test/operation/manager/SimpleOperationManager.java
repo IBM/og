@@ -49,11 +49,11 @@ public class SimpleOperationManager implements OperationManager
          final Map<Long, Request> pendingRequests,
          final Statistics stats)
    {
-      this.requestMix = checkNotNull(requestMix, "requestMix must not be null");
-      this.consumers = checkNotNull(consumers, "consumers must not be null");
-      this.scheduler = checkNotNull(scheduler, "scheduler must not be null");
-      this.pendingRequests = checkNotNull(pendingRequests, "pendingRequests must not be null");
-      this.stats = checkNotNull(stats, "stats must not be null");
+      this.requestMix = checkNotNull(requestMix);
+      this.consumers = checkNotNull(consumers);
+      this.scheduler = checkNotNull(scheduler);
+      this.pendingRequests = checkNotNull(pendingRequests);
+      this.stats = checkNotNull(stats);
    }
 
    @Override
