@@ -112,9 +112,8 @@
 // The type of concurrency to use. One of ("iops", "threads").
 
 // "concurrency": {
-// "type": "iops",
-// "count": 1.0,
-// "unit": "seconds"
+// "type": "threads",
+// "count": 1,
 // },
 
 
