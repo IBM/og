@@ -40,6 +40,7 @@ import com.cleversafe.og.cli.json.JsonConfig;
 import com.cleversafe.og.cli.json.OperationConfig;
 import com.cleversafe.og.cli.json.StoppingConditionsConfig;
 import com.cleversafe.og.cli.json.enums.AuthType;
+import com.cleversafe.og.cli.json.enums.ConcurrencyType;
 import com.cleversafe.og.distribution.Distribution;
 import com.cleversafe.og.distribution.NormalDistribution;
 import com.cleversafe.og.distribution.UniformDistribution;
@@ -68,6 +69,7 @@ import com.cleversafe.og.http.auth.HttpAuth;
 import com.cleversafe.og.http.util.ApiType;
 import com.cleversafe.og.operation.Entity;
 import com.cleversafe.og.s3.auth.AWSAuthV2;
+import com.cleversafe.og.scheduling.ConcurrentRequestScheduler;
 import com.cleversafe.og.scheduling.RequestRateScheduler;
 import com.cleversafe.og.scheduling.Scheduler;
 import com.cleversafe.og.util.Entities;
@@ -428,8 +430,13 @@ public class JsonModule extends AbstractModule
    public Scheduler provideScheduler()
    {
       final ConcurrencyConfig concurrency = this.config.getConcurrency();
-      final Distribution count = new UniformDistribution(concurrency.getCount(), 0.0);
-      return new RequestRateScheduler(count, concurrency.getUnit());
+      if (ConcurrencyType.THREADS == concurrency.getType())
+         return new ConcurrentRequestScheduler(Math.round(concurrency.getCount()));
+      else
+      {
+         final Distribution count = new UniformDistribution(concurrency.getCount(), 0.0);
+         return new RequestRateScheduler(count, concurrency.getUnit());
+      }
    }
 
    @Provides

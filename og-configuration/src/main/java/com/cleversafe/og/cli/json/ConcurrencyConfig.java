@@ -21,9 +21,11 @@ package com.cleversafe.og.cli.json;
 
 import java.util.concurrent.TimeUnit;
 
+import com.cleversafe.og.cli.json.enums.ConcurrencyType;
+
 public class ConcurrencyConfig
 {
-   String type;
+   ConcurrencyType type;
    double count;
    TimeUnit unit;
    long rampup;
@@ -31,7 +33,7 @@ public class ConcurrencyConfig
 
    public ConcurrencyConfig()
    {
-      this.type = "threads";
+      this.type = ConcurrencyType.THREADS;
       this.count = 1.0;
       this.unit = TimeUnit.SECONDS;
       this.rampupUnit = TimeUnit.SECONDS;
@@ -40,7 +42,7 @@ public class ConcurrencyConfig
    /**
     * @return the type
     */
-   public String getType()
+   public ConcurrencyType getType()
    {
       return this.type;
    }
