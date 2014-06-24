@@ -69,11 +69,11 @@ import com.cleversafe.og.test.StatusCodeListener;
 import com.cleversafe.og.test.operation.manager.SimpleOperationManager;
 import com.cleversafe.og.util.ByteBufferConsumers;
 import com.cleversafe.og.util.OperationType;
-import com.cleversafe.og.util.WeightedRandomChoice;
-import com.cleversafe.og.util.producer.Producers;
+import com.cleversafe.og.util.producer.RandomChoiceProducer;
 import com.google.common.base.Function;
 import com.google.common.eventbus.EventBus;
 import com.google.common.math.DoubleMath;
+import com.google.common.reflect.TypeToken;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -108,17 +108,20 @@ public class OGModule extends AbstractModule
       checkArgument(DoubleMath.fuzzyEquals(sum, 100.0, err),
             "Sum of percentages must be 100.0 [%s]", sum);
 
-      final WeightedRandomChoice<Producer<Request>> wrc =
-            new WeightedRandomChoice<Producer<Request>>();
+      // Have to capture generic type with a type token
+      @SuppressWarnings("serial")
+      final TypeToken<Producer<Request>> t = new TypeToken<Producer<Request>>()
+      {};
+      final RandomChoiceProducer.Builder<Producer<Request>> wrc =
+            RandomChoiceProducer.custom(t.getRawType());
       if (writeWeight > 0.0)
-         wrc.addChoice(write, writeWeight);
+         wrc.withChoice(write, writeWeight);
       if (readWeight > 0.0)
-         wrc.addChoice(read, readWeight);
+         wrc.withChoice(read, readWeight);
       if (deleteWeight > 0.0)
-         wrc.addChoice(delete, deleteWeight);
+         wrc.withChoice(delete, deleteWeight);
 
-      return new SimpleOperationManager(Producers.of(wrc), consumers, scheduler, pendingRequests,
-            stats);
+      return new SimpleOperationManager(wrc.build(), consumers, scheduler, pendingRequests, stats);
    }
 
    @Provides

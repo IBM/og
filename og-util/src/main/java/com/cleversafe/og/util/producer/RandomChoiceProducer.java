@@ -87,7 +87,7 @@ public class RandomChoiceProducer<T> implements Producer<T>
       return currentTotalWeight;
    }
 
-   public static <T> Builder<T> custom(final Class<T> cls)
+   public static <T> Builder<T> custom(final Class<? super T> cls)
    {
       return new Builder<T>();
    }

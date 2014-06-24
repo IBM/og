@@ -22,7 +22,6 @@ package com.cleversafe.og.util.producer;
 import java.util.List;
 
 import com.cleversafe.og.api.Producer;
-import com.cleversafe.og.util.WeightedRandomChoice;
 
 public class Producers
 {
@@ -32,11 +31,6 @@ public class Producers
    public static <T> Producer<T> of(final T item)
    {
       return ConstantProducer.of(item);
-   }
-
-   public static <T> Producer<T> of(final WeightedRandomChoice<T> item)
-   {
-      return WeightedRandomChoiceProducer.of(item);
    }
 
    public static <T> Producer<T> roundRobin(final List<T> items)

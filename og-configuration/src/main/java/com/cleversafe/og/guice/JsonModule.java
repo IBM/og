@@ -76,8 +76,8 @@ import com.cleversafe.og.scheduling.Scheduler;
 import com.cleversafe.og.util.Entities;
 import com.cleversafe.og.util.OperationType;
 import com.cleversafe.og.util.Pair;
-import com.cleversafe.og.util.WeightedRandomChoice;
 import com.cleversafe.og.util.producer.Producers;
+import com.cleversafe.og.util.producer.RandomChoiceProducer;
 import com.google.common.base.CharMatcher;
 import com.google.common.math.DoubleMath;
 import com.google.inject.AbstractModule;
@@ -179,12 +179,12 @@ public class JsonModule extends AbstractModule
          return Producers.roundRobin(hosts);
       else
       {
-         final WeightedRandomChoice<String> wrc = new WeightedRandomChoice<String>();
+         final RandomChoiceProducer.Builder<String> wrc = RandomChoiceProducer.custom(String.class);
          for (final String host : hosts)
          {
-            wrc.addChoice(host);
+            wrc.withChoice(host);
          }
-         return Producers.of(wrc);
+         return wrc.build();
       }
    }
 
@@ -323,21 +323,22 @@ public class JsonModule extends AbstractModule
    @DefaultEntity
    public Producer<Entity> provideDefaultEntity()
    {
-      final WeightedRandomChoice<Distribution> wrc = new WeightedRandomChoice<Distribution>();
+      final RandomChoiceProducer.Builder<Distribution> wrc =
+            RandomChoiceProducer.custom(Distribution.class);
       for (final FileSizeConfig f : this.config.getFilesizes())
       {
-         wrc.addChoice(createSizeDistribution(f), f.getWeight());
+         wrc.withChoice(createSizeDistribution(f), f.getWeight());
       }
 
       final JsonConfig config = this.config;
       return new Producer<Entity>()
       {
-         private final WeightedRandomChoice<Distribution> sizes = wrc;
+         private final Producer<Distribution> sizes = wrc.build();
 
          @Override
          public Entity produce()
          {
-            return Entities.of(config.getSource(), (long) this.sizes.nextChoice().nextSample());
+            return Entities.of(config.getSource(), (long) this.sizes.produce().nextSample());
          }
       };
    }
