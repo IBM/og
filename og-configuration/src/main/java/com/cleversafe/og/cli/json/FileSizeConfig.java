@@ -29,8 +29,7 @@ public class FileSizeConfig
    SizeUnit averageUnit;
    double spread;
    SizeUnit spreadUnit;
-   // TODO weight should be decimal
-   long weight;
+   double weight;
 
    public FileSizeConfig()
    {
@@ -39,7 +38,7 @@ public class FileSizeConfig
       this.averageUnit = SizeUnit.MEBIBYTES;
       this.spread = 0.0;
       this.spreadUnit = SizeUnit.MEBIBYTES;
-      this.weight = 1;
+      this.weight = 1.0;
    }
 
    /**
@@ -85,7 +84,7 @@ public class FileSizeConfig
    /**
     * @return the weight
     */
-   public long getWeight()
+   public double getWeight()
    {
       return this.weight;
    }
