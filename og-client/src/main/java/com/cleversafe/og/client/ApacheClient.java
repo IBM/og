@@ -52,7 +52,7 @@ import org.slf4j.LoggerFactory;
 import com.cleversafe.og.http.HttpResponse;
 import com.cleversafe.og.http.auth.HttpAuth;
 import com.cleversafe.og.operation.EntityType;
-import com.cleversafe.og.operation.MetaDataConstants;
+import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.Entities;
@@ -152,7 +152,7 @@ public class ApacheClient implements Client
    {
       checkNotNull(request);
       final ByteBufferConsumer consumer =
-            this.byteBufferConsumers.apply(request.getMetaDataEntry(MetaDataConstants.RESPONSE_BODY_PROCESSOR.toString()));
+            this.byteBufferConsumers.apply(request.getMetaDataEntry(Metadata.RESPONSE_BODY_PROCESSOR.toString()));
       return this.executorService.submit(new BlockingHttpOperation(this.client, this.auth, request,
             consumer, this.gson, this.chunkedEncoding));
    }

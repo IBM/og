@@ -50,7 +50,7 @@ import com.cleversafe.og.object.manager.ObjectManager;
 import com.cleversafe.og.object.manager.ObjectNameConsumer;
 import com.cleversafe.og.operation.Entity;
 import com.cleversafe.og.operation.EntityType;
-import com.cleversafe.og.operation.MetaDataConstants;
+import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
@@ -58,7 +58,7 @@ import com.cleversafe.og.soh.SOHWriteByteBufferConsumer;
 import com.cleversafe.og.soh.object.manager.SOHWriteObjectNameConsumer;
 import com.cleversafe.og.util.ByteBufferConsumers;
 import com.cleversafe.og.util.Entities;
-import com.cleversafe.og.util.OperationType;
+import com.cleversafe.og.util.Operation;
 import com.cleversafe.og.util.Pair;
 import com.cleversafe.og.util.consumer.ByteBufferConsumer;
 import com.cleversafe.og.util.consumer.Consumer;
@@ -100,7 +100,7 @@ public class SOHModule extends AbstractModule
             .withQueryParams(queryParams)
             .build();
       final Map<String, String> metadata = new HashMap<String, String>();
-      metadata.put(MetaDataConstants.RESPONSE_BODY_PROCESSOR.toString(), "soh.put_object");
+      metadata.put(Metadata.RESPONSE_BODY_PROCESSOR.toString(), "soh.put_object");
 
       return new RequestProducer(id,
             Producers.of(Method.PUT),
@@ -194,11 +194,11 @@ public class SOHModule extends AbstractModule
       laxStatusCodes.add(201);
       laxStatusCodes.add(204);
 
-      list.add(new SOHWriteObjectNameConsumer(objectManager, pendingRequests, OperationType.WRITE,
+      list.add(new SOHWriteObjectNameConsumer(objectManager, pendingRequests, Operation.WRITE,
             laxStatusCodes));
-      list.add(new ObjectNameConsumer(objectManager, pendingRequests, OperationType.READ,
+      list.add(new ObjectNameConsumer(objectManager, pendingRequests, Operation.READ,
             laxStatusCodes));
-      list.add(new ObjectNameConsumer(objectManager, pendingRequests, OperationType.DELETE,
+      list.add(new ObjectNameConsumer(objectManager, pendingRequests, Operation.DELETE,
             laxStatusCodes));
       return list;
    }

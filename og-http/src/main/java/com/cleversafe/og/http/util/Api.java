@@ -19,7 +19,7 @@
 
 package com.cleversafe.og.http.util;
 
-public enum ApiType
+public enum Api
 {
    SOH,
    S3,

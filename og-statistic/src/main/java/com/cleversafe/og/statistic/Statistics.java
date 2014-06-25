@@ -35,24 +35,24 @@ import org.slf4j.LoggerFactory;
 import com.cleversafe.og.http.util.MethodUtil;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
-import com.cleversafe.og.util.OperationType;
+import com.cleversafe.og.util.Operation;
 import com.google.common.eventbus.EventBus;
 
 public class Statistics
 {
    private static Logger _logger = LoggerFactory.getLogger(Statistics.class);
-   private final Map<OperationType, Map<Counter, AtomicLong>> counters;
+   private final Map<Operation, Map<Counter, AtomicLong>> counters;
    // use concurrent hashmap at status code level, as additional status code keys may be mapped
    // concurrently during the lifetime of the test
-   private final Map<OperationType, ConcurrentNavigableMap<Integer, AtomicLong>> scCounters;
+   private final Map<Operation, ConcurrentNavigableMap<Integer, AtomicLong>> scCounters;
    private final EventBus eventBus;
    private AtomicLong unmappedSC;
 
    public Statistics(final EventBus eventBus)
    {
-      this.counters = new HashMap<OperationType, Map<Counter, AtomicLong>>();
-      this.scCounters = new HashMap<OperationType, ConcurrentNavigableMap<Integer, AtomicLong>>();
-      for (final OperationType operation : OperationType.values())
+      this.counters = new HashMap<Operation, Map<Counter, AtomicLong>>();
+      this.scCounters = new HashMap<Operation, ConcurrentNavigableMap<Integer, AtomicLong>>();
+      for (final Operation operation : Operation.values())
       {
          this.counters.put(operation, new HashMap<Counter, AtomicLong>());
 
@@ -68,28 +68,28 @@ public class Statistics
 
    public void update(final Request request, final Response response)
    {
-      final OperationType operation = MethodUtil.toOperationType(request.getMethod());
+      final Operation operation = MethodUtil.toOperationType(request.getMethod());
       updateCounter(operation, Counter.OPERATIONS, 1);
-      updateCounter(OperationType.ALL, Counter.OPERATIONS, 1);
+      updateCounter(Operation.ALL, Counter.OPERATIONS, 1);
       if (response.getMetaDataEntry("exception") != null)
       {
          updateCounter(operation, Counter.ABORTS, 1);
-         updateCounter(OperationType.ALL, Counter.ABORTS, 1);
+         updateCounter(Operation.ALL, Counter.ABORTS, 1);
       }
       else
       {
          updateStatusCode(operation, response.getStatusCode());
-         updateStatusCode(OperationType.ALL, response.getStatusCode());
+         updateStatusCode(Operation.ALL, response.getStatusCode());
       }
       this.eventBus.post(this);
    }
 
-   private void updateCounter(final OperationType operation, final Counter counter, final long value)
+   private void updateCounter(final Operation operation, final Counter counter, final long value)
    {
       this.counters.get(operation).get(counter).addAndGet(value);
    }
 
-   private void updateStatusCode(final OperationType operation, final int statusCode)
+   private void updateStatusCode(final Operation operation, final int statusCode)
    {
       final AtomicLong existingSC =
             this.scCounters.get(operation).putIfAbsent(statusCode, this.unmappedSC);
@@ -100,14 +100,14 @@ public class Statistics
          this.unmappedSC = new AtomicLong(1);
    }
 
-   public long get(final OperationType operation, final Counter counter)
+   public long get(final Operation operation, final Counter counter)
    {
       checkNotNull(operation);
       checkNotNull(counter);
       return this.counters.get(operation).get(counter).get();
    }
 
-   public long getStatusCode(final OperationType operation, final int statusCode)
+   public long getStatusCode(final Operation operation, final int statusCode)
    {
       final AtomicLong sc = this.scCounters.get(operation).get(statusCode);
       if (sc != null)
@@ -116,7 +116,7 @@ public class Statistics
    }
 
    // TODO clean this up, would be nice not to expose AtomicLong and other internal details
-   public Iterator<Entry<Integer, AtomicLong>> statusCodeIterator(final OperationType operation)
+   public Iterator<Entry<Integer, AtomicLong>> statusCodeIterator(final Operation operation)
    {
       checkNotNull(operation);
       return this.scCounters.get(operation).entrySet().iterator();

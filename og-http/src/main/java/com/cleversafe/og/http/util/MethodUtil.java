@@ -23,7 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.operation.Method;
-import com.cleversafe.og.util.OperationType;
+import com.cleversafe.og.util.Operation;
 
 public class MethodUtil
 {
@@ -32,18 +32,18 @@ public class MethodUtil
    private MethodUtil()
    {}
 
-   public static OperationType toOperationType(final Method method)
+   public static Operation toOperationType(final Method method)
    {
       switch (method)
       {
          case GET :
          case HEAD :
-            return OperationType.READ;
+            return Operation.READ;
          case POST :
          case PUT :
-            return OperationType.WRITE;
+            return Operation.WRITE;
          case DELETE :
-            return OperationType.DELETE;
+            return Operation.DELETE;
          default :
             throw new RuntimeException(String.format("Unrecognized method [%s]", method));
       }

@@ -27,20 +27,20 @@ import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.statistic.Counter;
 import com.cleversafe.og.statistic.Statistics;
-import com.cleversafe.og.util.OperationType;
+import com.cleversafe.og.util.Operation;
 import com.google.common.eventbus.Subscribe;
 
 public class StatisticsListener
 {
    private static Logger _logger = LoggerFactory.getLogger(StatisticsListener.class);
    private final LoadTest test;
-   private final OperationType operation;
+   private final Operation operation;
    private final Counter counter;
    private final long thresholdValue;
 
    public StatisticsListener(
          final LoadTest test,
-         final OperationType operation,
+         final Operation operation,
          final Counter counter,
          final long thresholdValue)
    {

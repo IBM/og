@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.statistic.Counter;
 import com.cleversafe.og.statistic.Statistics;
-import com.cleversafe.og.util.OperationType;
+import com.cleversafe.og.util.Operation;
 
 public class Summary
 {
@@ -108,13 +108,13 @@ public class Summary
          return;
 
       this.summary = new SummaryStats();
-      retrieveStats(this.summary.all, OperationType.ALL);
-      retrieveStats(this.summary.write, OperationType.WRITE);
-      retrieveStats(this.summary.read, OperationType.READ);
-      retrieveStats(this.summary.delete, OperationType.DELETE);
+      retrieveStats(this.summary.all, Operation.ALL);
+      retrieveStats(this.summary.write, Operation.WRITE);
+      retrieveStats(this.summary.read, Operation.READ);
+      retrieveStats(this.summary.delete, Operation.DELETE);
    }
 
-   private void retrieveStats(final OperationStats opStats, final OperationType operation)
+   private void retrieveStats(final OperationStats opStats, final Operation operation)
    {
       opStats.operations = this.stats.get(operation, Counter.OPERATIONS);
       final Iterator<Entry<Integer, AtomicLong>> it = this.stats.statusCodeIterator(operation);

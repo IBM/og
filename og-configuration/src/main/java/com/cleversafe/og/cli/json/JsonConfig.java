@@ -26,9 +26,9 @@ import java.util.Map;
 
 import com.cleversafe.og.cli.json.enums.CollectionAlgorithmType;
 import com.cleversafe.og.http.Scheme;
-import com.cleversafe.og.http.util.ApiType;
+import com.cleversafe.og.http.util.Api;
 import com.cleversafe.og.operation.EntityType;
-import com.cleversafe.og.util.OperationType;
+import com.cleversafe.og.util.Operation;
 
 public class JsonConfig
 {
@@ -36,7 +36,7 @@ public class JsonConfig
    CollectionAlgorithmType hostAlgorithm;
    List<String> hosts;
    Integer port;
-   ApiType api;
+   Api api;
    String uriRoot;
    String container;
    Map<String, String> headers;
@@ -51,14 +51,14 @@ public class JsonConfig
    String objectLocation;
    ClientConfig client;
 
-   Map<OperationType, OperationConfig> operationConfig;
+   Map<Operation, OperationConfig> operationConfig;
 
    public JsonConfig()
    {
       this.scheme = Scheme.HTTP;
       this.hostAlgorithm = CollectionAlgorithmType.ROUNDROBIN;
       this.hosts = new ArrayList<String>();
-      this.api = ApiType.SOH;
+      this.api = Api.SOH;
       this.headers = new LinkedHashMap<String, String>();
       this.filesizes = new ArrayList<FileSizeConfig>();
       this.filesizes.add(new FileSizeConfig());
@@ -68,7 +68,7 @@ public class JsonConfig
       this.stoppingConditions = new StoppingConditionsConfig();
       this.objectLocation = "./object";
       // TODO OperationType is not being lowercased when serialized
-      this.operationConfig = new LinkedHashMap<OperationType, OperationConfig>();
+      this.operationConfig = new LinkedHashMap<Operation, OperationConfig>();
       this.client = new ClientConfig();
    }
 
@@ -107,7 +107,7 @@ public class JsonConfig
    /**
     * @return the api
     */
-   public ApiType getApi()
+   public Api getApi()
    {
       return this.api;
    }
@@ -211,7 +211,7 @@ public class JsonConfig
    /**
     * @return the operationConfig
     */
-   public Map<OperationType, OperationConfig> getOperationConfig()
+   public Map<Operation, OperationConfig> getOperationConfig()
    {
       return this.operationConfig;
    }

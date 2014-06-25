@@ -31,7 +31,7 @@ import com.cleversafe.og.object.LegacyObjectName;
 import com.cleversafe.og.object.ObjectName;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
-import com.cleversafe.og.util.OperationType;
+import com.cleversafe.og.util.Operation;
 import com.cleversafe.og.util.consumer.Consumer;
 import com.cleversafe.og.util.producer.ProducerException;
 import com.google.common.collect.Iterables;
@@ -41,13 +41,13 @@ public class ObjectNameConsumer implements Consumer<Response>
 {
    private final ObjectManager objectManager;
    private final Map<Long, Request> pendingRequests;
-   private final OperationType operation;
+   private final Operation operation;
    private final List<Integer> statusCodes;
 
    public ObjectNameConsumer(
          final ObjectManager objectManager,
          final Map<Long, Request> pendingRequests,
-         final OperationType operation,
+         final Operation operation,
          final List<Integer> statusCodes)
    {
       this.objectManager = checkNotNull(objectManager);
@@ -94,9 +94,9 @@ public class ObjectNameConsumer implements Consumer<Response>
    {
       try
       {
-         if (OperationType.WRITE == this.operation)
+         if (Operation.WRITE == this.operation)
             this.objectManager.writeNameComplete(objectName);
-         else if (OperationType.READ == this.operation)
+         else if (Operation.READ == this.operation)
             this.objectManager.releaseNameFromRead(objectName);
       }
       catch (final ObjectManagerException e)

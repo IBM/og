@@ -66,14 +66,14 @@ import com.cleversafe.og.guice.annotation.WriteWeight;
 import com.cleversafe.og.http.Scheme;
 import com.cleversafe.og.http.auth.BasicAuth;
 import com.cleversafe.og.http.auth.HttpAuth;
-import com.cleversafe.og.http.util.ApiType;
+import com.cleversafe.og.http.util.Api;
 import com.cleversafe.og.operation.Entity;
 import com.cleversafe.og.s3.auth.AWSAuthV2;
 import com.cleversafe.og.scheduling.ConcurrentRequestScheduler;
 import com.cleversafe.og.scheduling.RequestRateScheduler;
 import com.cleversafe.og.scheduling.Scheduler;
 import com.cleversafe.og.util.Entities;
-import com.cleversafe.og.util.OperationType;
+import com.cleversafe.og.util.Operation;
 import com.cleversafe.og.util.Pair;
 import com.cleversafe.og.util.producer.Producer;
 import com.cleversafe.og.util.producer.Producers;
@@ -142,7 +142,7 @@ public class JsonModule extends AbstractModule
    @WriteHost
    public Producer<String> provideWriteHost(@DefaultHost final Producer<String> host)
    {
-      return provideHost(OperationType.WRITE, host);
+      return provideHost(Operation.WRITE, host);
    }
 
    @Provides
@@ -150,7 +150,7 @@ public class JsonModule extends AbstractModule
    @ReadHost
    public Producer<String> provideReadHost(@DefaultHost final Producer<String> host)
    {
-      return provideHost(OperationType.READ, host);
+      return provideHost(Operation.READ, host);
    }
 
    @Provides
@@ -158,11 +158,11 @@ public class JsonModule extends AbstractModule
    @DeleteHost
    public Producer<String> provideDeleteHost(@DefaultHost final Producer<String> host)
    {
-      return provideHost(OperationType.DELETE, host);
+      return provideHost(Operation.DELETE, host);
    }
 
    private Producer<String> provideHost(
-         final OperationType operationType,
+         final Operation operationType,
          final Producer<String> defaultHost)
    {
       final OperationConfig config = this.config.getOperationConfig().get(operationType);
@@ -199,7 +199,7 @@ public class JsonModule extends AbstractModule
    }
 
    @Provides
-   public ApiType provideApi()
+   public Api provideApi()
    {
       return this.config.getApi();
    }
@@ -279,7 +279,7 @@ public class JsonModule extends AbstractModule
    @WriteHeaders
    public List<Producer<Pair<String, String>>> provideWriteHeaders()
    {
-      return provideHeaders(OperationType.WRITE);
+      return provideHeaders(Operation.WRITE);
    }
 
    @Provides
@@ -287,7 +287,7 @@ public class JsonModule extends AbstractModule
    @ReadHeaders
    public List<Producer<Pair<String, String>>> provideReadHeaders()
    {
-      return provideHeaders(OperationType.READ);
+      return provideHeaders(Operation.READ);
    }
 
    @Provides
@@ -295,10 +295,10 @@ public class JsonModule extends AbstractModule
    @DeleteHeaders
    public List<Producer<Pair<String, String>>> provideDeleteHeaders()
    {
-      return provideHeaders(OperationType.DELETE);
+      return provideHeaders(Operation.DELETE);
    }
 
-   private List<Producer<Pair<String, String>>> provideHeaders(final OperationType operationType)
+   private List<Producer<Pair<String, String>>> provideHeaders(final Operation operationType)
    {
       final Map<String, String> headers = this.config.getHeaders();
       final OperationConfig config = this.config.getOperationConfig().get(operationType);

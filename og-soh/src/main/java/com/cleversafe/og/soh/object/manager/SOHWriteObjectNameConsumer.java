@@ -29,7 +29,7 @@ import com.cleversafe.og.object.manager.ObjectManager;
 import com.cleversafe.og.object.manager.ObjectNameConsumer;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
-import com.cleversafe.og.util.OperationType;
+import com.cleversafe.og.util.Operation;
 
 public class SOHWriteObjectNameConsumer extends ObjectNameConsumer
 {
@@ -38,7 +38,7 @@ public class SOHWriteObjectNameConsumer extends ObjectNameConsumer
    public SOHWriteObjectNameConsumer(
          final ObjectManager objectManager,
          final Map<Long, Request> pendingRequests,
-         final OperationType operation,
+         final Operation operation,
          final List<Integer> statusCodes)
    {
       super(objectManager, pendingRequests, operation, statusCodes);

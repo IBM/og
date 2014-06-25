@@ -56,7 +56,7 @@ import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.ByteBufferConsumers;
 import com.cleversafe.og.util.Entities;
-import com.cleversafe.og.util.OperationType;
+import com.cleversafe.og.util.Operation;
 import com.cleversafe.og.util.Pair;
 import com.cleversafe.og.util.consumer.ByteBufferConsumer;
 import com.cleversafe.og.util.consumer.Consumer;
@@ -194,11 +194,11 @@ public class NOHModule extends AbstractModule
       laxStatusCodes.add(201);
       laxStatusCodes.add(204);
 
-      list.add(new ObjectNameConsumer(objectManager, pendingRequests, OperationType.WRITE,
+      list.add(new ObjectNameConsumer(objectManager, pendingRequests, Operation.WRITE,
             laxStatusCodes));
-      list.add(new ObjectNameConsumer(objectManager, pendingRequests, OperationType.READ,
+      list.add(new ObjectNameConsumer(objectManager, pendingRequests, Operation.READ,
             laxStatusCodes));
-      list.add(new ObjectNameConsumer(objectManager, pendingRequests, OperationType.DELETE,
+      list.add(new ObjectNameConsumer(objectManager, pendingRequests, Operation.DELETE,
             laxStatusCodes));
       return list;
    }

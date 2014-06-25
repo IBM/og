@@ -35,7 +35,7 @@
 
 package com.cleversafe.og.util;
 
-public enum OperationType
+public enum Operation
 {
    ALL,
    WRITE,

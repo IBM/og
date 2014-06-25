@@ -29,7 +29,7 @@ import com.cleversafe.og.guice.annotation.DefaultObjectLocation;
 import com.cleversafe.og.guice.annotation.DeleteObjectName;
 import com.cleversafe.og.guice.annotation.ReadObjectName;
 import com.cleversafe.og.guice.annotation.WriteObjectName;
-import com.cleversafe.og.http.util.ApiType;
+import com.cleversafe.og.http.util.Api;
 import com.cleversafe.og.object.manager.DeleteObjectNameProducer;
 import com.cleversafe.og.object.manager.ObjectManager;
 import com.cleversafe.og.object.manager.RandomObjectPopulator;
@@ -56,7 +56,7 @@ public class ObjectManagerModule extends AbstractModule
    public ObjectManager provideObjectManager(
          @DefaultObjectLocation final String objectLocation,
          @DefaultContainer final Producer<String> container,
-         final ApiType api)
+         final Api api)
    {
       // FIXME this naming scheme will break unless @DefaultContainer is a constant producer
       final String prefix = container.produce() + "-" + api.toString().toLowerCase();

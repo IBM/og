@@ -19,7 +19,7 @@
 
 package com.cleversafe.og.operation;
 
-public enum MetaDataConstants
+public enum Metadata
 {
    RESPONSE_BODY_PROCESSOR
 }

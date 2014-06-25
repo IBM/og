@@ -26,20 +26,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.statistic.Statistics;
-import com.cleversafe.og.util.OperationType;
+import com.cleversafe.og.util.Operation;
 import com.google.common.eventbus.Subscribe;
 
 public class StatusCodeListener
 {
    private static Logger _logger = LoggerFactory.getLogger(StatusCodeListener.class);
    private final LoadTest test;
-   private final OperationType operation;
+   private final Operation operation;
    private final int statusCode;
    private final long thresholdValue;
 
    public StatusCodeListener(
          final LoadTest test,
-         final OperationType operation,
+         final Operation operation,
          final int statusCode,
          final long thresholdValue)
    {

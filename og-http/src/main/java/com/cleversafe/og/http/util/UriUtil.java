@@ -51,7 +51,7 @@ public class UriUtil
          try
          {
             // if 2 parts and first part is an api, must be soh write
-            ApiType.valueOf(parts.get(0).toUpperCase(Locale.US));
+            Api.valueOf(parts.get(0).toUpperCase(Locale.US));
             return null;
          }
          catch (final IllegalArgumentException e)

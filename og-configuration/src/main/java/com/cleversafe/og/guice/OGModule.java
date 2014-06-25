@@ -35,7 +35,7 @@ import com.cleversafe.og.test.LoadTest;
 import com.cleversafe.og.test.RuntimeListener;
 import com.cleversafe.og.test.StatisticsListener;
 import com.cleversafe.og.test.StatusCodeListener;
-import com.cleversafe.og.util.OperationType;
+import com.cleversafe.og.util.Operation;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -66,11 +66,11 @@ public class OGModule extends AbstractModule
       final List<StatusCodeListener> statusCodeListeners = new ArrayList<StatusCodeListener>();
 
       if (stoppingConditions.getOperations() > 0)
-         statsListeners.add(new StatisticsListener(test, OperationType.ALL, Counter.OPERATIONS,
+         statsListeners.add(new StatisticsListener(test, Operation.ALL, Counter.OPERATIONS,
                stoppingConditions.getOperations()));
 
       if (stoppingConditions.getAborts() > 0)
-         statsListeners.add(new StatisticsListener(test, OperationType.ALL, Counter.ABORTS,
+         statsListeners.add(new StatisticsListener(test, Operation.ALL, Counter.ABORTS,
                stoppingConditions.getAborts()));
 
       // RuntimeListener does not need to be registered with the event bus
@@ -82,7 +82,7 @@ public class OGModule extends AbstractModule
       for (final Entry<Integer, Integer> sc : scMap.entrySet())
       {
          if (sc.getValue() > 0)
-            statusCodeListeners.add(new StatusCodeListener(test, OperationType.ALL, sc.getKey(),
+            statusCodeListeners.add(new StatusCodeListener(test, Operation.ALL, sc.getKey(),
                   sc.getValue()));
       }
 
