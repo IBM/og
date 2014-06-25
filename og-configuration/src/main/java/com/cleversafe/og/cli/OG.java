@@ -151,8 +151,8 @@ public class OG
       while (errs.hasNext())
       {
          _logger.error(errs.next().toString());
-         printUsage(jsap);
       }
+      printUsage(jsap);
       System.exit(ERROR_CONFIGURATION);
    }
 
