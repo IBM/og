@@ -155,7 +155,7 @@ public class OG
       final Iterator errs = jsapResult.getErrorMessageIterator();
       while (errs.hasNext())
       {
-         _logger.error("%s", errs.next());
+         _logger.error("{}", errs.next());
       }
       printUsage(jsap);
       System.exit(ERROR_CONFIGURATION);
@@ -163,7 +163,7 @@ public class OG
 
    private static void printUsage(final JSAP jsap)
    {
-      _logger.info("Usage: og " + jsap.getUsage());
+      _logger.info("Usage: og {}", jsap.getUsage());
       _logger.info(jsap.getHelp());
    }
 
@@ -239,7 +239,7 @@ public class OG
       }
       catch (final FileNotFoundException e)
       {
-         _logger.error(String.format("Could not find file [%s]", testConfig));
+         _logger.error("Could not find file [{}]", testConfig);
          System.exit(ERROR_CONFIGURATION);
       }
       return configReader;
@@ -285,7 +285,7 @@ public class OG
             _logger.error("Error shutting down object manager", e);
          }
 
-         _logger.info("%s", this.summary);
+         _logger.info("{}", this.summary);
          _summaryJsonLogger.info(this.gson.toJson(this.summary.getSummaryStats()));
       }
    }

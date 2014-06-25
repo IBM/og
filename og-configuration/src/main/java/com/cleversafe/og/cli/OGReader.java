@@ -67,7 +67,7 @@ public class OGReader
       }
       catch (final IOException e)
       {
-         _logger.error("Exception reading object file:", e);
+         _logger.error("Exception reading object file", e);
          System.exit(ERROR_CONFIGURATION);
       }
    }
@@ -93,7 +93,7 @@ public class OGReader
       final Iterator errs = jsapResult.getErrorMessageIterator();
       while (errs.hasNext())
       {
-         _logger.error("%s", errs.next());
+         _logger.error("{}", errs.next());
          printUsage(jsap);
       }
       System.exit(ERROR_CONFIGURATION);
@@ -101,7 +101,7 @@ public class OGReader
 
    private static void printUsage(final JSAP jsap)
    {
-      _logger.info("Usage: og-reader " + jsap.getUsage());
+      _logger.info("Usage: og-reader {}", jsap.getUsage());
       _logger.info(jsap.getHelp());
    }
 
@@ -130,7 +130,7 @@ public class OGReader
             final String id = BaseEncoding.base16().lowerCase().encode(objectID);
             _logger.info(id);
          }
-         _logger.info(numRecords + " records");
+         _logger.info("{} records", numRecords);
       }
       finally
       {
