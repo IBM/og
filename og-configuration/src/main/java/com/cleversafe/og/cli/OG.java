@@ -38,9 +38,12 @@ import com.cleversafe.og.cli.json.type.CaseInsensitiveEnumTypeAdapterFactory;
 import com.cleversafe.og.cli.json.type.SizeUnitTypeAdapterFactory;
 import com.cleversafe.og.cli.json.type.TimeUnitTypeAdapterFactory;
 import com.cleversafe.og.cli.report.Summary;
+import com.cleversafe.og.guice.ClientModule;
 import com.cleversafe.og.guice.JsonModule;
 import com.cleversafe.og.guice.NOHModule;
 import com.cleversafe.og.guice.OGModule;
+import com.cleversafe.og.guice.ObjectManagerModule;
+import com.cleversafe.og.guice.OperationManagerModule;
 import com.cleversafe.og.guice.SOHModule;
 import com.cleversafe.og.object.manager.ObjectManager;
 import com.cleversafe.og.statistic.Statistics;
@@ -110,7 +113,9 @@ public class OG
       try
       {
          final Injector injector =
-               Guice.createInjector(new JsonModule(config), new OGModule(), apiModule);
+               Guice.createInjector(new JsonModule(config), new OGModule(),
+                     new OperationManagerModule(), apiModule, new ObjectManagerModule(),
+                     new ClientModule());
          final Statistics stats = injector.getInstance(Statistics.class);
          objectManager = injector.getInstance(ObjectManager.class);
          test = injector.getInstance(LoadTest.class);

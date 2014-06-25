@@ -54,12 +54,15 @@ import com.cleversafe.og.operation.EntityType;
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
+import com.cleversafe.og.util.ByteBufferConsumers;
 import com.cleversafe.og.util.Entities;
 import com.cleversafe.og.util.OperationType;
 import com.cleversafe.og.util.Pair;
+import com.cleversafe.og.util.consumer.ByteBufferConsumer;
 import com.cleversafe.og.util.consumer.Consumer;
 import com.cleversafe.og.util.producer.Producer;
 import com.cleversafe.og.util.producer.Producers;
+import com.google.common.base.Function;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -198,6 +201,20 @@ public class NOHModule extends AbstractModule
       list.add(new ObjectNameConsumer(objectManager, pendingRequests, OperationType.DELETE,
             laxStatusCodes));
       return list;
+   }
+
+   @Provides
+   @Singleton
+   public Function<String, ByteBufferConsumer> provideByteBufferConsumers()
+   {
+      return new Function<String, ByteBufferConsumer>()
+      {
+         @Override
+         public ByteBufferConsumer apply(final String input)
+         {
+            return ByteBufferConsumers.noOp();
+         }
+      };
    }
 
    // TODO better way to do this? Maybe uriRoot should never be null and/or should be propagated
