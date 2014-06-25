@@ -25,10 +25,10 @@
 			<SizeBasedTriggeringPolicy size="100MB" />
 			<DefaultRolloverStrategy max="20"/>
 		</RollingRandomAccessFile>
-		<File name="ConfigJson" append="true" fileName="${log_path}/${config.json}">
+		<File name="ConfigJson" append="false" fileName="${log_path}/${config.json}">
 			<PatternLayout pattern="%m%n" />
 		</File>
-		<File name="SummaryJson" append="true" fileName="${log_path}/${summary.json}">
+		<File name="SummaryJson" append="false" fileName="${log_path}/${summary.json}">
 			<PatternLayout pattern="%m%n" />
 		</File>
 	</Appenders>
