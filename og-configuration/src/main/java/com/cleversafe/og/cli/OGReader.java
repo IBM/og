@@ -127,7 +127,7 @@ public class OGReader
          while (in.read(objectID, 0, ID_LENGTH) == ID_LENGTH)
          {
             numRecords++;
-            final String id = new String(BaseEncoding.base16().lowerCase().encode(objectID));
+            final String id = BaseEncoding.base16().lowerCase().encode(objectID);
             _logger.info(id);
          }
          _logger.info(numRecords + " records");
