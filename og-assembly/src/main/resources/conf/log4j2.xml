@@ -5,6 +5,7 @@
 		<Property name="application.log">application.log</Property>
 		<Property name="request.log">request.log</Property>
 		<Property name="config.json">config.json</Property>
+		<Property name="summary.json">summary.json</Property>
 	</Properties>
 	<Appenders>
 		<Console name="Console" target="SYSTEM_OUT">
@@ -27,6 +28,9 @@
 		<File name="ConfigJson" append="true" fileName="${log_path}/${config.json}">
 			<PatternLayout pattern="%m%n" />
 		</File>
+		<File name="SummaryJson" append="true" fileName="${log_path}/${summary.json}">
+			<PatternLayout pattern="%m%n" />
+		</File>
 	</Appenders>
 	<Loggers>
 		<Logger name="RequestLogger" level="info" additivity="false">
@@ -34,6 +38,9 @@
 		</Logger>
 		<Logger name="ConfigJsonLogger" level="info" additivity="false">
 			<AppenderRef ref="ConfigJson" />
+		</Logger>
+		<Logger name="SummaryJsonLogger" level="info" additivity="false">
+			<AppenderRef ref="SummaryJson" />
 		</Logger>
 		<Logger name="com.cleversafe.og.cli.OG" level="info">
 			<AppenderRef ref="Console" />

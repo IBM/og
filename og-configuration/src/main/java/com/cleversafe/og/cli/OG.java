@@ -29,8 +29,6 @@ import java.io.Reader;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Iterator;
-import java.util.Map.Entry;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,15 +37,14 @@ import com.cleversafe.og.cli.json.JsonConfig;
 import com.cleversafe.og.cli.json.type.CaseInsensitiveEnumTypeAdapterFactory;
 import com.cleversafe.og.cli.json.type.SizeUnitTypeAdapterFactory;
 import com.cleversafe.og.cli.json.type.TimeUnitTypeAdapterFactory;
+import com.cleversafe.og.cli.report.Summary;
 import com.cleversafe.og.guice.JsonModule;
 import com.cleversafe.og.guice.NOHModule;
 import com.cleversafe.og.guice.OGModule;
 import com.cleversafe.og.guice.SOHModule;
 import com.cleversafe.og.object.manager.ObjectManager;
-import com.cleversafe.og.statistic.Counter;
 import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.test.LoadTest;
-import com.cleversafe.og.util.OperationType;
 import com.cleversafe.og.util.Version;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
@@ -63,6 +60,7 @@ public class OG
 {
    private static Logger _logger = LoggerFactory.getLogger(OG.class);
    private static Logger _configJsonLogger = LoggerFactory.getLogger("ConfigJsonLogger");
+   private static Logger _summaryJsonLogger = LoggerFactory.getLogger("SummaryJsonLogger");
    private static final String JSAP_RESOURCE_NAME = "og.jsap";
    private static final String CONFIG_JSON = "config.json";
    public static final int NORMAL_TERMINATION = 0;
@@ -116,7 +114,8 @@ public class OG
          final Statistics stats = injector.getInstance(Statistics.class);
          objectManager = injector.getInstance(ObjectManager.class);
          test = injector.getInstance(LoadTest.class);
-         Runtime.getRuntime().addShutdownHook(new ShutdownHook(stats, objectManager));
+         Runtime.getRuntime().addShutdownHook(
+               new ShutdownHook(gson, new Summary(stats), objectManager));
          _logger.info("running test");
          test.runTest();
          // FIXME this call should be unnecessary as testComplete is already called in the shutdown
@@ -257,12 +256,14 @@ public class OG
 
    private static class ShutdownHook extends Thread
    {
-      private final Statistics stats;
+      private final Gson gson;
+      private final Summary summary;
       private final ObjectManager objectManager;
 
-      public ShutdownHook(final Statistics stats, final ObjectManager objectManager)
+      public ShutdownHook(final Gson gson, final Summary summary, final ObjectManager objectManager)
       {
-         this.stats = checkNotNull(stats);
+         this.gson = checkNotNull(gson);
+         this.summary = checkNotNull(summary);
          this.objectManager = checkNotNull(objectManager);
       }
 
@@ -278,22 +279,9 @@ public class OG
          {
             _logger.error("Error shutting down object manager", e);
          }
-         // TODO create report class?
-         for (final OperationType operation : OperationType.values())
-         {
-            _logger.info(operation.toString());
-            _logger.info("operations: " + this.stats.get(operation, Counter.OPERATIONS));
-            _logger.info("status codes:");
-            final Iterator<Entry<Integer, AtomicLong>> scIterator =
-                  this.stats.statusCodeIterator(operation);
-            while (scIterator.hasNext())
-            {
-               final Entry<Integer, AtomicLong> sc = scIterator.next();
-               _logger.info(sc.getKey() + ": " + sc.getValue());
-            }
-            _logger.info("aborts: " + this.stats.get(operation, Counter.ABORTS));
-            _logger.info("");
-         }
+
+         _logger.info(this.summary.toString());
+         _summaryJsonLogger.info(this.gson.toJson(this.summary.getSummaryStats()));
       }
    }
 }
