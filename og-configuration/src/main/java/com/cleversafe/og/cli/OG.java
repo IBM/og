@@ -155,7 +155,7 @@ public class OG
       final Iterator errs = jsapResult.getErrorMessageIterator();
       while (errs.hasNext())
       {
-         _logger.error(errs.next().toString());
+         _logger.error("%s", errs.next());
       }
       printUsage(jsap);
       System.exit(ERROR_CONFIGURATION);
@@ -285,7 +285,7 @@ public class OG
             _logger.error("Error shutting down object manager", e);
          }
 
-         _logger.info(this.summary.toString());
+         _logger.info("%s", this.summary);
          _summaryJsonLogger.info(this.gson.toJson(this.summary.getSummaryStats()));
       }
    }

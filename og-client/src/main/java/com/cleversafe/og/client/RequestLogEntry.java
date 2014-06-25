@@ -26,6 +26,7 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 import com.cleversafe.og.operation.EntityType;
+import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.google.common.net.HttpHeaders;
@@ -39,7 +40,7 @@ public class RequestLogEntry
    final long timestampFinish;
    final String timeStart;
    final String timeFinish;
-   final String requestMethod;
+   final Method requestMethod;
    final String requestUri;
    final String objectId;
    final int status;
@@ -74,7 +75,7 @@ public class RequestLogEntry
       this.timestampFinish = timestampFinish;
       this.timeStart = RequestLogEntry.formatter.print(this.timestampStart);
       this.timeFinish = RequestLogEntry.formatter.print(this.timestampFinish);
-      this.requestMethod = request.getMethod().toString();
+      this.requestMethod = request.getMethod();
 
       this.requestUri = uri.getPath() + (uri.getQuery() != null ? uri.getQuery() : "");
       // TODO not sure how to get this, could parse from uri but error prone

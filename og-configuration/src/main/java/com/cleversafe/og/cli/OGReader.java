@@ -93,7 +93,7 @@ public class OGReader
       final Iterator errs = jsapResult.getErrorMessageIterator();
       while (errs.hasNext())
       {
-         _logger.error(errs.next().toString());
+         _logger.error("%s", errs.next());
          printUsage(jsap);
       }
       System.exit(ERROR_CONFIGURATION);

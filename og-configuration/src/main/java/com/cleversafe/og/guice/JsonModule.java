@@ -376,7 +376,7 @@ public class JsonModule extends AbstractModule
          final boolean created = f.mkdirs();
          if (!created)
             throw new RuntimeException(String.format(
-                  "Failed to create object location directory [%s]", f.toString()));
+                  "Failed to create object location directory [%s]", f));
       }
       else if (!f.isDirectory())
       {
