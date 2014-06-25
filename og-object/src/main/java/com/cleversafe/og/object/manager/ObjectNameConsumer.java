@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.cleversafe.og.api.Consumer;
+import com.cleversafe.og.api.ProducerException;
 import com.cleversafe.og.http.util.MethodUtil;
 import com.cleversafe.og.http.util.UriUtil;
 import com.cleversafe.og.object.LegacyObjectName;
@@ -91,9 +92,16 @@ public class ObjectNameConsumer implements Consumer<Response>
 
    private void updateObjectManager(final ObjectName objectName)
    {
-      if (OperationType.WRITE == this.operation)
-         this.objectManager.writeNameComplete(objectName);
-      else if (OperationType.READ == this.operation)
-         this.objectManager.releaseNameFromRead(objectName);
+      try
+      {
+         if (OperationType.WRITE == this.operation)
+            this.objectManager.writeNameComplete(objectName);
+         else if (OperationType.READ == this.operation)
+            this.objectManager.releaseNameFromRead(objectName);
+      }
+      catch (final ObjectManagerException e)
+      {
+         throw new ProducerException(e);
+      }
    }
 }
