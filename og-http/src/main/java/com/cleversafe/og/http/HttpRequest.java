@@ -105,13 +105,13 @@ public class HttpRequest implements Request
    }
 
    @Override
-   public String getMetaDataEntry(final String key)
+   public String getMetadata(final String key)
    {
       return this.metadata.get(key);
    }
 
    @Override
-   public Iterator<Entry<String, String>> metaData()
+   public Iterator<Entry<String, String>> metadata()
    {
       return this.metadata.entrySet().iterator();
    }

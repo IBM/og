@@ -152,7 +152,7 @@ public class ApacheClient implements Client
    {
       checkNotNull(request);
       final ByteBufferConsumer consumer =
-            this.byteBufferConsumers.apply(request.getMetaDataEntry(Metadata.RESPONSE_BODY_PROCESSOR.toString()));
+            this.byteBufferConsumers.apply(request.getMetadata(Metadata.RESPONSE_BODY_PROCESSOR.toString()));
       return this.executorService.submit(new BlockingHttpOperation(this.client, this.auth, request,
             consumer, this.gson, this.chunkedEncoding));
    }

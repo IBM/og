@@ -48,6 +48,6 @@ public class SOHWriteObjectNameConsumer extends ObjectNameConsumer
    protected String getObjectString(final Request request, final Response response)
    {
       // TODO metadata constants?
-      return response.getMetaDataEntry("object_name");
+      return response.getMetadata("object_name");
    }
 }
