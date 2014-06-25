@@ -113,7 +113,7 @@ public class LegacyObjectName implements ObjectName
    @Override
    public String toString()
    {
-      return new String(BaseEncoding.base16().lowerCase().encode(toBytes()));
+      return BaseEncoding.base16().lowerCase().encode(toBytes());
    }
 
    private static void validateBytes(final byte[] objectName)
@@ -152,8 +152,24 @@ public class LegacyObjectName implements ObjectName
    @Override
    public int compareTo(final ObjectName o)
    {
-      checkNotNull(o);
-      // TODO compareTo that does not require creation of String objects every time
-      return toString().compareTo(o.toString());
+      // TODO this compareTo implementation is heavily borrrowed from String.toString. It is
+      // ignorant of character encoding issues, but in our case we are storing hex digits so it
+      // should be sufficient
+      final byte[] b1 = toBytes();
+      final byte[] b2 = o.toBytes();
+      final int len1 = b1.length;
+      final int len2 = b2.length;
+      final int lim = Math.min(len1, len2);
+
+      int k = 0;
+      while (k < lim)
+      {
+         final byte c1 = b1[k];
+         final byte c2 = b2[k];
+         if (c1 != c2)
+            return c1 - c2;
+         k++;
+      }
+      return len1 - len2;
    }
 }
