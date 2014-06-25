@@ -23,21 +23,21 @@ import com.cleversafe.og.cli.json.enums.AuthType;
 
 public class AuthConfig
 {
-   private final AuthType authType;
+   private final AuthType type;
    private String username;
    private String password;
 
    public AuthConfig()
    {
-      this.authType = AuthType.BASIC;
+      this.type = AuthType.BASIC;
    }
 
    /**
-    * @return the authType
+    * @return the type
     */
-   public AuthType getAuthType()
+   public AuthType getType()
    {
-      return this.authType;
+      return this.type;
    }
 
    /**

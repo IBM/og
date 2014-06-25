@@ -244,13 +244,13 @@ public class JsonModule extends AbstractModule
    public HttpAuth providesDefaultAuth()
    {
       final AuthConfig authConfig = this.config.getAuthentication();
-      final AuthType authType = authConfig.getAuthType();
+      final AuthType type = authConfig.getType();
       final String username = authConfig.getUsername();
       final String password = authConfig.getPassword();
 
       if (username != null && password != null)
       {
-         if (AuthType.AWSV2 == authType)
+         if (AuthType.AWSV2 == type)
             return new AWSAuthV2(Producers.of(username), Producers.of(password));
          else
             return new BasicAuth(Producers.of(username), Producers.of(password));
