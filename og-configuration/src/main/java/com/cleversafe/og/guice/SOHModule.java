@@ -25,8 +25,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.cleversafe.og.api.Consumer;
-import com.cleversafe.og.api.Producer;
 import com.cleversafe.og.guice.annotation.DefaultContainer;
 import com.cleversafe.og.guice.annotation.DefaultEntity;
 import com.cleversafe.og.guice.annotation.DefaultId;
@@ -60,6 +58,8 @@ import com.cleversafe.og.soh.object.manager.SOHWriteObjectNameConsumer;
 import com.cleversafe.og.util.Entities;
 import com.cleversafe.og.util.OperationType;
 import com.cleversafe.og.util.Pair;
+import com.cleversafe.og.util.consumer.Consumer;
+import com.cleversafe.og.util.producer.Producer;
 import com.cleversafe.og.util.producer.Producers;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;

@@ -21,7 +21,7 @@ package com.cleversafe.og.object.manager;
 
 import java.util.UUID;
 
-import com.cleversafe.og.api.Producer;
+import com.cleversafe.og.util.producer.Producer;
 
 public class UUIDObjectNameProducer implements Producer<String>
 {

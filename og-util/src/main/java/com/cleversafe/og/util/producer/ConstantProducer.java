@@ -20,8 +20,6 @@
 package com.cleversafe.og.util.producer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-
-import com.cleversafe.og.api.Producer;
 public class ConstantProducer<T> implements Producer<T>
 {
    private final T item;

@@ -31,7 +31,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicLong;
 
-import com.cleversafe.og.api.Producer;
 import com.cleversafe.og.cli.json.AuthConfig;
 import com.cleversafe.og.cli.json.ClientConfig;
 import com.cleversafe.og.cli.json.ConcurrencyConfig;
@@ -76,6 +75,7 @@ import com.cleversafe.og.scheduling.Scheduler;
 import com.cleversafe.og.util.Entities;
 import com.cleversafe.og.util.OperationType;
 import com.cleversafe.og.util.Pair;
+import com.cleversafe.og.util.producer.Producer;
 import com.cleversafe.og.util.producer.Producers;
 import com.cleversafe.og.util.producer.RandomChoiceProducer;
 import com.google.common.base.CharMatcher;

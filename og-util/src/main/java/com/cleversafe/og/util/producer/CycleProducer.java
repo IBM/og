@@ -28,8 +28,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.cleversafe.og.api.Producer;
-
 public class CycleProducer<T> implements Producer<T>
 {
    private static Logger _logger = LoggerFactory.getLogger(CycleProducer.class);

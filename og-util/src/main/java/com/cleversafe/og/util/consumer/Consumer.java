@@ -17,7 +17,7 @@
 // Date: Mar 12, 2014
 // ---------------------
 
-package com.cleversafe.og.api;
+package com.cleversafe.og.util.consumer;
 
 public interface Consumer<T>
 {

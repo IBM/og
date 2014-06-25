@@ -24,15 +24,15 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.List;
 import java.util.Map;
 
-import com.cleversafe.og.api.Consumer;
-import com.cleversafe.og.api.OperationManager;
-import com.cleversafe.og.api.OperationManagerException;
-import com.cleversafe.og.api.Producer;
-import com.cleversafe.og.api.ProducerException;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
+import com.cleversafe.og.operation.manager.OperationManager;
+import com.cleversafe.og.operation.manager.OperationManagerException;
 import com.cleversafe.og.scheduling.Scheduler;
 import com.cleversafe.og.statistic.Statistics;
+import com.cleversafe.og.util.consumer.Consumer;
+import com.cleversafe.og.util.producer.Producer;
+import com.cleversafe.og.util.producer.ProducerException;
 
 public class SimpleOperationManager implements OperationManager
 {

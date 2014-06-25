@@ -25,8 +25,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.List;
 import java.util.Map;
 
-import com.cleversafe.og.api.Consumer;
-import com.cleversafe.og.api.ProducerException;
 import com.cleversafe.og.http.util.MethodUtil;
 import com.cleversafe.og.http.util.UriUtil;
 import com.cleversafe.og.object.LegacyObjectName;
@@ -34,6 +32,8 @@ import com.cleversafe.og.object.ObjectName;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.OperationType;
+import com.cleversafe.og.util.consumer.Consumer;
+import com.cleversafe.og.util.producer.ProducerException;
 import com.google.common.collect.Iterables;
 import com.google.common.io.BaseEncoding;
 

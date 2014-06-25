@@ -17,13 +17,10 @@
 // Date: Mar 12, 2014
 // ---------------------
 
-package com.cleversafe.og.api;
+package com.cleversafe.og.util.producer;
 
-import java.nio.ByteBuffer;
-import java.util.Iterator;
-import java.util.Map.Entry;
 
-public interface ByteBufferConsumer extends Consumer<ByteBuffer>
+public interface Producer<T>
 {
-   Iterator<Entry<String, String>> metaData();
+   T produce();
 }

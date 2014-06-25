@@ -21,8 +21,6 @@ package com.cleversafe.og.util.producer;
 
 import java.util.List;
 
-import com.cleversafe.og.api.Producer;
-
 public class Producers
 {
    private Producers()

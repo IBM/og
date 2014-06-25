@@ -17,7 +17,7 @@
 // Date: Feb 6, 2014
 // ---------------------
 
-package com.cleversafe.og.api;
+package com.cleversafe.og.operation.manager;
 
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;

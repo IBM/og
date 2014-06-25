@@ -27,11 +27,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.cleversafe.og.api.OperationManager;
-import com.cleversafe.og.api.OperationManagerException;
 import com.cleversafe.og.client.Client;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
+import com.cleversafe.og.operation.manager.OperationManager;
+import com.cleversafe.og.operation.manager.OperationManagerException;
 import com.google.common.util.concurrent.ListenableFuture;
 
 public class LoadTest

@@ -14,34 +14,34 @@
 // -----------------------
 // @author: rveitch
 //
-// Date: Apr 8, 2014
+// Date: Feb 25, 2014
 // ---------------------
 
-package com.cleversafe.og.api;
+package com.cleversafe.og.operation.manager;
 
-public class ProducerException extends RuntimeException
+public class OperationManagerException extends Exception
 {
    private static final long serialVersionUID = 1L;
 
-   public ProducerException()
+   public OperationManagerException()
    {}
 
-   public ProducerException(final String message)
+   public OperationManagerException(final String message)
    {
       super(message);
    }
 
-   public ProducerException(final Throwable cause)
+   public OperationManagerException(final Throwable cause)
    {
       super(cause);
    }
 
-   public ProducerException(final String message, final Throwable cause)
+   public OperationManagerException(final String message, final Throwable cause)
    {
       super(message, cause);
    }
 
-   public ProducerException(
+   public OperationManagerException(
          final String message,
          final Throwable cause,
          final boolean enableSuppression,

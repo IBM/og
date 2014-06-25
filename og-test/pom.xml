@@ -13,5 +13,9 @@
 			<groupId>com.cleversafe</groupId>
 			<artifactId>og-statistic</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>com.cleversafe</groupId>
+			<artifactId>og-scheduling</artifactId>
+		</dependency>
 	</dependencies>
 </project>

@@ -26,9 +26,9 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 
-import com.cleversafe.og.api.Producer;
-import com.cleversafe.og.api.ProducerException;
 import com.cleversafe.og.http.Scheme;
+import com.cleversafe.og.util.producer.Producer;
+import com.cleversafe.og.util.producer.ProducerException;
 import com.google.common.base.Joiner;
 
 public class URIProducer implements Producer<URI>

@@ -26,12 +26,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.cleversafe.og.api.Producer;
 import com.cleversafe.og.http.HttpRequest;
 import com.cleversafe.og.operation.Entity;
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.util.Pair;
+import com.cleversafe.og.util.producer.Producer;
 
 public class RequestProducer implements Producer<Request>
 {

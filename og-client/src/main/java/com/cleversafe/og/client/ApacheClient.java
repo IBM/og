@@ -49,7 +49,6 @@ import org.apache.http.protocol.HttpRequestExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.cleversafe.og.api.ByteBufferConsumer;
 import com.cleversafe.og.http.HttpResponse;
 import com.cleversafe.og.http.auth.HttpAuth;
 import com.cleversafe.og.operation.EntityType;
@@ -59,6 +58,7 @@ import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.Entities;
 import com.cleversafe.og.util.Pair;
 import com.cleversafe.og.util.Version;
+import com.cleversafe.og.util.consumer.ByteBufferConsumer;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.util.concurrent.ListenableFuture;

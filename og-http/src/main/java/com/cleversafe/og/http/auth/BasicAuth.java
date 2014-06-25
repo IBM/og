@@ -26,9 +26,9 @@ import java.nio.charset.StandardCharsets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.cleversafe.og.api.Producer;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.util.Pair;
+import com.cleversafe.og.util.producer.Producer;
 import com.google.common.io.BaseEncoding;
 
 public class BasicAuth implements HttpAuth
