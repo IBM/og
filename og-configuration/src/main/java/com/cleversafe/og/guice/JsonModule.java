@@ -176,7 +176,7 @@ public class JsonModule extends AbstractModule
          final List<String> hosts)
    {
       if (CollectionAlgorithmType.ROUNDROBIN == algorithm)
-         return Producers.roundRobin(hosts);
+         return Producers.cycle(hosts);
       else
       {
          final RandomChoiceProducer.Builder<String> wrc = RandomChoiceProducer.custom(String.class);

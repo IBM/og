@@ -33,8 +33,8 @@ public class Producers
       return ConstantProducer.of(item);
    }
 
-   public static <T> Producer<T> roundRobin(final List<T> items)
+   public static <T> Producer<T> cycle(final List<T> items)
    {
-      return new RoundRobinProducer<T>(items);
+      return new CycleProducer<T>(items);
    }
 }

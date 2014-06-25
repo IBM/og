@@ -30,13 +30,13 @@ import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.api.Producer;
 
-public class RoundRobinProducer<T> implements Producer<T>
+public class CycleProducer<T> implements Producer<T>
 {
-   private static Logger _logger = LoggerFactory.getLogger(RoundRobinProducer.class);
+   private static Logger _logger = LoggerFactory.getLogger(CycleProducer.class);
    private final List<T> items;
    private final AtomicLong counter;
 
-   public RoundRobinProducer(final List<T> items)
+   public CycleProducer(final List<T> items)
    {
       this.items = checkNotNull(items);
       checkArgument(items.size() > 0, "items size must be > 0");
