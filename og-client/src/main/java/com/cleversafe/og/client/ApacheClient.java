@@ -162,23 +162,25 @@ public class ApacheClient implements Client
    }
 
    @Override
-   public ListenableFuture<Boolean> shutdown(final boolean graceful)
+   public ListenableFuture<Boolean> shutdown(final boolean immediate)
    {
       final SettableFuture<Boolean> future = SettableFuture.create();
-      final Thread t = new Thread(getShutdownRunnable(future, graceful));
+      final Thread t = new Thread(getShutdownRunnable(future, immediate));
       t.setName("clientShutdown");
       t.start();
       return future;
    }
 
-   private Runnable getShutdownRunnable(final SettableFuture<Boolean> future, final boolean graceful)
+   private Runnable getShutdownRunnable(
+         final SettableFuture<Boolean> future,
+         final boolean immediate)
    {
       return new Runnable()
       {
          @Override
          public void run()
          {
-            if (!graceful)
+            if (immediate)
                immediateShutdown();
             else
                gracefulShutdown();

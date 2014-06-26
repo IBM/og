@@ -77,7 +77,7 @@ public class LoadTest
       }
       finally
       {
-         final ListenableFuture<Boolean> complete = this.client.shutdown(false);
+         final ListenableFuture<Boolean> complete = this.client.shutdown(true);
          try
          {
             complete.get(5, TimeUnit.SECONDS);
