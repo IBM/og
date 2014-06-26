@@ -36,7 +36,9 @@ import com.cleversafe.og.guice.OGModule;
 import com.cleversafe.og.guice.ObjectManagerModule;
 import com.cleversafe.og.guice.OperationManagerModule;
 import com.cleversafe.og.guice.SOHModule;
+import com.cleversafe.og.http.util.Api;
 import com.cleversafe.og.object.manager.ObjectManager;
+import com.cleversafe.og.object.manager.ObjectManagerException;
 import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.test.LoadTest;
 import com.google.gson.FieldNamingPolicy;
@@ -65,41 +67,51 @@ public class OG extends AbstractCLI
 
       _configJsonLogger.info(gson.toJson(config));
 
-      ObjectManager objectManager = null;
-      LoadTest test = null;
-      AbstractModule apiModule;
-      // TODO better way to do this?
-      switch (config.getApi())
-      {
-         case SOH :
-            apiModule = new SOHModule();
-            break;
-         default :
-            apiModule = new NOHModule();
-            break;
-      }
       try
       {
-         final Injector injector =
-               Guice.createInjector(new JsonModule(config), new OGModule(),
-                     new OperationManagerModule(), apiModule, new ObjectManagerModule(),
-                     new ClientModule());
+         final Injector injector = createInjector(config);
          final Statistics stats = injector.getInstance(Statistics.class);
-         objectManager = injector.getInstance(ObjectManager.class);
-         test = injector.getInstance(LoadTest.class);
-         Runtime.getRuntime().addShutdownHook(
-               new ShutdownHook(gson, new Summary(stats), objectManager));
+         final ObjectManager objectManager = injector.getInstance(ObjectManager.class);
+         final LoadTest test = injector.getInstance(LoadTest.class);
+         Runtime.getRuntime().addShutdownHook(new ShutdownHook(Thread.currentThread(), test));
          _consoleLogger.info("running test");
          test.runTest();
-         // FIXME this call should be unnecessary as testComplete is already called in the shutdown
-         // hook, but may be due to buggy implementation in RandomObjectPopulator join call
-         objectManager.testComplete();
+         try
+         {
+            objectManager.testComplete();
+         }
+         catch (final ObjectManagerException e)
+         {
+            _consoleLogger.error("Error shutting down object manager", e);
+         }
+
+         final Summary summary = new Summary(stats);
+         _consoleLogger.info("{}", summary);
+         _summaryJsonLogger.info(gson.toJson(summary.getSummaryStats()));
       }
       catch (final RuntimeException e)
       {
          _consoleLogger.error("Error provisioning dependencies", e);
          System.exit(CONFIGURATION_ERROR);
       }
+   }
+
+   private static Injector createInjector(final JsonConfig config)
+   {
+      return Guice.createInjector(
+            new JsonModule(config),
+            new OGModule(),
+            new OperationManagerModule(),
+            apiModule(config.getApi()),
+            new ObjectManagerModule(),
+            new ClientModule());
+   }
+
+   private static AbstractModule apiModule(final Api api)
+   {
+      if (Api.SOH == api)
+         return new SOHModule();
+      return new NOHModule();
    }
 
    private static Gson createGson()
@@ -117,32 +129,28 @@ public class OG extends AbstractCLI
 
    private static class ShutdownHook extends Thread
    {
-      private final Gson gson;
-      private final Summary summary;
-      private final ObjectManager objectManager;
+      private final Thread mainThread;
+      private final LoadTest test;
 
-      public ShutdownHook(final Gson gson, final Summary summary, final ObjectManager objectManager)
+      public ShutdownHook(final Thread mainThread, final LoadTest test)
       {
-         this.gson = checkNotNull(gson);
-         this.summary = checkNotNull(summary);
-         this.objectManager = checkNotNull(objectManager);
+         this.mainThread = checkNotNull(mainThread);
+         this.test = checkNotNull(test);
       }
 
       @Override
       public void run()
       {
-         _consoleLogger.info("shutting down");
+         this.test.stopTest();
+         this.mainThread.interrupt();
          try
          {
-            this.objectManager.testComplete();
+            this.mainThread.join(5000);
          }
-         catch (final Exception e)
+         catch (final InterruptedException e)
          {
-            _consoleLogger.error("Error shutting down object manager", e);
+            _logger.warn("Shutdown hook was interrupted while waiting for main thread termination");
          }
-
-         _consoleLogger.info("{}", this.summary);
-         _summaryJsonLogger.info(this.gson.toJson(this.summary.getSummaryStats()));
       }
    }
 }
