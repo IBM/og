@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.http.Header;
 import org.apache.http.HeaderIterator;
@@ -161,13 +162,63 @@ public class ApacheClient implements Client
    public ListenableFuture<Boolean> shutdown(final boolean graceful)
    {
       final SettableFuture<Boolean> future = SettableFuture.create();
-      if (!graceful)
-      {
-         this.executorService.shutdownNow();
-         future.set(true);
-      }
-      // TODO implement graceful shutdown
+      new Thread(getShutdownRunnable(future, graceful)).start();
       return future;
+   }
+
+   private Runnable getShutdownRunnable(final SettableFuture<Boolean> future, final boolean graceful)
+   {
+      return new Runnable()
+      {
+         @Override
+         public void run()
+         {
+            if (!graceful)
+               immediateShutdown();
+            else
+               gracefulShutdown();
+            future.set(true);
+         }
+
+         private void immediateShutdown()
+         {
+            closeSockets();
+            ApacheClient.this.executorService.shutdownNow();
+            awaitShutdown(5, TimeUnit.SECONDS);
+         }
+
+         private void gracefulShutdown()
+         {
+            ApacheClient.this.executorService.shutdown();
+            awaitShutdown(1, TimeUnit.HOURS);
+            if (!ApacheClient.this.executorService.isTerminated())
+               immediateShutdown();
+         }
+
+         private void closeSockets()
+         {
+            try
+            {
+               ApacheClient.this.client.close();
+            }
+            catch (final IOException e)
+            {
+               _logger.error("Error closing client connection pool", e);
+            }
+         }
+
+         private void awaitShutdown(final long timeout, final TimeUnit unit)
+         {
+            try
+            {
+               ApacheClient.this.executorService.awaitTermination(timeout, unit);
+            }
+            catch (final InterruptedException e)
+            {
+               _logger.error("Interrupted while waiting for executor service termination", e);
+            }
+         }
+      };
    }
 
    private static class BlockingHttpOperation implements Callable<Response>
