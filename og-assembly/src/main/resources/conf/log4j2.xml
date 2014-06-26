@@ -33,17 +33,17 @@
 		</File>
 	</Appenders>
 	<Loggers>
-		<Logger name="RequestLogger" level="info" additivity="false">
-			<AppenderRef ref="RequestLog" />
+		<Logger name="ConsoleLogger" level="info" additivity="false">
+			<AppenderRef ref="Console" />
 		</Logger>
 		<Logger name="ConfigJsonLogger" level="info" additivity="false">
 			<AppenderRef ref="ConfigJson" />
 		</Logger>
+		<Logger name="RequestLogger" level="info" additivity="false">
+			<AppenderRef ref="RequestLog" />
+		</Logger>
 		<Logger name="SummaryJsonLogger" level="info" additivity="false">
 			<AppenderRef ref="SummaryJson" />
-		</Logger>
-		<Logger name="com.cleversafe.og.cli.OG" level="info">
-			<AppenderRef ref="Console" />
 		</Logger>
 		<Logger name="com.cleversafe.og.cli.OGReader" level="info" additivity="false">
 			<AppenderRef ref="Console" />

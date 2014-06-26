@@ -22,44 +22,19 @@ package com.cleversafe.og.cli;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.URL;
-import java.util.Iterator;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.cleversafe.og.util.Version;
 import com.google.common.io.BaseEncoding;
-import com.martiansoftware.jsap.JSAP;
 import com.martiansoftware.jsap.JSAPResult;
 
-public class OGReader
+public class OGReader extends AbstractCLI
 {
-   private static Logger _logger = LoggerFactory.getLogger(OGReader.class);
    private static final String JSAP_RESOURCE_NAME = "ogreader.jsap";
-   public static final int NORMAL_TERMINATION = 0;
-   public static final int ERROR_CONFIGURATION = 1;
    // TODO place this constant in util somewhere?
    private static int ID_LENGTH = 18;
 
    public static void main(final String[] args)
    {
-      final JSAP jsap = getJSAP();
-      final JSAPResult jsapResult = jsap.parse(args);
-      if (!jsapResult.success())
-         printErrorsAndExit(jsap, jsapResult);
-
-      if (jsapResult.getBoolean("version"))
-      {
-         _logger.info(Version.displayVersion());
-         System.exit(NORMAL_TERMINATION);
-      }
-
-      if (jsapResult.getBoolean("help"))
-      {
-         printUsage(jsap);
-         System.exit(NORMAL_TERMINATION);
-      }
+      final JSAPResult jsapResult = processArgs(JSAP_RESOURCE_NAME, args);
 
       try
       {
@@ -67,53 +42,9 @@ public class OGReader
       }
       catch (final IOException e)
       {
-         _logger.error("Exception reading object file", e);
-         System.exit(ERROR_CONFIGURATION);
+         _consoleLogger.error("Exception reading object file", e);
+         System.exit(UNKNOWN_ERROR);
       }
-   }
-
-   private static JSAP getJSAP()
-   {
-      JSAP jsap = null;
-      try
-      {
-         jsap = new JSAP(getResource(JSAP_RESOURCE_NAME));
-      }
-      catch (final Exception e)
-      {
-         _logger.error("Error creating JSAP", e);
-         System.exit(ERROR_CONFIGURATION);
-      }
-      return jsap;
-   }
-
-   private static void printErrorsAndExit(final JSAP jsap, final JSAPResult jsapResult)
-   {
-      @SuppressWarnings("rawtypes")
-      final Iterator errs = jsapResult.getErrorMessageIterator();
-      while (errs.hasNext())
-      {
-         _logger.error("{}", errs.next());
-         printUsage(jsap);
-      }
-      System.exit(ERROR_CONFIGURATION);
-   }
-
-   private static void printUsage(final JSAP jsap)
-   {
-      _logger.info("Usage: og-reader {}", jsap.getUsage());
-      _logger.info(jsap.getHelp());
-   }
-
-   private static URL getResource(final String resourceName)
-   {
-      final URL url = ClassLoader.getSystemResource(resourceName);
-      if (url == null)
-      {
-         _logger.error("Could not find configuration file on classpath [{}]", resourceName);
-         System.exit(ERROR_CONFIGURATION);
-      }
-      return url;
    }
 
    public static void readIdFile(final File filename) throws IOException
@@ -128,9 +59,9 @@ public class OGReader
          {
             numRecords++;
             final String id = BaseEncoding.base16().lowerCase().encode(objectID);
-            _logger.info(id);
+            _consoleLogger.info(id);
          }
-         _logger.info("{} records", numRecords);
+         _consoleLogger.info("{} records", numRecords);
       }
       finally
       {
