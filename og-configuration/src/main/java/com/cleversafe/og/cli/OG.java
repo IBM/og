@@ -75,7 +75,9 @@ public class OG extends AbstractCLI
          final LoadTest test = injector.getInstance(LoadTest.class);
          Runtime.getRuntime().addShutdownHook(new ShutdownHook(Thread.currentThread(), test));
          _consoleLogger.info("running test");
-         test.runTest();
+         final boolean success = test.runTest();
+         if (!success)
+            _consoleLogger.error("Test ended abruptly. Check application log for details");
          try
          {
             objectManager.testComplete();

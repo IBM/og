@@ -55,7 +55,7 @@ public class LoadTest
       this.running = new AtomicBoolean(true);
    }
 
-   public void runTest()
+   public boolean runTest()
    {
       try
       {
@@ -72,6 +72,7 @@ public class LoadTest
       catch (final OperationManagerException e)
       {
          _logger.error("", e);
+         return false;
       }
       finally
       {
@@ -90,6 +91,7 @@ public class LoadTest
          if (!success)
             _logger.error("Error while shutting down executor service");
       }
+      return true;
    }
 
    public void stopTest()
