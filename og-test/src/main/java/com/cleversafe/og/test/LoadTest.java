@@ -22,6 +22,7 @@ package com.cleversafe.og.test;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
@@ -33,6 +34,7 @@ import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.operation.manager.OperationManager;
 import com.cleversafe.og.operation.manager.OperationManagerException;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 
 public class LoadTest
 {
@@ -71,16 +73,28 @@ public class LoadTest
       {
          _logger.error("", e);
       }
+      finally
+      {
+         final ListenableFuture<Boolean> complete = this.client.shutdown(false);
+         try
+         {
+            complete.get(5, TimeUnit.SECONDS);
+         }
+         catch (final Exception e)
+         {
+            _logger.error("Exception while waiting for client shutdown completion", e);
+         }
+         final boolean success =
+               MoreExecutors.shutdownAndAwaitTermination(this.executorService, 5, TimeUnit.SECONDS);
+
+         if (!success)
+            _logger.error("Error while shutting down executor service");
+      }
    }
 
    public void stopTest()
    {
-      final boolean wasRunning = this.running.getAndSet(false);
-      if (wasRunning)
-      {
-         this.client.shutdown(false);
-         this.executorService.shutdown();
-      }
+      this.running.set(false);
    }
 
    private Runnable getListener(final ListenableFuture<Response> future)
