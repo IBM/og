@@ -21,5 +21,6 @@ package com.cleversafe.og.operation;
 
 public enum Metadata
 {
-   RESPONSE_BODY_PROCESSOR
+   RESPONSE_BODY_PROCESSOR,
+   ABORTED;
 }

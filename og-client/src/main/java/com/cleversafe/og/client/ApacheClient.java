@@ -273,7 +273,7 @@ public class ApacheClient implements Client
          {
             _logger.error("Exception executing request", e);
             responseBuilder.withStatusCode(499)
-                  .withMetaDataEntry("exception", "1");
+                  .withMetaDataEntry(Metadata.ABORTED.toString(), "");
          }
          response = responseBuilder.build();
          final long timestampFinish = System.currentTimeMillis();

@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.http.util.MethodUtil;
+import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.Operation;
@@ -71,7 +72,7 @@ public class Statistics
       final Operation operation = MethodUtil.toOperationType(request.getMethod());
       updateCounter(operation, Counter.OPERATIONS, 1);
       updateCounter(Operation.ALL, Counter.OPERATIONS, 1);
-      if (response.getMetadata("exception") != null)
+      if (response.getMetadata(Metadata.ABORTED.toString()) != null)
       {
          updateCounter(operation, Counter.ABORTS, 1);
          updateCounter(Operation.ALL, Counter.ABORTS, 1);
