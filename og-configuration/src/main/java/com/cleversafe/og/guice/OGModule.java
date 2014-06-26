@@ -23,8 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import com.cleversafe.og.cli.json.StoppingConditionsConfig;
 import com.cleversafe.og.client.Client;
@@ -60,8 +58,7 @@ public class OGModule extends AbstractModule
          final StoppingConditionsConfig stoppingConditions,
          final EventBus eventBus)
    {
-      final ExecutorService executorService = Executors.newCachedThreadPool();
-      final LoadTest test = new LoadTest(operationManager, client, executorService);
+      final LoadTest test = new LoadTest(operationManager, client);
       final List<StatisticsListener> statsListeners = new ArrayList<StatisticsListener>();
       final List<StatusCodeListener> statusCodeListeners = new ArrayList<StatusCodeListener>();
 

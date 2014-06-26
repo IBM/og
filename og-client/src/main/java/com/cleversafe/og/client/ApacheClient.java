@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.http.Header;
@@ -66,6 +67,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -140,7 +142,8 @@ public class ApacheClient implements Client
                   .build())
             .build();
 
-      this.executorService = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
+      final ThreadFactory fac = new ThreadFactoryBuilder().setNameFormat("client-%d").build();
+      this.executorService = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool(fac));
       this.gson = new GsonBuilder()
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
             .setLongSerializationPolicy(LongSerializationPolicy.STRING)
@@ -162,7 +165,9 @@ public class ApacheClient implements Client
    public ListenableFuture<Boolean> shutdown(final boolean graceful)
    {
       final SettableFuture<Boolean> future = SettableFuture.create();
-      new Thread(getShutdownRunnable(future, graceful)).start();
+      final Thread t = new Thread(getShutdownRunnable(future, graceful));
+      t.setName("clientShutdown");
+      t.start();
       return future;
    }
 

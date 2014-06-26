@@ -22,6 +22,8 @@ package com.cleversafe.og.test;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -35,6 +37,7 @@ import com.cleversafe.og.operation.manager.OperationManager;
 import com.cleversafe.og.operation.manager.OperationManagerException;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 public class LoadTest
 {
@@ -44,14 +47,12 @@ public class LoadTest
    private final ExecutorService executorService;
    AtomicBoolean running;
 
-   public LoadTest(
-         final OperationManager operationManager,
-         final Client client,
-         final ExecutorService executorService)
+   public LoadTest(final OperationManager operationManager, final Client client)
    {
       this.operationManager = checkNotNull(operationManager);
       this.client = checkNotNull(client);
-      this.executorService = checkNotNull(executorService);
+      final ThreadFactory fac = new ThreadFactoryBuilder().setNameFormat("test-%d").build();
+      this.executorService = Executors.newCachedThreadPool(fac);
       this.running = new AtomicBoolean(true);
    }
 

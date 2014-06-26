@@ -83,6 +83,7 @@ public class RuntimeListener
          }
 
       });
+      t.setName("runtimeListener");
       t.setDaemon(true);
       t.start();
    }
