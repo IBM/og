@@ -20,12 +20,15 @@
 package com.cleversafe.og.guice;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.cleversafe.og.cli.json.StoppingConditionsConfig;
 import com.cleversafe.og.client.Client;
+import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.manager.OperationManager;
 import com.cleversafe.og.statistic.Counter;
 import com.cleversafe.og.statistic.Statistics;
@@ -42,22 +45,27 @@ import com.google.inject.Singleton;
 public class OGModule extends AbstractModule
 {
 
+   private final Map<Long, Request> pendingRequests;
+
    public OGModule()
-   {}
+   {
+      // have to create this here so that LoadTest can access a modifiable
+      // version of the map, all others get a read-only instance
+      this.pendingRequests = new ConcurrentHashMap<Long, Request>();
+   }
 
    @Override
    protected void configure()
    {}
 
-   // TODO refactor stopping condition creation
    @Provides
    @Singleton
    LoadTest provideLoadTest(
          final OperationManager operationManager,
          final Client client,
+         final Statistics stats,
          final StoppingConditionsConfig config)
    {
-      final LoadTest test = new LoadTest(operationManager, client);
       final List<TestCondition> conditions = new ArrayList<TestCondition>();
 
       if (config.getOperations() > 0)
@@ -67,10 +75,6 @@ public class OGModule extends AbstractModule
       if (config.getAborts() > 0)
          conditions.add(new CounterCondition(Operation.ALL, Counter.ABORTS, config.getAborts()));
 
-      if (config.getRuntime() > 0)
-         new RuntimeCondition(Thread.currentThread(), test, config.getRuntime(),
-               config.getRuntimeUnit());
-
       final Map<Integer, Integer> scMap = config.getStatusCodes();
       for (final Entry<Integer, Integer> sc : scMap.entrySet())
       {
@@ -78,7 +82,22 @@ public class OGModule extends AbstractModule
             conditions.add(new StatusCodeCondition(Operation.ALL, sc.getKey(), sc.getValue()));
       }
 
+      final LoadTest test =
+            new LoadTest(operationManager, client, stats, conditions, this.pendingRequests);
+
+      // have to create this condition after LoadTest because it triggers LoadTest.stopTest()
+      if (config.getRuntime() > 0)
+         new RuntimeCondition(Thread.currentThread(), test, config.getRuntime(),
+               config.getRuntimeUnit());
+
       return test;
+   }
+
+   @Provides
+   @Singleton
+   public Map<Long, Request> providePendingRequests()
+   {
+      return Collections.unmodifiableMap(this.pendingRequests);
    }
 
    @Provides

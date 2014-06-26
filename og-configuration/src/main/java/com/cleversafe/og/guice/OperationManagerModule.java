@@ -22,8 +22,6 @@ package com.cleversafe.og.guice;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,12 +32,10 @@ import com.cleversafe.og.guice.annotation.Read;
 import com.cleversafe.og.guice.annotation.ReadWeight;
 import com.cleversafe.og.guice.annotation.Write;
 import com.cleversafe.og.guice.annotation.WriteWeight;
-import com.cleversafe.og.object.manager.ObjectManager;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.operation.manager.OperationManager;
 import com.cleversafe.og.scheduling.Scheduler;
-import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.test.operation.manager.SimpleOperationManager;
 import com.cleversafe.og.util.consumer.Consumer;
 import com.cleversafe.og.util.producer.Producer;
@@ -66,13 +62,10 @@ public class OperationManagerModule extends AbstractModule
    @Singleton
    public OperationManager provideOperationManager(
          final Producer<Producer<Request>> producer,
-         final ObjectManager objectManager,
-         final Map<Long, Request> pendingRequests,
          final Scheduler scheduler,
-         final List<Consumer<Response>> consumers,
-         final Statistics stats)
+         final List<Consumer<Response>> consumers)
    {
-      return new SimpleOperationManager(producer, consumers, scheduler, pendingRequests, stats);
+      return new SimpleOperationManager(producer, consumers, scheduler);
    }
 
    @Provides
@@ -103,12 +96,5 @@ public class OperationManagerModule extends AbstractModule
          wrc.withChoice(delete, deleteWeight);
 
       return wrc.build();
-   }
-
-   @Provides
-   @Singleton
-   public Map<Long, Request> providePendingRequests()
-   {
-      return new ConcurrentHashMap<Long, Request>();
    }
 }
