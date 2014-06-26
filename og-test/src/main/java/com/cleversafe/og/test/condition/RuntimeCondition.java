@@ -17,7 +17,7 @@
 // Date: Jun 22, 2014
 // ---------------------
 
-package com.cleversafe.og.test;
+package com.cleversafe.og.test.condition;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -27,15 +27,17 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RuntimeListener
+import com.cleversafe.og.test.LoadTest;
+
+public class RuntimeCondition
 {
-   private static Logger _logger = LoggerFactory.getLogger(RuntimeListener.class);
+   private static Logger _logger = LoggerFactory.getLogger(RuntimeCondition.class);
    private final Thread mainThread;
    private final LoadTest test;
    private final double duration;
    private final TimeUnit unit;
 
-   public RuntimeListener(
+   public RuntimeCondition(
          final Thread mainThread,
          final LoadTest test,
          final double duration,
@@ -73,13 +75,13 @@ public class RuntimeListener
                   sleepRemaining -= sleptTime;
                }
             }
-            RuntimeListener.this.test.stopTest();
-            RuntimeListener.this.mainThread.interrupt();
+            RuntimeCondition.this.test.stopTest();
+            RuntimeCondition.this.mainThread.interrupt();
          }
 
          private final long nextSleepDuration()
          {
-            return (long) (RuntimeListener.this.duration * RuntimeListener.this.unit.toNanos(1));
+            return (long) (RuntimeCondition.this.duration * RuntimeCondition.this.unit.toNanos(1));
          }
 
       });

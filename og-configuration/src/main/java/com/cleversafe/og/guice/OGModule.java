@@ -30,9 +30,9 @@ import com.cleversafe.og.operation.manager.OperationManager;
 import com.cleversafe.og.statistic.Counter;
 import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.test.LoadTest;
-import com.cleversafe.og.test.RuntimeListener;
-import com.cleversafe.og.test.StatisticsListener;
-import com.cleversafe.og.test.StatusCodeListener;
+import com.cleversafe.og.test.condition.RuntimeCondition;
+import com.cleversafe.og.test.condition.CounterCondition;
+import com.cleversafe.og.test.condition.StatusCodeCondition;
 import com.cleversafe.og.util.Operation;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.AbstractModule;
@@ -59,36 +59,36 @@ public class OGModule extends AbstractModule
          final EventBus eventBus)
    {
       final LoadTest test = new LoadTest(operationManager, client);
-      final List<StatisticsListener> statsListeners = new ArrayList<StatisticsListener>();
-      final List<StatusCodeListener> statusCodeListeners = new ArrayList<StatusCodeListener>();
+      final List<CounterCondition> statsListeners = new ArrayList<CounterCondition>();
+      final List<StatusCodeCondition> statusCodeListeners = new ArrayList<StatusCodeCondition>();
 
       if (stoppingConditions.getOperations() > 0)
-         statsListeners.add(new StatisticsListener(test, Operation.ALL, Counter.OPERATIONS,
+         statsListeners.add(new CounterCondition(test, Operation.ALL, Counter.OPERATIONS,
                stoppingConditions.getOperations()));
 
       if (stoppingConditions.getAborts() > 0)
-         statsListeners.add(new StatisticsListener(test, Operation.ALL, Counter.ABORTS,
+         statsListeners.add(new CounterCondition(test, Operation.ALL, Counter.ABORTS,
                stoppingConditions.getAborts()));
 
       // RuntimeListener does not need to be registered with the event bus
       if (stoppingConditions.getRuntime() > 0)
-         new RuntimeListener(Thread.currentThread(), test, stoppingConditions.getRuntime(),
+         new RuntimeCondition(Thread.currentThread(), test, stoppingConditions.getRuntime(),
                stoppingConditions.getRuntimeUnit());
 
       final Map<Integer, Integer> scMap = stoppingConditions.getStatusCodes();
       for (final Entry<Integer, Integer> sc : scMap.entrySet())
       {
          if (sc.getValue() > 0)
-            statusCodeListeners.add(new StatusCodeListener(test, Operation.ALL, sc.getKey(),
+            statusCodeListeners.add(new StatusCodeCondition(test, Operation.ALL, sc.getKey(),
                   sc.getValue()));
       }
 
-      for (final StatisticsListener listener : statsListeners)
+      for (final CounterCondition listener : statsListeners)
       {
          eventBus.register(listener);
       }
 
-      for (final StatusCodeListener listener : statusCodeListeners)
+      for (final StatusCodeCondition listener : statusCodeListeners)
       {
          eventBus.register(listener);
       }

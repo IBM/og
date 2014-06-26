@@ -17,7 +17,7 @@
 // Date: Jun 22, 2014
 // ---------------------
 
-package com.cleversafe.og.test;
+package com.cleversafe.og.test.condition;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -27,18 +27,19 @@ import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.statistic.Counter;
 import com.cleversafe.og.statistic.Statistics;
+import com.cleversafe.og.test.LoadTest;
 import com.cleversafe.og.util.Operation;
 import com.google.common.eventbus.Subscribe;
 
-public class StatisticsListener
+public class CounterCondition
 {
-   private static Logger _logger = LoggerFactory.getLogger(StatisticsListener.class);
+   private static Logger _logger = LoggerFactory.getLogger(CounterCondition.class);
    private final LoadTest test;
    private final Operation operation;
    private final Counter counter;
    private final long thresholdValue;
 
-   public StatisticsListener(
+   public CounterCondition(
          final LoadTest test,
          final Operation operation,
          final Counter counter,
