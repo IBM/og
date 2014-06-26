@@ -262,19 +262,20 @@ public class ApacheClient implements Client
          setRequestURI(requestBuilder);
          setRequestHeaders(requestBuilder);
          setRequestContent(requestBuilder);
-         Response response;
+         final HttpResponse.Builder responseBuilder = HttpResponse.custom()
+               .withRequestId(this.request.getId());
+         final Response response;
          try
          {
-            response = sendRequest(requestBuilder.build());
+            sendRequest(requestBuilder.build(), responseBuilder);
          }
          catch (final Exception e)
          {
             _logger.error("Exception executing request", e);
-            response = HttpResponse.custom()
-                  .withRequestId(this.request.getId())
-                  .withMetaDataEntry("exception", "1")
-                  .build();
+            responseBuilder.withStatusCode(499)
+                  .withMetaDataEntry("exception", "1");
          }
+         response = responseBuilder.build();
          final long timestampFinish = System.currentTimeMillis();
 
          _requestLogger.info(this.gson.toJson(new RequestLogEntry(this.request, response,
@@ -329,21 +330,21 @@ public class ApacheClient implements Client
          return entity;
       }
 
-      private Response sendRequest(final HttpUriRequest _request)
+      private void sendRequest(
+            final HttpUriRequest _request,
+            final HttpResponse.Builder responseBuilder)
             throws ClientProtocolException, IOException
       {
-         return this.client.execute(_request, new ResponseHandler<Response>()
+         this.client.execute(_request, new ResponseHandler<Void>()
          {
             @Override
-            public Response handleResponse(final org.apache.http.HttpResponse response)
+            public Void handleResponse(final org.apache.http.HttpResponse response)
                   throws ClientProtocolException, IOException
             {
-               final HttpResponse.Builder responseBuilder = HttpResponse.custom()
-                     .withRequestId(BlockingHttpOperation.this.request.getId());
                setResponseStatusCode(responseBuilder, response);
                setResponseHeaders(responseBuilder, response);
                receiveResponseContent(responseBuilder, response);
-               return responseBuilder.build();
+               return null;
             }
          });
       }
