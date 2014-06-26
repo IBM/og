@@ -75,7 +75,7 @@ public class OGModule extends AbstractModule
 
       // RuntimeListener does not need to be registered with the event bus
       if (stoppingConditions.getRuntime() > 0)
-         new RuntimeListener(test, stoppingConditions.getRuntime(),
+         new RuntimeListener(Thread.currentThread(), test, stoppingConditions.getRuntime(),
                stoppingConditions.getRuntimeUnit());
 
       final Map<Integer, Integer> scMap = stoppingConditions.getStatusCodes();

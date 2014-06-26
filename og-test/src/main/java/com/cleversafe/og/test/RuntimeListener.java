@@ -30,12 +30,18 @@ import org.slf4j.LoggerFactory;
 public class RuntimeListener
 {
    private static Logger _logger = LoggerFactory.getLogger(RuntimeListener.class);
+   private final Thread mainThread;
    private final LoadTest test;
    private final double duration;
    private final TimeUnit unit;
 
-   public RuntimeListener(final LoadTest test, final double duration, final TimeUnit unit)
+   public RuntimeListener(
+         final Thread mainThread,
+         final LoadTest test,
+         final double duration,
+         final TimeUnit unit)
    {
+      this.mainThread = checkNotNull(mainThread);
       this.test = checkNotNull(test);
       checkArgument(duration > 0.0, "duration must be > 0.0 [%s]", duration);
       this.duration = duration;
@@ -67,8 +73,8 @@ public class RuntimeListener
                   sleepRemaining -= sleptTime;
                }
             }
-
             RuntimeListener.this.test.stopTest();
+            RuntimeListener.this.mainThread.interrupt();
          }
 
          private final long nextSleepDuration()
