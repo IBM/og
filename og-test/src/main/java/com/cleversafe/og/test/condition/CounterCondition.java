@@ -27,36 +27,32 @@ import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.statistic.Counter;
 import com.cleversafe.og.statistic.Statistics;
-import com.cleversafe.og.test.LoadTest;
 import com.cleversafe.og.util.Operation;
-import com.google.common.eventbus.Subscribe;
 
-public class CounterCondition
+public class CounterCondition implements TestCondition
 {
    private static Logger _logger = LoggerFactory.getLogger(CounterCondition.class);
-   private final LoadTest test;
    private final Operation operation;
    private final Counter counter;
    private final long thresholdValue;
 
    public CounterCondition(
-         final LoadTest test,
          final Operation operation,
          final Counter counter,
          final long thresholdValue)
    {
-      this.test = checkNotNull(test);
       this.operation = checkNotNull(operation);
       this.counter = checkNotNull(counter);
       checkArgument(thresholdValue > 0, "thresholdValue must be > 0 [%s]", thresholdValue);
       this.thresholdValue = thresholdValue;
    }
 
-   @Subscribe
-   public void handleStatisticEvent(final Statistics stats)
+   @Override
+   public boolean isTriggered(final Statistics stats)
    {
       final long currentValue = stats.get(this.operation, this.counter);
       if (currentValue >= this.thresholdValue)
-         this.test.stopTest();
+         return true;
+      return false;
    }
 }

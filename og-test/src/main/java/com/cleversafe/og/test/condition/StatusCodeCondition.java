@@ -26,25 +26,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.statistic.Statistics;
-import com.cleversafe.og.test.LoadTest;
 import com.cleversafe.og.util.Operation;
-import com.google.common.eventbus.Subscribe;
 
-public class StatusCodeCondition
+public class StatusCodeCondition implements TestCondition
 {
    private static Logger _logger = LoggerFactory.getLogger(StatusCodeCondition.class);
-   private final LoadTest test;
    private final Operation operation;
    private final int statusCode;
    private final long thresholdValue;
 
    public StatusCodeCondition(
-         final LoadTest test,
          final Operation operation,
          final int statusCode,
          final long thresholdValue)
    {
-      this.test = checkNotNull(test);
       this.operation = checkNotNull(operation);
       // TODO use guava range
       checkArgument(statusCode >= 100 && statusCode <= 599,
@@ -54,11 +49,12 @@ public class StatusCodeCondition
       this.thresholdValue = thresholdValue;
    }
 
-   @Subscribe
-   public void handleStatisticEvent(final Statistics stats)
+   @Override
+   public boolean isTriggered(final Statistics stats)
    {
       final long currentValue = stats.getStatusCode(this.operation, this.statusCode);
       if (currentValue >= this.thresholdValue)
-         this.test.stopTest();
+         return true;
+      return false;
    }
 }

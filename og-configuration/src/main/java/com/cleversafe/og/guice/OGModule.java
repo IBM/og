@@ -30,11 +30,11 @@ import com.cleversafe.og.operation.manager.OperationManager;
 import com.cleversafe.og.statistic.Counter;
 import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.test.LoadTest;
-import com.cleversafe.og.test.condition.RuntimeCondition;
 import com.cleversafe.og.test.condition.CounterCondition;
+import com.cleversafe.og.test.condition.RuntimeCondition;
 import com.cleversafe.og.test.condition.StatusCodeCondition;
+import com.cleversafe.og.test.condition.TestCondition;
 import com.cleversafe.og.util.Operation;
-import com.google.common.eventbus.EventBus;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -55,42 +55,27 @@ public class OGModule extends AbstractModule
    LoadTest provideLoadTest(
          final OperationManager operationManager,
          final Client client,
-         final StoppingConditionsConfig stoppingConditions,
-         final EventBus eventBus)
+         final StoppingConditionsConfig config)
    {
       final LoadTest test = new LoadTest(operationManager, client);
-      final List<CounterCondition> statsListeners = new ArrayList<CounterCondition>();
-      final List<StatusCodeCondition> statusCodeListeners = new ArrayList<StatusCodeCondition>();
+      final List<TestCondition> conditions = new ArrayList<TestCondition>();
 
-      if (stoppingConditions.getOperations() > 0)
-         statsListeners.add(new CounterCondition(test, Operation.ALL, Counter.OPERATIONS,
-               stoppingConditions.getOperations()));
+      if (config.getOperations() > 0)
+         conditions.add(new CounterCondition(Operation.ALL, Counter.OPERATIONS,
+               config.getOperations()));
 
-      if (stoppingConditions.getAborts() > 0)
-         statsListeners.add(new CounterCondition(test, Operation.ALL, Counter.ABORTS,
-               stoppingConditions.getAborts()));
+      if (config.getAborts() > 0)
+         conditions.add(new CounterCondition(Operation.ALL, Counter.ABORTS, config.getAborts()));
 
-      // RuntimeListener does not need to be registered with the event bus
-      if (stoppingConditions.getRuntime() > 0)
-         new RuntimeCondition(Thread.currentThread(), test, stoppingConditions.getRuntime(),
-               stoppingConditions.getRuntimeUnit());
+      if (config.getRuntime() > 0)
+         new RuntimeCondition(Thread.currentThread(), test, config.getRuntime(),
+               config.getRuntimeUnit());
 
-      final Map<Integer, Integer> scMap = stoppingConditions.getStatusCodes();
+      final Map<Integer, Integer> scMap = config.getStatusCodes();
       for (final Entry<Integer, Integer> sc : scMap.entrySet())
       {
          if (sc.getValue() > 0)
-            statusCodeListeners.add(new StatusCodeCondition(test, Operation.ALL, sc.getKey(),
-                  sc.getValue()));
-      }
-
-      for (final CounterCondition listener : statsListeners)
-      {
-         eventBus.register(listener);
-      }
-
-      for (final StatusCodeCondition listener : statusCodeListeners)
-      {
-         eventBus.register(listener);
+            conditions.add(new StatusCodeCondition(Operation.ALL, sc.getKey(), sc.getValue()));
       }
 
       return test;
@@ -98,15 +83,8 @@ public class OGModule extends AbstractModule
 
    @Provides
    @Singleton
-   public EventBus provideEventBus()
+   public Statistics provideStatistics()
    {
-      return new EventBus();
-   }
-
-   @Provides
-   @Singleton
-   public Statistics provideStatistics(final EventBus eventBus)
-   {
-      return new Statistics(eventBus);
+      return new Statistics();
    }
 }

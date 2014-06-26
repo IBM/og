@@ -27,35 +27,36 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.test.LoadTest;
 
-public class RuntimeCondition
+public class RuntimeCondition implements TestCondition
 {
    private static Logger _logger = LoggerFactory.getLogger(RuntimeCondition.class);
    private final Thread mainThread;
    private final LoadTest test;
-   private final double duration;
-   private final TimeUnit unit;
+   private final long runtime;
+   private final long timestampStart;
 
    public RuntimeCondition(
          final Thread mainThread,
          final LoadTest test,
-         final double duration,
+         final double runtime,
          final TimeUnit unit)
    {
       this.mainThread = checkNotNull(mainThread);
       this.test = checkNotNull(test);
-      checkArgument(duration > 0.0, "duration must be > 0.0 [%s]", duration);
-      this.duration = duration;
-      this.unit = checkNotNull(unit);
+      checkArgument(runtime > 0.0, "duration must be > 0.0 [%s]", runtime);
+      this.runtime = (long) (runtime * unit.toNanos(1));
+      this.timestampStart = System.nanoTime();
 
       final Thread t = new Thread(new Runnable()
       {
          @Override
          public void run()
          {
-            long timestampStart = System.nanoTime();
-            long sleepRemaining = nextSleepDuration();
+            long timestampStart = RuntimeCondition.this.timestampStart;
+            long sleepRemaining = RuntimeCondition.this.runtime;
 
             while (sleepRemaining > 0)
             {
@@ -78,15 +79,19 @@ public class RuntimeCondition
             RuntimeCondition.this.test.stopTest();
             RuntimeCondition.this.mainThread.interrupt();
          }
-
-         private final long nextSleepDuration()
-         {
-            return (long) (RuntimeCondition.this.duration * RuntimeCondition.this.unit.toNanos(1));
-         }
-
       });
-      t.setName("runtimeListener");
+      t.setName("runtimeCondition");
       t.setDaemon(true);
       t.start();
+   }
+
+   @Override
+   public boolean isTriggered(final Statistics stats)
+   {
+      // this method ignores the stats, it is concerned with runtime only
+      final long currentRuntime = System.nanoTime() - this.timestampStart;
+      if (currentRuntime >= this.runtime)
+         return true;
+      return false;
    }
 }

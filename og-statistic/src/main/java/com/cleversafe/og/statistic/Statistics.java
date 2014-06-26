@@ -37,7 +37,6 @@ import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.Operation;
-import com.google.common.eventbus.EventBus;
 
 public class Statistics
 {
@@ -46,10 +45,9 @@ public class Statistics
    // use concurrent hashmap at status code level, as additional status code keys may be mapped
    // concurrently during the lifetime of the test
    private final Map<Operation, ConcurrentNavigableMap<Integer, AtomicLong>> scCounters;
-   private final EventBus eventBus;
    private AtomicLong unmappedSC;
 
-   public Statistics(final EventBus eventBus)
+   public Statistics()
    {
       this.counters = new HashMap<Operation, Map<Counter, AtomicLong>>();
       this.scCounters = new HashMap<Operation, ConcurrentNavigableMap<Integer, AtomicLong>>();
@@ -63,7 +61,6 @@ public class Statistics
             this.counters.get(operation).put(counter, new AtomicLong());
          }
       }
-      this.eventBus = checkNotNull(eventBus);
       this.unmappedSC = new AtomicLong(1);
    }
 
@@ -82,7 +79,6 @@ public class Statistics
          updateStatusCode(operation, response.getStatusCode());
          updateStatusCode(Operation.ALL, response.getStatusCode());
       }
-      this.eventBus.post(this);
    }
 
    private void updateCounter(final Operation operation, final Counter counter, final long value)
