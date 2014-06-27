@@ -31,7 +31,7 @@ import com.cleversafe.og.cli.json.type.TimeUnitTypeAdapterFactory;
 import com.cleversafe.og.cli.report.Summary;
 import com.cleversafe.og.guice.ClientModule;
 import com.cleversafe.og.guice.JsonModule;
-import com.cleversafe.og.guice.NOHModule;
+import com.cleversafe.og.guice.ApiModule;
 import com.cleversafe.og.guice.OGModule;
 import com.cleversafe.og.guice.ObjectManagerModule;
 import com.cleversafe.og.guice.OperationManagerModule;
@@ -113,7 +113,7 @@ public class OG extends AbstractCLI
    {
       if (Api.SOH == api)
          return new SOHModule();
-      return new NOHModule();
+      return new ApiModule();
    }
 
    private static Gson createGson()
