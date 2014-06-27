@@ -189,13 +189,17 @@ public class ApacheClient implements Client
 
          private void immediateShutdown()
          {
+            _logger.info("Issuing immediate shutdown");
             closeSockets();
+            _logger.info("Issuing shutdownNow call to ExecutorService");
             ApacheClient.this.executorService.shutdownNow();
             awaitShutdown(5, TimeUnit.SECONDS);
          }
 
          private void gracefulShutdown()
          {
+            _logger.info("Issuing graceful shutdown");
+            _logger.info("Issuing shutdown call to ExecutorService");
             ApacheClient.this.executorService.shutdown();
             awaitShutdown(1, TimeUnit.HOURS);
             if (!ApacheClient.this.executorService.isTerminated())
@@ -206,6 +210,7 @@ public class ApacheClient implements Client
          {
             try
             {
+               _logger.info("Attempting to close connection pool");
                ApacheClient.this.client.close();
             }
             catch (final IOException e)
@@ -218,7 +223,12 @@ public class ApacheClient implements Client
          {
             try
             {
-               ApacheClient.this.executorService.awaitTermination(timeout, unit);
+               _logger.info("Awaiting ExecutorService termination for {} {}", timeout, unit);
+               final boolean result =
+                     ApacheClient.this.executorService.awaitTermination(timeout, unit);
+               _logger.info("ExecutorService termination result [{}]", result
+                     ? "success"
+                     : "failure");
             }
             catch (final InterruptedException e)
             {
@@ -227,7 +237,6 @@ public class ApacheClient implements Client
          }
       };
    }
-
    private static class BlockingHttpOperation implements Callable<Response>
    {
       private final CloseableHttpClient client;
