@@ -25,13 +25,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.cleversafe.og.guice.annotation.TestContainer;
-import com.cleversafe.og.guice.annotation.TestEntity;
-import com.cleversafe.og.guice.annotation.TesttId;
-import com.cleversafe.og.guice.annotation.TestPort;
-import com.cleversafe.og.guice.annotation.TestQueryParams;
-import com.cleversafe.og.guice.annotation.TestScheme;
-import com.cleversafe.og.guice.annotation.TestUriRoot;
 import com.cleversafe.og.guice.annotation.Delete;
 import com.cleversafe.og.guice.annotation.DeleteHeaders;
 import com.cleversafe.og.guice.annotation.DeleteHost;
@@ -40,6 +33,13 @@ import com.cleversafe.og.guice.annotation.Read;
 import com.cleversafe.og.guice.annotation.ReadHeaders;
 import com.cleversafe.og.guice.annotation.ReadHost;
 import com.cleversafe.og.guice.annotation.ReadObjectName;
+import com.cleversafe.og.guice.annotation.TestContainer;
+import com.cleversafe.og.guice.annotation.TestEntity;
+import com.cleversafe.og.guice.annotation.TestPort;
+import com.cleversafe.og.guice.annotation.TestQueryParams;
+import com.cleversafe.og.guice.annotation.TestScheme;
+import com.cleversafe.og.guice.annotation.TestUriRoot;
+import com.cleversafe.og.guice.annotation.TesttId;
 import com.cleversafe.og.guice.annotation.Write;
 import com.cleversafe.og.guice.annotation.WriteHeaders;
 import com.cleversafe.og.guice.annotation.WriteHost;
@@ -47,6 +47,7 @@ import com.cleversafe.og.guice.annotation.WriteObjectName;
 import com.cleversafe.og.http.Scheme;
 import com.cleversafe.og.http.producer.RequestProducer;
 import com.cleversafe.og.http.producer.UriProducer;
+import com.cleversafe.og.http.util.HttpUtil;
 import com.cleversafe.og.object.manager.ObjectManager;
 import com.cleversafe.og.object.manager.ObjectNameConsumer;
 import com.cleversafe.og.operation.Entity;
@@ -186,20 +187,11 @@ public class NOHModule extends AbstractModule
          final ObjectManager objectManager,
          final Map<Long, Request> pendingRequests)
    {
+      final List<Integer> sc = HttpUtil.SUCCESS_STATUS_CODES;
       final List<Consumer<Response>> list = new ArrayList<Consumer<Response>>();
-
-      // TODO static util class for generating an objectName consumer?
-      final List<Integer> laxStatusCodes = new ArrayList<Integer>();
-      laxStatusCodes.add(200);
-      laxStatusCodes.add(201);
-      laxStatusCodes.add(204);
-
-      list.add(new ObjectNameConsumer(objectManager, pendingRequests, Operation.WRITE,
-            laxStatusCodes));
-      list.add(new ObjectNameConsumer(objectManager, pendingRequests, Operation.READ,
-            laxStatusCodes));
-      list.add(new ObjectNameConsumer(objectManager, pendingRequests, Operation.DELETE,
-            laxStatusCodes));
+      list.add(new ObjectNameConsumer(objectManager, pendingRequests, Operation.WRITE, sc));
+      list.add(new ObjectNameConsumer(objectManager, pendingRequests, Operation.READ, sc));
+      list.add(new ObjectNameConsumer(objectManager, pendingRequests, Operation.DELETE, sc));
       return list;
    }
 
