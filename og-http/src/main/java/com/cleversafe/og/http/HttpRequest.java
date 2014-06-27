@@ -108,7 +108,7 @@ public class HttpRequest implements Request
    @Override
    public String getMetadata(final Metadata key)
    {
-      return this.metadata.get(key);
+      return this.metadata.get(key.toString());
    }
 
    @Override

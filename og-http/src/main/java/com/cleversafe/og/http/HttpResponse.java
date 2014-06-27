@@ -79,7 +79,7 @@ public class HttpResponse implements Response
    @Override
    public String getMetadata(final Metadata key)
    {
-      return this.metadata.get(key);
+      return this.metadata.get(key.toString());
    }
 
    @Override
