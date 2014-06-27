@@ -32,11 +32,17 @@ public class Entities
 {
    private static final int BUF_SIZE = 1024;
    private static final byte[] ZERO_BUF = new byte[BUF_SIZE];
+   private static final Entity NONE_ENTITY = Entities.of(EntityType.NONE, 0);
    // TODO performance of single random instance used by multiple threads? Need to quantify
    private static final Random RANDOM = new Random();
 
    private Entities()
    {}
+
+   public static Entity none()
+   {
+      return NONE_ENTITY;
+   }
 
    public static Entity of(final EntityType type, final long size)
    {
