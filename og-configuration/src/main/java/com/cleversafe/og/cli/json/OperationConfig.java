@@ -19,7 +19,7 @@
 
 package com.cleversafe.og.cli.json;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -34,7 +34,7 @@ public class OperationConfig
    public OperationConfig()
    {
       this.hostAlgorithm = CollectionAlgorithmType.ROUNDROBIN;
-      this.headers = new HashMap<String, String>();
+      this.headers = new LinkedHashMap<String, String>();
    }
 
    /**
