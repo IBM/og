@@ -9,7 +9,7 @@
 // Note: All configuration names are strings and must be quoted e.g. "scheme"
 
 
-// The httpe scheme to use. One of ("http", "https")
+// The http scheme to use. One of ("http", "https")
 
 // "scheme": "http",
 
@@ -70,7 +70,7 @@
 // "hosts": [],
 // "headers": {}
 // }
-}
+// },
 
 
 // Read operation configuration
@@ -81,7 +81,7 @@
 // "hosts": [],
 // "headers": {}
 // }
-}
+// },
 
 
 // Delete operation configuration
@@ -92,7 +92,7 @@
 // "hosts": [],
 // "headers": {}
 // }
-}
+// },
 
 
 // File size(s) to use for write operations. File sizes are described in terms
