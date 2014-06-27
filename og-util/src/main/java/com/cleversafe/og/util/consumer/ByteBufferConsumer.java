@@ -25,5 +25,5 @@ import java.util.Map.Entry;
 
 public interface ByteBufferConsumer extends Consumer<ByteBuffer>
 {
-   Iterator<Entry<String, String>> metaData();
+   Iterator<Entry<String, String>> metadata();
 }

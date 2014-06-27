@@ -28,6 +28,7 @@ import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Response;
 
 public class HttpResponse implements Response
@@ -73,6 +74,12 @@ public class HttpResponse implements Response
    public Iterator<Entry<String, String>> headers()
    {
       return this.headers.entrySet().iterator();
+   }
+
+   @Override
+   public String getMetadata(final Metadata key)
+   {
+      return this.metadata.get(key);
    }
 
    @Override
@@ -123,7 +130,13 @@ public class HttpResponse implements Response
          return this;
       }
 
-      public Builder withMetaDataEntry(final String key, final String value)
+      public Builder withMetadata(final Metadata key, final String value)
+      {
+         this.metadata.put(key.toString(), value);
+         return this;
+      }
+
+      public Builder withMetadata(final String key, final String value)
       {
          this.metadata.put(key, value);
          return this;

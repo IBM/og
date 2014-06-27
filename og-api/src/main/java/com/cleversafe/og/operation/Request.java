@@ -87,6 +87,18 @@ public interface Request
     * @throws NullPointerException
     *            if key is null
     */
+   String getMetadata(Metadata key);
+
+   /**
+    * Gets the value of the request metadata entry with the specified key.
+    * 
+    * @param key
+    *           the key of the metadata entry
+    * @return the value for the metadata entry with the specified key, or null if no such mapping
+    *         exists
+    * @throws NullPointerException
+    *            if key is null
+    */
    String getMetadata(String key);
 
    /**

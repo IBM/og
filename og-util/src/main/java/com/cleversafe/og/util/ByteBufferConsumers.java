@@ -44,7 +44,7 @@ public class ByteBufferConsumers
       }
 
       @Override
-      public Iterator<Entry<String, String>> metaData()
+      public Iterator<Entry<String, String>> metadata()
       {
          return this.emptyMap.entrySet().iterator();
       }

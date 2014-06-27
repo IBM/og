@@ -78,7 +78,7 @@ public class RequestProducer implements Producer<Request>
       final Map<String, String> m = this.metadata.produce();
       for (final Entry<String, String> e : m.entrySet())
       {
-         context.withMetaDataEntry(e.getKey(), e.getValue());
+         context.withMetadata(e.getKey(), e.getValue());
       }
 
       return context.build();

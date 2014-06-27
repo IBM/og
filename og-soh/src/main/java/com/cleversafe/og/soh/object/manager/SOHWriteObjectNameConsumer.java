@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.object.manager.ObjectManager;
 import com.cleversafe.og.object.manager.ObjectNameConsumer;
+import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.Operation;
@@ -47,7 +48,6 @@ public class SOHWriteObjectNameConsumer extends ObjectNameConsumer
    @Override
    protected String getObjectString(final Request request, final Response response)
    {
-      // TODO metadata constants?
-      return response.getMetadata("object_name");
+      return response.getMetadata(Metadata.OBJECT_NAME);
    }
 }

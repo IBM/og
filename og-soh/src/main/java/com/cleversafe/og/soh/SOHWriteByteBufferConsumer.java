@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.util.consumer.ByteBufferConsumer;
 
 public class SOHWriteByteBufferConsumer implements ByteBufferConsumer
@@ -53,7 +54,7 @@ public class SOHWriteByteBufferConsumer implements ByteBufferConsumer
          this.idx += transferSize;
          if (remaining() == 0)
          {
-            this.metadata.put("object_name", new String(this.objectNameBytes));
+            this.metadata.put(Metadata.OBJECT_NAME.toString(), new String(this.objectNameBytes));
          }
       }
    }
@@ -64,7 +65,7 @@ public class SOHWriteByteBufferConsumer implements ByteBufferConsumer
    }
 
    @Override
-   public Iterator<Entry<String, String>> metaData()
+   public Iterator<Entry<String, String>> metadata()
    {
       // TODO map is mutable so iterator can modify, is this a problem?
       return this.metadata.entrySet().iterator();

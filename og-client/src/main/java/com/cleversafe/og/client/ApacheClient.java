@@ -156,7 +156,7 @@ public class ApacheClient implements Client
    {
       checkNotNull(request);
       final ByteBufferConsumer consumer =
-            this.byteBufferConsumers.apply(request.getMetadata(Metadata.RESPONSE_BODY_PROCESSOR.toString()));
+            this.byteBufferConsumers.apply(request.getMetadata(Metadata.RESPONSE_BODY_PROCESSOR));
       return this.executorService.submit(new BlockingHttpOperation(this.client, this.auth, request,
             consumer, this.gson, this.chunkedEncoding));
    }
@@ -288,8 +288,7 @@ public class ApacheClient implements Client
          catch (final Exception e)
          {
             _logger.error("Exception executing request", e);
-            responseBuilder.withStatusCode(499)
-                  .withMetaDataEntry(Metadata.ABORTED.toString(), "");
+            responseBuilder.withStatusCode(499).withMetadata(Metadata.ABORTED, "");
          }
          response = responseBuilder.build();
          final long timestampFinish = System.currentTimeMillis();
@@ -404,11 +403,11 @@ public class ApacheClient implements Client
          {
             processReceivedBytes(bytesRead);
          }
-         final Iterator<Entry<String, String>> it = this.consumer.metaData();
+         final Iterator<Entry<String, String>> it = this.consumer.metadata();
          while (it.hasNext())
          {
             final Entry<String, String> e = it.next();
-            responseBuilder.withMetaDataEntry(e.getKey(), e.getValue());
+            responseBuilder.withMetadata(e.getKey(), e.getValue());
          }
       }
 

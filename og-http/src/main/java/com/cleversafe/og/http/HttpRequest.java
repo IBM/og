@@ -36,6 +36,7 @@ import org.joda.time.format.DateTimeFormatter;
 
 import com.cleversafe.og.operation.Entity;
 import com.cleversafe.og.operation.EntityType;
+import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.util.Entities;
@@ -105,6 +106,12 @@ public class HttpRequest implements Request
    }
 
    @Override
+   public String getMetadata(final Metadata key)
+   {
+      return this.metadata.get(key);
+   }
+
+   @Override
    public String getMetadata(final String key)
    {
       return this.metadata.get(key);
@@ -168,7 +175,13 @@ public class HttpRequest implements Request
          return this;
       }
 
-      public Builder withMetaDataEntry(final String key, final String value)
+      public Builder withMetadata(final Metadata key, final String value)
+      {
+         this.metadata.put(key.toString(), value);
+         return this;
+      }
+
+      public Builder withMetadata(final String key, final String value)
       {
          this.metadata.put(key, value);
          return this;
