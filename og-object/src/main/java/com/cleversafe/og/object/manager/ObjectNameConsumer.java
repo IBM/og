@@ -25,8 +25,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.List;
 import java.util.Map;
 
-import com.cleversafe.og.http.util.MethodUtil;
-import com.cleversafe.og.http.util.UriUtil;
+import com.cleversafe.og.http.util.HttpUtil;
 import com.cleversafe.og.object.LegacyObjectName;
 import com.cleversafe.og.object.ObjectName;
 import com.cleversafe.og.operation.Request;
@@ -71,7 +70,7 @@ public class ObjectNameConsumer implements Consumer<Response>
       final Request request = this.pendingRequests.get(response.getRequestId());
 
       // if this consumer is not relevant for the current response, ignore
-      if (this.operation != MethodUtil.toOperationType(request.getMethod()))
+      if (this.operation != HttpUtil.toOperation(request.getMethod()))
          return;
 
       // if the status code of this response does not match what can be consumed, ignore
@@ -87,7 +86,7 @@ public class ObjectNameConsumer implements Consumer<Response>
 
    protected String getObjectString(final Request request, final Response response)
    {
-      return UriUtil.getObjectName(request.getURI());
+      return HttpUtil.getObjectName(request.getURI());
    }
 
    private void updateObjectManager(final ObjectName objectName)

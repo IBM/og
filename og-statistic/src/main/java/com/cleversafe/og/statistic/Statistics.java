@@ -32,7 +32,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.cleversafe.og.http.util.MethodUtil;
+import com.cleversafe.og.http.util.HttpUtil;
 import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
@@ -66,7 +66,7 @@ public class Statistics
 
    public void update(final Request request, final Response response)
    {
-      final Operation operation = MethodUtil.toOperationType(request.getMethod());
+      final Operation operation = HttpUtil.toOperation(request.getMethod());
       updateCounter(operation, Counter.OPERATIONS, 1);
       updateCounter(Operation.ALL, Counter.OPERATIONS, 1);
       if (response.getMetadata(Metadata.ABORTED.toString()) != null)

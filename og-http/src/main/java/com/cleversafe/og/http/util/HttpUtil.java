@@ -14,7 +14,7 @@
 // -----------------------
 // @author: rveitch
 //
-// Date: Jun 23, 2014
+// Date: Jun 26, 2014
 // ---------------------
 
 package com.cleversafe.og.http.util;
@@ -22,21 +22,51 @@ package com.cleversafe.og.http.util;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.cleversafe.og.operation.Method;
+import com.cleversafe.og.util.Operation;
 import com.google.common.base.Splitter;
 
-public class UriUtil
+public class HttpUtil
 {
-   private static Logger _logger = LoggerFactory.getLogger(UriUtil.class);
+   private static Logger _logger = LoggerFactory.getLogger(HttpUtil.class);
    private static final Splitter uriSplitter = Splitter.on("/").omitEmptyStrings();
+   public static final List<Integer> SUCCESS_STATUS_CODES;
+   static
+   {
+      final List<Integer> sc = new ArrayList<Integer>();
+      sc.add(200);
+      sc.add(201);
+      sc.add(204);
+      SUCCESS_STATUS_CODES = Collections.unmodifiableList(sc);
+   }
 
-   private UriUtil()
+   private HttpUtil()
    {}
+
+   public static Operation toOperation(final Method method)
+   {
+      switch (method)
+      {
+         case PUT :
+         case POST :
+            return Operation.WRITE;
+         case GET :
+         case HEAD :
+            return Operation.READ;
+         case DELETE :
+            return Operation.DELETE;
+         default :
+            throw new RuntimeException(String.format("Unrecognized method [%s]", method));
+      }
+   }
 
    public static String getObjectName(final URI uri)
    {
