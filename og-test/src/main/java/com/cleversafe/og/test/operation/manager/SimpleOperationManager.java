@@ -27,7 +27,6 @@ import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.operation.manager.OperationManager;
 import com.cleversafe.og.operation.manager.OperationManagerException;
-import com.cleversafe.og.scheduling.Scheduler;
 import com.cleversafe.og.util.consumer.Consumer;
 import com.cleversafe.og.util.producer.Producer;
 import com.cleversafe.og.util.producer.ProducerException;
@@ -36,23 +35,18 @@ public class SimpleOperationManager implements OperationManager
 {
    private final Producer<Producer<Request>> requestMix;
    private final List<Consumer<Response>> consumers;
-   private final Scheduler scheduler;
 
    public SimpleOperationManager(
          final Producer<Producer<Request>> requestMix,
-         final List<Consumer<Response>> consumers,
-         final Scheduler scheduler)
+         final List<Consumer<Response>> consumers)
    {
       this.requestMix = checkNotNull(requestMix);
       this.consumers = checkNotNull(consumers);
-      this.scheduler = checkNotNull(scheduler);
    }
 
    @Override
    public Request next() throws OperationManagerException
    {
-      this.scheduler.waitForNext();
-
       final Producer<Request> producer = this.requestMix.produce();
       try
       {
@@ -72,6 +66,5 @@ public class SimpleOperationManager implements OperationManager
       {
          consumer.consume(response);
       }
-      this.scheduler.complete(response);
    }
 }

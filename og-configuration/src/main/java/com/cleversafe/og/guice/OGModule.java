@@ -30,6 +30,7 @@ import com.cleversafe.og.cli.json.StoppingConditionsConfig;
 import com.cleversafe.og.client.Client;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.manager.OperationManager;
+import com.cleversafe.og.scheduling.Scheduler;
 import com.cleversafe.og.statistic.Counter;
 import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.test.LoadTest;
@@ -63,6 +64,7 @@ public class OGModule extends AbstractModule
    LoadTest provideLoadTest(
          final OperationManager operationManager,
          final Client client,
+         final Scheduler scheduler,
          final Statistics stats,
          final StoppingConditionsConfig config)
    {
@@ -83,7 +85,8 @@ public class OGModule extends AbstractModule
       }
 
       final LoadTest test =
-            new LoadTest(operationManager, client, stats, conditions, this.pendingRequests);
+            new LoadTest(operationManager, client, scheduler, stats, conditions,
+                  this.pendingRequests);
 
       // have to create this condition after LoadTest because it triggers LoadTest.stopTest()
       if (config.getRuntime() > 0)

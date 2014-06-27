@@ -37,6 +37,7 @@ import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.operation.manager.OperationManager;
 import com.cleversafe.og.operation.manager.OperationManagerException;
+import com.cleversafe.og.scheduling.Scheduler;
 import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.test.condition.TestCondition;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -48,6 +49,7 @@ public class LoadTest
    private static Logger _logger = LoggerFactory.getLogger(LoadTest.class);
    private final OperationManager operationManager;
    private final Client client;
+   private final Scheduler scheduler;
    private final Statistics stats;
    private final List<TestCondition> testConditions;
    private final Map<Long, Request> pendingRequests;
@@ -57,12 +59,14 @@ public class LoadTest
    public LoadTest(
          final OperationManager operationManager,
          final Client client,
+         final Scheduler scheduler,
          final Statistics stats,
          final List<TestCondition> testConditions,
          final Map<Long, Request> pendingRequests)
    {
       this.operationManager = checkNotNull(operationManager);
       this.client = checkNotNull(client);
+      this.scheduler = checkNotNull(scheduler);
       this.stats = checkNotNull(stats);
       this.testConditions = checkNotNull(testConditions);
       this.pendingRequests = checkNotNull(pendingRequests);
@@ -79,11 +83,12 @@ public class LoadTest
          {
             final Request nextRequest = this.operationManager.next();
             this.pendingRequests.put(nextRequest.getId(), nextRequest);
-            if (this.running.get())
+            if (isRunning())
             {
                final ListenableFuture<Response> future = this.client.execute(nextRequest);
                future.addListener(getListener(future), this.executorService);
             }
+            this.scheduler.waitForNext();
          }
       }
       catch (final OperationManagerException e)
@@ -96,7 +101,7 @@ public class LoadTest
          final ListenableFuture<Boolean> complete = this.client.shutdown(true);
          try
          {
-            complete.get(5, TimeUnit.SECONDS);
+            complete.get();
          }
          catch (final Exception e)
          {
@@ -151,6 +156,7 @@ public class LoadTest
          {
             final Response response = this.future.get();
             LoadTest.this.operationManager.complete(response);
+            LoadTest.this.scheduler.complete(response);
             final Request request = LoadTest.this.pendingRequests.get(response.getRequestId());
             LoadTest.this.stats.update(request, response);
             LoadTest.this.pendingRequests.remove(response.getRequestId());
