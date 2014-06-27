@@ -21,13 +21,13 @@ package com.cleversafe.og.cli.json;
 
 import com.cleversafe.og.cli.json.enums.AuthType;
 
-public class AuthConfig
+public class AuthenticationConfig
 {
    private final AuthType type;
    private String username;
    private String password;
 
-   public AuthConfig()
+   public AuthenticationConfig()
    {
       this.type = AuthType.BASIC;
    }

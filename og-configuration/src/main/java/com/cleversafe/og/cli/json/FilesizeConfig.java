@@ -22,7 +22,7 @@ package com.cleversafe.og.cli.json;
 import com.cleversafe.og.cli.json.enums.DistributionType;
 import com.cleversafe.og.util.SizeUnit;
 
-public class FileSizeConfig
+public class FilesizeConfig
 {
    DistributionType distribution;
    double average;
@@ -31,7 +31,7 @@ public class FileSizeConfig
    SizeUnit spreadUnit;
    double weight;
 
-   public FileSizeConfig()
+   public FilesizeConfig()
    {
       this.distribution = DistributionType.UNIFORM;
       this.average = 5.0;

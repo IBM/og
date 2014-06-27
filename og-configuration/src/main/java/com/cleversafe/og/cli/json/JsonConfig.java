@@ -42,10 +42,10 @@ public class JsonConfig
    OperationConfig write;
    OperationConfig read;
    OperationConfig delete;
-   List<FileSizeConfig> filesizes;
+   List<FilesizeConfig> filesizes;
    EntityType source;
    ConcurrencyConfig concurrency;
-   AuthConfig authentication;
+   AuthenticationConfig authentication;
    StoppingConditionsConfig stoppingConditions;
    String objectLocation;
    ClientConfig client;
@@ -60,11 +60,11 @@ public class JsonConfig
       this.write = new OperationConfig();
       this.read = new OperationConfig();
       this.delete = new OperationConfig();
-      this.filesizes = new ArrayList<FileSizeConfig>();
-      this.filesizes.add(new FileSizeConfig());
+      this.filesizes = new ArrayList<FilesizeConfig>();
+      this.filesizes.add(new FilesizeConfig());
       this.source = EntityType.RANDOM;
       this.concurrency = new ConcurrencyConfig();
-      this.authentication = new AuthConfig();
+      this.authentication = new AuthenticationConfig();
       this.stoppingConditions = new StoppingConditionsConfig();
       this.objectLocation = "./object";
       this.client = new ClientConfig();
@@ -161,7 +161,7 @@ public class JsonConfig
    /**
     * @return the filesizes
     */
-   public List<FileSizeConfig> getFilesizes()
+   public List<FilesizeConfig> getFilesizes()
    {
       return this.filesizes;
    }
@@ -185,7 +185,7 @@ public class JsonConfig
    /**
     * @return the authentication
     */
-   public AuthConfig getAuthentication()
+   public AuthenticationConfig getAuthentication()
    {
       return this.authentication;
    }

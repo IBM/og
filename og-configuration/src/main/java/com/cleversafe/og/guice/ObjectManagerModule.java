@@ -24,10 +24,10 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.cleversafe.og.guice.annotation.DefaultContainer;
-import com.cleversafe.og.guice.annotation.DefaultObjectLocation;
 import com.cleversafe.og.guice.annotation.DeleteObjectName;
 import com.cleversafe.og.guice.annotation.ReadObjectName;
+import com.cleversafe.og.guice.annotation.TestContainer;
+import com.cleversafe.og.guice.annotation.TestObjectLocation;
 import com.cleversafe.og.guice.annotation.WriteObjectName;
 import com.cleversafe.og.http.util.Api;
 import com.cleversafe.og.object.manager.DeleteObjectNameProducer;
@@ -54,11 +54,11 @@ public class ObjectManagerModule extends AbstractModule
    @Provides
    @Singleton
    public ObjectManager provideObjectManager(
-         @DefaultObjectLocation final String objectLocation,
-         @DefaultContainer final Producer<String> container,
+         @TestObjectLocation final String objectLocation,
+         @TestContainer final Producer<String> container,
          final Api api)
    {
-      // FIXME this naming scheme will break unless @DefaultContainer is a constant producer
+      // FIXME this naming scheme will break unless @TestContainer is a constant producer
       final String prefix = container.produce() + "-" + api.toString().toLowerCase();
       return new RandomObjectPopulator(UUID.randomUUID(), objectLocation, prefix);
    }

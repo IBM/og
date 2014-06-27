@@ -31,7 +31,7 @@ import com.cleversafe.og.util.producer.Producer;
 import com.cleversafe.og.util.producer.ProducerException;
 import com.google.common.base.Joiner;
 
-public class URIProducer implements Producer<URI>
+public class UriProducer implements Producer<URI>
 {
    private final Producer<Scheme> scheme;
    private final Producer<String> host;
@@ -42,7 +42,7 @@ public class URIProducer implements Producer<URI>
    private final boolean trailingSlash;
    private static final Joiner.MapJoiner paramJoiner = Joiner.on('&').withKeyValueSeparator("=");
 
-   private URIProducer(
+   private UriProducer(
          final Producer<Scheme> scheme,
          final Producer<String> host,
          final Producer<Integer> port,
@@ -162,9 +162,9 @@ public class URIProducer implements Producer<URI>
          return this;
       }
 
-      public URIProducer build()
+      public UriProducer build()
       {
-         return new URIProducer(this.scheme, this.host, this.port, this.path, this.queryParams,
+         return new UriProducer(this.scheme, this.host, this.port, this.path, this.queryParams,
                this.trailingSlash);
       }
    }

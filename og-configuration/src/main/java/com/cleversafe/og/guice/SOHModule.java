@@ -25,13 +25,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.cleversafe.og.guice.annotation.DefaultContainer;
-import com.cleversafe.og.guice.annotation.DefaultEntity;
-import com.cleversafe.og.guice.annotation.DefaultId;
-import com.cleversafe.og.guice.annotation.DefaultPort;
-import com.cleversafe.og.guice.annotation.DefaultQueryParams;
-import com.cleversafe.og.guice.annotation.DefaultScheme;
-import com.cleversafe.og.guice.annotation.DefaultUriRoot;
+import com.cleversafe.og.guice.annotation.TestContainer;
+import com.cleversafe.og.guice.annotation.TestEntity;
+import com.cleversafe.og.guice.annotation.TesttId;
+import com.cleversafe.og.guice.annotation.TestPort;
+import com.cleversafe.og.guice.annotation.TestQueryParams;
+import com.cleversafe.og.guice.annotation.TestScheme;
+import com.cleversafe.og.guice.annotation.TestUriRoot;
 import com.cleversafe.og.guice.annotation.Delete;
 import com.cleversafe.og.guice.annotation.DeleteHeaders;
 import com.cleversafe.og.guice.annotation.DeleteHost;
@@ -45,7 +45,7 @@ import com.cleversafe.og.guice.annotation.WriteHeaders;
 import com.cleversafe.og.guice.annotation.WriteHost;
 import com.cleversafe.og.http.Scheme;
 import com.cleversafe.og.http.producer.RequestProducer;
-import com.cleversafe.og.http.producer.URIProducer;
+import com.cleversafe.og.http.producer.UriProducer;
 import com.cleversafe.og.object.manager.ObjectManager;
 import com.cleversafe.og.object.manager.ObjectNameConsumer;
 import com.cleversafe.og.operation.Entity;
@@ -79,20 +79,20 @@ public class SOHModule extends AbstractModule
    @Singleton
    @Write
    public Producer<Request> provideWrite(
-         @DefaultId final Producer<Long> id,
-         @DefaultScheme final Producer<Scheme> scheme,
+         @TesttId final Producer<Long> id,
+         @TestScheme final Producer<Scheme> scheme,
          @WriteHost final Producer<String> host,
-         @DefaultPort final Producer<Integer> port,
-         @DefaultUriRoot final Producer<String> uriRoot,
-         @DefaultContainer final Producer<String> container,
-         @DefaultQueryParams final Producer<Map<String, String>> queryParams,
+         @TestPort final Producer<Integer> port,
+         @TestUriRoot final Producer<String> uriRoot,
+         @TestContainer final Producer<String> container,
+         @TestQueryParams final Producer<Map<String, String>> queryParams,
          @WriteHeaders final List<Producer<Pair<String, String>>> headers,
-         @DefaultEntity final Producer<Entity> entity)
+         @TestEntity final Producer<Entity> entity)
    {
       final List<Producer<String>> parts = new ArrayList<Producer<String>>();
       addUriRoot(parts, uriRoot);
       parts.add(container);
-      final Producer<URI> writeURI = URIProducer.custom()
+      final Producer<URI> writeURI = UriProducer.custom()
             .withScheme(scheme)
             .toHost(host)
             .onPort(port)
@@ -114,21 +114,21 @@ public class SOHModule extends AbstractModule
    @Singleton
    @Read
    public Producer<Request> provideRead(
-         @DefaultId final Producer<Long> id,
-         @DefaultScheme final Producer<Scheme> scheme,
+         @TesttId final Producer<Long> id,
+         @TestScheme final Producer<Scheme> scheme,
          @ReadHost final Producer<String> host,
-         @DefaultPort final Producer<Integer> port,
-         @DefaultUriRoot final Producer<String> uriRoot,
-         @DefaultContainer final Producer<String> container,
+         @TestPort final Producer<Integer> port,
+         @TestUriRoot final Producer<String> uriRoot,
+         @TestContainer final Producer<String> container,
          @ReadObjectName final Producer<String> object,
-         @DefaultQueryParams final Producer<Map<String, String>> queryParams,
+         @TestQueryParams final Producer<Map<String, String>> queryParams,
          @ReadHeaders final List<Producer<Pair<String, String>>> headers)
    {
       final List<Producer<String>> parts = new ArrayList<Producer<String>>();
       addUriRoot(parts, uriRoot);
       parts.add(container);
       parts.add(object);
-      final Producer<URI> readURI = URIProducer.custom()
+      final Producer<URI> readURI = UriProducer.custom()
             .withScheme(scheme)
             .toHost(host)
             .onPort(port)
@@ -149,21 +149,21 @@ public class SOHModule extends AbstractModule
    @Singleton
    @Delete
    public Producer<Request> provideDelete(
-         @DefaultId final Producer<Long> id,
-         @DefaultScheme final Producer<Scheme> scheme,
+         @TesttId final Producer<Long> id,
+         @TestScheme final Producer<Scheme> scheme,
          @DeleteHost final Producer<String> host,
-         @DefaultPort final Producer<Integer> port,
-         @DefaultUriRoot final Producer<String> uriRoot,
-         @DefaultContainer final Producer<String> container,
+         @TestPort final Producer<Integer> port,
+         @TestUriRoot final Producer<String> uriRoot,
+         @TestContainer final Producer<String> container,
          @DeleteObjectName final Producer<String> object,
-         @DefaultQueryParams final Producer<Map<String, String>> queryParams,
+         @TestQueryParams final Producer<Map<String, String>> queryParams,
          @DeleteHeaders final List<Producer<Pair<String, String>>> headers)
    {
       final List<Producer<String>> parts = new ArrayList<Producer<String>>();
       addUriRoot(parts, uriRoot);
       parts.add(container);
       parts.add(object);
-      final Producer<URI> deleteURI = URIProducer.custom()
+      final Producer<URI> deleteURI = UriProducer.custom()
             .withScheme(scheme)
             .toHost(host)
             .onPort(port)

@@ -31,10 +31,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicLong;
 
-import com.cleversafe.og.cli.json.AuthConfig;
+import com.cleversafe.og.cli.json.AuthenticationConfig;
 import com.cleversafe.og.cli.json.ClientConfig;
 import com.cleversafe.og.cli.json.ConcurrencyConfig;
-import com.cleversafe.og.cli.json.FileSizeConfig;
+import com.cleversafe.og.cli.json.FilesizeConfig;
 import com.cleversafe.og.cli.json.JsonConfig;
 import com.cleversafe.og.cli.json.OperationConfig;
 import com.cleversafe.og.cli.json.StoppingConditionsConfig;
@@ -44,22 +44,22 @@ import com.cleversafe.og.cli.json.enums.ConcurrencyType;
 import com.cleversafe.og.distribution.Distribution;
 import com.cleversafe.og.distribution.NormalDistribution;
 import com.cleversafe.og.distribution.UniformDistribution;
-import com.cleversafe.og.guice.annotation.DefaultContainer;
-import com.cleversafe.og.guice.annotation.DefaultEntity;
-import com.cleversafe.og.guice.annotation.DefaultHeaders;
-import com.cleversafe.og.guice.annotation.DefaultHost;
-import com.cleversafe.og.guice.annotation.DefaultId;
-import com.cleversafe.og.guice.annotation.DefaultObjectLocation;
-import com.cleversafe.og.guice.annotation.DefaultPort;
-import com.cleversafe.og.guice.annotation.DefaultQueryParams;
-import com.cleversafe.og.guice.annotation.DefaultScheme;
-import com.cleversafe.og.guice.annotation.DefaultUriRoot;
 import com.cleversafe.og.guice.annotation.DeleteHeaders;
 import com.cleversafe.og.guice.annotation.DeleteHost;
 import com.cleversafe.og.guice.annotation.DeleteWeight;
 import com.cleversafe.og.guice.annotation.ReadHeaders;
 import com.cleversafe.og.guice.annotation.ReadHost;
 import com.cleversafe.og.guice.annotation.ReadWeight;
+import com.cleversafe.og.guice.annotation.TestContainer;
+import com.cleversafe.og.guice.annotation.TestEntity;
+import com.cleversafe.og.guice.annotation.TestHeaders;
+import com.cleversafe.og.guice.annotation.TestHost;
+import com.cleversafe.og.guice.annotation.TestObjectLocation;
+import com.cleversafe.og.guice.annotation.TestPort;
+import com.cleversafe.og.guice.annotation.TestQueryParams;
+import com.cleversafe.og.guice.annotation.TestScheme;
+import com.cleversafe.og.guice.annotation.TestUriRoot;
+import com.cleversafe.og.guice.annotation.TesttId;
 import com.cleversafe.og.guice.annotation.WriteHeaders;
 import com.cleversafe.og.guice.annotation.WriteHost;
 import com.cleversafe.og.guice.annotation.WriteWeight;
@@ -105,8 +105,8 @@ public class JsonModule extends AbstractModule
 
    @Provides
    @Singleton
-   @DefaultId
-   public Producer<Long> provideDefaultIdProducer()
+   @TesttId
+   public Producer<Long> provideTestIdProducer()
    {
       return new Producer<Long>()
       {
@@ -122,16 +122,16 @@ public class JsonModule extends AbstractModule
 
    @Provides
    @Singleton
-   @DefaultScheme
-   public Producer<Scheme> provideDefaultScheme()
+   @TestScheme
+   public Producer<Scheme> provideTestScheme()
    {
       return Producers.of(this.config.getScheme());
    }
 
    @Provides
    @Singleton
-   @DefaultHost
-   public Producer<String> provideDefaultHost()
+   @TestHost
+   public Producer<String> provideTesttHost()
    {
       return createHost(this.config.getHostAlgorithm(), this.config.getHosts());
    }
@@ -139,7 +139,7 @@ public class JsonModule extends AbstractModule
    @Provides
    @Singleton
    @WriteHost
-   public Producer<String> provideWriteHost(@DefaultHost final Producer<String> host)
+   public Producer<String> provideWriteHost(@TestHost final Producer<String> host)
    {
       return provideHost(this.config.getWrite(), host);
    }
@@ -147,7 +147,7 @@ public class JsonModule extends AbstractModule
    @Provides
    @Singleton
    @ReadHost
-   public Producer<String> provideReadHost(@DefaultHost final Producer<String> host)
+   public Producer<String> provideReadHost(@TestHost final Producer<String> host)
    {
       return provideHost(this.config.getRead(), host);
    }
@@ -155,14 +155,14 @@ public class JsonModule extends AbstractModule
    @Provides
    @Singleton
    @DeleteHost
-   public Producer<String> provideDeleteHost(@DefaultHost final Producer<String> host)
+   public Producer<String> provideDeleteHost(@TestHost final Producer<String> host)
    {
       return provideHost(this.config.getDelete(), host);
    }
 
    private Producer<String> provideHost(
          final OperationConfig operationConfig,
-         final Producer<String> defaultHost)
+         final Producer<String> testHost)
    {
       if (operationConfig != null)
       {
@@ -170,7 +170,7 @@ public class JsonModule extends AbstractModule
          if (operationHosts != null && operationHosts.size() > 0)
             return createHost(operationConfig.getHostAlgorithm(), operationConfig.getHosts());
       }
-      return defaultHost;
+      return testHost;
    }
 
    private Producer<String> createHost(
@@ -192,8 +192,8 @@ public class JsonModule extends AbstractModule
 
    @Provides
    @Singleton
-   @DefaultPort
-   public Producer<Integer> provideDefaultPort()
+   @TestPort
+   public Producer<Integer> provideTestPort()
    {
       if (this.config.getPort() != null)
          return Producers.of(this.config.getPort());
@@ -208,8 +208,8 @@ public class JsonModule extends AbstractModule
 
    @Provides
    @Singleton
-   @DefaultUriRoot
-   public Producer<String> provideDefaultUriRoot()
+   @TestUriRoot
+   public Producer<String> provideTestUriRoot()
    {
       if (this.config.getUriRoot() != null)
       {
@@ -226,16 +226,16 @@ public class JsonModule extends AbstractModule
 
    @Provides
    @Singleton
-   @DefaultContainer
-   public Producer<String> provideDefaultContainer()
+   @TestContainer
+   public Producer<String> provideTestContainer()
    {
       return Producers.of(this.config.getContainer());
    }
 
    @Provides
    @Singleton
-   @DefaultQueryParams
-   public Producer<Map<String, String>> provideDefaultQueryParams()
+   @TestQueryParams
+   public Producer<Map<String, String>> provideTestQueryParams()
    {
       final Map<String, String> queryParams = new HashMap<String, String>();
       return Producers.of(queryParams);
@@ -243,9 +243,9 @@ public class JsonModule extends AbstractModule
 
    @Provides
    @Singleton
-   public HttpAuth providesDefaultAuth()
+   public HttpAuth providesTestAuth()
    {
-      final AuthConfig authConfig = this.config.getAuthentication();
+      final AuthenticationConfig authConfig = this.config.getAuthentication();
       final AuthType type = authConfig.getType();
       final String username = authConfig.getUsername();
       final String password = authConfig.getPassword();
@@ -270,8 +270,8 @@ public class JsonModule extends AbstractModule
 
    @Provides
    @Singleton
-   @DefaultHeaders
-   public List<Producer<Pair<String, String>>> provideDefaultHeaders()
+   @TestHeaders
+   public List<Producer<Pair<String, String>>> provideTestHeaders()
    {
       return createHeaders(this.config.getHeaders());
    }
@@ -321,12 +321,12 @@ public class JsonModule extends AbstractModule
 
    @Provides
    @Singleton
-   @DefaultEntity
-   public Producer<Entity> provideDefaultEntity()
+   @TestEntity
+   public Producer<Entity> provideTestEntity()
    {
       final RandomChoiceProducer.Builder<Distribution> wrc =
             RandomChoiceProducer.custom(Distribution.class);
-      for (final FileSizeConfig f : this.config.getFilesizes())
+      for (final FilesizeConfig f : this.config.getFilesizes())
       {
          wrc.withChoice(createSizeDistribution(f), f.getWeight());
       }
@@ -344,7 +344,7 @@ public class JsonModule extends AbstractModule
       };
    }
 
-   private static Distribution createSizeDistribution(final FileSizeConfig filesize)
+   private static Distribution createSizeDistribution(final FilesizeConfig filesize)
    {
       // TODO standardize terminology; mean or average
       final double mean = filesize.getAverage() * filesize.getAverageUnit().toBytes(1);
@@ -363,7 +363,7 @@ public class JsonModule extends AbstractModule
    // TODO simplify this method if possible
    @Provides
    @Singleton
-   @DefaultObjectLocation
+   @TestObjectLocation
    public String provideObjectLocation() throws IOException
    {
 
