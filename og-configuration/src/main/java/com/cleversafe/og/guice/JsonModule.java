@@ -73,7 +73,6 @@ import com.cleversafe.og.scheduling.ConcurrentRequestScheduler;
 import com.cleversafe.og.scheduling.RequestRateScheduler;
 import com.cleversafe.og.scheduling.Scheduler;
 import com.cleversafe.og.util.Entities;
-import com.cleversafe.og.util.Operation;
 import com.cleversafe.og.util.Pair;
 import com.cleversafe.og.util.producer.Producer;
 import com.cleversafe.og.util.producer.Producers;
@@ -142,7 +141,7 @@ public class JsonModule extends AbstractModule
    @WriteHost
    public Producer<String> provideWriteHost(@DefaultHost final Producer<String> host)
    {
-      return provideHost(Operation.WRITE, host);
+      return provideHost(this.config.getWrite(), host);
    }
 
    @Provides
@@ -150,7 +149,7 @@ public class JsonModule extends AbstractModule
    @ReadHost
    public Producer<String> provideReadHost(@DefaultHost final Producer<String> host)
    {
-      return provideHost(Operation.READ, host);
+      return provideHost(this.config.getRead(), host);
    }
 
    @Provides
@@ -158,16 +157,19 @@ public class JsonModule extends AbstractModule
    @DeleteHost
    public Producer<String> provideDeleteHost(@DefaultHost final Producer<String> host)
    {
-      return provideHost(Operation.DELETE, host);
+      return provideHost(this.config.getDelete(), host);
    }
 
    private Producer<String> provideHost(
-         final Operation operationType,
+         final OperationConfig operationConfig,
          final Producer<String> defaultHost)
    {
-      final OperationConfig config = this.config.getOperationConfig().get(operationType);
-      if (config != null && config.getHosts() != null)
-         return createHost(config.getHostAlgorithm(), config.getHosts());
+      if (operationConfig != null)
+      {
+         final List<String> operationHosts = operationConfig.getHosts();
+         if (operationHosts != null && operationHosts.size() > 0)
+            return createHost(operationConfig.getHostAlgorithm(), operationConfig.getHosts());
+      }
       return defaultHost;
    }
 
@@ -279,7 +281,7 @@ public class JsonModule extends AbstractModule
    @WriteHeaders
    public List<Producer<Pair<String, String>>> provideWriteHeaders()
    {
-      return provideHeaders(Operation.WRITE);
+      return provideHeaders(this.config.getWrite());
    }
 
    @Provides
@@ -287,7 +289,7 @@ public class JsonModule extends AbstractModule
    @ReadHeaders
    public List<Producer<Pair<String, String>>> provideReadHeaders()
    {
-      return provideHeaders(Operation.READ);
+      return provideHeaders(this.config.getRead());
    }
 
    @Provides
@@ -295,15 +297,14 @@ public class JsonModule extends AbstractModule
    @DeleteHeaders
    public List<Producer<Pair<String, String>>> provideDeleteHeaders()
    {
-      return provideHeaders(Operation.DELETE);
+      return provideHeaders(this.config.getDelete());
    }
 
-   private List<Producer<Pair<String, String>>> provideHeaders(final Operation operationType)
+   private List<Producer<Pair<String, String>>> provideHeaders(final OperationConfig operationConfig)
    {
       final Map<String, String> headers = this.config.getHeaders();
-      final OperationConfig config = this.config.getOperationConfig().get(operationType);
-      if (config != null && config.getHeaders() != null)
-         headers.putAll(config.getHeaders());
+      if (operationConfig != null && operationConfig.getHeaders() != null)
+         headers.putAll(this.config.getHeaders());
       return createHeaders(headers);
    }
 
@@ -390,10 +391,10 @@ public class JsonModule extends AbstractModule
    @WriteWeight
    public double provideWriteWeight()
    {
-      final double write = this.config.getWrite();
+      final double write = this.config.getWrite().getweight();
       checkArgument(inRange(write), "write must be in range [0.0, 100.0] [%s]", write);
-      final double read = this.config.getRead();
-      final double delete = this.config.getDelete();
+      final double read = this.config.getRead().getweight();
+      final double delete = this.config.getDelete().getweight();
       if (allEqual(0.0, write, read, delete))
          return 100.0;
       return write;
@@ -403,7 +404,7 @@ public class JsonModule extends AbstractModule
    @ReadWeight
    public double provideReadWeight()
    {
-      final double read = this.config.getRead();
+      final double read = this.config.getRead().getweight();
       checkArgument(inRange(read), "read must be in range [0.0, 100.0] [%s]", read);
       return read;
    }
@@ -412,7 +413,7 @@ public class JsonModule extends AbstractModule
    @DeleteWeight
    public double provideDeleteWeight()
    {
-      final double delete = this.config.getDelete();
+      final double delete = this.config.getDelete().getweight();
       checkArgument(inRange(delete), "delete must be in range [0.0, 100.0] [%s]", delete);
       return delete;
    }

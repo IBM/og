@@ -62,19 +62,37 @@
 // "headers": {},
 
 
-// Percentage of write requests.
+// Write operation configuration
 
-// "write": 100.0,
+// "write": {
+// "weight": 100.0,
+// "host_algorithm": "roundrobin",
+// "hosts": [],
+// "headers": {}
+// }
+}
 
 
-// Percentage of read requests.
+// Read operation configuration
 
-// "read": 0.0,
+// "read": {
+// "weight": 0.0,
+// "host_algorithm": "roundrobin",
+// "hosts": [],
+// "headers": {}
+// }
+}
 
 
-// Percentage of delete requests.
+// Delete operation configuration
 
-// "delete": 0.0,
+// "delete": {
+// "weight": 0.0,
+// "host_algorithm": "roundrobin",
+// "hosts": [],
+// "headers": {}
+// }
+}
 
 
 // File size(s) to use for write operations. File sizes are described in terms

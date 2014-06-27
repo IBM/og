@@ -28,7 +28,6 @@ import com.cleversafe.og.cli.json.enums.CollectionAlgorithmType;
 import com.cleversafe.og.http.Scheme;
 import com.cleversafe.og.http.util.Api;
 import com.cleversafe.og.operation.EntityType;
-import com.cleversafe.og.util.Operation;
 
 public class JsonConfig
 {
@@ -40,9 +39,9 @@ public class JsonConfig
    String uriRoot;
    String container;
    Map<String, String> headers;
-   double write;
-   double read;
-   double delete;
+   OperationConfig write;
+   OperationConfig read;
+   OperationConfig delete;
    List<FileSizeConfig> filesizes;
    EntityType source;
    ConcurrencyConfig concurrency;
@@ -51,8 +50,6 @@ public class JsonConfig
    String objectLocation;
    ClientConfig client;
 
-   Map<Operation, OperationConfig> operationConfig;
-
    public JsonConfig()
    {
       this.scheme = Scheme.HTTP;
@@ -60,6 +57,9 @@ public class JsonConfig
       this.hosts = new ArrayList<String>();
       this.api = Api.SOH;
       this.headers = new LinkedHashMap<String, String>();
+      this.write = new OperationConfig();
+      this.read = new OperationConfig();
+      this.delete = new OperationConfig();
       this.filesizes = new ArrayList<FileSizeConfig>();
       this.filesizes.add(new FileSizeConfig());
       this.source = EntityType.RANDOM;
@@ -67,8 +67,6 @@ public class JsonConfig
       this.authentication = new AuthConfig();
       this.stoppingConditions = new StoppingConditionsConfig();
       this.objectLocation = "./object";
-      // TODO OperationType is not being lowercased when serialized
-      this.operationConfig = new LinkedHashMap<Operation, OperationConfig>();
       this.client = new ClientConfig();
    }
 
@@ -139,7 +137,7 @@ public class JsonConfig
    /**
     * @return the write
     */
-   public double getWrite()
+   public OperationConfig getWrite()
    {
       return this.write;
    }
@@ -147,7 +145,7 @@ public class JsonConfig
    /**
     * @return the read
     */
-   public double getRead()
+   public OperationConfig getRead()
    {
       return this.read;
    }
@@ -155,7 +153,7 @@ public class JsonConfig
    /**
     * @return the delete
     */
-   public double getDelete()
+   public OperationConfig getDelete()
    {
       return this.delete;
    }
@@ -206,14 +204,6 @@ public class JsonConfig
    public String getObjectLocation()
    {
       return this.objectLocation;
-   }
-
-   /**
-    * @return the operationConfig
-    */
-   public Map<Operation, OperationConfig> getOperationConfig()
-   {
-      return this.operationConfig;
    }
 
    /**

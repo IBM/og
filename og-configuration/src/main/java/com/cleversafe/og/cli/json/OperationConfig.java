@@ -27,6 +27,7 @@ import com.cleversafe.og.cli.json.enums.CollectionAlgorithmType;
 
 public class OperationConfig
 {
+   double weight;
    CollectionAlgorithmType hostAlgorithm;
    List<String> hosts;
    Map<String, String> headers;
@@ -35,6 +36,14 @@ public class OperationConfig
    {
       this.hostAlgorithm = CollectionAlgorithmType.ROUNDROBIN;
       this.headers = new LinkedHashMap<String, String>();
+   }
+
+   /**
+    * @return the write
+    */
+   public double getweight()
+   {
+      return this.weight;
    }
 
    /**
