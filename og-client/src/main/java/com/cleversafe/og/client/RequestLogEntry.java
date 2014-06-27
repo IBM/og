@@ -33,6 +33,7 @@ import com.google.common.net.HttpHeaders;
 
 public class RequestLogEntry
 {
+   final String type = "http";
    final String serverName;
    final String remoteAddress;
    final String user;
@@ -44,13 +45,13 @@ public class RequestLogEntry
    final String requestUri;
    final String objectId;
    final int status;
-   final Long requestLength;
+   final long requestLength;
    final long responseLength;
    final String userAgent;
    final long requestLatency;
 
+   final String clientRequestId;
    final String requestId;
-   final String clvRequestId;
    final String stat;
    final Long objectLength;
 
@@ -81,11 +82,8 @@ public class RequestLogEntry
       // TODO not sure how to get this, could parse from uri but error prone
       this.objectId = null;
       this.status = response.getStatusCode();
-      // TODO requestLength calculation will break with awsv4; content-length is modified
-      if (EntityType.NONE != request.getEntity().getType())
-         this.requestLength = request.getEntity().getSize();
-      else
-         this.requestLength = null;
+      // TODO add request body processor
+      this.requestLength = 0;
       // TODO fix response body consumption in Client so that this can be passed in
       this.responseLength = 0;
       this.userAgent = request.getHeader(HttpHeaders.USER_AGENT);
@@ -93,9 +91,12 @@ public class RequestLogEntry
       this.requestLatency = this.timestampFinish - this.timestampStart;
 
       // custom
-      this.requestId = String.valueOf(request.getId());
-      this.clvRequestId = response.getHeader(X_CLV_REQUEST_ID);
+      this.clientRequestId = String.valueOf(request.getId());
+      this.requestId = response.getHeader(X_CLV_REQUEST_ID);
       this.stat = null;
-      this.objectLength = null;
+      if (EntityType.NONE != request.getEntity().getType())
+         this.objectLength = request.getEntity().getSize();
+      else
+         this.objectLength = null;
    }
 }
