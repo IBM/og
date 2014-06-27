@@ -147,11 +147,11 @@ public class OG extends AbstractCLI
          this.mainThread.interrupt();
          try
          {
-            this.mainThread.join(5000);
+            this.mainThread.join();
          }
          catch (final InterruptedException e)
          {
-            _logger.warn("Shutdown hook was interrupted while waiting for main thread termination");
+            _logger.warn("Shutdown hook interrupted while waiting for main thread to terminate", e);
          }
       }
    }
