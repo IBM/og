@@ -28,20 +28,25 @@ import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import com.cleversafe.og.operation.Entity;
+import com.cleversafe.og.operation.EntityType;
 import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Response;
+import com.cleversafe.og.util.Entities;
 
 public class HttpResponse implements Response
 {
    private final long requestId;
    private final int statusCode;
    private final SortedMap<String, String> headers;
+   private final Entity entity;
    private final SortedMap<String, String> metadata;
 
    private HttpResponse(
          final long requestId,
          final int statusCode,
          final SortedMap<String, String> headers,
+         final Entity entity,
          final SortedMap<String, String> metadata)
    {
       checkArgument(requestId >= 0, "requestId must be >= 0 [%s]", requestId);
@@ -49,6 +54,7 @@ public class HttpResponse implements Response
       checkArgument(statusCode >= 0, "statusCode must be >= 0 [%s]", statusCode);
       this.statusCode = statusCode;
       this.headers = checkNotNull(headers);
+      this.entity = checkNotNull(entity);
       this.metadata = checkNotNull(metadata);
    }
 
@@ -74,6 +80,12 @@ public class HttpResponse implements Response
    public Iterator<Entry<String, String>> headers()
    {
       return this.headers.entrySet().iterator();
+   }
+
+   @Override
+   public Entity getEntity()
+   {
+      return this.entity;
    }
 
    @Override
@@ -104,11 +116,13 @@ public class HttpResponse implements Response
       private long requestId;
       private int statusCode;
       private final SortedMap<String, String> headers;
+      private Entity entity;
       private final SortedMap<String, String> metadata;
 
       private Builder()
       {
          this.headers = new TreeMap<String, String>();
+         this.entity = Entities.of(EntityType.NONE, 0);
          this.metadata = new TreeMap<String, String>();
       }
 
@@ -130,6 +144,12 @@ public class HttpResponse implements Response
          return this;
       }
 
+      public Builder withEntity(final Entity entity)
+      {
+         this.entity = entity;
+         return this;
+      }
+
       public Builder withMetadata(final Metadata key, final String value)
       {
          this.metadata.put(key.toString(), value);
@@ -145,7 +165,7 @@ public class HttpResponse implements Response
       public HttpResponse build()
       {
          return new HttpResponse(this.requestId, this.statusCode,
-               Collections.unmodifiableSortedMap(this.headers),
+               Collections.unmodifiableSortedMap(this.headers), this.entity,
                Collections.unmodifiableSortedMap(this.metadata));
       }
    }

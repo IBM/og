@@ -61,6 +61,13 @@ public interface Response
    Iterator<Entry<String, String>> headers();
 
    /**
+    * Gets the description of the entity for this response.
+    * 
+    * @return the description of the entity for this response
+    */
+   Entity getEntity();
+
+   /**
     * Gets the value of the response metadata entry with the specified key.
     * 
     * @param key
