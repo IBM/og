@@ -37,6 +37,10 @@ public class CycleProducer<T> implements Producer<T>
    public CycleProducer(final List<T> items)
    {
       this.items = checkNotNull(items);
+      for (final T item : items)
+      {
+         checkNotNull(item, "items must not contain any null elements");
+      }
       checkArgument(items.size() > 0, "items size must be > 0");
       this.counter = new AtomicLong(0);
    }

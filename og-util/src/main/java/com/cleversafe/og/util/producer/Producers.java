@@ -28,7 +28,7 @@ public class Producers
 
    public static <T> Producer<T> of(final T item)
    {
-      return ConstantProducer.of(item);
+      return new ConstantProducer<T>(item);
    }
 
    public static <T> Producer<T> cycle(final List<T> items)

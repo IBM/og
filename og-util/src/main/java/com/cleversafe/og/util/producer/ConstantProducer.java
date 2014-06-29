@@ -24,14 +24,9 @@ public class ConstantProducer<T> implements Producer<T>
 {
    private final T item;
 
-   private ConstantProducer(final T item)
+   public ConstantProducer(final T item)
    {
       this.item = checkNotNull(item);
-   }
-
-   public static <K> ConstantProducer<K> of(final K item)
-   {
-      return new ConstantProducer<K>(item);
    }
 
    @Override
