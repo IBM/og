@@ -17,12 +17,14 @@
 // Date: Jan 3, 2014
 // ---------------------
 
-package com.cleversafe.og.distribution;
+package com.cleversafe.og.util.distribution;
 
 import java.util.Random;
 
 import org.junit.Assert;
 import org.junit.Test;
+
+import com.cleversafe.og.util.distribution.PoissonDistribution;
 
 public class PoissonDistributionTest
 {

@@ -17,7 +17,7 @@
 // Date: Jan 3, 2014
 // ---------------------
 
-package com.cleversafe.og.distribution;
+package com.cleversafe.og.util.distribution;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;

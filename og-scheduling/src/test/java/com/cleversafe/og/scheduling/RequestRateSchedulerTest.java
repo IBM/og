@@ -27,8 +27,8 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.cleversafe.og.distribution.Distribution;
 import com.cleversafe.og.scheduling.RequestRateScheduler;
+import com.cleversafe.og.util.distribution.Distribution;
 
 public class RequestRateSchedulerTest
 {

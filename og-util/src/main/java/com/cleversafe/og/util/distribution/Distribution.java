@@ -17,7 +17,7 @@
 // Date: Oct 23, 2013
 // ---------------------
 
-package com.cleversafe.og.distribution;
+package com.cleversafe.og.util.distribution;
 
 /**
  * An object that emits values based on a configured statistical distribution.

@@ -17,74 +17,76 @@
 // Date: Oct 23, 2013
 // ---------------------
 
-package com.cleversafe.og.distribution;
+package com.cleversafe.og.util.distribution;
 
 import java.util.Random;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-public class UniformDistributionTest
+import com.cleversafe.og.util.distribution.NormalDistribution;
+
+public class NormalDistributionTest
 {
    private static final double err = Math.pow(0.1, 6);
 
    @Test(expected = IllegalArgumentException.class)
    public void testNegativeMean()
    {
-      new UniformDistribution(-1.0, 10.0);
+      new NormalDistribution(-1.0, 10.0);
    }
 
    @Test
    public void testZeroMean()
    {
-      new UniformDistribution(0.0, 10.0);
+      new NormalDistribution(0.0, 10.0);
    }
 
    @Test(expected = IllegalArgumentException.class)
    public void testNegativeSpread()
    {
-      new UniformDistribution(10.0, -1.0);
+      new NormalDistribution(10.0, -1.0);
    }
 
    @Test
    public void testZeroSpread()
    {
-      new UniformDistribution(10.0, 0.0);
+      new NormalDistribution(10.0, 0.0);
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullRandom()
    {
-      new UniformDistribution(10.0, 10.0, null);
+      new NormalDistribution(10.0, 10.0, null);
    }
 
    @Test
-   public void testBasicUniformDistribution()
+   public void testBasicNormalDistribution()
    {
-      final UniformDistribution ud = new UniformDistribution(10.0, 10.0);
-      Assert.assertEquals(10.0, ud.getMean(), err);
-      Assert.assertEquals(10.0, ud.getSpread(), err);
-      ud.nextSample();
-      ud.nextSample();
-      ud.nextSample();
+      final NormalDistribution nd = new NormalDistribution(10.0, 10.0);
+      Assert.assertEquals(10.0, nd.getMean(), err);
+      Assert.assertEquals(10.0, nd.getSpread(), err);
+      nd.nextSample();
+      nd.nextSample();
+      nd.nextSample();
    }
 
    @Test
-   public void testUniformDistributionWithRandom()
+   public void testNormalDistributionWithRandom()
    {
-      final UniformDistribution ud = new UniformDistribution(10.0, 10.0, new Random());
-      ud.nextSample();
-      ud.nextSample();
-      ud.nextSample();
+      final NormalDistribution nd = new NormalDistribution(10.0, 10.0, new Random());
+      nd.nextSample();
+      nd.nextSample();
+      nd.nextSample();
    }
 
    @Test
    public void testZeroSpreadValue()
    {
-      final UniformDistribution ud = new UniformDistribution(10.0, 0.0);
+      final NormalDistribution nd = new NormalDistribution(10.0, 0.0);
       for (int i = 0; i < 100; i++)
       {
-         Assert.assertEquals(10, ud.nextSample(), 0.00001);
+         Assert.assertEquals(10, nd.nextSample(), 0.00001);
       }
    }
 }

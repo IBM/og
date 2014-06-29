@@ -17,7 +17,7 @@
 // Date: Oct 23, 2013
 // ---------------------
 
-package com.cleversafe.og.distribution;
+package com.cleversafe.og.util.distribution;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -25,40 +25,41 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Random;
 
 /**
- * A <code>Distribution</code> implementation that returns values conforming to a normal
+ * A <code>Distribution</code> implementation that returns values conforming to a uniform
  * distribution.
  */
-public class NormalDistribution implements Distribution
+public class UniformDistribution implements Distribution
 {
    private final double mean;
    private final double spread;
    private final Random random;
 
    /**
-    * Constructs a <code>NormalDistribution</code> instance
+    * Constructs a <code>UniformDistribution</code> instance
     * 
     * @param mean
     *           the mean value of this distribution
     * @param spread
-    *           the spread of this distribution. Spread is defined as the first standard deviation.
+    *           the spread of this distribution. Spread is defined as distance between min and max
+    *           values.
     * @throws IllegalArgumentException
     *            if mean is negative
     * @throws IllegalArgumentException
     *            if spread is negative
     */
-   public NormalDistribution(final double mean, final double spread)
+   public UniformDistribution(final double mean, final double spread)
    {
       this(mean, spread, new Random());
    }
 
    /**
-    * Constructs a <code>NormalDistribution</code> instance, using the provided <code>Random</code>
+    * Constructs a <code>UniformDistribution</code> instance, using the provided <code>Random</code>
     * instance for random seed data
     * 
     * @param mean
     *           the mean value of this distribution
     * @param spread
-    *           the spread of this distribution. Spread is defined as the first standard deviation.
+    *           the spread of this distribution
     * @throws IllegalArgumentException
     *            if mean is negative
     * @throws IllegalArgumentException
@@ -66,7 +67,7 @@ public class NormalDistribution implements Distribution
     * @throws NullPointerException
     *            if random is null
     */
-   public NormalDistribution(final double mean, final double spread, final Random random)
+   public UniformDistribution(final double mean, final double spread, final Random random)
    {
       checkArgument(mean >= 0.0, "mean must be >= 0.0 [%s]", mean);
       checkArgument(spread >= 0.0, "spread must be >= 0.0 [%s]", spread);
@@ -88,18 +89,14 @@ public class NormalDistribution implements Distribution
       return this.spread;
    }
 
-   /**
-    * {@inheritDoc}
-    * 
-    * This implementation will always return a non-negative sample.
-    */
    @Override
    public double nextSample()
    {
       double result;
+      final double halfWidth = this.spread / 2;
       do
       {
-         result = this.mean + (this.spread * this.random.nextGaussian());
+         result = (this.mean - halfWidth) + (this.spread * this.random.nextDouble());
       } while (result < 0);
       return result;
    }

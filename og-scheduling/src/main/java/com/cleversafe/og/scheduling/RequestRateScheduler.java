@@ -23,8 +23,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.concurrent.TimeUnit;
 
-import com.cleversafe.og.distribution.Distribution;
 import com.cleversafe.og.operation.Response;
+import com.cleversafe.og.util.distribution.Distribution;
 
 public class RequestRateScheduler implements Scheduler
 {
