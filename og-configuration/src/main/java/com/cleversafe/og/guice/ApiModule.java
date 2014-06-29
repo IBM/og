@@ -25,7 +25,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import com.cleversafe.og.consumer.ObjectNameConsumer;
+import com.cleversafe.og.consumer.ReadObjectNameConsumer;
+import com.cleversafe.og.consumer.WriteObjectNameConsumer;
 import com.cleversafe.og.guice.annotation.Delete;
 import com.cleversafe.og.guice.annotation.DeleteHeaders;
 import com.cleversafe.og.guice.annotation.DeleteHost;
@@ -56,7 +57,6 @@ import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.ByteBufferConsumers;
 import com.cleversafe.og.util.Entities;
-import com.cleversafe.og.util.Operation;
 import com.cleversafe.og.util.Pair;
 import com.cleversafe.og.util.consumer.ByteBufferConsumer;
 import com.cleversafe.og.util.consumer.Consumer;
@@ -177,9 +177,8 @@ public class ApiModule extends AbstractModule
    {
       final List<Integer> sc = HttpUtil.SUCCESS_STATUS_CODES;
       final List<Consumer<Response>> list = new ArrayList<Consumer<Response>>();
-      list.add(new ObjectNameConsumer(objectManager, pendingRequests, Operation.WRITE, sc));
-      list.add(new ObjectNameConsumer(objectManager, pendingRequests, Operation.READ, sc));
-      list.add(new ObjectNameConsumer(objectManager, pendingRequests, Operation.DELETE, sc));
+      list.add(new WriteObjectNameConsumer(objectManager, pendingRequests, sc));
+      list.add(new ReadObjectNameConsumer(objectManager, pendingRequests, sc));
       return list;
    }
 

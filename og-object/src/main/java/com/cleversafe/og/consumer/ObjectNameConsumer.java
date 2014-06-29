@@ -38,9 +38,9 @@ import com.cleversafe.og.util.producer.ProducerException;
 import com.google.common.collect.Iterables;
 import com.google.common.io.BaseEncoding;
 
-public class ObjectNameConsumer implements Consumer<Response>
+public abstract class ObjectNameConsumer implements Consumer<Response>
 {
-   private final ObjectManager objectManager;
+   protected final ObjectManager objectManager;
    private final Map<Long, Request> pendingRequests;
    private final Operation operation;
    private final List<Integer> statusCodes;
@@ -70,6 +70,10 @@ public class ObjectNameConsumer implements Consumer<Response>
    {
       checkNotNull(response);
       final Request request = this.pendingRequests.get(response.getRequestId());
+      if (request == null)
+         throw new ProducerException(String.format(
+               "No matching request found for response with request id [%s]",
+               response.getRequestId()));
 
       // if this consumer is not relevant for the current response, ignore
       if (this.operation != HttpUtil.toOperation(request.getMethod()))
@@ -79,11 +83,13 @@ public class ObjectNameConsumer implements Consumer<Response>
       if (!Iterables.contains(this.statusCodes, response.getStatusCode()))
          return;
 
-      // TODO check for null?
-      final String s = getObjectString(request, response);
+      final String objectString = getObjectString(request, response);
+      if (objectString == null)
+         throw new ProducerException("Unable to determine object");
+
       final ObjectName objectName =
-            LegacyObjectName.forBytes(BaseEncoding.base16().lowerCase().decode(s));
-      updateObjectManager(objectName);
+            LegacyObjectName.forBytes(BaseEncoding.base16().lowerCase().decode(objectString));
+      updateManager(objectName);
    }
 
    protected String getObjectString(final Request request, final Response response)
@@ -91,18 +97,17 @@ public class ObjectNameConsumer implements Consumer<Response>
       return HttpUtil.getObjectName(request.getURI());
    }
 
-   private void updateObjectManager(final ObjectName objectName)
+   private void updateManager(final ObjectName objectName)
    {
       try
       {
-         if (Operation.WRITE == this.operation)
-            this.objectManager.writeNameComplete(objectName);
-         else if (Operation.READ == this.operation)
-            this.objectManager.releaseNameFromRead(objectName);
+         updateObjectManager(objectName);
       }
       catch (final ObjectManagerException e)
       {
          throw new ProducerException(e);
       }
    }
+
+   protected abstract void updateObjectManager(ObjectName objectName) throws ObjectManagerException;
 }

@@ -25,24 +25,22 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.cleversafe.og.consumer.ObjectNameConsumer;
+import com.cleversafe.og.consumer.WriteObjectNameConsumer;
 import com.cleversafe.og.object.manager.ObjectManager;
 import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
-import com.cleversafe.og.util.Operation;
 
-public class SOHWriteObjectNameConsumer extends ObjectNameConsumer
+public class SOHWriteObjectNameConsumer extends WriteObjectNameConsumer
 {
    private static final Logger _logger = LoggerFactory.getLogger(SOHWriteObjectNameConsumer.class);
 
    public SOHWriteObjectNameConsumer(
          final ObjectManager objectManager,
          final Map<Long, Request> pendingRequests,
-         final Operation operation,
          final List<Integer> statusCodes)
    {
-      super(objectManager, pendingRequests, operation, statusCodes);
+      super(objectManager, pendingRequests, statusCodes);
    }
 
    @Override
