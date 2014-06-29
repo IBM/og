@@ -17,7 +17,7 @@
 // Date: Mar 29, 2014
 // ---------------------
 
-package com.cleversafe.og.soh;
+package com.cleversafe.og.soh.object.consumer;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;

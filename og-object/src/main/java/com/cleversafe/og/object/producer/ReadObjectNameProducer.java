@@ -17,18 +17,20 @@
 // Date: Mar 29, 2014
 // ---------------------
 
-package com.cleversafe.og.object.manager;
+package com.cleversafe.og.object.producer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.cleversafe.og.object.manager.ObjectManager;
+import com.cleversafe.og.object.manager.ObjectManagerException;
 import com.cleversafe.og.util.producer.Producer;
 import com.cleversafe.og.util.producer.ProducerException;
 
-public class DeleteObjectNameProducer implements Producer<String>
+public class ReadObjectNameProducer implements Producer<String>
 {
    private final ObjectManager objectManager;
 
-   public DeleteObjectNameProducer(final ObjectManager objectManager)
+   public ReadObjectNameProducer(final ObjectManager objectManager)
    {
       this.objectManager = checkNotNull(objectManager);
    }
@@ -38,7 +40,7 @@ public class DeleteObjectNameProducer implements Producer<String>
    {
       try
       {
-         return this.objectManager.getNameForDelete().toString();
+         return this.objectManager.acquireNameForRead().toString();
       }
       catch (final ObjectManagerException e)
       {

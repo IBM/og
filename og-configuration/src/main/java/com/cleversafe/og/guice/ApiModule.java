@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.cleversafe.og.consumer.ObjectNameConsumer;
 import com.cleversafe.og.guice.annotation.Delete;
 import com.cleversafe.og.guice.annotation.DeleteHeaders;
 import com.cleversafe.og.guice.annotation.DeleteHost;
@@ -49,7 +50,6 @@ import com.cleversafe.og.http.producer.RequestProducer;
 import com.cleversafe.og.http.producer.UriProducer;
 import com.cleversafe.og.http.util.HttpUtil;
 import com.cleversafe.og.object.manager.ObjectManager;
-import com.cleversafe.og.object.manager.ObjectNameConsumer;
 import com.cleversafe.og.operation.Entity;
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;

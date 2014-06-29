@@ -17,7 +17,7 @@
 // Date: Apr 6, 2014
 // ---------------------
 
-package com.cleversafe.og.object.manager;
+package com.cleversafe.og.object.producer;
 
 import java.util.UUID;
 

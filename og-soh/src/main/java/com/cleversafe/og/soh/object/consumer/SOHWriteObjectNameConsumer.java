@@ -17,7 +17,7 @@
 // Date: Jun 23, 2014
 // ---------------------
 
-package com.cleversafe.og.soh.object.manager;
+package com.cleversafe.og.soh.object.consumer;
 
 import java.util.List;
 import java.util.Map;
@@ -25,8 +25,8 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.cleversafe.og.consumer.ObjectNameConsumer;
 import com.cleversafe.og.object.manager.ObjectManager;
-import com.cleversafe.og.object.manager.ObjectNameConsumer;
 import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;

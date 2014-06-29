@@ -17,7 +17,7 @@
 // Date: Mar 29, 2014
 // ---------------------
 
-package com.cleversafe.og.object.manager;
+package com.cleversafe.og.consumer;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -28,6 +28,8 @@ import java.util.Map;
 import com.cleversafe.og.http.util.HttpUtil;
 import com.cleversafe.og.object.LegacyObjectName;
 import com.cleversafe.og.object.ObjectName;
+import com.cleversafe.og.object.manager.ObjectManager;
+import com.cleversafe.og.object.manager.ObjectManagerException;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.Operation;
