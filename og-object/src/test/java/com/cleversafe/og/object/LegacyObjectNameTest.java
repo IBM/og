@@ -25,8 +25,6 @@ import java.util.UUID;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.cleversafe.og.object.LegacyObjectName;
-
 public class LegacyObjectNameTest
 {
    @Test(expected = NullPointerException.class)
@@ -123,6 +121,20 @@ public class LegacyObjectNameTest
       objectName.setName(uuid);
       Assert.assertEquals(sid, objectName.toString());
       assertBytesEqual(uuid, objectName);
+   }
+
+   @Test
+   public void testCompareEqualsNull()
+   {
+      final LegacyObjectName objectName = LegacyObjectName.forUUID(UUID.randomUUID());
+      Assert.assertFalse(objectName.equals(null));
+   }
+
+   @Test
+   public void testCompareEqualsType()
+   {
+      final LegacyObjectName objectName = LegacyObjectName.forUUID(UUID.randomUUID());
+      Assert.assertFalse(objectName.equals("NOT_AN_OBJECT_NAME"));
    }
 
    private void assertBytesEqual(final UUID uuid, final LegacyObjectName objectName)
