@@ -24,10 +24,10 @@ import java.util.Random;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.cleversafe.og.distribution.NormalDistribution;
-
 public class NormalDistributionTest
 {
+   private static final double err = Math.pow(0.1, 6);
+
    @Test(expected = IllegalArgumentException.class)
    public void testNegativeMean()
    {
@@ -62,6 +62,8 @@ public class NormalDistributionTest
    public void testBasicNormalDistribution()
    {
       final NormalDistribution nd = new NormalDistribution(10.0, 10.0);
+      Assert.assertEquals(10.0, nd.getMean(), err);
+      Assert.assertEquals(10.0, nd.getSpread(), err);
       nd.nextSample();
       nd.nextSample();
       nd.nextSample();

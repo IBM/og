@@ -21,12 +21,13 @@ package com.cleversafe.og.distribution;
 
 import java.util.Random;
 
+import org.junit.Assert;
 import org.junit.Test;
-
-import com.cleversafe.og.distribution.PoissonDistribution;
 
 public class PoissonDistributionTest
 {
+   private static final double err = Math.pow(0.1, 6);
+
    @Test(expected = IllegalArgumentException.class)
    public void testNegativeMean()
    {
@@ -49,6 +50,8 @@ public class PoissonDistributionTest
    public void testBasicPoissonDistribution()
    {
       final PoissonDistribution pd = new PoissonDistribution(10.0);
+      Assert.assertEquals(10.0, pd.getMean(), err);
+      Assert.assertEquals(0.0, pd.getSpread(), err);
       pd.nextSample();
       pd.nextSample();
       pd.nextSample();

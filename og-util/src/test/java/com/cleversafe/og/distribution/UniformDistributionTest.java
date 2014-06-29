@@ -24,10 +24,10 @@ import java.util.Random;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.cleversafe.og.distribution.UniformDistribution;
-
 public class UniformDistributionTest
 {
+   private static final double err = Math.pow(0.1, 6);
+
    @Test(expected = IllegalArgumentException.class)
    public void testNegativeMean()
    {
@@ -62,6 +62,8 @@ public class UniformDistributionTest
    public void testBasicUniformDistribution()
    {
       final UniformDistribution ud = new UniformDistribution(10.0, 10.0);
+      Assert.assertEquals(10.0, ud.getMean(), err);
+      Assert.assertEquals(10.0, ud.getSpread(), err);
       ud.nextSample();
       ud.nextSample();
       ud.nextSample();
