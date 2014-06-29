@@ -30,18 +30,18 @@ import org.slf4j.LoggerFactory;
 
 public class CycleProducer<T> implements Producer<T>
 {
-   private static Logger _logger = LoggerFactory.getLogger(CycleProducer.class);
+   private static final Logger _logger = LoggerFactory.getLogger(CycleProducer.class);
    private final List<T> items;
    private final AtomicLong counter;
 
    public CycleProducer(final List<T> items)
    {
       this.items = checkNotNull(items);
+      checkArgument(!items.isEmpty(), "items must not be empty");
       for (final T item : items)
       {
          checkNotNull(item, "items must not contain any null elements");
       }
-      checkArgument(items.size() > 0, "items size must be > 0");
       this.counter = new AtomicLong(0);
    }
 

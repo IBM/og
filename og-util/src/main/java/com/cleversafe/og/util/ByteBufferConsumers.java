@@ -32,7 +32,7 @@ import com.cleversafe.og.util.consumer.ByteBufferConsumer;
 
 public class ByteBufferConsumers
 {
-   private static Logger _logger = LoggerFactory.getLogger(ByteBufferConsumers.class);
+   private static final Logger _logger = LoggerFactory.getLogger(ByteBufferConsumers.class);
    private static final ByteBufferConsumer NO_OP_CONSUMER = new ByteBufferConsumer()
    {
       private final Map<String, String> emptyMap = Collections.emptyMap();

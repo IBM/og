@@ -35,7 +35,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.http.Header;
 import org.apache.http.HeaderIterator;
 import org.apache.http.HttpEntity;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -62,7 +61,6 @@ import com.cleversafe.og.util.Pair;
 import com.cleversafe.og.util.Version;
 import com.cleversafe.og.util.consumer.ByteBufferConsumer;
 import com.google.common.base.Function;
-import com.google.common.base.Joiner;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -75,8 +73,8 @@ import com.google.gson.LongSerializationPolicy;
 
 public class ApacheClient implements Client
 {
-   private static Logger _logger = LoggerFactory.getLogger(ApacheClient.class);
-   private static Logger _requestLogger = LoggerFactory.getLogger("RequestLogger");
+   private static final Logger _logger = LoggerFactory.getLogger(ApacheClient.class);
+   private static final Logger _requestLogger = LoggerFactory.getLogger("RequestLogger");
    private final CloseableHttpClient client;
    private final Function<String, ByteBufferConsumer> byteBufferConsumers;
    private final ListeningExecutorService executorService;
@@ -247,7 +245,6 @@ public class ApacheClient implements Client
       private final byte[] buf;
       private final ByteBuffer byteBuf;
       final Gson gson;
-      private static final Joiner joiner = Joiner.on(',').skipNulls();
       private final boolean chunkedEncoding;
 
       public BlockingHttpOperation(
@@ -346,15 +343,14 @@ public class ApacheClient implements Client
       }
 
       private void sendRequest(
-            final HttpUriRequest _request,
-            final HttpResponse.Builder responseBuilder)
-            throws ClientProtocolException, IOException
+            final HttpUriRequest apacheRequest,
+            final HttpResponse.Builder responseBuilder) throws IOException
       {
-         this.client.execute(_request, new ResponseHandler<Void>()
+         this.client.execute(apacheRequest, new ResponseHandler<Void>()
          {
             @Override
             public Void handleResponse(final org.apache.http.HttpResponse response)
-                  throws ClientProtocolException, IOException
+                  throws IOException
             {
                setResponseStatusCode(responseBuilder, response);
                setResponseHeaders(responseBuilder, response);
@@ -387,7 +383,7 @@ public class ApacheClient implements Client
       // TODO handle IllegalStateException via logging, etc
       private void receiveResponseContent(
             final HttpResponse.Builder responseBuilder,
-            final org.apache.http.HttpResponse response) throws IllegalStateException, IOException
+            final org.apache.http.HttpResponse response) throws IOException
       {
          final HttpEntity entity = response.getEntity();
          if (entity != null)

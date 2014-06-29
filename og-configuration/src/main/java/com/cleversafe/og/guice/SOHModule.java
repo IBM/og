@@ -72,6 +72,9 @@ import com.google.inject.Singleton;
 
 public class SOHModule extends AbstractModule
 {
+
+   private static final String SOH_PUT_OBJECT = "soh.put_object";
+
    @Override
    protected void configure()
    {}
@@ -93,7 +96,7 @@ public class SOHModule extends AbstractModule
       final Producer<URI> uri =
             createUri(scheme, host, port, uriRoot, container, null, queryParams);
       final Map<String, String> metadata = new HashMap<String, String>();
-      metadata.put(Metadata.RESPONSE_BODY_PROCESSOR.toString(), "soh.put_object");
+      metadata.put(Metadata.RESPONSE_BODY_PROCESSOR.toString(), SOH_PUT_OBJECT);
       return createRequestProducer(id, Method.PUT, uri, headers, entity, metadata);
    }
 
@@ -196,7 +199,7 @@ public class SOHModule extends AbstractModule
          @Override
          public ByteBufferConsumer apply(final String input)
          {
-            if ("soh.put_object".equals(input))
+            if (SOH_PUT_OBJECT.equals(input))
             {
                return new SOHWriteByteBufferConsumer();
             }

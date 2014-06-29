@@ -65,7 +65,7 @@ public class RequestProducer implements Producer<Request>
       final HttpRequest.Builder context = HttpRequest.custom();
       context.withId(this.id.produce())
             .withMethod(this.method.produce())
-            .withURI(this.uri.produce());
+            .withUri(this.uri.produce());
 
       for (final Producer<Pair<String, String>> producer : this.headers)
       {

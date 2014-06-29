@@ -55,7 +55,7 @@ public class RequestLogEntry
    final String stat;
    final Long objectLength;
 
-   private static final DateTimeFormatter formatter = DateTimeFormat.forPattern(
+   private static final DateTimeFormatter FORMATTER = DateTimeFormat.forPattern(
          "dd/MMM/yyyy:HH:mm:ss Z").withLocale(Locale.US);
    private static final String X_CLV_REQUEST_ID = "X-Clv-Request-Id";
 
@@ -65,17 +65,16 @@ public class RequestLogEntry
          final long timestampStart,
          final long timestampFinish)
    {
-      // FIXME reliably get localaddress? Name should be clientName? Do we even need this field?
-      final String serverName = null;
       final URI uri = request.getURI();
-      this.serverName = serverName;
+      // FIXME reliably get localaddress? Name should be clientName? Do we even need this field?
+      this.serverName = null;
       this.remoteAddress = uri.getHost();
       // TODO get user from HttpAuth?
       this.user = null;
       this.timestampStart = timestampStart;
       this.timestampFinish = timestampFinish;
-      this.timeStart = RequestLogEntry.formatter.print(this.timestampStart);
-      this.timeFinish = RequestLogEntry.formatter.print(this.timestampFinish);
+      this.timeStart = RequestLogEntry.FORMATTER.print(this.timestampStart);
+      this.timeFinish = RequestLogEntry.FORMATTER.print(this.timestampFinish);
       this.requestMethod = request.getMethod();
 
       this.requestUri = uri.getPath() + (uri.getQuery() != null ? uri.getQuery() : "");

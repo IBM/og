@@ -42,7 +42,7 @@ import com.google.inject.Singleton;
 
 public class ObjectManagerModule extends AbstractModule
 {
-   private static Logger _logger = LoggerFactory.getLogger(ObjectManagerModule.class);
+   private static final Logger _logger = LoggerFactory.getLogger(ObjectManagerModule.class);
 
    public ObjectManagerModule()
    {}

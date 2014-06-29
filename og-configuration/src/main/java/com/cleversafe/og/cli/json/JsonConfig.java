@@ -31,31 +31,34 @@ import com.cleversafe.og.operation.EntityType;
 
 public class JsonConfig
 {
-   Scheme scheme;
-   CollectionAlgorithmType hostAlgorithm;
-   List<String> hosts;
-   Integer port;
-   Api api;
-   String uriRoot;
-   String container;
-   Map<String, String> headers;
-   OperationConfig write;
-   OperationConfig read;
-   OperationConfig delete;
-   List<FilesizeConfig> filesizes;
-   EntityType source;
-   ConcurrencyConfig concurrency;
-   AuthenticationConfig authentication;
-   StoppingConditionsConfig stoppingConditions;
-   String objectLocation;
-   ClientConfig client;
+   private final Scheme scheme;
+   private final CollectionAlgorithmType hostAlgorithm;
+   private final List<String> hosts;
+   private final Integer port;
+   private final Api api;
+   private final String uriRoot;
+   private final String container;
+   private final Map<String, String> headers;
+   private final OperationConfig write;
+   private final OperationConfig read;
+   private final OperationConfig delete;
+   private final List<FilesizeConfig> filesizes;
+   private final EntityType source;
+   private final ConcurrencyConfig concurrency;
+   private final AuthenticationConfig authentication;
+   private final StoppingConditionsConfig stoppingConditions;
+   private final String objectLocation;
+   private final ClientConfig client;
 
    public JsonConfig()
    {
       this.scheme = Scheme.HTTP;
       this.hostAlgorithm = CollectionAlgorithmType.ROUNDROBIN;
       this.hosts = new ArrayList<String>();
+      this.port = null;
       this.api = Api.SOH;
+      this.uriRoot = null;
+      this.container = null;
       this.headers = new LinkedHashMap<String, String>();
       this.write = new OperationConfig();
       this.read = new OperationConfig();

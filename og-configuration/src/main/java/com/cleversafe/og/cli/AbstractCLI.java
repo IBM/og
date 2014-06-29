@@ -20,9 +20,11 @@
 package com.cleversafe.og.cli;
 
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 
 import org.slf4j.Logger;
@@ -35,8 +37,8 @@ import com.martiansoftware.jsap.JSAPResult;
 
 public abstract class AbstractCLI
 {
-   private static Logger _logger = LoggerFactory.getLogger(AbstractCLI.class);
-   protected static Logger _consoleLogger = LoggerFactory.getLogger("ConsoleLogger");
+   private static final Logger _logger = LoggerFactory.getLogger(AbstractCLI.class);
+   protected static final Logger _consoleLogger = LoggerFactory.getLogger("ConsoleLogger");
    protected static final int NORMAL = 0;
    protected static final int CONFIGURATION_ERROR = 1;
    protected static final int UNKNOWN_ERROR = 2;
@@ -104,7 +106,8 @@ public abstract class AbstractCLI
          File json = userConfig;
          if (userConfig == null)
             json = new File(getResource(defaultConfigResource).toURI());
-         final Reader reader = new FileReader(json);
+         final Reader reader =
+               new InputStreamReader(new FileInputStream(json), StandardCharsets.UTF_8);
          config = gson.fromJson(reader, cls);
       }
       catch (final Exception e)

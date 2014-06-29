@@ -29,9 +29,9 @@ import com.cleversafe.og.cli.json.type.CaseInsensitiveEnumTypeAdapterFactory;
 import com.cleversafe.og.cli.json.type.SizeUnitTypeAdapterFactory;
 import com.cleversafe.og.cli.json.type.TimeUnitTypeAdapterFactory;
 import com.cleversafe.og.cli.report.Summary;
+import com.cleversafe.og.guice.ApiModule;
 import com.cleversafe.og.guice.ClientModule;
 import com.cleversafe.og.guice.JsonModule;
-import com.cleversafe.og.guice.ApiModule;
 import com.cleversafe.og.guice.OGModule;
 import com.cleversafe.og.guice.ObjectManagerModule;
 import com.cleversafe.og.guice.OperationManagerModule;
@@ -52,9 +52,9 @@ import com.martiansoftware.jsap.JSAPResult;
 
 public class OG extends AbstractCLI
 {
-   private static Logger _logger = LoggerFactory.getLogger(OG.class);
-   private static Logger _configJsonLogger = LoggerFactory.getLogger("ConfigJsonLogger");
-   private static Logger _summaryJsonLogger = LoggerFactory.getLogger("SummaryJsonLogger");
+   private static final Logger _logger = LoggerFactory.getLogger(OG.class);
+   private static final Logger _configJsonLogger = LoggerFactory.getLogger("ConfigJsonLogger");
+   private static final Logger _summaryJsonLogger = LoggerFactory.getLogger("SummaryJsonLogger");
    private static final String JSAP_RESOURCE_NAME = "og.jsap";
    private static final String CONFIG_JSON = "config.json";
 

@@ -71,7 +71,7 @@ public class AWSAuthV2Test
    {
       final Request request = HttpRequest.custom()
             .withMethod(Method.GET)
-            .withURI(new URI("/johnsmith/photos/puppy.jpg"))
+            .withUri(new URI("/johnsmith/photos/puppy.jpg"))
             .withHeader("Date", "Tue, 27 Mar 2007 19:36:42 +0000")
             .build();
       final String stringToSign =
@@ -85,7 +85,7 @@ public class AWSAuthV2Test
    {
       final Request request = HttpRequest.custom()
             .withMethod(Method.PUT)
-            .withURI(new URI("/johnsmith/photos/puppy.jpg"))
+            .withUri(new URI("/johnsmith/photos/puppy.jpg"))
             .withHeader("Content-Type", "image/jpeg")
             .withHeader("Content-Length", "94328")
             .withHeader("Date", "Tue, 27 Mar 2007 21:15:45 +0000")
@@ -101,7 +101,7 @@ public class AWSAuthV2Test
    {
       final Request request = HttpRequest.custom()
             .withMethod(Method.GET)
-            .withURI(new URI("/johnsmith/?prefix=photos&max-keys=50&marker=puppy"))
+            .withUri(new URI("/johnsmith/?prefix=photos&max-keys=50&marker=puppy"))
             .withHeader("User-Agent", "Mozilla/5.0")
             .withHeader("Date", "Tue, 27 Mar 2007 19:42:41 +0000")
             .build();
@@ -116,7 +116,7 @@ public class AWSAuthV2Test
    {
       final Request request = HttpRequest.custom()
             .withMethod(Method.DELETE)
-            .withURI(new URI("/johnsmith/photos/puppy.jpg"))
+            .withUri(new URI("/johnsmith/photos/puppy.jpg"))
             .withHeader("User-Agent", "dotnet")
             .withHeader("Host", "s3.amazonaws.com")
             .withHeader("Date", "Tue, 27 Mar 2007 21:20:27 +0000")

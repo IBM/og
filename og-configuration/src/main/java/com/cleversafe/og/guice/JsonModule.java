@@ -41,6 +41,7 @@ import com.cleversafe.og.cli.json.StoppingConditionsConfig;
 import com.cleversafe.og.cli.json.enums.AuthType;
 import com.cleversafe.og.cli.json.enums.CollectionAlgorithmType;
 import com.cleversafe.og.cli.json.enums.ConcurrencyType;
+import com.cleversafe.og.cli.json.enums.DistributionType;
 import com.cleversafe.og.guice.annotation.DeleteHeaders;
 import com.cleversafe.og.guice.annotation.DeleteHost;
 import com.cleversafe.og.guice.annotation.DeleteWeight;
@@ -86,7 +87,7 @@ import com.google.inject.Singleton;
 public class JsonModule extends AbstractModule
 {
    private final JsonConfig config;
-   private final static double err = Math.pow(0.1, 6);
+   private static final double ERR = Math.pow(0.1, 6);
 
    public JsonModule(final JsonConfig config)
    {
@@ -167,7 +168,7 @@ public class JsonModule extends AbstractModule
       if (operationConfig != null)
       {
          final List<String> operationHosts = operationConfig.getHosts();
-         if (operationHosts != null && operationHosts.size() > 0)
+         if (operationHosts != null && !operationHosts.isEmpty())
             return createHost(operationConfig.getHostAlgorithm(), operationConfig.getHosts());
       }
       return testHost;
@@ -330,7 +331,7 @@ public class JsonModule extends AbstractModule
          wrc.withChoice(createSizeDistribution(f), f.getWeight());
       }
 
-      final JsonConfig config = this.config;
+      final JsonConfig jsonConfig = this.config;
       return new Producer<Entity>()
       {
          private final Producer<Distribution> sizes = wrc.build();
@@ -338,7 +339,7 @@ public class JsonModule extends AbstractModule
          @Override
          public Entity produce()
          {
-            return Entities.of(config.getSource(), (long) this.sizes.produce().nextSample());
+            return Entities.of(jsonConfig.getSource(), (long) this.sizes.produce().nextSample());
          }
       };
    }
@@ -348,15 +349,9 @@ public class JsonModule extends AbstractModule
       // TODO standardize terminology; mean or average
       final double mean = filesize.getAverage() * filesize.getAverageUnit().toBytes(1);
       final double spread = filesize.getSpread() * filesize.getSpreadUnit().toBytes(1);
-      switch (filesize.getDistribution())
-      {
-      // TODO determine how to expose these in json configuration in a way that makes sense
-      // mean/average/min/max?
-         case NORMAL :
-            return new NormalDistribution(mean, spread);
-         default :
-            return new UniformDistribution(mean, spread);
-      }
+      if (DistributionType.NORMAL == filesize.getDistribution())
+         return new NormalDistribution(mean, spread);
+      return new UniformDistribution(mean, spread);
    }
 
    // TODO simplify this method if possible
@@ -419,16 +414,15 @@ public class JsonModule extends AbstractModule
 
    private boolean inRange(final double v)
    {
-      return DoubleMath.fuzzyCompare(v, 0.0, err) >= 0
-            && DoubleMath.fuzzyCompare(v, 100.0, err) <= 0;
+      return DoubleMath.fuzzyCompare(v, 0.0, ERR) >= 0
+            && DoubleMath.fuzzyCompare(v, 100.0, ERR) <= 0;
    }
 
    private boolean allEqual(final double compare, final double... values)
    {
-      final double err = Math.pow(0.1, 6);
       for (final double v : values)
       {
-         if (!DoubleMath.fuzzyEquals(v, compare, err))
+         if (!DoubleMath.fuzzyEquals(v, compare, ERR))
             return false;
       }
       return true;

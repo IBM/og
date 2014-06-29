@@ -20,6 +20,7 @@
 package com.cleversafe.og.soh;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -54,7 +55,8 @@ public class SOHWriteByteBufferConsumer implements ByteBufferConsumer
          this.idx += transferSize;
          if (remaining() == 0)
          {
-            this.metadata.put(Metadata.OBJECT_NAME.toString(), new String(this.objectNameBytes));
+            this.metadata.put(Metadata.OBJECT_NAME.toString(), new String(this.objectNameBytes,
+                  StandardCharsets.UTF_8));
          }
       }
    }

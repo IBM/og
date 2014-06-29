@@ -50,8 +50,7 @@ public class SimpleOperationManager implements OperationManager
       final Producer<Request> producer = this.requestMix.produce();
       try
       {
-         final Request request = producer.produce();
-         return request;
+         return producer.produce();
       }
       catch (final ProducerException e)
       {

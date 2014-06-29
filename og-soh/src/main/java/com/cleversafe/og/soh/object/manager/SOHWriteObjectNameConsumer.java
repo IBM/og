@@ -34,7 +34,7 @@ import com.cleversafe.og.util.Operation;
 
 public class SOHWriteObjectNameConsumer extends ObjectNameConsumer
 {
-   private static Logger _logger = LoggerFactory.getLogger(SOHWriteObjectNameConsumer.class);
+   private static final Logger _logger = LoggerFactory.getLogger(SOHWriteObjectNameConsumer.class);
 
    public SOHWriteObjectNameConsumer(
          final ObjectManager objectManager,

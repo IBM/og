@@ -34,7 +34,7 @@ import com.google.inject.Singleton;
 
 public class ClientModule extends AbstractModule
 {
-   private static Logger _logger = LoggerFactory.getLogger(ClientModule.class);
+   private static final Logger _logger = LoggerFactory.getLogger(ClientModule.class);
 
    public ClientModule()
    {}

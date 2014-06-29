@@ -53,7 +53,7 @@ public class ObjectNameConsumer implements Consumer<Response>
       this.pendingRequests = checkNotNull(pendingRequests);
       this.operation = checkNotNull(operation);
       checkNotNull(statusCodes);
-      checkArgument(statusCodes.size() > 0, "statusCodes size must be > 0");
+      checkArgument(!statusCodes.isEmpty(), "statusCodes must not be empty");
       for (final int statusCode : statusCodes)
       {
          // TODO use guava range

@@ -41,7 +41,7 @@ import com.google.common.io.BaseEncoding;
 
 public class AWSAuthV2 implements HttpAuth
 {
-   private static Logger _logger = LoggerFactory.getLogger(AWSAuthV2.class);
+   private static final Logger _logger = LoggerFactory.getLogger(AWSAuthV2.class);
    private static final String HMAC_SHA1 = "HmacSHA1";
    private final Producer<String> awsAccessKeyId;
    private final Producer<String> awsSecretAccessKey;
@@ -55,10 +55,9 @@ public class AWSAuthV2 implements HttpAuth
    @Override
    public Pair<String, String> nextAuthorizationHeader(final Request request)
    {
-      final String awsAccessKeyId = this.awsAccessKeyId.produce();
-      final String awsSecretAccessKey = this.awsSecretAccessKey.produce();
-      return new Pair<String, String>("Authorization", authenticate(request, awsAccessKeyId,
-            awsSecretAccessKey));
+      final String accessKey = this.awsAccessKeyId.produce();
+      final String secretKey = this.awsSecretAccessKey.produce();
+      return new Pair<String, String>("Authorization", authenticate(request, accessKey, secretKey));
    }
 
    private String authenticate(

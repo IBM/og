@@ -31,22 +31,22 @@ import org.slf4j.LoggerFactory;
 
 public class RandomChoiceProducer<T> implements Producer<T>
 {
-   private static Logger _logger = LoggerFactory.getLogger(RandomChoiceProducer.class);
+   private static final Logger _logger = LoggerFactory.getLogger(RandomChoiceProducer.class);
    private final List<Choice<T>> choices;
    private final Random random;
 
    private RandomChoiceProducer(final List<Choice<T>> choices, final Random random)
    {
       this.choices = checkNotNull(choices);
-      checkArgument(choices.size() > 0, "choices size must be > 0");
+      checkArgument(!choices.isEmpty(), "choices must not be empty");
       this.random = checkNotNull(random);
    }
 
    private static class Choice<S>
    {
-      public final S value;
-      public final Producer<? extends Number> weight;
-      public double currentWeight;
+      private final S value;
+      private final Producer<? extends Number> weight;
+      private double currentWeight;
 
       private Choice(final S choice, final Producer<? extends Number> weight)
       {

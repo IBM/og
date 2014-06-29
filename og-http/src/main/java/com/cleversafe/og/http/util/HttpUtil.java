@@ -36,8 +36,8 @@ import com.google.common.base.Splitter;
 
 public class HttpUtil
 {
-   private static Logger _logger = LoggerFactory.getLogger(HttpUtil.class);
-   private static final Splitter uriSplitter = Splitter.on("/").omitEmptyStrings();
+   private static final Logger _logger = LoggerFactory.getLogger(HttpUtil.class);
+   private static final Splitter URI_SPLITTER = Splitter.on("/").omitEmptyStrings();
    public static final List<Integer> SUCCESS_STATUS_CODES;
    static
    {
@@ -71,7 +71,7 @@ public class HttpUtil
    public static String getObjectName(final URI uri)
    {
       checkNotNull(uri);
-      final List<String> parts = uriSplitter.splitToList(uri.getPath());
+      final List<String> parts = URI_SPLITTER.splitToList(uri.getPath());
 
       if (parts.size() == 3)
          return parts.get(2);

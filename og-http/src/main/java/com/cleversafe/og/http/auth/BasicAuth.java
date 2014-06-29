@@ -33,7 +33,7 @@ import com.google.common.io.BaseEncoding;
 
 public class BasicAuth implements HttpAuth
 {
-   private static Logger _logger = LoggerFactory.getLogger(BasicAuth.class);
+   private static final Logger _logger = LoggerFactory.getLogger(BasicAuth.class);
    private final Producer<String> username;
    private final Producer<String> password;
 
@@ -47,9 +47,9 @@ public class BasicAuth implements HttpAuth
    public Pair<String, String> nextAuthorizationHeader(final Request request)
    {
       // TODO cache header in common case of constant username and password
-      final String username = this.username.produce();
-      final String password = this.password.produce();
-      final String credentials = username + ":" + password;
+      final String user = this.username.produce();
+      final String pass = this.password.produce();
+      final String credentials = user + ":" + pass;
       final String b64 = BaseEncoding.base64().encode(credentials.getBytes(StandardCharsets.UTF_8));
       return new Pair<String, String>("Authorization", "Basic " + b64);
    }

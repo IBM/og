@@ -151,8 +151,7 @@ public class HttpResponse implements Response
 
       public Builder withMetadata(final Metadata key, final String value)
       {
-         this.metadata.put(key.toString(), value);
-         return this;
+         return withMetadata(key.toString(), value);
       }
 
       public Builder withMetadata(final String key, final String value)

@@ -46,7 +46,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 public class LoadTest
 {
-   private static Logger _logger = LoggerFactory.getLogger(LoadTest.class);
+   private static final Logger _logger = LoggerFactory.getLogger(LoadTest.class);
    private final OperationManager operationManager;
    private final Client client;
    private final Scheduler scheduler;

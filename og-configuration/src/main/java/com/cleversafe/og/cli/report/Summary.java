@@ -37,7 +37,7 @@ import com.cleversafe.og.util.Operation;
 
 public class Summary
 {
-   private static Logger _logger = LoggerFactory.getLogger(Summary.class);
+   private static final Logger _logger = LoggerFactory.getLogger(Summary.class);
    private final Statistics stats;
    private SummaryStats summary;
 
@@ -48,17 +48,17 @@ public class Summary
 
    private static class SummaryStats
    {
-      public final OperationStats all = new OperationStats();
-      public final OperationStats write = new OperationStats();
-      public final OperationStats read = new OperationStats();
-      public final OperationStats delete = new OperationStats();
+      private final OperationStats all = new OperationStats();
+      private final OperationStats write = new OperationStats();
+      private final OperationStats read = new OperationStats();
+      private final OperationStats delete = new OperationStats();
    }
 
    private static class OperationStats
    {
-      public long operations = 0;
-      public final Map<Integer, Long> statusCodes = new TreeMap<Integer, Long>();
-      public long aborts = 0;
+      private long operations = 0;
+      private final Map<Integer, Long> statusCodes = new TreeMap<Integer, Long>();
+      private long aborts = 0;
    }
 
    @Override

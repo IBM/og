@@ -24,12 +24,12 @@ import com.cleversafe.og.util.SizeUnit;
 
 public class FilesizeConfig
 {
-   DistributionType distribution;
-   double average;
-   SizeUnit averageUnit;
-   double spread;
-   SizeUnit spreadUnit;
-   double weight;
+   private final DistributionType distribution;
+   private final double average;
+   private final SizeUnit averageUnit;
+   private final double spread;
+   private final SizeUnit spreadUnit;
+   private final double weight;
 
    public FilesizeConfig()
    {

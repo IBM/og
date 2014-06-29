@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
 
 public class FixedBufferInputStream extends InputStream
 {
-   private static Logger _logger = LoggerFactory.getLogger(FixedBufferInputStream.class);
+   private static final Logger _logger = LoggerFactory.getLogger(FixedBufferInputStream.class);
    private final byte[] buf;
    private final long size;
    private long available;

@@ -40,7 +40,7 @@ import com.cleversafe.og.util.Operation;
 
 public class Statistics
 {
-   private static Logger _logger = LoggerFactory.getLogger(Statistics.class);
+   private static final Logger _logger = LoggerFactory.getLogger(Statistics.class);
    private final Map<Operation, Map<Counter, AtomicLong>> counters;
    // use concurrent hashmap at status code level, as additional status code keys may be mapped
    // concurrently during the lifetime of the test

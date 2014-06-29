@@ -32,7 +32,7 @@ import com.cleversafe.og.test.LoadTest;
 
 public class RuntimeCondition implements TestCondition
 {
-   private static Logger _logger = LoggerFactory.getLogger(RuntimeCondition.class);
+   private static final Logger _logger = LoggerFactory.getLogger(RuntimeCondition.class);
    private final Thread mainThread;
    private final LoadTest test;
    private final long runtime;
@@ -55,7 +55,7 @@ public class RuntimeCondition implements TestCondition
          @Override
          public void run()
          {
-            long timestampStart = RuntimeCondition.this.timestampStart;
+            long start = RuntimeCondition.this.timestampStart;
             long sleepRemaining = RuntimeCondition.this.runtime;
 
             while (sleepRemaining > 0)
@@ -70,9 +70,9 @@ public class RuntimeCondition implements TestCondition
                }
                finally
                {
-                  final long timestampEnd = System.nanoTime();
-                  final long sleptTime = timestampEnd - timestampStart;
-                  timestampStart = timestampEnd;
+                  final long end = System.nanoTime();
+                  final long sleptTime = end - start;
+                  start = end;
                   sleepRemaining -= sleptTime;
                }
             }

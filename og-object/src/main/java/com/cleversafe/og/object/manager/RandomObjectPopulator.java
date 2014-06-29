@@ -63,14 +63,12 @@ import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.object.LegacyObjectName;
 import com.cleversafe.og.object.ObjectName;
-import com.cleversafe.og.object.manager.ObjectManager;
-import com.cleversafe.og.object.manager.ObjectManagerException;
 
 public class RandomObjectPopulator extends Thread implements ObjectManager
 {
    private static final int MAX_PERSIST_ARG = 30 * 1000 * 60;
    private final String directory;
-   public final String prefix;
+   private final String prefix;
    static final String suffix = ".bin";
    private final Pattern filenamePattern;
    class IdFilter implements FilenameFilter
@@ -82,7 +80,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager
       }
    }
 
-   private static Logger _logger = LoggerFactory.getLogger(RandomObjectPopulator.class);
+   private static final Logger _logger = LoggerFactory.getLogger(RandomObjectPopulator.class);
 
    final static int OBJECT_SIZE = 18;
    private static final int MAX_OBJECT_ARG = 100 * (1048576 / OBJECT_SIZE);
@@ -222,8 +220,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager
    private File[] getIdFiles()
    {
       final File dir = new File(this.directory);
-      final File[] files = dir.listFiles(new IdFilter());
-      return files;
+      return dir.listFiles(new IdFilter());
    }
 
    @Override
@@ -323,7 +320,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager
          this.objectsLock.readLock().unlock();
          count = this.currentlyReading.get(id).intValue();
       }
-      this.currentlyReading.put(id, new Integer(count + 1));
+      this.currentlyReading.put(id, Integer.valueOf(count + 1));
       if (count == 0)
       {
          this.objectsLock.readLock().unlock();
@@ -340,7 +337,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager
       final int count = this.currentlyReading.get(id).intValue();
       if (count > 1)
       {
-         this.currentlyReading.put(id, new Integer(count - 1));
+         this.currentlyReading.put(id, Integer.valueOf(count - 1));
       }
       else
       {
@@ -464,7 +461,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager
    private int getTransferrable(final int size, final File surplus)
    {
       final int slotsAvailable = this.MAX_OBJECTS - size;
-      final int surplusAvailable = ((int) (surplus.length() / OBJECT_SIZE));
+      final int surplusAvailable = (int) (surplus.length() / OBJECT_SIZE);
       return Math.min(slotsAvailable, surplusAvailable);
    }
 

@@ -30,7 +30,7 @@ import com.cleversafe.og.util.Operation;
 
 public class StatusCodeCondition implements TestCondition
 {
-   private static Logger _logger = LoggerFactory.getLogger(StatusCodeCondition.class);
+   private static final Logger _logger = LoggerFactory.getLogger(StatusCodeCondition.class);
    private final Operation operation;
    private final int statusCode;
    private final long thresholdValue;

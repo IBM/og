@@ -46,8 +46,8 @@ import com.google.inject.Singleton;
 
 public class OperationManagerModule extends AbstractModule
 {
-   private static Logger _logger = LoggerFactory.getLogger(OperationManagerModule.class);
-   private final static double err = Math.pow(0.1, 6);
+   private static final Logger _logger = LoggerFactory.getLogger(OperationManagerModule.class);
+   private static final double ERR = Math.pow(0.1, 6);
 
    public OperationManagerModule()
    {}
@@ -76,7 +76,7 @@ public class OperationManagerModule extends AbstractModule
          @DeleteWeight final double deleteWeight)
    {
       final double sum = readWeight + writeWeight + deleteWeight;
-      checkArgument(DoubleMath.fuzzyEquals(sum, 100.0, err),
+      checkArgument(DoubleMath.fuzzyEquals(sum, 100.0, ERR),
             "Sum of percentages must be 100.0 [%s]", sum);
 
       final RandomChoiceProducer.Builder<Producer<Request>> wrc = RandomChoiceProducer.custom();

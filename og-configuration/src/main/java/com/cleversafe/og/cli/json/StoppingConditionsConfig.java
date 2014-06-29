@@ -28,17 +28,20 @@ import org.slf4j.LoggerFactory;
 
 public class StoppingConditionsConfig
 {
-   private static Logger _logger = LoggerFactory.getLogger(StoppingConditionsConfig.class);
-   private long operations;
-   private double runtime;
+   private static final Logger _logger = LoggerFactory.getLogger(StoppingConditionsConfig.class);
+   private final long operations;
+   private final double runtime;
    private final TimeUnit runtimeUnit;
    private final Map<Integer, Integer> statusCodes;
-   private long aborts;
+   private final long aborts;
 
    public StoppingConditionsConfig()
    {
+      this.operations = 0;
+      this.runtime = 0.0;
       this.runtimeUnit = TimeUnit.SECONDS;
       this.statusCodes = new HashMap<Integer, Integer>();
+      this.aborts = 0;
    }
 
    /**

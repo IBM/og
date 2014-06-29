@@ -24,12 +24,14 @@ import com.cleversafe.og.cli.json.enums.AuthType;
 public class AuthenticationConfig
 {
    private final AuthType type;
-   private String username;
-   private String password;
+   private final String username;
+   private final String password;
 
    public AuthenticationConfig()
    {
       this.type = AuthType.BASIC;
+      this.username = null;
+      this.password = null;
    }
 
    /**

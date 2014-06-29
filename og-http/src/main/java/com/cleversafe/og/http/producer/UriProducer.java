@@ -40,7 +40,7 @@ public class UriProducer implements Producer<URI>
    // TODO this type is awkward
    private final Producer<Map<String, String>> queryParameters;
    private final boolean trailingSlash;
-   private static final Joiner.MapJoiner paramJoiner = Joiner.on('&').withKeyValueSeparator("=");
+   private static final Joiner.MapJoiner PARAM_JOINER = Joiner.on('&').withKeyValueSeparator("=");
 
    private UriProducer(
          final Producer<Scheme> scheme,
@@ -104,7 +104,7 @@ public class UriProducer implements Producer<URI>
 
    private void appendQueryParams(final StringBuilder builder)
    {
-      final String queryParams = paramJoiner.join(this.queryParameters.produce());
+      final String queryParams = PARAM_JOINER.join(this.queryParameters.produce());
       if (queryParams.length() > 0)
          builder.append("?").append(queryParams);
    }

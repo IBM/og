@@ -156,7 +156,7 @@ public class HttpRequest implements Request
          return this;
       }
 
-      public Builder withURI(final URI uri)
+      public Builder withUri(final URI uri)
       {
          this.uri = uri;
          return this;
@@ -176,8 +176,7 @@ public class HttpRequest implements Request
 
       public Builder withMetadata(final Metadata key, final String value)
       {
-         this.metadata.put(key.toString(), value);
-         return this;
+         return withMetadata(key.toString(), value);
       }
 
       public Builder withMetadata(final String key, final String value)

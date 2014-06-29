@@ -31,7 +31,7 @@ import com.cleversafe.og.util.Operation;
 
 public class CounterCondition implements TestCondition
 {
-   private static Logger _logger = LoggerFactory.getLogger(CounterCondition.class);
+   private static final Logger _logger = LoggerFactory.getLogger(CounterCondition.class);
    private final Operation operation;
    private final Counter counter;
    private final long thresholdValue;

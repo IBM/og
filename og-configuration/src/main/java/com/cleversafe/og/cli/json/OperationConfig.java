@@ -19,6 +19,7 @@
 
 package com.cleversafe.og.cli.json;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,14 +28,16 @@ import com.cleversafe.og.cli.json.enums.CollectionAlgorithmType;
 
 public class OperationConfig
 {
-   double weight;
-   CollectionAlgorithmType hostAlgorithm;
-   List<String> hosts;
-   Map<String, String> headers;
+   private final double weight;
+   private final CollectionAlgorithmType hostAlgorithm;
+   private final List<String> hosts;
+   private final Map<String, String> headers;
 
    public OperationConfig()
    {
+      this.weight = 0.0;
       this.hostAlgorithm = CollectionAlgorithmType.ROUNDROBIN;
+      this.hosts = new ArrayList<String>();
       this.headers = new LinkedHashMap<String, String>();
    }
 
