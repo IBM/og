@@ -45,10 +45,10 @@ public class RandomChoiceProducer<T> implements Producer<T>
    private static class Choice<S>
    {
       public final S value;
-      public final Producer<Double> weight;
+      public final Producer<? extends Number> weight;
       public double currentWeight;
 
-      private Choice(final S choice, final Producer<Double> weight)
+      private Choice(final S choice, final Producer<? extends Number> weight)
       {
          this.value = choice;
          this.weight = weight;
@@ -71,7 +71,7 @@ public class RandomChoiceProducer<T> implements Producer<T>
          }
          previousWeights += choice.currentWeight;
       }
-      return this.choices.get(this.choices.size() - 1).value;
+      throw new ProducerException("Incorrect weight calculation");
    }
 
    private double getCurrentWeights()
@@ -79,13 +79,13 @@ public class RandomChoiceProducer<T> implements Producer<T>
       double currentTotalWeight = 0.0;
       for (final Choice<T> choice : this.choices)
       {
-         choice.currentWeight = choice.weight.produce();
+         choice.currentWeight = choice.weight.produce().doubleValue();
          currentTotalWeight += choice.currentWeight;
       }
       return currentTotalWeight;
    }
 
-   public static <T> Builder<T> custom(final Class<? super T> cls)
+   public static <T> Builder<T> custom()
    {
       return new Builder<T>();
    }
@@ -112,7 +112,7 @@ public class RandomChoiceProducer<T> implements Producer<T>
          return withChoice(choice, Producers.of(weight));
       }
 
-      public Builder<T> withChoice(final T choice, final Producer<Double> weight)
+      public Builder<T> withChoice(final T choice, final Producer<? extends Number> weight)
       {
          checkNotNull(choice);
          checkNotNull(weight);

@@ -181,7 +181,7 @@ public class JsonModule extends AbstractModule
          return Producers.cycle(hosts);
       else
       {
-         final RandomChoiceProducer.Builder<String> wrc = RandomChoiceProducer.custom(String.class);
+         final RandomChoiceProducer.Builder<String> wrc = RandomChoiceProducer.custom();
          for (final String host : hosts)
          {
             wrc.withChoice(host);
@@ -324,8 +324,7 @@ public class JsonModule extends AbstractModule
    @TestEntity
    public Producer<Entity> provideTestEntity()
    {
-      final RandomChoiceProducer.Builder<Distribution> wrc =
-            RandomChoiceProducer.custom(Distribution.class);
+      final RandomChoiceProducer.Builder<Distribution> wrc = RandomChoiceProducer.custom();
       for (final FilesizeConfig f : this.config.getFilesizes())
       {
          wrc.withChoice(createSizeDistribution(f), f.getWeight());

@@ -40,7 +40,6 @@ import com.cleversafe.og.util.consumer.Consumer;
 import com.cleversafe.og.util.producer.Producer;
 import com.cleversafe.og.util.producer.RandomChoiceProducer;
 import com.google.common.math.DoubleMath;
-import com.google.common.reflect.TypeToken;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -80,12 +79,7 @@ public class OperationManagerModule extends AbstractModule
       checkArgument(DoubleMath.fuzzyEquals(sum, 100.0, err),
             "Sum of percentages must be 100.0 [%s]", sum);
 
-      // Have to capture generic type with a type token
-      @SuppressWarnings("serial")
-      final TypeToken<Producer<Request>> t = new TypeToken<Producer<Request>>()
-      {};
-      final RandomChoiceProducer.Builder<Producer<Request>> wrc =
-            RandomChoiceProducer.custom(t.getRawType());
+      final RandomChoiceProducer.Builder<Producer<Request>> wrc = RandomChoiceProducer.custom();
       if (writeWeight > 0.0)
          wrc.withChoice(write, writeWeight);
       if (readWeight > 0.0)
