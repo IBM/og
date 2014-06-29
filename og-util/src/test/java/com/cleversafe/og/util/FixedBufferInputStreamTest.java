@@ -23,7 +23,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-// @SuppressWarnings("resource")
+@SuppressWarnings("resource")
 public class FixedBufferInputStreamTest
 {
    private long size;
