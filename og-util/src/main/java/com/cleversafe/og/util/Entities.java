@@ -48,6 +48,8 @@ public class Entities
    {
       checkNotNull(type);
       checkArgument(size >= 0, "size must be >= 0 [%s]", size);
+      if (size > 0)
+         checkArgument(EntityType.NONE != type, "type must not be NONE unless size is 0 [%s]", size);
       return new Entity()
       {
          private final EntityType entityType = type;

@@ -29,7 +29,6 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import com.cleversafe.og.operation.Entity;
-import com.cleversafe.og.operation.EntityType;
 import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.Entities;
@@ -122,7 +121,7 @@ public class HttpResponse implements Response
       private Builder()
       {
          this.headers = new TreeMap<String, String>();
-         this.entity = Entities.of(EntityType.NONE, 0);
+         this.entity = Entities.none();
          this.metadata = new TreeMap<String, String>();
       }
 

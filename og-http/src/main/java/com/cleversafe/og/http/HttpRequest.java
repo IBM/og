@@ -35,7 +35,6 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 import com.cleversafe.og.operation.Entity;
-import com.cleversafe.og.operation.EntityType;
 import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
@@ -141,7 +140,7 @@ public class HttpRequest implements Request
       {
          this.headers = new TreeMap<String, String>();
          this.headers.put("Date", RFC1123.print(new DateTime()));
-         this.entity = Entities.of(EntityType.NONE, 0);
+         this.entity = Entities.none();
          this.metadata = new TreeMap<String, String>();
       }
 
