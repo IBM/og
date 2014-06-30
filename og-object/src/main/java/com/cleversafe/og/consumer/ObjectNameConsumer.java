@@ -94,7 +94,7 @@ public abstract class ObjectNameConsumer implements Consumer<Response>
 
    protected String getObjectString(final Request request, final Response response)
    {
-      return HttpUtil.getObjectName(request.getURI());
+      return HttpUtil.getObjectName(request.getUri());
    }
 
    private void updateManager(final ObjectName objectName)

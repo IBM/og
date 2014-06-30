@@ -49,7 +49,7 @@ public interface Request
     * 
     * @return the uri for this request
     */
-   URI getURI();
+   URI getUri();
 
    /**
     * Gets the value of the request header with the specified key.

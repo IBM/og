@@ -65,7 +65,7 @@ public class RequestLogEntry
          final long timestampStart,
          final long timestampFinish)
    {
-      final URI uri = request.getURI();
+      final URI uri = request.getUri();
       // FIXME reliably get localaddress? Name should be clientName? Do we even need this field?
       this.serverName = null;
       this.remoteAddress = uri.getHost();

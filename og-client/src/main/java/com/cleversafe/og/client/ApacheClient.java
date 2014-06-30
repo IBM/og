@@ -298,7 +298,7 @@ public class ApacheClient implements Client
 
       private void setRequestURI(final RequestBuilder requestBuilder)
       {
-         requestBuilder.setUri(this.request.getURI());
+         requestBuilder.setUri(this.request.getUri());
       }
 
       private void setRequestHeaders(final RequestBuilder requestBuilder)

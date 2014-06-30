@@ -63,7 +63,7 @@ public class ReadObjectNameConsumerTest
       this.mockObjectManager = mock(ObjectManager.class);
       this.statusCodes = HttpUtil.SUCCESS_STATUS_CODES;
       this.mockRequest = mock(Request.class);
-      when(this.mockRequest.getURI()).thenReturn(
+      when(this.mockRequest.getUri()).thenReturn(
             new URI("http://192.168.8.1/soh/container/5c18be1057404792923dc487ca40f2370000"));
       this.mockResponse = mock(Response.class);
       when(this.mockResponse.getRequestId()).thenReturn(1L);
@@ -198,7 +198,7 @@ public class ReadObjectNameConsumerTest
    @Test(expected = ProducerException.class)
    public void testNoObject() throws URISyntaxException
    {
-      when(this.mockRequest.getURI()).thenReturn(new URI("http://192.168.8.1/container"));
+      when(this.mockRequest.getUri()).thenReturn(new URI("http://192.168.8.1/container"));
       when(this.mockRequest.getMethod()).thenReturn(Method.GET);
       when(this.mockResponse.getStatusCode()).thenReturn(200);
 

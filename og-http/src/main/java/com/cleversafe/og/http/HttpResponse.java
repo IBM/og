@@ -24,9 +24,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Map.Entry;
-import java.util.SortedMap;
-import java.util.TreeMap;
 
 import com.cleversafe.og.operation.Entity;
 import com.cleversafe.og.operation.Metadata;
@@ -37,20 +37,21 @@ public class HttpResponse implements Response
 {
    private final long requestId;
    private final int statusCode;
-   private final SortedMap<String, String> headers;
+   private final Map<String, String> headers;
    private final Entity entity;
-   private final SortedMap<String, String> metadata;
+   private final Map<String, String> metadata;
 
    private HttpResponse(
          final long requestId,
          final int statusCode,
-         final SortedMap<String, String> headers,
+         final Map<String, String> headers,
          final Entity entity,
-         final SortedMap<String, String> metadata)
+         final Map<String, String> metadata)
    {
       checkArgument(requestId >= 0, "requestId must be >= 0 [%s]", requestId);
       this.requestId = requestId;
-      checkArgument(statusCode >= 0, "statusCode must be >= 0 [%s]", statusCode);
+      checkArgument(statusCode >= 100 && statusCode <= 599,
+            "statusCode must be in range [100, 599] [%s]", statusCode);
       this.statusCode = statusCode;
       this.headers = checkNotNull(headers);
       this.entity = checkNotNull(entity);
@@ -114,15 +115,15 @@ public class HttpResponse implements Response
    {
       private long requestId;
       private int statusCode;
-      private final SortedMap<String, String> headers;
+      private final Map<String, String> headers;
       private Entity entity;
-      private final SortedMap<String, String> metadata;
+      private final Map<String, String> metadata;
 
       private Builder()
       {
-         this.headers = new TreeMap<String, String>();
+         this.headers = new LinkedHashMap<String, String>();
          this.entity = Entities.none();
-         this.metadata = new TreeMap<String, String>();
+         this.metadata = new LinkedHashMap<String, String>();
       }
 
       public Builder withRequestId(final long requestId)
@@ -139,7 +140,7 @@ public class HttpResponse implements Response
 
       public Builder withHeader(final String key, final String value)
       {
-         this.headers.put(key, value);
+         this.headers.put(checkNotNull(key), checkNotNull(value));
          return this;
       }
 
@@ -156,15 +157,15 @@ public class HttpResponse implements Response
 
       public Builder withMetadata(final String key, final String value)
       {
-         this.metadata.put(key, value);
+         this.metadata.put(checkNotNull(key), checkNotNull(value));
          return this;
       }
 
       public HttpResponse build()
       {
          return new HttpResponse(this.requestId, this.statusCode,
-               Collections.unmodifiableSortedMap(this.headers), this.entity,
-               Collections.unmodifiableSortedMap(this.metadata));
+               Collections.unmodifiableMap(this.headers), this.entity,
+               Collections.unmodifiableMap(this.metadata));
       }
    }
 }

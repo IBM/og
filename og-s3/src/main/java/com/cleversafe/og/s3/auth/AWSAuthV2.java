@@ -173,6 +173,6 @@ public class AWSAuthV2 implements HttpAuth
    // http://docs.aws.amazon.com/AmazonS3/latest/dev/RESTAuthentication.html
    public String canonicalizedResource(final Request request)
    {
-      return request.getURI().getRawPath();
+      return request.getUri().getRawPath();
    }
 }
