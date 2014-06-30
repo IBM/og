@@ -79,7 +79,8 @@ public class RandomAccessConcurrentHashSet<K>
    /**
     * The maximum number of segments to allow; used to bound constructor arguments.
     */
-   static final int MAX_SEGMENTS = 1 << 16; // slightly conservative
+   // slightly conservative
+   static final int MAX_SEGMENTS = 1 << 16;
 
    /**
     * Number of unsynchronized retries in size and containsValue methods before resorting to
@@ -725,7 +726,8 @@ public class RandomAccessConcurrentHashSet<K>
                check += segments[i].count;
                if (mc[i] != segments[i].modCount)
                {
-                  check = -1; // force retry
+                  // force retry
+                  check = -1;
                   break;
                }
             }
@@ -736,7 +738,8 @@ public class RandomAccessConcurrentHashSet<K>
          }
       }
       if (check != sum)
-      { // Resort to locking all segments
+      {
+         // Resort to locking all segments
          sum = 0;
          for (final Segment<K> segment : segments)
          {
@@ -838,7 +841,7 @@ public class RandomAccessConcurrentHashSet<K>
    /*
     * Removes and returns a random member of the set or {@code null} if it is empty.
     */
-   final static Random generator = new Random();
+   static final Random generator = new Random();
 
    public K removeRandom()
    {

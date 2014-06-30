@@ -39,7 +39,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -66,11 +65,31 @@ import com.cleversafe.og.object.ObjectName;
 
 public class RandomObjectPopulator extends Thread implements ObjectManager
 {
+   private static final Logger _logger = LoggerFactory.getLogger(RandomObjectPopulator.class);
+   private static final int OBJECT_SIZE = 18;
    private static final int MAX_PERSIST_ARG = 30 * 1000 * 60;
+   private static final int MAX_OBJECT_ARG = 100 * (1048576 / OBJECT_SIZE);
+   private final int maxObjects;
    private final String directory;
    private final String prefix;
    static final String suffix = ".bin";
    private final Pattern filenamePattern;
+
+   // object read from a file
+   private final RandomAccessConcurrentHashSet<ObjectName> objects =
+         new RandomAccessConcurrentHashSet<ObjectName>();
+   private final ReadWriteLock objectsLock = new ReentrantReadWriteLock(true);
+   private final SortedMap<ObjectName, Integer> currentlyReading =
+         Collections.synchronizedSortedMap(new TreeMap<ObjectName, Integer>());
+   private final ReadWriteLock readingLock = new ReentrantReadWriteLock(true);
+   private final ReadWriteLock persistLock = new ReentrantReadWriteLock(true);
+   private final File saveFile;
+   private volatile boolean testEnded = false;
+   private final int idFileIndex;
+   private final Random rand = new Random();
+   private final UUID vaultId;
+   private final ScheduledExecutorService saver;
+
    class IdFilter implements FilenameFilter
    {
       @Override
@@ -80,39 +99,10 @@ public class RandomObjectPopulator extends Thread implements ObjectManager
       }
    }
 
-   private static final Logger _logger = LoggerFactory.getLogger(RandomObjectPopulator.class);
-
-   final static int OBJECT_SIZE = 18;
-   private static final int MAX_OBJECT_ARG = 100 * (1048576 / OBJECT_SIZE);
-
    public static int getObjectSize()
    {
       return OBJECT_SIZE;
    }
-   final int MAX_OBJECTS;
-
-// object read from a file
-   private final RandomAccessConcurrentHashSet<ObjectName> objects =
-         new RandomAccessConcurrentHashSet<ObjectName>();
-   private final ReadWriteLock objectsLock = new ReentrantReadWriteLock(true);
-
-   private final SortedMap<ObjectName, Integer> currentlyReading =
-         Collections.synchronizedSortedMap(new TreeMap<ObjectName, Integer>());
-   private final ReadWriteLock readingLock = new ReentrantReadWriteLock(true);
-
-   private final ReadWriteLock persistLock = new ReentrantReadWriteLock(true);
-
-   private final File saveFile;
-
-   private volatile boolean testEnded = false;
-
-   private final int idFileIndex;
-
-   private final Random rand = new Random();
-
-   public final UUID vaultId;
-
-   private final ScheduledExecutorService saver;
 
    public RandomObjectPopulator(final UUID vaultId)
    {
@@ -143,7 +133,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager
          final UUID vaultId,
          final String directory,
          final String prefix,
-         final int maxObjects,
+         final int maxObjectCount,
          final long persistTime)
    {
       this.vaultId = vaultId;
@@ -159,7 +149,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager
       this.filenamePattern =
             Pattern.compile(String.format("%s(\\d|[1-9]\\d*)%s", this.prefix,
                   RandomObjectPopulator.suffix));
-      this.MAX_OBJECTS = maxObjects;
+      this.maxObjects = maxObjectCount;
       final File[] files = getIdFiles();
       if (files.length > 1)
       {
@@ -189,7 +179,8 @@ public class RandomObjectPopulator extends Thread implements ObjectManager
                _logger.error("Can't store id file", e);
             }
          }
-      }, persistTime, persistTime, TimeUnit.MILLISECONDS); // Every 30 minutes
+         // Every 30 minutes
+      }, persistTime, persistTime, TimeUnit.MILLISECONDS);
    }
 
    private void loadObjects()
@@ -276,7 +267,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager
       }
    }
 
-   private void checkForNull(final ObjectName id) throws ObjectManagerException
+   private void checkForNull(final ObjectName id)
    {
       if (id == null)
       {
@@ -361,19 +352,19 @@ public class RandomObjectPopulator extends Thread implements ObjectManager
       }
    }
 
-   private void persistIds() throws FileNotFoundException, IOException
+   private void persistIds() throws IOException
    {
       this.persistLock.writeLock().lock();
       final int toSave = this.objects.size();
       final DataOutputStream out = new DataOutputStream(new FileOutputStream(this.saveFile));
-      if (toSave > this.MAX_OBJECTS)
+      if (toSave > this.maxObjects)
       {
-         for (int size = this.objects.size(); size > this.MAX_OBJECTS; size = this.objects.size())
+         for (int size = this.objects.size(); size > this.maxObjects; size = this.objects.size())
          {
             final int numFiles = getIdFiles().length;
             File surplus = createFile(numFiles - 1);
             if (surplus.equals(this.saveFile)
-                  || (surplus.length() / OBJECT_SIZE) >= this.MAX_OBJECTS)
+                  || (surplus.length() / OBJECT_SIZE) >= this.maxObjects)
             {
                // Create a new file
                surplus = createFile(numFiles);
@@ -392,9 +383,9 @@ public class RandomObjectPopulator extends Thread implements ObjectManager
             dos.close();
          }
       }
-      else if (toSave < this.MAX_OBJECTS)
+      else if (toSave < this.maxObjects)
       {
-         for (int size = this.objects.size(); size < this.MAX_OBJECTS; size = this.objects.size())
+         for (int size = this.objects.size(); size < this.maxObjects; size = this.objects.size())
          {
             // Try to borrow from last id file
             // When borrowing, add to this.objects
@@ -453,14 +444,14 @@ public class RandomObjectPopulator extends Thread implements ObjectManager
 
    private int getRemaining(final int size, final File surplus)
    {
-      final int objectsAvailable = size - this.MAX_OBJECTS;
-      final int spaceAvailable = this.MAX_OBJECTS - ((int) (surplus.length() / OBJECT_SIZE));
+      final int objectsAvailable = size - this.maxObjects;
+      final int spaceAvailable = this.maxObjects - ((int) (surplus.length() / OBJECT_SIZE));
       return Math.min(objectsAvailable, spaceAvailable);
    }
 
    private int getTransferrable(final int size, final File surplus)
    {
-      final int slotsAvailable = this.MAX_OBJECTS - size;
+      final int slotsAvailable = this.maxObjects - size;
       final int surplusAvailable = (int) (surplus.length() / OBJECT_SIZE);
       return Math.min(slotsAvailable, surplusAvailable);
    }

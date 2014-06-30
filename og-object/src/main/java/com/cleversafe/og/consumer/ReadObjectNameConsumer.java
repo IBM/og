@@ -24,7 +24,6 @@ import java.util.Map;
 
 import com.cleversafe.og.object.ObjectName;
 import com.cleversafe.og.object.manager.ObjectManager;
-import com.cleversafe.og.object.manager.ObjectManagerException;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.util.Operation;
 
@@ -39,7 +38,7 @@ public class ReadObjectNameConsumer extends ObjectNameConsumer
    }
 
    @Override
-   protected void updateObjectManager(final ObjectName objectName) throws ObjectManagerException
+   protected void updateObjectManager(final ObjectName objectName)
    {
       this.objectManager.releaseNameFromRead(objectName);
    }

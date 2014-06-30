@@ -109,5 +109,5 @@ public abstract class ObjectNameConsumer implements Consumer<Response>
       }
    }
 
-   protected abstract void updateObjectManager(ObjectName objectName) throws ObjectManagerException;
+   protected abstract void updateObjectManager(ObjectName objectName);
 }
