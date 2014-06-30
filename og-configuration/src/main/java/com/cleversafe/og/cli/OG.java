@@ -21,13 +21,16 @@ package com.cleversafe.og.cli;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.concurrent.TimeUnit;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.cli.json.JsonConfig;
+import com.cleversafe.og.cli.json.type.BehavioralEnumTypeAdapterFactory;
 import com.cleversafe.og.cli.json.type.CaseInsensitiveEnumTypeAdapterFactory;
-import com.cleversafe.og.cli.json.type.SizeUnitTypeAdapterFactory;
-import com.cleversafe.og.cli.json.type.TimeUnitTypeAdapterFactory;
+import com.cleversafe.og.cli.json.type.SizeUnitTypeAdapter;
+import com.cleversafe.og.cli.json.type.TimeUnitTypeAdapter;
 import com.cleversafe.og.cli.report.Summary;
 import com.cleversafe.og.guice.ApiModule;
 import com.cleversafe.og.guice.ClientModule;
@@ -41,10 +44,12 @@ import com.cleversafe.og.object.manager.ObjectManager;
 import com.cleversafe.og.object.manager.ObjectManagerException;
 import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.test.LoadTest;
+import com.cleversafe.og.util.SizeUnit;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.LongSerializationPolicy;
+import com.google.gson.TypeAdapter;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -118,13 +123,17 @@ public class OG extends AbstractCLI
 
    private static Gson createGson()
    {
+      final TypeAdapter<TimeUnit> time = new TimeUnitTypeAdapter().nullSafe();
+      final TypeAdapter<SizeUnit> size = new SizeUnitTypeAdapter().nullSafe();
+
       return new GsonBuilder()
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
             .setLongSerializationPolicy(LongSerializationPolicy.STRING)
             .registerTypeAdapterFactory(new CaseInsensitiveEnumTypeAdapterFactory())
-            // TODO refactor into an abstract adapter for enums with behavior
-            .registerTypeAdapterFactory(new TimeUnitTypeAdapterFactory())
-            .registerTypeAdapterFactory(new SizeUnitTypeAdapterFactory())
+            .registerTypeAdapterFactory(
+                  new BehavioralEnumTypeAdapterFactory<TimeUnit>(TimeUnit.class, time))
+            .registerTypeAdapterFactory(
+                  new BehavioralEnumTypeAdapterFactory<SizeUnit>(SizeUnit.class, size))
             .setPrettyPrinting()
             .create();
    }
