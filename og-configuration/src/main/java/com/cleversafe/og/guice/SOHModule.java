@@ -148,8 +148,21 @@ public class SOHModule extends AbstractModule
          final Producer<Entity> entity,
          final Map<String, String> metadata)
    {
-      return new RequestProducer(id, Producers.of(method), uri, headers, entity,
-            Producers.of(metadata));
+      final RequestProducer.Builder b = RequestProducer.custom()
+            .withId(id)
+            .withMethod(method)
+            .withUri(uri)
+            .withEntity(entity);
+      for (final Producer<Pair<String, String>> header : headers)
+      {
+         b.withHeader(header);
+      }
+      for (final Entry<String, String> m : metadata.entrySet())
+      {
+         b.withMetadata(m.getKey(), m.getValue());
+      }
+
+      return b.build();
    }
 
    private Producer<URI> createUri(
