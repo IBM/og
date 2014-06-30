@@ -226,6 +226,16 @@ public class UriProducerTest
       Assert.assertEquals("key=value&key2=value2", uri.getQuery());
    }
 
+   @Test
+   public void testQueryParameters3()
+   {
+      final Producer<URI> p =
+            UriProducer.custom().toHost(this.host).atPath(this.path).withQueryParameter("key2",
+                  "value2").withQueryParameter("key1", "value1").build();
+      final URI uri = p.produce();
+      Assert.assertEquals("key2=value2&key1=value1", uri.getQuery());
+   }
+
    @Test(expected = ProducerException.class)
    public void testBadUri()
    {

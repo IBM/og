@@ -24,9 +24,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 import com.cleversafe.og.http.Scheme;
 import com.cleversafe.og.util.producer.Producer;
@@ -128,7 +128,7 @@ public class UriProducer implements Producer<URI>
       private Builder()
       {
          this.scheme = Producers.of(Scheme.HTTP);
-         this.queryParameters = new TreeMap<String, String>();
+         this.queryParameters = new LinkedHashMap<String, String>();
       }
 
       public Builder withScheme(final Scheme scheme)
