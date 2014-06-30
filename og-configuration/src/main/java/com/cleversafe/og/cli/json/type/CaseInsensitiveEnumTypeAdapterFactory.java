@@ -20,6 +20,7 @@
 package com.cleversafe.og.cli.json.type;
 
 import java.io.IOException;
+import java.util.Locale;
 
 import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
@@ -43,26 +44,22 @@ public class CaseInsensitiveEnumTypeAdapterFactory implements TypeAdapterFactory
          @Override
          public void write(final JsonWriter out, final T value) throws IOException
          {
-            if (value != null)
-               out.value(value.toString().toLowerCase());
-            else
-               out.nullValue();
+            out.value(value.toString().toLowerCase(Locale.US));
          }
 
          @SuppressWarnings("unchecked")
          @Override
          public T read(final JsonReader in) throws IOException
          {
-            final String candidate = in.nextString().toUpperCase();
+            final String s = in.nextString().toUpperCase(Locale.US);
             for (final Object enumEntry : rawType.getEnumConstants())
             {
-               if (enumEntry.toString().equals(candidate))
+               if (enumEntry.toString().equals(s))
                   return (T) enumEntry;
             }
-            throw new IllegalArgumentException(String.format("Could not parse into enum [%s]",
-                  candidate));
+            throw new IllegalArgumentException(String.format("Could not parse into enum [%s]", s));
          }
-      };
+      }.nullSafe();
    }
 
    private boolean behavioralEnum(final Class<?> rawType)
