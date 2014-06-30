@@ -30,6 +30,7 @@ import java.util.Locale;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.cleversafe.og.http.Scheme;
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.util.Operation;
 import com.google.common.base.Splitter;
@@ -53,6 +54,7 @@ public class HttpUtil
 
    public static Operation toOperation(final Method method)
    {
+      checkNotNull(method);
       switch (method)
       {
          case PUT :
@@ -64,13 +66,16 @@ public class HttpUtil
          case DELETE :
             return Operation.DELETE;
          default :
-            throw new RuntimeException(String.format("Unrecognized method [%s]", method));
+            throw new IllegalArgumentException(String.format("Unrecognized method [%s]", method));
       }
    }
 
    public static String getObjectName(final URI uri)
    {
       checkNotNull(uri);
+      checkNotNull(uri.getScheme());
+      // make sure this uri uses a known scheme
+      Scheme.valueOf(uri.getScheme().toUpperCase(Locale.US));
       final List<String> parts = URI_SPLITTER.splitToList(uri.getPath());
 
       if (parts.size() == 3)
