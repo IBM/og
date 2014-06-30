@@ -21,7 +21,7 @@ package com.cleversafe.og.guice;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -31,11 +31,15 @@ import com.cleversafe.og.consumer.WriteObjectNameConsumer;
 import com.cleversafe.og.guice.annotation.Delete;
 import com.cleversafe.og.guice.annotation.DeleteHeaders;
 import com.cleversafe.og.guice.annotation.DeleteHost;
+import com.cleversafe.og.guice.annotation.DeleteMetadata;
 import com.cleversafe.og.guice.annotation.DeleteObjectName;
+import com.cleversafe.og.guice.annotation.DeleteUri;
 import com.cleversafe.og.guice.annotation.Read;
 import com.cleversafe.og.guice.annotation.ReadHeaders;
 import com.cleversafe.og.guice.annotation.ReadHost;
+import com.cleversafe.og.guice.annotation.ReadMetadata;
 import com.cleversafe.og.guice.annotation.ReadObjectName;
+import com.cleversafe.og.guice.annotation.ReadUri;
 import com.cleversafe.og.guice.annotation.TestContainer;
 import com.cleversafe.og.guice.annotation.TestEntity;
 import com.cleversafe.og.guice.annotation.TestPort;
@@ -46,16 +50,22 @@ import com.cleversafe.og.guice.annotation.TesttId;
 import com.cleversafe.og.guice.annotation.Write;
 import com.cleversafe.og.guice.annotation.WriteHeaders;
 import com.cleversafe.og.guice.annotation.WriteHost;
+import com.cleversafe.og.guice.annotation.WriteMetadata;
 import com.cleversafe.og.guice.annotation.WriteObjectName;
+import com.cleversafe.og.guice.annotation.WriteUri;
 import com.cleversafe.og.http.Scheme;
 import com.cleversafe.og.http.producer.RequestProducer;
 import com.cleversafe.og.http.producer.UriProducer;
+import com.cleversafe.og.http.util.Api;
 import com.cleversafe.og.http.util.HttpUtil;
 import com.cleversafe.og.object.manager.ObjectManager;
 import com.cleversafe.og.operation.Entity;
+import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
+import com.cleversafe.og.soh.object.consumer.SOHWriteByteBufferConsumer;
+import com.cleversafe.og.soh.object.consumer.SOHWriteObjectNameConsumer;
 import com.cleversafe.og.util.ByteBufferConsumers;
 import com.cleversafe.og.util.Entities;
 import com.cleversafe.og.util.Pair;
@@ -70,6 +80,8 @@ import com.google.inject.Singleton;
 
 public class ApiModule extends AbstractModule
 {
+   private static final String SOH_PUT_OBJECT = "soh.put_object";
+
    @Override
    protected void configure()
    {}
@@ -79,20 +91,38 @@ public class ApiModule extends AbstractModule
    @Write
    public Producer<Request> provideWrite(
          @TesttId final Producer<Long> id,
+         @WriteUri final Producer<URI> uri,
+         @WriteHeaders final List<Producer<Pair<String, String>>> headers,
+         @TestEntity final Producer<Entity> entity,
+         @WriteMetadata final Map<String, String> metadata)
+   {
+      return createRequestProducer(id, Method.PUT, uri, headers, entity, metadata);
+   }
+
+   @Provides
+   @Singleton
+   @WriteUri
+   public Producer<URI> providWriteUri(
          @TestScheme final Producer<Scheme> scheme,
          @WriteHost final Producer<String> host,
          @TestPort final Producer<Integer> port,
          @TestUriRoot final Producer<String> uriRoot,
          @TestContainer final Producer<String> container,
          @WriteObjectName final Producer<String> object,
-         @TestQueryParams final Map<String, String> queryParameters,
-         @WriteHeaders final List<Producer<Pair<String, String>>> headers,
-         @TestEntity final Producer<Entity> entity)
+         @TestQueryParams final Map<String, String> queryParameters)
    {
-      final Producer<URI> uri =
-            createUri(scheme, host, port, uriRoot, container, object, queryParameters);
-      return createRequestProducer(id, Method.PUT, uri, headers, entity,
-            Collections.<String, String> emptyMap());
+      return createUri(scheme, host, port, uriRoot, container, object, queryParameters);
+   }
+
+   @Provides
+   @WriteMetadata
+   public Map<String, String> provideWriteMetadata(final Api api)
+   {
+      final Map<String, String> metadata = new HashMap<String, String>();
+      // SOH needs to use a special response procesor to extract the returned object id
+      if (Api.SOH == api)
+         metadata.put(Metadata.RESPONSE_BODY_PROCESSOR.toString(), SOH_PUT_OBJECT);
+      return metadata;
    }
 
    @Provides
@@ -100,19 +130,34 @@ public class ApiModule extends AbstractModule
    @Read
    public Producer<Request> provideRead(
          @TesttId final Producer<Long> id,
+         @ReadUri final Producer<URI> uri,
+         @ReadHeaders final List<Producer<Pair<String, String>>> headers,
+         @ReadMetadata final Map<String, String> metadata)
+   {
+      return createRequestProducer(id, Method.GET, uri, headers, Producers.of(Entities.none()),
+            metadata);
+   }
+
+   @Provides
+   @Singleton
+   @ReadUri
+   public Producer<URI> providReadUri(
          @TestScheme final Producer<Scheme> scheme,
          @ReadHost final Producer<String> host,
          @TestPort final Producer<Integer> port,
          @TestUriRoot final Producer<String> uriRoot,
          @TestContainer final Producer<String> container,
          @ReadObjectName final Producer<String> object,
-         @TestQueryParams final Map<String, String> queryParameters,
-         @ReadHeaders final List<Producer<Pair<String, String>>> headers)
+         @TestQueryParams final Map<String, String> queryParameters)
    {
-      final Producer<URI> uri =
-            createUri(scheme, host, port, uriRoot, container, object, queryParameters);
-      return createRequestProducer(id, Method.GET, uri, headers, Producers.of(Entities.none()),
-            Collections.<String, String> emptyMap());
+      return createUri(scheme, host, port, uriRoot, container, object, queryParameters);
+   }
+
+   @Provides
+   @ReadMetadata
+   public Map<String, String> provideReadMetadata()
+   {
+      return new HashMap<String, String>();
    }
 
    @Provides
@@ -120,19 +165,34 @@ public class ApiModule extends AbstractModule
    @Delete
    public Producer<Request> provideDelete(
          @TesttId final Producer<Long> id,
+         @DeleteUri final Producer<URI> uri,
+         @DeleteHeaders final List<Producer<Pair<String, String>>> headers,
+         @DeleteMetadata final Map<String, String> metadata)
+   {
+      return createRequestProducer(id, Method.DELETE, uri, headers, Producers.of(Entities.none()),
+            metadata);
+   }
+
+   @Provides
+   @Singleton
+   @DeleteUri
+   public Producer<URI> providDeleteUri(
          @TestScheme final Producer<Scheme> scheme,
          @DeleteHost final Producer<String> host,
          @TestPort final Producer<Integer> port,
          @TestUriRoot final Producer<String> uriRoot,
          @TestContainer final Producer<String> container,
          @DeleteObjectName final Producer<String> object,
-         @TestQueryParams final Map<String, String> queryParameters,
-         @DeleteHeaders final List<Producer<Pair<String, String>>> headers)
+         @TestQueryParams final Map<String, String> queryParameters)
    {
-      final Producer<URI> uri =
-            createUri(scheme, host, port, uriRoot, container, object, queryParameters);
-      return createRequestProducer(id, Method.DELETE, uri, headers, Producers.of(Entities.none()),
-            Collections.<String, String> emptyMap());
+      return createUri(scheme, host, port, uriRoot, container, object, queryParameters);
+   }
+
+   @Provides
+   @DeleteMetadata
+   public Map<String, String> provideDeleteMetadata()
+   {
+      return new HashMap<String, String>();
    }
 
    private Producer<Request> createRequestProducer(
@@ -146,12 +206,14 @@ public class ApiModule extends AbstractModule
       final RequestProducer.Builder b = RequestProducer.custom()
             .withId(id)
             .withMethod(method)
-            .withUri(uri)
-            .withEntity(entity);
+            .withUri(uri);
       for (final Producer<Pair<String, String>> header : headers)
       {
          b.withHeader(header);
       }
+
+      b.withEntity(entity);
+
       for (final Entry<String, String> m : metadata.entrySet())
       {
          b.withMetadata(m.getKey(), m.getValue());
@@ -173,7 +235,8 @@ public class ApiModule extends AbstractModule
       if (uriRoot != null)
          parts.add(uriRoot);
       parts.add(container);
-      parts.add(object);
+      if (object != null)
+         parts.add(object);
       final UriProducer.Builder b = UriProducer.custom()
             .withScheme(scheme)
             .toHost(host)
@@ -190,12 +253,17 @@ public class ApiModule extends AbstractModule
    @Provides
    @Singleton
    public List<Consumer<Response>> provideObjectNameConsumers(
+         final Api api,
          final ObjectManager objectManager,
          final Map<Long, Request> pendingRequests)
    {
       final List<Integer> sc = HttpUtil.SUCCESS_STATUS_CODES;
       final List<Consumer<Response>> list = new ArrayList<Consumer<Response>>();
-      list.add(new WriteObjectNameConsumer(objectManager, pendingRequests, sc));
+      // SOH writes must consume writes by processing response metadata
+      if (Api.SOH == api)
+         list.add(new SOHWriteObjectNameConsumer(objectManager, pendingRequests, sc));
+      else
+         list.add(new WriteObjectNameConsumer(objectManager, pendingRequests, sc));
       list.add(new ReadObjectNameConsumer(objectManager, pendingRequests, sc));
       return list;
    }
@@ -209,6 +277,10 @@ public class ApiModule extends AbstractModule
          @Override
          public ByteBufferConsumer apply(final String input)
          {
+            if (SOH_PUT_OBJECT.equals(input))
+            {
+               return new SOHWriteByteBufferConsumer();
+            }
             return ByteBufferConsumers.noOp();
          }
       };
