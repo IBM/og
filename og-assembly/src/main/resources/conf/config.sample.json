@@ -69,7 +69,6 @@
 // "host_algorithm": "roundrobin",
 // "hosts": [],
 // "headers": {}
-// }
 // },
 
 
@@ -80,7 +79,6 @@
 // "host_algorithm": "roundrobin",
 // "hosts": [],
 // "headers": {}
-// }
 // },
 
 
@@ -91,7 +89,6 @@
 // "host_algorithm": "roundrobin",
 // "hosts": [],
 // "headers": {}
-// }
 // },
 
 
