@@ -38,8 +38,6 @@ import com.cleversafe.og.guice.JsonModule;
 import com.cleversafe.og.guice.OGModule;
 import com.cleversafe.og.guice.ObjectManagerModule;
 import com.cleversafe.og.guice.OperationManagerModule;
-import com.cleversafe.og.guice.SOHModule;
-import com.cleversafe.og.http.util.Api;
 import com.cleversafe.og.object.manager.ObjectManager;
 import com.cleversafe.og.object.manager.ObjectManagerException;
 import com.cleversafe.og.statistic.Statistics;
@@ -50,7 +48,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.LongSerializationPolicy;
 import com.google.gson.TypeAdapter;
-import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.martiansoftware.jsap.JSAPResult;
@@ -109,16 +106,9 @@ public class OG extends AbstractCLI
             new JsonModule(config),
             new OGModule(),
             new OperationManagerModule(),
-            apiModule(config.getApi()),
+            new ApiModule(),
             new ObjectManagerModule(),
             new ClientModule());
-   }
-
-   private static AbstractModule apiModule(final Api api)
-   {
-      if (Api.SOH == api)
-         return new SOHModule();
-      return new ApiModule();
    }
 
    private static Gson createGson()
