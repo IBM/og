@@ -20,9 +20,7 @@
 package com.cleversafe.og.cli.json.type;
 
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
-import com.cleversafe.og.util.SizeUnit;
 import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
 import com.google.gson.TypeAdapterFactory;
@@ -37,8 +35,7 @@ public class CaseInsensitiveEnumTypeAdapterFactory implements TypeAdapterFactory
    {
       @SuppressWarnings("unchecked")
       final Class<T> rawType = (Class<T>) type.getRawType();
-      if (!rawType.isEnum() || behavioralEnum(rawType, SizeUnit.class)
-            || behavioralEnum(rawType, TimeUnit.class))
+      if (!rawType.isEnum() || behavioralEnum(rawType))
          return null;
 
       return new TypeAdapter<T>()
@@ -68,14 +65,9 @@ public class CaseInsensitiveEnumTypeAdapterFactory implements TypeAdapterFactory
       };
    }
 
-   private boolean behavioralEnum(final Class<?> rawType, final Class<?> enumType)
-   {
-      return rawType.equals(enumType) || parentEquals(rawType, enumType);
-   }
-
-   private boolean parentEquals(final Class<?> rawType, final Class<?> enumType)
+   private boolean behavioralEnum(final Class<?> rawType)
    {
       final Class<?> parent = rawType.getSuperclass();
-      return parent != null && parent.equals(enumType);
+      return parent != null && parent.isEnum();
    }
 }
