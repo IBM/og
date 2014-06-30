@@ -236,10 +236,9 @@ public class JsonModule extends AbstractModule
    @Provides
    @Singleton
    @TestQueryParams
-   public Producer<Map<String, String>> provideTestQueryParams()
+   public Map<String, String> provideTestQueryParams()
    {
-      final Map<String, String> queryParams = new HashMap<String, String>();
-      return Producers.of(queryParams);
+      return new HashMap<String, String>();
    }
 
    @Provides

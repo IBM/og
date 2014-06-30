@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import com.cleversafe.og.consumer.ReadObjectNameConsumer;
 import com.cleversafe.og.consumer.WriteObjectNameConsumer;
@@ -84,12 +85,12 @@ public class ApiModule extends AbstractModule
          @TestUriRoot final Producer<String> uriRoot,
          @TestContainer final Producer<String> container,
          @WriteObjectName final Producer<String> object,
-         @TestQueryParams final Producer<Map<String, String>> queryParams,
+         @TestQueryParams final Map<String, String> queryParameters,
          @WriteHeaders final List<Producer<Pair<String, String>>> headers,
          @TestEntity final Producer<Entity> entity)
    {
       final Producer<URI> uri =
-            createUri(scheme, host, port, uriRoot, container, object, queryParams);
+            createUri(scheme, host, port, uriRoot, container, object, queryParameters);
       return createRequestProducer(id, Method.PUT, uri, headers, entity,
             Collections.<String, String> emptyMap());
    }
@@ -105,11 +106,11 @@ public class ApiModule extends AbstractModule
          @TestUriRoot final Producer<String> uriRoot,
          @TestContainer final Producer<String> container,
          @ReadObjectName final Producer<String> object,
-         @TestQueryParams final Producer<Map<String, String>> queryParams,
+         @TestQueryParams final Map<String, String> queryParameters,
          @ReadHeaders final List<Producer<Pair<String, String>>> headers)
    {
       final Producer<URI> uri =
-            createUri(scheme, host, port, uriRoot, container, object, queryParams);
+            createUri(scheme, host, port, uriRoot, container, object, queryParameters);
       return createRequestProducer(id, Method.GET, uri, headers, Producers.of(Entities.none()),
             Collections.<String, String> emptyMap());
    }
@@ -125,11 +126,11 @@ public class ApiModule extends AbstractModule
          @TestUriRoot final Producer<String> uriRoot,
          @TestContainer final Producer<String> container,
          @DeleteObjectName final Producer<String> object,
-         @TestQueryParams final Producer<Map<String, String>> queryParams,
+         @TestQueryParams final Map<String, String> queryParameters,
          @DeleteHeaders final List<Producer<Pair<String, String>>> headers)
    {
       final Producer<URI> uri =
-            createUri(scheme, host, port, uriRoot, container, object, queryParams);
+            createUri(scheme, host, port, uriRoot, container, object, queryParameters);
       return createRequestProducer(id, Method.DELETE, uri, headers, Producers.of(Entities.none()),
             Collections.<String, String> emptyMap());
    }
@@ -153,20 +154,24 @@ public class ApiModule extends AbstractModule
          final Producer<String> uriRoot,
          final Producer<String> container,
          final Producer<String> object,
-         final Producer<Map<String, String>> queryParams)
+         final Map<String, String> queryParameters)
    {
       final List<Producer<String>> parts = new ArrayList<Producer<String>>();
       if (uriRoot != null)
          parts.add(uriRoot);
       parts.add(container);
       parts.add(object);
-      return UriProducer.custom()
+      final UriProducer.Builder b = UriProducer.custom()
             .withScheme(scheme)
             .toHost(host)
             .onPort(port)
-            .atPath(parts)
-            .withQueryParams(queryParams)
-            .build();
+            .atPath(parts);
+
+      for (final Entry<String, String> e : queryParameters.entrySet())
+      {
+         b.withQueryParameter(e.getKey(), e.getValue());
+      }
+      return b.build();
    }
 
    @Provides

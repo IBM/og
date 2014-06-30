@@ -19,16 +19,19 @@
 
 package com.cleversafe.og.http.producer;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import com.cleversafe.og.http.Scheme;
 import com.cleversafe.og.util.producer.Producer;
 import com.cleversafe.og.util.producer.ProducerException;
+import com.cleversafe.og.util.producer.Producers;
 import com.google.common.base.Joiner;
 
 public class UriProducer implements Producer<URI>
@@ -37,8 +40,7 @@ public class UriProducer implements Producer<URI>
    private final Producer<String> host;
    private final Producer<Integer> port;
    private final List<Producer<String>> parts;
-   // TODO this type is awkward
-   private final Producer<Map<String, String>> queryParameters;
+   private final Map<String, String> queryParameters;
    private final boolean trailingSlash;
    private static final Joiner.MapJoiner PARAM_JOINER = Joiner.on('&').withKeyValueSeparator("=");
 
@@ -47,7 +49,7 @@ public class UriProducer implements Producer<URI>
          final Producer<String> host,
          final Producer<Integer> port,
          final List<Producer<String>> parts,
-         final Producer<Map<String, String>> queryParameters,
+         final Map<String, String> queryParameters,
          final boolean trailingSlash)
    {
       this.scheme = checkNotNull(scheme);
@@ -104,7 +106,7 @@ public class UriProducer implements Producer<URI>
 
    private void appendQueryParams(final StringBuilder builder)
    {
-      final String queryParams = PARAM_JOINER.join(this.queryParameters.produce());
+      final String queryParams = PARAM_JOINER.join(this.queryParameters);
       if (queryParams.length() > 0)
          builder.append("?").append(queryParams);
    }
@@ -120,11 +122,19 @@ public class UriProducer implements Producer<URI>
       private Producer<String> host;
       private Producer<Integer> port;
       private List<Producer<String>> path;
-      private Producer<Map<String, String>> queryParams;
+      private final Map<String, String> queryParameters;
       private boolean trailingSlash;
 
       private Builder()
-      {}
+      {
+         this.scheme = Producers.of(Scheme.HTTP);
+         this.queryParameters = new TreeMap<String, String>();
+      }
+
+      public Builder withScheme(final Scheme scheme)
+      {
+         return withScheme(Producers.of(scheme));
+      }
 
       public Builder withScheme(final Producer<Scheme> scheme)
       {
@@ -132,10 +142,21 @@ public class UriProducer implements Producer<URI>
          return this;
       }
 
+      public Builder toHost(final String host)
+      {
+         return toHost(Producers.of(host));
+      }
+
       public Builder toHost(final Producer<String> host)
       {
          this.host = host;
          return this;
+      }
+
+      public Builder onPort(final int port)
+      {
+         checkArgument(port >= 0, "port must be >= 0 [%s]", port);
+         return onPort(Producers.of(port));
       }
 
       public Builder onPort(final Producer<Integer> port)
@@ -150,9 +171,11 @@ public class UriProducer implements Producer<URI>
          return this;
       }
 
-      public Builder withQueryParams(final Producer<Map<String, String>> queryParams)
+      public Builder withQueryParameter(final String key, final String value)
       {
-         this.queryParams = queryParams;
+         checkNotNull(key);
+         checkNotNull(value);
+         this.queryParameters.put(key, value);
          return this;
       }
 
@@ -164,7 +187,7 @@ public class UriProducer implements Producer<URI>
 
       public UriProducer build()
       {
-         return new UriProducer(this.scheme, this.host, this.port, this.path, this.queryParams,
+         return new UriProducer(this.scheme, this.host, this.port, this.path, this.queryParameters,
                this.trailingSlash);
       }
    }
