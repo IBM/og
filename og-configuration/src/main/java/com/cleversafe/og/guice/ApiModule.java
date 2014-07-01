@@ -65,7 +65,6 @@ import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.soh.object.consumer.SOHWriteByteBufferConsumer;
-import com.cleversafe.og.soh.object.consumer.SOHWriteObjectNameConsumer;
 import com.cleversafe.og.util.ByteBufferConsumers;
 import com.cleversafe.og.util.Entities;
 import com.cleversafe.og.util.Pair;
@@ -263,17 +262,12 @@ public class ApiModule extends AbstractModule
    @Provides
    @Singleton
    public List<Consumer<Response>> provideObjectNameConsumers(
-         final Api api,
          final ObjectManager objectManager,
          final Map<Long, Request> pendingRequests)
    {
       final List<Integer> sc = HttpUtil.SUCCESS_STATUS_CODES;
       final List<Consumer<Response>> list = new ArrayList<Consumer<Response>>();
-      // SOH writes must consume writes by processing response metadata
-      if (Api.SOH == api)
-         list.add(new SOHWriteObjectNameConsumer(objectManager, pendingRequests, sc));
-      else
-         list.add(new WriteObjectNameConsumer(objectManager, pendingRequests, sc));
+      list.add(new WriteObjectNameConsumer(objectManager, pendingRequests, sc));
       list.add(new ReadObjectNameConsumer(objectManager, pendingRequests, sc));
       return list;
    }
