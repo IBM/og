@@ -25,6 +25,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.cleversafe.og.http.util.HttpUtil;
 import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.util.Operation;
 
@@ -41,9 +42,8 @@ public class StatusCodeCondition implements TestCondition
          final long thresholdValue)
    {
       this.operation = checkNotNull(operation);
-      // TODO use guava range
-      checkArgument(statusCode >= 100 && statusCode <= 599,
-            "statusCode must be in range [100, 599] [%s]", statusCode);
+      checkArgument(HttpUtil.VALID_STATUS_CODES.contains(statusCode),
+            "statusCode must be a valid status code [%s]", statusCode);
       this.statusCode = statusCode;
       checkArgument(thresholdValue > 0, "thresholdValue must be > 0 [%s]", thresholdValue);
       this.thresholdValue = thresholdValue;

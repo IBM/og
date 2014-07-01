@@ -58,9 +58,8 @@ public abstract class ObjectNameConsumer implements Consumer<Response>
       checkArgument(!statusCodes.isEmpty(), "statusCodes must not be empty");
       for (final int statusCode : statusCodes)
       {
-         // TODO use guava range
-         checkArgument(statusCode >= 100 && statusCode <= 599,
-               "all statusCodes in list must be in range [100, 599] [%s]", statusCode);
+         checkArgument(HttpUtil.VALID_STATUS_CODES.contains(statusCode),
+               "all statusCodes in list must be valid status codes [%s]", statusCode);
       }
       this.statusCodes = statusCodes;
    }

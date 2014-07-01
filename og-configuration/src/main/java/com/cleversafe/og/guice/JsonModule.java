@@ -79,6 +79,7 @@ import com.cleversafe.og.util.producer.Producer;
 import com.cleversafe.og.util.producer.Producers;
 import com.cleversafe.og.util.producer.RandomChoiceProducer;
 import com.google.common.base.CharMatcher;
+import com.google.common.collect.Range;
 import com.google.common.math.DoubleMath;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -88,6 +89,7 @@ public class JsonModule extends AbstractModule
 {
    private final JsonConfig config;
    private static final double ERR = Math.pow(0.1, 6);
+   private static final Range<Double> PERCENTAGE = Range.closed(0.0, 100.0);
 
    public JsonModule(final JsonConfig config)
    {
@@ -385,7 +387,7 @@ public class JsonModule extends AbstractModule
    public double provideWriteWeight()
    {
       final double write = this.config.getWrite().getweight();
-      checkArgument(inRange(write), "write must be in range [0.0, 100.0] [%s]", write);
+      checkArgument(PERCENTAGE.contains(write), "write must be in range [0.0, 100.0] [%s]", write);
       final double read = this.config.getRead().getweight();
       final double delete = this.config.getDelete().getweight();
       if (allEqual(0.0, write, read, delete))
@@ -398,7 +400,7 @@ public class JsonModule extends AbstractModule
    public double provideReadWeight()
    {
       final double read = this.config.getRead().getweight();
-      checkArgument(inRange(read), "read must be in range [0.0, 100.0] [%s]", read);
+      checkArgument(PERCENTAGE.contains(read), "read must be in range [0.0, 100.0] [%s]", read);
       return read;
    }
 
@@ -407,14 +409,9 @@ public class JsonModule extends AbstractModule
    public double provideDeleteWeight()
    {
       final double delete = this.config.getDelete().getweight();
-      checkArgument(inRange(delete), "delete must be in range [0.0, 100.0] [%s]", delete);
+      checkArgument(PERCENTAGE.contains(delete), "delete must be in range [0.0, 100.0] [%s]",
+            delete);
       return delete;
-   }
-
-   private boolean inRange(final double v)
-   {
-      return DoubleMath.fuzzyCompare(v, 0.0, ERR) >= 0
-            && DoubleMath.fuzzyCompare(v, 100.0, ERR) <= 0;
    }
 
    private boolean allEqual(final double compare, final double... values)

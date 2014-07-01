@@ -28,6 +28,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.cleversafe.og.http.util.HttpUtil;
 import com.cleversafe.og.operation.Entity;
 import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Response;
@@ -50,8 +51,8 @@ public class HttpResponse implements Response
    {
       checkArgument(requestId >= 0, "requestId must be >= 0 [%s]", requestId);
       this.requestId = requestId;
-      checkArgument(statusCode >= 100 && statusCode <= 599,
-            "statusCode must be in range [100, 599] [%s]", statusCode);
+      checkArgument(HttpUtil.VALID_STATUS_CODES.contains(statusCode),
+            "statusCode must be a valid status code [%s]", statusCode);
       this.statusCode = statusCode;
       this.headers = checkNotNull(headers);
       this.entity = checkNotNull(entity);
