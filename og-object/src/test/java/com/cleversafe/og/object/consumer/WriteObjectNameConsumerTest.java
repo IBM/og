@@ -43,6 +43,7 @@ import com.cleversafe.og.http.util.HttpUtil;
 import com.cleversafe.og.object.ObjectName;
 import com.cleversafe.og.object.manager.ObjectManager;
 import com.cleversafe.og.object.manager.ObjectManagerException;
+import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
@@ -131,7 +132,26 @@ public class WriteObjectNameConsumerTest
    public void testSuccessfulWrite()
    {
       when(this.mockRequest.getMethod()).thenReturn(Method.PUT);
+      when(this.mockRequest.getMetadata(Metadata.OBJECT_NAME)).thenReturn(
+            "5c18be1057404792923dc487ca40f2370000");
       when(this.mockResponse.getStatusCode()).thenReturn(201);
+
+      final Consumer<Response> c =
+            new WriteObjectNameConsumer(this.mockObjectManager, this.pendingRequests,
+                  this.statusCodes);
+
+      c.consume(this.mockResponse);
+      verify(this.mockObjectManager).writeNameComplete(isA(ObjectName.class));
+   }
+
+   @Test
+   public void testSuccessfulWriteSOH()
+   {
+      when(this.mockRequest.getMethod()).thenReturn(Method.PUT);
+      when(this.mockResponse.getStatusCode()).thenReturn(201);
+      // for SOH, the metadata gets set on response rather than request
+      when(this.mockResponse.getMetadata(Metadata.OBJECT_NAME)).thenReturn(
+            "5c18be1057404792923dc487ca40f2370000");
 
       final Consumer<Response> c =
             new WriteObjectNameConsumer(this.mockObjectManager, this.pendingRequests,

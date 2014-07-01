@@ -43,6 +43,7 @@ import com.cleversafe.og.http.util.HttpUtil;
 import com.cleversafe.og.object.ObjectName;
 import com.cleversafe.og.object.manager.ObjectManager;
 import com.cleversafe.og.object.manager.ObjectManagerException;
+import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
@@ -131,6 +132,8 @@ public class ReadObjectNameConsumerTest
    public void testSuccessfulRead()
    {
       when(this.mockRequest.getMethod()).thenReturn(Method.GET);
+      when(this.mockRequest.getMetadata(Metadata.OBJECT_NAME)).thenReturn(
+            "5c18be1057404792923dc487ca40f2370000");
       when(this.mockResponse.getStatusCode()).thenReturn(200);
 
       final Consumer<Response> c =

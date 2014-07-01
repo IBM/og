@@ -30,6 +30,7 @@ import com.cleversafe.og.object.LegacyObjectName;
 import com.cleversafe.og.object.ObjectName;
 import com.cleversafe.og.object.manager.ObjectManager;
 import com.cleversafe.og.object.manager.ObjectManagerException;
+import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.Operation;
@@ -93,7 +94,12 @@ public abstract class ObjectNameConsumer implements Consumer<Response>
 
    protected String getObjectString(final Request request, final Response response)
    {
-      return HttpUtil.getObjectName(request.getUri());
+      String objectString = request.getMetadata(Metadata.OBJECT_NAME);
+      // SOH writes
+      if (objectString == null)
+         objectString = response.getMetadata(Metadata.OBJECT_NAME);
+
+      return objectString;
    }
 
    private void updateManager(final ObjectName objectName)
