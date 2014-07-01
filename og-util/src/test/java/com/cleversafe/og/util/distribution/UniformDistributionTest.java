@@ -64,7 +64,7 @@ public class UniformDistributionTest
    public void testBasicUniformDistribution()
    {
       final UniformDistribution ud = new UniformDistribution(10.0, 10.0);
-      Assert.assertEquals(10.0, ud.getMean(), err);
+      Assert.assertEquals(10.0, ud.getAverage(), err);
       Assert.assertEquals(10.0, ud.getSpread(), err);
       ud.nextSample();
       ud.nextSample();

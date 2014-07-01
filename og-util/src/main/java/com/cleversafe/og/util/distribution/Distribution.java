@@ -26,9 +26,9 @@ public interface Distribution
 {
    /**
     * 
-    * @return the configured mean
+    * @return the configured average
     */
-   double getMean();
+   double getAverage();
 
    /**
     * 

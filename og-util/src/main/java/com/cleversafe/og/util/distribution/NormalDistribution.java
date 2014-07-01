@@ -30,56 +30,56 @@ import java.util.Random;
  */
 public class NormalDistribution implements Distribution
 {
-   private final double mean;
+   private final double average;
    private final double spread;
    private final Random random;
 
    /**
     * Constructs a <code>NormalDistribution</code> instance
     * 
-    * @param mean
-    *           the mean value of this distribution
+    * @param average
+    *           the average value of this distribution
     * @param spread
     *           the spread of this distribution. Spread is defined as the first standard deviation.
     * @throws IllegalArgumentException
-    *            if mean is negative
+    *            if average is negative
     * @throws IllegalArgumentException
     *            if spread is negative
     */
-   public NormalDistribution(final double mean, final double spread)
+   public NormalDistribution(final double average, final double spread)
    {
-      this(mean, spread, new Random());
+      this(average, spread, new Random());
    }
 
    /**
     * Constructs a <code>NormalDistribution</code> instance, using the provided <code>Random</code>
     * instance for random seed data
     * 
-    * @param mean
-    *           the mean value of this distribution
+    * @param average
+    *           the average value of this distribution
     * @param spread
     *           the spread of this distribution. Spread is defined as the first standard deviation.
     * @throws IllegalArgumentException
-    *            if mean is negative
+    *            if average is negative
     * @throws IllegalArgumentException
     *            if spread is negative
     * @throws NullPointerException
     *            if random is null
     */
-   public NormalDistribution(final double mean, final double spread, final Random random)
+   public NormalDistribution(final double average, final double spread, final Random random)
    {
-      checkArgument(mean >= 0.0, "mean must be >= 0.0 [%s]", mean);
+      checkArgument(average >= 0.0, "average must be >= 0.0 [%s]", average);
       checkArgument(spread >= 0.0, "spread must be >= 0.0 [%s]", spread);
       checkNotNull(random);
-      this.mean = mean;
+      this.average = average;
       this.spread = spread;
       this.random = random;
    }
 
    @Override
-   public double getMean()
+   public double getAverage()
    {
-      return this.mean;
+      return this.average;
    }
 
    @Override
@@ -99,7 +99,7 @@ public class NormalDistribution implements Distribution
       double result;
       do
       {
-         result = this.mean + (this.spread * this.random.nextGaussian());
+         result = this.average + (this.spread * this.random.nextGaussian());
       } while (result < 0);
       return result;
    }

@@ -347,12 +347,11 @@ public class JsonModule extends AbstractModule
 
    private static Distribution createSizeDistribution(final FilesizeConfig filesize)
    {
-      // TODO standardize terminology; mean or average
-      final double mean = filesize.getAverage() * filesize.getAverageUnit().toBytes(1);
+      final double average = filesize.getAverage() * filesize.getAverageUnit().toBytes(1);
       final double spread = filesize.getSpread() * filesize.getSpreadUnit().toBytes(1);
       if (DistributionType.NORMAL == filesize.getDistribution())
-         return new NormalDistribution(mean, spread);
-      return new UniformDistribution(mean, spread);
+         return new NormalDistribution(average, spread);
+      return new UniformDistribution(average, spread);
    }
 
    // TODO simplify this method if possible

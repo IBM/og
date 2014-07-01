@@ -52,7 +52,7 @@ public class PoissonDistributionTest
    public void testBasicPoissonDistribution()
    {
       final PoissonDistribution pd = new PoissonDistribution(10.0);
-      Assert.assertEquals(10.0, pd.getMean(), err);
+      Assert.assertEquals(10.0, pd.getAverage(), err);
       Assert.assertEquals(0.0, pd.getSpread(), err);
       pd.nextSample();
       pd.nextSample();

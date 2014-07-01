@@ -64,7 +64,7 @@ public class NormalDistributionTest
    public void testBasicNormalDistribution()
    {
       final NormalDistribution nd = new NormalDistribution(10.0, 10.0);
-      Assert.assertEquals(10.0, nd.getMean(), err);
+      Assert.assertEquals(10.0, nd.getAverage(), err);
       Assert.assertEquals(10.0, nd.getSpread(), err);
       nd.nextSample();
       nd.nextSample();

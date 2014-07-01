@@ -30,45 +30,45 @@ import java.util.Random;
  */
 public class PoissonDistribution implements Distribution
 {
-   private final double mean;
+   private final double average;
    private final Random random;
 
    /**
     * Constructs a <code>PoissonDistribution</code> instance
     * 
-    * @param mean
-    *           the mean value of this distribution
+    * @param average
+    *           the average value of this distribution
     * @throws IllegalArgumentException
-    *            if mean is negative
+    *            if average is negative
     */
-   public PoissonDistribution(final double mean)
+   public PoissonDistribution(final double average)
    {
-      this(mean, new Random());
+      this(average, new Random());
    }
 
    /**
     * Constructs a <code>PoissonDistribution</code> instance, using the provided <code>Random</code>
     * instance for random seed data
     * 
-    * @param mean
-    *           the mean value of this distribution
+    * @param average
+    *           the average value of this distribution
     * @throws IllegalArgumentException
-    *            if mean is negative
+    *            if average is negative
     * @throws NullPointerException
     *            if random is null
     */
-   public PoissonDistribution(final double mean, final Random random)
+   public PoissonDistribution(final double average, final Random random)
    {
-      checkArgument(mean >= 0.0, "mean must be >= 0.0 [%s]", mean);
+      checkArgument(average >= 0.0, "average must be >= 0.0 [%s]", average);
       checkNotNull(random);
-      this.mean = mean;
+      this.average = average;
       this.random = random;
    }
 
    @Override
-   public double getMean()
+   public double getAverage()
    {
-      return this.mean;
+      return this.average;
    }
 
    /**
@@ -85,6 +85,6 @@ public class PoissonDistribution implements Distribution
    {
       // note the 1 - random.nextDouble (instead of random.nextDouble) is to prevent the case where
       // 0 is chosen and an infinite sleep occurs.
-      return this.mean * (-Math.log(1 - this.random.nextDouble()));
+      return this.average * (-Math.log(1 - this.random.nextDouble()));
    }
 }
