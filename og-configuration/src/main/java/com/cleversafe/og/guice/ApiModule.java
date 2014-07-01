@@ -71,6 +71,7 @@ import com.cleversafe.og.util.Entities;
 import com.cleversafe.og.util.Pair;
 import com.cleversafe.og.util.consumer.ByteBufferConsumer;
 import com.cleversafe.og.util.consumer.Consumer;
+import com.cleversafe.og.util.producer.CachingProducer;
 import com.cleversafe.og.util.producer.Producer;
 import com.cleversafe.og.util.producer.Producers;
 import com.google.common.base.Function;
@@ -92,11 +93,12 @@ public class ApiModule extends AbstractModule
    public Producer<Request> provideWrite(
          @TesttId final Producer<Long> id,
          @WriteUri final Producer<URI> uri,
+         @WriteObjectName final CachingProducer<String> object,
          @WriteHeaders final List<Producer<Pair<String, String>>> headers,
          @TestEntity final Producer<Entity> entity,
          @WriteMetadata final Map<String, String> metadata)
    {
-      return createRequestProducer(id, Method.PUT, uri, headers, entity, metadata);
+      return createRequestProducer(id, Method.PUT, uri, object, headers, entity, metadata);
    }
 
    @Provides
@@ -108,7 +110,7 @@ public class ApiModule extends AbstractModule
          @TestPort final Producer<Integer> port,
          @TestUriRoot final Producer<String> uriRoot,
          @TestContainer final Producer<String> container,
-         @WriteObjectName final Producer<String> object,
+         @WriteObjectName final CachingProducer<String> object,
          @TestQueryParams final Map<String, String> queryParameters)
    {
       return createUri(scheme, host, port, uriRoot, container, object, queryParameters);
@@ -131,11 +133,12 @@ public class ApiModule extends AbstractModule
    public Producer<Request> provideRead(
          @TesttId final Producer<Long> id,
          @ReadUri final Producer<URI> uri,
+         @ReadObjectName final CachingProducer<String> object,
          @ReadHeaders final List<Producer<Pair<String, String>>> headers,
          @ReadMetadata final Map<String, String> metadata)
    {
-      return createRequestProducer(id, Method.GET, uri, headers, Producers.of(Entities.none()),
-            metadata);
+      return createRequestProducer(id, Method.GET, uri, object, headers,
+            Producers.of(Entities.none()), metadata);
    }
 
    @Provides
@@ -147,7 +150,7 @@ public class ApiModule extends AbstractModule
          @TestPort final Producer<Integer> port,
          @TestUriRoot final Producer<String> uriRoot,
          @TestContainer final Producer<String> container,
-         @ReadObjectName final Producer<String> object,
+         @ReadObjectName final CachingProducer<String> object,
          @TestQueryParams final Map<String, String> queryParameters)
    {
       return createUri(scheme, host, port, uriRoot, container, object, queryParameters);
@@ -166,10 +169,12 @@ public class ApiModule extends AbstractModule
    public Producer<Request> provideDelete(
          @TesttId final Producer<Long> id,
          @DeleteUri final Producer<URI> uri,
+         @DeleteObjectName final CachingProducer<String> object,
          @DeleteHeaders final List<Producer<Pair<String, String>>> headers,
          @DeleteMetadata final Map<String, String> metadata)
    {
-      return createRequestProducer(id, Method.DELETE, uri, headers, Producers.of(Entities.none()),
+      return createRequestProducer(id, Method.DELETE, uri, object, headers,
+            Producers.of(Entities.none()),
             metadata);
    }
 
@@ -182,7 +187,7 @@ public class ApiModule extends AbstractModule
          @TestPort final Producer<Integer> port,
          @TestUriRoot final Producer<String> uriRoot,
          @TestContainer final Producer<String> container,
-         @DeleteObjectName final Producer<String> object,
+         @DeleteObjectName final CachingProducer<String> object,
          @TestQueryParams final Map<String, String> queryParameters)
    {
       return createUri(scheme, host, port, uriRoot, container, object, queryParameters);
@@ -199,6 +204,7 @@ public class ApiModule extends AbstractModule
          final Producer<Long> id,
          final Method method,
          final Producer<URI> uri,
+         final CachingProducer<String> object,
          final List<Producer<Pair<String, String>>> headers,
          final Producer<Entity> entity,
          final Map<String, String> metadata)
@@ -207,6 +213,10 @@ public class ApiModule extends AbstractModule
             .withId(id)
             .withMethod(method)
             .withUri(uri);
+
+      if (object != null)
+         b.withObject(object);
+
       for (final Producer<Pair<String, String>> header : headers)
       {
          b.withHeader(header);

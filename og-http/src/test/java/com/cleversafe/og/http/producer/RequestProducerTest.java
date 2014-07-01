@@ -21,7 +21,9 @@ package com.cleversafe.og.http.producer;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map.Entry;
 
 import org.junit.Assert;
@@ -35,6 +37,7 @@ import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.util.Entities;
 import com.cleversafe.og.util.Pair;
+import com.cleversafe.og.util.producer.CachingProducer;
 import com.cleversafe.og.util.producer.Producer;
 import com.cleversafe.og.util.producer.Producers;
 
@@ -101,6 +104,12 @@ public class RequestProducerTest
    public void testNullUriProducer()
    {
       RequestProducer.custom().withId(0).withMethod(this.method).withUri((Producer<URI>) null).build();
+   }
+
+   @Test(expected = NullPointerException.class)
+   public void testNullObject()
+   {
+      RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).withObject(null);
    }
 
    @Test(expected = NullPointerException.class)
@@ -219,6 +228,24 @@ public class RequestProducerTest
             RequestProducer.custom().withId(0).withMethod(this.method).withUri(Producers.of(aUri)).build();
       final Request r = p.produce();
       Assert.assertEquals(aUri, r.getUri());
+   }
+
+   @Test
+   public void testObject()
+   {
+      final List<String> list = new ArrayList<String>();
+      list.add("one");
+      list.add("two");
+      list.add("three");
+      final CachingProducer<String> cp = new CachingProducer<String>(Producers.cycle(list));
+      final Producer<Request> p =
+            RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).withObject(
+                  cp).build();
+
+      Assert.assertEquals("one", cp.produce());
+      final Request r = p.produce();
+      Assert.assertEquals("one", r.getMetadata(Metadata.OBJECT_NAME));
+      Assert.assertEquals("two", cp.produce());
    }
 
    @Test

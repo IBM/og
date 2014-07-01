@@ -35,6 +35,7 @@ import com.cleversafe.og.object.manager.RandomObjectPopulator;
 import com.cleversafe.og.object.producer.DeleteObjectNameProducer;
 import com.cleversafe.og.object.producer.ReadObjectNameProducer;
 import com.cleversafe.og.object.producer.UUIDObjectNameProducer;
+import com.cleversafe.og.util.producer.CachingProducer;
 import com.cleversafe.og.util.producer.Producer;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -66,26 +67,26 @@ public class ObjectManagerModule extends AbstractModule
    @Provides
    @Singleton
    @WriteObjectName
-   public Producer<String> provideWriteObjectName(final Api api)
+   public CachingProducer<String> provideWriteObjectName(final Api api)
    {
       if (Api.SOH == api)
          return null;
-      return new UUIDObjectNameProducer();
+      return new CachingProducer<String>(new UUIDObjectNameProducer());
    }
 
    @Provides
    @Singleton
    @ReadObjectName
-   public Producer<String> provideReadObjectName(final ObjectManager objectManager)
+   public CachingProducer<String> provideReadObjectName(final ObjectManager objectManager)
    {
-      return new ReadObjectNameProducer(objectManager);
+      return new CachingProducer<String>(new ReadObjectNameProducer(objectManager));
    }
 
    @Provides
    @Singleton
    @DeleteObjectName
-   public Producer<String> provideDeleteObjectName(final ObjectManager objectManager)
+   public CachingProducer<String> provideDeleteObjectName(final ObjectManager objectManager)
    {
-      return new DeleteObjectNameProducer(objectManager);
+      return new CachingProducer<String>(new DeleteObjectNameProducer(objectManager));
    }
 }

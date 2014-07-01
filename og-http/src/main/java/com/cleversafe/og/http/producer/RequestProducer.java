@@ -35,6 +35,7 @@ import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.util.Pair;
+import com.cleversafe.og.util.producer.CachingProducer;
 import com.cleversafe.og.util.producer.Producer;
 import com.cleversafe.og.util.producer.Producers;
 
@@ -43,6 +44,7 @@ public class RequestProducer implements Producer<Request>
    private final Producer<Long> id;
    private final Producer<Method> method;
    private final Producer<URI> uri;
+   private final CachingProducer<String> object;
    private final List<Producer<Pair<String, String>>> headers;
    private final Producer<Entity> entity;
    private final Map<String, String> metadata;
@@ -51,6 +53,7 @@ public class RequestProducer implements Producer<Request>
          final Producer<Long> id,
          final Producer<Method> method,
          final Producer<URI> uri,
+         final CachingProducer<String> object,
          final List<Producer<Pair<String, String>>> headers,
          final Producer<Entity> entity,
          final Map<String, String> metadata)
@@ -58,6 +61,7 @@ public class RequestProducer implements Producer<Request>
       this.id = checkNotNull(id);
       this.method = checkNotNull(method);
       this.uri = checkNotNull(uri);
+      this.object = object;
       this.headers = checkNotNull(headers);
       this.entity = entity;
       this.metadata = checkNotNull(metadata);
@@ -70,6 +74,9 @@ public class RequestProducer implements Producer<Request>
       context.withId(this.id.produce())
             .withMethod(this.method.produce())
             .withUri(this.uri.produce());
+
+      if (this.object != null)
+         context.withMetadata(Metadata.OBJECT_NAME, this.object.getCachedValue());
 
       for (final Producer<Pair<String, String>> producer : this.headers)
       {
@@ -98,6 +105,7 @@ public class RequestProducer implements Producer<Request>
       private Producer<Long> id;
       private Producer<Method> method;
       private Producer<URI> uri;
+      private CachingProducer<String> object;
       private final List<Producer<Pair<String, String>>> headers;
       private Producer<Entity> entity;
       private final Map<String, String> metadata;
@@ -142,6 +150,12 @@ public class RequestProducer implements Producer<Request>
          return this;
       }
 
+      public Builder withObject(final CachingProducer<String> object)
+      {
+         this.object = checkNotNull(object);
+         return this;
+      }
+
       public Builder withHeader(final String key, final String value)
       {
          return withHeader(new Pair<String, String>(key, value));
@@ -183,8 +197,8 @@ public class RequestProducer implements Producer<Request>
 
       public RequestProducer build()
       {
-         return new RequestProducer(this.id, this.method, this.uri, this.headers, this.entity,
-               this.metadata);
+         return new RequestProducer(this.id, this.method, this.uri, this.object, this.headers,
+               this.entity, this.metadata);
       }
    }
 }
