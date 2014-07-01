@@ -66,8 +66,10 @@ public class ObjectManagerModule extends AbstractModule
    @Provides
    @Singleton
    @WriteObjectName
-   public Producer<String> provideWriteObjectName()
+   public Producer<String> provideWriteObjectName(final Api api)
    {
+      if (Api.SOH == api)
+         return null;
       return new UUIDObjectNameProducer();
    }
 
