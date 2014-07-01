@@ -26,6 +26,7 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 import com.cleversafe.og.operation.EntityType;
+import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
@@ -78,8 +79,13 @@ public class RequestLogEntry
       this.requestMethod = request.getMethod();
 
       this.requestUri = uri.getPath() + (uri.getQuery() != null ? uri.getQuery() : "");
-      // TODO not sure how to get this, could parse from uri but error prone
-      this.objectId = null;
+
+      String objectName = request.getMetadata(Metadata.OBJECT_NAME);
+      // SOH writes
+      if (objectName == null)
+         objectName = response.getMetadata(Metadata.OBJECT_NAME);
+      this.objectId = objectName;
+
       this.status = response.getStatusCode();
       // TODO add request body processor
       this.requestLength = 0;
