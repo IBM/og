@@ -26,7 +26,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -117,11 +116,11 @@ public class Summary
    private void retrieveStats(final OperationStats opStats, final Operation operation)
    {
       opStats.operations = this.stats.get(operation, Counter.OPERATIONS);
-      final Iterator<Entry<Integer, AtomicLong>> it = this.stats.statusCodeIterator(operation);
+      final Iterator<Entry<Integer, Long>> it = this.stats.statusCodeIterator(operation);
       while (it.hasNext())
       {
-         final Entry<Integer, AtomicLong> sc = it.next();
-         opStats.statusCodes.put(sc.getKey(), sc.getValue().get());
+         final Entry<Integer, Long> sc = it.next();
+         opStats.statusCodes.put(sc.getKey(), sc.getValue());
       }
       opStats.aborts = this.stats.get(operation, Counter.ABORTS);
    }

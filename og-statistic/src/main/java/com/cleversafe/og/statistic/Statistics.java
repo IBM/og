@@ -19,8 +19,10 @@
 
 package com.cleversafe.og.statistic;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -66,10 +68,13 @@ public class Statistics
 
    public void update(final Request request, final Response response)
    {
+      checkNotNull(request);
+      checkNotNull(response);
+
       final Operation operation = HttpUtil.toOperation(request.getMethod());
       updateCounter(operation, Counter.OPERATIONS, 1);
       updateCounter(Operation.ALL, Counter.OPERATIONS, 1);
-      if (response.getMetadata(Metadata.ABORTED.toString()) != null)
+      if (response.getMetadata(Metadata.ABORTED) != null)
       {
          updateCounter(operation, Counter.ABORTS, 1);
          updateCounter(Operation.ALL, Counter.ABORTS, 1);
@@ -106,16 +111,42 @@ public class Statistics
 
    public long getStatusCode(final Operation operation, final int statusCode)
    {
+      checkNotNull(operation);
+      checkArgument(HttpUtil.VALID_STATUS_CODES.contains(statusCode),
+            "statusCode must be a valid status code [%s]", statusCode);
+
       final AtomicLong sc = this.scCounters.get(operation).get(statusCode);
       if (sc != null)
          return sc.get();
       return 0;
    }
 
-   // TODO clean this up, would be nice not to expose AtomicLong and other internal details
-   public Iterator<Entry<Integer, AtomicLong>> statusCodeIterator(final Operation operation)
+   public Iterator<Entry<Integer, Long>> statusCodeIterator(final Operation operation)
    {
       checkNotNull(operation);
-      return this.scCounters.get(operation).entrySet().iterator();
+      final Iterator<Entry<Integer, AtomicLong>> it =
+            this.scCounters.get(operation).entrySet().iterator();
+
+      return new Iterator<Entry<Integer, Long>>()
+      {
+
+         @Override
+         public boolean hasNext()
+         {
+            return it.hasNext();
+         }
+
+         @Override
+         public Entry<Integer, Long> next()
+         {
+            final Entry<Integer, AtomicLong> e = it.next();
+            return new AbstractMap.SimpleImmutableEntry<Integer, Long>(e.getKey(),
+                  e.getValue().get());
+         }
+
+         @Override
+         public void remove()
+         {}
+      };
    }
 }
