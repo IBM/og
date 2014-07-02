@@ -19,6 +19,7 @@
 
 package com.cleversafe.og.cli.report;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Iterator;
@@ -26,6 +27,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,18 +41,27 @@ public class Summary
    private static final Logger _logger = LoggerFactory.getLogger(Summary.class);
    private final Statistics stats;
    private SummaryStats summary;
+   private final double runtime;
 
-   public Summary(final Statistics stats)
+   public Summary(final Statistics stats, final long runtime)
    {
       this.stats = checkNotNull(stats);
+      checkArgument(runtime >= 0, "runtime must be >= 0 [%s]", runtime);
+      this.runtime = (double) runtime / TimeUnit.SECONDS.toNanos(1);
    }
 
    private static class SummaryStats
    {
-      private final OperationStats all = new OperationStats();
+      private final double runtime;
       private final OperationStats write = new OperationStats();
       private final OperationStats read = new OperationStats();
       private final OperationStats delete = new OperationStats();
+      private final OperationStats all = new OperationStats();
+
+      public SummaryStats(final double runtime)
+      {
+         this.runtime = runtime;
+      }
    }
 
    private static class OperationStats
@@ -65,21 +76,21 @@ public class Summary
    {
       retrieveStats();
 
-      final String format = "\nAll\n%s\n\nWrite\n%s\n\nRead\n%s\n\nDelete\n%s";
-      return String.format(Locale.US, format,
-            getOperation(this.summary.all),
-            getOperation(this.summary.write),
-            getOperation(this.summary.read),
-            getOperation(this.summary.delete));
+      return String.format(Locale.US, "Runtime: %.2f Seconds\n", this.runtime) +
+            "Write: " + getOperation(this.summary.write) +
+            "Read: " + getOperation(this.summary.read) +
+            "Delete: " + getOperation(this.summary.delete) +
+            "All: " + getOperation(this.summary.all);
    }
 
    private String getOperation(final OperationStats opStats)
    {
-      final String format = "Operations: %s\nStatus Codes:\n%sAborts: %s";
-      return String.format(Locale.US, format,
-            opStats.operations,
-            getStatusCodes(opStats),
-            opStats.aborts);
+      final String format = "Operations=%s Bytes=0 Aborts=%s\nStatus Codes:\n%s\n";
+      String statusCodes = getStatusCodes(opStats);
+      if (statusCodes.length() == 0)
+         statusCodes = "N/A\n";
+
+      return String.format(Locale.US, format, opStats.operations, opStats.aborts, statusCodes);
    }
 
    private String getStatusCodes(final OperationStats opStats)
@@ -106,11 +117,11 @@ public class Summary
       if (this.summary != null)
          return;
 
-      this.summary = new SummaryStats();
-      retrieveStats(this.summary.all, Operation.ALL);
+      this.summary = new SummaryStats(this.runtime);
       retrieveStats(this.summary.write, Operation.WRITE);
       retrieveStats(this.summary.read, Operation.READ);
       retrieveStats(this.summary.delete, Operation.DELETE);
+      retrieveStats(this.summary.all, Operation.ALL);
    }
 
    private void retrieveStats(final OperationStats opStats, final Operation operation)

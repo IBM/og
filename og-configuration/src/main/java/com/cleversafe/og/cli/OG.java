@@ -21,6 +21,7 @@ package com.cleversafe.og.cli;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -43,6 +44,7 @@ import com.cleversafe.og.object.manager.ObjectManagerException;
 import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.test.LoadTest;
 import com.cleversafe.og.util.SizeUnit;
+import com.cleversafe.og.util.Version;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -59,10 +61,15 @@ public class OG extends AbstractCLI
    private static final Logger _summaryJsonLogger = LoggerFactory.getLogger("SummaryJsonLogger");
    private static final String JSAP_RESOURCE_NAME = "og.jsap";
    private static final String CONFIG_JSON = "config.json";
+   private static final String LINE_SEPARATOR =
+         "-------------------------------------------------------------------------------";
 
    public static void main(final String[] args)
    {
       final JSAPResult jsapResult = processArgs(JSAP_RESOURCE_NAME, args);
+
+      logBanner();
+      _consoleLogger.info("Configuring...");
       final Gson gson = createGson();
       final JsonConfig config =
             fromJson(gson, JsonConfig.class, jsapResult.getFile("config"), CONFIG_JSON);
@@ -76,9 +83,14 @@ public class OG extends AbstractCLI
          final ObjectManager objectManager = injector.getInstance(ObjectManager.class);
          final LoadTest test = injector.getInstance(LoadTest.class);
          Runtime.getRuntime().addShutdownHook(new ShutdownHook(Thread.currentThread(), test));
-         _consoleLogger.info("running test");
+         _consoleLogger.info("Configured.");
+         _consoleLogger.info("Test Running...");
+         final long timestampStart = System.nanoTime();
          final boolean success = test.runTest();
-         if (!success)
+         final long timestampFinish = System.nanoTime();
+         if (success)
+            _consoleLogger.info("Test Completed.");
+         else
             _consoleLogger.error("Test ended abruptly. Check application log for details");
          try
          {
@@ -89,7 +101,8 @@ public class OG extends AbstractCLI
             _consoleLogger.error("Error shutting down object manager", e);
          }
 
-         final Summary summary = new Summary(stats);
+         logSummaryBanner();
+         final Summary summary = new Summary(stats, timestampFinish - timestampStart);
          _consoleLogger.info("{}", summary);
          _summaryJsonLogger.info(gson.toJson(summary.getSummaryStats()));
       }
@@ -98,6 +111,21 @@ public class OG extends AbstractCLI
          _consoleLogger.error("Error provisioning dependencies", e);
          System.exit(CONFIGURATION_ERROR);
       }
+   }
+
+   private static void logBanner()
+   {
+      final String bannerFormat = "%s\nObject Generator (%s)\n%s";
+      final String banner = String.format(Locale.US, bannerFormat,
+            LINE_SEPARATOR, Version.displayVersion(), LINE_SEPARATOR);
+      _consoleLogger.info(banner);
+   }
+
+   private static void logSummaryBanner()
+   {
+      final String bannerFormat = "%s\nSummary\n%s";
+      final String banner = String.format(Locale.US, bannerFormat, LINE_SEPARATOR, LINE_SEPARATOR);
+      _consoleLogger.info(banner);
    }
 
    private static Injector createInjector(final JsonConfig config)
