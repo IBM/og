@@ -31,10 +31,12 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.cleversafe.og.operation.EntityType;
 import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
+import com.cleversafe.og.util.Entities;
 import com.cleversafe.og.util.Operation;
 
 public class StatisticsTest
@@ -49,8 +51,10 @@ public class StatisticsTest
       this.stats = new Statistics();
       this.request = mock(Request.class);
       when(this.request.getMethod()).thenReturn(Method.PUT);
+      when(this.request.getEntity()).thenReturn(Entities.of(EntityType.RANDOM, 1024));
       this.response = mock(Response.class);
       when(this.response.getStatusCode()).thenReturn(201);
+      when(this.response.getEntity()).thenReturn(Entities.of(EntityType.ZEROES, 1024));
    }
 
    @Test(expected = NullPointerException.class)

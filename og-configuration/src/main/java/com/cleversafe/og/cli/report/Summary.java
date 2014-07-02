@@ -67,6 +67,7 @@ public class Summary
    private static class OperationStats
    {
       private long operations = 0;
+      private long bytes = 0;
       private final Map<Integer, Long> statusCodes = new TreeMap<Integer, Long>();
       private long aborts = 0;
    }
@@ -85,12 +86,13 @@ public class Summary
 
    private String getOperation(final OperationStats opStats)
    {
-      final String format = "Operations=%s Bytes=0 Aborts=%s\nStatus Codes:\n%s\n";
+      final String format = "Operations=%s Bytes=%s Aborts=%s\nStatus Codes:\n%s\n";
       String statusCodes = getStatusCodes(opStats);
       if (statusCodes.length() == 0)
          statusCodes = "N/A\n";
 
-      return String.format(Locale.US, format, opStats.operations, opStats.aborts, statusCodes);
+      return String.format(Locale.US, format, opStats.operations, opStats.bytes, opStats.aborts,
+            statusCodes);
    }
 
    private String getStatusCodes(final OperationStats opStats)
@@ -127,6 +129,7 @@ public class Summary
    private void retrieveStats(final OperationStats opStats, final Operation operation)
    {
       opStats.operations = this.stats.get(operation, Counter.OPERATIONS);
+      opStats.bytes = this.stats.get(operation, Counter.BYTES);
       final Iterator<Entry<Integer, Long>> it = this.stats.statusCodeIterator(operation);
       while (it.hasNext())
       {

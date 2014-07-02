@@ -379,7 +379,6 @@ public class ApacheClient implements Client
          }
       }
 
-      // TODO handle IllegalStateException via logging, etc
       private void receiveResponseContent(
             final HttpResponse.Builder responseBuilder,
             final org.apache.http.HttpResponse response) throws IOException
@@ -393,11 +392,16 @@ public class ApacheClient implements Client
             final HttpResponse.Builder responseBuilder,
             final InputStream responseContent) throws IOException
       {
+         long totalBytes = 0;
          int bytesRead;
          while ((bytesRead = responseContent.read(this.buf)) > 0)
          {
+            totalBytes += bytesRead;
             processReceivedBytes(bytesRead);
          }
+
+         responseBuilder.withEntity(Entities.of(EntityType.ZEROES, totalBytes));
+
          final Iterator<Entry<String, String>> it = this.consumer.metadata();
          while (it.hasNext())
          {

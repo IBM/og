@@ -85,11 +85,15 @@ public class RequestLogEntry
          objectName = response.getMetadata(Metadata.OBJECT_NAME);
       this.objectId = objectName;
 
+      long objectSize = 0;
+      if (EntityType.NONE != request.getEntity().getType())
+         objectSize = request.getEntity().getSize();
+
       this.status = response.getStatusCode();
-      // TODO add request body processor
-      this.requestLength = 0;
-      // TODO fix response body consumption in Client so that this can be passed in
-      this.responseLength = 0;
+      // TODO requestLength will not equal objectLength with AWSv4 request overhead
+      this.requestLength = objectSize;
+      // TODO is this correct?
+      this.responseLength = response.getEntity().getSize();
       this.userAgent = request.getHeader(HttpHeaders.USER_AGENT);
       // TODO ask: dsnet access.log uses System.currentTimeMillis() - request.getTimeStamp();
       this.requestLatency = this.timestampFinish - this.timestampStart;
@@ -98,9 +102,6 @@ public class RequestLogEntry
       this.clientRequestId = String.valueOf(request.getId());
       this.requestId = response.getHeader(X_CLV_REQUEST_ID);
       this.stat = null;
-      if (EntityType.NONE != request.getEntity().getType())
-         this.objectLength = request.getEntity().getSize();
-      else
-         this.objectLength = null;
+      this.objectLength = objectSize;
    }
 }
