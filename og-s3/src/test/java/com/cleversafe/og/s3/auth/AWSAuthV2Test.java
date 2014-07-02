@@ -35,7 +35,6 @@ import org.slf4j.LoggerFactory;
 import com.cleversafe.og.http.HttpRequest;
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
-import com.cleversafe.og.s3.auth.AWSAuthV2;
 import com.cleversafe.og.util.producer.Producers;
 
 // test data pulled from examples aws auth signing v2 at:
@@ -135,7 +134,7 @@ public class AWSAuthV2Test
       final AWSAuthV2 auth =
             new AWSAuthV2(Producers.of(AWS_ACCESS_KEY_ID), Producers.of(AWS_SECRET_ACCESS_KEY));
       final String s = auth.stringToSign(this.request);
-      final String s2 = auth.nextAuthorizationHeader(this.request).getValue();
+      final String s2 = auth.nextAuthorizationHeader(this.request);
       Assert.assertEquals(this.stringToSign, s);
       Assert.assertEquals(this.nextAuthorizationHeader, s2);
    }

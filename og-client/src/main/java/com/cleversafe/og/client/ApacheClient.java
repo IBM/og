@@ -57,7 +57,6 @@ import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.Entities;
-import com.cleversafe.og.util.Pair;
 import com.cleversafe.og.util.Version;
 import com.cleversafe.og.util.consumer.ByteBufferConsumer;
 import com.google.common.base.Function;
@@ -316,8 +315,8 @@ public class ApacheClient implements Client
       {
          if (this.auth != null)
          {
-            final Pair<String, String> authHeader = this.auth.nextAuthorizationHeader(this.request);
-            requestBuilder.addHeader(authHeader.getKey(), authHeader.getValue());
+            final String authValue = this.auth.nextAuthorizationHeader(this.request);
+            requestBuilder.addHeader("Authorization", authValue);
          }
 
       }

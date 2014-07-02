@@ -20,9 +20,8 @@
 package com.cleversafe.og.http.auth;
 
 import com.cleversafe.og.operation.Request;
-import com.cleversafe.og.util.Pair;
 
 public interface HttpAuth
 {
-   public Pair<String, String> nextAuthorizationHeader(final Request request);
+   String nextAuthorizationHeader(final Request request);
 }

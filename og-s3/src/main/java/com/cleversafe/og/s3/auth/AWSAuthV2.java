@@ -35,7 +35,6 @@ import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.http.auth.HttpAuth;
 import com.cleversafe.og.operation.Request;
-import com.cleversafe.og.util.Pair;
 import com.cleversafe.og.util.producer.Producer;
 import com.google.common.io.BaseEncoding;
 
@@ -53,11 +52,11 @@ public class AWSAuthV2 implements HttpAuth
    }
 
    @Override
-   public Pair<String, String> nextAuthorizationHeader(final Request request)
+   public String nextAuthorizationHeader(final Request request)
    {
       final String accessKey = this.awsAccessKeyId.produce();
       final String secretKey = this.awsSecretAccessKey.produce();
-      return new Pair<String, String>("Authorization", authenticate(request, accessKey, secretKey));
+      return authenticate(request, accessKey, secretKey);
    }
 
    private String authenticate(

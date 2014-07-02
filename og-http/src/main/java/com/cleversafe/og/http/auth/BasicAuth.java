@@ -27,7 +27,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.operation.Request;
-import com.cleversafe.og.util.Pair;
 import com.cleversafe.og.util.producer.Producer;
 import com.google.common.io.BaseEncoding;
 
@@ -44,13 +43,13 @@ public class BasicAuth implements HttpAuth
    }
 
    @Override
-   public Pair<String, String> nextAuthorizationHeader(final Request request)
+   public String nextAuthorizationHeader(final Request request)
    {
       // TODO cache header in common case of constant username and password
       final String user = this.username.produce();
       final String pass = this.password.produce();
       final String credentials = user + ":" + pass;
       final String b64 = BaseEncoding.base64().encode(credentials.getBytes(StandardCharsets.UTF_8));
-      return new Pair<String, String>("Authorization", "Basic " + b64);
+      return "Basic " + b64;
    }
 }
