@@ -42,10 +42,12 @@ import com.cleversafe.og.guice.annotation.ReadObjectName;
 import com.cleversafe.og.guice.annotation.ReadUri;
 import com.cleversafe.og.guice.annotation.TestContainer;
 import com.cleversafe.og.guice.annotation.TestEntity;
+import com.cleversafe.og.guice.annotation.TestPassword;
 import com.cleversafe.og.guice.annotation.TestPort;
 import com.cleversafe.og.guice.annotation.TestQueryParams;
 import com.cleversafe.og.guice.annotation.TestScheme;
 import com.cleversafe.og.guice.annotation.TestUriRoot;
+import com.cleversafe.og.guice.annotation.TestUsername;
 import com.cleversafe.og.guice.annotation.TesttId;
 import com.cleversafe.og.guice.annotation.Write;
 import com.cleversafe.og.guice.annotation.WriteHeaders;
@@ -95,9 +97,12 @@ public class ApiModule extends AbstractModule
          @WriteObjectName final CachingProducer<String> object,
          @WriteHeaders final List<Producer<Pair<String, String>>> headers,
          @TestEntity final Producer<Entity> entity,
-         @WriteMetadata final Map<String, String> metadata)
+         @WriteMetadata final Map<String, String> metadata,
+         @TestUsername final Producer<String> username,
+         @TestPassword final Producer<String> password)
    {
-      return createRequestProducer(id, Method.PUT, uri, object, headers, entity, metadata);
+      return createRequestProducer(id, Method.PUT, uri, object, headers, entity, metadata,
+            username, password);
    }
 
    @Provides
@@ -134,10 +139,12 @@ public class ApiModule extends AbstractModule
          @ReadUri final Producer<URI> uri,
          @ReadObjectName final CachingProducer<String> object,
          @ReadHeaders final List<Producer<Pair<String, String>>> headers,
-         @ReadMetadata final Map<String, String> metadata)
+         @ReadMetadata final Map<String, String> metadata,
+         @TestUsername final Producer<String> username,
+         @TestPassword final Producer<String> password)
    {
       return createRequestProducer(id, Method.GET, uri, object, headers,
-            Producers.of(Entities.none()), metadata);
+            Producers.of(Entities.none()), metadata, username, password);
    }
 
    @Provides
@@ -170,11 +177,12 @@ public class ApiModule extends AbstractModule
          @DeleteUri final Producer<URI> uri,
          @DeleteObjectName final CachingProducer<String> object,
          @DeleteHeaders final List<Producer<Pair<String, String>>> headers,
-         @DeleteMetadata final Map<String, String> metadata)
+         @DeleteMetadata final Map<String, String> metadata,
+         @TestUsername final Producer<String> username,
+         @TestPassword final Producer<String> password)
    {
       return createRequestProducer(id, Method.DELETE, uri, object, headers,
-            Producers.of(Entities.none()),
-            metadata);
+            Producers.of(Entities.none()), metadata, username, password);
    }
 
    @Provides
@@ -206,7 +214,9 @@ public class ApiModule extends AbstractModule
          final CachingProducer<String> object,
          final List<Producer<Pair<String, String>>> headers,
          final Producer<Entity> entity,
-         final Map<String, String> metadata)
+         final Map<String, String> metadata,
+         final Producer<String> username,
+         final Producer<String> password)
    {
       final RequestProducer.Builder b = RequestProducer.custom()
             .withId(id)
@@ -227,6 +237,12 @@ public class ApiModule extends AbstractModule
       {
          b.withMetadata(m.getKey(), m.getValue());
       }
+
+      if (username != null)
+         b.withUsername(username);
+
+      if (password != null)
+         b.withPassword(password);
 
       return b.build();
    }

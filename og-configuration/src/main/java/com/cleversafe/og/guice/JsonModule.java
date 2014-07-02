@@ -31,7 +31,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicLong;
 
-import com.cleversafe.og.cli.json.AuthenticationConfig;
 import com.cleversafe.og.cli.json.ClientConfig;
 import com.cleversafe.og.cli.json.ConcurrencyConfig;
 import com.cleversafe.og.cli.json.FilesizeConfig;
@@ -53,10 +52,12 @@ import com.cleversafe.og.guice.annotation.TestEntity;
 import com.cleversafe.og.guice.annotation.TestHeaders;
 import com.cleversafe.og.guice.annotation.TestHost;
 import com.cleversafe.og.guice.annotation.TestObjectLocation;
+import com.cleversafe.og.guice.annotation.TestPassword;
 import com.cleversafe.og.guice.annotation.TestPort;
 import com.cleversafe.og.guice.annotation.TestQueryParams;
 import com.cleversafe.og.guice.annotation.TestScheme;
 import com.cleversafe.og.guice.annotation.TestUriRoot;
+import com.cleversafe.og.guice.annotation.TestUsername;
 import com.cleversafe.og.guice.annotation.TesttId;
 import com.cleversafe.og.guice.annotation.WriteHeaders;
 import com.cleversafe.og.guice.annotation.WriteHost;
@@ -245,19 +246,38 @@ public class JsonModule extends AbstractModule
 
    @Provides
    @Singleton
-   public HttpAuth providesTestAuth()
+   @TestUsername
+   public Producer<String> provideTestUsername()
    {
-      final AuthenticationConfig authConfig = this.config.getAuthentication();
-      final AuthType type = authConfig.getType();
-      final String username = authConfig.getUsername();
-      final String password = authConfig.getPassword();
+      if (this.config.getAuthentication().getUsername() != null)
+         return Producers.of(this.config.getAuthentication().getUsername());
+      return null;
+   }
+
+   @Provides
+   @Singleton
+   @TestPassword
+   public Producer<String> provideTestPassword()
+   {
+      if (this.config.getAuthentication().getPassword() != null)
+         return Producers.of(this.config.getAuthentication().getPassword());
+      return null;
+   }
+
+   @Provides
+   @Singleton
+   public HttpAuth providesTestAuth(
+         @TestUsername final Producer<String> username,
+         @TestPassword final Producer<String> password)
+   {
+      final AuthType type = this.config.getAuthentication().getType();
 
       if (username != null && password != null)
       {
          if (AuthType.AWSV2 == type)
-            return new AWSAuthV2(Producers.of(username), Producers.of(password));
+            return new AWSAuthV2();
          else
-            return new BasicAuth(Producers.of(username), Producers.of(password));
+            return new BasicAuth();
       }
       else if (username == null && password == null)
          return null;

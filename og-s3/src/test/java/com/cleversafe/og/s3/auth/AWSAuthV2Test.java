@@ -33,9 +33,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.http.HttpRequest;
+import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
-import com.cleversafe.og.util.producer.Producers;
 
 // test data pulled from examples aws auth signing v2 at:
 // http://docs.aws.amazon.com/AmazonS3/latest/dev/RESTAuthentication.html
@@ -72,6 +72,8 @@ public class AWSAuthV2Test
             .withMethod(Method.GET)
             .withUri(new URI("/johnsmith/photos/puppy.jpg"))
             .withHeader("Date", "Tue, 27 Mar 2007 19:36:42 +0000")
+            .withMetadata(Metadata.USERNAME, AWS_ACCESS_KEY_ID)
+            .withMetadata(Metadata.PASSWORD, AWS_SECRET_ACCESS_KEY)
             .build();
       final String stringToSign =
             "GET\n\n\nTue, 27 Mar 2007 19:36:42 +0000\n/johnsmith/photos/puppy.jpg";
@@ -88,6 +90,8 @@ public class AWSAuthV2Test
             .withHeader("Content-Type", "image/jpeg")
             .withHeader("Content-Length", "94328")
             .withHeader("Date", "Tue, 27 Mar 2007 21:15:45 +0000")
+            .withMetadata(Metadata.USERNAME, AWS_ACCESS_KEY_ID)
+            .withMetadata(Metadata.PASSWORD, AWS_SECRET_ACCESS_KEY)
             .build();
       final String stringToSign =
             "PUT\n\nimage/jpeg\nTue, 27 Mar 2007 21:15:45 +0000\n/johnsmith/photos/puppy.jpg";
@@ -103,6 +107,8 @@ public class AWSAuthV2Test
             .withUri(new URI("/johnsmith/?prefix=photos&max-keys=50&marker=puppy"))
             .withHeader("User-Agent", "Mozilla/5.0")
             .withHeader("Date", "Tue, 27 Mar 2007 19:42:41 +0000")
+            .withMetadata(Metadata.USERNAME, AWS_ACCESS_KEY_ID)
+            .withMetadata(Metadata.PASSWORD, AWS_SECRET_ACCESS_KEY)
             .build();
       final String stringToSign =
             "GET\n\n\nTue, 27 Mar 2007 19:42:41 +0000\n/johnsmith/";
@@ -120,6 +126,8 @@ public class AWSAuthV2Test
             .withHeader("Host", "s3.amazonaws.com")
             .withHeader("Date", "Tue, 27 Mar 2007 21:20:27 +0000")
             .withHeader("x-amz-date", "Tue, 27 Mar 2007 21:20:26 +0000")
+            .withMetadata(Metadata.USERNAME, AWS_ACCESS_KEY_ID)
+            .withMetadata(Metadata.PASSWORD, AWS_SECRET_ACCESS_KEY)
             .build();
       final String stringToSign =
             "DELETE\n\n\nTue, 27 Mar 2007 21:20:26 +0000\n/johnsmith/photos/puppy.jpg";
@@ -131,8 +139,7 @@ public class AWSAuthV2Test
    @Test
    public void testSigning()
    {
-      final AWSAuthV2 auth =
-            new AWSAuthV2(Producers.of(AWS_ACCESS_KEY_ID), Producers.of(AWS_SECRET_ACCESS_KEY));
+      final AWSAuthV2 auth = new AWSAuthV2();
       final String s = auth.stringToSign(this.request);
       final String s2 = auth.nextAuthorizationHeader(this.request);
       Assert.assertEquals(this.stringToSign, s);

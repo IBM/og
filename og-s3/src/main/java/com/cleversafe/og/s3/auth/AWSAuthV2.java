@@ -19,8 +19,6 @@
 
 package com.cleversafe.og.s3.auth;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.Map.Entry;
@@ -34,29 +32,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.http.auth.HttpAuth;
+import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Request;
-import com.cleversafe.og.util.producer.Producer;
 import com.google.common.io.BaseEncoding;
 
 public class AWSAuthV2 implements HttpAuth
 {
    private static final Logger _logger = LoggerFactory.getLogger(AWSAuthV2.class);
    private static final String HMAC_SHA1 = "HmacSHA1";
-   private final Producer<String> awsAccessKeyId;
-   private final Producer<String> awsSecretAccessKey;
 
-   public AWSAuthV2(final Producer<String> awsAccessKeyId, final Producer<String> awsSecretAccessKey)
-   {
-      this.awsAccessKeyId = checkNotNull(awsAccessKeyId);
-      this.awsSecretAccessKey = checkNotNull(awsSecretAccessKey);
-   }
+   public AWSAuthV2()
+   {}
 
    @Override
    public String nextAuthorizationHeader(final Request request)
    {
-      final String accessKey = this.awsAccessKeyId.produce();
-      final String secretKey = this.awsSecretAccessKey.produce();
-      return authenticate(request, accessKey, secretKey);
+      final String awsAccessKeyId = request.getMetadata(Metadata.USERNAME);
+      final String awsSecretAccessKey = request.getMetadata(Metadata.PASSWORD);
+      return authenticate(request, awsAccessKeyId, awsSecretAccessKey);
    }
 
    private String authenticate(

@@ -19,36 +19,28 @@
 
 package com.cleversafe.og.http.auth;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.nio.charset.StandardCharsets;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Request;
-import com.cleversafe.og.util.producer.Producer;
 import com.google.common.io.BaseEncoding;
 
 public class BasicAuth implements HttpAuth
 {
    private static final Logger _logger = LoggerFactory.getLogger(BasicAuth.class);
-   private final Producer<String> username;
-   private final Producer<String> password;
 
-   public BasicAuth(final Producer<String> username, final Producer<String> password)
-   {
-      this.username = checkNotNull(username);
-      this.password = checkNotNull(password);
-   }
+   public BasicAuth()
+   {}
 
    @Override
    public String nextAuthorizationHeader(final Request request)
    {
-      // TODO cache header in common case of constant username and password
-      final String user = this.username.produce();
-      final String pass = this.password.produce();
-      final String credentials = user + ":" + pass;
+      final String username = request.getMetadata(Metadata.USERNAME);
+      final String password = request.getMetadata(Metadata.PASSWORD);
+      final String credentials = username + ":" + password;
       final String b64 = BaseEncoding.base64().encode(credentials.getBytes(StandardCharsets.UTF_8));
       return "Basic " + b64;
    }
