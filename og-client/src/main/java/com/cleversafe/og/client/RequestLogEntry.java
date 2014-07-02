@@ -70,8 +70,7 @@ public class RequestLogEntry
       // FIXME reliably get localaddress? Name should be clientName? Do we even need this field?
       this.serverName = null;
       this.remoteAddress = uri.getHost();
-      // TODO get user from HttpAuth?
-      this.user = null;
+      this.user = request.getMetadata(Metadata.USERNAME);
       this.timestampStart = timestampStart;
       this.timestampFinish = timestampFinish;
       this.timeStart = RequestLogEntry.FORMATTER.print(this.timestampStart);
