@@ -32,8 +32,8 @@ import com.cleversafe.og.operation.EntityType;
 public class JsonConfig
 {
    private final Scheme scheme;
-   private final CollectionAlgorithmType hostAlgorithm;
-   private final List<String> hosts;
+   private final CollectionAlgorithmType hostSelection;
+   private final List<String> host;
    private final Integer port;
    private final Api api;
    private final String uriRoot;
@@ -42,7 +42,7 @@ public class JsonConfig
    private final OperationConfig write;
    private final OperationConfig read;
    private final OperationConfig delete;
-   private final List<FilesizeConfig> filesizes;
+   private final List<FilesizeConfig> filesize;
    private final EntityType source;
    private final ConcurrencyConfig concurrency;
    private final AuthenticationConfig authentication;
@@ -53,8 +53,8 @@ public class JsonConfig
    public JsonConfig()
    {
       this.scheme = Scheme.HTTP;
-      this.hostAlgorithm = CollectionAlgorithmType.ROUNDROBIN;
-      this.hosts = new ArrayList<String>();
+      this.hostSelection = CollectionAlgorithmType.ROUNDROBIN;
+      this.host = new ArrayList<String>();
       this.port = null;
       this.api = Api.SOH;
       this.uriRoot = null;
@@ -63,8 +63,8 @@ public class JsonConfig
       this.write = new OperationConfig();
       this.read = new OperationConfig();
       this.delete = new OperationConfig();
-      this.filesizes = new ArrayList<FilesizeConfig>();
-      this.filesizes.add(new FilesizeConfig());
+      this.filesize = new ArrayList<FilesizeConfig>();
+      this.filesize.add(new FilesizeConfig());
       this.source = EntityType.RANDOM;
       this.concurrency = new ConcurrencyConfig();
       this.authentication = new AuthenticationConfig();
@@ -82,19 +82,19 @@ public class JsonConfig
    }
 
    /**
-    * @return the hostAlgorithm
+    * @return the hostSelection
     */
-   public CollectionAlgorithmType getHostAlgorithm()
+   public CollectionAlgorithmType getHostSelection()
    {
-      return this.hostAlgorithm;
+      return this.hostSelection;
    }
 
    /**
-    * @return the hosts
+    * @return the host
     */
-   public List<String> getHosts()
+   public List<String> getHost()
    {
-      return this.hosts;
+      return this.host;
    }
 
    /**
@@ -162,11 +162,11 @@ public class JsonConfig
    }
 
    /**
-    * @return the filesizes
+    * @return the filesize
     */
-   public List<FilesizeConfig> getFilesizes()
+   public List<FilesizeConfig> getFilesize()
    {
-      return this.filesizes;
+      return this.filesize;
    }
 
    /**

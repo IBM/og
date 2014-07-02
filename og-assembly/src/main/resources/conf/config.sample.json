@@ -14,18 +14,19 @@
 // "scheme": "http",
 
 
-// the algorithm to use when determining which host to use for the next request.
-// One of ("random", "roundrobin"). Ignored if only one host is specified. 
+// the selection policy to use when determining which host to use for the next
+// request. One of ("random", "roundrobin"). Ignored if only one host is
+// specified.
 
-// "host_algorithm": "roundrobin",
+// "host_selection": "roundrobin",
 
 
 // A list of hosts to use.
 //
-// Example1 "hosts": ["192.168.8.10"]
-// Example2 "hosts": ["dc-a2100-3838.cleversafelabs.com", "10.10.1.56"]
+// Example1 "host": ["192.168.8.10"]
+// Example2 "host": ["dc-a2100-3838.cleversafelabs.com", "10.10.1.56"]
 
-"hosts": [],
+"host": [],
 
 
 // The http port to use.
@@ -100,14 +101,14 @@
 // Distribution is one of ("uniform", "normal")
 //
 // Example1 A single, constant file size of 10 kilobytes.
-// "filesizes": [
+// "filesize": [
 // {
 // "average": 10,
 // "average_unit": "kb"
 // }
 // ],
 
-// "filesizes": [
+// "filesize": [
 // {
 // "distribution": "uniform",
 // "average": 5.0,

@@ -137,7 +137,7 @@ public class JsonModule extends AbstractModule
    @TestHost
    public Producer<String> provideTesttHost()
    {
-      return createHost(this.config.getHostAlgorithm(), this.config.getHosts());
+      return createHost(this.config.getHostSelection(), this.config.getHost());
    }
 
    @Provides
@@ -347,7 +347,7 @@ public class JsonModule extends AbstractModule
    public Producer<Entity> provideTestEntity()
    {
       final RandomChoiceProducer.Builder<Distribution> wrc = RandomChoiceProducer.custom();
-      for (final FilesizeConfig f : this.config.getFilesizes())
+      for (final FilesizeConfig f : this.config.getFilesize())
       {
          wrc.withChoice(createSizeDistribution(f), f.getWeight());
       }
