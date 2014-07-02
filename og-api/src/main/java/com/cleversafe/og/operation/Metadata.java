@@ -22,6 +22,8 @@ package com.cleversafe.og.operation;
 public enum Metadata
 {
    OBJECT_NAME,
+   USERNAME,
+   PASSWORD,
    RESPONSE_BODY_PROCESSOR,
    ABORTED;
 }

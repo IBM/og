@@ -48,6 +48,8 @@ public class RequestProducer implements Producer<Request>
    private final List<Producer<Pair<String, String>>> headers;
    private final Producer<Entity> entity;
    private final Map<String, String> metadata;
+   private final Producer<String> username;
+   private final Producer<String> password;
 
    private RequestProducer(
          final Producer<Long> id,
@@ -56,7 +58,9 @@ public class RequestProducer implements Producer<Request>
          final CachingProducer<String> object,
          final List<Producer<Pair<String, String>>> headers,
          final Producer<Entity> entity,
-         final Map<String, String> metadata)
+         final Map<String, String> metadata,
+         final Producer<String> username,
+         final Producer<String> password)
    {
       this.id = checkNotNull(id);
       this.method = checkNotNull(method);
@@ -65,6 +69,11 @@ public class RequestProducer implements Producer<Request>
       this.headers = checkNotNull(headers);
       this.entity = entity;
       this.metadata = checkNotNull(metadata);
+      checkArgument((username != null && password != null)
+            || (username == null && password == null),
+            "username and password must both be either null or not null");
+      this.username = username;
+      this.password = password;
    }
 
    @Override
@@ -92,6 +101,12 @@ public class RequestProducer implements Producer<Request>
          context.withMetadata(e.getKey(), e.getValue());
       }
 
+      if (this.username != null)
+         context.withMetadata(Metadata.USERNAME, this.username.produce());
+
+      if (this.password != null)
+         context.withMetadata(Metadata.PASSWORD, this.password.produce());
+
       return context.build();
    }
 
@@ -109,6 +124,8 @@ public class RequestProducer implements Producer<Request>
       private final List<Producer<Pair<String, String>>> headers;
       private Producer<Entity> entity;
       private final Map<String, String> metadata;
+      private Producer<String> username;
+      private Producer<String> password;
 
       private Builder()
       {
@@ -195,10 +212,32 @@ public class RequestProducer implements Producer<Request>
          return this;
       }
 
+      public Builder withUsername(final String username)
+      {
+         return withUsername(Producers.of(username));
+      }
+
+      public Builder withUsername(final Producer<String> username)
+      {
+         this.username = checkNotNull(username);
+         return this;
+      }
+
+      public Builder withPassword(final String password)
+      {
+         return withPassword(Producers.of(password));
+      }
+
+      public Builder withPassword(final Producer<String> password)
+      {
+         this.password = checkNotNull(password);
+         return this;
+      }
+
       public RequestProducer build()
       {
          return new RequestProducer(this.id, this.method, this.uri, this.object, this.headers,
-               this.entity, this.metadata);
+               this.entity, this.metadata, this.username, this.password);
       }
    }
 }

@@ -182,6 +182,46 @@ public class RequestProducerTest
             "aborted", null);
    }
 
+   @Test(expected = NullPointerException.class)
+   public void testNullUsername()
+   {
+      RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).withUsername(
+            (String) null);
+   }
+
+   @Test(expected = NullPointerException.class)
+   public void testNullUsername2()
+   {
+      RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).withUsername(
+            (Producer<String>) null);
+   }
+
+   @Test(expected = NullPointerException.class)
+   public void testNullPassword()
+   {
+      RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).withPassword(
+            (String) null);
+   }
+
+   @Test(expected = NullPointerException.class)
+   public void testNullPassword2()
+   {
+      RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).withPassword(
+            (Producer<String>) null);
+   }
+
+   @Test(expected = IllegalArgumentException.class)
+   public void testNullUsernameNoPassword()
+   {
+      RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).withUsername("u").build();
+   }
+
+   @Test(expected = IllegalArgumentException.class)
+   public void testNullNoUsernamePassword()
+   {
+      RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).withPassword("p").build();
+   }
+
    @Test
    public void testId()
    {
@@ -319,5 +359,26 @@ public class RequestProducerTest
       Assert.assertEquals("ABORTED", e.getKey());
       Assert.assertEquals("value1", e.getValue());
       Assert.assertFalse(it.hasNext());
+   }
+
+   @Test
+   public void testNoCredentials()
+   {
+      final RequestProducer p =
+            RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).build();
+      final Request r = p.produce();
+      Assert.assertNull(r.getMetadata(Metadata.USERNAME));
+      Assert.assertNull(r.getMetadata(Metadata.PASSWORD));
+   }
+
+   @Test
+   public void testCredentials()
+   {
+      final RequestProducer p =
+            RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).withUsername(
+                  "username").withPassword("password").build();
+      final Request r = p.produce();
+      Assert.assertEquals("username", r.getMetadata(Metadata.USERNAME));
+      Assert.assertEquals("password", r.getMetadata(Metadata.PASSWORD));
    }
 }
