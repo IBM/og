@@ -47,7 +47,7 @@ public class JsonConfig
    private final ConcurrencyConfig concurrency;
    private final AuthenticationConfig authentication;
    private final StoppingConditionsConfig stoppingConditions;
-   private final String objectLocation;
+   private final ObjectManagerConfig objectManager;
    private final ClientConfig client;
 
    public JsonConfig()
@@ -69,7 +69,7 @@ public class JsonConfig
       this.concurrency = new ConcurrencyConfig();
       this.authentication = new AuthenticationConfig();
       this.stoppingConditions = new StoppingConditionsConfig();
-      this.objectLocation = "./object";
+      this.objectManager = new ObjectManagerConfig();
       this.client = new ClientConfig();
    }
 
@@ -202,11 +202,11 @@ public class JsonConfig
    }
 
    /**
-    * @return the objectLocation
+    * @return the objectManager
     */
-   public String getObjectLocation()
+   public ObjectManagerConfig getObjectManager()
    {
-      return this.objectLocation;
+      return this.objectManager;
    }
 
    /**

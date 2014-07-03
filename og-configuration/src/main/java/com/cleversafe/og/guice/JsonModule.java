@@ -51,7 +51,7 @@ import com.cleversafe.og.guice.annotation.TestContainer;
 import com.cleversafe.og.guice.annotation.TestEntity;
 import com.cleversafe.og.guice.annotation.TestHeaders;
 import com.cleversafe.og.guice.annotation.TestHost;
-import com.cleversafe.og.guice.annotation.TestObjectLocation;
+import com.cleversafe.og.guice.annotation.TestObjectFileLocation;
 import com.cleversafe.og.guice.annotation.TestPassword;
 import com.cleversafe.og.guice.annotation.TestPort;
 import com.cleversafe.og.guice.annotation.TestQueryParams;
@@ -377,11 +377,11 @@ public class JsonModule extends AbstractModule
    // TODO simplify this method if possible
    @Provides
    @Singleton
-   @TestObjectLocation
-   public String provideObjectLocation() throws IOException
+   @TestObjectFileLocation
+   public String provideObjectFileLocation() throws IOException
    {
 
-      String path = this.config.getObjectLocation();
+      String path = this.config.getObjectManager().getObjectFileLocation();
       if (path == null || path.length() == 0)
          path = "./object";
 

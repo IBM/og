@@ -158,9 +158,11 @@
 // },
 
 
-// The root directory to store object names.
+// Object Manager config.
 
-// "object_location": "./object",
+// "object_manager": {
+// "object_file_location": "./object"
+// },
 
 
 // Advanced client configuration options

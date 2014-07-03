@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 import com.cleversafe.og.guice.annotation.DeleteObjectName;
 import com.cleversafe.og.guice.annotation.ReadObjectName;
 import com.cleversafe.og.guice.annotation.TestContainer;
-import com.cleversafe.og.guice.annotation.TestObjectLocation;
+import com.cleversafe.og.guice.annotation.TestObjectFileLocation;
 import com.cleversafe.og.guice.annotation.WriteObjectName;
 import com.cleversafe.og.http.util.Api;
 import com.cleversafe.og.object.manager.ObjectManager;
@@ -55,13 +55,13 @@ public class ObjectManagerModule extends AbstractModule
    @Provides
    @Singleton
    public ObjectManager provideObjectManager(
-         @TestObjectLocation final String objectLocation,
+         @TestObjectFileLocation final String objectFileLocation,
          @TestContainer final Producer<String> container,
          final Api api)
    {
       // FIXME this naming scheme will break unless @TestContainer is a constant producer
       final String prefix = container.produce() + "-" + api.toString().toLowerCase();
-      return new RandomObjectPopulator(UUID.randomUUID(), objectLocation, prefix);
+      return new RandomObjectPopulator(UUID.randomUUID(), objectFileLocation, prefix);
    }
 
    @Provides
