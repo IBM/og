@@ -54,6 +54,7 @@ public class LoadTest
    private final List<TestCondition> testConditions;
    private final Map<Long, Request> pendingRequests;
    private final ExecutorService executorService;
+   private final Thread testThread;
    AtomicBoolean running;
 
    public LoadTest(
@@ -72,6 +73,7 @@ public class LoadTest
       this.pendingRequests = checkNotNull(pendingRequests);
       final ThreadFactory fac = new ThreadFactoryBuilder().setNameFormat("test-%d").build();
       this.executorService = Executors.newCachedThreadPool(fac);
+      this.testThread = Thread.currentThread();
       this.running = new AtomicBoolean(true);
    }
 
@@ -130,6 +132,15 @@ public class LoadTest
    public void stopTest()
    {
       this.running.set(false);
+      this.testThread.interrupt();
+      try
+      {
+         this.testThread.join();
+      }
+      catch (final InterruptedException e)
+      {
+         _logger.warn("Interrupted while waiting for test thread to terminate", e);
+      }
    }
 
    private Runnable getListener(final ListenableFuture<Response> future)

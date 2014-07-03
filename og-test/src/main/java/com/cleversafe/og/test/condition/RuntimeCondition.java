@@ -33,18 +33,12 @@ import com.cleversafe.og.test.LoadTest;
 public class RuntimeCondition implements TestCondition
 {
    private static final Logger _logger = LoggerFactory.getLogger(RuntimeCondition.class);
-   private final Thread mainThread;
    private final LoadTest test;
    private final long runtime;
    private final long timestampStart;
 
-   public RuntimeCondition(
-         final Thread mainThread,
-         final LoadTest test,
-         final double runtime,
-         final TimeUnit unit)
+   public RuntimeCondition(final LoadTest test, final double runtime, final TimeUnit unit)
    {
-      this.mainThread = checkNotNull(mainThread);
       this.test = checkNotNull(test);
       checkArgument(runtime > 0.0, "duration must be > 0.0 [%s]", runtime);
       this.runtime = (long) (runtime * unit.toNanos(1));
@@ -77,7 +71,6 @@ public class RuntimeCondition implements TestCondition
                }
             }
             RuntimeCondition.this.test.stopTest();
-            RuntimeCondition.this.mainThread.interrupt();
          }
       });
       t.setName("runtimeCondition");

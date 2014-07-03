@@ -90,8 +90,7 @@ public class OGModule extends AbstractModule
 
       // have to create this condition after LoadTest because it triggers LoadTest.stopTest()
       if (config.getRuntime() > 0)
-         new RuntimeCondition(Thread.currentThread(), test, config.getRuntime(),
-               config.getRuntimeUnit());
+         new RuntimeCondition(test, config.getRuntime(), config.getRuntimeUnit());
 
       return test;
    }

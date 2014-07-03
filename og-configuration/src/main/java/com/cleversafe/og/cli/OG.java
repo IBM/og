@@ -84,7 +84,7 @@ public class OG extends AbstractCLI
          final Statistics stats = injector.getInstance(Statistics.class);
          objectManager = injector.getInstance(ObjectManager.class);
          final LoadTest test = injector.getInstance(LoadTest.class);
-         Runtime.getRuntime().addShutdownHook(new ShutdownHook(Thread.currentThread(), test));
+         Runtime.getRuntime().addShutdownHook(new ShutdownHook(test));
          _consoleLogger.info("Configured.");
          _consoleLogger.info("Test Running...");
          final long timestampStart = System.currentTimeMillis();
@@ -172,12 +172,10 @@ public class OG extends AbstractCLI
 
    private static class ShutdownHook extends Thread
    {
-      private final Thread mainThread;
       private final LoadTest test;
 
-      public ShutdownHook(final Thread mainThread, final LoadTest test)
+      public ShutdownHook(final LoadTest test)
       {
-         this.mainThread = checkNotNull(mainThread);
          this.test = checkNotNull(test);
       }
 
@@ -185,15 +183,6 @@ public class OG extends AbstractCLI
       public void run()
       {
          this.test.stopTest();
-         this.mainThread.interrupt();
-         try
-         {
-            this.mainThread.join();
-         }
-         catch (final InterruptedException e)
-         {
-            _logger.warn("Shutdown hook interrupted while waiting for main thread to terminate", e);
-         }
       }
    }
 }
