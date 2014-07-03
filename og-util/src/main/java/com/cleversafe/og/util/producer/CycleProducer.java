@@ -22,6 +22,7 @@ package com.cleversafe.og.util.producer;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -36,12 +37,15 @@ public class CycleProducer<T> implements Producer<T>
 
    public CycleProducer(final List<T> items)
    {
-      this.items = checkNotNull(items);
+      checkNotNull(items);
       checkArgument(!items.isEmpty(), "items must not be empty");
       for (final T item : items)
       {
          checkNotNull(item, "items must not contain any null elements");
       }
+      // defensive copy
+      this.items = new ArrayList<T>();
+      this.items.addAll(items);
       this.counter = new AtomicLong(0);
    }
 

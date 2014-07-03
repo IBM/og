@@ -75,4 +75,19 @@ public class CycleProducerTest
          Assert.assertEquals(Integer.valueOf(3), p.produce());
       }
    }
+
+   @Test
+   public void testListModification()
+   {
+      final List<Integer> list = new ArrayList<Integer>();
+      list.add(1);
+      list.add(2);
+      final Producer<Integer> p = new CycleProducer<Integer>(list);
+      list.add(3);
+      for (int i = 0; i < 10; i++)
+      {
+         Assert.assertEquals(Integer.valueOf(1), p.produce());
+         Assert.assertEquals(Integer.valueOf(2), p.produce());
+      }
+   }
 }
