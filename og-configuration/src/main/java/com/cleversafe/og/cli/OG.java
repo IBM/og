@@ -85,9 +85,9 @@ public class OG extends AbstractCLI
          Runtime.getRuntime().addShutdownHook(new ShutdownHook(Thread.currentThread(), test));
          _consoleLogger.info("Configured.");
          _consoleLogger.info("Test Running...");
-         final long timestampStart = System.nanoTime();
+         final long timestampStart = System.currentTimeMillis();
          final boolean success = test.runTest();
-         final long timestampFinish = System.nanoTime();
+         final long timestampFinish = System.currentTimeMillis();
          if (success)
             _consoleLogger.info("Test Completed.");
          else
@@ -102,7 +102,7 @@ public class OG extends AbstractCLI
          }
 
          logSummaryBanner();
-         final Summary summary = new Summary(stats, timestampFinish - timestampStart);
+         final Summary summary = new Summary(stats, timestampStart, timestampFinish);
          _consoleLogger.info("{}", summary);
          _summaryJsonLogger.info(gson.toJson(summary.getSummaryStats()));
       }
