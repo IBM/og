@@ -23,9 +23,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -34,7 +32,6 @@ import com.cleversafe.og.operation.Entity;
 import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
-import com.cleversafe.og.util.Pair;
 import com.cleversafe.og.util.producer.CachingProducer;
 import com.cleversafe.og.util.producer.Producer;
 import com.cleversafe.og.util.producer.Producers;
@@ -45,7 +42,7 @@ public class RequestProducer implements Producer<Request>
    private final Producer<Method> method;
    private final Producer<URI> uri;
    private final CachingProducer<String> object;
-   private final List<Producer<Pair<String, String>>> headers;
+   private final Map<Producer<String>, Producer<String>> headers;
    private final Producer<Entity> entity;
    private final Map<String, String> metadata;
    private final Producer<String> username;
@@ -56,7 +53,7 @@ public class RequestProducer implements Producer<Request>
          final Producer<Method> method,
          final Producer<URI> uri,
          final CachingProducer<String> object,
-         final List<Producer<Pair<String, String>>> headers,
+         final Map<Producer<String>, Producer<String>> headers,
          final Producer<Entity> entity,
          final Map<String, String> metadata,
          final Producer<String> username,
@@ -87,10 +84,9 @@ public class RequestProducer implements Producer<Request>
       if (this.object != null)
          context.withMetadata(Metadata.OBJECT_NAME, this.object.getCachedValue());
 
-      for (final Producer<Pair<String, String>> producer : this.headers)
+      for (final Entry<Producer<String>, Producer<String>> header : this.headers.entrySet())
       {
-         final Pair<String, String> pair = producer.produce();
-         context.withHeader(pair.getKey(), pair.getValue());
+         context.withHeader(header.getKey().produce(), header.getValue().produce());
       }
 
       if (this.entity != null)
@@ -121,7 +117,7 @@ public class RequestProducer implements Producer<Request>
       private Producer<Method> method;
       private Producer<URI> uri;
       private CachingProducer<String> object;
-      private final List<Producer<Pair<String, String>>> headers;
+      private final Map<Producer<String>, Producer<String>> headers;
       private Producer<Entity> entity;
       private final Map<String, String> metadata;
       private Producer<String> username;
@@ -129,7 +125,7 @@ public class RequestProducer implements Producer<Request>
 
       private Builder()
       {
-         this.headers = new ArrayList<Producer<Pair<String, String>>>();
+         this.headers = new LinkedHashMap<Producer<String>, Producer<String>>();
          this.metadata = new LinkedHashMap<String, String>();
       }
 
@@ -175,18 +171,14 @@ public class RequestProducer implements Producer<Request>
 
       public Builder withHeader(final String key, final String value)
       {
-         return withHeader(new Pair<String, String>(key, value));
+         return withHeader(Producers.of(key), Producers.of(value));
       }
 
-      public Builder withHeader(final Pair<String, String> header)
+      public Builder withHeader(final Producer<String> key, final Producer<String> value)
       {
-         return withHeader(Producers.of(header));
-      }
-
-      public Builder withHeader(final Producer<Pair<String, String>> header)
-      {
-         checkNotNull(header);
-         this.headers.add(header);
+         checkNotNull(key);
+         checkNotNull(value);
+         this.headers.put(key, value);
          return this;
       }
 

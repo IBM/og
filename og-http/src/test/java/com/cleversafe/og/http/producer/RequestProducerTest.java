@@ -36,7 +36,6 @@ import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.util.Entities;
-import com.cleversafe.og.util.Pair;
 import com.cleversafe.og.util.producer.CachingProducer;
 import com.cleversafe.og.util.producer.Producer;
 import com.cleversafe.og.util.producer.Producers;
@@ -127,17 +126,17 @@ public class RequestProducerTest
    }
 
    @Test(expected = NullPointerException.class)
-   public void testHeaderNullPair()
+   public void testHeaderNullKeyProducer()
    {
       RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).withHeader(
-            (Pair<String, String>) null);
+            (Producer<String>) null, Producers.of("value"));
    }
 
    @Test(expected = NullPointerException.class)
-   public void testHeaderNullPairProducer()
+   public void testHeaderNullValueProducer()
    {
       RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).withHeader(
-            (Producer<Pair<String, String>>) null);
+            Producers.of("key"), (Producer<String>) null);
    }
 
    @Test(expected = NullPointerException.class)
@@ -293,19 +292,20 @@ public class RequestProducerTest
    {
       final RequestProducer p =
             RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).withHeader(
-                  "key3", "value3").withHeader(new Pair<String, String>("key2", "value2")).withHeader(
-                  Producers.of(new Pair<String, String>("key1", "value1"))).build();
+                  "key2", "value2").withHeader(Producers.of("key1"), Producers.of("value1")).build();
       final Request r = p.produce();
       final Iterator<Entry<String, String>> it = r.headers();
       // Skip Date header which is automatically added
       it.next();
-      for (int i = 0; i < 3; i++)
-      {
-         Assert.assertTrue(it.hasNext());
-         final Entry<String, String> e = it.next();
-         Assert.assertEquals("key" + (3 - i), e.getKey());
-         Assert.assertEquals("value" + (3 - i), e.getValue());
-      }
+      Assert.assertTrue(it.hasNext());
+      Entry<String, String> e = it.next();
+      Assert.assertEquals("key2", e.getKey());
+      Assert.assertEquals("value2", e.getValue());
+
+      Assert.assertTrue(it.hasNext());
+      e = it.next();
+      Assert.assertEquals("key1", e.getKey());
+      Assert.assertEquals("value1", e.getValue());
       Assert.assertFalse(it.hasNext());
    }
 

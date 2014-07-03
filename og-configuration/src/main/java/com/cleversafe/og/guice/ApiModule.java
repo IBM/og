@@ -69,7 +69,6 @@ import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.soh.object.consumer.SOHWriteByteBufferConsumer;
 import com.cleversafe.og.util.ByteBufferConsumers;
 import com.cleversafe.og.util.Entities;
-import com.cleversafe.og.util.Pair;
 import com.cleversafe.og.util.consumer.ByteBufferConsumer;
 import com.cleversafe.og.util.consumer.Consumer;
 import com.cleversafe.og.util.producer.CachingProducer;
@@ -95,7 +94,7 @@ public class ApiModule extends AbstractModule
          @TesttId final Producer<Long> id,
          @WriteUri final Producer<URI> uri,
          @WriteObjectName final CachingProducer<String> object,
-         @WriteHeaders final List<Producer<Pair<String, String>>> headers,
+         @WriteHeaders final Map<Producer<String>, Producer<String>> headers,
          @TestEntity final Producer<Entity> entity,
          @WriteMetadata final Map<String, String> metadata,
          @TestUsername final Producer<String> username,
@@ -138,7 +137,7 @@ public class ApiModule extends AbstractModule
          @TesttId final Producer<Long> id,
          @ReadUri final Producer<URI> uri,
          @ReadObjectName final CachingProducer<String> object,
-         @ReadHeaders final List<Producer<Pair<String, String>>> headers,
+         @ReadHeaders final Map<Producer<String>, Producer<String>> headers,
          @ReadMetadata final Map<String, String> metadata,
          @TestUsername final Producer<String> username,
          @TestPassword final Producer<String> password)
@@ -176,7 +175,7 @@ public class ApiModule extends AbstractModule
          @TesttId final Producer<Long> id,
          @DeleteUri final Producer<URI> uri,
          @DeleteObjectName final CachingProducer<String> object,
-         @DeleteHeaders final List<Producer<Pair<String, String>>> headers,
+         @DeleteHeaders final Map<Producer<String>, Producer<String>> headers,
          @DeleteMetadata final Map<String, String> metadata,
          @TestUsername final Producer<String> username,
          @TestPassword final Producer<String> password)
@@ -212,7 +211,7 @@ public class ApiModule extends AbstractModule
          final Method method,
          final Producer<URI> uri,
          final CachingProducer<String> object,
-         final List<Producer<Pair<String, String>>> headers,
+         final Map<Producer<String>, Producer<String>> headers,
          final Producer<Entity> entity,
          final Map<String, String> metadata,
          final Producer<String> username,
@@ -226,9 +225,9 @@ public class ApiModule extends AbstractModule
       if (object != null)
          b.withObject(object);
 
-      for (final Producer<Pair<String, String>> header : headers)
+      for (final Entry<Producer<String>, Producer<String>> header : headers.entrySet())
       {
-         b.withHeader(header);
+         b.withHeader(header.getKey(), header.getValue());
       }
 
       b.withEntity(entity);
