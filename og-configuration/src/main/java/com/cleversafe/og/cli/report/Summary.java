@@ -65,10 +65,11 @@ public class Summary
       private final long timestampStart;
       private final long timestampFinish;
       private final double runtime;
+      private long operations;
+      private long aborts;
       private final OperationStats write = new OperationStats();
       private final OperationStats read = new OperationStats();
       private final OperationStats delete = new OperationStats();
-      private final OperationStats all = new OperationStats();
 
       public SummaryStats(
             final long timestampStart,
@@ -97,15 +98,16 @@ public class Summary
       return String.format(Locale.US, "Start: %s\n", FORMATTER.print(this.timestampStart)) +
             String.format(Locale.US, "End: %s\n", FORMATTER.print(this.timestampFinish)) +
             String.format(Locale.US, "Runtime: %.2f Seconds\n", this.runtime) +
-            "Write: " + getOperation(this.summary.write) +
-            "Read: " + getOperation(this.summary.read) +
-            "Delete: " + getOperation(this.summary.delete) +
-            "All: " + getOperation(this.summary.all);
+            String.format(Locale.US, "Operations: %s\n", this.summary.operations) +
+            String.format(Locale.US, "Aborts: %s\n\n", this.summary.aborts) +
+            "[Write]\n" + getOperation(this.summary.write) +
+            "[Read]\n" + getOperation(this.summary.read) +
+            "[Delete]\n" + getOperation(this.summary.delete);
    }
 
    private String getOperation(final OperationStats opStats)
    {
-      final String format = "Operations=%s Bytes=%s Aborts=%s\nStatus Codes:\n%s\n";
+      final String format = "Operations: %s\nBytes: %s\nAborts: %s\nStatus Codes:\n%s\n";
       String statusCodes = getStatusCodes(opStats);
       if (statusCodes.length() == 0)
          statusCodes = "N/A\n";
@@ -142,7 +144,10 @@ public class Summary
       retrieveStats(this.summary.write, Operation.WRITE);
       retrieveStats(this.summary.read, Operation.READ);
       retrieveStats(this.summary.delete, Operation.DELETE);
-      retrieveStats(this.summary.all, Operation.ALL);
+      final OperationStats all = new OperationStats();
+      retrieveStats(all, Operation.ALL);
+      this.summary.operations = all.operations;
+      this.summary.aborts = all.aborts;
    }
 
    private void retrieveStats(final OperationStats opStats, final Operation operation)
