@@ -72,7 +72,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager
    private final int maxObjects;
    private final String directory;
    private final String prefix;
-   static final String suffix = ".bin";
+   static final String SUFFIX = ".object";
    private final Pattern filenamePattern;
 
    // object read from a file
@@ -148,7 +148,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager
       }
       this.filenamePattern =
             Pattern.compile(String.format("%s(\\d|[1-9]\\d*)%s", this.prefix,
-                  RandomObjectPopulator.suffix));
+                  RandomObjectPopulator.SUFFIX));
       this.maxObjects = maxObjectCount;
       final File[] files = getIdFiles();
       if (files.length > 1)
@@ -458,7 +458,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager
 
    private File createFile(final int idx)
    {
-      return new File(this.directory + "/" + this.prefix + idx + suffix);
+      return new File(this.directory + "/" + this.prefix + idx + SUFFIX);
    }
 
    /*

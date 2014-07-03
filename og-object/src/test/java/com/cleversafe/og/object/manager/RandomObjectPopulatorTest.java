@@ -41,14 +41,12 @@ import org.junit.Test;
 
 import com.cleversafe.og.object.LegacyObjectName;
 import com.cleversafe.og.object.ObjectName;
-import com.cleversafe.og.object.manager.ObjectManagerException;
-import com.cleversafe.og.object.manager.RandomObjectPopulator;
 
 public class RandomObjectPopulatorTest
 {
    final String dirName = "RandomObjectPopulatorTest";
    static final String prefix = "id_";
-   static final String suffix = ".bin";
+   static final String suffix = ".object";
 
    final protected UUID vaultId = new UUID(0, 0);
 
@@ -478,15 +476,15 @@ public class RandomObjectPopulatorTest
    {
       final RandomObjectPopulator r = new RandomObjectPopulator(null, "test");
       final FilenameFilter f = r.new IdFilter();
-      Assert.assertFalse(f.accept(null, "test.bin"));
-      Assert.assertTrue(f.accept(null, "test0.bin"));
-      Assert.assertFalse(f.accept(null, "test00.bin"));
-      Assert.assertTrue(f.accept(null, "test10.bin"));
-      Assert.assertFalse(f.accept(null, "test01.bin"));
-      Assert.assertTrue(f.accept(null, "test111.bin"));
-      Assert.assertTrue(f.accept(null, "test1111.bin"));
-      Assert.assertFalse(f.accept(null, "testt.bin"));
-      Assert.assertFalse(f.accept(null, "testt0.bin"));
+      Assert.assertFalse(f.accept(null, "test" + suffix));
+      Assert.assertTrue(f.accept(null, "test0" + suffix));
+      Assert.assertFalse(f.accept(null, "test00" + suffix));
+      Assert.assertTrue(f.accept(null, "test10" + suffix));
+      Assert.assertFalse(f.accept(null, "test01" + suffix));
+      Assert.assertTrue(f.accept(null, "test111" + suffix));
+      Assert.assertTrue(f.accept(null, "test1111" + suffix));
+      Assert.assertFalse(f.accept(null, "testt" + suffix));
+      Assert.assertFalse(f.accept(null, "testt0" + suffix));
    }
 // @Test
 // public void testInvalidRetention() throws InterruptedException, ExecutionException, IOException
