@@ -27,37 +27,24 @@ import com.cleversafe.og.operation.Response;
 
 public class ConcurrentRequestScheduler implements Scheduler
 {
-   private final long concurrentRequests;
-   private long currentConcurrency;
    private final Semaphore sem;
 
-   public ConcurrentRequestScheduler(final long concurrentRequests)
+   public ConcurrentRequestScheduler(final int concurrentRequests)
    {
       checkArgument(concurrentRequests > 0, "concurrentRequests must be > 0");
-      this.concurrentRequests = concurrentRequests;
-      this.currentConcurrency = 0;
-      this.sem = new Semaphore(0);
+      this.sem = new Semaphore(concurrentRequests - 1);
    }
 
    @Override
    public void waitForNext()
    {
-      if (this.currentConcurrency < this.concurrentRequests)
+      try
       {
-         this.currentConcurrency += 1;
-         return;
+         this.sem.acquire();
       }
-
-      else
+      catch (final InterruptedException e)
       {
-         try
-         {
-            this.sem.acquire();
-         }
-         catch (final InterruptedException e)
-         {
-            return;
-         }
+         return;
       }
    }
 

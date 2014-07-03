@@ -83,11 +83,8 @@ public class LoadTest
          {
             final Request nextRequest = this.operationManager.next();
             this.pendingRequests.put(nextRequest.getId(), nextRequest);
-            if (isRunning())
-            {
-               final ListenableFuture<Response> future = this.client.execute(nextRequest);
-               future.addListener(getListener(future), this.executorService);
-            }
+            final ListenableFuture<Response> future = this.client.execute(nextRequest);
+            future.addListener(getListener(future), this.executorService);
             this.scheduler.waitForNext();
          }
       }

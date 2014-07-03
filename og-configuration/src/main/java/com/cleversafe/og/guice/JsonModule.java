@@ -463,7 +463,7 @@ public class JsonModule extends AbstractModule
    {
       final ConcurrencyConfig concurrency = this.config.getConcurrency();
       if (ConcurrencyType.THREADS == concurrency.getType())
-         return new ConcurrentRequestScheduler(Math.round(concurrency.getCount()));
+         return new ConcurrentRequestScheduler((int) Math.round(concurrency.getCount()));
       else
       {
          final Distribution count = new UniformDistribution(concurrency.getCount(), 0.0);
