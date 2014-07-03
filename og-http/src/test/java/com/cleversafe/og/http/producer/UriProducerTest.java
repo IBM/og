@@ -244,4 +244,15 @@ public class UriProducerTest
       final Producer<URI> p = UriProducer.custom().toHost(this.host).atPath(badPath).build();
       p.produce();
    }
+
+   @Test
+   public void testPathModification()
+   {
+      final List<Producer<String>> path = new ArrayList<Producer<String>>();
+      path.add(Producers.of("container"));
+      final Producer<URI> p = UriProducer.custom().toHost(this.host).atPath(path).build();
+      path.add(Producers.of("object"));
+      final URI u = p.produce();
+      Assert.assertEquals("/container", u.getPath());
+   }
 }

@@ -24,6 +24,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,7 +56,10 @@ public class UriProducer implements Producer<URI>
       this.scheme = checkNotNull(scheme);
       this.host = checkNotNull(host);
       this.port = port;
-      this.parts = checkNotNull(parts);
+      checkNotNull(parts);
+      // defensive copy
+      this.parts = new ArrayList<Producer<String>>();
+      this.parts.addAll(parts);
       this.queryParameters = checkNotNull(queryParameters);
       this.trailingSlash = trailingSlash;
    }
