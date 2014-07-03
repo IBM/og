@@ -52,6 +52,7 @@ import com.cleversafe.og.guice.annotation.TestEntity;
 import com.cleversafe.og.guice.annotation.TestHeaders;
 import com.cleversafe.og.guice.annotation.TestHost;
 import com.cleversafe.og.guice.annotation.TestObjectFileLocation;
+import com.cleversafe.og.guice.annotation.TestObjectFileName;
 import com.cleversafe.og.guice.annotation.TestPassword;
 import com.cleversafe.og.guice.annotation.TestPort;
 import com.cleversafe.og.guice.annotation.TestQueryParams;
@@ -399,6 +400,19 @@ public class JsonModule extends AbstractModule
                f.toString()));
       }
       return f.toString();
+   }
+
+   @Provides
+   @Singleton
+   @TestObjectFileName
+   public String provideObjectFileName(
+         @TestContainer final Producer<String> container,
+         final Api api)
+   {
+      if (this.config.getObjectManager().getObjectFileName() != null)
+         return this.config.getObjectManager().getObjectFileName();
+      // FIXME this naming scheme will break unless @TestContainer is a constant producer
+      return container.produce() + "-" + api.toString().toLowerCase();
    }
 
    @Provides

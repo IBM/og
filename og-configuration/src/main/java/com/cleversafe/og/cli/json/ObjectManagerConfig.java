@@ -22,6 +22,7 @@ package com.cleversafe.og.cli.json;
 public class ObjectManagerConfig
 {
    private final String objectFileLocation;
+   private String objectFileName;
 
    public ObjectManagerConfig()
    {
@@ -31,5 +32,10 @@ public class ObjectManagerConfig
    public String getObjectFileLocation()
    {
       return this.objectFileLocation;
+   }
+
+   public String getObjectFileName()
+   {
+      return this.objectFileName;
    }
 }

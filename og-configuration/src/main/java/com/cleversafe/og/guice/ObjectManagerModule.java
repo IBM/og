@@ -26,8 +26,8 @@ import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.guice.annotation.DeleteObjectName;
 import com.cleversafe.og.guice.annotation.ReadObjectName;
-import com.cleversafe.og.guice.annotation.TestContainer;
 import com.cleversafe.og.guice.annotation.TestObjectFileLocation;
+import com.cleversafe.og.guice.annotation.TestObjectFileName;
 import com.cleversafe.og.guice.annotation.WriteObjectName;
 import com.cleversafe.og.http.util.Api;
 import com.cleversafe.og.object.manager.ObjectManager;
@@ -36,7 +36,6 @@ import com.cleversafe.og.object.producer.DeleteObjectNameProducer;
 import com.cleversafe.og.object.producer.ReadObjectNameProducer;
 import com.cleversafe.og.object.producer.UUIDObjectNameProducer;
 import com.cleversafe.og.util.producer.CachingProducer;
-import com.cleversafe.og.util.producer.Producer;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -56,12 +55,9 @@ public class ObjectManagerModule extends AbstractModule
    @Singleton
    public ObjectManager provideObjectManager(
          @TestObjectFileLocation final String objectFileLocation,
-         @TestContainer final Producer<String> container,
-         final Api api)
+         @TestObjectFileName final String objectFileName)
    {
-      // FIXME this naming scheme will break unless @TestContainer is a constant producer
-      final String prefix = container.produce() + "-" + api.toString().toLowerCase();
-      return new RandomObjectPopulator(UUID.randomUUID(), objectFileLocation, prefix);
+      return new RandomObjectPopulator(UUID.randomUUID(), objectFileLocation, objectFileName);
    }
 
    @Provides

@@ -161,7 +161,8 @@
 // Object Manager config.
 
 // "object_manager": {
-// "object_file_location": "./object"
+// "object_file_location": "./object",
+// "object_file_name": "<container>-<api>"
 // },
 
 
