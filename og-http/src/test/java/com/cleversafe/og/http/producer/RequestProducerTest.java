@@ -329,4 +329,28 @@ public class RequestProducerTest
       Assert.assertEquals("username", r.getMetadata(Metadata.USERNAME));
       Assert.assertEquals("password", r.getMetadata(Metadata.PASSWORD));
    }
+
+   @Test
+   public void testHeaderModification()
+   {
+      final RequestProducer.Builder b =
+            new RequestProducer.Builder(this.method, this.uri).withHeader("key1", "value1");
+      final RequestProducer rp = b.build();
+      b.withHeader("key2", "value2");
+      final Request r = rp.produce();
+      Assert.assertEquals("value1", r.getHeader("key1"));
+      Assert.assertNull(r.getHeader("key2"));
+   }
+
+   @Test
+   public void testMetadataModification()
+   {
+      final RequestProducer.Builder b =
+            new RequestProducer.Builder(this.method, this.uri).withMetadata("key1", "value1");
+      final RequestProducer rp = b.build();
+      b.withMetadata("key2", "value2");
+      final Request r = rp.produce();
+      Assert.assertEquals("value1", r.getMetadata("key1"));
+      Assert.assertNull(r.getMetadata("key2"));
+   }
 }
