@@ -98,14 +98,14 @@ public class RequestProducerTest
    public void testHeaderNullKeyProducer()
    {
       new RequestProducer.Builder(this.method, this.uri).withHeader((Producer<String>) null,
-            Producers.of("value"));
+            Producers.of("value")).build();
    }
 
    @Test(expected = NullPointerException.class)
    public void testHeaderNullValueProducer()
    {
       new RequestProducer.Builder(this.method, this.uri).withHeader(Producers.of("key"),
-            (Producer<String>) null);
+            (Producer<String>) null).build();
    }
 
    @Test(expected = NullPointerException.class)
@@ -136,7 +136,7 @@ public class RequestProducerTest
    public void testMetadataNullKey3()
    {
       new RequestProducer.Builder(this.method, this.uri)
-            .withMetadata((Producer<String>) null, Producers.of("value"));
+            .withMetadata((Producer<String>) null, Producers.of("value")).build();
    }
 
    @Test(expected = NullPointerException.class)
@@ -155,7 +155,7 @@ public class RequestProducerTest
    public void testMetadataNullValue3()
    {
       new RequestProducer.Builder(this.method, this.uri)
-            .withMetadata(Producers.of("aborted"), (Producer<String>) null);
+            .withMetadata(Producers.of("aborted"), (Producer<String>) null).build();
    }
 
    @Test(expected = NullPointerException.class)

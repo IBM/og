@@ -50,7 +50,7 @@ public class HttpResponse implements Response
       this.headers = new LinkedHashMap<String, String>();
       for (final Entry<String, String> h : builder.headers.entrySet())
       {
-         this.headers.put(h.getKey(), h.getValue());
+         this.headers.put(checkNotNull(h.getKey()), checkNotNull(h.getValue()));
       }
       this.entity = checkNotNull(builder.entity);
       checkNotNull(builder.metadata);
@@ -58,7 +58,7 @@ public class HttpResponse implements Response
       this.metadata = new LinkedHashMap<String, String>();
       for (final Entry<String, String> m : builder.metadata.entrySet())
       {
-         this.metadata.put(m.getKey(), m.getValue());
+         this.metadata.put(checkNotNull(m.getKey()), checkNotNull(m.getValue()));
       }
    }
 
@@ -126,7 +126,7 @@ public class HttpResponse implements Response
 
       public Builder withHeader(final String key, final String value)
       {
-         this.headers.put(checkNotNull(key), checkNotNull(value));
+         this.headers.put(key, value);
          return this;
       }
 
@@ -143,7 +143,7 @@ public class HttpResponse implements Response
 
       public Builder withMetadata(final String key, final String value)
       {
-         this.metadata.put(checkNotNull(key), checkNotNull(value));
+         this.metadata.put(key, value);
          return this;
       }
 

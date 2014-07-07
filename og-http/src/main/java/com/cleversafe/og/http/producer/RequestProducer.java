@@ -57,7 +57,7 @@ public class RequestProducer implements Producer<Request>
       this.headers = new LinkedHashMap<Producer<String>, Producer<String>>();
       for (final Entry<Producer<String>, Producer<String>> h : builder.headers.entrySet())
       {
-         this.headers.put(h.getKey(), h.getValue());
+         this.headers.put(checkNotNull(h.getKey()), checkNotNull(h.getValue()));
       }
       this.entity = builder.entity;
       checkNotNull(builder.metadata);
@@ -65,7 +65,7 @@ public class RequestProducer implements Producer<Request>
       this.metadata = new LinkedHashMap<Producer<String>, Producer<String>>();
       for (final Entry<Producer<String>, Producer<String>> m : builder.metadata.entrySet())
       {
-         this.metadata.put(m.getKey(), m.getValue());
+         this.metadata.put(checkNotNull(m.getKey()), checkNotNull(m.getValue()));
       }
       this.username = builder.username;
       this.password = builder.password;
@@ -142,8 +142,6 @@ public class RequestProducer implements Producer<Request>
 
       public Builder withHeader(final Producer<String> key, final Producer<String> value)
       {
-         checkNotNull(key);
-         checkNotNull(value);
          this.headers.put(key, value);
          return this;
       }
@@ -172,7 +170,7 @@ public class RequestProducer implements Producer<Request>
 
       public Builder withMetadata(final Producer<String> key, final Producer<String> value)
       {
-         this.metadata.put(checkNotNull(key), checkNotNull(value));
+         this.metadata.put(key, value);
          return this;
       }
 

@@ -63,7 +63,7 @@ public class UriProducer implements Producer<URI>
       this.queryParameters = new LinkedHashMap<String, String>();
       for (final Entry<String, String> qp : builder.queryParameters.entrySet())
       {
-         this.queryParameters.put(qp.getKey(), qp.getValue());
+         this.queryParameters.put(checkNotNull(qp.getKey()), checkNotNull(qp.getValue()));
       }
       this.trailingSlash = builder.trailingSlash;
    }
@@ -166,8 +166,6 @@ public class UriProducer implements Producer<URI>
 
       public Builder withQueryParameter(final String key, final String value)
       {
-         checkNotNull(key);
-         checkNotNull(value);
          this.queryParameters.put(key, value);
          return this;
       }

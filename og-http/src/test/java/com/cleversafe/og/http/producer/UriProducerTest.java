@@ -106,13 +106,13 @@ public class UriProducerTest
    @Test(expected = NullPointerException.class)
    public void testQueryParametersNullKey()
    {
-      new UriProducer.Builder(this.host, this.path).withQueryParameter(null, "value");
+      new UriProducer.Builder(this.host, this.path).withQueryParameter(null, "value").build();
    }
 
    @Test(expected = NullPointerException.class)
    public void testQueryParametersNullValue()
    {
-      new UriProducer.Builder(this.host, this.path).withQueryParameter("key", null);
+      new UriProducer.Builder(this.host, this.path).withQueryParameter("key", null).build();
    }
 
    @Test
