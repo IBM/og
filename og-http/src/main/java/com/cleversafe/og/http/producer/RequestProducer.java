@@ -65,9 +65,8 @@ public class RequestProducer implements Producer<Request>
    @Override
    public Request produce()
    {
-      final HttpRequest.Builder context = HttpRequest.custom()
-            .withMethod(this.method.produce())
-            .withUri(this.uri.produce());
+      final HttpRequest.Builder context =
+            new HttpRequest.Builder(this.method.produce(), this.uri.produce());
 
       if (this.object != null)
          context.withMetadata(Metadata.OBJECT_NAME, this.object.getCachedValue());

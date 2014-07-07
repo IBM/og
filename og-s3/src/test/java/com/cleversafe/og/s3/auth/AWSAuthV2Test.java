@@ -68,13 +68,12 @@ public class AWSAuthV2Test
 
    public static Object[] generateGET() throws URISyntaxException
    {
-      final Request request = HttpRequest.custom()
-            .withMethod(Method.GET)
-            .withUri(new URI("/johnsmith/photos/puppy.jpg"))
-            .withHeader("Date", "Tue, 27 Mar 2007 19:36:42 +0000")
-            .withMetadata(Metadata.USERNAME, AWS_ACCESS_KEY_ID)
-            .withMetadata(Metadata.PASSWORD, AWS_SECRET_ACCESS_KEY)
-            .build();
+      final Request request =
+            new HttpRequest.Builder(Method.GET, new URI("/johnsmith/photos/puppy.jpg"))
+                  .withHeader("Date", "Tue, 27 Mar 2007 19:36:42 +0000")
+                  .withMetadata(Metadata.USERNAME, AWS_ACCESS_KEY_ID)
+                  .withMetadata(Metadata.PASSWORD, AWS_SECRET_ACCESS_KEY)
+                  .build();
       final String stringToSign =
             "GET\n\n\nTue, 27 Mar 2007 19:36:42 +0000\n/johnsmith/photos/puppy.jpg";
       final String nextAuthorizationHeader =
@@ -84,15 +83,14 @@ public class AWSAuthV2Test
 
    public static Object[] generatePUT() throws URISyntaxException
    {
-      final Request request = HttpRequest.custom()
-            .withMethod(Method.PUT)
-            .withUri(new URI("/johnsmith/photos/puppy.jpg"))
-            .withHeader("Content-Type", "image/jpeg")
-            .withHeader("Content-Length", "94328")
-            .withHeader("Date", "Tue, 27 Mar 2007 21:15:45 +0000")
-            .withMetadata(Metadata.USERNAME, AWS_ACCESS_KEY_ID)
-            .withMetadata(Metadata.PASSWORD, AWS_SECRET_ACCESS_KEY)
-            .build();
+      final Request request =
+            new HttpRequest.Builder(Method.PUT, new URI("/johnsmith/photos/puppy.jpg"))
+                  .withHeader("Content-Type", "image/jpeg")
+                  .withHeader("Content-Length", "94328")
+                  .withHeader("Date", "Tue, 27 Mar 2007 21:15:45 +0000")
+                  .withMetadata(Metadata.USERNAME, AWS_ACCESS_KEY_ID)
+                  .withMetadata(Metadata.PASSWORD, AWS_SECRET_ACCESS_KEY)
+                  .build();
       final String stringToSign =
             "PUT\n\nimage/jpeg\nTue, 27 Mar 2007 21:15:45 +0000\n/johnsmith/photos/puppy.jpg";
       final String nextAuthorizationHeader =
@@ -102,14 +100,14 @@ public class AWSAuthV2Test
 
    public static Object[] generateList() throws URISyntaxException
    {
-      final Request request = HttpRequest.custom()
-            .withMethod(Method.GET)
-            .withUri(new URI("/johnsmith/?prefix=photos&max-keys=50&marker=puppy"))
-            .withHeader("User-Agent", "Mozilla/5.0")
-            .withHeader("Date", "Tue, 27 Mar 2007 19:42:41 +0000")
-            .withMetadata(Metadata.USERNAME, AWS_ACCESS_KEY_ID)
-            .withMetadata(Metadata.PASSWORD, AWS_SECRET_ACCESS_KEY)
-            .build();
+      final Request request =
+            new HttpRequest.Builder(Method.GET, new URI(
+                  "/johnsmith/?prefix=photos&max-keys=50&marker=puppy"))
+                  .withHeader("User-Agent", "Mozilla/5.0")
+                  .withHeader("Date", "Tue, 27 Mar 2007 19:42:41 +0000")
+                  .withMetadata(Metadata.USERNAME, AWS_ACCESS_KEY_ID)
+                  .withMetadata(Metadata.PASSWORD, AWS_SECRET_ACCESS_KEY)
+                  .build();
       final String stringToSign =
             "GET\n\n\nTue, 27 Mar 2007 19:42:41 +0000\n/johnsmith/";
       final String nextAuthorizationHeader =
@@ -119,16 +117,15 @@ public class AWSAuthV2Test
 
    public static Object[] generateDELETE() throws URISyntaxException
    {
-      final Request request = HttpRequest.custom()
-            .withMethod(Method.DELETE)
-            .withUri(new URI("/johnsmith/photos/puppy.jpg"))
-            .withHeader("User-Agent", "dotnet")
-            .withHeader("Host", "s3.amazonaws.com")
-            .withHeader("Date", "Tue, 27 Mar 2007 21:20:27 +0000")
-            .withHeader("x-amz-date", "Tue, 27 Mar 2007 21:20:26 +0000")
-            .withMetadata(Metadata.USERNAME, AWS_ACCESS_KEY_ID)
-            .withMetadata(Metadata.PASSWORD, AWS_SECRET_ACCESS_KEY)
-            .build();
+      final Request request =
+            new HttpRequest.Builder(Method.DELETE, new URI("/johnsmith/photos/puppy.jpg"))
+                  .withHeader("User-Agent", "dotnet")
+                  .withHeader("Host", "s3.amazonaws.com")
+                  .withHeader("Date", "Tue, 27 Mar 2007 21:20:27 +0000")
+                  .withHeader("x-amz-date", "Tue, 27 Mar 2007 21:20:26 +0000")
+                  .withMetadata(Metadata.USERNAME, AWS_ACCESS_KEY_ID)
+                  .withMetadata(Metadata.PASSWORD, AWS_SECRET_ACCESS_KEY)
+                  .build();
       final String stringToSign =
             "DELETE\n\n\nTue, 27 Mar 2007 21:20:26 +0000\n/johnsmith/photos/puppy.jpg";
       final String nextAuthorizationHeader =

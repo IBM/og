@@ -22,7 +22,6 @@ package com.cleversafe.og.http;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URI;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Locale;
@@ -49,18 +48,25 @@ public class HttpRequest implements Request
    private static final DateTimeFormatter RFC1123 =
          DateTimeFormat.forPattern("EEE, dd MMM yyyy HH:mm:ss zzz").withLocale(Locale.US);
 
-   private HttpRequest(
-         final Method method,
-         final URI uri,
-         final Map<String, String> headers,
-         final Entity entity,
-         final Map<String, String> metadata)
+   private HttpRequest(final Builder builder)
    {
-      this.method = checkNotNull(method);
-      this.uri = checkNotNull(uri);
-      this.headers = checkNotNull(headers);
-      this.entity = checkNotNull(entity);
-      this.metadata = checkNotNull(metadata);
+      this.method = checkNotNull(builder.method);
+      this.uri = checkNotNull(builder.uri);
+      checkNotNull(builder.headers);
+      // defensive copy
+      this.headers = new LinkedHashMap<String, String>();
+      for (final Entry<String, String> h : builder.headers.entrySet())
+      {
+         this.headers.put(h.getKey(), h.getValue());
+      }
+      this.entity = checkNotNull(builder.entity);
+      checkNotNull(builder.metadata);
+      // defensive copy
+      this.metadata = new LinkedHashMap<String, String>();
+      for (final Entry<String, String> m : builder.metadata.entrySet())
+      {
+         this.metadata.put(m.getKey(), m.getValue());
+      }
    }
 
    @Override
@@ -111,37 +117,22 @@ public class HttpRequest implements Request
       return this.metadata.entrySet().iterator();
    }
 
-   public static Builder custom()
-   {
-      return new Builder();
-   }
-
    public static class Builder
    {
-      private Method method;
-      private URI uri;
+      private final Method method;
+      private final URI uri;
       private final Map<String, String> headers;
       private Entity entity;
       private final Map<String, String> metadata;
 
-      private Builder()
+      public Builder(final Method method, final URI uri)
       {
+         this.method = method;
+         this.uri = uri;
          this.headers = new LinkedHashMap<String, String>();
          this.headers.put("Date", RFC1123.print(new DateTime()));
          this.entity = Entities.none();
          this.metadata = new LinkedHashMap<String, String>();
-      }
-
-      public Builder withMethod(final Method method)
-      {
-         this.method = method;
-         return this;
-      }
-
-      public Builder withUri(final URI uri)
-      {
-         this.uri = uri;
-         return this;
       }
 
       public Builder withHeader(final String key, final String value)
@@ -169,8 +160,7 @@ public class HttpRequest implements Request
 
       public HttpRequest build()
       {
-         return new HttpRequest(this.method, this.uri, Collections.unmodifiableMap(this.headers),
-               this.entity, Collections.unmodifiableMap(this.metadata));
+         return new HttpRequest(this);
       }
    }
 }

@@ -49,76 +49,61 @@ public class HttpRequestTest
    @Test(expected = NullPointerException.class)
    public void testNullMethod()
    {
-      HttpRequest.custom().withMethod(null).withUri(this.uri).build();
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void testNoMethod()
-   {
-      HttpRequest.custom().withUri(this.uri).build();
+      new HttpRequest.Builder(null, this.uri).build();
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullUri()
    {
-      HttpRequest.custom().withMethod(this.method).withUri(null).build();
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void testNoUri()
-   {
-      HttpRequest.custom().withMethod(this.method).build();
+      new HttpRequest.Builder(this.method, null).build();
    }
 
    @Test(expected = NullPointerException.class)
    public void testHeaderNullKey()
    {
-      HttpRequest.custom().withMethod(this.method).withUri(this.uri).withHeader(null, "value").build();
+      new HttpRequest.Builder(this.method, this.uri).withHeader(null, "value").build();
    }
 
    @Test(expected = NullPointerException.class)
    public void testHeaderNullValue()
    {
-      HttpRequest.custom().withMethod(this.method).withUri(this.uri).withHeader("key", null).build();
+      new HttpRequest.Builder(this.method, this.uri).withHeader("key", null).build();
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullEntity()
    {
-      HttpRequest.custom().withMethod(this.method).withUri(this.uri).withEntity(null).build();
+      new HttpRequest.Builder(this.method, this.uri).withEntity(null).build();
    }
 
    @Test(expected = NullPointerException.class)
    public void testMetadataNullKey()
    {
-      HttpRequest.custom().withMethod(this.method).withUri(this.uri).withMetadata((Metadata) null,
-            "value").build();
+      new HttpRequest.Builder(this.method, this.uri).withMetadata((Metadata) null, "value").build();
    }
 
    @Test(expected = NullPointerException.class)
    public void testMetadataNullKey2()
    {
-      HttpRequest.custom().withMethod(this.method).withUri(this.uri).withMetadata((String) null,
-            "value").build();
+      new HttpRequest.Builder(this.method, this.uri).withMetadata((String) null, "value").build();
    }
 
    @Test(expected = NullPointerException.class)
    public void testMetadataNullValue()
    {
-      HttpRequest.custom().withMethod(this.method).withUri(this.uri).withMetadata(Metadata.ABORTED,
-            null).build();
+      new HttpRequest.Builder(this.method, this.uri).withMetadata(Metadata.ABORTED, null).build();
    }
 
    @Test(expected = NullPointerException.class)
    public void testMetadataNullValue2()
    {
-      HttpRequest.custom().withMethod(this.method).withUri(this.uri).withMetadata("key", null).build();
+      new HttpRequest.Builder(this.method, this.uri).withMetadata("key", null).build();
    }
 
    @Test
    public void testMethod()
    {
-      final HttpRequest r = HttpRequest.custom().withMethod(Method.HEAD).withUri(this.uri).build();
+      final HttpRequest r = new HttpRequest.Builder(Method.HEAD, this.uri).build();
       Assert.assertEquals(Method.HEAD, r.getMethod());
    }
 
@@ -126,14 +111,14 @@ public class HttpRequestTest
    public void testUri() throws URISyntaxException
    {
       final URI aUri = new URI("https://10.1.1.1/container/object");
-      final HttpRequest r = HttpRequest.custom().withMethod(this.method).withUri(aUri).build();
+      final HttpRequest r = new HttpRequest.Builder(this.method, aUri).build();
       Assert.assertEquals(aUri, r.getUri());
    }
 
    @Test
    public void testMissingHeader()
    {
-      final HttpRequest r = HttpRequest.custom().withMethod(this.method).withUri(this.uri).build();
+      final HttpRequest r = new HttpRequest.Builder(this.method, this.uri).build();
       Assert.assertNull(r.getHeader("key"));
    }
 
@@ -141,16 +126,14 @@ public class HttpRequestTest
    public void testHeader()
    {
       final HttpRequest r =
-            HttpRequest.custom().withMethod(this.method).withUri(this.uri).withHeader("key",
-                  "value").build();
+            new HttpRequest.Builder(this.method, this.uri).withHeader("key", "value").build();
       Assert.assertEquals("value", r.getHeader("key"));
    }
 
    @Test
    public void testNoHeaders()
    {
-      final HttpRequest r =
-            HttpRequest.custom().withMethod(this.method).withUri(this.uri).build();
+      final HttpRequest r = new HttpRequest.Builder(this.method, this.uri).build();
       final Iterator<Entry<String, String>> it = r.headers();
       Assert.assertTrue(it.hasNext());
       // Skip Date header which is automatically added
@@ -162,8 +145,7 @@ public class HttpRequestTest
    public void testHeaders()
    {
       final HttpRequest r =
-            HttpRequest.custom().withMethod(this.method).withUri(this.uri).withHeader("key",
-                  "value").build();
+            new HttpRequest.Builder(this.method, this.uri).withHeader("key", "value").build();
       final Iterator<Entry<String, String>> it = r.headers();
       Assert.assertTrue(it.hasNext());
       // Skip Date header which is automatically added
@@ -178,7 +160,7 @@ public class HttpRequestTest
    @Test
    public void testHeaders2()
    {
-      final HttpRequest.Builder b = HttpRequest.custom().withMethod(this.method).withUri(this.uri);
+      final HttpRequest.Builder b = new HttpRequest.Builder(this.method, this.uri);
       for (int i = 0; i < 10; i++)
       {
          // (100 - i) exposes sorted vs insertion order
@@ -202,8 +184,7 @@ public class HttpRequestTest
    @Test
    public void testDefaultEntity()
    {
-      final HttpRequest r =
-            HttpRequest.custom().withMethod(this.method).withUri(this.uri).build();
+      final HttpRequest r = new HttpRequest.Builder(this.method, this.uri).build();
       Assert.assertEquals(EntityType.NONE, r.getEntity().getType());
       Assert.assertEquals(0, r.getEntity().getSize());
    }
@@ -212,8 +193,7 @@ public class HttpRequestTest
    public void testEntity()
    {
       final Entity e = Entities.of(EntityType.ZEROES, 12345);
-      final HttpRequest r =
-            HttpRequest.custom().withMethod(this.method).withUri(this.uri).withEntity(e).build();
+      final HttpRequest r = new HttpRequest.Builder(this.method, this.uri).withEntity(e).build();
       Assert.assertEquals(EntityType.ZEROES, r.getEntity().getType());
       Assert.assertEquals(12345, r.getEntity().getSize());
    }
@@ -221,16 +201,14 @@ public class HttpRequestTest
    @Test
    public void testMissingMetadata()
    {
-      final HttpRequest r =
-            HttpRequest.custom().withMethod(this.method).withUri(this.uri).build();
+      final HttpRequest r = new HttpRequest.Builder(this.method, this.uri).build();
       Assert.assertNull(r.getMetadata(Metadata.ABORTED));
    }
 
    @Test
    public void testMissingMetadata2()
    {
-      final HttpRequest r =
-            HttpRequest.custom().withMethod(this.method).withUri(this.uri).build();
+      final HttpRequest r = new HttpRequest.Builder(this.method, this.uri).build();
       Assert.assertNull(r.getMetadata("aborted"));
    }
 
@@ -238,8 +216,7 @@ public class HttpRequestTest
    public void testMetadataEntry()
    {
       final HttpRequest r =
-            HttpRequest.custom().withMethod(this.method).withUri(this.uri).withMetadata(
-                  Metadata.ABORTED, "1").build();
+            new HttpRequest.Builder(this.method, this.uri).withMetadata(Metadata.ABORTED, "1").build();
       Assert.assertEquals("1", r.getMetadata(Metadata.ABORTED));
    }
 
@@ -247,16 +224,14 @@ public class HttpRequestTest
    public void testMetadataEntry2()
    {
       final HttpRequest r =
-            HttpRequest.custom().withMethod(this.method).withUri(this.uri).withMetadata("key",
-                  "value").build();
+            new HttpRequest.Builder(this.method, this.uri).withMetadata("key", "value").build();
       Assert.assertEquals("value", r.getMetadata("key"));
    }
 
    @Test
    public void testMetadata()
    {
-      final HttpRequest r =
-            HttpRequest.custom().withMethod(this.method).withUri(this.uri).build();
+      final HttpRequest r = new HttpRequest.Builder(this.method, this.uri).build();
       final Iterator<Entry<String, String>> it = r.metadata();
       Assert.assertFalse(it.hasNext());
    }
@@ -265,8 +240,7 @@ public class HttpRequestTest
    public void testMetadata2()
    {
       final HttpRequest r =
-            HttpRequest.custom().withMethod(this.method).withUri(this.uri).withMetadata("key",
-                  "value").build();
+            new HttpRequest.Builder(this.method, this.uri).withMetadata("key", "value").build();
       final Iterator<Entry<String, String>> it = r.metadata();
       Assert.assertTrue(it.hasNext());
       final Entry<String, String> e = it.next();
@@ -278,7 +252,7 @@ public class HttpRequestTest
    @Test
    public void testMetadata3()
    {
-      final HttpRequest.Builder b = HttpRequest.custom().withMethod(this.method).withUri(this.uri);
+      final HttpRequest.Builder b = new HttpRequest.Builder(this.method, this.uri);
       for (int i = 0; i < 10; i++)
       {
          b.withMetadata("key" + i, "value" + i);
@@ -298,5 +272,27 @@ public class HttpRequestTest
       Assert.assertEquals("ABORTED", e.getKey());
       Assert.assertEquals("1", e.getValue());
       Assert.assertFalse(it.hasNext());
+   }
+
+   @Test
+   public void testHeaderModification()
+   {
+      final HttpRequest.Builder b =
+            new HttpRequest.Builder(this.method, this.uri).withHeader("key1", "value1");
+      final HttpRequest r = b.build();
+      b.withHeader("key2", "value2");
+      Assert.assertEquals("value1", r.getHeader("key1"));
+      Assert.assertNull(r.getHeader("key2"));
+   }
+
+   @Test
+   public void testMetadataModification()
+   {
+      final HttpRequest.Builder b =
+            new HttpRequest.Builder(this.method, this.uri).withMetadata("key1", "value1");
+      final HttpRequest r = b.build();
+      b.withMetadata("key2", "value2");
+      Assert.assertEquals("value1", r.getMetadata("key1"));
+      Assert.assertNull(r.getMetadata("key2"));
    }
 }
