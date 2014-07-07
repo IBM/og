@@ -31,7 +31,7 @@ public class WriteObjectNameConsumer extends ObjectNameConsumer
 {
    public WriteObjectNameConsumer(
          final ObjectManager objectManager,
-         final Map<Long, Request> pendingRequests,
+         final Map<String, Request> pendingRequests,
          final List<Integer> statusCodes)
    {
       super(objectManager, pendingRequests, Operation.WRITE, statusCodes);

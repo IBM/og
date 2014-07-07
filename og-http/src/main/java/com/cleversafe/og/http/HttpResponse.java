@@ -36,33 +36,23 @@ import com.cleversafe.og.util.Entities;
 
 public class HttpResponse implements Response
 {
-   private final long requestId;
    private final int statusCode;
    private final Map<String, String> headers;
    private final Entity entity;
    private final Map<String, String> metadata;
 
    private HttpResponse(
-         final long requestId,
          final int statusCode,
          final Map<String, String> headers,
          final Entity entity,
          final Map<String, String> metadata)
    {
-      checkArgument(requestId >= 0, "requestId must be >= 0 [%s]", requestId);
-      this.requestId = requestId;
       checkArgument(HttpUtil.VALID_STATUS_CODES.contains(statusCode),
             "statusCode must be a valid status code [%s]", statusCode);
       this.statusCode = statusCode;
       this.headers = checkNotNull(headers);
       this.entity = checkNotNull(entity);
       this.metadata = checkNotNull(metadata);
-   }
-
-   @Override
-   public long getRequestId()
-   {
-      return this.requestId;
    }
 
    @Override
@@ -114,7 +104,6 @@ public class HttpResponse implements Response
 
    public static class Builder
    {
-      private long requestId;
       private int statusCode;
       private final Map<String, String> headers;
       private Entity entity;
@@ -125,12 +114,6 @@ public class HttpResponse implements Response
          this.headers = new LinkedHashMap<String, String>();
          this.entity = Entities.none();
          this.metadata = new LinkedHashMap<String, String>();
-      }
-
-      public Builder withRequestId(final long requestId)
-      {
-         this.requestId = requestId;
-         return this;
       }
 
       public Builder withStatusCode(final int statusCode)
@@ -164,9 +147,8 @@ public class HttpResponse implements Response
 
       public HttpResponse build()
       {
-         return new HttpResponse(this.requestId, this.statusCode,
-               Collections.unmodifiableMap(this.headers), this.entity,
-               Collections.unmodifiableMap(this.metadata));
+         return new HttpResponse(this.statusCode, Collections.unmodifiableMap(this.headers),
+               this.entity, Collections.unmodifiableMap(this.metadata));
       }
    }
 }

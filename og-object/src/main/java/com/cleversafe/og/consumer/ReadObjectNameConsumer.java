@@ -31,7 +31,7 @@ public class ReadObjectNameConsumer extends ObjectNameConsumer
 {
    public ReadObjectNameConsumer(
          final ObjectManager objectManager,
-         final Map<Long, Request> pendingRequests,
+         final Map<String, Request> pendingRequests,
          final List<Integer> statusCodes)
    {
       super(objectManager, pendingRequests, Operation.READ, statusCodes);

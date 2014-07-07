@@ -42,13 +42,13 @@ import com.cleversafe.og.guice.annotation.ReadObjectName;
 import com.cleversafe.og.guice.annotation.ReadUri;
 import com.cleversafe.og.guice.annotation.TestContainer;
 import com.cleversafe.og.guice.annotation.TestEntity;
+import com.cleversafe.og.guice.annotation.TestId;
 import com.cleversafe.og.guice.annotation.TestPassword;
 import com.cleversafe.og.guice.annotation.TestPort;
 import com.cleversafe.og.guice.annotation.TestQueryParams;
 import com.cleversafe.og.guice.annotation.TestScheme;
 import com.cleversafe.og.guice.annotation.TestUriRoot;
 import com.cleversafe.og.guice.annotation.TestUsername;
-import com.cleversafe.og.guice.annotation.TesttId;
 import com.cleversafe.og.guice.annotation.Write;
 import com.cleversafe.og.guice.annotation.WriteHeaders;
 import com.cleversafe.og.guice.annotation.WriteHost;
@@ -91,17 +91,16 @@ public class ApiModule extends AbstractModule
    @Singleton
    @Write
    public Producer<Request> provideWrite(
-         @TesttId final Producer<Long> id,
          @WriteUri final Producer<URI> uri,
          @WriteObjectName final CachingProducer<String> object,
          @WriteHeaders final Map<Producer<String>, Producer<String>> headers,
          @TestEntity final Producer<Entity> entity,
-         @WriteMetadata final Map<String, String> metadata,
+         @WriteMetadata final Map<Producer<String>, Producer<String>> metadata,
          @TestUsername final Producer<String> username,
          @TestPassword final Producer<String> password)
    {
-      return createRequestProducer(id, Method.PUT, uri, object, headers, entity, metadata,
-            username, password);
+      return createRequestProducer(Method.PUT, uri, object, headers, entity, metadata, username,
+            password);
    }
 
    @Provides
@@ -121,12 +120,15 @@ public class ApiModule extends AbstractModule
 
    @Provides
    @WriteMetadata
-   public Map<String, String> provideWriteMetadata(final Api api)
+   public Map<Producer<String>, Producer<String>> provideWriteMetadata(
+         final Api api,
+         @TestId final Producer<String> id)
    {
-      final Map<String, String> metadata = new HashMap<String, String>();
+      final Map<Producer<String>, Producer<String>> metadata = createMetadata(id);
       // SOH needs to use a special response procesor to extract the returned object id
       if (Api.SOH == api)
-         metadata.put(Metadata.RESPONSE_BODY_PROCESSOR.toString(), SOH_PUT_OBJECT);
+         metadata.put(Producers.of(Metadata.RESPONSE_BODY_PROCESSOR.toString()),
+               Producers.of(SOH_PUT_OBJECT));
       return metadata;
    }
 
@@ -134,16 +136,15 @@ public class ApiModule extends AbstractModule
    @Singleton
    @Read
    public Producer<Request> provideRead(
-         @TesttId final Producer<Long> id,
          @ReadUri final Producer<URI> uri,
          @ReadObjectName final CachingProducer<String> object,
          @ReadHeaders final Map<Producer<String>, Producer<String>> headers,
-         @ReadMetadata final Map<String, String> metadata,
+         @ReadMetadata final Map<Producer<String>, Producer<String>> metadata,
          @TestUsername final Producer<String> username,
          @TestPassword final Producer<String> password)
    {
-      return createRequestProducer(id, Method.GET, uri, object, headers,
-            Producers.of(Entities.none()), metadata, username, password);
+      return createRequestProducer(Method.GET, uri, object, headers, Producers.of(Entities.none()),
+            metadata, username, password);
    }
 
    @Provides
@@ -163,24 +164,24 @@ public class ApiModule extends AbstractModule
 
    @Provides
    @ReadMetadata
-   public Map<String, String> provideReadMetadata()
+   public Map<Producer<String>, Producer<String>> provideReadMetadata(
+         @TestId final Producer<String> id)
    {
-      return new HashMap<String, String>();
+      return createMetadata(id);
    }
 
    @Provides
    @Singleton
    @Delete
    public Producer<Request> provideDelete(
-         @TesttId final Producer<Long> id,
          @DeleteUri final Producer<URI> uri,
          @DeleteObjectName final CachingProducer<String> object,
          @DeleteHeaders final Map<Producer<String>, Producer<String>> headers,
-         @DeleteMetadata final Map<String, String> metadata,
+         @DeleteMetadata final Map<Producer<String>, Producer<String>> metadata,
          @TestUsername final Producer<String> username,
          @TestPassword final Producer<String> password)
    {
-      return createRequestProducer(id, Method.DELETE, uri, object, headers,
+      return createRequestProducer(Method.DELETE, uri, object, headers,
             Producers.of(Entities.none()), metadata, username, password);
    }
 
@@ -201,24 +202,31 @@ public class ApiModule extends AbstractModule
 
    @Provides
    @DeleteMetadata
-   public Map<String, String> provideDeleteMetadata()
+   public Map<Producer<String>, Producer<String>> provideDeleteMetadata(
+         @TestId final Producer<String> id)
    {
-      return new HashMap<String, String>();
+      return createMetadata(id);
+   }
+
+   public Map<Producer<String>, Producer<String>> createMetadata(final Producer<String> id)
+   {
+      final Map<Producer<String>, Producer<String>> metadata =
+            new HashMap<Producer<String>, Producer<String>>();
+      metadata.put(Producers.of(Metadata.REQUEST_ID.toString()), id);
+      return metadata;
    }
 
    private Producer<Request> createRequestProducer(
-         final Producer<Long> id,
          final Method method,
          final Producer<URI> uri,
          final CachingProducer<String> object,
          final Map<Producer<String>, Producer<String>> headers,
          final Producer<Entity> entity,
-         final Map<String, String> metadata,
+         final Map<Producer<String>, Producer<String>> metadata,
          final Producer<String> username,
          final Producer<String> password)
    {
-      final RequestProducer.Builder b =
-            new RequestProducer.Builder(Producers.of(method), uri).withId(id);
+      final RequestProducer.Builder b = new RequestProducer.Builder(Producers.of(method), uri);
 
       if (object != null)
          b.withObject(object);
@@ -230,7 +238,7 @@ public class ApiModule extends AbstractModule
 
       b.withEntity(entity);
 
-      for (final Entry<String, String> m : metadata.entrySet())
+      for (final Entry<Producer<String>, Producer<String>> m : metadata.entrySet())
       {
          b.withMetadata(m.getKey(), m.getValue());
       }
@@ -271,7 +279,7 @@ public class ApiModule extends AbstractModule
    @Singleton
    public List<Consumer<Response>> provideObjectNameConsumers(
          final ObjectManager objectManager,
-         final Map<Long, Request> pendingRequests)
+         final Map<String, Request> pendingRequests)
    {
       final List<Integer> sc = HttpUtil.SUCCESS_STATUS_CODES;
       final List<Consumer<Response>> list = new ArrayList<Consumer<Response>>();

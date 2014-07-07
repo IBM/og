@@ -46,13 +46,13 @@ import com.google.inject.Singleton;
 public class OGModule extends AbstractModule
 {
 
-   private final Map<Long, Request> pendingRequests;
+   private final Map<String, Request> pendingRequests;
 
    public OGModule()
    {
       // have to create this here so that LoadTest can access a modifiable
       // version of the map, all others get a read-only instance
-      this.pendingRequests = new ConcurrentHashMap<Long, Request>();
+      this.pendingRequests = new ConcurrentHashMap<String, Request>();
    }
 
    @Override
@@ -97,7 +97,7 @@ public class OGModule extends AbstractModule
 
    @Provides
    @Singleton
-   public Map<Long, Request> providePendingRequests()
+   public Map<String, Request> providePendingRequests()
    {
       return Collections.unmodifiableMap(this.pendingRequests);
    }

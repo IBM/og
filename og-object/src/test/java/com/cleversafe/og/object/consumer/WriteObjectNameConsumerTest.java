@@ -53,7 +53,7 @@ import com.cleversafe.og.util.producer.ProducerException;
 public class WriteObjectNameConsumerTest
 {
    private ObjectManager mockObjectManager;
-   private Map<Long, Request> pendingRequests;
+   private Map<String, Request> pendingRequests;
    private List<Integer> statusCodes;
    private Request mockRequest;
    private Response mockResponse;
@@ -67,10 +67,10 @@ public class WriteObjectNameConsumerTest
       when(this.mockRequest.getUri()).thenReturn(
             new URI("http://192.168.8.1/soh/container/5c18be1057404792923dc487ca40f2370000"));
       this.mockResponse = mock(Response.class);
-      when(this.mockResponse.getRequestId()).thenReturn(1L);
+      when(this.mockResponse.getMetadata(Metadata.REQUEST_ID)).thenReturn("1");
 
-      this.pendingRequests = new HashMap<Long, Request>();
-      this.pendingRequests.put(1L, this.mockRequest);
+      this.pendingRequests = new HashMap<String, Request>();
+      this.pendingRequests.put("1", this.mockRequest);
    }
 
    @Test(expected = NullPointerException.class)

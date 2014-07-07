@@ -19,7 +19,6 @@
 
 package com.cleversafe.og.http;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URI;
@@ -42,7 +41,6 @@ import com.cleversafe.og.util.Entities;
 
 public class HttpRequest implements Request
 {
-   private final long id;
    private final Method method;
    private final URI uri;
    private final Map<String, String> headers;
@@ -52,26 +50,17 @@ public class HttpRequest implements Request
          DateTimeFormat.forPattern("EEE, dd MMM yyyy HH:mm:ss zzz").withLocale(Locale.US);
 
    private HttpRequest(
-         final long id,
          final Method method,
          final URI uri,
          final Map<String, String> headers,
          final Entity entity,
          final Map<String, String> metadata)
    {
-      checkArgument(id >= 0, "id must be >= 0 [%s]", id);
-      this.id = id;
       this.method = checkNotNull(method);
       this.uri = checkNotNull(uri);
       this.headers = checkNotNull(headers);
       this.entity = checkNotNull(entity);
       this.metadata = checkNotNull(metadata);
-   }
-
-   @Override
-   public long getId()
-   {
-      return this.id;
    }
 
    @Override
@@ -129,7 +118,6 @@ public class HttpRequest implements Request
 
    public static class Builder
    {
-      private long id;
       private Method method;
       private URI uri;
       private final Map<String, String> headers;
@@ -142,12 +130,6 @@ public class HttpRequest implements Request
          this.headers.put("Date", RFC1123.print(new DateTime()));
          this.entity = Entities.none();
          this.metadata = new LinkedHashMap<String, String>();
-      }
-
-      public Builder withId(final long id)
-      {
-         this.id = id;
-         return this;
       }
 
       public Builder withMethod(final Method method)
@@ -187,9 +169,8 @@ public class HttpRequest implements Request
 
       public HttpRequest build()
       {
-         return new HttpRequest(this.id, this.method, this.uri,
-               Collections.unmodifiableMap(this.headers), this.entity,
-               Collections.unmodifiableMap(this.metadata));
+         return new HttpRequest(this.method, this.uri, Collections.unmodifiableMap(this.headers),
+               this.entity, Collections.unmodifiableMap(this.metadata));
       }
    }
 }

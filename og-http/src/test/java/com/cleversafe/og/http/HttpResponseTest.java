@@ -41,24 +41,6 @@ public class HttpResponseTest
       this.statusCode = 201;
    }
 
-   @Test(expected = IllegalArgumentException.class)
-   public void testNegativeRequestId()
-   {
-      HttpResponse.custom().withRequestId(-1).withStatusCode(this.statusCode).build();
-   }
-
-   @Test
-   public void testZeroRequestId()
-   {
-      HttpResponse.custom().withRequestId(0).withStatusCode(this.statusCode).build();
-   }
-
-   @Test
-   public void testPositiveRequestId()
-   {
-      HttpResponse.custom().withRequestId(1).withStatusCode(this.statusCode).build();
-   }
-
    @Test
    public void testNoRequestId()
    {
@@ -141,21 +123,6 @@ public class HttpResponseTest
    public void testMetadataNullValue2()
    {
       HttpResponse.custom().withStatusCode(this.statusCode).withMetadata("key", null).build();
-   }
-
-   @Test
-   public void testDefaultRequestId()
-   {
-      final HttpResponse r = HttpResponse.custom().withStatusCode(this.statusCode).build();
-      Assert.assertEquals(0, r.getRequestId());
-   }
-
-   @Test
-   public void testRequestId()
-   {
-      final HttpResponse r =
-            HttpResponse.custom().withRequestId(5).withStatusCode(this.statusCode).build();
-      Assert.assertEquals(5, r.getRequestId());
    }
 
    @Test

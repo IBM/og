@@ -58,7 +58,7 @@ import com.cleversafe.og.guice.annotation.TestQueryParams;
 import com.cleversafe.og.guice.annotation.TestScheme;
 import com.cleversafe.og.guice.annotation.TestUriRoot;
 import com.cleversafe.og.guice.annotation.TestUsername;
-import com.cleversafe.og.guice.annotation.TesttId;
+import com.cleversafe.og.guice.annotation.TestId;
 import com.cleversafe.og.guice.annotation.WriteHeaders;
 import com.cleversafe.og.guice.annotation.WriteHost;
 import com.cleversafe.og.guice.annotation.WriteWeight;
@@ -108,17 +108,17 @@ public class JsonModule extends AbstractModule
 
    @Provides
    @Singleton
-   @TesttId
-   public Producer<Long> provideTestIdProducer()
+   @TestId
+   public Producer<String> provideTestIdProducer()
    {
-      return new Producer<Long>()
+      return new Producer<String>()
       {
          private final AtomicLong id = new AtomicLong();
 
          @Override
-         public Long produce()
+         public String produce()
          {
-            return this.id.getAndIncrement();
+            return String.valueOf(this.id.getAndIncrement());
          }
       };
    }

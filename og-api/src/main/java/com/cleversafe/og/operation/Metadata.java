@@ -21,6 +21,7 @@ package com.cleversafe.og.operation;
 
 public enum Metadata
 {
+   REQUEST_ID,
    OBJECT_NAME,
    USERNAME,
    PASSWORD,

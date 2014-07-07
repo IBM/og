@@ -38,7 +38,6 @@ import com.cleversafe.og.util.producer.Producers;
 
 public class RequestProducer implements Producer<Request>
 {
-   private final Producer<Long> id;
    private final Producer<Method> method;
    private final Producer<URI> uri;
    private final CachingProducer<String> object;
@@ -50,7 +49,6 @@ public class RequestProducer implements Producer<Request>
 
    private RequestProducer(final Builder builder)
    {
-      this.id = checkNotNull(builder.id);
       this.method = checkNotNull(builder.method);
       this.uri = checkNotNull(builder.uri);
       this.object = builder.object;
@@ -67,8 +65,7 @@ public class RequestProducer implements Producer<Request>
    @Override
    public Request produce()
    {
-      final HttpRequest.Builder context = HttpRequest.custom();
-      context.withId(this.id.produce())
+      final HttpRequest.Builder context = HttpRequest.custom()
             .withMethod(this.method.produce())
             .withUri(this.uri.produce());
 
@@ -99,7 +96,6 @@ public class RequestProducer implements Producer<Request>
 
    public static class Builder
    {
-      private Producer<Long> id;
       private final Producer<Method> method;
       private final Producer<URI> uri;
       private CachingProducer<String> object;
@@ -120,18 +116,6 @@ public class RequestProducer implements Producer<Request>
          this.uri = uri;
          this.headers = new LinkedHashMap<Producer<String>, Producer<String>>();
          this.metadata = new LinkedHashMap<Producer<String>, Producer<String>>();
-      }
-
-      public Builder withId(final long id)
-      {
-         checkArgument(id >= 0, "id must be >= 0 [%s]", id);
-         return withId(Producers.of(id));
-      }
-
-      public Builder withId(final Producer<Long> id)
-      {
-         this.id = id;
-         return this;
       }
 
       public Builder withObject(final CachingProducer<String> object)

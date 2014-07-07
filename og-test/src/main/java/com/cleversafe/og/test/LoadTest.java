@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.client.Client;
+import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.operation.manager.OperationManager;
@@ -52,7 +53,7 @@ public class LoadTest
    private final Scheduler scheduler;
    private final Statistics stats;
    private final List<TestCondition> testConditions;
-   private final Map<Long, Request> pendingRequests;
+   private final Map<String, Request> pendingRequests;
    private final ExecutorService executorService;
    private final Thread testThread;
    AtomicBoolean running;
@@ -63,7 +64,7 @@ public class LoadTest
          final Scheduler scheduler,
          final Statistics stats,
          final List<TestCondition> testConditions,
-         final Map<Long, Request> pendingRequests)
+         final Map<String, Request> pendingRequests)
    {
       this.operationManager = checkNotNull(operationManager);
       this.client = checkNotNull(client);
@@ -84,7 +85,7 @@ public class LoadTest
          while (isRunning())
          {
             final Request nextRequest = this.operationManager.next();
-            this.pendingRequests.put(nextRequest.getId(), nextRequest);
+            this.pendingRequests.put(nextRequest.getMetadata(Metadata.REQUEST_ID), nextRequest);
             final ListenableFuture<Response> future = this.client.execute(nextRequest);
             future.addListener(getListener(future), this.executorService);
             this.scheduler.waitForNext();
@@ -163,11 +164,14 @@ public class LoadTest
          try
          {
             final Response response = this.future.get();
+
             LoadTest.this.operationManager.complete(response);
             LoadTest.this.scheduler.complete(response);
-            final Request request = LoadTest.this.pendingRequests.get(response.getRequestId());
+
+            final String requestId = response.getMetadata(Metadata.REQUEST_ID);
+            final Request request = LoadTest.this.pendingRequests.get(requestId);
             LoadTest.this.stats.update(request, response);
-            LoadTest.this.pendingRequests.remove(response.getRequestId());
+            LoadTest.this.pendingRequests.remove(requestId);
          }
          catch (final Exception e)
          {

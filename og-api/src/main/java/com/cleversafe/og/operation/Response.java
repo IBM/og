@@ -28,13 +28,6 @@ import java.util.Map.Entry;
 public interface Response
 {
    /**
-    * Gets the id for the request associated with this response.
-    * 
-    * @return the id of the associated request
-    */
-   long getRequestId();
-
-   /**
     * Gets the status code for this response.
     * 
     * @return the status code for this response

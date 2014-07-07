@@ -46,30 +46,6 @@ public class HttpRequestTest
       this.uri = new URI("http://192.168.8.1/container/object");
    }
 
-   @Test(expected = IllegalArgumentException.class)
-   public void testNegativeId()
-   {
-      HttpRequest.custom().withId(-1).withMethod(this.method).withUri(this.uri).build();
-   }
-
-   @Test
-   public void testZeroId()
-   {
-      HttpRequest.custom().withId(0).withMethod(this.method).withUri(this.uri).build();
-   }
-
-   @Test
-   public void testPositiveId()
-   {
-      HttpRequest.custom().withId(1).withMethod(this.method).withUri(this.uri).build();
-   }
-
-   @Test
-   public void testNoId()
-   {
-      HttpRequest.custom().withMethod(this.method).withUri(this.uri).build();
-   }
-
    @Test(expected = NullPointerException.class)
    public void testNullMethod()
    {
@@ -137,22 +113,6 @@ public class HttpRequestTest
    public void testMetadataNullValue2()
    {
       HttpRequest.custom().withMethod(this.method).withUri(this.uri).withMetadata("key", null).build();
-   }
-
-   @Test
-   public void testDefaultId()
-   {
-      final HttpRequest r =
-            HttpRequest.custom().withMethod(this.method).withUri(this.uri).build();
-      Assert.assertEquals(0, r.getId());
-   }
-
-   @Test
-   public void testId()
-   {
-      final HttpRequest r =
-            HttpRequest.custom().withId(5).withMethod(this.method).withUri(this.uri).build();
-      Assert.assertEquals(5, r.getId());
    }
 
    @Test

@@ -99,7 +99,7 @@ public class RequestLogEntry
       this.requestLatency = this.timestampFinish - this.timestampStart;
 
       // custom
-      this.clientRequestId = String.valueOf(request.getId());
+      this.clientRequestId = request.getMetadata(Metadata.REQUEST_ID);
       this.requestId = response.getHeader(X_CLV_REQUEST_ID);
       this.stat = null;
       this.objectLength = objectSize;

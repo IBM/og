@@ -42,13 +42,13 @@ import com.google.common.io.BaseEncoding;
 public abstract class ObjectNameConsumer implements Consumer<Response>
 {
    protected final ObjectManager objectManager;
-   private final Map<Long, Request> pendingRequests;
+   private final Map<String, Request> pendingRequests;
    private final Operation operation;
    private final List<Integer> statusCodes;
 
    public ObjectNameConsumer(
          final ObjectManager objectManager,
-         final Map<Long, Request> pendingRequests,
+         final Map<String, Request> pendingRequests,
          final Operation operation,
          final List<Integer> statusCodes)
    {
@@ -69,11 +69,11 @@ public abstract class ObjectNameConsumer implements Consumer<Response>
    public void consume(final Response response)
    {
       checkNotNull(response);
-      final Request request = this.pendingRequests.get(response.getRequestId());
+      final String requestId = response.getMetadata(Metadata.REQUEST_ID);
+      final Request request = this.pendingRequests.get(requestId);
       if (request == null)
          throw new ProducerException(String.format(
-               "No matching request found for response with request id [%s]",
-               response.getRequestId()));
+               "No matching request found for response with request id [%s]", requestId));
 
       // if this consumer is not relevant for the current response, ignore
       if (this.operation != HttpUtil.toOperation(request.getMethod()))

@@ -29,14 +29,6 @@ import java.util.Map.Entry;
 public interface Request
 {
    /**
-    * Gets the id for this request. An id should uniquely identify this request relative to any past
-    * or future requests.
-    * 
-    * @return the id of this request
-    */
-   long getId();
-
-   /**
     * Gets the http method for this request.
     * 
     * @return the http method for this request
