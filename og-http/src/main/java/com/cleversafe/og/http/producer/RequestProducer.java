@@ -44,7 +44,7 @@ public class RequestProducer implements Producer<Request>
    private final CachingProducer<String> object;
    private final Map<Producer<String>, Producer<String>> headers;
    private final Producer<Entity> entity;
-   private final Map<String, String> metadata;
+   private final Map<Producer<String>, Producer<String>> metadata;
    private final Producer<String> username;
    private final Producer<String> password;
 
@@ -83,9 +83,9 @@ public class RequestProducer implements Producer<Request>
       if (this.entity != null)
          context.withEntity(this.entity.produce());
 
-      for (final Entry<String, String> e : this.metadata.entrySet())
+      for (final Entry<Producer<String>, Producer<String>> e : this.metadata.entrySet())
       {
-         context.withMetadata(e.getKey(), e.getValue());
+         context.withMetadata(e.getKey().produce(), e.getValue().produce());
       }
 
       if (this.username != null)
@@ -105,7 +105,7 @@ public class RequestProducer implements Producer<Request>
       private CachingProducer<String> object;
       private final Map<Producer<String>, Producer<String>> headers;
       private Producer<Entity> entity;
-      private final Map<String, String> metadata;
+      private final Map<Producer<String>, Producer<String>> metadata;
       private Producer<String> username;
       private Producer<String> password;
 
@@ -119,7 +119,7 @@ public class RequestProducer implements Producer<Request>
          this.method = method;
          this.uri = uri;
          this.headers = new LinkedHashMap<Producer<String>, Producer<String>>();
-         this.metadata = new LinkedHashMap<String, String>();
+         this.metadata = new LinkedHashMap<Producer<String>, Producer<String>>();
       }
 
       public Builder withId(final long id)
@@ -170,6 +170,12 @@ public class RequestProducer implements Producer<Request>
       }
 
       public Builder withMetadata(final String key, final String value)
+      {
+         this.metadata.put(Producers.of(key), Producers.of(value));
+         return this;
+      }
+
+      public Builder withMetadata(final Producer<String> key, final Producer<String> value)
       {
          this.metadata.put(checkNotNull(key), checkNotNull(value));
          return this;

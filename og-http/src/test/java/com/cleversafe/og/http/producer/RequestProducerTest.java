@@ -164,6 +164,14 @@ public class RequestProducerTest
    }
 
    @Test(expected = NullPointerException.class)
+   public void testMetadataNullKey3()
+   {
+      new RequestProducer.Builder(this.method, this.uri).withId(0).withMetadata(
+            (Producer<String>) null,
+            Producers.of("value"));
+   }
+
+   @Test(expected = NullPointerException.class)
    public void testMetadataNullValue()
    {
       new RequestProducer.Builder(this.method, this.uri).withMetadata(Metadata.ABORTED, null);
@@ -173,6 +181,13 @@ public class RequestProducerTest
    public void testMetadataNullValue2()
    {
       new RequestProducer.Builder(this.method, this.uri).withId(0).withMetadata("aborted", null);
+   }
+
+   @Test(expected = NullPointerException.class)
+   public void testMetadataNullValue3()
+   {
+      new RequestProducer.Builder(this.method, this.uri).withId(0).withMetadata(
+            Producers.of("aborted"), (Producer<String>) null);
    }
 
    @Test(expected = NullPointerException.class)
@@ -333,18 +348,22 @@ public class RequestProducerTest
    public void testMetadata()
    {
       final RequestProducer p =
-            new RequestProducer.Builder(this.method, this.uri).withId(0).withMetadata("key2",
-                  "value2").withMetadata(Metadata.ABORTED, "value1").build();
+            new RequestProducer.Builder(this.method, this.uri).withId(0).withMetadata("key3",
+                  "value3").withMetadata(Metadata.ABORTED, "value2").withMetadata(
+                  Producers.of("key1"), Producers.of("value1")).build();
       final Request r = p.produce();
       final Iterator<Entry<String, String>> it = r.metadata();
 
       Assert.assertTrue(it.hasNext());
       Entry<String, String> e = it.next();
-      Assert.assertEquals("key2", e.getKey());
-      Assert.assertEquals("value2", e.getValue());
+      Assert.assertEquals("key3", e.getKey());
+      Assert.assertEquals("value3", e.getValue());
       Assert.assertTrue(it.hasNext());
       e = it.next();
       Assert.assertEquals("ABORTED", e.getKey());
+      Assert.assertEquals("value2", e.getValue());
+      e = it.next();
+      Assert.assertEquals("key1", e.getKey());
       Assert.assertEquals("value1", e.getValue());
       Assert.assertFalse(it.hasNext());
    }
