@@ -24,7 +24,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -73,7 +72,6 @@ import com.cleversafe.og.scheduling.ConcurrentRequestScheduler;
 import com.cleversafe.og.scheduling.RequestRateScheduler;
 import com.cleversafe.og.scheduling.Scheduler;
 import com.cleversafe.og.util.Entities;
-import com.cleversafe.og.util.Pair;
 import com.cleversafe.og.util.distribution.Distribution;
 import com.cleversafe.og.util.distribution.NormalDistribution;
 import com.cleversafe.og.util.distribution.UniformDistribution;
@@ -294,7 +292,7 @@ public class JsonModule extends AbstractModule
    @Provides
    @Singleton
    @TestHeaders
-   public List<Producer<Pair<String, String>>> provideTestHeaders()
+   public Map<Producer<String>, Producer<String>> provideTestHeaders()
    {
       return createHeaders(this.config.getHeaders());
    }
@@ -302,7 +300,7 @@ public class JsonModule extends AbstractModule
    @Provides
    @Singleton
    @WriteHeaders
-   public List<Producer<Pair<String, String>>> provideWriteHeaders()
+   public Map<Producer<String>, Producer<String>> provideWriteHeaders()
    {
       return provideHeaders(this.config.getWrite());
    }
@@ -310,7 +308,7 @@ public class JsonModule extends AbstractModule
    @Provides
    @Singleton
    @ReadHeaders
-   public List<Producer<Pair<String, String>>> provideReadHeaders()
+   public Map<Producer<String>, Producer<String>> provideReadHeaders()
    {
       return provideHeaders(this.config.getRead());
    }
@@ -318,12 +316,13 @@ public class JsonModule extends AbstractModule
    @Provides
    @Singleton
    @DeleteHeaders
-   public List<Producer<Pair<String, String>>> provideDeleteHeaders()
+   public Map<Producer<String>, Producer<String>> provideDeleteHeaders()
    {
       return provideHeaders(this.config.getDelete());
    }
 
-   private List<Producer<Pair<String, String>>> provideHeaders(final OperationConfig operationConfig)
+   private Map<Producer<String>, Producer<String>> provideHeaders(
+         final OperationConfig operationConfig)
    {
       final Map<String, String> headers = this.config.getHeaders();
       if (operationConfig != null && operationConfig.getHeaders() != null)
@@ -331,13 +330,13 @@ public class JsonModule extends AbstractModule
       return createHeaders(headers);
    }
 
-   private List<Producer<Pair<String, String>>> createHeaders(final Map<String, String> headers)
+   private Map<Producer<String>, Producer<String>> createHeaders(final Map<String, String> headers)
    {
-      final List<Producer<Pair<String, String>>> h =
-            new ArrayList<Producer<Pair<String, String>>>();
+      final Map<Producer<String>, Producer<String>> h =
+            new HashMap<Producer<String>, Producer<String>>();
       for (final Entry<String, String> e : headers.entrySet())
       {
-         h.add(Producers.of(new Pair<String, String>(e.getKey(), e.getValue())));
+         h.put(Producers.of(e.getKey()), Producers.of(e.getValue()));
       }
       return h;
    }
