@@ -55,177 +55,167 @@ public class RequestProducerTest
    @Test(expected = NullPointerException.class)
    public void testNoId()
    {
-      RequestProducer.custom().withMethod(this.method).withUri(this.uri).build();
+      new RequestProducer.Builder(this.method, this.uri).build();
    }
 
    @Test(expected = IllegalArgumentException.class)
    public void testNegativeId()
    {
-      RequestProducer.custom().withId(-1).withMethod(this.method).withUri(this.uri).build();
+      new RequestProducer.Builder(this.method, this.uri).withId(-1).build();
    }
 
    public void testZeroId()
    {
-      RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).build();
+      new RequestProducer.Builder(this.method, this.uri).withId(0).build();
    }
 
    public void testPositiveId()
    {
-      RequestProducer.custom().withId(1).withMethod(this.method).withUri(this.uri).build();
+      new RequestProducer.Builder(this.method, this.uri).withId(1).build();
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullId()
+   public void testNullIdProducer()
    {
-      RequestProducer.custom().withId((Producer<Long>) null).withMethod(this.method).withUri(
-            this.uri).build();
+      new RequestProducer.Builder(this.method, this.uri).withId((Producer<Long>) null).build();
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullMethod()
    {
-      RequestProducer.custom().withId(0).withMethod((Method) null).withUri(this.uri).build();
+      new RequestProducer.Builder((Method) null, this.uri).withId(0).build();
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullMethodProducer()
    {
-      RequestProducer.custom().withId(0).withMethod((Producer<Method>) null).withUri(this.uri).build();
+      new RequestProducer.Builder((Producer<Method>) null, Producers.of(this.uri)).withId(0).build();
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullUri()
    {
-      RequestProducer.custom().withId(0).withMethod(this.method).withUri((URI) null).build();
+      new RequestProducer.Builder(this.method, (URI) null).withId(0).build();
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullUriProducer()
    {
-      RequestProducer.custom().withId(0).withMethod(this.method).withUri((Producer<URI>) null).build();
+      new RequestProducer.Builder(Producers.of(this.method), (Producer<URI>) null).withId(0).build();
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullObject()
    {
-      RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).withObject(null);
+      new RequestProducer.Builder(this.method, this.uri).withId(0).withObject(null).build();
    }
 
    @Test(expected = NullPointerException.class)
    public void testHeaderNullKey()
    {
-      RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).withHeader(null,
-            "value");
+      new RequestProducer.Builder(this.method, this.uri).withId(0).withHeader(null, "value");
    }
 
    @Test(expected = NullPointerException.class)
    public void testHeaderNullValue()
    {
-      RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).withHeader(
-            "key", null);
+      new RequestProducer.Builder(this.method, this.uri).withId(0).withHeader("key", null);
    }
 
    @Test(expected = NullPointerException.class)
    public void testHeaderNullKeyProducer()
    {
-      RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).withHeader(
+      new RequestProducer.Builder(this.method, this.uri).withId(0).withHeader(
             (Producer<String>) null, Producers.of("value"));
    }
 
    @Test(expected = NullPointerException.class)
    public void testHeaderNullValueProducer()
    {
-      RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).withHeader(
-            Producers.of("key"), (Producer<String>) null);
+      new RequestProducer.Builder(this.method, this.uri).withId(0).withHeader(Producers.of("key"),
+            (Producer<String>) null);
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullEntity()
    {
-      RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).withEntity(
-            (Entity) null);
+      new RequestProducer.Builder(this.method, this.uri).withId(0).withEntity((Entity) null);
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullEntityProducer()
    {
-      RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).withEntity(
+      new RequestProducer.Builder(this.method, this.uri).withId(0).withEntity(
             (Producer<Entity>) null);
    }
 
    @Test(expected = NullPointerException.class)
    public void testMetadataNullKey()
    {
-      RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).withMetadata(
-            (Metadata) null, "value");
+      new RequestProducer.Builder(this.method, this.uri).withId(0).withMetadata((Metadata) null,
+            "value");
    }
 
    @Test(expected = NullPointerException.class)
    public void testMetadataNullKey2()
    {
-      RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).withMetadata(
-            (String) null, "value");
+      new RequestProducer.Builder(this.method, this.uri).withId(0).withMetadata((String) null,
+            "value");
    }
 
    @Test(expected = NullPointerException.class)
    public void testMetadataNullValue()
    {
-      RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).withMetadata(
-            Metadata.ABORTED, null);
+      new RequestProducer.Builder(this.method, this.uri).withMetadata(Metadata.ABORTED, null);
    }
 
    @Test(expected = NullPointerException.class)
    public void testMetadataNullValue2()
    {
-      RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).withMetadata(
-            "aborted", null);
+      new RequestProducer.Builder(this.method, this.uri).withId(0).withMetadata("aborted", null);
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullUsername()
    {
-      RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).withUsername(
-            (String) null);
+      new RequestProducer.Builder(this.method, this.uri).withId(0).withCredentials(null, "password");
    }
 
-   @Test(expected = NullPointerException.class)
+   @Test(expected = IllegalArgumentException.class)
    public void testNullUsername2()
    {
-      RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).withUsername(
-            (Producer<String>) null);
+      new RequestProducer.Builder(this.method, this.uri).withId(0).withCredentials(
+            (Producer<String>) null, Producers.of("password")).build();
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullPassword()
    {
-      RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).withPassword(
+      new RequestProducer.Builder(this.method, this.uri).withId(0).withCredentials("username",
             (String) null);
    }
 
-   @Test(expected = NullPointerException.class)
+   @Test(expected = IllegalArgumentException.class)
    public void testNullPassword2()
    {
-      RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).withPassword(
-            (Producer<String>) null);
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testNullUsernameNoPassword()
-   {
-      RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).withUsername("u").build();
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testNullNoUsernamePassword()
-   {
-      RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).withPassword("p").build();
+      new RequestProducer.Builder(this.method, this.uri).withId(0).withCredentials(
+            Producers.of("username"), (Producer<String>) null).build();
    }
 
    @Test
    public void testId()
    {
       final RequestProducer p =
-            RequestProducer.custom().withId(5).withMethod(this.method).withUri(this.uri).build();
+            new RequestProducer.Builder(this.method, this.uri).withId(5).build();
+      final Request r = p.produce();
+      Assert.assertEquals(5, r.getId());
+   }
+
+   @Test
+   public void testIdProducer()
+   {
+      final RequestProducer p =
+            new RequestProducer.Builder(this.method, this.uri).withId(Producers.of(5L)).build();
       final Request r = p.produce();
       Assert.assertEquals(5, r.getId());
    }
@@ -234,7 +224,7 @@ public class RequestProducerTest
    public void testMethod()
    {
       final RequestProducer p =
-            RequestProducer.custom().withId(0).withMethod(Method.HEAD).withUri(this.uri).build();
+            new RequestProducer.Builder(Method.HEAD, this.uri).withId(0).build();
       final Request r = p.produce();
       Assert.assertEquals(Method.HEAD, r.getMethod());
    }
@@ -243,8 +233,8 @@ public class RequestProducerTest
    public void testMethodProducer()
    {
       final RequestProducer p =
-            RequestProducer.custom().withId(0).withMethod(Producers.of(Method.DELETE)).withUri(
-                  this.uri).build();
+            new RequestProducer.Builder(Producers.of(Method.DELETE), Producers.of(this.uri)).withId(
+                  0).build();
       final Request r = p.produce();
       Assert.assertEquals(Method.DELETE, r.getMethod());
    }
@@ -253,8 +243,7 @@ public class RequestProducerTest
    public void testUri() throws URISyntaxException
    {
       final URI aUri = new URI("http://10.1.1.1/container/object");
-      final RequestProducer p =
-            RequestProducer.custom().withId(0).withMethod(this.method).withUri(aUri).build();
+      final RequestProducer p = new RequestProducer.Builder(this.method, aUri).withId(0).build();
       final Request r = p.produce();
       Assert.assertEquals(aUri, r.getUri());
    }
@@ -264,7 +253,7 @@ public class RequestProducerTest
    {
       final URI aUri = new URI("http://10.1.1.1/container/object");
       final RequestProducer p =
-            RequestProducer.custom().withId(0).withMethod(this.method).withUri(Producers.of(aUri)).build();
+            new RequestProducer.Builder(Producers.of(this.method), Producers.of(aUri)).withId(0).build();
       final Request r = p.produce();
       Assert.assertEquals(aUri, r.getUri());
    }
@@ -278,8 +267,7 @@ public class RequestProducerTest
       list.add("three");
       final CachingProducer<String> cp = new CachingProducer<String>(Producers.cycle(list));
       final Producer<Request> p =
-            RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).withObject(
-                  cp).build();
+            new RequestProducer.Builder(this.method, this.uri).withId(0).withObject(cp).build();
 
       Assert.assertEquals("one", cp.produce());
       final Request r = p.produce();
@@ -291,8 +279,8 @@ public class RequestProducerTest
    public void testHeaders()
    {
       final RequestProducer p =
-            RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).withHeader(
-                  "key2", "value2").withHeader(Producers.of("key1"), Producers.of("value1")).build();
+            new RequestProducer.Builder(this.method, this.uri).withId(0).withHeader("key2",
+                  "value2").withHeader(Producers.of("key1"), Producers.of("value1")).build();
       final Request r = p.produce();
       final Iterator<Entry<String, String>> it = r.headers();
       // Skip Date header which is automatically added
@@ -313,7 +301,7 @@ public class RequestProducerTest
    public void testNoEntity()
    {
       final RequestProducer p =
-            RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).build();
+            new RequestProducer.Builder(this.method, this.uri).withId(0).build();
       final Request r = p.produce();
       Assert.assertEquals(EntityType.NONE, r.getEntity().getType());
       Assert.assertEquals(0, r.getEntity().getSize());
@@ -323,7 +311,7 @@ public class RequestProducerTest
    public void testEntity()
    {
       final RequestProducer p =
-            RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).withEntity(
+            new RequestProducer.Builder(this.method, this.uri).withId(0).withEntity(
                   Entities.of(EntityType.ZEROES, 12345)).build();
       final Request r = p.produce();
       Assert.assertEquals(EntityType.ZEROES, r.getEntity().getType());
@@ -334,7 +322,7 @@ public class RequestProducerTest
    public void testEntityProducer()
    {
       final RequestProducer p =
-            RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).withEntity(
+            new RequestProducer.Builder(this.method, this.uri).withId(0).withEntity(
                   Producers.of(Entities.of(EntityType.ZEROES, 12345))).build();
       final Request r = p.produce();
       Assert.assertEquals(EntityType.ZEROES, r.getEntity().getType());
@@ -345,8 +333,8 @@ public class RequestProducerTest
    public void testMetadata()
    {
       final RequestProducer p =
-            RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).withMetadata(
-                  "key2", "value2").withMetadata(Metadata.ABORTED, "value1").build();
+            new RequestProducer.Builder(this.method, this.uri).withId(0).withMetadata("key2",
+                  "value2").withMetadata(Metadata.ABORTED, "value1").build();
       final Request r = p.produce();
       final Iterator<Entry<String, String>> it = r.metadata();
 
@@ -365,7 +353,7 @@ public class RequestProducerTest
    public void testNoCredentials()
    {
       final RequestProducer p =
-            RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).build();
+            new RequestProducer.Builder(this.method, this.uri).withId(0).build();
       final Request r = p.produce();
       Assert.assertNull(r.getMetadata(Metadata.USERNAME));
       Assert.assertNull(r.getMetadata(Metadata.PASSWORD));
@@ -375,8 +363,8 @@ public class RequestProducerTest
    public void testCredentials()
    {
       final RequestProducer p =
-            RequestProducer.custom().withId(0).withMethod(this.method).withUri(this.uri).withUsername(
-                  "username").withPassword("password").build();
+            new RequestProducer.Builder(this.method, this.uri).withId(0).withCredentials(
+                  "username", "password").build();
       final Request r = p.produce();
       Assert.assertEquals("username", r.getMetadata(Metadata.USERNAME));
       Assert.assertEquals("password", r.getMetadata(Metadata.PASSWORD));

@@ -48,29 +48,20 @@ public class RequestProducer implements Producer<Request>
    private final Producer<String> username;
    private final Producer<String> password;
 
-   private RequestProducer(
-         final Producer<Long> id,
-         final Producer<Method> method,
-         final Producer<URI> uri,
-         final CachingProducer<String> object,
-         final Map<Producer<String>, Producer<String>> headers,
-         final Producer<Entity> entity,
-         final Map<String, String> metadata,
-         final Producer<String> username,
-         final Producer<String> password)
+   private RequestProducer(final Builder builder)
    {
-      this.id = checkNotNull(id);
-      this.method = checkNotNull(method);
-      this.uri = checkNotNull(uri);
-      this.object = object;
-      this.headers = checkNotNull(headers);
-      this.entity = entity;
-      this.metadata = checkNotNull(metadata);
-      checkArgument((username != null && password != null)
-            || (username == null && password == null),
+      this.id = checkNotNull(builder.id);
+      this.method = checkNotNull(builder.method);
+      this.uri = checkNotNull(builder.uri);
+      this.object = builder.object;
+      this.headers = checkNotNull(builder.headers);
+      this.entity = builder.entity;
+      this.metadata = checkNotNull(builder.metadata);
+      this.username = builder.username;
+      this.password = builder.password;
+      checkArgument((this.username != null && this.password != null)
+            || (this.username == null && this.password == null),
             "username and password must both be either null or not null");
-      this.username = username;
-      this.password = password;
    }
 
    @Override
@@ -106,16 +97,11 @@ public class RequestProducer implements Producer<Request>
       return context.build();
    }
 
-   public static Builder custom()
-   {
-      return new Builder();
-   }
-
    public static class Builder
    {
       private Producer<Long> id;
-      private Producer<Method> method;
-      private Producer<URI> uri;
+      private final Producer<Method> method;
+      private final Producer<URI> uri;
       private CachingProducer<String> object;
       private final Map<Producer<String>, Producer<String>> headers;
       private Producer<Entity> entity;
@@ -123,8 +109,15 @@ public class RequestProducer implements Producer<Request>
       private Producer<String> username;
       private Producer<String> password;
 
-      private Builder()
+      public Builder(final Method method, final URI uri)
       {
+         this(Producers.of(method), Producers.of(uri));
+      }
+
+      public Builder(final Producer<Method> method, final Producer<URI> uri)
+      {
+         this.method = method;
+         this.uri = uri;
          this.headers = new LinkedHashMap<Producer<String>, Producer<String>>();
          this.metadata = new LinkedHashMap<String, String>();
       }
@@ -138,28 +131,6 @@ public class RequestProducer implements Producer<Request>
       public Builder withId(final Producer<Long> id)
       {
          this.id = id;
-         return this;
-      }
-
-      public Builder withMethod(final Method method)
-      {
-         return withMethod(Producers.of(method));
-      }
-
-      public Builder withMethod(final Producer<Method> method)
-      {
-         this.method = method;
-         return this;
-      }
-
-      public Builder withUri(final URI uri)
-      {
-         return withUri(Producers.of(uri));
-      }
-
-      public Builder withUri(final Producer<URI> uri)
-      {
-         this.uri = uri;
          return this;
       }
 
@@ -204,32 +175,23 @@ public class RequestProducer implements Producer<Request>
          return this;
       }
 
-      public Builder withUsername(final String username)
+      public Builder withCredentials(final String username, final String password)
       {
-         return withUsername(Producers.of(username));
+         return withCredentials(Producers.of(username), Producers.of(password));
       }
 
-      public Builder withUsername(final Producer<String> username)
+      public Builder withCredentials(
+            final Producer<String> username,
+            final Producer<String> password)
       {
-         this.username = checkNotNull(username);
-         return this;
-      }
-
-      public Builder withPassword(final String password)
-      {
-         return withPassword(Producers.of(password));
-      }
-
-      public Builder withPassword(final Producer<String> password)
-      {
-         this.password = checkNotNull(password);
+         this.username = username;
+         this.password = password;
          return this;
       }
 
       public RequestProducer build()
       {
-         return new RequestProducer(this.id, this.method, this.uri, this.object, this.headers,
-               this.entity, this.metadata, this.username, this.password);
+         return new RequestProducer(this);
       }
    }
 }

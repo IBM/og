@@ -217,10 +217,8 @@ public class ApiModule extends AbstractModule
          final Producer<String> username,
          final Producer<String> password)
    {
-      final RequestProducer.Builder b = RequestProducer.custom()
-            .withId(id)
-            .withMethod(method)
-            .withUri(uri);
+      final RequestProducer.Builder b =
+            new RequestProducer.Builder(Producers.of(method), uri).withId(id);
 
       if (object != null)
          b.withObject(object);
@@ -237,11 +235,8 @@ public class ApiModule extends AbstractModule
          b.withMetadata(m.getKey(), m.getValue());
       }
 
-      if (username != null)
-         b.withUsername(username);
-
-      if (password != null)
-         b.withPassword(password);
+      if (username != null && password != null)
+         b.withCredentials(username, password);
 
       return b.build();
    }
