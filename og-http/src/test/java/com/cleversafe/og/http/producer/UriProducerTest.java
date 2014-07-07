@@ -104,13 +104,13 @@ public class UriProducerTest
    }
 
    @Test(expected = NullPointerException.class)
-   public void testQueryParamsNullKey()
+   public void testQueryParametersNullKey()
    {
       new UriProducer.Builder(this.host, this.path).withQueryParameter(null, "value");
    }
 
    @Test(expected = NullPointerException.class)
-   public void testQueryParamsNullValue()
+   public void testQueryParametersNullValue()
    {
       new UriProducer.Builder(this.host, this.path).withQueryParameter("key", null);
    }
@@ -237,5 +237,16 @@ public class UriProducerTest
       path.add(Producers.of("object"));
       final URI u = p.produce();
       Assert.assertEquals("/container", u.getPath());
+   }
+
+   @Test
+   public void testQueryParametersModification()
+   {
+      final UriProducer.Builder b =
+            new UriProducer.Builder(this.host, this.path).withQueryParameter("key", "value");
+      final Producer<URI> p = b.build();
+      b.withQueryParameter("key2", "value2");
+      final URI uri = p.produce();
+      Assert.assertEquals("key=value", uri.getQuery());
    }
 }

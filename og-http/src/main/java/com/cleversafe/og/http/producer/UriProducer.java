@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import com.cleversafe.og.http.Scheme;
 import com.cleversafe.og.util.producer.Producer;
@@ -57,7 +58,13 @@ public class UriProducer implements Producer<URI>
       {
          this.path.add(checkNotNull(p));
       }
-      this.queryParameters = checkNotNull(builder.queryParameters);
+      checkNotNull(builder.queryParameters);
+      // defensive copy
+      this.queryParameters = new LinkedHashMap<String, String>();
+      for (final Entry<String, String> qp : builder.queryParameters.entrySet())
+      {
+         this.queryParameters.put(qp.getKey(), qp.getValue());
+      }
       this.trailingSlash = builder.trailingSlash;
    }
 
