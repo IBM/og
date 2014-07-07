@@ -22,7 +22,6 @@ package com.cleversafe.og.http;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -41,18 +40,26 @@ public class HttpResponse implements Response
    private final Entity entity;
    private final Map<String, String> metadata;
 
-   private HttpResponse(
-         final int statusCode,
-         final Map<String, String> headers,
-         final Entity entity,
-         final Map<String, String> metadata)
+   private HttpResponse(final Builder builder)
    {
-      checkArgument(HttpUtil.VALID_STATUS_CODES.contains(statusCode),
-            "statusCode must be a valid status code [%s]", statusCode);
-      this.statusCode = statusCode;
-      this.headers = checkNotNull(headers);
-      this.entity = checkNotNull(entity);
-      this.metadata = checkNotNull(metadata);
+      this.statusCode = builder.statusCode;
+      checkArgument(HttpUtil.VALID_STATUS_CODES.contains(this.statusCode),
+            "statusCode must be a valid status code [%s]", this.statusCode);
+      checkNotNull(builder.headers);
+      // defensive copy
+      this.headers = new LinkedHashMap<String, String>();
+      for (final Entry<String, String> h : builder.headers.entrySet())
+      {
+         this.headers.put(h.getKey(), h.getValue());
+      }
+      this.entity = checkNotNull(builder.entity);
+      checkNotNull(builder.metadata);
+      // defensive copy
+      this.metadata = new LinkedHashMap<String, String>();
+      for (final Entry<String, String> m : builder.metadata.entrySet())
+      {
+         this.metadata.put(m.getKey(), m.getValue());
+      }
    }
 
    @Override
@@ -97,11 +104,6 @@ public class HttpResponse implements Response
       return this.metadata.entrySet().iterator();
    }
 
-   public static Builder custom()
-   {
-      return new Builder();
-   }
-
    public static class Builder
    {
       private int statusCode;
@@ -109,7 +111,7 @@ public class HttpResponse implements Response
       private Entity entity;
       private final Map<String, String> metadata;
 
-      private Builder()
+      public Builder()
       {
          this.headers = new LinkedHashMap<String, String>();
          this.entity = Entities.none();
@@ -147,8 +149,7 @@ public class HttpResponse implements Response
 
       public HttpResponse build()
       {
-         return new HttpResponse(this.statusCode, Collections.unmodifiableMap(this.headers),
-               this.entity, Collections.unmodifiableMap(this.metadata));
+         return new HttpResponse(this);
       }
    }
 }

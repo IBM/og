@@ -41,102 +41,98 @@ public class HttpResponseTest
       this.statusCode = 201;
    }
 
-   @Test
-   public void testNoRequestId()
-   {
-      HttpResponse.custom().withStatusCode(this.statusCode).build();
-   }
-
    @Test(expected = IllegalArgumentException.class)
    public void testNoStatusCode()
    {
-      HttpResponse.custom().build();
+      new HttpResponse.Builder().build();
    }
 
    @Test(expected = IllegalArgumentException.class)
    public void testNegativeStatusCode()
    {
-      HttpResponse.custom().withStatusCode(-1).build();
+      new HttpResponse.Builder().withStatusCode(-1).build();
    }
 
    @Test(expected = IllegalArgumentException.class)
    public void testZeroStatusCode()
    {
-      HttpResponse.custom().withStatusCode(0).build();
+      new HttpResponse.Builder().withStatusCode(0).build();
    }
 
    @Test(expected = IllegalArgumentException.class)
    public void testSmallStatusCode()
    {
-      HttpResponse.custom().withStatusCode(99).build();
+      new HttpResponse.Builder().withStatusCode(99).build();
    }
 
    @Test
    public void testMediumStatusCode()
    {
-      HttpResponse.custom().withStatusCode(100).build();
+      new HttpResponse.Builder().withStatusCode(100).build();
    }
 
    @Test(expected = IllegalArgumentException.class)
    public void testLargeStatusCode()
    {
-      HttpResponse.custom().withStatusCode(600).build();
+      new HttpResponse.Builder().withStatusCode(600).build();
    }
 
    @Test(expected = NullPointerException.class)
    public void testHeaderNullKey()
    {
-      HttpResponse.custom().withStatusCode(this.statusCode).withHeader(null, "value").build();
+      new HttpResponse.Builder().withStatusCode(this.statusCode).withHeader(null, "value").build();
    }
 
    @Test(expected = NullPointerException.class)
    public void testHeaderNullValue()
    {
-      HttpResponse.custom().withStatusCode(this.statusCode).withHeader("key", null).build();
+      new HttpResponse.Builder().withStatusCode(this.statusCode).withHeader("key", null).build();
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullEntity()
    {
-      HttpResponse.custom().withStatusCode(this.statusCode).withEntity(null).build();
+      new HttpResponse.Builder().withStatusCode(this.statusCode).withEntity(null).build();
    }
 
    @Test(expected = NullPointerException.class)
    public void testMetadataNullKey()
    {
-      HttpResponse.custom().withStatusCode(this.statusCode).withMetadata((Metadata) null, "value").build();
+      new HttpResponse.Builder().withStatusCode(this.statusCode).withMetadata((Metadata) null,
+            "value").build();
    }
 
    @Test(expected = NullPointerException.class)
    public void testMetadataNullKey2()
    {
-      HttpResponse.custom().withStatusCode(this.statusCode).withMetadata((String) null, "value").build();
+      new HttpResponse.Builder().withStatusCode(this.statusCode).withMetadata((String) null,
+            "value").build();
    }
 
    @Test(expected = NullPointerException.class)
    public void testMetadataNullValue()
    {
-      HttpResponse.custom().withStatusCode(this.statusCode).withMetadata(Metadata.ABORTED, null).build();
+      new HttpResponse.Builder().withStatusCode(this.statusCode).withMetadata(Metadata.ABORTED,
+            null).build();
    }
 
    @Test(expected = NullPointerException.class)
    public void testMetadataNullValue2()
    {
-      HttpResponse.custom().withStatusCode(this.statusCode).withMetadata("key", null).build();
+      new HttpResponse.Builder().withStatusCode(this.statusCode).withMetadata("key", null).build();
    }
 
    @Test
    public void testStatusCode()
    {
-      final HttpResponse r =
-            HttpResponse.custom().withStatusCode(404).build();
+      final HttpResponse r = new HttpResponse.Builder().withStatusCode(404).build();
       Assert.assertEquals(404, r.getStatusCode());
    }
 
    @Test
    public void testMissingHeader()
    {
-      final HttpResponse r = HttpResponse.custom().withStatusCode(this.statusCode).build();
+      final HttpResponse r = new HttpResponse.Builder().withStatusCode(this.statusCode).build();
       Assert.assertNull(r.getHeader("key"));
    }
 
@@ -144,14 +140,14 @@ public class HttpResponseTest
    public void testHeader()
    {
       final HttpResponse r =
-            HttpResponse.custom().withStatusCode(this.statusCode).withHeader("key", "value").build();
+            new HttpResponse.Builder().withStatusCode(this.statusCode).withHeader("key", "value").build();
       Assert.assertEquals("value", r.getHeader("key"));
    }
 
    @Test
    public void testNoHeaders()
    {
-      final HttpResponse r = HttpResponse.custom().withStatusCode(this.statusCode).build();
+      final HttpResponse r = new HttpResponse.Builder().withStatusCode(this.statusCode).build();
       final Iterator<Entry<String, String>> it = r.headers();
       Assert.assertFalse(it.hasNext());
    }
@@ -160,7 +156,7 @@ public class HttpResponseTest
    public void testHeaders()
    {
       final HttpResponse r =
-            HttpResponse.custom().withStatusCode(this.statusCode).withHeader("key", "value").build();
+            new HttpResponse.Builder().withStatusCode(this.statusCode).withHeader("key", "value").build();
       final Iterator<Entry<String, String>> it = r.headers();
       Assert.assertTrue(it.hasNext());
       final Entry<String, String> e = it.next();
@@ -172,7 +168,7 @@ public class HttpResponseTest
    @Test
    public void testHeaders2()
    {
-      final HttpResponse.Builder b = HttpResponse.custom().withStatusCode(this.statusCode);
+      final HttpResponse.Builder b = new HttpResponse.Builder().withStatusCode(this.statusCode);
       for (int i = 0; i < 10; i++)
       {
          // (100 - i) exposes sorted vs insertion order
@@ -193,7 +189,7 @@ public class HttpResponseTest
    @Test
    public void testDefaultEntity()
    {
-      final HttpResponse r = HttpResponse.custom().withStatusCode(this.statusCode).build();
+      final HttpResponse r = new HttpResponse.Builder().withStatusCode(this.statusCode).build();
       Assert.assertEquals(EntityType.NONE, r.getEntity().getType());
       Assert.assertEquals(0, r.getEntity().getSize());
    }
@@ -203,7 +199,7 @@ public class HttpResponseTest
    {
       final Entity e = Entities.of(EntityType.ZEROES, 12345);
       final HttpResponse r =
-            HttpResponse.custom().withStatusCode(this.statusCode).withEntity(e).build();
+            new HttpResponse.Builder().withStatusCode(this.statusCode).withEntity(e).build();
       Assert.assertEquals(EntityType.ZEROES, r.getEntity().getType());
       Assert.assertEquals(12345, r.getEntity().getSize());
    }
@@ -211,14 +207,14 @@ public class HttpResponseTest
    @Test
    public void testMissingMetadata()
    {
-      final HttpResponse r = HttpResponse.custom().withStatusCode(this.statusCode).build();
+      final HttpResponse r = new HttpResponse.Builder().withStatusCode(this.statusCode).build();
       Assert.assertNull(r.getMetadata(Metadata.ABORTED));
    }
 
    @Test
    public void testMissingMetadata2()
    {
-      final HttpResponse r = HttpResponse.custom().withStatusCode(this.statusCode).build();
+      final HttpResponse r = new HttpResponse.Builder().withStatusCode(this.statusCode).build();
       Assert.assertNull(r.getMetadata("aborted"));
    }
 
@@ -226,8 +222,8 @@ public class HttpResponseTest
    public void testMetadataEntry()
    {
       final HttpResponse r =
-            HttpResponse.custom().withStatusCode(this.statusCode).withMetadata(Metadata.ABORTED,
-                  "1").build();
+            new HttpResponse.Builder().withStatusCode(this.statusCode).withMetadata(
+                  Metadata.ABORTED, "1").build();
       Assert.assertEquals("1", r.getMetadata(Metadata.ABORTED));
    }
 
@@ -235,14 +231,14 @@ public class HttpResponseTest
    public void testMetadataEntry2()
    {
       final HttpResponse r =
-            HttpResponse.custom().withStatusCode(this.statusCode).withMetadata("key", "value").build();
+            new HttpResponse.Builder().withStatusCode(this.statusCode).withMetadata("key", "value").build();
       Assert.assertEquals("value", r.getMetadata("key"));
    }
 
    @Test
    public void testMetadata()
    {
-      final HttpResponse r = HttpResponse.custom().withStatusCode(this.statusCode).build();
+      final HttpResponse r = new HttpResponse.Builder().withStatusCode(this.statusCode).build();
       final Iterator<Entry<String, String>> it = r.metadata();
       Assert.assertFalse(it.hasNext());
    }
@@ -251,7 +247,7 @@ public class HttpResponseTest
    public void testMetadata2()
    {
       final HttpResponse r =
-            HttpResponse.custom().withStatusCode(this.statusCode).withMetadata("key", "value").build();
+            new HttpResponse.Builder().withStatusCode(this.statusCode).withMetadata("key", "value").build();
       final Iterator<Entry<String, String>> it = r.metadata();
       Assert.assertTrue(it.hasNext());
       final Entry<String, String> e = it.next();
@@ -263,7 +259,7 @@ public class HttpResponseTest
    @Test
    public void testMetadata3()
    {
-      final HttpResponse.Builder b = HttpResponse.custom().withStatusCode(this.statusCode);
+      final HttpResponse.Builder b = new HttpResponse.Builder().withStatusCode(this.statusCode);
       for (int i = 0; i < 10; i++)
       {
          b.withMetadata("key" + i, "value" + i);
@@ -283,5 +279,27 @@ public class HttpResponseTest
       Assert.assertEquals("ABORTED", e.getKey());
       Assert.assertEquals("1", e.getValue());
       Assert.assertFalse(it.hasNext());
+   }
+
+   @Test
+   public void testHeaderModification()
+   {
+      final HttpResponse.Builder b =
+            new HttpResponse.Builder().withStatusCode(200).withHeader("key1", "value1");
+      final HttpResponse r = b.build();
+      b.withHeader("key2", "value2");
+      Assert.assertEquals("value1", r.getHeader("key1"));
+      Assert.assertNull(r.getHeader("key2"));
+   }
+
+   @Test
+   public void testMetadataModification()
+   {
+      final HttpResponse.Builder b =
+            new HttpResponse.Builder().withStatusCode(200).withMetadata("key1", "value1");
+      final HttpResponse r = b.build();
+      b.withMetadata("key2", "value2");
+      Assert.assertEquals("value1", r.getMetadata("key1"));
+      Assert.assertNull(r.getMetadata("key2"));
    }
 }

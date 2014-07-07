@@ -274,7 +274,7 @@ public class ApacheClient implements Client
          setRequestURI(requestBuilder);
          setRequestHeaders(requestBuilder);
          setRequestContent(requestBuilder);
-         final HttpResponse.Builder responseBuilder = HttpResponse.custom();
+         final HttpResponse.Builder responseBuilder = new HttpResponse.Builder();
          final String requestId = this.request.getMetadata(Metadata.REQUEST_ID);
          if (requestId != null)
             responseBuilder.withMetadata(Metadata.REQUEST_ID, requestId);
