@@ -186,6 +186,16 @@ public class HttpResponseTest
       Assert.assertFalse(it.hasNext());
    }
 
+   @Test(expected = UnsupportedOperationException.class)
+   public void testHeaderIteratorRemove()
+   {
+      final HttpResponse r =
+            new HttpResponse.Builder().withStatusCode(200).withHeader("key", "value").build();
+      final Iterator<Entry<String, String>> it = r.headers();
+      it.next();
+      it.remove();
+   }
+
    @Test
    public void testDefaultEntity()
    {
@@ -279,6 +289,16 @@ public class HttpResponseTest
       Assert.assertEquals("ABORTED", e.getKey());
       Assert.assertEquals("1", e.getValue());
       Assert.assertFalse(it.hasNext());
+   }
+
+   @Test(expected = UnsupportedOperationException.class)
+   public void testMetadataIteratorRemove()
+   {
+      final HttpResponse r =
+            new HttpResponse.Builder().withStatusCode(200).withMetadata("key", "value").build();
+      final Iterator<Entry<String, String>> it = r.metadata();
+      it.next();
+      it.remove();
    }
 
    @Test

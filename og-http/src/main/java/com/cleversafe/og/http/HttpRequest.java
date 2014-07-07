@@ -22,6 +22,7 @@ package com.cleversafe.og.http;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URI;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Locale;
@@ -54,19 +55,23 @@ public class HttpRequest implements Request
       this.uri = checkNotNull(builder.uri);
       checkNotNull(builder.headers);
       // defensive copy
-      this.headers = new LinkedHashMap<String, String>();
+      final Map<String, String> mutableHeaders = new LinkedHashMap<String, String>();
       for (final Entry<String, String> h : builder.headers.entrySet())
       {
-         this.headers.put(checkNotNull(h.getKey()), checkNotNull(h.getValue()));
+         mutableHeaders.put(checkNotNull(h.getKey()), checkNotNull(h.getValue()));
       }
+      // support immutable iteration via headers method
+      this.headers = Collections.unmodifiableMap(mutableHeaders);
       this.entity = checkNotNull(builder.entity);
       checkNotNull(builder.metadata);
       // defensive copy
-      this.metadata = new LinkedHashMap<String, String>();
+      final Map<String, String> mutableMetadata = new LinkedHashMap<String, String>();
       for (final Entry<String, String> m : builder.metadata.entrySet())
       {
-         this.metadata.put(checkNotNull(m.getKey()), checkNotNull(m.getValue()));
+         mutableMetadata.put(checkNotNull(m.getKey()), checkNotNull(m.getValue()));
       }
+      // support immutable iteration via metadata method
+      this.metadata = Collections.unmodifiableMap(mutableMetadata);
    }
 
    @Override
