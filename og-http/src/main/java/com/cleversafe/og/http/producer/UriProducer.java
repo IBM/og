@@ -40,45 +40,42 @@ public class UriProducer implements Producer<URI>
    private final Producer<Scheme> scheme;
    private final Producer<String> host;
    private final Producer<Integer> port;
-   private final List<Producer<String>> parts;
+   private final List<Producer<String>> path;
    private final Map<String, String> queryParameters;
    private final boolean trailingSlash;
    private static final Joiner.MapJoiner PARAM_JOINER = Joiner.on('&').withKeyValueSeparator("=");
 
-   private UriProducer(
-         final Producer<Scheme> scheme,
-         final Producer<String> host,
-         final Producer<Integer> port,
-         final List<Producer<String>> parts,
-         final Map<String, String> queryParameters,
-         final boolean trailingSlash)
+   private UriProducer(final Builder builder)
    {
-      this.scheme = checkNotNull(scheme);
-      this.host = checkNotNull(host);
-      this.port = port;
-      checkNotNull(parts);
+      this.scheme = checkNotNull(builder.scheme);
+      this.host = checkNotNull(builder.host);
+      this.port = builder.port;
+      checkNotNull(builder.path);
       // defensive copy
-      this.parts = new ArrayList<Producer<String>>();
-      this.parts.addAll(parts);
-      this.queryParameters = checkNotNull(queryParameters);
-      this.trailingSlash = trailingSlash;
+      this.path = new ArrayList<Producer<String>>();
+      for (final Producer<String> p : builder.path)
+      {
+         this.path.add(checkNotNull(p));
+      }
+      this.queryParameters = checkNotNull(builder.queryParameters);
+      this.trailingSlash = builder.trailingSlash;
    }
 
    @Override
    public URI produce()
    {
-      final StringBuilder builder = new StringBuilder()
+      final StringBuilder s = new StringBuilder()
             .append(this.scheme.produce())
             .append("://")
             .append(this.host.produce());
-      appendPort(builder);
-      appendPath(builder);
-      appendTrailingSlash(builder);
-      appendQueryParams(builder);
+      appendPort(s);
+      appendPath(s);
+      appendTrailingSlash(s);
+      appendQueryParams(s);
 
       try
       {
-         return new URI(builder.toString());
+         return new URI(s.toString());
       }
       catch (final URISyntaxException e)
       {
@@ -88,50 +85,52 @@ public class UriProducer implements Producer<URI>
       }
    }
 
-   private void appendPort(final StringBuilder builder)
+   private void appendPort(final StringBuilder s)
    {
       if (this.port != null)
-         builder.append(":").append(this.port.produce());
+         s.append(":").append(this.port.produce());
    }
 
-   private void appendPath(final StringBuilder builder)
+   private void appendPath(final StringBuilder s)
    {
-      for (final Producer<String> part : this.parts)
+      for (final Producer<String> part : this.path)
       {
-         builder.append("/").append(part.produce());
+         s.append("/").append(part.produce());
       }
    }
 
-   private void appendTrailingSlash(final StringBuilder builder)
+   private void appendTrailingSlash(final StringBuilder s)
    {
       if (this.trailingSlash)
-         builder.append("/");
+         s.append("/");
    }
 
-   private void appendQueryParams(final StringBuilder builder)
+   private void appendQueryParams(final StringBuilder s)
    {
       final String queryParams = PARAM_JOINER.join(this.queryParameters);
       if (queryParams.length() > 0)
-         builder.append("?").append(queryParams);
-   }
-
-   public static Builder custom()
-   {
-      return new Builder();
+         s.append("?").append(queryParams);
    }
 
    public static class Builder
    {
       private Producer<Scheme> scheme;
-      private Producer<String> host;
+      private final Producer<String> host;
       private Producer<Integer> port;
-      private List<Producer<String>> path;
+      private final List<Producer<String>> path;
       private final Map<String, String> queryParameters;
       private boolean trailingSlash;
 
-      private Builder()
+      public Builder(final String host, final List<Producer<String>> path)
+      {
+         this(Producers.of(host), path);
+      }
+
+      public Builder(final Producer<String> host, final List<Producer<String>> path)
       {
          this.scheme = Producers.of(Scheme.HTTP);
+         this.host = host;
+         this.path = path;
          this.queryParameters = new LinkedHashMap<String, String>();
       }
 
@@ -146,17 +145,6 @@ public class UriProducer implements Producer<URI>
          return this;
       }
 
-      public Builder toHost(final String host)
-      {
-         return toHost(Producers.of(host));
-      }
-
-      public Builder toHost(final Producer<String> host)
-      {
-         this.host = host;
-         return this;
-      }
-
       public Builder onPort(final int port)
       {
          checkArgument(port >= 0, "port must be >= 0 [%s]", port);
@@ -166,12 +154,6 @@ public class UriProducer implements Producer<URI>
       public Builder onPort(final Producer<Integer> port)
       {
          this.port = port;
-         return this;
-      }
-
-      public Builder atPath(final List<Producer<String>> path)
-      {
-         this.path = path;
          return this;
       }
 
@@ -191,8 +173,7 @@ public class UriProducer implements Producer<URI>
 
       public UriProducer build()
       {
-         return new UriProducer(this.scheme, this.host, this.port, this.path, this.queryParameters,
-               this.trailingSlash);
+         return new UriProducer(this);
       }
    }
 }

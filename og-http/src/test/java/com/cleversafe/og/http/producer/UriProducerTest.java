@@ -51,86 +51,74 @@ public class UriProducerTest
    @Test(expected = NullPointerException.class)
    public void testNullScheme()
    {
-      UriProducer.custom().withScheme((Scheme) null).toHost(this.host).atPath(this.path).build();
+      new UriProducer.Builder(this.host, this.path).withScheme((Scheme) null).build();
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullScheme2()
+   public void testNullSchemeProducer()
    {
-      UriProducer.custom().withScheme((Producer<Scheme>) null).toHost(this.host).atPath(this.path).build();
+      new UriProducer.Builder(this.host, this.path).withScheme((Producer<Scheme>) null).build();
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullHost()
    {
-      UriProducer.custom().atPath(this.path).build();
+      new UriProducer.Builder((String) null, this.path).build();
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullHost2()
+   public void testNullHostProducer()
    {
-      UriProducer.custom().toHost((String) null).atPath(this.path).build();
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void testNullHost3()
-   {
-      UriProducer.custom().toHost((Producer<String>) null).atPath(this.path).build();
+      new UriProducer.Builder((Producer<String>) null, this.path).build();
    }
 
    @Test
    public void testNullPort()
    {
       // can set port to null, it gets ignored when assembling url in produce
-      UriProducer.custom().toHost(this.host).onPort((Producer<Integer>) null).atPath(this.path).build();
+      new UriProducer.Builder(this.host, this.path).onPort((Producer<Integer>) null).build();
    }
 
    @Test(expected = IllegalArgumentException.class)
    public void testNegativePort()
    {
-      UriProducer.custom().toHost(this.host).onPort(-1).atPath(this.path).build();
+      new UriProducer.Builder(this.host, this.path).onPort(-1).build();
    }
 
    @Test
    public void testZeroPort()
    {
-      UriProducer.custom().toHost(this.host).onPort(0).atPath(this.path).build();
+      new UriProducer.Builder(this.host, this.path).onPort(0).build();
    }
 
    @Test
    public void testPositivePort()
    {
-      UriProducer.custom().toHost(this.host).onPort(1).atPath(this.path).build();
+      new UriProducer.Builder(this.host, this.path).onPort(1).build();
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullPath()
    {
-      UriProducer.custom().toHost(this.host).build();
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void testNullPath2()
-   {
-      UriProducer.custom().toHost(this.host).atPath(null).build();
+      new UriProducer.Builder(this.host, (List<Producer<String>>) null).build();
    }
 
    @Test(expected = NullPointerException.class)
    public void testQueryParamsNullKey()
    {
-      UriProducer.custom().withQueryParameter(null, "value");
+      new UriProducer.Builder(this.host, this.path).withQueryParameter(null, "value");
    }
 
    @Test(expected = NullPointerException.class)
    public void testQueryParamsNullValue()
    {
-      UriProducer.custom().withQueryParameter("key", null);
+      new UriProducer.Builder(this.host, this.path).withQueryParameter("key", null);
    }
 
    @Test
    public void testUriProducer()
    {
-      final Producer<URI> p = UriProducer.custom().toHost(this.host).atPath(this.path).build();
+      final Producer<URI> p = new UriProducer.Builder(this.host, this.path).build();
       final URI uri = p.produce();
       Assert.assertEquals(Scheme.HTTP, Scheme.valueOf(uri.getScheme().toUpperCase(Locale.US)));
       Assert.assertEquals(this.host, uri.getHost());
@@ -143,17 +131,16 @@ public class UriProducerTest
    public void testScheme()
    {
       final Producer<URI> p =
-            UriProducer.custom().withScheme(Scheme.HTTP).toHost(this.host).atPath(this.path).build();
+            new UriProducer.Builder(this.host, this.path).withScheme(Scheme.HTTP).build();
       final URI uri = p.produce();
       Assert.assertEquals(Scheme.HTTP, Scheme.valueOf(uri.getScheme().toUpperCase(Locale.US)));
    }
 
    @Test
-   public void testScheme2()
+   public void testSchemeProducer()
    {
       final Producer<URI> p =
-            UriProducer.custom().withScheme(Producers.of(Scheme.HTTPS)).toHost(this.host).atPath(
-                  this.path).build();
+            new UriProducer.Builder(this.host, this.path).withScheme(Producers.of(Scheme.HTTPS)).build();
       final URI uri = p.produce();
       Assert.assertEquals(Scheme.HTTPS, Scheme.valueOf(uri.getScheme().toUpperCase(Locale.US)));
    }
@@ -161,8 +148,7 @@ public class UriProducerTest
    @Test
    public void testHost()
    {
-      final Producer<URI> p =
-            UriProducer.custom().toHost(Producers.of("10.1.1.1")).atPath(this.path).build();
+      final Producer<URI> p = new UriProducer.Builder("10.1.1.1", this.path).build();
       final URI uri = p.produce();
       Assert.assertEquals("10.1.1.1", uri.getHost());
    }
@@ -170,17 +156,16 @@ public class UriProducerTest
    @Test
    public void testPort()
    {
-      final Producer<URI> p =
-            UriProducer.custom().toHost(this.host).atPath(this.path).onPort(80).build();
+      final Producer<URI> p = new UriProducer.Builder(this.host, this.path).onPort(80).build();
       final URI uri = p.produce();
       Assert.assertEquals(80, uri.getPort());
    }
 
    @Test
-   public void testPort2()
+   public void testPortProducer()
    {
       final Producer<URI> p =
-            UriProducer.custom().toHost(this.host).atPath(this.path).onPort(Producers.of(8080)).build();
+            new UriProducer.Builder(this.host, this.path).onPort(Producers.of(8080)).build();
       final URI uri = p.produce();
       Assert.assertEquals(8080, uri.getPort());
    }
@@ -191,8 +176,7 @@ public class UriProducerTest
       final List<Producer<String>> aPath = new ArrayList<Producer<String>>();
       aPath.add(Producers.of("container"));
       aPath.add(Producers.of("object"));
-      final Producer<URI> p =
-            UriProducer.custom().toHost(this.host).atPath(aPath).build();
+      final Producer<URI> p = new UriProducer.Builder(this.host, aPath).build();
       final URI uri = p.produce();
       Assert.assertEquals("/container/object", uri.getPath());
    }
@@ -201,7 +185,7 @@ public class UriProducerTest
    public void testTrailingSlash()
    {
       final Producer<URI> p =
-            UriProducer.custom().toHost(this.host).atPath(this.path).withTrailingSlash().build();
+            new UriProducer.Builder(this.host, this.path).withTrailingSlash().build();
       final URI uri = p.produce();
       Assert.assertEquals("/container/", uri.getPath());
    }
@@ -210,8 +194,7 @@ public class UriProducerTest
    public void testQueryParameters()
    {
       final Producer<URI> p =
-            UriProducer.custom().toHost(this.host).atPath(this.path).withQueryParameter("key",
-                  "value").build();
+            new UriProducer.Builder(this.host, this.path).withQueryParameter("key", "value").build();
       final URI uri = p.produce();
       Assert.assertEquals("key=value", uri.getQuery());
    }
@@ -220,8 +203,8 @@ public class UriProducerTest
    public void testQueryParameters2()
    {
       final Producer<URI> p =
-            UriProducer.custom().toHost(this.host).atPath(this.path).withQueryParameter("key",
-                  "value").withQueryParameter("key2", "value2").build();
+            new UriProducer.Builder(this.host, this.path).withQueryParameter("key", "value").withQueryParameter(
+                  "key2", "value2").build();
       final URI uri = p.produce();
       Assert.assertEquals("key=value&key2=value2", uri.getQuery());
    }
@@ -230,8 +213,8 @@ public class UriProducerTest
    public void testQueryParameters3()
    {
       final Producer<URI> p =
-            UriProducer.custom().toHost(this.host).atPath(this.path).withQueryParameter("key2",
-                  "value2").withQueryParameter("key1", "value1").build();
+            new UriProducer.Builder(this.host, this.path).withQueryParameter("key2", "value2").withQueryParameter(
+                  "key1", "value1").build();
       final URI uri = p.produce();
       Assert.assertEquals("key2=value2&key1=value1", uri.getQuery());
    }
@@ -241,7 +224,7 @@ public class UriProducerTest
    {
       final List<Producer<String>> badPath = new ArrayList<Producer<String>>();
       badPath.add(Producers.of("containe\r"));
-      final Producer<URI> p = UriProducer.custom().toHost(this.host).atPath(badPath).build();
+      final Producer<URI> p = new UriProducer.Builder(this.host, badPath).build();
       p.produce();
    }
 
@@ -250,7 +233,7 @@ public class UriProducerTest
    {
       final List<Producer<String>> path = new ArrayList<Producer<String>>();
       path.add(Producers.of("container"));
-      final Producer<URI> p = UriProducer.custom().toHost(this.host).atPath(path).build();
+      final Producer<URI> p = new UriProducer.Builder(this.host, this.path).build();
       path.add(Producers.of("object"));
       final URI u = p.produce();
       Assert.assertEquals("/container", u.getPath());

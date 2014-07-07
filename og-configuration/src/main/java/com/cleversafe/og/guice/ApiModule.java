@@ -255,17 +255,15 @@ public class ApiModule extends AbstractModule
          final Producer<String> object,
          final Map<String, String> queryParameters)
    {
-      final List<Producer<String>> parts = new ArrayList<Producer<String>>();
+      final List<Producer<String>> path = new ArrayList<Producer<String>>();
       if (uriRoot != null)
-         parts.add(uriRoot);
-      parts.add(container);
+         path.add(uriRoot);
+      path.add(container);
       if (object != null)
-         parts.add(object);
-      final UriProducer.Builder b = UriProducer.custom()
+         path.add(object);
+      final UriProducer.Builder b = new UriProducer.Builder(host, path)
             .withScheme(scheme)
-            .toHost(host)
-            .onPort(port)
-            .atPath(parts);
+            .onPort(port);
 
       for (final Entry<String, String> e : queryParameters.entrySet())
       {
