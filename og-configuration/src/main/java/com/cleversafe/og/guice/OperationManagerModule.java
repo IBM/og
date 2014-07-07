@@ -79,7 +79,8 @@ public class OperationManagerModule extends AbstractModule
       checkArgument(DoubleMath.fuzzyEquals(sum, 100.0, ERR),
             "Sum of percentages must be 100.0 [%s]", sum);
 
-      final RandomChoiceProducer.Builder<Producer<Request>> wrc = RandomChoiceProducer.custom();
+      final RandomChoiceProducer.Builder<Producer<Request>> wrc =
+            new RandomChoiceProducer.Builder<Producer<Request>>();
       if (writeWeight > 0.0)
          wrc.withChoice(write, writeWeight);
       if (readWeight > 0.0)

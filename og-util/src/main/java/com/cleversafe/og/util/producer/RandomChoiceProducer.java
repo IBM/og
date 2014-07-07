@@ -35,11 +35,11 @@ public class RandomChoiceProducer<T> implements Producer<T>
    private final List<Choice<T>> choices;
    private final Random random;
 
-   private RandomChoiceProducer(final List<Choice<T>> choices, final Random random)
+   private RandomChoiceProducer(final Builder<T> builder)
    {
-      this.choices = checkNotNull(choices);
-      checkArgument(!choices.isEmpty(), "choices must not be empty");
-      this.random = checkNotNull(random);
+      this.choices = checkNotNull(builder.choices);
+      checkArgument(!this.choices.isEmpty(), "choices must not be empty");
+      this.random = checkNotNull(builder.random);
    }
 
    private static class Choice<S>
@@ -85,17 +85,12 @@ public class RandomChoiceProducer<T> implements Producer<T>
       return currentTotalWeight;
    }
 
-   public static <T> Builder<T> custom()
-   {
-      return new Builder<T>();
-   }
-
    public static class Builder<T>
    {
       private final List<Choice<T>> choices;
       private Random random;
 
-      private Builder()
+      public Builder()
       {
          this.choices = new ArrayList<Choice<T>>();
          this.random = new Random();
@@ -128,7 +123,7 @@ public class RandomChoiceProducer<T> implements Producer<T>
 
       public RandomChoiceProducer<T> build()
       {
-         return new RandomChoiceProducer<T>(this.choices, this.random);
+         return new RandomChoiceProducer<T>(this);
       }
    }
 }

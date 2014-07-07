@@ -35,37 +35,37 @@ public class RandomChoiceProducerTest
    @Test(expected = IllegalArgumentException.class)
    public void testNoChoice()
    {
-      RandomChoiceProducer.custom().build();
+      new RandomChoiceProducer.Builder<Integer>().build();
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullChoice()
    {
-      RandomChoiceProducer.<Integer> custom().withChoice(null).build();
+      new RandomChoiceProducer.Builder<Integer>().withChoice(null).build();
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullRandom()
    {
-      RandomChoiceProducer.<Integer> custom().withChoice(1).withRandom(null).build();
+      new RandomChoiceProducer.Builder<Integer>().withChoice(1).withRandom(null).build();
    }
 
    @Test(expected = IllegalArgumentException.class)
    public void testNegativeWeight()
    {
-      RandomChoiceProducer.<Integer> custom().withChoice(1, -1.0).build();
+      new RandomChoiceProducer.Builder<Integer>().withChoice(1, -1.0).build();
    }
 
    @Test(expected = IllegalArgumentException.class)
    public void testZeroWeight()
    {
-      RandomChoiceProducer.<Integer> custom().withChoice(1, 0.0).build();
+      new RandomChoiceProducer.Builder<Integer>().withChoice(1, 0.0).build();
    }
 
    @Test
    public void testOneChoice()
    {
-      final Producer<Integer> p = RandomChoiceProducer.<Integer> custom().withChoice(1).build();
+      final Producer<Integer> p = new RandomChoiceProducer.Builder<Integer>().withChoice(1).build();
       for (int i = 0; i < 10; i++)
       {
          Assert.assertEquals(Integer.valueOf(1), p.produce());
@@ -75,7 +75,7 @@ public class RandomChoiceProducerTest
    @Test
    public void testNChoices()
    {
-      final RandomChoiceProducer.Builder<Integer> b = RandomChoiceProducer.custom();
+      final RandomChoiceProducer.Builder<Integer> b = new RandomChoiceProducer.Builder<Integer>();
       b.withChoice(1, 33);
       b.withChoice(2, Producers.of(33.5));
       b.withChoice(3, Producers.of(33));
