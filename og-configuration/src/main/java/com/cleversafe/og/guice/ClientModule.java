@@ -47,11 +47,10 @@ public class ClientModule extends AbstractModule
    @Singleton
    public Client provideClient(
          final ClientConfig clientConfig,
-         final HttpAuth auth,
+         final HttpAuth authentication,
          final Function<String, ByteBufferConsumer> byteBufferConsumers)
    {
-      return ApacheClient.custom()
-            .withAuth(auth)
+      return new ApacheClient.Builder(byteBufferConsumers)
             .withConnectTimeout(clientConfig.getConnectTimeout())
             .withSoTimeout(clientConfig.getSoTimeout())
             .usingSoReuseAddress(clientConfig.isSoReuseAddress())
@@ -61,7 +60,7 @@ public class ClientModule extends AbstractModule
             .usingChunkedEncoding(clientConfig.isChunkedEncoding())
             .usingExpectContinue(clientConfig.isExpectContinue())
             .withWaitForContinue(clientConfig.getWaitForContinue())
-            .withByteBufferConsumers(byteBufferConsumers)
+            .withAuthentication(authentication)
             .build();
    }
 }

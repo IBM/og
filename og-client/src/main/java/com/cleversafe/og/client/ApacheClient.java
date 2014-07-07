@@ -78,28 +78,22 @@ public class ApacheClient implements Client
    private final Function<String, ByteBufferConsumer> byteBufferConsumers;
    private final ListeningExecutorService executorService;
    private final Gson gson;
-   private final HttpAuth auth;
+   private final HttpAuth authentication;
    private final boolean chunkedEncoding;
 
-   private ApacheClient(
-         final HttpAuth auth,
-         final int connectTimeout,
-         final int soTimeout,
-         final boolean soReuseAddress,
-         final int soLinger,
-         final boolean soKeepAlive,
-         final boolean tcpNoDelay,
-         final boolean chunkedEncoding,
-         final boolean expectContinue,
-         final int waitForContinue,
-         final Function<String, ByteBufferConsumer> byteBufferConsumers)
+   private ApacheClient(final Builder builder)
    {
-      this.auth = auth; // optional
+      // create local copies to prevent builder from changing values between check and use
+      final int connectTimeout = builder.connectTimeout;
+      final int soTimeout = builder.soTimeout;
+      final int soLinger = builder.soLinger;
+      final int waitForContinue = builder.waitForContinue;
+
       checkArgument(connectTimeout >= 0, "connectTimeout must be >= 0 [%s]", connectTimeout);
       checkArgument(soTimeout >= 0, "soTimeout must be >= 0 [%s]", soTimeout);
       checkArgument(soLinger >= -1, "soLinger must be >= -1 [%s]", soLinger);
       checkArgument(waitForContinue >= 0, "waitForContinue must be >= 0 [%s]", waitForContinue);
-      this.byteBufferConsumers = checkNotNull(byteBufferConsumers);
+      this.byteBufferConsumers = checkNotNull(builder.byteBufferConsumers);
 
       this.client = HttpClients.custom()
             // TODO HTTPS: setHostnameVerifier, setSslcontext, and SetSSLSocketFactory methods
@@ -111,10 +105,10 @@ public class ApacheClient implements Client
             .setMaxConnPerRoute(Integer.MAX_VALUE)
             .setDefaultSocketConfig(SocketConfig.custom()
                   .setSoTimeout(soTimeout)
-                  .setSoReuseAddress(soReuseAddress)
+                  .setSoReuseAddress(builder.soReuseAddress)
                   .setSoLinger(soLinger)
-                  .setSoKeepAlive(soKeepAlive)
-                  .setTcpNoDelay(tcpNoDelay)
+                  .setSoKeepAlive(builder.soKeepAlive)
+                  .setTcpNoDelay(builder.tcpNoDelay)
                   .build())
             .setConnectionReuseStrategy(DefaultConnectionReuseStrategy.INSTANCE)
             .setKeepAliveStrategy(DefaultConnectionKeepAliveStrategy.INSTANCE)
@@ -126,7 +120,7 @@ public class ApacheClient implements Client
             // TODO need to implement a redirectStrategy that will redirect PUT and POST
             .setRedirectStrategy(new LaxRedirectStrategy())
             .setDefaultRequestConfig(RequestConfig.custom()
-                  .setExpectContinueEnabled(expectContinue)
+                  .setExpectContinueEnabled(builder.expectContinue)
                   // TODO investigate performance impact of stale check (30ms reported)
                   .setStaleConnectionCheckEnabled(true)
                   .setRedirectsEnabled(true)
@@ -145,7 +139,10 @@ public class ApacheClient implements Client
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
             .setLongSerializationPolicy(LongSerializationPolicy.STRING)
             .create();
-      this.chunkedEncoding = chunkedEncoding;
+
+      // optional
+      this.authentication = builder.authentication;
+      this.chunkedEncoding = builder.chunkedEncoding;
    }
 
    @Override
@@ -154,7 +151,7 @@ public class ApacheClient implements Client
       checkNotNull(request);
       final ByteBufferConsumer consumer =
             this.byteBufferConsumers.apply(request.getMetadata(Metadata.RESPONSE_BODY_PROCESSOR));
-      return this.executorService.submit(new BlockingHttpOperation(this.client, this.auth, request,
+      return this.executorService.submit(new BlockingHttpOperation(this.client, this.authentication, request,
             consumer, this.gson, this.chunkedEncoding));
    }
 
@@ -421,14 +418,8 @@ public class ApacheClient implements Client
       }
    }
 
-   public static Builder custom()
-   {
-      return new Builder();
-   }
-
    public static class Builder
    {
-      private HttpAuth auth;
       private int connectTimeout;
       private int soTimeout;
       private boolean soReuseAddress;
@@ -438,15 +429,12 @@ public class ApacheClient implements Client
       private boolean chunkedEncoding;
       private boolean expectContinue;
       private int waitForContinue;
-      private Function<String, ByteBufferConsumer> byteBufferConsumers;
+      private HttpAuth authentication;
+      private final Function<String, ByteBufferConsumer> byteBufferConsumers;
 
-      private Builder()
-      {}
-
-      public Builder withAuth(final HttpAuth auth)
+      public Builder(final Function<String, ByteBufferConsumer> byteBufferConsumers)
       {
-         this.auth = auth;
-         return this;
+         this.byteBufferConsumers = byteBufferConsumers;
       }
 
       public Builder withConnectTimeout(final int connectTimeout)
@@ -503,19 +491,15 @@ public class ApacheClient implements Client
          return this;
       }
 
-      public Builder withByteBufferConsumers(
-            final Function<String, ByteBufferConsumer> byteBufferConsumers)
+      public Builder withAuthentication(final HttpAuth authentication)
       {
-         this.byteBufferConsumers = byteBufferConsumers;
+         this.authentication = authentication;
          return this;
       }
 
       public ApacheClient build()
       {
-         return new ApacheClient(this.auth, this.connectTimeout, this.soTimeout,
-               this.soReuseAddress, this.soLinger, this.soKeepAlive, this.tcpNoDelay,
-               this.chunkedEncoding, this.expectContinue, this.waitForContinue,
-               this.byteBufferConsumers);
+         return new ApacheClient(this);
       }
    }
 }
