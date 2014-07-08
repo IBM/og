@@ -19,6 +19,7 @@
 
 package com.cleversafe.og.util;
 
+import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 import org.slf4j.Logger;
@@ -27,8 +28,21 @@ import org.slf4j.LoggerFactory;
 public class Version
 {
    private static final Logger _logger = LoggerFactory.getLogger(Version.class);
-   private static String DISPLAY_VERSION = ResourceBundle.getBundle("og")
-         .getString("display.version");
+   private static final String DISPLAY_VERSION;
+   static
+   {
+      String displayVersion;
+      try
+      {
+         displayVersion = ResourceBundle.getBundle("og").getString("display.version");
+      }
+      catch (final MissingResourceException e)
+      {
+         _logger.error("Unable to retrieve display version", e);
+         displayVersion = "og";
+      }
+      DISPLAY_VERSION = displayVersion;
+   }
 
    private Version()
    {}
