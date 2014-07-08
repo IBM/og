@@ -92,7 +92,7 @@ public class ApacheClient implements Client
       checkArgument(connectTimeout >= 0, "connectTimeout must be >= 0 [%s]", connectTimeout);
       checkArgument(soTimeout >= 0, "soTimeout must be >= 0 [%s]", soTimeout);
       checkArgument(soLinger >= -1, "soLinger must be >= -1 [%s]", soLinger);
-      checkArgument(waitForContinue >= 0, "waitForContinue must be >= 0 [%s]", waitForContinue);
+      checkArgument(waitForContinue > 0, "waitForContinue must be > 0 [%s]", waitForContinue);
       this.byteBufferConsumers = checkNotNull(builder.byteBufferConsumers);
 
       this.client = HttpClients.custom()
@@ -151,7 +151,8 @@ public class ApacheClient implements Client
       checkNotNull(request);
       final ByteBufferConsumer consumer =
             this.byteBufferConsumers.apply(request.getMetadata(Metadata.RESPONSE_BODY_PROCESSOR));
-      return this.executorService.submit(new BlockingHttpOperation(this.client, this.authentication, request,
+      return this.executorService.submit(new BlockingHttpOperation(this.client,
+            this.authentication, request,
             consumer, this.gson, this.chunkedEncoding));
    }
 
@@ -434,6 +435,7 @@ public class ApacheClient implements Client
 
       public Builder(final Function<String, ByteBufferConsumer> byteBufferConsumers)
       {
+         this.waitForContinue = 3000;
          this.byteBufferConsumers = byteBufferConsumers;
       }
 
