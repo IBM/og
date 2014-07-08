@@ -26,6 +26,7 @@ import com.cleversafe.og.cli.json.ClientConfig;
 import com.cleversafe.og.client.ApacheClient;
 import com.cleversafe.og.client.Client;
 import com.cleversafe.og.http.auth.HttpAuth;
+import com.cleversafe.og.util.Version;
 import com.cleversafe.og.util.consumer.ByteBufferConsumer;
 import com.google.common.base.Function;
 import com.google.inject.AbstractModule;
@@ -61,6 +62,7 @@ public class ClientModule extends AbstractModule
             .usingExpectContinue(clientConfig.isExpectContinue())
             .withWaitForContinue(clientConfig.getWaitForContinue())
             .withAuthentication(authentication)
+            .withUserAgent(Version.displayVersion())
             .build();
    }
 }
