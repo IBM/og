@@ -44,6 +44,7 @@ import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.DefaultConnectionReuseStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultConnectionKeepAliveStrategy;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.client.LaxRedirectStrategy;
 import org.apache.http.protocol.HttpRequestExecutor;
@@ -57,7 +58,6 @@ import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.Entities;
-import com.cleversafe.og.util.Version;
 import com.cleversafe.og.util.consumer.ByteBufferConsumer;
 import com.google.common.base.Function;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -88,6 +88,7 @@ public class ApacheClient implements Client
       final int soTimeout = builder.soTimeout;
       final int soLinger = builder.soLinger;
       final int waitForContinue = builder.waitForContinue;
+      final String userAgent = builder.userAgent;
 
       checkArgument(connectTimeout >= 0, "connectTimeout must be >= 0 [%s]", connectTimeout);
       checkArgument(soTimeout >= 0, "soTimeout must be >= 0 [%s]", soTimeout);
@@ -95,11 +96,14 @@ public class ApacheClient implements Client
       checkArgument(waitForContinue > 0, "waitForContinue must be > 0 [%s]", waitForContinue);
       this.byteBufferConsumers = checkNotNull(builder.byteBufferConsumers);
 
-      this.client = HttpClients.custom()
+      final HttpClientBuilder clientBuilder = HttpClients.custom();
+      if (userAgent != null)
+         clientBuilder.setUserAgent(userAgent);
+
+      this.client = clientBuilder
             // TODO HTTPS: setHostnameVerifier, setSslcontext, and SetSSLSocketFactory methods
             // TODO investigate ConnectionConfig, particularly bufferSize and fragmentSizeHint
             // TODO defaultCredentialsProvider and defaultAuthSchemeRegistry for pre/passive auth?
-            .setUserAgent(Version.displayVersion())
             .setRequestExecutor(new HttpRequestExecutor(waitForContinue))
             .setMaxConnTotal(Integer.MAX_VALUE)
             .setMaxConnPerRoute(Integer.MAX_VALUE)
@@ -432,6 +436,7 @@ public class ApacheClient implements Client
       private int waitForContinue;
       private HttpAuth authentication;
       private final Function<String, ByteBufferConsumer> byteBufferConsumers;
+      private String userAgent;
 
       public Builder(final Function<String, ByteBufferConsumer> byteBufferConsumers)
       {
@@ -496,6 +501,12 @@ public class ApacheClient implements Client
       public Builder withAuthentication(final HttpAuth authentication)
       {
          this.authentication = authentication;
+         return this;
+      }
+
+      public Builder withUserAgent(final String userAgent)
+      {
+         this.userAgent = userAgent;
          return this;
       }
 
