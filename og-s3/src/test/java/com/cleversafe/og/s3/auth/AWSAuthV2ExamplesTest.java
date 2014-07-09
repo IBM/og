@@ -40,16 +40,16 @@ import com.cleversafe.og.operation.Request;
 // test data pulled from examples aws auth signing v2 at:
 // http://docs.aws.amazon.com/AmazonS3/latest/dev/RESTAuthentication.html
 @RunWith(Parameterized.class)
-public class AWSAuthV2Test
+public class AWSAuthV2ExamplesTest
 {
-   private static Logger _logger = LoggerFactory.getLogger(AWSAuthV2Test.class);
+   private static Logger _logger = LoggerFactory.getLogger(AWSAuthV2ExamplesTest.class);
    private static String AWS_ACCESS_KEY_ID = "AKIAIOSFODNN7EXAMPLE";
    private static String AWS_SECRET_ACCESS_KEY = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY";
    private final Request request;
    private final String stringToSign;
    private final String nextAuthorizationHeader;
 
-   public AWSAuthV2Test(
+   public AWSAuthV2ExamplesTest(
          final Request request,
          final String stringToSign,
          final String nextAuthorizationHeader)
