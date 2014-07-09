@@ -49,6 +49,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -64,13 +65,16 @@ import com.cleversafe.og.util.Entities;
 import com.cleversafe.og.util.consumer.ByteBufferConsumer;
 import com.github.tomakehurst.wiremock.client.RequestPatternBuilder;
 import com.github.tomakehurst.wiremock.http.RequestMethod;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import com.google.common.base.Function;
 
 public class ApacheClientTest
 {
+   @ClassRule
+   public static WireMockClassRule WIREMOCK_RULE = new WireMockClassRule(8080);
+
    @Rule
-   public final WireMockRule wireMockRule = new WireMockRule();
+   public WireMockClassRule wireMockRule = WIREMOCK_RULE;
    private Function<String, ByteBufferConsumer> byteBufferConsumers;
    private Client client;
    private URI objectUri;
