@@ -28,7 +28,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.matching;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
@@ -55,6 +54,7 @@ import org.junit.Test;
 
 import com.cleversafe.og.http.HttpRequest;
 import com.cleversafe.og.http.auth.BasicAuth;
+import com.cleversafe.og.operation.Entity;
 import com.cleversafe.og.operation.EntityType;
 import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Method;
@@ -251,41 +251,42 @@ public class ApacheClientTest
    @Test
    public void testPutRequestNoneEntity() throws InterruptedException, ExecutionException
    {
-      final Request request = new HttpRequest.Builder(Method.PUT, this.objectUri).build();
-      final Response response = this.client.execute(request).get();
-      Assert.assertEquals(200, response.getStatusCode());
-      Assert.assertEquals(EntityType.NONE, response.getEntity().getType());
-      Assert.assertEquals(0, response.getEntity().getSize());
-      verify(putRequestedFor(urlEqualTo(this.objectUri.getPath())).withRequestBody(equalTo("")));
+      testWriteWithEntity(Method.PUT, null, "");
    }
 
    // TODO test SOH write at integration test level, using real byteBufferConsumer
    @Test
    public void testPutRequestWithEntity() throws InterruptedException, ExecutionException
    {
-      final Request request = new HttpRequest.Builder(Method.PUT, this.objectUri)
-            .withEntity(Entities.zeroes(1024))
-            .build();
-      final Response response = this.client.execute(request).get();
-      Assert.assertEquals(200, response.getStatusCode());
-      Assert.assertEquals(EntityType.NONE, response.getEntity().getType());
-      Assert.assertEquals(0, response.getEntity().getSize());
-      verify(putRequestedFor(urlEqualTo(this.objectUri.getPath()))
-            .withRequestBody(equalTo(new String(new byte[1024]))));
+      testWriteWithEntity(Method.PUT, Entities.zeroes(1024), new String(new byte[1024]));
+   }
+
+   @Test
+   public void testPostRequestNoneEntity() throws InterruptedException, ExecutionException
+   {
+      testWriteWithEntity(Method.POST, null, "");
    }
 
    @Test
    public void testPostRequestWithEntity() throws InterruptedException, ExecutionException
    {
-      final Request request = new HttpRequest.Builder(Method.POST, this.objectUri)
-            .withEntity(Entities.zeroes(1024))
-            .build();
+      testWriteWithEntity(Method.POST, Entities.zeroes(1024), new String(new byte[1024]));
+   }
+
+   private void testWriteWithEntity(final Method method, final Entity entity, final String body)
+         throws InterruptedException, ExecutionException
+   {
+      final HttpRequest.Builder b = new HttpRequest.Builder(method, this.objectUri);
+      if (entity != null)
+         b.withEntity(entity);
+
+      final Request request = b.build();
       final Response response = this.client.execute(request).get();
       Assert.assertEquals(200, response.getStatusCode());
       Assert.assertEquals(EntityType.NONE, response.getEntity().getType());
       Assert.assertEquals(0, response.getEntity().getSize());
-      verify(postRequestedFor(urlEqualTo(this.objectUri.getPath()))
-            .withRequestBody(equalTo(new String(new byte[1024]))));
+      verify(requestedFor(method, this.objectUri.getPath())
+            .withRequestBody(equalTo(body)));
    }
 
    @Test
