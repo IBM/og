@@ -158,7 +158,9 @@ public class Statistics
 
          @Override
          public void remove()
-         {}
+         {
+            throw new UnsupportedOperationException("Removal of Statistics elements is not allowed");
+         }
       };
    }
 }
