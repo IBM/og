@@ -82,10 +82,11 @@ public class AWSAuthV2 implements HttpAuth
          mac.init(signingKey);
          return mac.doFinal(data);
       }
-      // FIXME what to do in case of exception?
       catch (final Exception e)
       {
-         return new byte[0];
+         // Wrapping checked algorithm and signing exceptions as unchecked exception in order to
+         // fail fast without adding these exceptions to HttpAuth interface
+         throw new RuntimeException("Exception signing request (awsv2)", e);
       }
    }
 
