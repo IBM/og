@@ -25,6 +25,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.delete;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.head;
 import static com.github.tomakehurst.wiremock.client.WireMock.matching;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.put;
@@ -107,6 +108,11 @@ public class ApacheClientTest
       stubFor(get(urlMatching("/container/.*")).willReturn(
             aResponse().withStatus(200)
                   .withBody(new byte[1024])
+            ));
+
+      // read (head)
+      stubFor(head(urlMatching("/container/.*")).willReturn(
+            aResponse().withStatus(200)
             ));
 
       // delete
@@ -296,6 +302,12 @@ public class ApacheClientTest
    public void testGetRequest() throws InterruptedException, ExecutionException
    {
       testReadRequest(Method.GET, 200, EntityType.ZEROES, 1024);
+   }
+
+   @Test
+   public void testHeadRequest() throws InterruptedException, ExecutionException
+   {
+      testReadRequest(Method.HEAD, 200, EntityType.NONE, 0);
    }
 
    @Test
@@ -541,6 +553,12 @@ public class ApacheClientTest
    public void testGetRedirect() throws InterruptedException, ExecutionException
    {
       testReadRedirect(Method.GET);
+   }
+
+   @Test
+   public void testHeadRedirect() throws InterruptedException, ExecutionException
+   {
+      testReadRedirect(Method.HEAD);
    }
 
    @Test
