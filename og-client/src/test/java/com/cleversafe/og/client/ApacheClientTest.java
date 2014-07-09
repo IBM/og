@@ -62,6 +62,8 @@ import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.Entities;
 import com.cleversafe.og.util.consumer.ByteBufferConsumer;
+import com.github.tomakehurst.wiremock.client.RequestPatternBuilder;
+import com.github.tomakehurst.wiremock.http.RequestMethod;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.common.base.Function;
 
@@ -477,98 +479,32 @@ public class ApacheClientTest
    @Test
    public void testPutRedirectContentLength() throws InterruptedException, ExecutionException
    {
-      final Client client = new ApacheClient.Builder(this.byteBufferConsumers)
-            .usingChunkedEncoding(false)
-            .build();
-
-      stubFinal(200);
-      for (final int redirectStatusCode : this.redirectStatuses)
-      {
-         stubIntermediate(redirectStatusCode);
-         final String rsc = String.valueOf(redirectStatusCode);
-         final Request request = new HttpRequest.Builder(Method.PUT, this.redirectUri)
-               .withHeader("RedirectStatus", rsc)
-               .withEntity(Entities.zeroes(1024))
-               .build();
-         final Response response = client.execute(request).get();
-         Assert.assertEquals(200, response.getStatusCode());
-
-         verify(putRequestedFor(urlEqualTo(this.redirectUri.getPath()))
-               .withHeader("RedirectStatus", equalTo(rsc))
-               // without expect: 100-continue, data should get sent to both endpoints
-               .withRequestBody(equalTo(new String(new byte[1024]))));
-
-         verify(putRequestedFor(urlEqualTo("/target"))
-               .withHeader("RedirectStatus", equalTo(rsc))
-               .withRequestBody(equalTo(new String(new byte[1024]))));
-      }
+      testWriteRedirect(Method.PUT, false);
    }
 
    @Test
    public void testPutRedirectChunkedEncoding() throws InterruptedException, ExecutionException
    {
-      final Client client = new ApacheClient.Builder(this.byteBufferConsumers)
-            .usingChunkedEncoding(true)
-            .build();
-
-      stubFinal(200);
-      for (final int redirectStatusCode : this.redirectStatuses)
-      {
-         stubIntermediate(redirectStatusCode);
-         final String rsc = String.valueOf(redirectStatusCode);
-         final Request request = new HttpRequest.Builder(Method.PUT, this.redirectUri)
-               .withHeader("RedirectStatus", rsc)
-               .withEntity(Entities.zeroes(1024))
-               .build();
-         final Response response = client.execute(request).get();
-         Assert.assertEquals(200, response.getStatusCode());
-
-         verify(putRequestedFor(urlEqualTo(this.redirectUri.getPath()))
-               .withHeader("RedirectStatus", equalTo(rsc))
-               // without expect: 100-continue, data should get sent to both endpoints
-               .withRequestBody(equalTo(new String(new byte[1024]))));
-
-         verify(putRequestedFor(urlEqualTo("/target"))
-               .withHeader("RedirectStatus", equalTo(rsc))
-               .withRequestBody(equalTo(new String(new byte[1024]))));
-      }
+      testWriteRedirect(Method.PUT, true);
    }
 
    @Test
    public void testPostRedirectContentLength() throws InterruptedException, ExecutionException
    {
-      final Client client = new ApacheClient.Builder(this.byteBufferConsumers)
-            .usingChunkedEncoding(false)
-            .build();
-
-      stubFinal(200);
-      for (final int redirectStatusCode : this.redirectStatuses)
-      {
-         stubIntermediate(redirectStatusCode);
-         final String rsc = String.valueOf(redirectStatusCode);
-         final Request request = new HttpRequest.Builder(Method.POST, this.redirectUri)
-               .withHeader("RedirectStatus", rsc)
-               .withEntity(Entities.zeroes(1024))
-               .build();
-         final Response response = client.execute(request).get();
-         Assert.assertEquals(200, response.getStatusCode());
-
-         verify(postRequestedFor(urlEqualTo(this.redirectUri.getPath()))
-               .withHeader("RedirectStatus", equalTo(rsc))
-               // without expect: 100-continue, data should get sent to both endpoints
-               .withRequestBody(equalTo(new String(new byte[1024]))));
-
-         verify(postRequestedFor(urlEqualTo("/target"))
-               .withHeader("RedirectStatus", equalTo(rsc))
-               .withRequestBody(equalTo(new String(new byte[1024]))));
-      }
+      testWriteRedirect(Method.POST, false);
    }
 
    @Test
    public void testPostRedirectChunkedEncoding() throws InterruptedException, ExecutionException
    {
+      testWriteRedirect(Method.POST, true);
+   }
+
+   private void testWriteRedirect(final Method method, final boolean chunkedEncoding)
+         throws InterruptedException, ExecutionException
+   {
       final Client client = new ApacheClient.Builder(this.byteBufferConsumers)
-            .usingChunkedEncoding(true)
+            .usingChunkedEncoding(chunkedEncoding)
             .build();
 
       stubFinal(200);
@@ -576,19 +512,18 @@ public class ApacheClientTest
       {
          stubIntermediate(redirectStatusCode);
          final String rsc = String.valueOf(redirectStatusCode);
-         final Request request = new HttpRequest.Builder(Method.POST, this.redirectUri)
+         final Request request = new HttpRequest.Builder(method, this.redirectUri)
                .withHeader("RedirectStatus", rsc)
                .withEntity(Entities.zeroes(1024))
                .build();
          final Response response = client.execute(request).get();
          Assert.assertEquals(200, response.getStatusCode());
 
-         verify(postRequestedFor(urlEqualTo(this.redirectUri.getPath()))
+         verify(requestedFor(method, this.redirectUri.getPath())
                .withHeader("RedirectStatus", equalTo(rsc))
-               // without expect: 100-continue, data should get sent to both endpoints
                .withRequestBody(equalTo(new String(new byte[1024]))));
 
-         verify(postRequestedFor(urlEqualTo("/target"))
+         verify(requestedFor(method, "/target")
                .withHeader("RedirectStatus", equalTo(rsc))
                .withRequestBody(equalTo(new String(new byte[1024]))));
       }
@@ -597,43 +532,33 @@ public class ApacheClientTest
    @Test
    public void testGetRedirect() throws InterruptedException, ExecutionException
    {
-      stubFinal(200);
-      for (final int redirectStatusCode : this.redirectStatuses)
-      {
-         stubIntermediate(redirectStatusCode);
-         final String rsc = String.valueOf(redirectStatusCode);
-         final Request request = new HttpRequest.Builder(Method.GET, this.redirectUri)
-               .withHeader("RedirectStatus", rsc)
-               .build();
-         final Response response = this.client.execute(request).get();
-         Assert.assertEquals(200, response.getStatusCode());
-
-         verify(getRequestedFor(urlEqualTo(this.redirectUri.getPath()))
-               .withHeader("RedirectStatus", equalTo(rsc)));
-
-         verify(getRequestedFor(urlEqualTo("/target"))
-               .withHeader("RedirectStatus", equalTo(rsc)));
-      }
+      testReadRedirect(Method.GET);
    }
 
    @Test
    public void testDeleteRedirect() throws InterruptedException, ExecutionException
    {
-      stubFinal(204);
+      testReadRedirect(Method.DELETE);
+   }
+
+   private void testReadRedirect(final Method method) throws InterruptedException,
+         ExecutionException
+   {
+      stubFinal(200);
       for (final int redirectStatusCode : this.redirectStatuses)
       {
          stubIntermediate(redirectStatusCode);
          final String rsc = String.valueOf(redirectStatusCode);
-         final Request request = new HttpRequest.Builder(Method.DELETE, this.redirectUri)
+         final Request request = new HttpRequest.Builder(method, this.redirectUri)
                .withHeader("RedirectStatus", rsc)
                .build();
          final Response response = this.client.execute(request).get();
-         Assert.assertEquals(204, response.getStatusCode());
+         Assert.assertEquals(200, response.getStatusCode());
 
-         verify(deleteRequestedFor(urlEqualTo(this.redirectUri.getPath()))
+         verify(requestedFor(method, this.redirectUri.getPath())
                .withHeader("RedirectStatus", equalTo(rsc)));
 
-         verify(deleteRequestedFor(urlEqualTo("/target"))
+         verify(requestedFor(method, "/target")
                .withHeader("RedirectStatus", equalTo(rsc)));
       }
    }
@@ -651,5 +576,10 @@ public class ApacheClientTest
       stubFor(any(urlEqualTo("/target")).willReturn(
             aResponse().withStatus(statusCode)
             ));
+   }
+
+   private RequestPatternBuilder requestedFor(final Method method, final String uri)
+   {
+      return new RequestPatternBuilder(RequestMethod.valueOf(method.toString()), urlEqualTo(uri));
    }
 }
