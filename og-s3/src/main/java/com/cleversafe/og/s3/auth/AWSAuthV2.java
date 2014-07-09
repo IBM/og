@@ -20,7 +20,12 @@
 package com.cleversafe.og.s3.auth;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -34,12 +39,36 @@ import org.slf4j.LoggerFactory;
 import com.cleversafe.og.http.auth.HttpAuth;
 import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Request;
+import com.google.common.base.Splitter;
 import com.google.common.io.BaseEncoding;
 
 public class AWSAuthV2 implements HttpAuth
 {
    private static final Logger _logger = LoggerFactory.getLogger(AWSAuthV2.class);
    private static final String HMAC_SHA1 = "HmacSHA1";
+   private static final Splitter QUERY_SPLITTER = Splitter.on("&");
+   private static final Splitter PARAM_SPLITTER = Splitter.on("=");
+   private static final List<String> SUBRESOURCES;
+   static
+   {
+      final List<String> subresources = new ArrayList<String>();
+      subresources.add("acl");
+      subresources.add("lifecycle");
+      subresources.add("location");
+      subresources.add("logging");
+      subresources.add("notification");
+      subresources.add("partNumber");
+      subresources.add("policy");
+      subresources.add("requestPayment");
+      subresources.add("torrent");
+      subresources.add("uploadId");
+      subresources.add("uploads");
+      subresources.add("versionId");
+      subresources.add("versioning");
+      subresources.add("versions");
+      subresources.add("website");
+      SUBRESOURCES = Collections.unmodifiableList(subresources);
+   }
 
    public AWSAuthV2()
    {}
@@ -166,6 +195,81 @@ public class AWSAuthV2 implements HttpAuth
    // http://docs.aws.amazon.com/AmazonS3/latest/dev/RESTAuthentication.html
    public String canonicalizedResource(final Request request)
    {
-      return request.getUri().getRawPath();
+      // create subresources lazily, usually no subresources will be present
+      SortedMap<String, String> subresources = null;
+
+      for (final Entry<String, String> q : splitQueryParameters(request.getUri().getQuery()).entrySet())
+      {
+         if (SUBRESOURCES.contains(q.getKey()))
+         {
+            if (subresources == null)
+               subresources = new TreeMap<String, String>();
+
+            subresources.put(q.getKey(), q.getValue());
+         }
+      }
+
+      if (subresources != null)
+      {
+         return new StringBuilder()
+               .append(request.getUri().getPath())
+               .append("?")
+               .append(joinQueryParameters(subresources))
+               .toString();
+      }
+
+      return request.getUri().getPath();
+   }
+
+   // Guava includes a map splitter, however it requires that all keys also have values, which is
+   // not always the case for aws signing e.g. torrent, so this method is required
+   public Map<String, String> splitQueryParameters(final String query)
+   {
+      // short circuit common case where there are no query parameters
+      if (query == null || query.length() == 0)
+         return Collections.emptyMap();
+
+      final Map<String, String> queryParameters = new HashMap<String, String>();
+
+      for (final String q : QUERY_SPLITTER.split(query))
+      {
+         final Iterator<String> it = PARAM_SPLITTER.split(q).iterator();
+         final String key = it.next();
+         String value = null;
+         if (it.hasNext())
+            value = it.next();
+
+         queryParameters.put(key, value);
+      }
+
+      return queryParameters;
+   }
+
+   // Guava includes a map joiner, however it requires that all keys also have values, which is
+   // not always the case for aws signing e.g. torrent, so this method is required
+   public String joinQueryParameters(final Map<String, String> queryParameters)
+   {
+      // short circuit common case where there are no query parameters
+      if (queryParameters == null || queryParameters.size() == 0)
+         return "";
+
+      final StringBuilder s = new StringBuilder();
+      final Iterator<Entry<String, String>> it = queryParameters.entrySet().iterator();
+      appendQueryParam(s, it.next());
+
+      while (it.hasNext())
+      {
+         s.append("&");
+         appendQueryParam(s, it.next());
+      }
+
+      return s.toString();
+   }
+
+   private void appendQueryParam(final StringBuilder s, final Entry<String, String> queryParam)
+   {
+      s.append(queryParam.getKey());
+      if (queryParam.getValue() != null)
+         s.append("=").append(queryParam.getValue());
    }
 }
