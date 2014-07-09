@@ -404,7 +404,8 @@ public class ApacheClient implements Client
             processReceivedBytes(bytesRead);
          }
 
-         responseBuilder.withEntity(Entities.of(EntityType.ZEROES, totalBytes));
+         if (totalBytes > 0)
+            responseBuilder.withEntity(Entities.of(EntityType.ZEROES, totalBytes));
 
          final Iterator<Entry<String, String>> it = this.consumer.metadata();
          while (it.hasNext())
