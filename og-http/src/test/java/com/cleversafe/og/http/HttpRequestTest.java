@@ -202,7 +202,7 @@ public class HttpRequestTest
    @Test
    public void testEntity()
    {
-      final Entity e = Entities.of(EntityType.ZEROES, 12345);
+      final Entity e = Entities.zeroes(12345);
       final HttpRequest r = new HttpRequest.Builder(this.method, this.uri).withEntity(e).build();
       Assert.assertEquals(EntityType.ZEROES, r.getEntity().getType());
       Assert.assertEquals(12345, r.getEntity().getSize());

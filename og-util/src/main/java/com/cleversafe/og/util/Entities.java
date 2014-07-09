@@ -32,7 +32,7 @@ public class Entities
 {
    private static final int BUF_SIZE = 1024;
    private static final byte[] ZERO_BUF = new byte[BUF_SIZE];
-   private static final Entity NONE_ENTITY = Entities.of(EntityType.NONE, 0);
+   private static final Entity NONE_ENTITY = Entities.createEntity(EntityType.NONE, 0);
    // TODO performance of single random instance used by multiple threads? Need to quantify
    private static final Random RANDOM = new Random();
 
@@ -44,15 +44,22 @@ public class Entities
       return NONE_ENTITY;
    }
 
-   public static Entity of(final EntityType type, final long size)
+   public static Entity random(final long size)
    {
-      checkNotNull(type);
+      return createEntity(EntityType.RANDOM, size);
+   }
+
+   public static Entity zeroes(final long size)
+   {
+      return createEntity(EntityType.ZEROES, size);
+   }
+
+   private static Entity createEntity(final EntityType type, final long size)
+   {
       checkArgument(size >= 0, "size must be >= 0 [%s]", size);
-      if (size > 0)
-         checkArgument(EntityType.NONE != type, "type must not be NONE unless size is 0 [%s]", size);
       return new Entity()
       {
-         private final EntityType entityType = type;
+         private final EntityType entityType = checkNotNull(type);
          private final long entitySize = size;
 
          @Override

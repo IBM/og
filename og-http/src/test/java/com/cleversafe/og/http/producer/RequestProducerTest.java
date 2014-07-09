@@ -268,7 +268,7 @@ public class RequestProducerTest
    public void testEntity()
    {
       final Request r = new RequestProducer.Builder(this.method, this.uri)
-            .withEntity(Entities.of(EntityType.ZEROES, 12345))
+            .withEntity(Entities.zeroes(12345))
             .build()
             .produce();
       Assert.assertEquals(EntityType.ZEROES, r.getEntity().getType());
@@ -279,7 +279,7 @@ public class RequestProducerTest
    public void testEntityProducer()
    {
       final Request r = new RequestProducer.Builder(this.method, this.uri)
-            .withEntity(Producers.of(Entities.of(EntityType.ZEROES, 12345)))
+            .withEntity(Producers.of(Entities.zeroes(12345)))
             .build()
             .produce();
       Assert.assertEquals(EntityType.ZEROES, r.getEntity().getType());

@@ -35,41 +35,42 @@ public class EntitiesTest
       Assert.assertEquals(0, e.getSize());
    }
 
-   @Test(expected = NullPointerException.class)
-   public void testNullEntityType()
+   @Test(expected = IllegalArgumentException.class)
+   public void testRandomNegativeSize()
    {
-      Entities.of(null, 0);
+      Entities.random(-1);
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testNegativeSize()
+   public void testZeroesNegativeSize()
    {
-      Entities.of(EntityType.RANDOM, -1);
+      Entities.zeroes(-1);
    }
 
    @Test
-   public void testZeroSizeNoneType()
+   public void testRandomZeroSize()
    {
-      Entities.of(EntityType.NONE, 0);
+      Entities.random(0);
    }
 
    @Test
-   public void testZeroSize()
+   public void testZeroesZeroSize()
    {
-      Entities.of(EntityType.RANDOM, 0);
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testPositiveSizeNoneType()
-   {
-      // NONE represents lack of an entity, and shouldn't be used otherwise
-      Entities.of(EntityType.NONE, 1);
+      Entities.zeroes(0);
    }
 
    @Test
-   public void testPositiveSize()
+   public void testRandomPositiveSize()
    {
-      final Entity e = Entities.of(EntityType.ZEROES, 1);
+      final Entity e = Entities.random(1);
+      Assert.assertEquals(EntityType.RANDOM, e.getType());
+      Assert.assertEquals(1, e.getSize());
+   }
+
+   @Test
+   public void testZeroesPositiveSize()
+   {
+      final Entity e = Entities.zeroes(1);
       Assert.assertEquals(EntityType.ZEROES, e.getType());
       Assert.assertEquals(1, e.getSize());
    }

@@ -403,7 +403,7 @@ public class ApacheClient implements Client
          }
 
          if (totalBytes > 0)
-            responseBuilder.withEntity(Entities.of(EntityType.ZEROES, totalBytes));
+            responseBuilder.withEntity(Entities.zeroes(totalBytes));
 
          final Iterator<Entry<String, String>> it = this.consumer.metadata();
          while (it.hasNext())

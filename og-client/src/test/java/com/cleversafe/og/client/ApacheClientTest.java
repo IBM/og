@@ -255,7 +255,7 @@ public class ApacheClientTest
    public void testPutRequestWithEntity() throws InterruptedException, ExecutionException
    {
       final Request request = new HttpRequest.Builder(Method.PUT, this.objectUri)
-            .withEntity(Entities.of(EntityType.ZEROES, 1024))
+            .withEntity(Entities.zeroes(1024))
             .build();
       final Response response = this.client.execute(request).get();
       Assert.assertEquals(200, response.getStatusCode());
@@ -307,7 +307,7 @@ public class ApacheClientTest
             .usingChunkedEncoding(false)
             .build();
       final Request request = new HttpRequest.Builder(Method.PUT, this.objectUri)
-            .withEntity(Entities.of(EntityType.ZEROES, 2048))
+            .withEntity(Entities.zeroes(2048))
             .build();
       client.execute(request).get();
       verify(putRequestedFor(urlEqualTo(this.objectUri.getPath()))
@@ -322,7 +322,7 @@ public class ApacheClientTest
             .usingChunkedEncoding(true)
             .build();
       final Request request = new HttpRequest.Builder(Method.PUT, this.objectUri)
-            .withEntity(Entities.of(EntityType.ZEROES, 2048))
+            .withEntity(Entities.zeroes(2048))
             .build();
       client.execute(request).get();
       verify(putRequestedFor(urlEqualTo(this.objectUri.getPath()))
@@ -337,7 +337,7 @@ public class ApacheClientTest
             .usingExpectContinue(true)
             .build();
       final Request request = new HttpRequest.Builder(Method.PUT, this.objectUri)
-            .withEntity(Entities.of(EntityType.ZEROES, 2048))
+            .withEntity(Entities.zeroes(2048))
             .build();
       client.execute(request).get();
       verify(putRequestedFor(urlEqualTo(this.objectUri.getPath()))
@@ -351,7 +351,7 @@ public class ApacheClientTest
             .usingExpectContinue(false)
             .build();
       final Request request = new HttpRequest.Builder(Method.PUT, this.objectUri)
-            .withEntity(Entities.of(EntityType.ZEROES, 2048))
+            .withEntity(Entities.zeroes(2048))
             .build();
       client.execute(request).get();
       verify(putRequestedFor(urlEqualTo(this.objectUri.getPath()))
@@ -467,7 +467,7 @@ public class ApacheClientTest
          final String rsc = String.valueOf(redirectStatusCode);
          final Request request = new HttpRequest.Builder(Method.PUT, this.redirectUri)
                .withHeader("RedirectStatus", rsc)
-               .withEntity(Entities.of(EntityType.ZEROES, 1024))
+               .withEntity(Entities.zeroes(1024))
                .build();
          final Response response = client.execute(request).get();
          Assert.assertEquals(200, response.getStatusCode());
@@ -497,7 +497,7 @@ public class ApacheClientTest
          final String rsc = String.valueOf(redirectStatusCode);
          final Request request = new HttpRequest.Builder(Method.PUT, this.redirectUri)
                .withHeader("RedirectStatus", rsc)
-               .withEntity(Entities.of(EntityType.ZEROES, 1024))
+               .withEntity(Entities.zeroes(1024))
                .build();
          final Response response = client.execute(request).get();
          Assert.assertEquals(200, response.getStatusCode());

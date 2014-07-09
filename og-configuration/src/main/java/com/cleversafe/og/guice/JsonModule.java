@@ -50,6 +50,7 @@ import com.cleversafe.og.guice.annotation.TestContainer;
 import com.cleversafe.og.guice.annotation.TestEntity;
 import com.cleversafe.og.guice.annotation.TestHeaders;
 import com.cleversafe.og.guice.annotation.TestHost;
+import com.cleversafe.og.guice.annotation.TestId;
 import com.cleversafe.og.guice.annotation.TestObjectFileLocation;
 import com.cleversafe.og.guice.annotation.TestObjectFileName;
 import com.cleversafe.og.guice.annotation.TestPassword;
@@ -58,7 +59,6 @@ import com.cleversafe.og.guice.annotation.TestQueryParams;
 import com.cleversafe.og.guice.annotation.TestScheme;
 import com.cleversafe.og.guice.annotation.TestUriRoot;
 import com.cleversafe.og.guice.annotation.TestUsername;
-import com.cleversafe.og.guice.annotation.TestId;
 import com.cleversafe.og.guice.annotation.WriteHeaders;
 import com.cleversafe.og.guice.annotation.WriteHost;
 import com.cleversafe.og.guice.annotation.WriteWeight;
@@ -67,6 +67,7 @@ import com.cleversafe.og.http.auth.BasicAuth;
 import com.cleversafe.og.http.auth.HttpAuth;
 import com.cleversafe.og.http.util.Api;
 import com.cleversafe.og.operation.Entity;
+import com.cleversafe.og.operation.EntityType;
 import com.cleversafe.og.s3.auth.AWSAuthV2;
 import com.cleversafe.og.scheduling.ConcurrentRequestScheduler;
 import com.cleversafe.og.scheduling.RequestRateScheduler;
@@ -362,7 +363,10 @@ public class JsonModule extends AbstractModule
          @Override
          public Entity produce()
          {
-            return Entities.of(jsonConfig.getSource(), (long) this.sizes.produce().nextSample());
+            if (EntityType.ZEROES == jsonConfig.getSource())
+               return Entities.zeroes((long) this.sizes.produce().nextSample());
+            else
+               return Entities.random((long) this.sizes.produce().nextSample());
          }
       };
    }

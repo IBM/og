@@ -207,7 +207,7 @@ public class HttpResponseTest
    @Test
    public void testEntity()
    {
-      final Entity e = Entities.of(EntityType.ZEROES, 12345);
+      final Entity e = Entities.zeroes(12345);
       final HttpResponse r =
             new HttpResponse.Builder().withStatusCode(this.statusCode).withEntity(e).build();
       Assert.assertEquals(EntityType.ZEROES, r.getEntity().getType());
