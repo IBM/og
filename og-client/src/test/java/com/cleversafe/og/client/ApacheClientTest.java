@@ -22,7 +22,6 @@ package com.cleversafe.og.client;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.any;
 import static com.github.tomakehurst.wiremock.client.WireMock.delete;
-import static com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
@@ -296,23 +295,27 @@ public class ApacheClientTest
    @Test
    public void testGetRequest() throws InterruptedException, ExecutionException
    {
-      final Request request = new HttpRequest.Builder(Method.GET, this.objectUri).build();
-      final Response response = this.client.execute(request).get();
-      Assert.assertEquals(200, response.getStatusCode());
-      Assert.assertEquals(EntityType.ZEROES, response.getEntity().getType());
-      Assert.assertEquals(1024, response.getEntity().getSize());
-      verify(getRequestedFor(urlEqualTo(this.objectUri.getPath())));
+      testReadRequest(Method.GET, 200, EntityType.ZEROES, 1024);
    }
 
    @Test
    public void testDeleteRequest() throws InterruptedException, ExecutionException
    {
-      final Request request = new HttpRequest.Builder(Method.DELETE, this.objectUri).build();
+      testReadRequest(Method.DELETE, 204, EntityType.NONE, 0);
+   }
+
+   private void testReadRequest(
+         final Method method,
+         final int statusCode,
+         final EntityType type,
+         final long size) throws InterruptedException, ExecutionException
+   {
+      final Request request = new HttpRequest.Builder(method, this.objectUri).build();
       final Response response = this.client.execute(request).get();
-      Assert.assertEquals(204, response.getStatusCode());
-      Assert.assertEquals(EntityType.NONE, response.getEntity().getType());
-      Assert.assertEquals(0, response.getEntity().getSize());
-      verify(deleteRequestedFor(urlEqualTo(this.objectUri.getPath())));
+      Assert.assertEquals(statusCode, response.getStatusCode());
+      Assert.assertEquals(type, response.getEntity().getType());
+      Assert.assertEquals(size, response.getEntity().getSize());
+      verify(requestedFor(method, this.objectUri.getPath()));
    }
 
    @Test
