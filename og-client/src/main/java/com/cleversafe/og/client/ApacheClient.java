@@ -46,7 +46,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultConnectionKeepAliveStrategy;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.client.LaxRedirectStrategy;
 import org.apache.http.protocol.HttpRequestExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -121,8 +120,7 @@ public class ApacheClient implements Client
             .disableContentCompression()
             .disableAuthCaching()
             .disableAutomaticRetries()
-            // TODO need to implement a redirectStrategy that will redirect PUT and POST
-            .setRedirectStrategy(new LaxRedirectStrategy())
+            .setRedirectStrategy(new CustomRedirectStrategy())
             .setDefaultRequestConfig(RequestConfig.custom()
                   .setExpectContinueEnabled(builder.expectContinue)
                   // TODO investigate performance impact of stale check (30ms reported)
