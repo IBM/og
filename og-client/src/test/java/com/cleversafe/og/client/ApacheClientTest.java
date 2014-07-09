@@ -27,6 +27,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.matching;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
@@ -88,6 +90,11 @@ public class ApacheClientTest
 
       // write
       stubFor(put(urlMatching("/container/.*")).willReturn(
+            aResponse().withStatus(200)
+            ));
+
+      // write (post)
+      stubFor(post(urlMatching("/container/.*")).willReturn(
             aResponse().withStatus(200)
             ));
 
@@ -262,6 +269,20 @@ public class ApacheClientTest
       Assert.assertEquals(EntityType.NONE, response.getEntity().getType());
       Assert.assertEquals(0, response.getEntity().getSize());
       verify(putRequestedFor(urlEqualTo(this.objectUri.getPath()))
+            .withRequestBody(equalTo(new String(new byte[1024]))));
+   }
+
+   @Test
+   public void testPostRequestWithEntity() throws InterruptedException, ExecutionException
+   {
+      final Request request = new HttpRequest.Builder(Method.POST, this.objectUri)
+            .withEntity(Entities.zeroes(1024))
+            .build();
+      final Response response = this.client.execute(request).get();
+      Assert.assertEquals(200, response.getStatusCode());
+      Assert.assertEquals(EntityType.NONE, response.getEntity().getType());
+      Assert.assertEquals(0, response.getEntity().getSize());
+      verify(postRequestedFor(urlEqualTo(this.objectUri.getPath()))
             .withRequestBody(equalTo(new String(new byte[1024]))));
    }
 
@@ -508,6 +529,66 @@ public class ApacheClientTest
                .withRequestBody(equalTo(new String(new byte[1024]))));
 
          verify(putRequestedFor(urlEqualTo("/target"))
+               .withHeader("RedirectStatus", equalTo(rsc))
+               .withRequestBody(equalTo(new String(new byte[1024]))));
+      }
+   }
+
+   @Test
+   public void testPostRedirectContentLength() throws InterruptedException, ExecutionException
+   {
+      final Client client = new ApacheClient.Builder(this.byteBufferConsumers)
+            .usingChunkedEncoding(false)
+            .build();
+
+      stubFinal(200);
+      for (final int redirectStatusCode : this.redirectStatuses)
+      {
+         stubIntermediate(redirectStatusCode);
+         final String rsc = String.valueOf(redirectStatusCode);
+         final Request request = new HttpRequest.Builder(Method.POST, this.redirectUri)
+               .withHeader("RedirectStatus", rsc)
+               .withEntity(Entities.zeroes(1024))
+               .build();
+         final Response response = client.execute(request).get();
+         Assert.assertEquals(200, response.getStatusCode());
+
+         verify(postRequestedFor(urlEqualTo(this.redirectUri.getPath()))
+               .withHeader("RedirectStatus", equalTo(rsc))
+               // without expect: 100-continue, data should get sent to both endpoints
+               .withRequestBody(equalTo(new String(new byte[1024]))));
+
+         verify(postRequestedFor(urlEqualTo("/target"))
+               .withHeader("RedirectStatus", equalTo(rsc))
+               .withRequestBody(equalTo(new String(new byte[1024]))));
+      }
+   }
+
+   @Test
+   public void testPostRedirectChunkedEncoding() throws InterruptedException, ExecutionException
+   {
+      final Client client = new ApacheClient.Builder(this.byteBufferConsumers)
+            .usingChunkedEncoding(true)
+            .build();
+
+      stubFinal(200);
+      for (final int redirectStatusCode : this.redirectStatuses)
+      {
+         stubIntermediate(redirectStatusCode);
+         final String rsc = String.valueOf(redirectStatusCode);
+         final Request request = new HttpRequest.Builder(Method.POST, this.redirectUri)
+               .withHeader("RedirectStatus", rsc)
+               .withEntity(Entities.zeroes(1024))
+               .build();
+         final Response response = client.execute(request).get();
+         Assert.assertEquals(200, response.getStatusCode());
+
+         verify(postRequestedFor(urlEqualTo(this.redirectUri.getPath()))
+               .withHeader("RedirectStatus", equalTo(rsc))
+               // without expect: 100-continue, data should get sent to both endpoints
+               .withRequestBody(equalTo(new String(new byte[1024]))));
+
+         verify(postRequestedFor(urlEqualTo("/target"))
                .withHeader("RedirectStatus", equalTo(rsc))
                .withRequestBody(equalTo(new String(new byte[1024]))));
       }
