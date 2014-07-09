@@ -53,7 +53,7 @@ public class StatisticsTest
       when(this.request.getEntity()).thenReturn(Entities.random(1024));
       this.response = mock(Response.class);
       when(this.response.getStatusCode()).thenReturn(201);
-      when(this.response.getEntity()).thenReturn(Entities.zeroes(1024));
+      when(this.response.getEntity()).thenReturn(Entities.none());
    }
 
    @Test(expected = NullPointerException.class)
@@ -72,7 +72,7 @@ public class StatisticsTest
    public void testUpdate()
    {
       this.stats.update(this.request, this.response);
-      assertAll(Operation.WRITE, 1, 0, 201, 1);
+      assertAll(Operation.WRITE, 1, 1024, 0, 201, 1);
    }
 
    @Test
@@ -80,7 +80,7 @@ public class StatisticsTest
    {
       this.stats.update(this.request, this.response);
       this.stats.update(this.request, this.response);
-      assertAll(Operation.WRITE, 2, 0, 201, 2);
+      assertAll(Operation.WRITE, 2, 2048, 0, 201, 2);
    }
 
    @Test
@@ -88,7 +88,7 @@ public class StatisticsTest
    {
       when(this.response.getMetadata(Metadata.ABORTED)).thenReturn("1");
       this.stats.update(this.request, this.response);
-      assertAll(Operation.WRITE, 1, 1, 201, 0);
+      assertAll(Operation.WRITE, 1, 1024, 1, 201, 0);
    }
 
    @Test
@@ -97,7 +97,26 @@ public class StatisticsTest
       when(this.response.getMetadata(Metadata.ABORTED)).thenReturn("1");
       this.stats.update(this.request, this.response);
       this.stats.update(this.request, this.response);
-      assertAll(Operation.WRITE, 2, 2, 201, 0);
+      assertAll(Operation.WRITE, 2, 2048, 2, 201, 0);
+   }
+
+   @Test
+   public void testUpdateReadBytes()
+   {
+      when(this.request.getMethod()).thenReturn(Method.GET);
+      when(this.request.getEntity()).thenReturn(Entities.none());
+      when(this.response.getEntity()).thenReturn(Entities.zeroes(1024));
+      this.stats.update(this.request, this.response);
+      assertAll(Operation.READ, 1, 1024, 0, 201, 1);
+   }
+
+   @Test
+   public void testDeleteReadBytes()
+   {
+      when(this.request.getMethod()).thenReturn(Method.DELETE);
+      when(this.request.getEntity()).thenReturn(Entities.none());
+      this.stats.update(this.request, this.response);
+      assertAll(Operation.DELETE, 1, 0, 0, 201, 1);
    }
 
    @Test
@@ -172,6 +191,15 @@ public class StatisticsTest
       this.stats.getStatusCode(Operation.WRITE, 600);
    }
 
+   @Test(expected = UnsupportedOperationException.class)
+   public void testStatusCodeIteratorRemove()
+   {
+      this.stats.update(this.request, this.response);
+      final Iterator<Entry<Integer, Long>> it = this.stats.statusCodeIterator(Operation.WRITE);
+      it.next();
+      it.remove();
+   }
+
    @Test
    public void testConcurrency() throws InterruptedException
    {
@@ -205,17 +233,19 @@ public class StatisticsTest
       {
          t.join();
       }
-      assertAll(Operation.WRITE, 1000, 0, 201, 1000);
+      assertAll(Operation.WRITE, 1000, 1024 * operationCount, 0, 201, 1000);
    }
 
    private void assertAll(
          final Operation operation,
          final int opCount,
+         final int byteCount,
          final int abortCount,
          final int statusCode,
          final int scCount)
    {
       Assert.assertEquals(opCount, this.stats.get(operation, Counter.OPERATIONS));
+      Assert.assertEquals(byteCount, this.stats.get(operation, Counter.BYTES));
       Assert.assertEquals(abortCount, this.stats.get(operation, Counter.ABORTS));
       Assert.assertEquals(scCount, this.stats.getStatusCode(operation, statusCode));
       final Iterator<Entry<Integer, Long>> it = this.stats.statusCodeIterator(operation);
