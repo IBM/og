@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.SortedMap;
@@ -145,7 +146,7 @@ public class AWSAuthV2 implements HttpAuth
       if (value != null)
          return value;
 
-      value = request.getHeader(key.toLowerCase());
+      value = request.getHeader(key.toLowerCase(Locale.US));
       if (value != null)
          return value;
 
@@ -164,14 +165,14 @@ public class AWSAuthV2 implements HttpAuth
       while (headers.hasNext())
       {
          final Entry<String, String> header = headers.next();
-         final String keyLower = header.getKey().toLowerCase();
+         final String keyLower = header.getKey().trim().toLowerCase(Locale.US);
          // ignoring x-amz-date, is this correct?
-         if (keyLower.startsWith("x-amz-") && !keyLower.equals("x-amz-date"))
+         if (keyLower.startsWith("x-amz-") && !"x-amz-date".equals(keyLower))
          {
             if (canonicalHeaders == null)
                canonicalHeaders = new TreeMap<String, String>();
 
-            canonicalHeaders.put(keyLower, header.getValue());
+            canonicalHeaders.put(keyLower, header.getValue().trim());
          }
       }
       final StringBuilder s = new StringBuilder();
@@ -189,8 +190,6 @@ public class AWSAuthV2 implements HttpAuth
    }
 
    // TODO only supports path-style requests, virtual hosts not supported
-   // TODO subresources not supported: acl, lifecycle, location, logging, notification, partNumber,
-   // policy, requestPayment, torrent, uploadId, uploads, versionId, versioning, versions, website
    // TODO other query params not supported, see step 4 of canonicalizing a request:
    // http://docs.aws.amazon.com/AmazonS3/latest/dev/RESTAuthentication.html
    public String canonicalizedResource(final Request request)
