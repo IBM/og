@@ -20,6 +20,7 @@
 package com.cleversafe.og.client;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.any;
 import static com.github.tomakehurst.wiremock.client.WireMock.delete;
 import static com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
@@ -38,7 +39,9 @@ import static org.mockito.Mockito.when;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -68,6 +71,8 @@ public class ApacheClientTest
    private Client client;
    private URI objectUri;
    private URI delayedUri;
+   private URI redirectUri;
+   private List<Integer> redirectStatuses;
 
    // TODO @Mock annotation?
    @SuppressWarnings("unchecked")
@@ -104,6 +109,11 @@ public class ApacheClientTest
 
       this.objectUri = new URI("http://127.0.0.1:8080/container/object");
       this.delayedUri = new URI("http://127.0.0.1:8080/delayed");
+      this.redirectUri = new URI("http://127.0.0.1:8080/intermediate");
+      this.redirectStatuses = new ArrayList<Integer>();
+      this.redirectStatuses.add(301);
+      this.redirectStatuses.add(302);
+      this.redirectStatuses.add(307);
    }
 
    @Test(expected = NullPointerException.class)
@@ -424,8 +434,8 @@ public class ApacheClientTest
       final long start = System.nanoTime();
       this.client.shutdown(true).get();
       final long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
-      // immediate shutdown takes less than 1 second
-      Assert.assertTrue(duration < 1000);
+      // immediate shutdown takes less than 5 seconds
+      Assert.assertTrue(duration < 5000);
    }
 
    @Test
@@ -438,5 +448,127 @@ public class ApacheClientTest
       final long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
       // graceful shutdown takes at least request time
       Assert.assertTrue(duration >= 5000);
+   }
+
+   // TODO determine a way to test PUT redirect with 100-Continue; WireMock always
+   // sends a 100-Continue intermediate response code prior to the user configured redirect
+   // so it cannot be used to test this
+   @Test
+   public void testPutRedirectContentLength() throws InterruptedException, ExecutionException
+   {
+      final Client client = new ApacheClient.Builder(this.byteBufferConsumers)
+            .usingChunkedEncoding(false)
+            .build();
+
+      stubFinal(200);
+      for (final int redirectStatusCode : this.redirectStatuses)
+      {
+         stubIntermediate(redirectStatusCode);
+         final String rsc = String.valueOf(redirectStatusCode);
+         final Request request = new HttpRequest.Builder(Method.PUT, this.redirectUri)
+               .withHeader("RedirectStatus", rsc)
+               .withEntity(Entities.of(EntityType.ZEROES, 1024))
+               .build();
+         final Response response = client.execute(request).get();
+         Assert.assertEquals(200, response.getStatusCode());
+
+         verify(putRequestedFor(urlEqualTo(this.redirectUri.getPath()))
+               .withHeader("RedirectStatus", equalTo(rsc))
+               // without expect: 100-continue, data should get sent to both endpoints
+               .withRequestBody(equalTo(new String(new byte[1024]))));
+
+         verify(putRequestedFor(urlEqualTo("/target"))
+               .withHeader("RedirectStatus", equalTo(rsc))
+               .withRequestBody(equalTo(new String(new byte[1024]))));
+      }
+   }
+
+   @Test
+   public void testPutRedirectChunkedEncoding() throws InterruptedException, ExecutionException
+   {
+      final Client client = new ApacheClient.Builder(this.byteBufferConsumers)
+            .usingChunkedEncoding(true)
+            .build();
+
+      stubFinal(200);
+      for (final int redirectStatusCode : this.redirectStatuses)
+      {
+         stubIntermediate(redirectStatusCode);
+         final String rsc = String.valueOf(redirectStatusCode);
+         final Request request = new HttpRequest.Builder(Method.PUT, this.redirectUri)
+               .withHeader("RedirectStatus", rsc)
+               .withEntity(Entities.of(EntityType.ZEROES, 1024))
+               .build();
+         final Response response = client.execute(request).get();
+         Assert.assertEquals(200, response.getStatusCode());
+
+         verify(putRequestedFor(urlEqualTo(this.redirectUri.getPath()))
+               .withHeader("RedirectStatus", equalTo(rsc))
+               // without expect: 100-continue, data should get sent to both endpoints
+               .withRequestBody(equalTo(new String(new byte[1024]))));
+
+         verify(putRequestedFor(urlEqualTo("/target"))
+               .withHeader("RedirectStatus", equalTo(rsc))
+               .withRequestBody(equalTo(new String(new byte[1024]))));
+      }
+   }
+
+   @Test
+   public void testGetRedirect() throws InterruptedException, ExecutionException
+   {
+      stubFinal(200);
+      for (final int redirectStatusCode : this.redirectStatuses)
+      {
+         stubIntermediate(redirectStatusCode);
+         final String rsc = String.valueOf(redirectStatusCode);
+         final Request request = new HttpRequest.Builder(Method.GET, this.redirectUri)
+               .withHeader("RedirectStatus", rsc)
+               .build();
+         final Response response = this.client.execute(request).get();
+         Assert.assertEquals(200, response.getStatusCode());
+
+         verify(getRequestedFor(urlEqualTo(this.redirectUri.getPath()))
+               .withHeader("RedirectStatus", equalTo(rsc)));
+
+         verify(getRequestedFor(urlEqualTo("/target"))
+               .withHeader("RedirectStatus", equalTo(rsc)));
+      }
+   }
+
+   @Test
+   public void testDeleteRedirect() throws InterruptedException, ExecutionException
+   {
+      stubFinal(204);
+      for (final int redirectStatusCode : this.redirectStatuses)
+      {
+         stubIntermediate(redirectStatusCode);
+         final String rsc = String.valueOf(redirectStatusCode);
+         final Request request = new HttpRequest.Builder(Method.DELETE, this.redirectUri)
+               .withHeader("RedirectStatus", rsc)
+               .build();
+         final Response response = this.client.execute(request).get();
+         Assert.assertEquals(204, response.getStatusCode());
+
+         verify(deleteRequestedFor(urlEqualTo(this.redirectUri.getPath()))
+               .withHeader("RedirectStatus", equalTo(rsc)));
+
+         verify(deleteRequestedFor(urlEqualTo("/target"))
+               .withHeader("RedirectStatus", equalTo(rsc)));
+      }
+   }
+
+   private void stubIntermediate(final int statusCode)
+   {
+      stubFor(any(urlEqualTo("/intermediate")).willReturn(
+            aResponse().withStatus(statusCode)
+                  .withHeader("location", "/target")
+            ));
+   }
+
+   private void stubFinal(final int statusCode)
+   {
+      stubFor(any(urlEqualTo("/target")).willReturn(
+            aResponse().withStatus(statusCode)
+            ));
    }
 }
