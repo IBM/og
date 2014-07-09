@@ -19,6 +19,9 @@
 
 package com.cleversafe.og.util;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -73,5 +76,42 @@ public class EntitiesTest
       final Entity e = Entities.zeroes(1);
       Assert.assertEquals(EntityType.ZEROES, e.getType());
       Assert.assertEquals(1, e.getSize());
+   }
+
+   @Test
+   public void testNoneCreateInputStream() throws IOException
+   {
+      final Entity e = Entities.none();
+      final InputStream i = Entities.createInputStream(e);
+      Assert.assertEquals(-1, i.read());
+   }
+
+   @Test
+   public void testRandomCreateInputStream() throws IOException
+   {
+      final Entity e = Entities.random(1024);
+      final InputStream stream = Entities.createInputStream(e);
+      final byte[] buf = new byte[1024];
+      Assert.assertEquals(1024, stream.read(buf));
+      boolean nonZero = false;
+      for (int i = 0; i < buf.length; i++)
+      {
+         if (buf[i] != 0)
+            nonZero = true;
+      }
+      Assert.assertTrue(nonZero);
+   }
+
+   @Test
+   public void testZeroesCreateInputStream() throws IOException
+   {
+      final Entity e = Entities.zeroes(1024);
+      final InputStream stream = Entities.createInputStream(e);
+      final byte[] buf = new byte[1024];
+      Assert.assertEquals(1024, stream.read(buf));
+      for (int i = 0; i < buf.length; i++)
+      {
+         Assert.assertEquals(0, buf[i]);
+      }
    }
 }

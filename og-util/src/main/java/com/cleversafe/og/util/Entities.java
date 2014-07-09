@@ -33,6 +33,14 @@ public class Entities
    private static final int BUF_SIZE = 1024;
    private static final byte[] ZERO_BUF = new byte[BUF_SIZE];
    private static final Entity NONE_ENTITY = Entities.createEntity(EntityType.NONE, 0);
+   private static final InputStream NONE_INPUTSTREAM = new InputStream()
+   {
+      @Override
+      public int read()
+      {
+         return -1;
+      }
+   };
    // TODO performance of single random instance used by multiple threads? Need to quantify
    private static final Random RANDOM = new Random();
 
@@ -79,21 +87,15 @@ public class Entities
    public static InputStream createInputStream(final Entity entity)
    {
       checkNotNull(entity);
-      byte[] buf;
-
       switch (entity.getType())
       {
          case NONE :
-            // TODO should we allow null return?
-            return null;
+            return NONE_INPUTSTREAM;
          case ZEROES :
-            buf = ZERO_BUF;
-            break;
+            return new FixedBufferInputStream(ZERO_BUF, entity.getSize());
          default :
-            buf = createRandomBuffer();
-            break;
+            return new FixedBufferInputStream(createRandomBuffer(), entity.getSize());
       }
-      return new FixedBufferInputStream(buf, entity.getSize());
    }
 
    private static byte[] createRandomBuffer()
