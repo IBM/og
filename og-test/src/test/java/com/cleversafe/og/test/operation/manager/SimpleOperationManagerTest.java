@@ -20,8 +20,10 @@
 package com.cleversafe.og.test.operation.manager;
 
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -90,5 +92,21 @@ public class SimpleOperationManagerTest
       when(this.requestMix.produce()).thenReturn(p);
       final SimpleOperationManager m = new SimpleOperationManager(this.requestMix, this.consumers);
       m.next();
+   }
+
+   // TODO should OperationManager interface declare OperationManagerException for complete method?
+   @Test
+   public void testConsumer() throws OperationManagerException
+   {
+      final List<Consumer<Response>> responseConsumers = new ArrayList<Consumer<Response>>();
+      @SuppressWarnings("unchecked")
+      final Consumer<Response> consumer = mock(Consumer.class);
+      responseConsumers.add(consumer);
+      final SimpleOperationManager m =
+            new SimpleOperationManager(this.requestMix, responseConsumers);
+      m.next();
+      final Response r = mock(Response.class);
+      m.complete(r);
+      verify(consumer).consume(r);
    }
 }
