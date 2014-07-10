@@ -56,7 +56,8 @@ public class LoadTest
    private final Map<String, Request> pendingRequests;
    private final ExecutorService executorService;
    private final Thread testThread;
-   AtomicBoolean running;
+   private final AtomicBoolean running;
+   private final AtomicBoolean success;
 
    public LoadTest(
          final OperationManager operationManager,
@@ -76,6 +77,7 @@ public class LoadTest
       this.executorService = Executors.newCachedThreadPool(fac);
       this.testThread = Thread.currentThread();
       this.running = new AtomicBoolean(true);
+      this.success = new AtomicBoolean(true);
    }
 
    public boolean runTest()
@@ -93,8 +95,10 @@ public class LoadTest
       }
       catch (final OperationManagerException e)
       {
-         _logger.error("", e);
-         return false;
+         this.success.set(false);
+         this.running.set(false);
+         _logger.error("Exception while producing request", e);
+         return this.success.get();
       }
       finally
       {
@@ -105,18 +109,19 @@ public class LoadTest
          }
          catch (final Exception e)
          {
+            this.success.set(false);
             _logger.error("Exception while waiting for client shutdown completion", e);
          }
-         final boolean success =
+         final boolean shutdownSuccess =
                MoreExecutors.shutdownAndAwaitTermination(this.executorService, 5, TimeUnit.SECONDS);
 
-         if (!success)
+         if (!shutdownSuccess)
             _logger.error("Error while shutting down executor service");
       }
-      return true;
+      return this.success.get();
    }
 
-   public boolean isRunning()
+   private boolean isRunning()
    {
       if (!this.running.get())
          return false;
@@ -175,8 +180,10 @@ public class LoadTest
          }
          catch (final Exception e)
          {
-            // TODO fix this
-            _logger.error("", e);
+            LoadTest.this.success.set(false);
+            LoadTest.this.running.set(false);
+            _logger.error("Exception while consuming response", e);
+            LoadTest.this.testThread.interrupt();
          }
       }
    }
