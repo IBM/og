@@ -47,9 +47,9 @@ public class SimpleOperationManager implements OperationManager
    @Override
    public Request next() throws OperationManagerException
    {
-      final Producer<Request> producer = this.requestMix.produce();
       try
       {
+         final Producer<Request> producer = this.requestMix.produce();
          return producer.produce();
       }
       catch (final ProducerException e)
