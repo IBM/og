@@ -23,11 +23,15 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.distribution.Distribution;
 
 public class RequestRateScheduler implements Scheduler
 {
+   private static final Logger _logger = LoggerFactory.getLogger(RequestRateScheduler.class);
    private final Distribution count;
    private final TimeUnit unit;
    private long lastCalledTimestamp;
@@ -51,6 +55,7 @@ public class RequestRateScheduler implements Scheduler
          }
          catch (final InterruptedException e)
          {
+            _logger.info("Interrupted while waiting to schedule next request");
             this.lastCalledTimestamp = System.nanoTime();
             return;
          }
