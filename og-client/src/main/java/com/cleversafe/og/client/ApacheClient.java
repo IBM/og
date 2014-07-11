@@ -439,6 +439,14 @@ public class ApacheClient implements Client
 
       public Builder(final Function<String, ByteBufferConsumer> byteBufferConsumers)
       {
+         this.connectTimeout = 0;
+         this.soTimeout = 0;
+         this.soReuseAddress = false;
+         this.soLinger = -1;
+         this.soKeepAlive = true;
+         this.tcpNoDelay = true;
+         this.chunkedEncoding = false;
+         this.expectContinue = false;
          this.waitForContinue = 3000;
          this.byteBufferConsumers = byteBufferConsumers;
       }
