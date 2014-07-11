@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration shutdownHook="disable">
 	<Properties>
-		<Property name="log_path">log/${sys:log_datetime}</Property>
+		<Property name="log_path">log/${og:datetime}</Property>
 		<Property name="application.log">application.log</Property>
 		<Property name="request.log">request.log</Property>
 		<Property name="config.json">config.json</Property>
