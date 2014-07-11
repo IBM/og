@@ -27,6 +27,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.cleversafe.og.operation.Response;
+import com.google.common.util.concurrent.Uninterruptibles;
 
 public class ConcurrentRequestSchedulerTest
 {
@@ -94,5 +95,25 @@ public class ConcurrentRequestSchedulerTest
             s.complete(response);
          }
       });
+   }
+
+   @Test
+   public void testInterruptedSchedulerThread()
+   {
+      final ConcurrentRequestScheduler s = new ConcurrentRequestScheduler(1);
+      final Thread t = new Thread(new Runnable()
+      {
+         @Override
+         public void run()
+         {
+            s.waitForNext();
+         }
+      });
+      t.start();
+      t.interrupt();
+      final long timestampStart = System.nanoTime();
+      Uninterruptibles.joinUninterruptibly(t);
+      final long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - timestampStart);
+      Assert.assertTrue(duration < 1000);
    }
 }

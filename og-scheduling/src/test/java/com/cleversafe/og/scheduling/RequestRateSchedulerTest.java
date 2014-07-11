@@ -29,6 +29,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.cleversafe.og.util.distribution.Distribution;
+import com.google.common.util.concurrent.Uninterruptibles;
 
 public class RequestRateSchedulerTest
 {
@@ -66,5 +67,25 @@ public class RequestRateSchedulerTest
          // 10 per second -> 1 per 100 millis
          Assert.assertTrue(duration > 50 && duration < 150);
       }
+   }
+
+   @Test
+   public void testInterruptedSchedulerThread()
+   {
+      final RequestRateScheduler s = new RequestRateScheduler(this.mockDistribution, TimeUnit.DAYS);
+      final Thread t = new Thread(new Runnable()
+      {
+         @Override
+         public void run()
+         {
+            s.waitForNext();
+         }
+      });
+      t.start();
+      t.interrupt();
+      final long timestampStart = System.nanoTime();
+      Uninterruptibles.joinUninterruptibly(t);
+      final long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - timestampStart);
+      Assert.assertTrue(duration < 1000);
    }
 }
