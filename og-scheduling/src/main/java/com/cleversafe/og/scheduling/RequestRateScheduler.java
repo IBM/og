@@ -55,7 +55,7 @@ public class RequestRateScheduler implements Scheduler
          }
          catch (final InterruptedException e)
          {
-            _logger.info("Interrupted while waiting to schedule next request");
+            _logger.info("Interrupted while waiting to schedule next request", e);
             this.lastCalledTimestamp = System.nanoTime();
             return;
          }

@@ -23,10 +23,14 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import java.util.concurrent.Semaphore;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.cleversafe.og.operation.Response;
 
 public class ConcurrentRequestScheduler implements Scheduler
 {
+   private static final Logger _logger = LoggerFactory.getLogger(ConcurrentRequestScheduler.class);
    private final Semaphore sem;
 
    public ConcurrentRequestScheduler(final int concurrentRequests)
@@ -44,6 +48,7 @@ public class ConcurrentRequestScheduler implements Scheduler
       }
       catch (final InterruptedException e)
       {
+         _logger.info("Interrupted while waiting to schedule next request", e);
          return;
       }
    }
