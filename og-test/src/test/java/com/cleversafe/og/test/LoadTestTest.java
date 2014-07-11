@@ -29,7 +29,6 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
@@ -51,7 +50,6 @@ import com.cleversafe.og.test.condition.CounterCondition;
 import com.cleversafe.og.test.condition.TestCondition;
 import com.cleversafe.og.util.Entities;
 import com.cleversafe.og.util.Operation;
-import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.common.util.concurrent.Uninterruptibles;
 
@@ -159,18 +157,6 @@ public class LoadTestTest
    public void testOperationManagerCompleteException()
    {
       doThrow(new RuntimeException()).when(this.operationManager).complete(this.response);
-      final boolean success = this.test.runTest();
-      Assert.assertFalse(success);
-      verify(this.client, atLeast(1)).shutdown(true);
-   }
-
-   @Test
-   public void testListenableFutureException() throws InterruptedException, ExecutionException
-   {
-      @SuppressWarnings("unchecked")
-      final ListenableFuture<Boolean> f = mock(ListenableFuture.class);
-      when(f.get()).thenThrow(new InterruptedException());
-      when(this.client.shutdown(true)).thenReturn(f);
       final boolean success = this.test.runTest();
       Assert.assertFalse(success);
       verify(this.client, atLeast(1)).shutdown(true);

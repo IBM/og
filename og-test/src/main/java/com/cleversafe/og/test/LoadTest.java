@@ -23,6 +23,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -44,6 +45,7 @@ import com.cleversafe.og.test.condition.TestCondition;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.common.util.concurrent.Uninterruptibles;
 
 public class LoadTest
 {
@@ -105,9 +107,9 @@ public class LoadTest
          final ListenableFuture<Boolean> complete = this.client.shutdown(true);
          try
          {
-            complete.get();
+            Uninterruptibles.getUninterruptibly(complete);
          }
-         catch (final Exception e)
+         catch (final ExecutionException e)
          {
             this.success.set(false);
             _logger.error("Exception while waiting for client shutdown completion", e);
@@ -139,14 +141,7 @@ public class LoadTest
    {
       this.running.set(false);
       this.testThread.interrupt();
-      try
-      {
-         this.testThread.join();
-      }
-      catch (final InterruptedException e)
-      {
-         _logger.warn("Interrupted while waiting for test thread to terminate", e);
-      }
+      Uninterruptibles.joinUninterruptibly(this.testThread);
    }
 
    private Runnable getListener(final ListenableFuture<Response> future)
