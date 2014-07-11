@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.test.LoadTest;
+import com.google.common.util.concurrent.Uninterruptibles;
 
 public class RuntimeCondition implements TestCondition
 {
@@ -49,27 +50,8 @@ public class RuntimeCondition implements TestCondition
          @Override
          public void run()
          {
-            long start = RuntimeCondition.this.timestampStart;
-            long sleepRemaining = RuntimeCondition.this.runtime;
-
-            while (sleepRemaining > 0)
-            {
-               try
-               {
-                  TimeUnit.NANOSECONDS.sleep(sleepRemaining);
-               }
-               catch (final InterruptedException e)
-               {
-                  // TODO meaningful message
-               }
-               finally
-               {
-                  final long end = System.nanoTime();
-                  final long sleptTime = end - start;
-                  start = end;
-                  sleepRemaining -= sleptTime;
-               }
-            }
+            Uninterruptibles.sleepUninterruptibly(RuntimeCondition.this.runtime,
+                  TimeUnit.NANOSECONDS);
             RuntimeCondition.this.test.stopTest();
          }
       });
