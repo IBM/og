@@ -53,6 +53,7 @@ import com.cleversafe.og.util.Entities;
 import com.cleversafe.og.util.Operation;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
+import com.google.common.util.concurrent.Uninterruptibles;
 
 public class LoadTestTest
 {
@@ -195,13 +196,7 @@ public class LoadTestTest
          @Override
          public void run()
          {
-            try
-            {
-               TimeUnit.MILLISECONDS.sleep(100);
-            }
-            catch (final InterruptedException e)
-            {
-            }
+            Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
             LoadTestTest.this.test.stopTest();
          }
 

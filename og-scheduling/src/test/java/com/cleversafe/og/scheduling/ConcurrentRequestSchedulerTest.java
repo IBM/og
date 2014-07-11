@@ -84,13 +84,7 @@ public class ConcurrentRequestSchedulerTest
          @Override
          public void run()
          {
-            try
-            {
-               TimeUnit.MILLISECONDS.sleep(threadWait);
-            }
-            catch (final InterruptedException e)
-            {
-            }
+            Uninterruptibles.sleepUninterruptibly(threadWait, TimeUnit.MILLISECONDS);
             final Response response = mock(Response.class);
             s.complete(response);
          }
