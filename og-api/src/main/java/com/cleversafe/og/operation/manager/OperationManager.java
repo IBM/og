@@ -38,13 +38,17 @@ public interface OperationManager
    Request next() throws OperationManagerException;
 
    /**
-    * Consumes a response. Implementations of this interface may optionally use information gathered
-    * from responses to inform the creation of future requests.
+    * Consumes an operation. Implementations of this interface may optionally use information
+    * gathered from request/response pairs to inform the creation of future requests.
     * 
+    * @param request
+    *           the request for a completed operation
     * @param response
-    *           a response for a completed request
+    *           the response for a completed operation
+    * @throws NullPointerException
+    *            if request is null
     * @throws NullPointerException
     *            if response is null
     */
-   void complete(Response response);
+   void complete(Request request, Response response);
 }

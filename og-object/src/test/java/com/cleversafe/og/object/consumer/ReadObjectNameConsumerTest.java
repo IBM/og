@@ -31,9 +31,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -47,13 +45,13 @@ import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
+import com.cleversafe.og.util.Pair;
 import com.cleversafe.og.util.consumer.Consumer;
 import com.cleversafe.og.util.producer.ProducerException;
 
 public class ReadObjectNameConsumerTest
 {
    private ObjectManager mockObjectManager;
-   private Map<String, Request> pendingRequests;
    private List<Integer> statusCodes;
    private Request mockRequest;
    private Response mockResponse;
@@ -68,34 +66,24 @@ public class ReadObjectNameConsumerTest
             new URI("http://192.168.8.1/soh/container/5c18be1057404792923dc487ca40f2370000"));
       this.mockResponse = mock(Response.class);
       when(this.mockResponse.getMetadata(Metadata.REQUEST_ID)).thenReturn("1");
-
-      this.pendingRequests = new HashMap<String, Request>();
-      this.pendingRequests.put("1", this.mockRequest);
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullObjectManager()
    {
-      new ReadObjectNameConsumer(null, this.pendingRequests, this.statusCodes);
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void testNullPendingRequests()
-   {
-      new ReadObjectNameConsumer(this.mockObjectManager, null, this.statusCodes);
+      new ReadObjectNameConsumer(null, this.statusCodes);
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullStatusCodes()
    {
-      new ReadObjectNameConsumer(this.mockObjectManager, this.pendingRequests, null);
+      new ReadObjectNameConsumer(this.mockObjectManager, null);
    }
 
    @Test(expected = IllegalArgumentException.class)
    public void testEmptyStatusCodes()
    {
-      new ReadObjectNameConsumer(this.mockObjectManager, this.pendingRequests,
-            Collections.<Integer> emptyList());
+      new ReadObjectNameConsumer(this.mockObjectManager, Collections.<Integer> emptyList());
    }
 
    @Test(expected = NullPointerException.class)
@@ -103,7 +91,7 @@ public class ReadObjectNameConsumerTest
    {
       final List<Integer> sc = new ArrayList<Integer>();
       sc.add(null);
-      new ReadObjectNameConsumer(this.mockObjectManager, this.pendingRequests, sc);
+      new ReadObjectNameConsumer(this.mockObjectManager, sc);
    }
 
    @Test(expected = IllegalArgumentException.class)
@@ -111,7 +99,7 @@ public class ReadObjectNameConsumerTest
    {
       final List<Integer> sc = new ArrayList<Integer>();
       sc.add(99);
-      new ReadObjectNameConsumer(this.mockObjectManager, this.pendingRequests, sc);
+      new ReadObjectNameConsumer(this.mockObjectManager, sc);
    }
 
    @Test(expected = IllegalArgumentException.class)
@@ -119,13 +107,13 @@ public class ReadObjectNameConsumerTest
    {
       final List<Integer> sc = new ArrayList<Integer>();
       sc.add(600);
-      new ReadObjectNameConsumer(this.mockObjectManager, this.pendingRequests, sc);
+      new ReadObjectNameConsumer(this.mockObjectManager, sc);
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullResponse()
    {
-      new ReadObjectNameConsumer(this.mockObjectManager, this.pendingRequests, this.statusCodes).consume(null);
+      new ReadObjectNameConsumer(this.mockObjectManager, this.statusCodes).consume(null);
    }
 
    @Test
@@ -136,11 +124,10 @@ public class ReadObjectNameConsumerTest
             "5c18be1057404792923dc487ca40f2370000");
       when(this.mockResponse.getStatusCode()).thenReturn(200);
 
-      final Consumer<Response> c =
-            new ReadObjectNameConsumer(this.mockObjectManager, this.pendingRequests,
-                  this.statusCodes);
+      final Consumer<Pair<Request, Response>> c =
+            new ReadObjectNameConsumer(this.mockObjectManager, this.statusCodes);
 
-      c.consume(this.mockResponse);
+      c.consume(new Pair<Request, Response>(this.mockRequest, this.mockResponse));
       verify(this.mockObjectManager).releaseNameFromRead(isA(ObjectName.class));
    }
 
@@ -150,11 +137,10 @@ public class ReadObjectNameConsumerTest
       when(this.mockRequest.getMethod()).thenReturn(Method.GET);
       when(this.mockResponse.getStatusCode()).thenReturn(500);
 
-      final Consumer<Response> c =
-            new ReadObjectNameConsumer(this.mockObjectManager, this.pendingRequests,
-                  this.statusCodes);
+      final Consumer<Pair<Request, Response>> c =
+            new ReadObjectNameConsumer(this.mockObjectManager, this.statusCodes);
 
-      c.consume(this.mockResponse);
+      c.consume(new Pair<Request, Response>(this.mockRequest, this.mockResponse));
       verify(this.mockObjectManager, never()).releaseNameFromRead(isA(ObjectName.class));
    }
 
@@ -163,11 +149,10 @@ public class ReadObjectNameConsumerTest
    {
       when(this.mockRequest.getMethod()).thenReturn(Method.PUT);
 
-      final Consumer<Response> c =
-            new ReadObjectNameConsumer(this.mockObjectManager, this.pendingRequests,
-                  this.statusCodes);
+      final Consumer<Pair<Request, Response>> c =
+            new ReadObjectNameConsumer(this.mockObjectManager, this.statusCodes);
 
-      c.consume(this.mockResponse);
+      c.consume(new Pair<Request, Response>(this.mockRequest, this.mockResponse));
       verify(this.mockObjectManager, never()).releaseNameFromRead((isA(ObjectName.class)));
    }
 
@@ -179,23 +164,10 @@ public class ReadObjectNameConsumerTest
       doThrow(new ObjectManagerException()).when(this.mockObjectManager).releaseNameFromRead(
             any(ObjectName.class));
 
-      final Consumer<Response> c =
-            new ReadObjectNameConsumer(this.mockObjectManager, this.pendingRequests,
-                  this.statusCodes);
+      final Consumer<Pair<Request, Response>> c =
+            new ReadObjectNameConsumer(this.mockObjectManager, this.statusCodes);
 
-      c.consume(this.mockResponse);
-   }
-
-   @Test(expected = ProducerException.class)
-   public void testNoPendingRequest()
-   {
-      when(this.mockRequest.getMethod()).thenReturn(Method.GET);
-      when(this.mockResponse.getStatusCode()).thenReturn(200);
-      // clear all pending requests
-      this.pendingRequests.clear();
-
-      new ReadObjectNameConsumer(this.mockObjectManager, this.pendingRequests, this.statusCodes)
-            .consume(this.mockResponse);
+      c.consume(new Pair<Request, Response>(this.mockRequest, this.mockResponse));
    }
 
    @Test(expected = ProducerException.class)
@@ -205,7 +177,7 @@ public class ReadObjectNameConsumerTest
       when(this.mockRequest.getMethod()).thenReturn(Method.GET);
       when(this.mockResponse.getStatusCode()).thenReturn(200);
 
-      new ReadObjectNameConsumer(this.mockObjectManager, this.pendingRequests, this.statusCodes)
-            .consume(this.mockResponse);
+      new ReadObjectNameConsumer(this.mockObjectManager, this.statusCodes)
+            .consume(new Pair<Request, Response>(this.mockRequest, this.mockResponse));
    }
 }

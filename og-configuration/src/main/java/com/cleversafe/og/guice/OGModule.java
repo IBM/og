@@ -20,15 +20,12 @@
 package com.cleversafe.og.guice;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
 
 import com.cleversafe.og.client.Client;
 import com.cleversafe.og.json.StoppingConditionsConfig;
-import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.manager.OperationManager;
 import com.cleversafe.og.scheduling.Scheduler;
 import com.cleversafe.og.statistic.Counter;
@@ -45,16 +42,6 @@ import com.google.inject.Singleton;
 
 public class OGModule extends AbstractModule
 {
-
-   private final Map<String, Request> pendingRequests;
-
-   public OGModule()
-   {
-      // have to create this here so that LoadTest can access a modifiable
-      // version of the map, all others get a read-only instance
-      this.pendingRequests = new ConcurrentHashMap<String, Request>();
-   }
-
    @Override
    protected void configure()
    {}
@@ -85,21 +72,13 @@ public class OGModule extends AbstractModule
       }
 
       final LoadTest test =
-            new LoadTest(operationManager, client, scheduler, stats, conditions,
-                  this.pendingRequests);
+            new LoadTest(operationManager, client, scheduler, stats, conditions);
 
       // have to create this condition after LoadTest because it triggers LoadTest.stopTest()
       if (config.getRuntime() > 0)
          new RuntimeCondition(test, config.getRuntime(), config.getRuntimeUnit());
 
       return test;
-   }
-
-   @Provides
-   @Singleton
-   public Map<String, Request> providePendingRequests()
-   {
-      return Collections.unmodifiableMap(this.pendingRequests);
    }
 
    @Provides

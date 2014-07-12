@@ -22,7 +22,6 @@ package com.cleversafe.og.test;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -34,7 +33,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.client.Client;
-import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.operation.manager.OperationManager;
@@ -55,7 +53,6 @@ public class LoadTest
    private final Scheduler scheduler;
    private final Statistics stats;
    private final List<TestCondition> testConditions;
-   private final Map<String, Request> pendingRequests;
    private final ExecutorService executorService;
    private final Thread testThread;
    private final AtomicBoolean running;
@@ -66,15 +63,13 @@ public class LoadTest
          final Client client,
          final Scheduler scheduler,
          final Statistics stats,
-         final List<TestCondition> testConditions,
-         final Map<String, Request> pendingRequests)
+         final List<TestCondition> testConditions)
    {
       this.operationManager = checkNotNull(operationManager);
       this.client = checkNotNull(client);
       this.scheduler = checkNotNull(scheduler);
       this.stats = checkNotNull(stats);
       this.testConditions = checkNotNull(testConditions);
-      this.pendingRequests = checkNotNull(pendingRequests);
       final ThreadFactory fac = new ThreadFactoryBuilder().setNameFormat("test-%d").build();
       this.executorService = Executors.newCachedThreadPool(fac);
       this.testThread = Thread.currentThread();
@@ -89,9 +84,8 @@ public class LoadTest
          while (isRunning())
          {
             final Request nextRequest = this.operationManager.next();
-            this.pendingRequests.put(nextRequest.getMetadata(Metadata.REQUEST_ID), nextRequest);
             final ListenableFuture<Response> future = this.client.execute(nextRequest);
-            future.addListener(getListener(future), this.executorService);
+            future.addListener(getListener(nextRequest, future), this.executorService);
             this.scheduler.waitForNext();
          }
       }
@@ -144,17 +138,19 @@ public class LoadTest
       Uninterruptibles.joinUninterruptibly(this.testThread);
    }
 
-   private Runnable getListener(final ListenableFuture<Response> future)
+   private Runnable getListener(final Request request, final ListenableFuture<Response> future)
    {
-      return new RequestCallback(future);
+      return new RequestCallback(request, future);
    }
 
    private class RequestCallback implements Runnable
    {
+      private final Request request;
       private final ListenableFuture<Response> future;
 
-      public RequestCallback(final ListenableFuture<Response> future)
+      public RequestCallback(final Request request, final ListenableFuture<Response> future)
       {
+         this.request = request;
          this.future = future;
       }
 
@@ -165,13 +161,10 @@ public class LoadTest
          {
             final Response response = this.future.get();
 
-            LoadTest.this.operationManager.complete(response);
+            LoadTest.this.operationManager.complete(this.request, response);
             LoadTest.this.scheduler.complete(response);
 
-            final String requestId = response.getMetadata(Metadata.REQUEST_ID);
-            final Request request = LoadTest.this.pendingRequests.get(requestId);
-            LoadTest.this.stats.update(request, response);
-            LoadTest.this.pendingRequests.remove(requestId);
+            LoadTest.this.stats.update(this.request, response);
          }
          catch (final Exception e)
          {

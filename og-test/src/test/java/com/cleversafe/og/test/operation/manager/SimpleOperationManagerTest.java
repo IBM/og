@@ -19,6 +19,7 @@
 
 package com.cleversafe.og.test.operation.manager;
 
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -34,6 +35,7 @@ import org.junit.Test;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.operation.manager.OperationManagerException;
+import com.cleversafe.og.util.Pair;
 import com.cleversafe.og.util.consumer.Consumer;
 import com.cleversafe.og.util.producer.Producer;
 import com.cleversafe.og.util.producer.ProducerException;
@@ -42,7 +44,7 @@ import com.cleversafe.og.util.producer.Producers;
 public class SimpleOperationManagerTest
 {
    private Producer<Producer<Request>> requestMix;
-   private List<Consumer<Response>> consumers;
+   private List<Consumer<Pair<Request, Response>>> consumers;
    private Request request;
 
    @Before
@@ -96,17 +98,18 @@ public class SimpleOperationManagerTest
 
    // TODO should OperationManager interface declare OperationManagerException for complete method?
    @Test
+   @SuppressWarnings("unchecked")
    public void testConsumer() throws OperationManagerException
    {
-      final List<Consumer<Response>> responseConsumers = new ArrayList<Consumer<Response>>();
-      @SuppressWarnings("unchecked")
-      final Consumer<Response> consumer = mock(Consumer.class);
+      final List<Consumer<Pair<Request, Response>>> responseConsumers =
+            new ArrayList<Consumer<Pair<Request, Response>>>();
+      final Consumer<Pair<Request, Response>> consumer = mock(Consumer.class);
       responseConsumers.add(consumer);
       final SimpleOperationManager m =
             new SimpleOperationManager(this.requestMix, responseConsumers);
       m.next();
       final Response r = mock(Response.class);
-      m.complete(r);
-      verify(consumer).consume(r);
+      m.complete(this.request, r);
+      verify(consumer).consume(any(Pair.class));
    }
 }

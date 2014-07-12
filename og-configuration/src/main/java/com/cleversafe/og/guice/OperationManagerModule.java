@@ -36,6 +36,7 @@ import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.operation.manager.OperationManager;
 import com.cleversafe.og.test.operation.manager.SimpleOperationManager;
+import com.cleversafe.og.util.Pair;
 import com.cleversafe.og.util.consumer.Consumer;
 import com.cleversafe.og.util.producer.Producer;
 import com.cleversafe.og.util.producer.RandomChoiceProducer;
@@ -60,7 +61,7 @@ public class OperationManagerModule extends AbstractModule
    @Singleton
    public OperationManager provideOperationManager(
          final Producer<Producer<Request>> producer,
-         final List<Consumer<Response>> consumers)
+         final List<Consumer<Pair<Request, Response>>> consumers)
    {
       return new SimpleOperationManager(producer, consumers);
    }

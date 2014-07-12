@@ -47,6 +47,7 @@ import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
+import com.cleversafe.og.util.Pair;
 import com.cleversafe.og.util.consumer.Consumer;
 import com.cleversafe.og.util.producer.ProducerException;
 
@@ -76,26 +77,19 @@ public class WriteObjectNameConsumerTest
    @Test(expected = NullPointerException.class)
    public void testNullObjectManager()
    {
-      new WriteObjectNameConsumer(null, this.pendingRequests, this.statusCodes);
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void testNullPendingRequests()
-   {
-      new WriteObjectNameConsumer(this.mockObjectManager, null, this.statusCodes);
+      new WriteObjectNameConsumer(null, this.statusCodes);
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullStatusCodes()
    {
-      new WriteObjectNameConsumer(this.mockObjectManager, this.pendingRequests, null);
+      new WriteObjectNameConsumer(this.mockObjectManager, null);
    }
 
    @Test(expected = IllegalArgumentException.class)
    public void testEmptyStatusCodes()
    {
-      new WriteObjectNameConsumer(this.mockObjectManager, this.pendingRequests,
-            Collections.<Integer> emptyList());
+      new WriteObjectNameConsumer(this.mockObjectManager, Collections.<Integer> emptyList());
    }
 
    @Test(expected = NullPointerException.class)
@@ -103,7 +97,7 @@ public class WriteObjectNameConsumerTest
    {
       final List<Integer> sc = new ArrayList<Integer>();
       sc.add(null);
-      new WriteObjectNameConsumer(this.mockObjectManager, this.pendingRequests, sc);
+      new WriteObjectNameConsumer(this.mockObjectManager, sc);
    }
 
    @Test(expected = IllegalArgumentException.class)
@@ -111,7 +105,7 @@ public class WriteObjectNameConsumerTest
    {
       final List<Integer> sc = new ArrayList<Integer>();
       sc.add(99);
-      new WriteObjectNameConsumer(this.mockObjectManager, this.pendingRequests, sc);
+      new WriteObjectNameConsumer(this.mockObjectManager, sc);
    }
 
    @Test(expected = IllegalArgumentException.class)
@@ -119,13 +113,13 @@ public class WriteObjectNameConsumerTest
    {
       final List<Integer> sc = new ArrayList<Integer>();
       sc.add(600);
-      new WriteObjectNameConsumer(this.mockObjectManager, this.pendingRequests, sc);
+      new WriteObjectNameConsumer(this.mockObjectManager, sc);
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullResponse()
    {
-      new WriteObjectNameConsumer(this.mockObjectManager, this.pendingRequests, this.statusCodes).consume(null);
+      new WriteObjectNameConsumer(this.mockObjectManager, this.statusCodes).consume(null);
    }
 
    @Test
@@ -136,11 +130,10 @@ public class WriteObjectNameConsumerTest
             "5c18be1057404792923dc487ca40f2370000");
       when(this.mockResponse.getStatusCode()).thenReturn(201);
 
-      final Consumer<Response> c =
-            new WriteObjectNameConsumer(this.mockObjectManager, this.pendingRequests,
-                  this.statusCodes);
+      final Consumer<Pair<Request, Response>> c =
+            new WriteObjectNameConsumer(this.mockObjectManager, this.statusCodes);
 
-      c.consume(this.mockResponse);
+      c.consume(new Pair<Request, Response>(this.mockRequest, this.mockResponse));
       verify(this.mockObjectManager).writeNameComplete(isA(ObjectName.class));
    }
 
@@ -153,11 +146,10 @@ public class WriteObjectNameConsumerTest
       when(this.mockResponse.getMetadata(Metadata.OBJECT_NAME)).thenReturn(
             "5c18be1057404792923dc487ca40f2370000");
 
-      final Consumer<Response> c =
-            new WriteObjectNameConsumer(this.mockObjectManager, this.pendingRequests,
-                  this.statusCodes);
+      final Consumer<Pair<Request, Response>> c =
+            new WriteObjectNameConsumer(this.mockObjectManager, this.statusCodes);
 
-      c.consume(this.mockResponse);
+      c.consume(new Pair<Request, Response>(this.mockRequest, this.mockResponse));
       verify(this.mockObjectManager).writeNameComplete(isA(ObjectName.class));
    }
 
@@ -167,11 +159,10 @@ public class WriteObjectNameConsumerTest
       when(this.mockRequest.getMethod()).thenReturn(Method.PUT);
       when(this.mockResponse.getStatusCode()).thenReturn(500);
 
-      final Consumer<Response> c =
-            new WriteObjectNameConsumer(this.mockObjectManager, this.pendingRequests,
-                  this.statusCodes);
+      final Consumer<Pair<Request, Response>> c =
+            new WriteObjectNameConsumer(this.mockObjectManager, this.statusCodes);
 
-      c.consume(this.mockResponse);
+      c.consume(new Pair<Request, Response>(this.mockRequest, this.mockResponse));
       verify(this.mockObjectManager, never()).writeNameComplete(isA(ObjectName.class));
    }
 
@@ -180,11 +171,10 @@ public class WriteObjectNameConsumerTest
    {
       when(this.mockRequest.getMethod()).thenReturn(Method.GET);
 
-      final Consumer<Response> c =
-            new WriteObjectNameConsumer(this.mockObjectManager, this.pendingRequests,
-                  this.statusCodes);
+      final Consumer<Pair<Request, Response>> c =
+            new WriteObjectNameConsumer(this.mockObjectManager, this.statusCodes);
 
-      c.consume(this.mockResponse);
+      c.consume(new Pair<Request, Response>(this.mockRequest, this.mockResponse));
       verify(this.mockObjectManager, never()).writeNameComplete((isA(ObjectName.class)));
    }
 
@@ -196,11 +186,10 @@ public class WriteObjectNameConsumerTest
       doThrow(new ObjectManagerException()).when(this.mockObjectManager).writeNameComplete(
             any(ObjectName.class));
 
-      final Consumer<Response> c =
-            new WriteObjectNameConsumer(this.mockObjectManager, this.pendingRequests,
-                  this.statusCodes);
+      final Consumer<Pair<Request, Response>> c =
+            new WriteObjectNameConsumer(this.mockObjectManager, this.statusCodes);
 
-      c.consume(this.mockResponse);
+      c.consume(new Pair<Request, Response>(this.mockRequest, this.mockResponse));
    }
 
    @Test(expected = ProducerException.class)
@@ -211,8 +200,8 @@ public class WriteObjectNameConsumerTest
       // clear all pending requests
       this.pendingRequests.clear();
 
-      new WriteObjectNameConsumer(this.mockObjectManager, this.pendingRequests, this.statusCodes)
-            .consume(this.mockResponse);
+      new WriteObjectNameConsumer(this.mockObjectManager, this.statusCodes)
+            .consume(new Pair<Request, Response>(this.mockRequest, this.mockResponse));
    }
 
    @Test(expected = ProducerException.class)
@@ -222,7 +211,7 @@ public class WriteObjectNameConsumerTest
       when(this.mockRequest.getMethod()).thenReturn(Method.PUT);
       when(this.mockResponse.getStatusCode()).thenReturn(201);
 
-      new WriteObjectNameConsumer(this.mockObjectManager, this.pendingRequests, this.statusCodes)
-            .consume(this.mockResponse);
+      new WriteObjectNameConsumer(this.mockObjectManager, this.statusCodes)
+            .consume(new Pair<Request, Response>(this.mockRequest, this.mockResponse));
    }
 }

@@ -28,7 +28,6 @@ import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
@@ -62,11 +61,9 @@ public class LoadTestTest
    private Scheduler scheduler;
    private Statistics stats;
    private List<TestCondition> testConditions;
-   private Map<String, Request> pendingRequests;
    private LoadTest test;
 
    @Before
-   @SuppressWarnings("unchecked")
    public void before() throws OperationManagerException
    {
       this.request = mock(Request.class);
@@ -94,54 +91,40 @@ public class LoadTestTest
       this.stats = new Statistics();
       this.testConditions = new ArrayList<TestCondition>();
       this.testConditions.add(new CounterCondition(Operation.WRITE, Counter.OPERATIONS, 5));
-      this.pendingRequests = mock(Map.class);
-      when(this.pendingRequests.get("1")).thenReturn(this.request);
 
       this.test =
             new LoadTest(this.operationManager, this.client, this.scheduler, this.stats,
-                  this.testConditions, this.pendingRequests);
+                  this.testConditions);
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullOperationManager()
    {
-      new LoadTest(null, this.client, this.scheduler, this.stats, this.testConditions,
-            this.pendingRequests);
+      new LoadTest(null, this.client, this.scheduler, this.stats, this.testConditions);
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullClient()
    {
-      new LoadTest(this.operationManager, null, this.scheduler, this.stats, this.testConditions,
-            this.pendingRequests);
+      new LoadTest(this.operationManager, null, this.scheduler, this.stats, this.testConditions);
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullScheduler()
    {
-      new LoadTest(this.operationManager, this.client, null, this.stats, this.testConditions,
-            this.pendingRequests);
+      new LoadTest(this.operationManager, this.client, null, this.stats, this.testConditions);
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullStatistics()
    {
-      new LoadTest(this.operationManager, this.client, this.scheduler, null, this.testConditions,
-            this.pendingRequests);
+      new LoadTest(this.operationManager, this.client, this.scheduler, null, this.testConditions);
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullTestConditions()
    {
-      new LoadTest(this.operationManager, this.client, this.scheduler, this.stats, null,
-            this.pendingRequests);
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void testNullPendingRequests()
-   {
-      new LoadTest(this.operationManager, this.client, this.scheduler, this.stats,
-            this.testConditions, null);
+      new LoadTest(this.operationManager, this.client, this.scheduler, this.stats, null);
    }
 
    @Test
@@ -156,7 +139,8 @@ public class LoadTestTest
    @Test
    public void testOperationManagerCompleteException()
    {
-      doThrow(new RuntimeException()).when(this.operationManager).complete(this.response);
+      doThrow(new RuntimeException()).when(this.operationManager)
+            .complete(this.request, this.response);
       final boolean success = this.test.runTest();
       Assert.assertFalse(success);
       verify(this.client, atLeast(1)).shutdown(true);

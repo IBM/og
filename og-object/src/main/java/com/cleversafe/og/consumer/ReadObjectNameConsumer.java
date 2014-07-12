@@ -20,21 +20,16 @@
 package com.cleversafe.og.consumer;
 
 import java.util.List;
-import java.util.Map;
 
 import com.cleversafe.og.object.ObjectName;
 import com.cleversafe.og.object.manager.ObjectManager;
-import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.util.Operation;
 
 public class ReadObjectNameConsumer extends ObjectNameConsumer
 {
-   public ReadObjectNameConsumer(
-         final ObjectManager objectManager,
-         final Map<String, Request> pendingRequests,
-         final List<Integer> statusCodes)
+   public ReadObjectNameConsumer(final ObjectManager objectManager, final List<Integer> statusCodes)
    {
-      super(objectManager, pendingRequests, Operation.READ, statusCodes);
+      super(objectManager, Operation.READ, statusCodes);
    }
 
    @Override

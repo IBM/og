@@ -69,6 +69,7 @@ import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.soh.object.consumer.SOHWriteByteBufferConsumer;
 import com.cleversafe.og.util.ByteBufferConsumers;
 import com.cleversafe.og.util.Entities;
+import com.cleversafe.og.util.Pair;
 import com.cleversafe.og.util.consumer.ByteBufferConsumer;
 import com.cleversafe.og.util.consumer.Consumer;
 import com.cleversafe.og.util.producer.CachingProducer;
@@ -277,14 +278,14 @@ public class ApiModule extends AbstractModule
 
    @Provides
    @Singleton
-   public List<Consumer<Response>> provideObjectNameConsumers(
-         final ObjectManager objectManager,
-         final Map<String, Request> pendingRequests)
+   public List<Consumer<Pair<Request, Response>>> provideObjectNameConsumers(
+         final ObjectManager objectManager)
    {
       final List<Integer> sc = HttpUtil.SUCCESS_STATUS_CODES;
-      final List<Consumer<Response>> list = new ArrayList<Consumer<Response>>();
-      list.add(new WriteObjectNameConsumer(objectManager, pendingRequests, sc));
-      list.add(new ReadObjectNameConsumer(objectManager, pendingRequests, sc));
+      final List<Consumer<Pair<Request, Response>>> list =
+            new ArrayList<Consumer<Pair<Request, Response>>>();
+      list.add(new WriteObjectNameConsumer(objectManager, sc));
+      list.add(new ReadObjectNameConsumer(objectManager, sc));
       return list;
    }
 

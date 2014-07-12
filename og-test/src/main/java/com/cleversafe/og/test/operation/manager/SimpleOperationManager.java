@@ -27,6 +27,7 @@ import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.operation.manager.OperationManager;
 import com.cleversafe.og.operation.manager.OperationManagerException;
+import com.cleversafe.og.util.Pair;
 import com.cleversafe.og.util.consumer.Consumer;
 import com.cleversafe.og.util.producer.Producer;
 import com.cleversafe.og.util.producer.ProducerException;
@@ -34,11 +35,11 @@ import com.cleversafe.og.util.producer.ProducerException;
 public class SimpleOperationManager implements OperationManager
 {
    private final Producer<Producer<Request>> requestMix;
-   private final List<Consumer<Response>> consumers;
+   private final List<Consumer<Pair<Request, Response>>> consumers;
 
    public SimpleOperationManager(
          final Producer<Producer<Request>> requestMix,
-         final List<Consumer<Response>> consumers)
+         final List<Consumer<Pair<Request, Response>>> consumers)
    {
       this.requestMix = checkNotNull(requestMix);
       this.consumers = checkNotNull(consumers);
@@ -59,11 +60,12 @@ public class SimpleOperationManager implements OperationManager
    }
 
    @Override
-   public void complete(final Response response)
+   public void complete(final Request request, final Response response)
    {
-      for (final Consumer<Response> consumer : this.consumers)
+      final Pair<Request, Response> operation = new Pair<Request, Response>(request, response);
+      for (final Consumer<Pair<Request, Response>> consumer : this.consumers)
       {
-         consumer.consume(response);
+         consumer.consume(operation);
       }
    }
 }
