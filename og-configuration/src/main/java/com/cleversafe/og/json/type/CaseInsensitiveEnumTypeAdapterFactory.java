@@ -36,7 +36,7 @@ public class CaseInsensitiveEnumTypeAdapterFactory implements TypeAdapterFactory
    {
       @SuppressWarnings("unchecked")
       final Class<T> rawType = (Class<T>) type.getRawType();
-      if (!rawType.isEnum() || behavioralEnum(rawType))
+      if (!rawType.isEnum())
          return null;
 
       return new TypeAdapter<T>()
@@ -47,8 +47,8 @@ public class CaseInsensitiveEnumTypeAdapterFactory implements TypeAdapterFactory
             out.value(value.toString().toLowerCase(Locale.US));
          }
 
-         @SuppressWarnings("unchecked")
          @Override
+         @SuppressWarnings("unchecked")
          public T read(final JsonReader in) throws IOException
          {
             final String s = in.nextString().toUpperCase(Locale.US);
@@ -60,11 +60,5 @@ public class CaseInsensitiveEnumTypeAdapterFactory implements TypeAdapterFactory
             throw new IllegalArgumentException(String.format("Could not parse into enum [%s]", s));
          }
       }.nullSafe();
-   }
-
-   private boolean behavioralEnum(final Class<?> rawType)
-   {
-      final Class<?> parent = rawType.getSuperclass();
-      return parent != null && parent.isEnum();
    }
 }
