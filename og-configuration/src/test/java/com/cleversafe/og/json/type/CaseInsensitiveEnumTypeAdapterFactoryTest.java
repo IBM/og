@@ -34,6 +34,7 @@ import com.cleversafe.og.json.enums.DistributionType;
 import com.cleversafe.og.util.SizeUnit;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.TypeAdapter;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
@@ -76,7 +77,7 @@ public class CaseInsensitiveEnumTypeAdapterFactoryTest
       Assert.assertEquals(DistributionType.NORMAL, typeAdapter.read(this.reader));
    }
 
-   @Test(expected = IllegalArgumentException.class)
+   @Test(expected = JsonSyntaxException.class)
    public void testEnumReadFailure() throws IOException
    {
       final TypeAdapter<DistributionType> typeAdapter =

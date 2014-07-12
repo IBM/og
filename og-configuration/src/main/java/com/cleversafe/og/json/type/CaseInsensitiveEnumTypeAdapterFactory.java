@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.Locale;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.TypeAdapter;
 import com.google.gson.TypeAdapterFactory;
 import com.google.gson.reflect.TypeToken;
@@ -57,7 +58,7 @@ public class CaseInsensitiveEnumTypeAdapterFactory implements TypeAdapterFactory
                if (enumEntry.toString().equals(s))
                   return (T) enumEntry;
             }
-            throw new IllegalArgumentException(String.format("Could not parse into enum [%s]", s));
+            throw new JsonSyntaxException(String.format("Could not parse into enum [%s]", s));
          }
       }.nullSafe();
    }
