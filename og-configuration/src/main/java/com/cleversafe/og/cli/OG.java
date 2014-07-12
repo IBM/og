@@ -35,7 +35,6 @@ import com.cleversafe.og.guice.OGModule;
 import com.cleversafe.og.guice.ObjectManagerModule;
 import com.cleversafe.og.guice.OperationManagerModule;
 import com.cleversafe.og.json.JsonConfig;
-import com.cleversafe.og.json.type.BehavioralEnumTypeAdapterFactory;
 import com.cleversafe.og.json.type.CaseInsensitiveEnumTypeAdapterFactory;
 import com.cleversafe.og.json.type.SizeUnitTypeAdapter;
 import com.cleversafe.og.json.type.TimeUnitTypeAdapter;
@@ -49,7 +48,6 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.LongSerializationPolicy;
-import com.google.gson.TypeAdapter;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.ProvisionException;
@@ -140,17 +138,14 @@ public class OG extends AbstractCLI
 
    private static Gson createGson()
    {
-      final TypeAdapter<TimeUnit> time = new TimeUnitTypeAdapter().nullSafe();
-      final TypeAdapter<SizeUnit> size = new SizeUnitTypeAdapter().nullSafe();
-
       return new GsonBuilder()
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
             .setLongSerializationPolicy(LongSerializationPolicy.STRING)
             .registerTypeAdapterFactory(new CaseInsensitiveEnumTypeAdapterFactory())
-            .registerTypeAdapterFactory(
-                  new BehavioralEnumTypeAdapterFactory<TimeUnit>(TimeUnit.class, time))
-            .registerTypeAdapterFactory(
-                  new BehavioralEnumTypeAdapterFactory<SizeUnit>(SizeUnit.class, size))
+            // SizeUnit and TimeUnit TypeAdapters must be registered after
+            // CaseInsensitiveEnumTypeAdapterFactory in order to override the registration
+            .registerTypeAdapter(SizeUnit.class, new SizeUnitTypeAdapter().nullSafe())
+            .registerTypeAdapter(TimeUnit.class, new TimeUnitTypeAdapter().nullSafe())
             .setPrettyPrinting()
             .create();
    }
