@@ -25,11 +25,11 @@ import com.cleversafe.og.json.enums.ConcurrencyType;
 
 public class ConcurrencyConfig
 {
-   private final ConcurrencyType type;
-   private final double count;
-   private final TimeUnit unit;
-   private final double rampup;
-   private final TimeUnit rampupUnit;
+   ConcurrencyType type;
+   double count;
+   TimeUnit unit;
+   double rampup;
+   TimeUnit rampupUnit;
 
    public ConcurrencyConfig()
    {
@@ -40,44 +40,28 @@ public class ConcurrencyConfig
       this.rampupUnit = TimeUnit.SECONDS;
    }
 
-   /**
-    * @return the type
-    */
    public ConcurrencyType getType()
    {
       return this.type;
    }
 
-   /**
-    * @return the count
-    */
    public double getCount()
    {
       return this.count;
    }
 
-   /**
-    * @return the unit
-    */
    public TimeUnit getUnit()
    {
       return this.unit;
    }
 
-   /**
-    * @return the rampup
-    */
    public double getRampup()
    {
       return this.rampup;
    }
 
-   /**
-    * @return the rampupUnit
-    */
    public TimeUnit getRampupUnit()
    {
       return this.rampupUnit;
    }
-
 }

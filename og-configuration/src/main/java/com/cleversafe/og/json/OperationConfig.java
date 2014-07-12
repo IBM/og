@@ -28,10 +28,10 @@ import com.cleversafe.og.json.enums.CollectionAlgorithmType;
 
 public class OperationConfig
 {
-   private final double weight;
-   private final CollectionAlgorithmType hostAlgorithm;
-   private final List<String> hosts;
-   private final Map<String, String> headers;
+   double weight;
+   CollectionAlgorithmType hostAlgorithm;
+   List<String> hosts;
+   Map<String, String> headers;
 
    public OperationConfig()
    {
@@ -41,33 +41,21 @@ public class OperationConfig
       this.headers = new LinkedHashMap<String, String>();
    }
 
-   /**
-    * @return the write
-    */
-   public double getweight()
+   public double getWeight()
    {
       return this.weight;
    }
 
-   /**
-    * @return the hostAlgorithm
-    */
    public CollectionAlgorithmType getHostAlgorithm()
    {
       return this.hostAlgorithm;
    }
 
-   /**
-    * @return the hosts
-    */
    public List<String> getHosts()
    {
       return this.hosts;
    }
 
-   /**
-    * @return the headers
-    */
    public Map<String, String> getHeaders()
    {
       return this.headers;

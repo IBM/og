@@ -23,17 +23,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class StoppingConditionsConfig
 {
-   private static final Logger _logger = LoggerFactory.getLogger(StoppingConditionsConfig.class);
-   private final long operations;
-   private final double runtime;
-   private final TimeUnit runtimeUnit;
-   private final Map<Integer, Integer> statusCodes;
-   private final long aborts;
+   long operations;
+   double runtime;
+   TimeUnit runtimeUnit;
+   Map<Integer, Integer> statusCodes;
+   long aborts;
 
    public StoppingConditionsConfig()
    {
@@ -44,41 +40,26 @@ public class StoppingConditionsConfig
       this.aborts = 0;
    }
 
-   /**
-    * @return the operations
-    */
    public long getOperations()
    {
       return this.operations;
    }
 
-   /**
-    * @return the runtime
-    */
    public double getRuntime()
    {
       return this.runtime;
    }
 
-   /**
-    * @return the runtime_unit
-    */
    public TimeUnit getRuntimeUnit()
    {
       return this.runtimeUnit;
    }
 
-   /**
-    * @return the statusCodes
-    */
    public Map<Integer, Integer> getStatusCodes()
    {
       return this.statusCodes;
    }
 
-   /**
-    * @return the aborts
-    */
    public long getAborts()
    {
       return this.aborts;

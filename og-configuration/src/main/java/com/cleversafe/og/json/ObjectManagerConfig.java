@@ -21,12 +21,13 @@ package com.cleversafe.og.json;
 
 public class ObjectManagerConfig
 {
-   private final String objectFileLocation;
-   private String objectFileName;
+   String objectFileLocation;
+   String objectFileName;
 
    public ObjectManagerConfig()
    {
       this.objectFileLocation = "./object";
+      this.objectFileName = null;
    }
 
    public String getObjectFileLocation()

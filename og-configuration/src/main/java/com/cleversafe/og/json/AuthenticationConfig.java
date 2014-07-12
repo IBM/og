@@ -23,9 +23,9 @@ import com.cleversafe.og.json.enums.AuthType;
 
 public class AuthenticationConfig
 {
-   private final AuthType type;
-   private final String username;
-   private final String password;
+   AuthType type;
+   String username;
+   String password;
 
    public AuthenticationConfig()
    {
@@ -34,25 +34,16 @@ public class AuthenticationConfig
       this.password = null;
    }
 
-   /**
-    * @return the type
-    */
    public AuthType getType()
    {
       return this.type;
    }
 
-   /**
-    * @return the username
-    */
    public String getUsername()
    {
       return this.username;
    }
 
-   /**
-    * @return the password
-    */
    public String getPassword()
    {
       return this.password;

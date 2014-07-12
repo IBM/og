@@ -21,15 +21,15 @@ package com.cleversafe.og.json;
 
 public class ClientConfig
 {
-   private final int connectTimeout;
-   private final int soTimeout;
-   private final boolean soReuseAddress;
-   private final int soLinger;
-   private final boolean soKeepAlive;
-   private final boolean tcpNoDelay;
-   private final boolean chunkedEncoding;
-   private final boolean expectContinue;
-   private final int waitForContinue;
+   int connectTimeout;
+   int soTimeout;
+   boolean soReuseAddress;
+   int soLinger;
+   boolean soKeepAlive;
+   boolean tcpNoDelay;
+   boolean chunkedEncoding;
+   boolean expectContinue;
+   int waitForContinue;
 
    public ClientConfig()
    {
@@ -44,73 +44,46 @@ public class ClientConfig
       this.waitForContinue = 3000;
    }
 
-   /**
-    * @return the connectTimeout
-    */
    public int getConnectTimeout()
    {
       return this.connectTimeout;
    }
 
-   /**
-    * @return the soTimeout
-    */
    public int getSoTimeout()
    {
       return this.soTimeout;
    }
 
-   /**
-    * @return the soReuseAddress
-    */
    public boolean isSoReuseAddress()
    {
       return this.soReuseAddress;
    }
 
-   /**
-    * @return the soLinger
-    */
    public int getSoLinger()
    {
       return this.soLinger;
    }
 
-   /**
-    * @return the soKeepAlive
-    */
    public boolean isSoKeepAlive()
    {
       return this.soKeepAlive;
    }
 
-   /**
-    * @return the tcpNoDelay
-    */
    public boolean isTcpNoDelay()
    {
       return this.tcpNoDelay;
    }
 
-   /**
-    * @return the chunkedEncoding
-    */
    public boolean isChunkedEncoding()
    {
       return this.chunkedEncoding;
    }
 
-   /**
-    * @return the expectContinue
-    */
    public boolean isExpectContinue()
    {
       return this.expectContinue;
    }
 
-   /**
-    * @return the waitForContinue
-    */
    public int getWaitForContinue()
    {
       return this.waitForContinue;

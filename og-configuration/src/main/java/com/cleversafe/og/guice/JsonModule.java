@@ -424,10 +424,10 @@ public class JsonModule extends AbstractModule
    @WriteWeight
    public double provideWriteWeight()
    {
-      final double write = this.config.getWrite().getweight();
+      final double write = this.config.getWrite().getWeight();
       checkArgument(PERCENTAGE.contains(write), "write must be in range [0.0, 100.0] [%s]", write);
-      final double read = this.config.getRead().getweight();
-      final double delete = this.config.getDelete().getweight();
+      final double read = this.config.getRead().getWeight();
+      final double delete = this.config.getDelete().getWeight();
       if (allEqual(0.0, write, read, delete))
          return 100.0;
       return write;
@@ -437,7 +437,7 @@ public class JsonModule extends AbstractModule
    @ReadWeight
    public double provideReadWeight()
    {
-      final double read = this.config.getRead().getweight();
+      final double read = this.config.getRead().getWeight();
       checkArgument(PERCENTAGE.contains(read), "read must be in range [0.0, 100.0] [%s]", read);
       return read;
    }
@@ -446,7 +446,7 @@ public class JsonModule extends AbstractModule
    @DeleteWeight
    public double provideDeleteWeight()
    {
-      final double delete = this.config.getDelete().getweight();
+      final double delete = this.config.getDelete().getWeight();
       checkArgument(PERCENTAGE.contains(delete), "delete must be in range [0.0, 100.0] [%s]",
             delete);
       return delete;

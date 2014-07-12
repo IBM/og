@@ -24,12 +24,12 @@ import com.cleversafe.og.util.SizeUnit;
 
 public class FilesizeConfig
 {
-   private final DistributionType distribution;
-   private final double average;
-   private final SizeUnit averageUnit;
-   private final double spread;
-   private final SizeUnit spreadUnit;
-   private final double weight;
+   DistributionType distribution;
+   double average;
+   SizeUnit averageUnit;
+   double spread;
+   SizeUnit spreadUnit;
+   double weight;
 
    public FilesizeConfig()
    {
@@ -41,49 +41,31 @@ public class FilesizeConfig
       this.weight = 1.0;
    }
 
-   /**
-    * @return the distribution
-    */
    public DistributionType getDistribution()
    {
       return this.distribution;
    }
 
-   /**
-    * @return the average
-    */
    public double getAverage()
    {
       return this.average;
    }
 
-   /**
-    * @return the averageUnit
-    */
    public SizeUnit getAverageUnit()
    {
       return this.averageUnit;
    }
 
-   /**
-    * @return the spread
-    */
    public double getSpread()
    {
       return this.spread;
    }
 
-   /**
-    * @return the spreadUnit
-    */
    public SizeUnit getSpreadUnit()
    {
       return this.spreadUnit;
    }
 
-   /**
-    * @return the weight
-    */
    public double getWeight()
    {
       return this.weight;
