@@ -22,10 +22,10 @@ package com.cleversafe.og.guice;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.cleversafe.og.cli.json.ClientConfig;
 import com.cleversafe.og.client.ApacheClient;
 import com.cleversafe.og.client.Client;
 import com.cleversafe.og.http.auth.HttpAuth;
+import com.cleversafe.og.json.ClientConfig;
 import com.cleversafe.og.util.Version;
 import com.cleversafe.og.util.consumer.ByteBufferConsumer;
 import com.google.common.base.Function;

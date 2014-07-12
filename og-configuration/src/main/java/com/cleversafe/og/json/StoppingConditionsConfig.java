@@ -17,7 +17,7 @@
 // Date: Jun 22, 2014
 // ---------------------
 
-package com.cleversafe.og.cli.json;
+package com.cleversafe.og.json;
 
 import java.util.HashMap;
 import java.util.Map;

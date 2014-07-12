@@ -17,7 +17,7 @@
 // Date: Jun 15, 2014
 // ---------------------
 
-package com.cleversafe.og.cli.json;
+package com.cleversafe.og.json;
 
 public class ClientConfig
 {

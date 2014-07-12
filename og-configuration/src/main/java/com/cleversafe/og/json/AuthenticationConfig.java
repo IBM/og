@@ -17,9 +17,9 @@
 // Date: Jun 15, 2014
 // ---------------------
 
-package com.cleversafe.og.cli.json;
+package com.cleversafe.og.json;
 
-import com.cleversafe.og.cli.json.enums.AuthType;
+import com.cleversafe.og.json.enums.AuthType;
 
 public class AuthenticationConfig
 {

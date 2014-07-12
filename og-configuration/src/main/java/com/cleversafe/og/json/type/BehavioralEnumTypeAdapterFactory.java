@@ -17,7 +17,7 @@
 // Date: Jun 28, 2014
 // ---------------------
 
-package com.cleversafe.og.cli.json.type;
+package com.cleversafe.og.json.type;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

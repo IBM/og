@@ -17,10 +17,10 @@
 // Date: Jun 23, 2014
 // ---------------------
 
-package com.cleversafe.og.cli.json.enums;
+package com.cleversafe.og.json.enums;
 
-public enum CollectionAlgorithmType
+public enum ConcurrencyType
 {
-   RANDOM,
-   ROUNDROBIN;
+   IOPS,
+   THREADS;
 }

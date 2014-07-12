@@ -17,16 +17,16 @@
 // Date: Mar 24, 2014
 // ---------------------
 
-package com.cleversafe.og.cli.json;
+package com.cleversafe.og.json;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.cleversafe.og.cli.json.enums.CollectionAlgorithmType;
 import com.cleversafe.og.http.Scheme;
 import com.cleversafe.og.http.util.Api;
+import com.cleversafe.og.json.enums.CollectionAlgorithmType;
 import com.cleversafe.og.operation.EntityType;
 
 public class JsonConfig

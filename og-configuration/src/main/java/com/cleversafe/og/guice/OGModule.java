@@ -26,8 +26,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.cleversafe.og.cli.json.StoppingConditionsConfig;
 import com.cleversafe.og.client.Client;
+import com.cleversafe.og.json.StoppingConditionsConfig;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.manager.OperationManager;
 import com.cleversafe.og.scheduling.Scheduler;

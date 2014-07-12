@@ -17,7 +17,7 @@
 // Date: Jul 2, 2014
 // ---------------------
 
-package com.cleversafe.og.cli.json;
+package com.cleversafe.og.json;
 
 public class ObjectManagerConfig
 {

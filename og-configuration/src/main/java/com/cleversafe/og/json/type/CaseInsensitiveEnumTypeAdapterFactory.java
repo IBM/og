@@ -17,7 +17,7 @@
 // Date: Apr 2, 2014
 // ---------------------
 
-package com.cleversafe.og.cli.json.type;
+package com.cleversafe.og.json.type;
 
 import java.io.IOException;
 import java.util.Locale;

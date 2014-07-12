@@ -17,11 +17,11 @@
 // Date: Mar 24, 2014
 // ---------------------
 
-package com.cleversafe.og.cli.json;
+package com.cleversafe.og.json;
 
 import java.util.concurrent.TimeUnit;
 
-import com.cleversafe.og.cli.json.enums.ConcurrencyType;
+import com.cleversafe.og.json.enums.ConcurrencyType;
 
 public class ConcurrencyConfig
 {

@@ -17,28 +17,28 @@
 // Date: Jun 28, 2014
 // ---------------------
 
-package com.cleversafe.og.cli.json.type;
+package com.cleversafe.og.json.type;
 
 import java.io.IOException;
 import java.util.Locale;
-import java.util.concurrent.TimeUnit;
 
+import com.cleversafe.og.util.SizeUnit;
 import com.cleversafe.og.util.Units;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
-public class TimeUnitTypeAdapter extends TypeAdapter<TimeUnit>
+public class SizeUnitTypeAdapter extends TypeAdapter<SizeUnit>
 {
    @Override
-   public void write(final JsonWriter out, final TimeUnit value) throws IOException
+   public void write(final JsonWriter out, final SizeUnit value) throws IOException
    {
       out.value(value.toString().toLowerCase(Locale.US));
    }
 
    @Override
-   public TimeUnit read(final JsonReader in) throws IOException
+   public SizeUnit read(final JsonReader in) throws IOException
    {
-      return Units.time(in.nextString());
+      return Units.size(in.nextString());
    }
 }

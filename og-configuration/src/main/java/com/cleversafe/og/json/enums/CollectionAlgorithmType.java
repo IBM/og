@@ -14,14 +14,13 @@
 // -----------------------
 // @author: rveitch
 //
-// Date: Oct 23, 2013
+// Date: Jun 23, 2014
 // ---------------------
 
-package com.cleversafe.og.cli.json.enums;
+package com.cleversafe.og.json.enums;
 
-public enum DistributionType
+public enum CollectionAlgorithmType
 {
-   UNIFORM,
-   NORMAL,
-   POISSON;
+   RANDOM,
+   ROUNDROBIN;
 }
