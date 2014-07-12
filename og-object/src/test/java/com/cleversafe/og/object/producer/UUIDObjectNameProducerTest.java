@@ -21,15 +21,11 @@ package com.cleversafe.og.object.producer;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.util.producer.Producer;
 
 public class UUIDObjectNameProducerTest
 {
-   private static Logger _logger = LoggerFactory.getLogger(UUIDObjectNameProducerTest.class);
-
    @Test
    public void testUUIDObjectNameProducer()
    {
@@ -41,5 +37,4 @@ public class UUIDObjectNameProducerTest
       Assert.assertNotEquals(u1, u3);
       Assert.assertNotEquals(u2, u3);
    }
-
 }

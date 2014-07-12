@@ -71,7 +71,7 @@ import com.google.common.base.Function;
 public class ApacheClientTest
 {
    @ClassRule
-   public static WireMockClassRule WIREMOCK_RULE = new WireMockClassRule(8080);
+   public static final WireMockClassRule WIREMOCK_RULE = new WireMockClassRule(8080);
 
    @Rule
    public WireMockClassRule wireMockRule = WIREMOCK_RULE;
@@ -82,10 +82,9 @@ public class ApacheClientTest
    private URI redirectUri;
    private List<Integer> redirectStatuses;
 
-   // TODO @Mock annotation?
-   @SuppressWarnings("unchecked")
    @Before()
-   public void setupBefore() throws URISyntaxException
+   @SuppressWarnings("unchecked")
+   public void before() throws URISyntaxException
    {
       this.byteBufferConsumers = mock(Function.class);
       final ByteBufferConsumer mockConsumer = mock(ByteBufferConsumer.class);

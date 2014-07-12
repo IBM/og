@@ -28,7 +28,7 @@ import com.cleversafe.og.util.distribution.NormalDistribution;
 
 public class NormalDistributionTest
 {
-   private static final double err = Math.pow(0.1, 6);
+   private static final double ERR = Math.pow(0.1, 6);
 
    @Test(expected = IllegalArgumentException.class)
    public void testNegativeMean()
@@ -64,8 +64,8 @@ public class NormalDistributionTest
    public void testBasicNormalDistribution()
    {
       final NormalDistribution nd = new NormalDistribution(10.0, 10.0);
-      Assert.assertEquals(10.0, nd.getAverage(), err);
-      Assert.assertEquals(10.0, nd.getSpread(), err);
+      Assert.assertEquals(10.0, nd.getAverage(), ERR);
+      Assert.assertEquals(10.0, nd.getSpread(), ERR);
       nd.nextSample();
       nd.nextSample();
       nd.nextSample();

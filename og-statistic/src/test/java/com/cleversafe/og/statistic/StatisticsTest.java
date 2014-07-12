@@ -45,7 +45,7 @@ public class StatisticsTest
    private Response response;
 
    @Before
-   public void setupBefore()
+   public void before()
    {
       this.stats = new Statistics();
       this.request = mock(Request.class);

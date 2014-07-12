@@ -29,8 +29,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.http.HttpRequest;
 import com.cleversafe.og.operation.Metadata;
@@ -42,9 +40,8 @@ import com.cleversafe.og.operation.Request;
 @RunWith(Parameterized.class)
 public class AWSAuthV2ExamplesTest
 {
-   private static Logger _logger = LoggerFactory.getLogger(AWSAuthV2ExamplesTest.class);
-   private static String AWS_ACCESS_KEY_ID = "AKIAIOSFODNN7EXAMPLE";
-   private static String AWS_SECRET_ACCESS_KEY = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY";
+   private static final String AWS_ACCESS_KEY_ID = "AKIAIOSFODNN7EXAMPLE";
+   private static final String AWS_SECRET_ACCESS_KEY = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY";
    private final Request request;
    private final String stringToSign;
    private final String nextAuthorizationHeader;

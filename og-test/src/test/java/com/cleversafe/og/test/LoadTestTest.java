@@ -65,9 +65,9 @@ public class LoadTestTest
    private Map<String, Request> pendingRequests;
    private LoadTest test;
 
-   @SuppressWarnings("unchecked")
    @Before
-   public void setBefore() throws OperationManagerException
+   @SuppressWarnings("unchecked")
+   public void before() throws OperationManagerException
    {
       this.request = mock(Request.class);
       when(this.request.getMethod()).thenReturn(Method.PUT);

@@ -24,13 +24,9 @@ import java.util.Collections;
 import java.util.List;
 
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ProducersTest
 {
-   private static Logger _logger = LoggerFactory.getLogger(ProducersTest.class);
-
    @Test(expected = NullPointerException.class)
    public void testNullOf()
    {

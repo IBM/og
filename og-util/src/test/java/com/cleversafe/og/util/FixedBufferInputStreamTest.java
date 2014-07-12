@@ -31,7 +31,7 @@ public class FixedBufferInputStreamTest
    private FixedBufferInputStream stream;
 
    @Before
-   public void setBefore()
+   public void before()
    {
       this.size = 1024;
       this.buf = new byte[]{1, 2, 3, 4, 5};

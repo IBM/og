@@ -40,7 +40,7 @@ public class UriProducerTest
    private List<Producer<String>> path;
 
    @Before
-   public void setBefore()
+   public void before()
    {
       this.host = "192.168.8.1";
       this.container = "container";

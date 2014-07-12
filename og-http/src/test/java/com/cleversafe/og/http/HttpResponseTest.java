@@ -36,7 +36,7 @@ public class HttpResponseTest
    private int statusCode;
 
    @Before
-   public void setBefore()
+   public void before()
    {
       this.statusCode = 201;
    }

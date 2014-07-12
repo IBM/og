@@ -28,7 +28,7 @@ import com.cleversafe.og.util.distribution.UniformDistribution;
 
 public class UniformDistributionTest
 {
-   private static final double err = Math.pow(0.1, 6);
+   private static final double ERR = Math.pow(0.1, 6);
 
    @Test(expected = IllegalArgumentException.class)
    public void testNegativeMean()
@@ -64,8 +64,8 @@ public class UniformDistributionTest
    public void testBasicUniformDistribution()
    {
       final UniformDistribution ud = new UniformDistribution(10.0, 10.0);
-      Assert.assertEquals(10.0, ud.getAverage(), err);
-      Assert.assertEquals(10.0, ud.getSpread(), err);
+      Assert.assertEquals(10.0, ud.getAverage(), ERR);
+      Assert.assertEquals(10.0, ud.getSpread(), ERR);
       ud.nextSample();
       ud.nextSample();
       ud.nextSample();

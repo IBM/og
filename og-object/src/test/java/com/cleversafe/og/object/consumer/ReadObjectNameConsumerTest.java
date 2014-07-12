@@ -59,7 +59,7 @@ public class ReadObjectNameConsumerTest
    private Response mockResponse;
 
    @Before
-   public void setBefore() throws URISyntaxException
+   public void before() throws URISyntaxException
    {
       this.mockObjectManager = mock(ObjectManager.class);
       this.statusCodes = HttpUtil.SUCCESS_STATUS_CODES;

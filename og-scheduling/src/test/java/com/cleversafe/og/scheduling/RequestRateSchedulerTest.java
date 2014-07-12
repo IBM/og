@@ -36,7 +36,7 @@ public class RequestRateSchedulerTest
    private Distribution mockDistribution;
 
    @Before
-   public void setBefore()
+   public void before()
    {
       this.mockDistribution = mock(Distribution.class);
       when(this.mockDistribution.nextSample()).thenReturn(10.0);

@@ -37,7 +37,7 @@ public class ReadObjectNameProducerTest
    private ObjectManager mockObjectManager;
 
    @Before
-   public void setBefore()
+   public void before()
    {
       this.mockObjectManager = mock(ObjectManager.class);
    }

@@ -47,7 +47,7 @@ public class SimpleOperationManagerTest
 
    @Before
    @SuppressWarnings("unchecked")
-   public void setBefore()
+   public void before()
    {
       this.requestMix = mock(Producer.class);
       this.consumers = Collections.emptyList();

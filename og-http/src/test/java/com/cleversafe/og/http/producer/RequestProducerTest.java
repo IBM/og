@@ -46,7 +46,7 @@ public class RequestProducerTest
    private URI uri;
 
    @Before
-   public void setBefore() throws URISyntaxException
+   public void before() throws URISyntaxException
    {
       this.method = Method.PUT;
       this.uri = new URI("http://192.168.8.23/container/object");

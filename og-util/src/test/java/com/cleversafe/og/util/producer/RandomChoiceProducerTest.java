@@ -25,13 +25,9 @@ import java.util.Random;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class RandomChoiceProducerTest
 {
-   private static Logger _logger = LoggerFactory.getLogger(RandomChoiceProducerTest.class);
-
    @Test(expected = IllegalArgumentException.class)
    public void testNoChoice()
    {

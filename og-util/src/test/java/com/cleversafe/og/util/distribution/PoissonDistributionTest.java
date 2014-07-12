@@ -28,7 +28,7 @@ import com.cleversafe.og.util.distribution.PoissonDistribution;
 
 public class PoissonDistributionTest
 {
-   private static final double err = Math.pow(0.1, 6);
+   private static final double ERR = Math.pow(0.1, 6);
 
    @Test(expected = IllegalArgumentException.class)
    public void testNegativeMean()
@@ -52,8 +52,8 @@ public class PoissonDistributionTest
    public void testBasicPoissonDistribution()
    {
       final PoissonDistribution pd = new PoissonDistribution(10.0);
-      Assert.assertEquals(10.0, pd.getAverage(), err);
-      Assert.assertEquals(0.0, pd.getSpread(), err);
+      Assert.assertEquals(10.0, pd.getAverage(), ERR);
+      Assert.assertEquals(0.0, pd.getSpread(), ERR);
       pd.nextSample();
       pd.nextSample();
       pd.nextSample();

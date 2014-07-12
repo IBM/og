@@ -43,7 +43,7 @@ public class AWSAuthV2Test
    private AWSAuthV2 auth;
 
    @Before
-   public void setBefore()
+   public void before()
    {
       this.request = mock(Request.class);
       this.auth = new AWSAuthV2();
