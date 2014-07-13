@@ -67,6 +67,7 @@ import com.cleversafe.og.util.producer.CachingProducer;
 import com.cleversafe.og.util.producer.Producer;
 import com.cleversafe.og.util.producer.RandomChoiceProducer;
 import com.google.common.base.Function;
+import com.google.common.eventbus.EventBus;
 import com.google.common.math.DoubleMath;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -81,6 +82,7 @@ public class OGModule extends AbstractModule
    {
       bind(OperationManager.class).to(SimpleOperationManager.class).in(Singleton.class);
       bind(Statistics.class).in(Singleton.class);
+      bind(EventBus.class).in(Singleton.class);
    }
 
    @Provides
