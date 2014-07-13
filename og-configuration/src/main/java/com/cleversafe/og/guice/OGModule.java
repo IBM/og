@@ -87,8 +87,16 @@ public class OGModule extends AbstractModule
    protected void configure()
    {
       bind(OperationManager.class).to(SimpleOperationManager.class).in(Singleton.class);
-      bind(Statistics.class).in(Singleton.class);
       bind(EventBus.class).in(Singleton.class);
+   }
+
+   @Provides
+   @Singleton
+   public Statistics provideStatistics(final EventBus eventBus)
+   {
+      final Statistics stats = new Statistics();
+      eventBus.register(stats);
+      return stats;
    }
 
    @Provides

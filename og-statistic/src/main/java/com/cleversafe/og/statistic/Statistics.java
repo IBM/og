@@ -39,6 +39,8 @@ import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.Operation;
+import com.cleversafe.og.util.Pair;
+import com.google.common.eventbus.Subscribe;
 
 public class Statistics
 {
@@ -66,10 +68,12 @@ public class Statistics
       this.unmappedSC = new AtomicLong(1);
    }
 
-   public void update(final Request request, final Response response)
+   @Subscribe
+   public void update(final Pair<Request, Response> result)
    {
-      checkNotNull(request);
-      checkNotNull(response);
+      checkNotNull(result);
+      final Request request = result.getKey();
+      final Response response = result.getValue();
 
       final Operation operation = HttpUtil.toOperation(request.getMethod());
       updateCounter(operation, Counter.OPERATIONS, 1);

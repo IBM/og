@@ -37,12 +37,14 @@ import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.Entities;
 import com.cleversafe.og.util.Operation;
+import com.cleversafe.og.util.Pair;
 
 public class StatisticsTest
 {
    private Statistics stats;
    private Request request;
    private Response response;
+   private Pair<Request, Response> operation;
 
    @Before
    public void before()
@@ -54,32 +56,27 @@ public class StatisticsTest
       this.response = mock(Response.class);
       when(this.response.getStatusCode()).thenReturn(201);
       when(this.response.getEntity()).thenReturn(Entities.none());
+      this.operation = new Pair<Request, Response>(this.request, this.response);
    }
 
    @Test(expected = NullPointerException.class)
-   public void testUpdateNullRequest()
+   public void testUpdateNullOperation()
    {
-      this.stats.update(null, this.response);
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void testUpdateNullResponse()
-   {
-      this.stats.update(this.request, null);
+      this.stats.update(null);
    }
 
    @Test
    public void testUpdate()
    {
-      this.stats.update(this.request, this.response);
+      this.stats.update(this.operation);
       assertAll(Operation.WRITE, 1, 1024, 0, 201, 1);
    }
 
    @Test
    public void testUpdateMultiple()
    {
-      this.stats.update(this.request, this.response);
-      this.stats.update(this.request, this.response);
+      this.stats.update(this.operation);
+      this.stats.update(this.operation);
       assertAll(Operation.WRITE, 2, 2048, 0, 201, 2);
    }
 
@@ -87,7 +84,7 @@ public class StatisticsTest
    public void testUpdateAbort()
    {
       when(this.response.getMetadata(Metadata.ABORTED)).thenReturn("1");
-      this.stats.update(this.request, this.response);
+      this.stats.update(this.operation);
       assertAll(Operation.WRITE, 1, 1024, 1, 201, 0);
    }
 
@@ -95,8 +92,8 @@ public class StatisticsTest
    public void testUpdateAbortMultiple()
    {
       when(this.response.getMetadata(Metadata.ABORTED)).thenReturn("1");
-      this.stats.update(this.request, this.response);
-      this.stats.update(this.request, this.response);
+      this.stats.update(this.operation);
+      this.stats.update(this.operation);
       assertAll(Operation.WRITE, 2, 2048, 2, 201, 0);
    }
 
@@ -106,7 +103,7 @@ public class StatisticsTest
       when(this.request.getMethod()).thenReturn(Method.GET);
       when(this.request.getEntity()).thenReturn(Entities.none());
       when(this.response.getEntity()).thenReturn(Entities.zeroes(1024));
-      this.stats.update(this.request, this.response);
+      this.stats.update(this.operation);
       assertAll(Operation.READ, 1, 1024, 0, 201, 1);
    }
 
@@ -115,7 +112,7 @@ public class StatisticsTest
    {
       when(this.request.getMethod()).thenReturn(Method.DELETE);
       when(this.request.getEntity()).thenReturn(Entities.none());
-      this.stats.update(this.request, this.response);
+      this.stats.update(this.operation);
       assertAll(Operation.DELETE, 1, 0, 0, 201, 1);
    }
 
@@ -194,7 +191,7 @@ public class StatisticsTest
    @Test(expected = UnsupportedOperationException.class)
    public void testStatusCodeIteratorRemove()
    {
-      this.stats.update(this.request, this.response);
+      this.stats.update(this.operation);
       final Iterator<Entry<Integer, Long>> it = this.stats.statusCodeIterator(Operation.WRITE);
       it.next();
       it.remove();
@@ -214,11 +211,10 @@ public class StatisticsTest
             public void run()
             {
                final Statistics stats = StatisticsTest.this.stats;
-               final Request request = StatisticsTest.this.request;
-               final Response response = StatisticsTest.this.response;
+               final Pair<Request, Response> operation = StatisticsTest.this.operation;
                for (int j = 0; j < operationCount / threadCount; j++)
                {
-                  stats.update(request, response);
+                  stats.update(operation);
                }
             }
          }));

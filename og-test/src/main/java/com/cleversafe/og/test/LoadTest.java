@@ -165,10 +165,11 @@ public class LoadTest
          try
          {
             final Response response = this.future.get();
-            LoadTest.this.eventBus.post(new Pair<Request, Response>(this.request, response));
+            final Pair<Request, Response> operation =
+                  new Pair<Request, Response>(this.request, response);
+            LoadTest.this.eventBus.post(operation);
 
             LoadTest.this.scheduler.complete(response);
-            LoadTest.this.stats.update(this.request, response);
          }
          catch (final Exception e)
          {

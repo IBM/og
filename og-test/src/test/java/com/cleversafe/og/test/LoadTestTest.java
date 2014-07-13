@@ -91,6 +91,7 @@ public class LoadTestTest
 
       this.scheduler = new ConcurrentRequestScheduler(1);
       this.stats = new Statistics();
+      this.eventBus.register(this.stats);
       this.testConditions = new ArrayList<TestCondition>();
       this.testConditions.add(new CounterCondition(Operation.WRITE, Counter.OPERATIONS, 5));
 

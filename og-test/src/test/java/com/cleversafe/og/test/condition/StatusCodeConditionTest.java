@@ -31,6 +31,7 @@ import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.util.Entities;
 import com.cleversafe.og.util.Operation;
+import com.cleversafe.og.util.Pair;
 
 public class StatusCodeConditionTest
 {
@@ -103,13 +104,14 @@ public class StatusCodeConditionTest
       final Response response = mock(Response.class);
       when(response.getEntity()).thenReturn(Entities.none());
       when(response.getStatusCode()).thenReturn(200);
+      final Pair<Request, Response> operation = new Pair<Request, Response>(request, response);
 
       final StatusCodeCondition c = new StatusCodeCondition(Operation.WRITE, 200, 2);
       final Statistics stats = new Statistics();
       Assert.assertFalse(c.isTriggered(stats));
-      stats.update(request, response);
+      stats.update(operation);
       Assert.assertFalse(c.isTriggered(stats));
-      stats.update(request, response);
+      stats.update(operation);
       Assert.assertTrue(c.isTriggered(stats));
    }
 }

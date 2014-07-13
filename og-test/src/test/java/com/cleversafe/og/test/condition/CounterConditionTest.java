@@ -32,6 +32,7 @@ import com.cleversafe.og.statistic.Counter;
 import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.util.Entities;
 import com.cleversafe.og.util.Operation;
+import com.cleversafe.og.util.Pair;
 
 public class CounterConditionTest
 {
@@ -79,13 +80,14 @@ public class CounterConditionTest
       when(request.getEntity()).thenReturn(Entities.none());
       final Response response = mock(Response.class);
       when(response.getEntity()).thenReturn(Entities.none());
+      final Pair<Request, Response> operation = new Pair<Request, Response>(request, response);
 
       final CounterCondition c = new CounterCondition(Operation.WRITE, Counter.OPERATIONS, 2);
       final Statistics stats = new Statistics();
       Assert.assertFalse(c.isTriggered(stats));
-      stats.update(request, response);
+      stats.update(operation);
       Assert.assertFalse(c.isTriggered(stats));
-      stats.update(request, response);
+      stats.update(operation);
       Assert.assertTrue(c.isTriggered(stats));
    }
 }
