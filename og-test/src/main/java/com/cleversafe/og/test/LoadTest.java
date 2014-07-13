@@ -168,8 +168,6 @@ public class LoadTest
             final Pair<Request, Response> operation =
                   new Pair<Request, Response>(this.request, response);
             LoadTest.this.eventBus.post(operation);
-
-            LoadTest.this.scheduler.complete(response);
          }
          catch (final Exception e)
          {

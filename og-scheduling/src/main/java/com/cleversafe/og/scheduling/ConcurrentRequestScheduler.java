@@ -26,7 +26,10 @@ import java.util.concurrent.Semaphore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
+import com.cleversafe.og.util.Pair;
+import com.google.common.eventbus.Subscribe;
 
 public class ConcurrentRequestScheduler implements Scheduler
 {
@@ -53,8 +56,8 @@ public class ConcurrentRequestScheduler implements Scheduler
       }
    }
 
-   @Override
-   public void complete(final Response response)
+   @Subscribe
+   public void complete(final Pair<Request, Response> operation)
    {
       this.sem.release();
    }

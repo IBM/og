@@ -19,12 +19,7 @@
 
 package com.cleversafe.og.scheduling;
 
-import com.cleversafe.og.operation.Response;
-
 public interface Scheduler
 {
-
    void waitForNext();
-
-   void complete(Response response);
 }

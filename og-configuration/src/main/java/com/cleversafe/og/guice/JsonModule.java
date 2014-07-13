@@ -81,6 +81,7 @@ import com.cleversafe.og.util.producer.Producers;
 import com.cleversafe.og.util.producer.RandomChoiceProducer;
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.Range;
+import com.google.common.eventbus.EventBus;
 import com.google.common.math.DoubleMath;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -464,11 +465,16 @@ public class JsonModule extends AbstractModule
 
    @Provides
    @Singleton
-   public Scheduler provideScheduler()
+   public Scheduler provideScheduler(final EventBus eventBus)
    {
       final ConcurrencyConfig concurrency = this.config.getConcurrency();
       if (ConcurrencyType.THREADS == concurrency.getType())
-         return new ConcurrentRequestScheduler((int) Math.round(concurrency.getCount()));
+      {
+         final Scheduler scheduler =
+               new ConcurrentRequestScheduler((int) Math.round(concurrency.getCount()));
+         eventBus.register(scheduler);
+         return scheduler;
+      }
       else
       {
          final Distribution count = new UniformDistribution(concurrency.getCount(), 0.0);

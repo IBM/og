@@ -90,6 +90,7 @@ public class LoadTestTest
       when(this.client.shutdown(true)).thenReturn(shutdownFuture);
 
       this.scheduler = new ConcurrentRequestScheduler(1);
+      this.eventBus.register(this.scheduler);
       this.stats = new Statistics();
       this.eventBus.register(this.stats);
       this.testConditions = new ArrayList<TestCondition>();

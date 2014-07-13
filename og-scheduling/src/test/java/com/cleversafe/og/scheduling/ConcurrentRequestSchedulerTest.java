@@ -26,7 +26,9 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
+import com.cleversafe.og.util.Pair;
 import com.google.common.util.concurrent.Uninterruptibles;
 
 public class ConcurrentRequestSchedulerTest
@@ -85,8 +87,9 @@ public class ConcurrentRequestSchedulerTest
          public void run()
          {
             Uninterruptibles.sleepUninterruptibly(threadWait, TimeUnit.MILLISECONDS);
+            final Request request = mock(Request.class);
             final Response response = mock(Response.class);
-            s.complete(response);
+            s.complete(new Pair<Request, Response>(request, response));
          }
       });
    }

@@ -26,7 +26,6 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.distribution.Distribution;
 
 public class RequestRateScheduler implements Scheduler
@@ -77,11 +76,5 @@ public class RequestRateScheduler implements Scheduler
       if (this.lastCalledTimestamp > 0)
          return timestamp - this.lastCalledTimestamp;
       return 0;
-   }
-
-   @Override
-   public void complete(final Response response)
-   {
-      // do nothing, request rate is independent of operation completion
    }
 }
