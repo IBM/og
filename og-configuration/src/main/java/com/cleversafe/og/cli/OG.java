@@ -48,6 +48,7 @@ import com.google.gson.LongSerializationPolicy;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.ProvisionException;
+import com.google.inject.Stage;
 import com.martiansoftware.jsap.JSAPResult;
 
 public class OG extends AbstractCLI
@@ -124,7 +125,7 @@ public class OG extends AbstractCLI
 
    private static Injector createInjector(final JsonConfig config)
    {
-      return Guice.createInjector(
+      return Guice.createInjector(Stage.PRODUCTION,
             new JsonModule(config),
             new ApiModule(),
             new OGModule());
