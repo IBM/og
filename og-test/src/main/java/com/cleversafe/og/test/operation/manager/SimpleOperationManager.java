@@ -23,6 +23,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.operation.manager.OperationManager;
@@ -37,6 +39,7 @@ public class SimpleOperationManager implements OperationManager
    private final Producer<Producer<Request>> requestMix;
    private final List<Consumer<Pair<Request, Response>>> consumers;
 
+   @Inject
    public SimpleOperationManager(
          final Producer<Producer<Request>> requestMix,
          final List<Consumer<Pair<Request, Response>>> consumers)

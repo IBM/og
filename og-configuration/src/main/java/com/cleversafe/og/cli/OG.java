@@ -29,11 +29,8 @@ import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.cli.report.Summary;
 import com.cleversafe.og.guice.ApiModule;
-import com.cleversafe.og.guice.ClientModule;
 import com.cleversafe.og.guice.JsonModule;
 import com.cleversafe.og.guice.OGModule;
-import com.cleversafe.og.guice.ObjectManagerModule;
-import com.cleversafe.og.guice.OperationManagerModule;
 import com.cleversafe.og.json.JsonConfig;
 import com.cleversafe.og.json.type.CaseInsensitiveEnumTypeAdapterFactory;
 import com.cleversafe.og.json.type.SizeUnitTypeAdapter;
@@ -129,11 +126,8 @@ public class OG extends AbstractCLI
    {
       return Guice.createInjector(
             new JsonModule(config),
-            new OGModule(),
-            new OperationManagerModule(),
             new ApiModule(),
-            new ObjectManagerModule(),
-            new ClientModule());
+            new OGModule());
    }
 
    private static Gson createGson()
