@@ -40,6 +40,8 @@ import com.cleversafe.og.operation.manager.OperationManagerException;
 import com.cleversafe.og.scheduling.Scheduler;
 import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.test.condition.TestCondition;
+import com.cleversafe.og.util.Pair;
+import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -48,6 +50,7 @@ import com.google.common.util.concurrent.Uninterruptibles;
 public class LoadTest
 {
    private static final Logger _logger = LoggerFactory.getLogger(LoadTest.class);
+   private final EventBus eventBus;
    private final OperationManager operationManager;
    private final Client client;
    private final Scheduler scheduler;
@@ -59,12 +62,14 @@ public class LoadTest
    private final AtomicBoolean success;
 
    public LoadTest(
+         final EventBus eventBus,
          final OperationManager operationManager,
          final Client client,
          final Scheduler scheduler,
          final Statistics stats,
          final List<TestCondition> testConditions)
    {
+      this.eventBus = checkNotNull(eventBus);
       this.operationManager = checkNotNull(operationManager);
       this.client = checkNotNull(client);
       this.scheduler = checkNotNull(scheduler);
@@ -160,6 +165,7 @@ public class LoadTest
          try
          {
             final Response response = this.future.get();
+            LoadTest.this.eventBus.post(new Pair<Request, Response>(this.request, response));
 
             LoadTest.this.operationManager.complete(this.request, response);
             LoadTest.this.scheduler.complete(response);
