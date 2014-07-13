@@ -19,24 +19,15 @@
 
 package com.cleversafe.og.test.operation.manager;
 
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.cleversafe.og.operation.Request;
-import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.operation.manager.OperationManagerException;
-import com.cleversafe.og.util.Pair;
-import com.cleversafe.og.util.consumer.Consumer;
 import com.cleversafe.og.util.producer.Producer;
 import com.cleversafe.og.util.producer.ProducerException;
 import com.cleversafe.og.util.producer.Producers;
@@ -44,7 +35,6 @@ import com.cleversafe.og.util.producer.Producers;
 public class SimpleOperationManagerTest
 {
    private Producer<Producer<Request>> requestMix;
-   private List<Consumer<Pair<Request, Response>>> consumers;
    private Request request;
 
    @Before
@@ -52,7 +42,6 @@ public class SimpleOperationManagerTest
    public void before()
    {
       this.requestMix = mock(Producer.class);
-      this.consumers = Collections.emptyList();
       this.request = mock(Request.class);
       when(this.requestMix.produce()).thenReturn(Producers.of(this.request));
    }
@@ -60,19 +49,13 @@ public class SimpleOperationManagerTest
    @Test(expected = NullPointerException.class)
    public void testNullRequestMix()
    {
-      new SimpleOperationManager(null, this.consumers);
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void testNullConsumersList()
-   {
-      new SimpleOperationManager(this.requestMix, null);
+      new SimpleOperationManager(null);
    }
 
    @Test
    public void testProduce() throws OperationManagerException
    {
-      final SimpleOperationManager m = new SimpleOperationManager(this.requestMix, this.consumers);
+      final SimpleOperationManager m = new SimpleOperationManager(this.requestMix);
       final Request r = m.next();
       Assert.assertEquals(r, this.request);
    }
@@ -81,7 +64,7 @@ public class SimpleOperationManagerTest
    public void testProduceOperationManagerException() throws OperationManagerException
    {
       when(this.requestMix.produce()).thenThrow(new ProducerException());
-      final SimpleOperationManager m = new SimpleOperationManager(this.requestMix, this.consumers);
+      final SimpleOperationManager m = new SimpleOperationManager(this.requestMix);
       m.next();
    }
 
@@ -92,24 +75,7 @@ public class SimpleOperationManagerTest
       final Producer<Request> p = mock(Producer.class);
       when(p.produce()).thenThrow(new ProducerException());
       when(this.requestMix.produce()).thenReturn(p);
-      final SimpleOperationManager m = new SimpleOperationManager(this.requestMix, this.consumers);
+      final SimpleOperationManager m = new SimpleOperationManager(this.requestMix);
       m.next();
-   }
-
-   // TODO should OperationManager interface declare OperationManagerException for complete method?
-   @Test
-   @SuppressWarnings("unchecked")
-   public void testConsumer() throws OperationManagerException
-   {
-      final List<Consumer<Pair<Request, Response>>> responseConsumers =
-            new ArrayList<Consumer<Pair<Request, Response>>>();
-      final Consumer<Pair<Request, Response>> consumer = mock(Consumer.class);
-      responseConsumers.add(consumer);
-      final SimpleOperationManager m =
-            new SimpleOperationManager(this.requestMix, responseConsumers);
-      m.next();
-      final Response r = mock(Response.class);
-      m.complete(this.request, r);
-      verify(consumer).consume(any(Pair.class));
    }
 }

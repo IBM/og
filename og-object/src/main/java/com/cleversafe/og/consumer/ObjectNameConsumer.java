@@ -37,6 +37,7 @@ import com.cleversafe.og.util.Pair;
 import com.cleversafe.og.util.consumer.Consumer;
 import com.cleversafe.og.util.producer.ProducerException;
 import com.google.common.collect.Iterables;
+import com.google.common.eventbus.Subscribe;
 import com.google.common.io.BaseEncoding;
 
 public abstract class ObjectNameConsumer implements Consumer<Pair<Request, Response>>
@@ -62,6 +63,7 @@ public abstract class ObjectNameConsumer implements Consumer<Pair<Request, Respo
       this.statusCodes = statusCodes;
    }
 
+   @Subscribe
    @Override
    public void consume(final Pair<Request, Response> operation)
    {

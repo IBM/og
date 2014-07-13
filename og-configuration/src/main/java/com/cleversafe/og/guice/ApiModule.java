@@ -26,8 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.cleversafe.og.consumer.ReadObjectNameConsumer;
-import com.cleversafe.og.consumer.WriteObjectNameConsumer;
 import com.cleversafe.og.guice.annotation.Delete;
 import com.cleversafe.og.guice.annotation.DeleteHeaders;
 import com.cleversafe.og.guice.annotation.DeleteHost;
@@ -59,19 +57,14 @@ import com.cleversafe.og.http.Scheme;
 import com.cleversafe.og.http.producer.RequestProducer;
 import com.cleversafe.og.http.producer.UriProducer;
 import com.cleversafe.og.http.util.Api;
-import com.cleversafe.og.http.util.HttpUtil;
-import com.cleversafe.og.object.manager.ObjectManager;
 import com.cleversafe.og.operation.Entity;
 import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
-import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.soh.object.consumer.SOHWriteByteBufferConsumer;
 import com.cleversafe.og.util.ByteBufferConsumers;
 import com.cleversafe.og.util.Entities;
-import com.cleversafe.og.util.Pair;
 import com.cleversafe.og.util.consumer.ByteBufferConsumer;
-import com.cleversafe.og.util.consumer.Consumer;
 import com.cleversafe.og.util.producer.CachingProducer;
 import com.cleversafe.og.util.producer.Producer;
 import com.cleversafe.og.util.producer.Producers;
@@ -274,19 +267,6 @@ public class ApiModule extends AbstractModule
          b.withQueryParameter(e.getKey(), e.getValue());
       }
       return b.build();
-   }
-
-   @Provides
-   @Singleton
-   public List<Consumer<Pair<Request, Response>>> provideObjectNameConsumers(
-         final ObjectManager objectManager)
-   {
-      final List<Integer> sc = HttpUtil.SUCCESS_STATUS_CODES;
-      final List<Consumer<Pair<Request, Response>>> list =
-            new ArrayList<Consumer<Pair<Request, Response>>>();
-      list.add(new WriteObjectNameConsumer(objectManager, sc));
-      list.add(new ReadObjectNameConsumer(objectManager, sc));
-      return list;
    }
 
    @Provides

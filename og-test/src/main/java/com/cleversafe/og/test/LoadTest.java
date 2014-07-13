@@ -167,9 +167,7 @@ public class LoadTest
             final Response response = this.future.get();
             LoadTest.this.eventBus.post(new Pair<Request, Response>(this.request, response));
 
-            LoadTest.this.operationManager.complete(this.request, response);
             LoadTest.this.scheduler.complete(response);
-
             LoadTest.this.stats.update(this.request, response);
          }
          catch (final Exception e)

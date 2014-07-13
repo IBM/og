@@ -21,7 +21,6 @@ package com.cleversafe.og.test;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.atLeast;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -146,16 +145,6 @@ public class LoadTestTest
    public void testOperationManagerException() throws OperationManagerException
    {
       when(this.operationManager.next()).thenThrow(new OperationManagerException());
-      final boolean success = this.test.runTest();
-      Assert.assertFalse(success);
-      verify(this.client, atLeast(1)).shutdown(true);
-   }
-
-   @Test
-   public void testOperationManagerCompleteException()
-   {
-      doThrow(new RuntimeException()).when(this.operationManager)
-            .complete(this.request, this.response);
       final boolean success = this.test.runTest();
       Assert.assertFalse(success);
       verify(this.client, atLeast(1)).shutdown(true);

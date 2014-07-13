@@ -29,6 +29,8 @@ import java.util.UUID;
 
 import com.cleversafe.og.client.ApacheClient;
 import com.cleversafe.og.client.Client;
+import com.cleversafe.og.consumer.ReadObjectNameConsumer;
+import com.cleversafe.og.consumer.WriteObjectNameConsumer;
 import com.cleversafe.og.guice.annotation.Delete;
 import com.cleversafe.og.guice.annotation.DeleteObjectName;
 import com.cleversafe.og.guice.annotation.DeleteWeight;
@@ -42,6 +44,7 @@ import com.cleversafe.og.guice.annotation.WriteObjectName;
 import com.cleversafe.og.guice.annotation.WriteWeight;
 import com.cleversafe.og.http.auth.HttpAuth;
 import com.cleversafe.og.http.util.Api;
+import com.cleversafe.og.http.util.HttpUtil;
 import com.cleversafe.og.json.ClientConfig;
 import com.cleversafe.og.json.StoppingConditionsConfig;
 import com.cleversafe.og.object.manager.ObjectManager;
@@ -50,6 +53,7 @@ import com.cleversafe.og.object.producer.DeleteObjectNameProducer;
 import com.cleversafe.og.object.producer.ReadObjectNameProducer;
 import com.cleversafe.og.object.producer.UUIDObjectNameProducer;
 import com.cleversafe.og.operation.Request;
+import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.operation.manager.OperationManager;
 import com.cleversafe.og.scheduling.Scheduler;
 import com.cleversafe.og.statistic.Counter;
@@ -61,8 +65,10 @@ import com.cleversafe.og.test.condition.StatusCodeCondition;
 import com.cleversafe.og.test.condition.TestCondition;
 import com.cleversafe.og.test.operation.manager.SimpleOperationManager;
 import com.cleversafe.og.util.Operation;
+import com.cleversafe.og.util.Pair;
 import com.cleversafe.og.util.Version;
 import com.cleversafe.og.util.consumer.ByteBufferConsumer;
+import com.cleversafe.og.util.consumer.Consumer;
 import com.cleversafe.og.util.producer.CachingProducer;
 import com.cleversafe.og.util.producer.Producer;
 import com.cleversafe.og.util.producer.RandomChoiceProducer;
@@ -114,6 +120,7 @@ public class OGModule extends AbstractModule
    @Provides
    @Singleton
    LoadTest provideLoadTest(
+         final EventBus eventBus,
          final OperationManager operationManager,
          final Client client,
          final Scheduler scheduler,
@@ -137,7 +144,7 @@ public class OGModule extends AbstractModule
       }
 
       final LoadTest test =
-            new LoadTest(operationManager, client, scheduler, stats, conditions);
+            new LoadTest(eventBus, operationManager, client, scheduler, stats, conditions);
 
       // have to create this condition after LoadTest because it triggers LoadTest.stopTest()
       if (config.getRuntime() > 0)
@@ -201,5 +208,24 @@ public class OGModule extends AbstractModule
    public CachingProducer<String> provideDeleteObjectName(final ObjectManager objectManager)
    {
       return new CachingProducer<String>(new DeleteObjectNameProducer(objectManager));
+   }
+
+   @Provides
+   @Singleton
+   public List<Consumer<Pair<Request, Response>>> provideObjectNameConsumers(
+         final ObjectManager objectManager,
+         final EventBus eventBus)
+   {
+      final List<Integer> sc = HttpUtil.SUCCESS_STATUS_CODES;
+      final List<Consumer<Pair<Request, Response>>> consumers =
+            new ArrayList<Consumer<Pair<Request, Response>>>();
+      consumers.add(new WriteObjectNameConsumer(objectManager, sc));
+      consumers.add(new ReadObjectNameConsumer(objectManager, sc));
+
+      for (final Consumer<Pair<Request, Response>> consumer : consumers)
+      {
+         eventBus.register(consumer);
+      }
+      return consumers;
    }
 }
