@@ -17,7 +17,7 @@
 // Date: Jun 28, 2014
 // ---------------------
 
-package com.cleversafe.og.util;
+package com.cleversafe.og.util.io;
 
 import org.junit.Assert;
 import org.junit.Before;

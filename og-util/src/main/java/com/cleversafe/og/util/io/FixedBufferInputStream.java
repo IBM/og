@@ -32,7 +32,7 @@
 // Date: Dec 19, 2008
 // ---------------------
 
-package com.cleversafe.og.util;
+package com.cleversafe.og.util.io;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;

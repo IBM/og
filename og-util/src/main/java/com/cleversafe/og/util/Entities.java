@@ -27,6 +27,7 @@ import java.util.Random;
 
 import com.cleversafe.og.operation.Entity;
 import com.cleversafe.og.operation.EntityType;
+import com.cleversafe.og.util.io.FixedBufferInputStream;
 
 public class Entities
 {
