@@ -23,5 +23,6 @@ public enum DistributionType
 {
    UNIFORM,
    NORMAL,
+   LOGNORMAL,
    POISSON;
 }

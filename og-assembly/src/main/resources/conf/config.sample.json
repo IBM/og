@@ -98,7 +98,7 @@
 // distribution is randomly selected on a per-request basis based on the
 // weights of each configured distribution.
 //
-// Distribution is one of ("uniform", "normal")
+// Distribution is one of ("uniform", "normal", "lognormal")
 //
 // Example1 A single, constant file size of 10 kilobytes.
 // "filesize": [

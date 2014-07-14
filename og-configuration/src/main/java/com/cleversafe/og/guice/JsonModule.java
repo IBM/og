@@ -74,6 +74,7 @@ import com.cleversafe.og.scheduling.RequestRateScheduler;
 import com.cleversafe.og.scheduling.Scheduler;
 import com.cleversafe.og.util.Entities;
 import com.cleversafe.og.util.distribution.Distribution;
+import com.cleversafe.og.util.distribution.LogNormalDistribution;
 import com.cleversafe.og.util.distribution.NormalDistribution;
 import com.cleversafe.og.util.distribution.UniformDistribution;
 import com.cleversafe.og.util.producer.Producer;
@@ -378,6 +379,8 @@ public class JsonModule extends AbstractModule
       final double spread = filesize.getSpread() * filesize.getSpreadUnit().toBytes(1);
       if (DistributionType.NORMAL == filesize.getDistribution())
          return new NormalDistribution(average, spread);
+      else if (DistributionType.LOGNORMAL == filesize.getDistribution())
+         return new LogNormalDistribution(average, spread);
       return new UniformDistribution(average, spread);
    }
 
