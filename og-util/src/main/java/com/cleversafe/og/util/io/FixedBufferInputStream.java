@@ -37,12 +37,10 @@ package com.cleversafe.og.util.io;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.io.InputStream;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class FixedBufferInputStream extends InputStream
+public class FixedBufferInputStream extends SizedInputStream
 {
    private static final Logger _logger = LoggerFactory.getLogger(FixedBufferInputStream.class);
    private final byte[] buf;
@@ -128,6 +126,7 @@ public class FixedBufferInputStream extends InputStream
       return (int) Math.min(this.available, Integer.MAX_VALUE);
    }
 
+   @Override
    public long getSize()
    {
       return this.size;
