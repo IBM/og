@@ -22,28 +22,12 @@ package com.cleversafe.og.util;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.io.InputStream;
-import java.util.Random;
-
 import com.cleversafe.og.operation.Entity;
 import com.cleversafe.og.operation.EntityType;
-import com.cleversafe.og.util.io.FixedBufferInputStream;
 
 public class Entities
 {
-   private static final int BUF_SIZE = 1024;
-   private static final byte[] ZERO_BUF = new byte[BUF_SIZE];
    private static final Entity NONE_ENTITY = Entities.createEntity(EntityType.NONE, 0);
-   private static final InputStream NONE_INPUTSTREAM = new InputStream()
-   {
-      @Override
-      public int read()
-      {
-         return -1;
-      }
-   };
-   // TODO performance of single random instance used by multiple threads? Need to quantify
-   private static final Random RANDOM = new Random();
 
    private Entities()
    {}
@@ -83,26 +67,5 @@ public class Entities
             return this.entitySize;
          }
       };
-   }
-
-   public static InputStream createInputStream(final Entity entity)
-   {
-      checkNotNull(entity);
-      switch (entity.getType())
-      {
-         case NONE :
-            return NONE_INPUTSTREAM;
-         case ZEROES :
-            return new FixedBufferInputStream(ZERO_BUF, entity.getSize());
-         default :
-            return new FixedBufferInputStream(createRandomBuffer(), entity.getSize());
-      }
-   }
-
-   private static byte[] createRandomBuffer()
-   {
-      final byte[] buf = new byte[Entities.BUF_SIZE];
-      RANDOM.nextBytes(buf);
-      return buf;
    }
 }

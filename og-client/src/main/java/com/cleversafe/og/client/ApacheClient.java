@@ -58,6 +58,7 @@ import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.Entities;
 import com.cleversafe.og.util.consumer.ByteBufferConsumer;
+import com.cleversafe.og.util.io.Streams;
 import com.google.common.base.Function;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -334,7 +335,7 @@ public class ApacheClient implements Client
          // TODO verify httpclient consumes request entity correctly automatically
          // TODO may need to implement a custom HttpEntity that returns false for isStreaming call,
          // if this makes a performance difference
-         final InputStream stream = Entities.createInputStream(this.request.getEntity());
+         final InputStream stream = Streams.create(this.request.getEntity());
          final InputStreamEntity entity =
                new InputStreamEntity(stream, this.request.getEntity().getSize());
          // TODO chunk size for chunked encoding is hardcoded to 2048 bytes. Can only be overridden
