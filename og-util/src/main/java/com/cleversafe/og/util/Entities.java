@@ -27,7 +27,7 @@ import com.cleversafe.og.operation.EntityType;
 
 public class Entities
 {
-   private static final Entity NONE_ENTITY = Entities.createEntity(EntityType.NONE, 0);
+   private static final Entity NONE_ENTITY = Entities.create(EntityType.NONE, 0);
 
    private Entities()
    {}
@@ -39,15 +39,15 @@ public class Entities
 
    public static Entity random(final long size)
    {
-      return createEntity(EntityType.RANDOM, size);
+      return create(EntityType.RANDOM, size);
    }
 
    public static Entity zeroes(final long size)
    {
-      return createEntity(EntityType.ZEROES, size);
+      return create(EntityType.ZEROES, size);
    }
 
-   private static Entity createEntity(final EntityType type, final long size)
+   private static Entity create(final EntityType type, final long size)
    {
       checkArgument(size >= 0, "size must be >= 0 [%s]", size);
       return new Entity()
