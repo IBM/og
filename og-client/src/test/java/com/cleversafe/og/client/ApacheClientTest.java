@@ -62,6 +62,7 @@ import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.Entities;
+import com.cleversafe.og.util.SizeUnit;
 import com.cleversafe.og.util.consumer.ByteBufferConsumer;
 import com.github.tomakehurst.wiremock.client.RequestPatternBuilder;
 import com.github.tomakehurst.wiremock.http.RequestMethod;
@@ -606,5 +607,41 @@ public class ApacheClientTest
    private RequestPatternBuilder requestedFor(final Method method, final String uri)
    {
       return new RequestPatternBuilder(RequestMethod.valueOf(method.toString()), urlEqualTo(uri));
+   }
+
+   @Test
+   public void testWriteThroughput() throws InterruptedException, ExecutionException
+   {
+      final long size = SizeUnit.KILOBYTES.toBytes(100);
+      final long tput = (long) (size * .9);
+      final Client client =
+            new ApacheClient.Builder(this.byteBufferConsumers).withWriteThroughput(tput).build();
+      final Request request =
+            new HttpRequest.Builder(Method.PUT, this.objectUri).withEntity(Entities.zeroes(size)).build();
+      final long timestampStart = System.nanoTime();
+      client.execute(request).get();
+      final long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - timestampStart);
+      // at least 1 second
+      Assert.assertTrue(duration >= 1000);
+   }
+
+   @Test
+   public void testReadThroughput() throws InterruptedException, ExecutionException
+   {
+      final long size = SizeUnit.KILOBYTES.toBytes(100);
+      final long tput = (long) (size * .9);
+      stubFor(get(urlMatching("/container/.*")).willReturn(
+            aResponse().withStatus(200)
+                  .withBody(new byte[(int) size])
+            ));
+
+      final Client client =
+            new ApacheClient.Builder(this.byteBufferConsumers).withReadThroughput(tput).build();
+      final Request request = new HttpRequest.Builder(Method.GET, this.objectUri).build();
+      final long timestampStart = System.nanoTime();
+      client.execute(request).get();
+      final long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - timestampStart);
+      // at least 1 second
+      Assert.assertTrue(duration >= 1000);
    }
 }

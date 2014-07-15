@@ -180,6 +180,8 @@ public class OGModule extends AbstractModule
             .withWaitForContinue(clientConfig.getWaitForContinue())
             .withAuthentication(authentication)
             .withUserAgent(Version.displayVersion())
+            .withWriteThroughput(clientConfig.getWriteThroughput())
+            .withReadThroughput(clientConfig.getReadThroughput())
             .build();
    }
 

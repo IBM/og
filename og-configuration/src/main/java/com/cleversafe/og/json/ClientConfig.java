@@ -30,6 +30,8 @@ public class ClientConfig
    boolean chunkedEncoding;
    boolean expectContinue;
    int waitForContinue;
+   int writeThroughput;
+   int readThroughput;
 
    public ClientConfig()
    {
@@ -42,6 +44,8 @@ public class ClientConfig
       this.chunkedEncoding = false;
       this.expectContinue = false;
       this.waitForContinue = 3000;
+      this.writeThroughput = 0;
+      this.readThroughput = 0;
    }
 
    public int getConnectTimeout()
@@ -87,5 +91,15 @@ public class ClientConfig
    public int getWaitForContinue()
    {
       return this.waitForContinue;
+   }
+
+   public int getWriteThroughput()
+   {
+      return this.writeThroughput;
+   }
+
+   public int getReadThroughput()
+   {
+      return this.readThroughput;
    }
 }

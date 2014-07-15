@@ -24,6 +24,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.Map.Entry;
@@ -80,21 +81,30 @@ public class ApacheClient implements Client
    private final Gson gson;
    private final HttpAuth authentication;
    private final boolean chunkedEncoding;
+   private final long writeThroughput;
+   private final long readThroughput;
 
    private ApacheClient(final Builder builder)
    {
+      this.byteBufferConsumers = checkNotNull(builder.byteBufferConsumers);
+
       // create local copies to prevent builder from changing values between check and use
       final int connectTimeout = builder.connectTimeout;
       final int soTimeout = builder.soTimeout;
       final int soLinger = builder.soLinger;
       final int waitForContinue = builder.waitForContinue;
       final String userAgent = builder.userAgent;
+      this.writeThroughput = builder.writeThroughput;
+      this.readThroughput = builder.readThroughput;
 
       checkArgument(connectTimeout >= 0, "connectTimeout must be >= 0 [%s]", connectTimeout);
       checkArgument(soTimeout >= 0, "soTimeout must be >= 0 [%s]", soTimeout);
       checkArgument(soLinger >= -1, "soLinger must be >= -1 [%s]", soLinger);
       checkArgument(waitForContinue > 0, "waitForContinue must be > 0 [%s]", waitForContinue);
-      this.byteBufferConsumers = checkNotNull(builder.byteBufferConsumers);
+      checkArgument(this.writeThroughput >= 0, "writeThroughput must be >= 0 [%s]",
+            this.writeThroughput);
+      checkArgument(this.readThroughput >= 0, "readThroughput must be >= 0 [%s]",
+            this.readThroughput);
 
       final HttpClientBuilder clientBuilder = HttpClients.custom();
       if (userAgent != null)
@@ -155,8 +165,8 @@ public class ApacheClient implements Client
       final ByteBufferConsumer consumer =
             this.byteBufferConsumers.apply(request.getMetadata(Metadata.RESPONSE_BODY_PROCESSOR));
       return this.executorService.submit(new BlockingHttpOperation(this.client,
-            this.authentication, request,
-            consumer, this.gson, this.chunkedEncoding));
+            this.authentication, request, consumer, this.gson, this.chunkedEncoding,
+            this.writeThroughput, this.readThroughput));
    }
 
    @Override
@@ -246,6 +256,8 @@ public class ApacheClient implements Client
       private final ByteBuffer byteBuf;
       final Gson gson;
       private final boolean chunkedEncoding;
+      private final long writeThroughput;
+      private final long readThroughput;
 
       public BlockingHttpOperation(
             final CloseableHttpClient client,
@@ -253,7 +265,9 @@ public class ApacheClient implements Client
             final Request request,
             final ByteBufferConsumer consumer,
             final Gson gson,
-            final boolean chunkedEncoding)
+            final boolean chunkedEncoding,
+            final long writeThroughput,
+            final long readThroughput)
       {
          this.client = client;
          this.auth = auth;
@@ -264,6 +278,8 @@ public class ApacheClient implements Client
          this.byteBuf = ByteBuffer.allocate(4096);
          this.gson = gson;
          this.chunkedEncoding = chunkedEncoding;
+         this.writeThroughput = writeThroughput;
+         this.readThroughput = readThroughput;
       }
 
       @Override
@@ -337,11 +353,27 @@ public class ApacheClient implements Client
          // if this makes a performance difference
          final InputStream stream = Streams.create(this.request.getEntity());
          final InputStreamEntity entity =
-               new InputStreamEntity(stream, this.request.getEntity().getSize());
+               new ThrottledEntity(stream, this.request.getEntity().getSize());
          // TODO chunk size for chunked encoding is hardcoded to 2048 bytes. Can only be overridden
          // by implementing a custom connection factory
          entity.setChunked(this.chunkedEncoding);
          return entity;
+      }
+
+      class ThrottledEntity extends InputStreamEntity
+      {
+         public ThrottledEntity(final InputStream instream, final long length)
+         {
+            super(instream, length);
+         }
+
+         @Override
+         public void writeTo(OutputStream outstream) throws IOException
+         {
+            if (BlockingHttpOperation.this.writeThroughput > 0)
+               outstream = Streams.throttle(outstream, BlockingHttpOperation.this.writeThroughput);
+            super.writeTo(outstream);
+         }
       }
 
       private void sendRequest(
@@ -388,7 +420,12 @@ public class ApacheClient implements Client
       {
          final HttpEntity entity = response.getEntity();
          if (entity != null)
-            receiveBytes(responseBuilder, entity.getContent());
+         {
+            InputStream in = entity.getContent();
+            if (this.readThroughput > 0)
+               in = Streams.throttle(in, this.readThroughput);
+            receiveBytes(responseBuilder, in);
+         }
       }
 
       private void receiveBytes(
@@ -425,6 +462,7 @@ public class ApacheClient implements Client
 
    public static class Builder
    {
+      private final Function<String, ByteBufferConsumer> byteBufferConsumers;
       private int connectTimeout;
       private int soTimeout;
       private boolean soReuseAddress;
@@ -435,8 +473,9 @@ public class ApacheClient implements Client
       private boolean expectContinue;
       private int waitForContinue;
       private HttpAuth authentication;
-      private final Function<String, ByteBufferConsumer> byteBufferConsumers;
       private String userAgent;
+      private long writeThroughput;
+      private long readThroughput;
 
       public Builder(final Function<String, ByteBufferConsumer> byteBufferConsumers)
       {
@@ -449,6 +488,8 @@ public class ApacheClient implements Client
          this.chunkedEncoding = false;
          this.expectContinue = false;
          this.waitForContinue = 3000;
+         this.writeThroughput = 0;
+         this.readThroughput = 0;
          this.byteBufferConsumers = byteBufferConsumers;
       }
 
@@ -515,6 +556,18 @@ public class ApacheClient implements Client
       public Builder withUserAgent(final String userAgent)
       {
          this.userAgent = userAgent;
+         return this;
+      }
+
+      public Builder withWriteThroughput(final long bytesPerSecond)
+      {
+         this.writeThroughput = bytesPerSecond;
+         return this;
+      }
+
+      public Builder withReadThroughput(final long bytesPerSecond)
+      {
+         this.readThroughput = bytesPerSecond;
          return this;
       }
 
