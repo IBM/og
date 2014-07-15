@@ -77,6 +77,7 @@ public class LoadTest
       this.testConditions = checkNotNull(testConditions);
       final ThreadFactory fac = new ThreadFactoryBuilder().setNameFormat("test-%d").build();
       this.executorService = Executors.newCachedThreadPool(fac);
+      // FIXME the whole testThread concept is flawed
       this.testThread = Thread.currentThread();
       this.running = new AtomicBoolean(true);
       this.success = new AtomicBoolean(true);

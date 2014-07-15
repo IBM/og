@@ -19,22 +19,23 @@
 
 package com.cleversafe.og.test;
 
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.cleversafe.og.client.Client;
-import com.cleversafe.og.operation.Metadata;
+import com.cleversafe.og.http.HttpRequest;
+import com.cleversafe.og.http.HttpResponse;
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
@@ -46,11 +47,9 @@ import com.cleversafe.og.statistic.Counter;
 import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.test.condition.CounterCondition;
 import com.cleversafe.og.test.condition.TestCondition;
-import com.cleversafe.og.util.Entities;
 import com.cleversafe.og.util.Operation;
 import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.SettableFuture;
-import com.google.common.util.concurrent.Uninterruptibles;
 
 public class LoadTestTest
 {
@@ -65,18 +64,10 @@ public class LoadTestTest
    private LoadTest test;
 
    @Before
-   public void before() throws OperationManagerException
+   public void before() throws OperationManagerException, URISyntaxException
    {
-      this.eventBus = new EventBus();
-      this.request = mock(Request.class);
-      when(this.request.getMethod()).thenReturn(Method.PUT);
-      when(this.request.getEntity()).thenReturn(Entities.none());
-      when(this.request.getMetadata(any(Metadata.class))).thenReturn(null);
-      when(this.request.getMetadata(Metadata.REQUEST_ID)).thenReturn("1");
-
-      this.response = mock(Response.class);
-      when(this.response.getStatusCode()).thenReturn(200);
-      when(this.response.getMetadata(Metadata.REQUEST_ID)).thenReturn("1");
+      this.request = new HttpRequest.Builder(Method.PUT, new URI("http://127.0.0.1")).build();
+      this.response = new HttpResponse.Builder().withStatusCode(200).build();
 
       this.operationManager = mock(OperationManager.class);
       when(this.operationManager.next()).thenReturn(this.request);
@@ -85,16 +76,21 @@ public class LoadTestTest
       final SettableFuture<Response> future = SettableFuture.create();
       future.set(this.response);
       when(this.client.execute(this.request)).thenReturn(future);
+
       final SettableFuture<Boolean> shutdownFuture = SettableFuture.create();
       shutdownFuture.set(true);
       when(this.client.shutdown(true)).thenReturn(shutdownFuture);
 
       this.scheduler = new ConcurrentRequestScheduler(1);
-      this.eventBus.register(this.scheduler);
+
       this.stats = new Statistics();
-      this.eventBus.register(this.stats);
+
       this.testConditions = new ArrayList<TestCondition>();
       this.testConditions.add(new CounterCondition(Operation.WRITE, Counter.OPERATIONS, 5));
+
+      this.eventBus = new EventBus();
+      this.eventBus.register(this.scheduler);
+      this.eventBus.register(this.stats);
 
       this.test =
             new LoadTest(this.eventBus, this.operationManager, this.client, this.scheduler,
@@ -159,26 +155,6 @@ public class LoadTestTest
       Assert.assertTrue(success);
       Assert.assertTrue(this.stats.get(Operation.WRITE, Counter.OPERATIONS) >= 5);
       verify(this.client, atLeast(5)).execute(this.request);
-      verify(this.client, atLeast(1)).shutdown(true);
-   }
-
-   @Test
-   public void testStopTest()
-   {
-      this.testConditions = new ArrayList<TestCondition>();
-      new Thread(new Runnable()
-      {
-
-         @Override
-         public void run()
-         {
-            Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
-            LoadTestTest.this.test.stopTest();
-         }
-
-      }).start();
-      final boolean success = this.test.runTest();
-      Assert.assertTrue(success);
       verify(this.client, atLeast(1)).shutdown(true);
    }
 }
