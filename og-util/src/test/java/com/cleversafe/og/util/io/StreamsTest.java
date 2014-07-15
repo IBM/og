@@ -19,9 +19,13 @@
 
 package com.cleversafe.og.util.io;
 
+import static org.mockito.Mockito.mock;
+
 import java.io.IOException;
+import java.io.InputStream;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.cleversafe.og.operation.Entity;
@@ -29,6 +33,14 @@ import com.cleversafe.og.util.Entities;
 
 public class StreamsTest
 {
+   private InputStream in;
+
+   @Before
+   public void before()
+   {
+      this.in = mock(InputStream.class);
+   }
+
    @Test(expected = NullPointerException.class)
    public void testNullEntity()
    {
@@ -73,5 +85,29 @@ public class StreamsTest
       {
          Assert.assertEquals(0, buf[i]);
       }
+   }
+
+   @Test(expected = NullPointerException.class)
+   public void testThrottleInputStreamNullStream()
+   {
+      Streams.throttle(null, 10);
+   }
+
+   @Test(expected = IllegalArgumentException.class)
+   public void testThrottleInputStreamNegativeBytesPerSecond()
+   {
+      Streams.throttle(this.in, -1);
+   }
+
+   @Test(expected = IllegalArgumentException.class)
+   public void testThrottleInputStreamZeroBytesPerSecond()
+   {
+      Streams.throttle(this.in, 0);
+   }
+
+   @Test
+   public void testThrottleInputStreamPositiveBytesPerSecond()
+   {
+      Streams.throttle(this.in, 1);
    }
 }
