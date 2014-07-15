@@ -22,6 +22,7 @@ package com.cleversafe.og.util.io;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Random;
 
 import com.cleversafe.og.operation.Entity;
@@ -74,5 +75,10 @@ public class Streams
    public static InputStream throttle(final InputStream in, final long bytesPerSecond)
    {
       return new ThrottledInputStream(in, bytesPerSecond);
+   }
+
+   public static OutputStream throttle(final OutputStream out, final long bytesPerSecond)
+   {
+      return new ThrottledOutputStream(out, bytesPerSecond);
    }
 }

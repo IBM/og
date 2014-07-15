@@ -23,6 +23,7 @@ import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -34,11 +35,13 @@ import com.cleversafe.og.util.Entities;
 public class StreamsTest
 {
    private InputStream in;
+   private OutputStream out;
 
    @Before
    public void before()
    {
       this.in = mock(InputStream.class);
+      this.out = mock(OutputStream.class);
    }
 
    @Test(expected = NullPointerException.class)
@@ -90,7 +93,7 @@ public class StreamsTest
    @Test(expected = NullPointerException.class)
    public void testThrottleInputStreamNullStream()
    {
-      Streams.throttle(null, 10);
+      Streams.throttle((InputStream) null, 10);
    }
 
    @Test(expected = IllegalArgumentException.class)
@@ -109,5 +112,29 @@ public class StreamsTest
    public void testThrottleInputStreamPositiveBytesPerSecond()
    {
       Streams.throttle(this.in, 1);
+   }
+
+   @Test(expected = NullPointerException.class)
+   public void testThrottleOutputStreamNullStream()
+   {
+      Streams.throttle((OutputStream) null, 10);
+   }
+
+   @Test(expected = IllegalArgumentException.class)
+   public void testThrottleOutputStreamNegativeBytesPerSecond()
+   {
+      Streams.throttle(this.out, -1);
+   }
+
+   @Test(expected = IllegalArgumentException.class)
+   public void testThrottleOutputStreamZeroBytesPerSecond()
+   {
+      Streams.throttle(this.out, 0);
+   }
+
+   @Test
+   public void testThrottleOutputStreamPositiveBytesPerSecond()
+   {
+      Streams.throttle(this.out, 1);
    }
 }
