@@ -33,7 +33,7 @@ public class JsonConfig
 {
    Scheme scheme;
    CollectionAlgorithmType hostSelection;
-   List<String> host;
+   List<HostConfig> host;
    Integer port;
    Api api;
    String uriRoot;
@@ -54,7 +54,7 @@ public class JsonConfig
    {
       this.scheme = Scheme.HTTP;
       this.hostSelection = CollectionAlgorithmType.ROUNDROBIN;
-      this.host = new ArrayList<String>();
+      this.host = new ArrayList<HostConfig>();
       this.port = null;
       this.api = Api.SOH;
       this.uriRoot = null;
@@ -83,7 +83,7 @@ public class JsonConfig
       return this.hostSelection;
    }
 
-   public List<String> getHost()
+   public List<HostConfig> getHost()
    {
       return this.host;
    }

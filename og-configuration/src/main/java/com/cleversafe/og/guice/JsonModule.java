@@ -24,6 +24,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,6 +60,7 @@ import com.cleversafe.og.http.util.Api;
 import com.cleversafe.og.json.ClientConfig;
 import com.cleversafe.og.json.ConcurrencyConfig;
 import com.cleversafe.og.json.FilesizeConfig;
+import com.cleversafe.og.json.HostConfig;
 import com.cleversafe.og.json.JsonConfig;
 import com.cleversafe.og.json.OperationConfig;
 import com.cleversafe.og.json.StoppingConditionsConfig;
@@ -172,26 +174,34 @@ public class JsonModule extends AbstractModule
    {
       if (operationConfig != null)
       {
-         final List<String> operationHosts = operationConfig.getHosts();
+         final List<HostConfig> operationHosts = operationConfig.getHost();
          if (operationHosts != null && !operationHosts.isEmpty())
-            return createHost(operationConfig.getHostAlgorithm(), operationConfig.getHosts());
+            return createHost(operationConfig.getHostAlgorithm(), operationHosts);
       }
       return testHost;
    }
 
    private Producer<String> createHost(
          final CollectionAlgorithmType algorithm,
-         final List<String> hosts)
+         final List<HostConfig> hosts)
    {
       if (CollectionAlgorithmType.ROUNDROBIN == algorithm)
-         return Producers.cycle(hosts);
+      {
+         final List<String> hostList = new ArrayList<String>();
+         for (final HostConfig host : hosts)
+         {
+            hostList.add(host.getHost());
+         }
+         return Producers.cycle(hostList);
+      }
+
       else
       {
          final RandomChoiceProducer.Builder<String> wrc =
                new RandomChoiceProducer.Builder<String>();
-         for (final String host : hosts)
+         for (final HostConfig host : hosts)
          {
-            wrc.withChoice(host);
+            wrc.withChoice(host.getHost(), host.getWeight());
          }
          return wrc.build();
       }

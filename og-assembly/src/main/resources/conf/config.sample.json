@@ -23,10 +23,11 @@
 
 // A list of hosts to use.
 //
-// Example1 "host": ["192.168.8.10"]
+// Example1 "host": "192.168.8.10"
 // Example2 "host": ["dc-a2100-3838.cleversafelabs.com", "10.10.1.56"]
+// Example3 "host": [{"host": "dc-a2100-3838.cleversafelabs.com", "weight": 5.0}, "10.10.1.56"]
 
-"host": [],
+"host": "",
 
 
 // The http port to use.
@@ -72,7 +73,7 @@
 // "write": {
 // "weight": 100.0,
 // "host_algorithm": "roundrobin",
-// "hosts": [],
+// "host": [],
 // "headers": {}
 // },
 
@@ -86,7 +87,7 @@
 // "read": {
 // "weight": 0.0,
 // "host_algorithm": "roundrobin",
-// "hosts": [],
+// "host": [],
 // "headers": {}
 // },
 
@@ -100,7 +101,7 @@
 // "delete": {
 // "weight": 0.0,
 // "host_algorithm": "roundrobin",
-// "hosts": [],
+// "host": [],
 // "headers": {}
 // },
 

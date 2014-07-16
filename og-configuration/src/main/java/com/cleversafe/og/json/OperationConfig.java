@@ -30,7 +30,7 @@ public class OperationConfig
 {
    double weight;
    CollectionAlgorithmType hostAlgorithm;
-   List<String> hosts;
+   List<HostConfig> host;
    Map<String, String> headers;
 
    public OperationConfig(final double weight)
@@ -43,7 +43,7 @@ public class OperationConfig
    {
       this.weight = 0.0;
       this.hostAlgorithm = CollectionAlgorithmType.ROUNDROBIN;
-      this.hosts = new ArrayList<String>();
+      this.host = new ArrayList<HostConfig>();
       this.headers = new LinkedHashMap<String, String>();
    }
 
@@ -57,9 +57,9 @@ public class OperationConfig
       return this.hostAlgorithm;
    }
 
-   public List<String> getHosts()
+   public List<HostConfig> getHost()
    {
-      return this.hosts;
+      return this.host;
    }
 
    public Map<String, String> getHeaders()
