@@ -52,18 +52,16 @@ public class RequestProducer implements Producer<Request>
       this.method = checkNotNull(builder.method);
       this.uri = checkNotNull(builder.uri);
       this.object = builder.object;
-      checkNotNull(builder.headers);
       // defensive copy
       this.headers = new LinkedHashMap<Producer<String>, Producer<String>>();
-      for (final Entry<Producer<String>, Producer<String>> h : builder.headers.entrySet())
+      for (final Entry<Producer<String>, Producer<String>> h : checkNotNull(builder.headers).entrySet())
       {
          this.headers.put(checkNotNull(h.getKey()), checkNotNull(h.getValue()));
       }
       this.entity = builder.entity;
-      checkNotNull(builder.metadata);
       // defensive copy
       this.metadata = new LinkedHashMap<Producer<String>, Producer<String>>();
-      for (final Entry<Producer<String>, Producer<String>> m : builder.metadata.entrySet())
+      for (final Entry<Producer<String>, Producer<String>> m : checkNotNull(builder.metadata).entrySet())
       {
          this.metadata.put(checkNotNull(m.getKey()), checkNotNull(m.getValue()));
       }

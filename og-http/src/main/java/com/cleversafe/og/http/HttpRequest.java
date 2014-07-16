@@ -53,20 +53,18 @@ public class HttpRequest implements Request
    {
       this.method = checkNotNull(builder.method);
       this.uri = checkNotNull(builder.uri);
-      checkNotNull(builder.headers);
       // defensive copy
       final Map<String, String> mutableHeaders = new LinkedHashMap<String, String>();
-      for (final Entry<String, String> h : builder.headers.entrySet())
+      for (final Entry<String, String> h : checkNotNull(builder.headers).entrySet())
       {
          mutableHeaders.put(checkNotNull(h.getKey()), checkNotNull(h.getValue()));
       }
       // support immutable iteration via headers method
       this.headers = Collections.unmodifiableMap(mutableHeaders);
       this.entity = checkNotNull(builder.entity);
-      checkNotNull(builder.metadata);
       // defensive copy
       final Map<String, String> mutableMetadata = new LinkedHashMap<String, String>();
-      for (final Entry<String, String> m : builder.metadata.entrySet())
+      for (final Entry<String, String> m : checkNotNull(builder.metadata).entrySet())
       {
          mutableMetadata.put(checkNotNull(m.getKey()), checkNotNull(m.getValue()));
       }

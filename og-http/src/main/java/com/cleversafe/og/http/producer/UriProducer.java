@@ -51,17 +51,15 @@ public class UriProducer implements Producer<URI>
       this.scheme = checkNotNull(builder.scheme);
       this.host = checkNotNull(builder.host);
       this.port = builder.port;
-      checkNotNull(builder.path);
       // defensive copy
       this.path = new ArrayList<Producer<String>>();
-      for (final Producer<String> p : builder.path)
+      for (final Producer<String> p : checkNotNull(builder.path))
       {
          this.path.add(checkNotNull(p));
       }
-      checkNotNull(builder.queryParameters);
       // defensive copy
       this.queryParameters = new LinkedHashMap<String, String>();
-      for (final Entry<String, String> qp : builder.queryParameters.entrySet())
+      for (final Entry<String, String> qp : checkNotNull(builder.queryParameters).entrySet())
       {
          this.queryParameters.put(checkNotNull(qp.getKey()), checkNotNull(qp.getValue()));
       }
