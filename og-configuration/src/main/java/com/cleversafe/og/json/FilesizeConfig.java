@@ -31,6 +31,12 @@ public class FilesizeConfig
    SizeUnit spreadUnit;
    double weight;
 
+   public FilesizeConfig(final double average)
+   {
+      this();
+      this.average = average;
+   }
+
    public FilesizeConfig()
    {
       this.distribution = DistributionType.UNIFORM;
