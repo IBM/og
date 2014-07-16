@@ -188,15 +188,6 @@ public class StatisticsTest
       this.stats.getStatusCode(Operation.WRITE, 600);
    }
 
-   @Test(expected = UnsupportedOperationException.class)
-   public void testStatusCodeIteratorRemove()
-   {
-      this.stats.update(this.operation);
-      final Iterator<Entry<Integer, Long>> it = this.stats.statusCodeIterator(Operation.WRITE);
-      it.next();
-      it.remove();
-   }
-
    @Test
    public void testConcurrency() throws InterruptedException
    {

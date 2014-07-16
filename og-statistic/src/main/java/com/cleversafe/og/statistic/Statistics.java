@@ -22,14 +22,11 @@ package com.cleversafe.og.statistic;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentNavigableMap;
-import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.TreeMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,31 +38,23 @@ import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.Operation;
 import com.cleversafe.og.util.Pair;
 import com.google.common.eventbus.Subscribe;
+import com.google.common.util.concurrent.AtomicLongMap;
 
 public class Statistics
 {
    private static final Logger _logger = LoggerFactory.getLogger(Statistics.class);
-   private final Map<Operation, Map<Counter, AtomicLong>> counters;
-   // use concurrent hashmap at status code level, as additional status code keys may be mapped
-   // concurrently during the lifetime of the test
-   private final Map<Operation, ConcurrentNavigableMap<Integer, AtomicLong>> scCounters;
-   private AtomicLong unmappedSC;
+   private final Map<Operation, AtomicLongMap<Counter>> counters;
+   private final Map<Operation, AtomicLongMap<Integer>> scCounters;
 
    public Statistics()
    {
-      this.counters = new HashMap<Operation, Map<Counter, AtomicLong>>();
-      this.scCounters = new HashMap<Operation, ConcurrentNavigableMap<Integer, AtomicLong>>();
+      this.counters = new HashMap<Operation, AtomicLongMap<Counter>>();
+      this.scCounters = new HashMap<Operation, AtomicLongMap<Integer>>();
       for (final Operation operation : Operation.values())
       {
-         this.counters.put(operation, new HashMap<Counter, AtomicLong>());
-
-         this.scCounters.put(operation, new ConcurrentSkipListMap<Integer, AtomicLong>());
-         for (final Counter counter : Counter.values())
-         {
-            this.counters.get(operation).put(counter, new AtomicLong());
-         }
+         this.counters.put(operation, AtomicLongMap.<Counter> create());
+         this.scCounters.put(operation, AtomicLongMap.<Integer> create());
       }
-      this.unmappedSC = new AtomicLong(1);
    }
 
    @Subscribe
@@ -104,25 +93,19 @@ public class Statistics
 
    private void updateCounter(final Operation operation, final Counter counter, final long value)
    {
-      this.counters.get(operation).get(counter).addAndGet(value);
+      this.counters.get(operation).addAndGet(counter, value);
    }
 
    private void updateStatusCode(final Operation operation, final int statusCode)
    {
-      final AtomicLong existingSC =
-            this.scCounters.get(operation).putIfAbsent(statusCode, this.unmappedSC);
-
-      if (existingSC != null)
-         existingSC.incrementAndGet();
-      else
-         this.unmappedSC = new AtomicLong(1);
+      this.scCounters.get(operation).incrementAndGet(statusCode);
    }
 
    public long get(final Operation operation, final Counter counter)
    {
       checkNotNull(operation);
       checkNotNull(counter);
-      return this.counters.get(operation).get(counter).get();
+      return this.counters.get(operation).get(counter);
    }
 
    public long getStatusCode(final Operation operation, final int statusCode)
@@ -131,40 +114,12 @@ public class Statistics
       checkArgument(HttpUtil.VALID_STATUS_CODES.contains(statusCode),
             "statusCode must be a valid status code [%s]", statusCode);
 
-      final AtomicLong sc = this.scCounters.get(operation).get(statusCode);
-      if (sc != null)
-         return sc.get();
-      return 0;
+      return this.scCounters.get(operation).get(statusCode);
    }
 
    public Iterator<Entry<Integer, Long>> statusCodeIterator(final Operation operation)
    {
       checkNotNull(operation);
-      final Iterator<Entry<Integer, AtomicLong>> it =
-            this.scCounters.get(operation).entrySet().iterator();
-
-      return new Iterator<Entry<Integer, Long>>()
-      {
-
-         @Override
-         public boolean hasNext()
-         {
-            return it.hasNext();
-         }
-
-         @Override
-         public Entry<Integer, Long> next()
-         {
-            final Entry<Integer, AtomicLong> e = it.next();
-            return new AbstractMap.SimpleImmutableEntry<Integer, Long>(e.getKey(),
-                  e.getValue().get());
-         }
-
-         @Override
-         public void remove()
-         {
-            throw new UnsupportedOperationException("Removal of Statistics elements is not allowed");
-         }
-      };
+      return new TreeMap<Integer, Long>(this.scCounters.get(operation).asMap()).entrySet().iterator();
    }
 }
