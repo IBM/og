@@ -31,6 +31,12 @@ public class ConcurrencyConfig
    double rampup;
    TimeUnit rampupUnit;
 
+   public ConcurrencyConfig(final double count)
+   {
+      this();
+      this.count = count;
+   }
+
    public ConcurrencyConfig()
    {
       this.type = ConcurrencyType.THREADS;

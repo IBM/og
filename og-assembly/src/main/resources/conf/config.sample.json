@@ -148,7 +148,10 @@
 
 
 // The type of concurrency to use. One of ("iops", "threads").
-
+// "concurrency": 1,
+//
+// or
+//
 // "concurrency": {
 // "type": "threads",
 // "count": 1
