@@ -25,7 +25,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -189,37 +188,19 @@ public class ApacheClient implements Client
          public void run()
          {
             if (immediate)
-               immediateShutdown();
-            else
-               gracefulShutdown();
+               closeSockets();
+
+            shutdownClient();
             future.set(true);
-         }
-
-         private void immediateShutdown()
-         {
-            _logger.info("Issuing immediate shutdown");
-            closeSockets();
-            _logger.info("Issuing shutdownNow call to ExecutorService");
-            ApacheClient.this.executorService.shutdownNow();
-            awaitShutdown(5, TimeUnit.SECONDS);
-         }
-
-         private void gracefulShutdown()
-         {
-            _logger.info("Issuing graceful shutdown");
-            _logger.info("Issuing shutdown call to ExecutorService");
-            ApacheClient.this.executorService.shutdown();
-            awaitShutdown(1, TimeUnit.HOURS);
-            if (!ApacheClient.this.executorService.isTerminated())
-               immediateShutdown();
          }
 
          private void closeSockets()
          {
             try
             {
-               _logger.info("Attempting to close connection pool");
+               _logger.info("Attempting to close client connection pool");
                ApacheClient.this.client.close();
+               _logger.info("Client connection pool is closed");
             }
             catch (final IOException e)
             {
@@ -227,20 +208,31 @@ public class ApacheClient implements Client
             }
          }
 
+         private void shutdownClient()
+         {
+            _logger.info("Issuing client shutdown");
+            ApacheClient.this.executorService.shutdown();
+            while (!ApacheClient.this.executorService.isTerminated())
+            {
+               awaitShutdown(1, TimeUnit.HOURS);
+            }
+            _logger.info("Client is shutdown");
+         }
+
          private void awaitShutdown(final long timeout, final TimeUnit unit)
          {
             try
             {
-               _logger.info("Awaiting ExecutorService termination for {} {}", timeout, unit);
+               _logger.info("Awaiting client executor service termination for {} {}", timeout, unit);
                final boolean result =
                      ApacheClient.this.executorService.awaitTermination(timeout, unit);
-               _logger.info("ExecutorService termination result [{}]", result
+               _logger.info("Client executor service termination result [{}]", result
                      ? "success"
                      : "failure");
             }
             catch (final InterruptedException e)
             {
-               _logger.error("Interrupted while waiting for executor service termination", e);
+               _logger.error("Interrupted while waiting for client executor service termination", e);
             }
          }
       };
@@ -253,7 +245,6 @@ public class ApacheClient implements Client
       private final ResponseBodyConsumer consumer;
 
       private final byte[] buf;
-      private final ByteBuffer byteBuf;
       final Gson gson;
       private final boolean chunkedEncoding;
       private final long writeThroughput;
@@ -275,7 +266,6 @@ public class ApacheClient implements Client
          this.consumer = consumer;
          // TODO inject buf size from config
          this.buf = new byte[4096];
-         this.byteBuf = ByteBuffer.allocate(4096);
          this.gson = gson;
          this.chunkedEncoding = chunkedEncoding;
          this.writeThroughput = writeThroughput;
