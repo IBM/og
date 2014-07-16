@@ -52,7 +52,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.LongSerializationPolicy;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.ProvisionException;
 import com.google.inject.Stage;
 import com.martiansoftware.jsap.JSAPResult;
 
@@ -104,7 +103,7 @@ public class OG extends AbstractCLI
          _summaryJsonLogger.info(gson.toJson(summary.getSummaryStats()));
 
       }
-      catch (final ProvisionException e)
+      catch (final Exception e)
       {
          shutdownObjectManager(objectManager);
          _consoleLogger.error("Error provisioning dependencies. Check application log for details");
