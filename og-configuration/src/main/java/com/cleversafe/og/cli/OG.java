@@ -33,6 +33,8 @@ import com.cleversafe.og.guice.JsonModule;
 import com.cleversafe.og.guice.OGModule;
 import com.cleversafe.og.json.JsonConfig;
 import com.cleversafe.og.json.type.CaseInsensitiveEnumTypeAdapterFactory;
+import com.cleversafe.og.json.type.FilesizeConfigListTypeAdapterFactory;
+import com.cleversafe.og.json.type.FilesizeConfigTypeAdapterFactory;
 import com.cleversafe.og.json.type.HostConfigListTypeAdapterFactory;
 import com.cleversafe.og.json.type.HostConfigTypeAdapterFactory;
 import com.cleversafe.og.json.type.OperationConfigTypeAdapterFactory;
@@ -147,6 +149,8 @@ public class OG extends AbstractCLI
             .registerTypeAdapterFactory(new OperationConfigTypeAdapterFactory())
             .registerTypeAdapterFactory(new HostConfigTypeAdapterFactory())
             .registerTypeAdapterFactory(new HostConfigListTypeAdapterFactory())
+            .registerTypeAdapterFactory(new FilesizeConfigTypeAdapterFactory())
+            .registerTypeAdapterFactory(new FilesizeConfigListTypeAdapterFactory())
             .setPrettyPrinting()
             .create();
    }

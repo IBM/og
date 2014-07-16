@@ -113,24 +113,26 @@
 //
 // Distribution is one of ("uniform", "normal", "lognormal")
 //
-// Example1 A single, constant file size of 10 kilobytes.
-// "filesize": [
-// {
+// Example1 A single, constant file size of 15.5 mebibytes
+// "filesize": 15.5,
+//
+// Example2 A single, constant file size of 10 kilobytes.
+// "filesize": {
 // "average": 10,
 // "average_unit": "kb"
-// }
-// ],
+// },
+//
+// Example3 Multiple file sizes
+// "filesize": [{"average": 5.5, "average_unit": "kb", "weight": 2.0}, 75.0]
 
-// "filesize": [
-// {
+// "filesize": {
 // "distribution": "uniform",
 // "average": 5.0,
 // "average_unit": "mebibytes",
 // "spread": 0.0,
 // "spread_unit": "mebibytes",
 // "weight": 1
-// }
-// ],
+// },
 
 
 // The generated source data to use for writes. One of ("random", "zeroes")
