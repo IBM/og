@@ -33,6 +33,7 @@ import com.cleversafe.og.guice.JsonModule;
 import com.cleversafe.og.guice.OGModule;
 import com.cleversafe.og.json.JsonConfig;
 import com.cleversafe.og.json.type.CaseInsensitiveEnumTypeAdapterFactory;
+import com.cleversafe.og.json.type.OperationConfigTypeAdapterFactory;
 import com.cleversafe.og.json.type.SizeUnitTypeAdapter;
 import com.cleversafe.og.json.type.TimeUnitTypeAdapter;
 import com.cleversafe.og.object.manager.ObjectManager;
@@ -141,6 +142,7 @@ public class OG extends AbstractCLI
             // CaseInsensitiveEnumTypeAdapterFactory in order to override the registration
             .registerTypeAdapter(SizeUnit.class, new SizeUnitTypeAdapter().nullSafe())
             .registerTypeAdapter(TimeUnit.class, new TimeUnitTypeAdapter().nullSafe())
+            .registerTypeAdapterFactory(new OperationConfigTypeAdapterFactory())
             .setPrettyPrinting()
             .create();
    }

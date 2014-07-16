@@ -33,6 +33,12 @@ public class OperationConfig
    List<String> hosts;
    Map<String, String> headers;
 
+   public OperationConfig(final double weight)
+   {
+      this();
+      this.weight = weight;
+   }
+
    public OperationConfig()
    {
       this.weight = 0.0;
