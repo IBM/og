@@ -42,6 +42,7 @@ public class JsonConfig
    OperationConfig write;
    OperationConfig read;
    OperationConfig delete;
+   CollectionAlgorithmType filesizeSelection;
    List<FilesizeConfig> filesize;
    EntityType source;
    ConcurrencyConfig concurrency;
@@ -63,6 +64,7 @@ public class JsonConfig
       this.write = new OperationConfig();
       this.read = new OperationConfig();
       this.delete = new OperationConfig();
+      this.filesizeSelection = CollectionAlgorithmType.RANDOM;
       this.filesize = new ArrayList<FilesizeConfig>();
       this.filesize.add(new FilesizeConfig());
       this.source = EntityType.RANDOM;
@@ -126,6 +128,11 @@ public class JsonConfig
    public OperationConfig getDelete()
    {
       return this.delete;
+   }
+
+   public CollectionAlgorithmType getFilesizeSelection()
+   {
+      return this.filesizeSelection;
    }
 
    public List<FilesizeConfig> getFilesize()

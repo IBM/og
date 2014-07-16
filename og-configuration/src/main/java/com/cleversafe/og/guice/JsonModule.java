@@ -360,27 +360,23 @@ public class JsonModule extends AbstractModule
    @TestEntity
    public Producer<Entity> provideTestEntity()
    {
+      if (CollectionAlgorithmType.ROUNDROBIN == this.config.getFilesizeSelection())
+      {
+         final List<Distribution> distributions = new ArrayList<Distribution>();
+         for (final FilesizeConfig f : this.config.getFilesize())
+         {
+            distributions.add(createSizeDistribution(f));
+         }
+         return createEntityProducer(Producers.cycle(distributions));
+      }
+
       final RandomChoiceProducer.Builder<Distribution> wrc =
             new RandomChoiceProducer.Builder<Distribution>();
       for (final FilesizeConfig f : this.config.getFilesize())
       {
          wrc.withChoice(createSizeDistribution(f), f.getWeight());
       }
-
-      final JsonConfig jsonConfig = this.config;
-      return new Producer<Entity>()
-      {
-         private final Producer<Distribution> sizes = wrc.build();
-
-         @Override
-         public Entity produce()
-         {
-            if (EntityType.ZEROES == jsonConfig.getSource())
-               return Entities.zeroes((long) this.sizes.produce().nextSample());
-            else
-               return Entities.random((long) this.sizes.produce().nextSample());
-         }
-      };
+      return createEntityProducer(wrc.build());
    }
 
    private static Distribution createSizeDistribution(final FilesizeConfig filesize)
@@ -392,6 +388,25 @@ public class JsonModule extends AbstractModule
       else if (DistributionType.LOGNORMAL == filesize.getDistribution())
          return new LogNormalDistribution(average, spread);
       return new UniformDistribution(average, spread);
+   }
+
+   private Producer<Entity> createEntityProducer(final Producer<Distribution> distributionProducer)
+   {
+      final JsonConfig jsonConfig = this.config;
+
+      return new Producer<Entity>()
+      {
+         @Override
+         public Entity produce()
+         {
+            final long sample = (long) distributionProducer.produce().nextSample();
+
+            if (EntityType.ZEROES == jsonConfig.getSource())
+               return Entities.zeroes(sample);
+            else
+               return Entities.random(sample);
+         }
+      };
    }
 
    // TODO simplify this method if possible

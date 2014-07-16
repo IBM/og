@@ -106,6 +106,13 @@
 // },
 
 
+// the selection policy to use when determining which file size to use for the
+// next request. One of ("random", "roundrobin"). Ignored if only one file size
+// is specified.
+
+// "filesize_selection": "random",
+
+
 // File size(s) to use for write operations. File sizes are described in terms
 // of a mathematical distribution. If multiple distributions are configured, a
 // distribution is randomly selected on a per-request basis based on the
