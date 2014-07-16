@@ -65,12 +65,11 @@ import com.cleversafe.og.test.condition.StatusCodeCondition;
 import com.cleversafe.og.test.condition.TestCondition;
 import com.cleversafe.og.test.operation.manager.SimpleOperationManager;
 import com.cleversafe.og.util.Operation;
+import com.cleversafe.og.util.ResponseBodyConsumer;
 import com.cleversafe.og.util.Version;
-import com.cleversafe.og.util.consumer.ByteBufferConsumer;
 import com.cleversafe.og.util.producer.CachingProducer;
 import com.cleversafe.og.util.producer.Producer;
 import com.cleversafe.og.util.producer.RandomChoiceProducer;
-import com.google.common.base.Function;
 import com.google.common.eventbus.EventBus;
 import com.google.common.math.DoubleMath;
 import com.google.inject.AbstractModule;
@@ -164,9 +163,9 @@ public class OGModule extends AbstractModule
    public Client provideClient(
          final ClientConfig clientConfig,
          final HttpAuth authentication,
-         final Function<String, ByteBufferConsumer> byteBufferConsumers)
+         final Map<String, ResponseBodyConsumer> responseBodyConsumers)
    {
-      return new ApacheClient.Builder(byteBufferConsumers)
+      return new ApacheClient.Builder(responseBodyConsumers)
             .withConnectTimeout(clientConfig.getConnectTimeout())
             .withSoTimeout(clientConfig.getSoTimeout())
             .usingSoReuseAddress(clientConfig.isSoReuseAddress())

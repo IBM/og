@@ -61,14 +61,12 @@ import com.cleversafe.og.operation.Entity;
 import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
-import com.cleversafe.og.soh.object.consumer.SOHWriteByteBufferConsumer;
-import com.cleversafe.og.util.ByteBufferConsumers;
+import com.cleversafe.og.soh.SOHWriteResponseBodyConsumer;
 import com.cleversafe.og.util.Entities;
-import com.cleversafe.og.util.consumer.ByteBufferConsumer;
+import com.cleversafe.og.util.ResponseBodyConsumer;
 import com.cleversafe.og.util.producer.CachingProducer;
 import com.cleversafe.og.util.producer.Producer;
 import com.cleversafe.og.util.producer.Producers;
-import com.google.common.base.Function;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -271,19 +269,12 @@ public class ApiModule extends AbstractModule
 
    @Provides
    @Singleton
-   public Function<String, ByteBufferConsumer> provideByteBufferConsumers()
+   public Map<String, ResponseBodyConsumer> provideResponseBodyConsumers()
    {
-      return new Function<String, ByteBufferConsumer>()
-      {
-         @Override
-         public ByteBufferConsumer apply(final String input)
-         {
-            if (SOH_PUT_OBJECT.equals(input))
-            {
-               return new SOHWriteByteBufferConsumer();
-            }
-            return ByteBufferConsumers.noOp();
-         }
-      };
+      final Map<String, ResponseBodyConsumer> consumers =
+            new HashMap<String, ResponseBodyConsumer>();
+      consumers.put(SOH_PUT_OBJECT, new SOHWriteResponseBodyConsumer());
+
+      return consumers;
    }
 }

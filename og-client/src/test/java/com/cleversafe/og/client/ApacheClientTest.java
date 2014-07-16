@@ -34,14 +34,11 @@ import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -62,12 +59,11 @@ import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.Entities;
+import com.cleversafe.og.util.ResponseBodyConsumer;
 import com.cleversafe.og.util.SizeUnit;
-import com.cleversafe.og.util.consumer.ByteBufferConsumer;
 import com.github.tomakehurst.wiremock.client.RequestPatternBuilder;
 import com.github.tomakehurst.wiremock.http.RequestMethod;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
-import com.google.common.base.Function;
 
 public class ApacheClientTest
 {
@@ -76,7 +72,7 @@ public class ApacheClientTest
 
    @Rule
    public WireMockClassRule wireMockRule = WIREMOCK_RULE;
-   private Function<String, ByteBufferConsumer> byteBufferConsumers;
+   private Map<String, ResponseBodyConsumer> responseBodyConsumers;
    private Client client;
    private URI objectUri;
    private URI delayedUri;
@@ -84,15 +80,10 @@ public class ApacheClientTest
    private List<Integer> redirectStatuses;
 
    @Before()
-   @SuppressWarnings("unchecked")
    public void before() throws URISyntaxException
    {
-      this.byteBufferConsumers = mock(Function.class);
-      final ByteBufferConsumer mockConsumer = mock(ByteBufferConsumer.class);
-      final Map<String, String> map = Collections.emptyMap();
-      when(mockConsumer.metadata()).thenReturn(map.entrySet().iterator());
-      when(this.byteBufferConsumers.apply(any(String.class))).thenReturn(mockConsumer);
-      this.client = new ApacheClient.Builder(this.byteBufferConsumers).build();
+      this.responseBodyConsumers = new HashMap<String, ResponseBodyConsumer>();
+      this.client = new ApacheClient.Builder(this.responseBodyConsumers).build();
 
       // write
       stubFor(put(urlMatching("/container/.*")).willReturn(
@@ -143,118 +134,118 @@ public class ApacheClientTest
    @Test(expected = IllegalArgumentException.class)
    public void testNegativeConnectTimeout()
    {
-      new ApacheClient.Builder(this.byteBufferConsumers).withConnectTimeout(-1).build();
+      new ApacheClient.Builder(this.responseBodyConsumers).withConnectTimeout(-1).build();
    }
 
    @Test
    public void testZeroConnectTimeout()
    {
-      new ApacheClient.Builder(this.byteBufferConsumers).withConnectTimeout(0).build();
+      new ApacheClient.Builder(this.responseBodyConsumers).withConnectTimeout(0).build();
    }
 
    @Test
    public void testPositiveConnectTimeout()
    {
-      new ApacheClient.Builder(this.byteBufferConsumers).withConnectTimeout(1).build();
+      new ApacheClient.Builder(this.responseBodyConsumers).withConnectTimeout(1).build();
    }
 
    @Test(expected = IllegalArgumentException.class)
    public void testNegativeSoTimeout()
    {
-      new ApacheClient.Builder(this.byteBufferConsumers).withSoTimeout(-1).build();
+      new ApacheClient.Builder(this.responseBodyConsumers).withSoTimeout(-1).build();
    }
 
    @Test
    public void testZeroSoTimeout()
    {
-      new ApacheClient.Builder(this.byteBufferConsumers).withSoTimeout(0).build();
+      new ApacheClient.Builder(this.responseBodyConsumers).withSoTimeout(0).build();
    }
 
    @Test
    public void testPositiveSoTimeout()
    {
-      new ApacheClient.Builder(this.byteBufferConsumers).withSoTimeout(1).build();
+      new ApacheClient.Builder(this.responseBodyConsumers).withSoTimeout(1).build();
    }
 
    // TODO verify reuse address?
    @Test
    public void testSoReuseAddress()
    {
-      new ApacheClient.Builder(this.byteBufferConsumers).usingSoReuseAddress(true).build();
+      new ApacheClient.Builder(this.responseBodyConsumers).usingSoReuseAddress(true).build();
    }
 
    @Test
    public void testNoSoReuseAddress()
    {
-      new ApacheClient.Builder(this.byteBufferConsumers).usingSoReuseAddress(false).build();
+      new ApacheClient.Builder(this.responseBodyConsumers).usingSoReuseAddress(false).build();
    }
 
    @Test(expected = IllegalArgumentException.class)
    public void testNegativeSoLinger()
    {
-      new ApacheClient.Builder(this.byteBufferConsumers).withSoLinger(-2).build();
+      new ApacheClient.Builder(this.responseBodyConsumers).withSoLinger(-2).build();
    }
 
    @Test
    public void testNegativeSoLinger2()
    {
-      new ApacheClient.Builder(this.byteBufferConsumers).withSoLinger(-1).build();
+      new ApacheClient.Builder(this.responseBodyConsumers).withSoLinger(-1).build();
    }
 
    @Test
    public void testZeroSoLinger()
    {
-      new ApacheClient.Builder(this.byteBufferConsumers).withSoLinger(0).build();
+      new ApacheClient.Builder(this.responseBodyConsumers).withSoLinger(0).build();
    }
 
    @Test
    public void testPositiveSoLinger()
    {
-      new ApacheClient.Builder(this.byteBufferConsumers).withSoLinger(1).build();
+      new ApacheClient.Builder(this.responseBodyConsumers).withSoLinger(1).build();
    }
 
    // TODO verify so keepalive?
    @Test
    public void testSoKeepAlive()
    {
-      new ApacheClient.Builder(this.byteBufferConsumers).usingSoKeepAlive(true).build();
+      new ApacheClient.Builder(this.responseBodyConsumers).usingSoKeepAlive(true).build();
    }
 
    @Test
    public void testNoSoKeepAlive()
    {
-      new ApacheClient.Builder(this.byteBufferConsumers).usingSoKeepAlive(false).build();
+      new ApacheClient.Builder(this.responseBodyConsumers).usingSoKeepAlive(false).build();
    }
 
    // TODO verify tcp nodelay?
    @Test
    public void testTcpNoDelay()
    {
-      new ApacheClient.Builder(this.byteBufferConsumers).usingTcpNoDelay(true).build();
+      new ApacheClient.Builder(this.responseBodyConsumers).usingTcpNoDelay(true).build();
    }
 
    @Test
    public void testNoTcpNoDelay()
    {
-      new ApacheClient.Builder(this.byteBufferConsumers).usingTcpNoDelay(false).build();
+      new ApacheClient.Builder(this.responseBodyConsumers).usingTcpNoDelay(false).build();
    }
 
    @Test(expected = IllegalArgumentException.class)
    public void testNegativeWaitForContinue()
    {
-      new ApacheClient.Builder(this.byteBufferConsumers).withWaitForContinue(-1).build();
+      new ApacheClient.Builder(this.responseBodyConsumers).withWaitForContinue(-1).build();
    }
 
    @Test(expected = IllegalArgumentException.class)
    public void testZeroWaitForContinue()
    {
-      new ApacheClient.Builder(this.byteBufferConsumers).withWaitForContinue(0).build();
+      new ApacheClient.Builder(this.responseBodyConsumers).withWaitForContinue(0).build();
    }
 
    @Test
    public void testPositiveWaitForContinue()
    {
-      new ApacheClient.Builder(this.byteBufferConsumers).withWaitForContinue(1).build();
+      new ApacheClient.Builder(this.responseBodyConsumers).withWaitForContinue(1).build();
    }
 
    @Test
@@ -346,7 +337,7 @@ public class ApacheClientTest
    @Test
    public void testContentLength() throws InterruptedException, ExecutionException
    {
-      final Client client = new ApacheClient.Builder(this.byteBufferConsumers)
+      final Client client = new ApacheClient.Builder(this.responseBodyConsumers)
             .usingChunkedEncoding(false)
             .build();
       final Request request = new HttpRequest.Builder(Method.PUT, this.objectUri)
@@ -361,7 +352,7 @@ public class ApacheClientTest
    @Test
    public void testChunkedEncoding() throws InterruptedException, ExecutionException
    {
-      final Client client = new ApacheClient.Builder(this.byteBufferConsumers)
+      final Client client = new ApacheClient.Builder(this.responseBodyConsumers)
             .usingChunkedEncoding(true)
             .build();
       final Request request = new HttpRequest.Builder(Method.PUT, this.objectUri)
@@ -376,7 +367,7 @@ public class ApacheClientTest
    @Test
    public void testExpect100Continue() throws InterruptedException, ExecutionException
    {
-      final Client client = new ApacheClient.Builder(this.byteBufferConsumers)
+      final Client client = new ApacheClient.Builder(this.responseBodyConsumers)
             .usingExpectContinue(true)
             .build();
       final Request request = new HttpRequest.Builder(Method.PUT, this.objectUri)
@@ -390,7 +381,7 @@ public class ApacheClientTest
    @Test
    public void testNoExpect100Continue() throws InterruptedException, ExecutionException
    {
-      final Client client = new ApacheClient.Builder(this.byteBufferConsumers)
+      final Client client = new ApacheClient.Builder(this.responseBodyConsumers)
             .usingExpectContinue(false)
             .build();
       final Request request = new HttpRequest.Builder(Method.PUT, this.objectUri)
@@ -404,7 +395,7 @@ public class ApacheClientTest
    @Test
    public void testAuthentication() throws InterruptedException, ExecutionException
    {
-      final Client client = new ApacheClient.Builder(this.byteBufferConsumers)
+      final Client client = new ApacheClient.Builder(this.responseBodyConsumers)
             .withAuthentication(new BasicAuth())
             .build();
       final Request request = new HttpRequest.Builder(Method.GET, this.objectUri)
@@ -428,7 +419,7 @@ public class ApacheClientTest
    @Test
    public void testUserAgent() throws InterruptedException, ExecutionException
    {
-      final Client client = new ApacheClient.Builder(this.byteBufferConsumers)
+      final Client client = new ApacheClient.Builder(this.responseBodyConsumers)
             .withUserAgent("testUserAgent")
             .build();
       final Request request = new HttpRequest.Builder(Method.GET, this.objectUri).build();
@@ -449,7 +440,7 @@ public class ApacheClientTest
    @Test
    public void testSoTimeoutExceeded() throws InterruptedException, ExecutionException
    {
-      final Client client = new ApacheClient.Builder(this.byteBufferConsumers)
+      final Client client = new ApacheClient.Builder(this.responseBodyConsumers)
             .withSoTimeout(5)
             .build();
       final Request request =
@@ -523,7 +514,7 @@ public class ApacheClientTest
    private void testWriteRedirect(final Method method, final boolean chunkedEncoding)
          throws InterruptedException, ExecutionException
    {
-      final Client client = new ApacheClient.Builder(this.byteBufferConsumers)
+      final Client client = new ApacheClient.Builder(this.responseBodyConsumers)
             .usingChunkedEncoding(chunkedEncoding)
             .build();
 
@@ -615,7 +606,7 @@ public class ApacheClientTest
       final long size = SizeUnit.KILOBYTES.toBytes(100);
       final long tput = (long) (size * .9);
       final Client client =
-            new ApacheClient.Builder(this.byteBufferConsumers).withWriteThroughput(tput).build();
+            new ApacheClient.Builder(this.responseBodyConsumers).withWriteThroughput(tput).build();
       final Request request =
             new HttpRequest.Builder(Method.PUT, this.objectUri).withEntity(Entities.zeroes(size)).build();
       final long timestampStart = System.nanoTime();
@@ -636,7 +627,7 @@ public class ApacheClientTest
             ));
 
       final Client client =
-            new ApacheClient.Builder(this.byteBufferConsumers).withReadThroughput(tput).build();
+            new ApacheClient.Builder(this.responseBodyConsumers).withReadThroughput(tput).build();
       final Request request = new HttpRequest.Builder(Method.GET, this.objectUri).build();
       final long timestampStart = System.nanoTime();
       client.execute(request).get();

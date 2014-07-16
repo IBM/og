@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
@@ -58,9 +59,8 @@ import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.Entities;
-import com.cleversafe.og.util.consumer.ByteBufferConsumer;
+import com.cleversafe.og.util.ResponseBodyConsumer;
 import com.cleversafe.og.util.io.Streams;
-import com.google.common.base.Function;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -76,7 +76,7 @@ public class ApacheClient implements Client
    private static final Logger _logger = LoggerFactory.getLogger(ApacheClient.class);
    private static final Logger _requestLogger = LoggerFactory.getLogger("RequestLogger");
    private final CloseableHttpClient client;
-   private final Function<String, ByteBufferConsumer> byteBufferConsumers;
+   private final Map<String, ResponseBodyConsumer> responseBodyConsumers;
    private final ListeningExecutorService executorService;
    private final Gson gson;
    private final HttpAuth authentication;
@@ -86,7 +86,7 @@ public class ApacheClient implements Client
 
    private ApacheClient(final Builder builder)
    {
-      this.byteBufferConsumers = checkNotNull(builder.byteBufferConsumers);
+      this.responseBodyConsumers = checkNotNull(builder.responseBodyConsumers);
 
       // create local copies to prevent builder from changing values between check and use
       final int connectTimeout = builder.connectTimeout;
@@ -162,8 +162,8 @@ public class ApacheClient implements Client
    public ListenableFuture<Response> execute(final Request request)
    {
       checkNotNull(request);
-      final ByteBufferConsumer consumer =
-            this.byteBufferConsumers.apply(request.getMetadata(Metadata.RESPONSE_BODY_PROCESSOR));
+      final ResponseBodyConsumer consumer =
+            this.responseBodyConsumers.get(request.getMetadata(Metadata.RESPONSE_BODY_PROCESSOR));
       return this.executorService.submit(new BlockingHttpOperation(this.client,
             this.authentication, request, consumer, this.gson, this.chunkedEncoding,
             this.writeThroughput, this.readThroughput));
@@ -250,7 +250,7 @@ public class ApacheClient implements Client
       private final CloseableHttpClient client;
       private final HttpAuth auth;
       private final Request request;
-      private final ByteBufferConsumer consumer;
+      private final ResponseBodyConsumer consumer;
 
       private final byte[] buf;
       private final ByteBuffer byteBuf;
@@ -263,7 +263,7 @@ public class ApacheClient implements Client
             final CloseableHttpClient client,
             final HttpAuth auth,
             final Request request,
-            final ByteBufferConsumer consumer,
+            final ResponseBodyConsumer consumer,
             final Gson gson,
             final boolean chunkedEncoding,
             final long writeThroughput,
@@ -424,11 +424,27 @@ public class ApacheClient implements Client
             InputStream in = entity.getContent();
             if (this.readThroughput > 0)
                in = Streams.throttle(in, this.readThroughput);
-            receiveBytes(responseBuilder, in);
+
+            // TODO clean this up, should always try to set response entity to response size;
+            // will InstrumentedInputStream help with this?
+            if (this.consumer != null)
+            {
+               final Iterator<Entry<String, String>> it =
+                     this.consumer.consume(response.getStatusLine().getStatusCode(), in);
+               while (it.hasNext())
+               {
+                  final Entry<String, String> e = it.next();
+                  responseBuilder.withMetadata(e.getKey(), e.getValue());
+               }
+            }
+            else
+            {
+               consumeBytes(responseBuilder, in);
+            }
          }
       }
 
-      private void receiveBytes(
+      private void consumeBytes(
             final HttpResponse.Builder responseBuilder,
             final InputStream responseContent) throws IOException
       {
@@ -437,32 +453,16 @@ public class ApacheClient implements Client
          while ((bytesRead = responseContent.read(this.buf)) > 0)
          {
             totalBytes += bytesRead;
-            processReceivedBytes(bytesRead);
          }
 
          if (totalBytes > 0)
             responseBuilder.withEntity(Entities.zeroes(totalBytes));
-
-         final Iterator<Entry<String, String>> it = this.consumer.metadata();
-         while (it.hasNext())
-         {
-            final Entry<String, String> e = it.next();
-            responseBuilder.withMetadata(e.getKey(), e.getValue());
-         }
-      }
-
-      private void processReceivedBytes(final int bytesRead)
-      {
-         this.byteBuf.put(this.buf, 0, bytesRead);
-         this.byteBuf.flip();
-         this.consumer.consume(this.byteBuf);
-         this.byteBuf.clear();
       }
    }
 
    public static class Builder
    {
-      private final Function<String, ByteBufferConsumer> byteBufferConsumers;
+      private final Map<String, ResponseBodyConsumer> responseBodyConsumers;
       private int connectTimeout;
       private int soTimeout;
       private boolean soReuseAddress;
@@ -477,7 +477,7 @@ public class ApacheClient implements Client
       private long writeThroughput;
       private long readThroughput;
 
-      public Builder(final Function<String, ByteBufferConsumer> byteBufferConsumers)
+      public Builder(final Map<String, ResponseBodyConsumer> responseBodyConsumers)
       {
          this.connectTimeout = 0;
          this.soTimeout = 0;
@@ -490,7 +490,7 @@ public class ApacheClient implements Client
          this.waitForContinue = 3000;
          this.writeThroughput = 0;
          this.readThroughput = 0;
-         this.byteBufferConsumers = byteBufferConsumers;
+         this.responseBodyConsumers = responseBodyConsumers;
       }
 
       public Builder withConnectTimeout(final int connectTimeout)
