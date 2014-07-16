@@ -38,6 +38,7 @@ import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.cleversafe.og.consumer.ObjectNameConsumer;
 import com.cleversafe.og.consumer.WriteObjectNameConsumer;
 import com.cleversafe.og.http.util.HttpUtil;
 import com.cleversafe.og.object.ObjectName;
@@ -48,7 +49,6 @@ import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.Pair;
-import com.cleversafe.og.util.consumer.Consumer;
 import com.cleversafe.og.util.producer.ProducerException;
 
 public class WriteObjectNameConsumerTest
@@ -130,7 +130,7 @@ public class WriteObjectNameConsumerTest
             "5c18be1057404792923dc487ca40f2370000");
       when(this.mockResponse.getStatusCode()).thenReturn(201);
 
-      final Consumer<Pair<Request, Response>> c =
+      final ObjectNameConsumer c =
             new WriteObjectNameConsumer(this.mockObjectManager, this.statusCodes);
 
       c.consume(new Pair<Request, Response>(this.mockRequest, this.mockResponse));
@@ -146,7 +146,7 @@ public class WriteObjectNameConsumerTest
       when(this.mockResponse.getMetadata(Metadata.OBJECT_NAME)).thenReturn(
             "5c18be1057404792923dc487ca40f2370000");
 
-      final Consumer<Pair<Request, Response>> c =
+      final ObjectNameConsumer c =
             new WriteObjectNameConsumer(this.mockObjectManager, this.statusCodes);
 
       c.consume(new Pair<Request, Response>(this.mockRequest, this.mockResponse));
@@ -159,7 +159,7 @@ public class WriteObjectNameConsumerTest
       when(this.mockRequest.getMethod()).thenReturn(Method.PUT);
       when(this.mockResponse.getStatusCode()).thenReturn(500);
 
-      final Consumer<Pair<Request, Response>> c =
+      final ObjectNameConsumer c =
             new WriteObjectNameConsumer(this.mockObjectManager, this.statusCodes);
 
       c.consume(new Pair<Request, Response>(this.mockRequest, this.mockResponse));
@@ -171,7 +171,7 @@ public class WriteObjectNameConsumerTest
    {
       when(this.mockRequest.getMethod()).thenReturn(Method.GET);
 
-      final Consumer<Pair<Request, Response>> c =
+      final ObjectNameConsumer c =
             new WriteObjectNameConsumer(this.mockObjectManager, this.statusCodes);
 
       c.consume(new Pair<Request, Response>(this.mockRequest, this.mockResponse));
@@ -186,7 +186,7 @@ public class WriteObjectNameConsumerTest
       doThrow(new ObjectManagerException()).when(this.mockObjectManager).writeNameComplete(
             any(ObjectName.class));
 
-      final Consumer<Pair<Request, Response>> c =
+      final ObjectNameConsumer c =
             new WriteObjectNameConsumer(this.mockObjectManager, this.statusCodes);
 
       c.consume(new Pair<Request, Response>(this.mockRequest, this.mockResponse));

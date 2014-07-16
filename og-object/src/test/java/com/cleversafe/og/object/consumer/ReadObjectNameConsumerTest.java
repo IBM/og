@@ -36,6 +36,7 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.cleversafe.og.consumer.ObjectNameConsumer;
 import com.cleversafe.og.consumer.ReadObjectNameConsumer;
 import com.cleversafe.og.http.util.HttpUtil;
 import com.cleversafe.og.object.ObjectName;
@@ -46,7 +47,6 @@ import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.Pair;
-import com.cleversafe.og.util.consumer.Consumer;
 import com.cleversafe.og.util.producer.ProducerException;
 
 public class ReadObjectNameConsumerTest
@@ -124,7 +124,7 @@ public class ReadObjectNameConsumerTest
             "5c18be1057404792923dc487ca40f2370000");
       when(this.mockResponse.getStatusCode()).thenReturn(200);
 
-      final Consumer<Pair<Request, Response>> c =
+      final ObjectNameConsumer c =
             new ReadObjectNameConsumer(this.mockObjectManager, this.statusCodes);
 
       c.consume(new Pair<Request, Response>(this.mockRequest, this.mockResponse));
@@ -137,7 +137,7 @@ public class ReadObjectNameConsumerTest
       when(this.mockRequest.getMethod()).thenReturn(Method.GET);
       when(this.mockResponse.getStatusCode()).thenReturn(500);
 
-      final Consumer<Pair<Request, Response>> c =
+      final ObjectNameConsumer c =
             new ReadObjectNameConsumer(this.mockObjectManager, this.statusCodes);
 
       c.consume(new Pair<Request, Response>(this.mockRequest, this.mockResponse));
@@ -149,7 +149,7 @@ public class ReadObjectNameConsumerTest
    {
       when(this.mockRequest.getMethod()).thenReturn(Method.PUT);
 
-      final Consumer<Pair<Request, Response>> c =
+      final ObjectNameConsumer c =
             new ReadObjectNameConsumer(this.mockObjectManager, this.statusCodes);
 
       c.consume(new Pair<Request, Response>(this.mockRequest, this.mockResponse));
@@ -164,7 +164,7 @@ public class ReadObjectNameConsumerTest
       doThrow(new ObjectManagerException()).when(this.mockObjectManager).releaseNameFromRead(
             any(ObjectName.class));
 
-      final Consumer<Pair<Request, Response>> c =
+      final ObjectNameConsumer c =
             new ReadObjectNameConsumer(this.mockObjectManager, this.statusCodes);
 
       c.consume(new Pair<Request, Response>(this.mockRequest, this.mockResponse));

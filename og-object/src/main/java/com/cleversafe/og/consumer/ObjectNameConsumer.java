@@ -34,13 +34,12 @@ import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.Operation;
 import com.cleversafe.og.util.Pair;
-import com.cleversafe.og.util.consumer.Consumer;
 import com.cleversafe.og.util.producer.ProducerException;
 import com.google.common.collect.Iterables;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.io.BaseEncoding;
 
-public abstract class ObjectNameConsumer implements Consumer<Pair<Request, Response>>
+public abstract class ObjectNameConsumer
 {
    protected final ObjectManager objectManager;
    private final Operation operation;
@@ -64,7 +63,6 @@ public abstract class ObjectNameConsumer implements Consumer<Pair<Request, Respo
    }
 
    @Subscribe
-   @Override
    public void consume(final Pair<Request, Response> operation)
    {
       checkNotNull(operation);

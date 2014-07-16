@@ -23,7 +23,9 @@ import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.Map.Entry;
 
-public interface ByteBufferConsumer extends Consumer<ByteBuffer>
+public interface ByteBufferConsumer
 {
+   void consume(final ByteBuffer src);
+
    Iterator<Entry<String, String>> metadata();
 }
