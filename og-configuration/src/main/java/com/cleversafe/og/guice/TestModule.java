@@ -57,13 +57,12 @@ import com.cleversafe.og.http.Scheme;
 import com.cleversafe.og.http.auth.BasicAuth;
 import com.cleversafe.og.http.auth.HttpAuth;
 import com.cleversafe.og.http.util.Api;
-import com.cleversafe.og.json.ClientConfig;
 import com.cleversafe.og.json.ConcurrencyConfig;
 import com.cleversafe.og.json.FilesizeConfig;
 import com.cleversafe.og.json.HostConfig;
-import com.cleversafe.og.json.TestConfig;
 import com.cleversafe.og.json.OperationConfig;
 import com.cleversafe.og.json.StoppingConditionsConfig;
+import com.cleversafe.og.json.TestConfig;
 import com.cleversafe.og.json.enums.AuthType;
 import com.cleversafe.og.json.enums.CollectionAlgorithmType;
 import com.cleversafe.og.json.enums.ConcurrencyType;
@@ -508,11 +507,5 @@ public class TestModule extends AbstractModule
          final Distribution count = new UniformDistribution(concurrency.getCount(), 0.0);
          return new RequestRateScheduler(count, concurrency.getUnit());
       }
-   }
-
-   @Provides
-   public ClientConfig provideClientConfig()
-   {
-      return this.config.getClient();
    }
 }

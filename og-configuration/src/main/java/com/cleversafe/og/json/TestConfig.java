@@ -49,7 +49,6 @@ public class TestConfig
    AuthenticationConfig authentication;
    StoppingConditionsConfig stoppingConditions;
    ObjectManagerConfig objectManager;
-   ClientConfig client;
 
    public TestConfig()
    {
@@ -72,7 +71,6 @@ public class TestConfig
       this.authentication = new AuthenticationConfig();
       this.stoppingConditions = new StoppingConditionsConfig();
       this.objectManager = new ObjectManagerConfig();
-      this.client = new ClientConfig();
    }
 
    public Scheme getScheme()
@@ -165,8 +163,4 @@ public class TestConfig
       return this.objectManager;
    }
 
-   public ClientConfig getClient()
-   {
-      return this.client;
-   }
 }
