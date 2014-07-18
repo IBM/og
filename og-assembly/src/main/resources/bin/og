@@ -14,7 +14,7 @@ fi
 ulimit -n ${ULIMIT}
 
 BASE=`dirname ${0}`
-CP=${BASE}/lib/*:${BASE}/conf/
+CP=${BASE}/lib/*:${BASE}/conf/log4j/og/:${BASE}/conf/
 CLASS='com.cleversafe.og.cli.OG'
 
 # TODO analyze which jvm parameters should be set
