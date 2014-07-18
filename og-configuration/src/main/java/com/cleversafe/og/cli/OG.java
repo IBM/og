@@ -29,8 +29,10 @@ import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.cli.report.Summary;
 import com.cleversafe.og.guice.ApiModule;
-import com.cleversafe.og.guice.TestModule;
+import com.cleversafe.og.guice.ClientModule;
 import com.cleversafe.og.guice.OGModule;
+import com.cleversafe.og.guice.TestModule;
+import com.cleversafe.og.json.ClientConfig;
 import com.cleversafe.og.json.TestConfig;
 import com.cleversafe.og.json.type.CaseInsensitiveEnumTypeAdapterFactory;
 import com.cleversafe.og.json.type.ConcurrencyConfigTypeAdapterFactory;
@@ -63,6 +65,7 @@ public class OG extends AbstractCLI
    private static final Logger _summaryJsonLogger = LoggerFactory.getLogger("SummaryJsonLogger");
    private static final String JSAP_RESOURCE_NAME = "og.jsap";
    private static final String CONFIG_JSON = "config.json";
+   private static final String CLIENT_JSON = "client.json";
    private static final String LINE_SEPARATOR =
          "-------------------------------------------------------------------------------";
 
@@ -75,13 +78,15 @@ public class OG extends AbstractCLI
       final Gson gson = createGson();
       final TestConfig config =
             fromJson(gson, TestConfig.class, jsapResult.getFile("config"), CONFIG_JSON);
+      final ClientConfig clientConfig =
+            fromJson(gson, ClientConfig.class, jsapResult.getFile("client_config"), CLIENT_JSON);
 
       _configJsonLogger.info(gson.toJson(config));
 
       ObjectManager objectManager = null;
       try
       {
-         final Injector injector = createInjector(config);
+         final Injector injector = createInjector(config, clientConfig);
          final Statistics stats = injector.getInstance(Statistics.class);
          objectManager = injector.getInstance(ObjectManager.class);
          final LoadTest test = injector.getInstance(LoadTest.class);
@@ -128,10 +133,11 @@ public class OG extends AbstractCLI
       _consoleLogger.info(banner);
    }
 
-   private static Injector createInjector(final TestConfig config)
+   private static Injector createInjector(final TestConfig config, final ClientConfig clientConfig)
    {
       return Guice.createInjector(Stage.PRODUCTION,
             new TestModule(config),
+            new ClientModule(clientConfig),
             new ApiModule(),
             new OGModule());
    }

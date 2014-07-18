@@ -9,6 +9,14 @@
 			</stringParser>
 			<help>A relative or absolute path to an og configuration file. If not specified, og will search for a config file named "config.json" on the classpath</help>
 		</unflaggedOption>
+		<unflaggedOption>
+			<id>client_config</id>
+			<required>false</required>
+			<stringParser>
+				<classname>FileStringParser</classname>
+			</stringParser>
+			<help>A relative or absolute path to an og client configuration file. If not specified, og will search for a config file named "client.json" on the classpath</help>
+		</unflaggedOption>
 		<switch>
 			<id>version</id>
 			<shortFlag>v</shortFlag>

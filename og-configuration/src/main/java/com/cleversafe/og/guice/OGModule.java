@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
 
-import com.cleversafe.og.client.ApacheClient;
 import com.cleversafe.og.client.Client;
 import com.cleversafe.og.consumer.ObjectNameConsumer;
 import com.cleversafe.og.consumer.ReadObjectNameConsumer;
@@ -43,10 +42,8 @@ import com.cleversafe.og.guice.annotation.TestObjectFileName;
 import com.cleversafe.og.guice.annotation.Write;
 import com.cleversafe.og.guice.annotation.WriteObjectName;
 import com.cleversafe.og.guice.annotation.WriteWeight;
-import com.cleversafe.og.http.auth.HttpAuth;
 import com.cleversafe.og.http.util.Api;
 import com.cleversafe.og.http.util.HttpUtil;
-import com.cleversafe.og.json.ClientConfig;
 import com.cleversafe.og.json.StoppingConditionsConfig;
 import com.cleversafe.og.object.manager.ObjectManager;
 import com.cleversafe.og.object.manager.RandomObjectPopulator;
@@ -65,8 +62,6 @@ import com.cleversafe.og.test.condition.StatusCodeCondition;
 import com.cleversafe.og.test.condition.TestCondition;
 import com.cleversafe.og.test.operation.manager.SimpleOperationManager;
 import com.cleversafe.og.util.Operation;
-import com.cleversafe.og.util.ResponseBodyConsumer;
-import com.cleversafe.og.util.Version;
 import com.cleversafe.og.util.producer.CachingProducer;
 import com.cleversafe.og.util.producer.Producer;
 import com.cleversafe.og.util.producer.RandomChoiceProducer;
@@ -156,30 +151,6 @@ public class OGModule extends AbstractModule
          new RuntimeCondition(test, config.getRuntime(), config.getRuntimeUnit());
 
       return test;
-   }
-
-   @Provides
-   @Singleton
-   public Client provideClient(
-         final ClientConfig clientConfig,
-         final HttpAuth authentication,
-         final Map<String, ResponseBodyConsumer> responseBodyConsumers)
-   {
-      return new ApacheClient.Builder(responseBodyConsumers)
-            .withConnectTimeout(clientConfig.getConnectTimeout())
-            .withSoTimeout(clientConfig.getSoTimeout())
-            .usingSoReuseAddress(clientConfig.isSoReuseAddress())
-            .withSoLinger(clientConfig.getSoLinger())
-            .usingSoKeepAlive(clientConfig.isSoKeepAlive())
-            .usingTcpNoDelay(clientConfig.isTcpNoDelay())
-            .usingChunkedEncoding(clientConfig.isChunkedEncoding())
-            .usingExpectContinue(clientConfig.isExpectContinue())
-            .withWaitForContinue(clientConfig.getWaitForContinue())
-            .withAuthentication(authentication)
-            .withUserAgent(Version.displayVersion())
-            .withWriteThroughput(clientConfig.getWriteThroughput())
-            .withReadThroughput(clientConfig.getReadThroughput())
-            .build();
    }
 
    @Provides
