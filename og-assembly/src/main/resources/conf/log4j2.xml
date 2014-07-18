@@ -1,7 +1,9 @@
+
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration shutdownHook="disable">
 	<Properties>
-		<Property name="log_path">log/${og:datetime}</Property>
+		<Property name="log_path">log</Property>
+		<Property name="test_path">${log_path}/${og:datetime}</Property>
 		<Property name="application.log">application.log</Property>
 		<Property name="request.log">request.log</Property>
 		<Property name="config.json">config.json</Property>
@@ -19,16 +21,16 @@
 			<DefaultRolloverStrategy max="20"/>
 		</RollingRandomAccessFile>
 		<RollingRandomAccessFile name="RequestLog" append="true"
-			fileName="${log_path}/${request.log}"
-			filePattern="${log_path}/${request.log}-%i.gz">
+			fileName="${test_path}/${request.log}"
+			filePattern="${test_path}/${request.log}-%i.gz">
 			<PatternLayout pattern="%m%n" />
 			<SizeBasedTriggeringPolicy size="100MB" />
 			<DefaultRolloverStrategy max="20"/>
 		</RollingRandomAccessFile>
-		<File name="ConfigJson" append="false" fileName="${log_path}/${config.json}">
+		<File name="ConfigJson" append="false" fileName="${test_path}/${config.json}">
 			<PatternLayout pattern="%m%n" />
 		</File>
-		<File name="SummaryJson" append="false" fileName="${log_path}/${summary.json}">
+		<File name="SummaryJson" append="false" fileName="${test_path}/${summary.json}">
 			<PatternLayout pattern="%m%n" />
 		</File>
 	</Appenders>
