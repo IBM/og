@@ -29,7 +29,7 @@ import com.cleversafe.og.http.util.Api;
 import com.cleversafe.og.json.enums.CollectionAlgorithmType;
 import com.cleversafe.og.operation.EntityType;
 
-public class JsonConfig
+public class TestConfig
 {
    Scheme scheme;
    CollectionAlgorithmType hostSelection;
@@ -51,7 +51,7 @@ public class JsonConfig
    ObjectManagerConfig objectManager;
    ClientConfig client;
 
-   public JsonConfig()
+   public TestConfig()
    {
       this.scheme = Scheme.HTTP;
       this.hostSelection = CollectionAlgorithmType.ROUNDROBIN;

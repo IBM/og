@@ -61,7 +61,7 @@ import com.cleversafe.og.json.ClientConfig;
 import com.cleversafe.og.json.ConcurrencyConfig;
 import com.cleversafe.og.json.FilesizeConfig;
 import com.cleversafe.og.json.HostConfig;
-import com.cleversafe.og.json.JsonConfig;
+import com.cleversafe.og.json.TestConfig;
 import com.cleversafe.og.json.OperationConfig;
 import com.cleversafe.og.json.StoppingConditionsConfig;
 import com.cleversafe.og.json.enums.AuthType;
@@ -90,13 +90,13 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 
-public class JsonModule extends AbstractModule
+public class TestModule extends AbstractModule
 {
-   private final JsonConfig config;
+   private final TestConfig config;
    private static final double ERR = Math.pow(0.1, 6);
    private static final Range<Double> PERCENTAGE = Range.closed(0.0, 100.0);
 
-   public JsonModule(final JsonConfig config)
+   public TestModule(final TestConfig config)
    {
       this.config = checkNotNull(config);
    }
@@ -106,7 +106,7 @@ public class JsonModule extends AbstractModule
    {}
 
    @Provides
-   public JsonConfig provideJsonConfig()
+   public TestConfig provideJsonConfig()
    {
       return this.config;
    }
@@ -392,7 +392,7 @@ public class JsonModule extends AbstractModule
 
    private Producer<Entity> createEntityProducer(final Producer<Distribution> distributionProducer)
    {
-      final JsonConfig jsonConfig = this.config;
+      final TestConfig jsonConfig = this.config;
 
       return new Producer<Entity>()
       {

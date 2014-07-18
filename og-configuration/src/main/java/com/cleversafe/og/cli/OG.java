@@ -29,9 +29,9 @@ import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.cli.report.Summary;
 import com.cleversafe.og.guice.ApiModule;
-import com.cleversafe.og.guice.JsonModule;
+import com.cleversafe.og.guice.TestModule;
 import com.cleversafe.og.guice.OGModule;
-import com.cleversafe.og.json.JsonConfig;
+import com.cleversafe.og.json.TestConfig;
 import com.cleversafe.og.json.type.CaseInsensitiveEnumTypeAdapterFactory;
 import com.cleversafe.og.json.type.ConcurrencyConfigTypeAdapterFactory;
 import com.cleversafe.og.json.type.FilesizeConfigListTypeAdapterFactory;
@@ -73,8 +73,8 @@ public class OG extends AbstractCLI
       logBanner();
       _consoleLogger.info("Configuring...");
       final Gson gson = createGson();
-      final JsonConfig config =
-            fromJson(gson, JsonConfig.class, jsapResult.getFile("config"), CONFIG_JSON);
+      final TestConfig config =
+            fromJson(gson, TestConfig.class, jsapResult.getFile("config"), CONFIG_JSON);
 
       _configJsonLogger.info(gson.toJson(config));
 
@@ -128,10 +128,10 @@ public class OG extends AbstractCLI
       _consoleLogger.info(banner);
    }
 
-   private static Injector createInjector(final JsonConfig config)
+   private static Injector createInjector(final TestConfig config)
    {
       return Guice.createInjector(Stage.PRODUCTION,
-            new JsonModule(config),
+            new TestModule(config),
             new ApiModule(),
             new OGModule());
    }
