@@ -5,7 +5,7 @@
 		<Property name="test_path">${log_path}/${og:datetime}</Property>
 		<Property name="application.log">application.log</Property>
 		<Property name="request.log">request.log</Property>
-		<Property name="config.json">config.json</Property>
+		<Property name="test.json">test.json</Property>
 		<Property name="summary.json">summary.json</Property>
 	</Properties>
 	<Appenders>
@@ -26,7 +26,7 @@
 			<SizeBasedTriggeringPolicy size="100MB" />
 			<DefaultRolloverStrategy max="20"/>
 		</RollingRandomAccessFile>
-		<File name="ConfigJson" append="false" fileName="${test_path}/${config.json}">
+		<File name="TestJson" append="false" fileName="${test_path}/${test.json}">
 			<PatternLayout pattern="%m%n" />
 		</File>
 		<File name="SummaryJson" append="false" fileName="${test_path}/${summary.json}">
@@ -37,8 +37,8 @@
 		<Logger name="ConsoleLogger" level="info" additivity="false">
 			<AppenderRef ref="Console" />
 		</Logger>
-		<Logger name="ConfigJsonLogger" level="info" additivity="false">
-			<AppenderRef ref="ConfigJson" />
+		<Logger name="TestJsonLogger" level="info" additivity="false">
+			<AppenderRef ref="TestJson" />
 		</Logger>
 		<Logger name="RequestLogger" level="info" additivity="false">
 			<AppenderRef ref="RequestLog" />

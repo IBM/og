@@ -61,10 +61,10 @@ import com.martiansoftware.jsap.JSAPResult;
 public class OG extends AbstractCLI
 {
    private static final Logger _logger = LoggerFactory.getLogger(OG.class);
-   private static final Logger _configJsonLogger = LoggerFactory.getLogger("ConfigJsonLogger");
+   private static final Logger _testJsonLogger = LoggerFactory.getLogger("TestJsonLogger");
    private static final Logger _summaryJsonLogger = LoggerFactory.getLogger("SummaryJsonLogger");
    private static final String JSAP_RESOURCE_NAME = "og.jsap";
-   private static final String CONFIG_JSON = "config.json";
+   private static final String TEST_JSON = "test.json";
    private static final String CLIENT_JSON = "client.json";
    private static final String LINE_SEPARATOR =
          "-------------------------------------------------------------------------------";
@@ -76,17 +76,17 @@ public class OG extends AbstractCLI
       logBanner();
       _consoleLogger.info("Configuring...");
       final Gson gson = createGson();
-      final TestConfig config =
-            fromJson(gson, TestConfig.class, jsapResult.getFile("config"), CONFIG_JSON);
+      final TestConfig testConfig =
+            fromJson(gson, TestConfig.class, jsapResult.getFile("test_config"), TEST_JSON);
       final ClientConfig clientConfig =
             fromJson(gson, ClientConfig.class, jsapResult.getFile("client_config"), CLIENT_JSON);
 
-      _configJsonLogger.info(gson.toJson(config));
+      _testJsonLogger.info(gson.toJson(testConfig));
 
       ObjectManager objectManager = null;
       try
       {
-         final Injector injector = createInjector(config, clientConfig);
+         final Injector injector = createInjector(testConfig, clientConfig);
          final Statistics stats = injector.getInstance(Statistics.class);
          objectManager = injector.getInstance(ObjectManager.class);
          final LoadTest test = injector.getInstance(LoadTest.class);
@@ -133,10 +133,12 @@ public class OG extends AbstractCLI
       _consoleLogger.info(banner);
    }
 
-   private static Injector createInjector(final TestConfig config, final ClientConfig clientConfig)
+   private static Injector createInjector(
+         final TestConfig testConfig,
+         final ClientConfig clientConfig)
    {
       return Guice.createInjector(Stage.PRODUCTION,
-            new TestModule(config),
+            new TestModule(testConfig),
             new ClientModule(clientConfig),
             new ApiModule(),
             new OGModule());
