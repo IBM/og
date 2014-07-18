@@ -62,6 +62,7 @@ public class OG extends AbstractCLI
 {
    private static final Logger _logger = LoggerFactory.getLogger(OG.class);
    private static final Logger _testJsonLogger = LoggerFactory.getLogger("TestJsonLogger");
+   private static final Logger _clientJsonLogger = LoggerFactory.getLogger("ClientJsonLogger");
    private static final Logger _summaryJsonLogger = LoggerFactory.getLogger("SummaryJsonLogger");
    private static final String JSAP_RESOURCE_NAME = "og.jsap";
    private static final String TEST_JSON = "test.json";
@@ -82,6 +83,7 @@ public class OG extends AbstractCLI
             fromJson(gson, ClientConfig.class, jsapResult.getFile("client_config"), CLIENT_JSON);
 
       _testJsonLogger.info(gson.toJson(testConfig));
+      _clientJsonLogger.info(gson.toJson(clientConfig));
 
       ObjectManager objectManager = null;
       try
