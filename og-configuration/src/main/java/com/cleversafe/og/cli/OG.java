@@ -154,8 +154,8 @@ public class OG extends AbstractCLI
             .registerTypeAdapterFactory(new CaseInsensitiveEnumTypeAdapterFactory())
             // SizeUnit and TimeUnit TypeAdapters must be registered after
             // CaseInsensitiveEnumTypeAdapterFactory in order to override the registration
-            .registerTypeAdapter(SizeUnit.class, new SizeUnitTypeAdapter().nullSafe())
-            .registerTypeAdapter(TimeUnit.class, new TimeUnitTypeAdapter().nullSafe())
+            .registerTypeHierarchyAdapter(SizeUnit.class, new SizeUnitTypeAdapter().nullSafe())
+            .registerTypeHierarchyAdapter(TimeUnit.class, new TimeUnitTypeAdapter().nullSafe())
             .registerTypeAdapterFactory(new OperationConfigTypeAdapterFactory())
             .registerTypeAdapterFactory(new HostConfigTypeAdapterFactory())
             .registerTypeAdapterFactory(new HostConfigListTypeAdapterFactory())
