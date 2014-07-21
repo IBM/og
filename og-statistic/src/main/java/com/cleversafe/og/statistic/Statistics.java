@@ -67,9 +67,6 @@ public class Statistics
       final Operation operation = HttpUtil.toOperation(request.getMethod());
       updateCounter(operation, Counter.OPERATIONS, 1);
       updateCounter(Operation.ALL, Counter.OPERATIONS, 1);
-      final long bytes = getBytes(operation, request, response);
-      updateCounter(operation, Counter.BYTES, bytes);
-      updateCounter(Operation.ALL, Counter.BYTES, bytes);
       if (response.getMetadata(Metadata.ABORTED) != null)
       {
          updateCounter(operation, Counter.ABORTS, 1);
@@ -77,6 +74,9 @@ public class Statistics
       }
       else
       {
+         final long bytes = getBytes(operation, request, response);
+         updateCounter(operation, Counter.BYTES, bytes);
+         updateCounter(Operation.ALL, Counter.BYTES, bytes);
          updateStatusCode(operation, response.getStatusCode());
          updateStatusCode(Operation.ALL, response.getStatusCode());
       }

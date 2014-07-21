@@ -83,18 +83,18 @@ public class StatisticsTest
    @Test
    public void testUpdateAbort()
    {
-      when(this.response.getMetadata(Metadata.ABORTED)).thenReturn("1");
+      when(this.response.getMetadata(Metadata.ABORTED)).thenReturn("");
       this.stats.update(this.operation);
-      assertAll(Operation.WRITE, 1, 1024, 1, 201, 0);
+      assertAll(Operation.WRITE, 1, 0, 1, 201, 0);
    }
 
    @Test
    public void testUpdateAbortMultiple()
    {
-      when(this.response.getMetadata(Metadata.ABORTED)).thenReturn("1");
+      when(this.response.getMetadata(Metadata.ABORTED)).thenReturn("");
       this.stats.update(this.operation);
       this.stats.update(this.operation);
-      assertAll(Operation.WRITE, 2, 2048, 2, 201, 0);
+      assertAll(Operation.WRITE, 2, 0, 2, 201, 0);
    }
 
    @Test
