@@ -22,10 +22,6 @@ package com.cleversafe.og.test;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
@@ -41,9 +37,9 @@ import com.cleversafe.og.operation.manager.OperationManagerException;
 import com.cleversafe.og.scheduling.Scheduler;
 import com.cleversafe.og.util.Pair;
 import com.google.common.eventbus.EventBus;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.MoreExecutors;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 public class LoadTest implements Callable<Boolean>
 {
@@ -52,7 +48,6 @@ public class LoadTest implements Callable<Boolean>
    private final Client client;
    private final Scheduler scheduler;
    private final EventBus eventBus;
-   private final ExecutorService executorService;
    private final AtomicBoolean running;
    private final AtomicBoolean success;
 
@@ -67,8 +62,6 @@ public class LoadTest implements Callable<Boolean>
       this.client = checkNotNull(client);
       this.scheduler = checkNotNull(scheduler);
       this.eventBus = checkNotNull(eventBus);
-      final ThreadFactory fac = new ThreadFactoryBuilder().setNameFormat("test-%d").build();
-      this.executorService = Executors.newCachedThreadPool(fac);
       this.running = new AtomicBoolean(true);
       this.success = new AtomicBoolean(true);
    }
@@ -80,9 +73,9 @@ public class LoadTest implements Callable<Boolean>
       {
          while (this.running.get())
          {
-            final Request nextRequest = this.operationManager.next();
-            final ListenableFuture<Response> future = this.client.execute(nextRequest);
-            future.addListener(getListener(nextRequest, future), this.executorService);
+            final Request request = this.operationManager.next();
+            final ListenableFuture<Response> future = this.client.execute(request);
+            addCallback(request, future);
             this.scheduler.waitForNext();
          }
       }
@@ -93,14 +86,7 @@ public class LoadTest implements Callable<Boolean>
          _logger.error("Exception while producing request", e);
          return this.success.get();
       }
-      finally
-      {
-         final boolean shutdownSuccess =
-               MoreExecutors.shutdownAndAwaitTermination(this.executorService, 5, TimeUnit.SECONDS);
 
-         if (!shutdownSuccess)
-            _logger.error("Error while shutting down executor service");
-      }
       return this.success.get();
    }
 
@@ -109,38 +95,24 @@ public class LoadTest implements Callable<Boolean>
       this.running.set(false);
    }
 
-   private Runnable getListener(final Request request, final ListenableFuture<Response> future)
+   private void addCallback(final Request request, final ListenableFuture<Response> future)
    {
-      return new RequestCallback(request, future);
-   }
-
-   private class RequestCallback implements Runnable
-   {
-      private final Request request;
-      private final ListenableFuture<Response> future;
-
-      public RequestCallback(final Request request, final ListenableFuture<Response> future)
+      Futures.addCallback(future, new FutureCallback<Response>()
       {
-         this.request = request;
-         this.future = future;
-      }
-
-      @Override
-      public void run()
-      {
-         try
+         @Override
+         public void onSuccess(final Response result)
          {
-            final Response response = this.future.get();
-            final Pair<Request, Response> operation =
-                  new Pair<Request, Response>(this.request, response);
+            final Pair<Request, Response> operation = new Pair<Request, Response>(request, result);
             LoadTest.this.eventBus.post(operation);
          }
-         catch (final Exception e)
+
+         @Override
+         public void onFailure(final Throwable t)
          {
             LoadTest.this.success.set(false);
             LoadTest.this.running.set(false);
-            _logger.error("Exception while consuming response", e);
+            _logger.error("Exception while processing operation", t);
          }
-      }
+      });
    }
 }
