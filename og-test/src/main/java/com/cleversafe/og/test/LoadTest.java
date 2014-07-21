@@ -21,7 +21,11 @@ package com.cleversafe.og.test;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 
 import javax.inject.Inject;
 
@@ -29,6 +33,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.client.Client;
+import com.cleversafe.og.http.HttpResponse;
+import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.operation.manager.OperationManager;
@@ -39,6 +45,7 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.Uninterruptibles;
 
 public class LoadTest implements Callable<Boolean>
 {
@@ -49,6 +56,8 @@ public class LoadTest implements Callable<Boolean>
    private final EventBus eventBus;
    private volatile boolean running;
    private volatile boolean success;
+   private final Map<String, ListenableFuture<Response>> activeOperations;
+   private final CountDownLatch completed;
 
    @Inject
    public LoadTest(
@@ -63,6 +72,8 @@ public class LoadTest implements Callable<Boolean>
       this.eventBus = checkNotNull(eventBus);
       this.running = true;
       this.success = true;
+      this.activeOperations = new ConcurrentHashMap<String, ListenableFuture<Response>>();
+      this.completed = new CountDownLatch(1);
    }
 
    @Override
@@ -74,6 +85,8 @@ public class LoadTest implements Callable<Boolean>
          {
             final Request request = this.operationManager.next();
             final ListenableFuture<Response> future = this.client.execute(request);
+            // TODO better key than request_id? make Request hashable?
+            this.activeOperations.put(request.getMetadata(Metadata.REQUEST_ID), future);
             addCallback(request, future);
             this.scheduler.waitForNext();
          }
@@ -83,15 +96,20 @@ public class LoadTest implements Callable<Boolean>
          this.success = false;
          this.running = false;
          _logger.error("Exception while producing request", e);
-         return this.success;
       }
 
+      if (!this.activeOperations.isEmpty())
+         Uninterruptibles.awaitUninterruptibly(this.completed);
       return this.success;
    }
 
    public void stopTest()
    {
       this.running = false;
+      for (final Entry<String, ListenableFuture<Response>> operation : this.activeOperations.entrySet())
+      {
+         operation.getValue().cancel(true);
+      }
    }
 
    private void addCallback(final Request request, final ListenableFuture<Response> future)
@@ -101,16 +119,34 @@ public class LoadTest implements Callable<Boolean>
          @Override
          public void onSuccess(final Response result)
          {
-            final Pair<Request, Response> operation = new Pair<Request, Response>(request, result);
-            LoadTest.this.eventBus.post(operation);
+            removeActiveOperation();
+            postOperation(result);
+
          }
 
          @Override
          public void onFailure(final Throwable t)
          {
+            removeActiveOperation();
             _logger.error("Exception while processing operation", t);
-            LoadTest.this.success = false;
             LoadTest.this.running = false;
+            final HttpResponse response = new HttpResponse.Builder()
+                  .withStatusCode(499)
+                  .withMetadata(Metadata.ABORTED, "")
+                  .build();
+            postOperation(response);
+         }
+
+         private void removeActiveOperation()
+         {
+            LoadTest.this.activeOperations.remove(request.getMetadata(Metadata.REQUEST_ID));
+            if (!LoadTest.this.running && LoadTest.this.activeOperations.isEmpty())
+               LoadTest.this.completed.countDown();
+         }
+
+         private void postOperation(final Response response)
+         {
+            LoadTest.this.eventBus.post(new Pair<Request, Response>(request, response));
          }
       });
    }

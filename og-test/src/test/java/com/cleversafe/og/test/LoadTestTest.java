@@ -35,6 +35,7 @@ import org.junit.Test;
 import com.cleversafe.og.client.Client;
 import com.cleversafe.og.http.HttpRequest;
 import com.cleversafe.og.http.HttpResponse;
+import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
@@ -64,8 +65,12 @@ public class LoadTestTest
    @Before
    public void before() throws OperationManagerException, URISyntaxException
    {
-      this.request = new HttpRequest.Builder(Method.PUT, new URI("http://127.0.0.1")).build();
-      this.response = new HttpResponse.Builder().withStatusCode(200).build();
+      this.request = new HttpRequest.Builder(Method.PUT, new URI("http://127.0.0.1"))
+            .withMetadata(Metadata.REQUEST_ID, "1")
+            .build();
+      this.response = new HttpResponse.Builder().withStatusCode(200)
+            .withMetadata(Metadata.REQUEST_ID, "1")
+            .build();
 
       this.operationManager = mock(OperationManager.class);
       when(this.operationManager.next()).thenReturn(this.request);
