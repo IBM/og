@@ -23,7 +23,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -46,7 +45,6 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.common.util.concurrent.Uninterruptibles;
 
 public class LoadTest implements Callable<Boolean>
 {
@@ -103,16 +101,6 @@ public class LoadTest implements Callable<Boolean>
       }
       finally
       {
-         final ListenableFuture<Boolean> complete = this.client.shutdown(true);
-         try
-         {
-            Uninterruptibles.getUninterruptibly(complete);
-         }
-         catch (final ExecutionException e)
-         {
-            this.success.set(false);
-            _logger.error("Exception while waiting for client shutdown completion", e);
-         }
          final boolean shutdownSuccess =
                MoreExecutors.shutdownAndAwaitTermination(this.executorService, 5, TimeUnit.SECONDS);
 

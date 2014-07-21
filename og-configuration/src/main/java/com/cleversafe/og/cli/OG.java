@@ -21,6 +21,7 @@ package com.cleversafe.og.cli;
 
 import java.util.Locale;
 import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -30,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.cli.report.Summary;
+import com.cleversafe.og.client.Client;
 import com.cleversafe.og.guice.ApiModule;
 import com.cleversafe.og.guice.ClientModule;
 import com.cleversafe.og.guice.OGModule;
@@ -51,6 +53,7 @@ import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.test.LoadTest;
 import com.cleversafe.og.util.SizeUnit;
 import com.cleversafe.og.util.Version;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.google.gson.FieldNamingPolicy;
@@ -92,12 +95,14 @@ public class OG extends AbstractCLI
       ObjectManager objectManager = null;
       ExecutorService executorService = null;
       LoadTest test = null;
+      Client client = null;
       try
       {
          final Injector injector = createInjector(testConfig, clientConfig);
          final Statistics stats = injector.getInstance(Statistics.class);
          objectManager = injector.getInstance(ObjectManager.class);
          test = injector.getInstance(LoadTest.class);
+         client = injector.getInstance(Client.class);
          executorService = Executors.newSingleThreadExecutor();
          final CompletionService<Boolean> completionService =
                new ExecutorCompletionService<Boolean>(executorService);
@@ -108,6 +113,7 @@ public class OG extends AbstractCLI
          completionService.submit(test);
          final boolean success = completionService.take().get();
          final long timestampFinish = System.currentTimeMillis();
+         shutdownClient(client, false);
          MoreExecutors.shutdownAndAwaitTermination(executorService, 5, TimeUnit.SECONDS);
          shutdownObjectManager(objectManager);
 
@@ -124,6 +130,7 @@ public class OG extends AbstractCLI
       }
       catch (final Exception e)
       {
+         shutdownClient(client, true);
          if (test != null)
             test.stopTest();
          MoreExecutors.shutdownAndAwaitTermination(executorService, 1, TimeUnit.HOURS);
@@ -191,6 +198,22 @@ public class OG extends AbstractCLI
          catch (final ObjectManagerException e)
          {
             _consoleLogger.error("Error shutting down object manager", e);
+         }
+      }
+   }
+
+   private static void shutdownClient(final Client client, final boolean immediate)
+   {
+      if (client != null)
+      {
+         final ListenableFuture<Boolean> complete = client.shutdown(immediate);
+         try
+         {
+            Uninterruptibles.getUninterruptibly(complete);
+         }
+         catch (final ExecutionException e)
+         {
+            _logger.error("Exception while waiting for client shutdown completion", e);
          }
       }
    }

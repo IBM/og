@@ -21,6 +21,7 @@ package com.cleversafe.og.test;
 
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -145,7 +146,7 @@ public class LoadTestTest
       when(this.operationManager.next()).thenThrow(new OperationManagerException());
       final boolean success = this.test.call();
       Assert.assertFalse(success);
-      verify(this.client, atLeast(1)).shutdown(true);
+      verify(this.client, never()).shutdown(true);
    }
 
    @Test
@@ -155,6 +156,6 @@ public class LoadTestTest
       Assert.assertTrue(success);
       Assert.assertTrue(this.stats.get(Operation.WRITE, Counter.OPERATIONS) >= 5);
       verify(this.client, atLeast(5)).execute(this.request);
-      verify(this.client, atLeast(1)).shutdown(true);
+      verify(this.client, never()).shutdown(true);
    }
 }
