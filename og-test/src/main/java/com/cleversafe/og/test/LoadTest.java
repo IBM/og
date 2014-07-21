@@ -22,7 +22,6 @@ package com.cleversafe.og.test;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
 
@@ -48,8 +47,8 @@ public class LoadTest implements Callable<Boolean>
    private final Client client;
    private final Scheduler scheduler;
    private final EventBus eventBus;
-   private final AtomicBoolean running;
-   private final AtomicBoolean success;
+   private volatile boolean running;
+   private volatile boolean success;
 
    @Inject
    public LoadTest(
@@ -62,8 +61,8 @@ public class LoadTest implements Callable<Boolean>
       this.client = checkNotNull(client);
       this.scheduler = checkNotNull(scheduler);
       this.eventBus = checkNotNull(eventBus);
-      this.running = new AtomicBoolean(true);
-      this.success = new AtomicBoolean(true);
+      this.running = true;
+      this.success = true;
    }
 
    @Override
@@ -71,7 +70,7 @@ public class LoadTest implements Callable<Boolean>
    {
       try
       {
-         while (this.running.get())
+         while (this.running)
          {
             final Request request = this.operationManager.next();
             final ListenableFuture<Response> future = this.client.execute(request);
@@ -81,18 +80,18 @@ public class LoadTest implements Callable<Boolean>
       }
       catch (final OperationManagerException e)
       {
-         this.success.set(false);
-         this.running.set(false);
+         this.success = false;
+         this.running = false;
          _logger.error("Exception while producing request", e);
-         return this.success.get();
+         return this.success;
       }
 
-      return this.success.get();
+      return this.success;
    }
 
    public void stopTest()
    {
-      this.running.set(false);
+      this.running = false;
    }
 
    private void addCallback(final Request request, final ListenableFuture<Response> future)
@@ -109,9 +108,9 @@ public class LoadTest implements Callable<Boolean>
          @Override
          public void onFailure(final Throwable t)
          {
-            LoadTest.this.success.set(false);
-            LoadTest.this.running.set(false);
             _logger.error("Exception while processing operation", t);
+            LoadTest.this.success = false;
+            LoadTest.this.running = false;
          }
       });
    }
