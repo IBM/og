@@ -27,8 +27,6 @@ import static org.mockito.Mockito.when;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -54,14 +52,13 @@ import com.google.common.util.concurrent.SettableFuture;
 
 public class LoadTestTest
 {
-   private EventBus eventBus;
    private Request request;
    Response response;
    private OperationManager operationManager;
    private Client client;
    private Scheduler scheduler;
+   private EventBus eventBus;
    private Statistics stats;
-   private List<TestCondition> testConditions;
    private LoadTest test;
 
    @Before
@@ -78,66 +75,43 @@ public class LoadTestTest
       future.set(this.response);
       when(this.client.execute(this.request)).thenReturn(future);
 
-      final SettableFuture<Boolean> shutdownFuture = SettableFuture.create();
-      shutdownFuture.set(true);
-      when(this.client.shutdown(true)).thenReturn(shutdownFuture);
-
       this.scheduler = new ConcurrentRequestScheduler(1);
 
-      this.stats = new Statistics();
-
-      this.testConditions = new ArrayList<TestCondition>();
-      this.testConditions.add(new CounterCondition(Operation.WRITE, Counter.OPERATIONS, 5));
-
       this.eventBus = new EventBus();
+
+      this.test = new LoadTest(this.operationManager, this.client, this.scheduler, this.eventBus);
+
+      this.stats = new Statistics();
+      final TestCondition condition =
+            new CounterCondition(Operation.WRITE, Counter.OPERATIONS, 5, this.test, this.stats);
+
       this.eventBus.register(this.scheduler);
       this.eventBus.register(this.stats);
-
-      this.test =
-            new LoadTest(this.eventBus, this.operationManager, this.client, this.scheduler,
-                  this.stats, this.testConditions);
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void testNullEventBus()
-   {
-      new LoadTest(null, this.operationManager, this.client, this.scheduler, this.stats,
-            this.testConditions);
+      this.eventBus.register(condition);
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullOperationManager()
    {
-      new LoadTest(this.eventBus, null, this.client, this.scheduler, this.stats,
-            this.testConditions);
+      new LoadTest(null, this.client, this.scheduler, this.eventBus);
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullClient()
    {
-      new LoadTest(this.eventBus, this.operationManager, null, this.scheduler, this.stats,
-            this.testConditions);
+      new LoadTest(this.operationManager, null, this.scheduler, this.eventBus);
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullScheduler()
    {
-      new LoadTest(this.eventBus, this.operationManager, this.client, null, this.stats,
-            this.testConditions);
+      new LoadTest(this.operationManager, this.client, null, this.eventBus);
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullStatistics()
+   public void testNullEventBus()
    {
-      new LoadTest(this.eventBus, this.operationManager, this.client, this.scheduler, null,
-            this.testConditions);
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void testNullTestConditions()
-   {
-      new LoadTest(this.eventBus, this.operationManager, this.client, this.scheduler, this.stats,
-            null);
+      new LoadTest(this.operationManager, this.client, this.scheduler, null);
    }
 
    @Test

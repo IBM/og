@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
 
-import com.cleversafe.og.client.Client;
 import com.cleversafe.og.consumer.ObjectNameConsumer;
 import com.cleversafe.og.consumer.ReadObjectNameConsumer;
 import com.cleversafe.og.consumer.WriteObjectNameConsumer;
@@ -52,7 +51,6 @@ import com.cleversafe.og.object.producer.ReadObjectNameProducer;
 import com.cleversafe.og.object.producer.UUIDObjectNameProducer;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.manager.OperationManager;
-import com.cleversafe.og.scheduling.Scheduler;
 import com.cleversafe.og.statistic.Counter;
 import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.test.LoadTest;
@@ -80,6 +78,7 @@ public class OGModule extends AbstractModule
    {
       bind(OperationManager.class).to(SimpleOperationManager.class).in(Singleton.class);
       bind(EventBus.class).in(Singleton.class);
+      bind(LoadTest.class).in(Singleton.class);
    }
 
    @Provides
@@ -89,6 +88,43 @@ public class OGModule extends AbstractModule
       final Statistics stats = new Statistics();
       eventBus.register(stats);
       return stats;
+   }
+
+   @Provides
+   @Singleton
+   public List<TestCondition> provideTestConditions(
+         final LoadTest test,
+         final EventBus eventBus,
+         final Statistics stats,
+         final StoppingConditionsConfig config)
+   {
+      final List<TestCondition> conditions = new ArrayList<TestCondition>();
+
+      if (config.getOperations() > 0)
+         conditions.add(new CounterCondition(Operation.ALL, Counter.OPERATIONS,
+               config.getOperations(), test, stats));
+
+      if (config.getAborts() > 0)
+         conditions.add(new CounterCondition(Operation.ALL, Counter.ABORTS, config.getAborts(),
+               test, stats));
+
+      final Map<Integer, Integer> scMap = config.getStatusCodes();
+      for (final Entry<Integer, Integer> sc : scMap.entrySet())
+      {
+         if (sc.getValue() > 0)
+            conditions.add(new StatusCodeCondition(Operation.ALL, sc.getKey(), sc.getValue(), test,
+                  stats));
+      }
+
+      if (config.getRuntime() > 0)
+         conditions.add(new RuntimeCondition(test, config.getRuntime(), config.getRuntimeUnit()));
+
+      for (final TestCondition condition : conditions)
+      {
+         eventBus.register(condition);
+      }
+
+      return conditions;
    }
 
    @Provides
@@ -115,42 +151,6 @@ public class OGModule extends AbstractModule
          wrc.withChoice(delete, deleteWeight);
 
       return wrc.build();
-   }
-
-   @Provides
-   @Singleton
-   LoadTest provideLoadTest(
-         final EventBus eventBus,
-         final OperationManager operationManager,
-         final Client client,
-         final Scheduler scheduler,
-         final Statistics stats,
-         final StoppingConditionsConfig config)
-   {
-      final List<TestCondition> conditions = new ArrayList<TestCondition>();
-
-      if (config.getOperations() > 0)
-         conditions.add(new CounterCondition(Operation.ALL, Counter.OPERATIONS,
-               config.getOperations()));
-
-      if (config.getAborts() > 0)
-         conditions.add(new CounterCondition(Operation.ALL, Counter.ABORTS, config.getAborts()));
-
-      final Map<Integer, Integer> scMap = config.getStatusCodes();
-      for (final Entry<Integer, Integer> sc : scMap.entrySet())
-      {
-         if (sc.getValue() > 0)
-            conditions.add(new StatusCodeCondition(Operation.ALL, sc.getKey(), sc.getValue()));
-      }
-
-      final LoadTest test =
-            new LoadTest(eventBus, operationManager, client, scheduler, stats, conditions);
-
-      // have to create this condition after LoadTest because it triggers LoadTest.stopTest()
-      if (config.getRuntime() > 0)
-         new RuntimeCondition(test, config.getRuntime(), config.getRuntimeUnit());
-
-      return test;
    }
 
    @Provides

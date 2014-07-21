@@ -28,7 +28,6 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.test.LoadTest;
 import com.google.common.util.concurrent.Uninterruptibles;
 
@@ -72,15 +71,14 @@ public class RuntimeConditionTest
    public void testRuntimeCondition()
    {
       final LoadTest test = mock(LoadTest.class);
-      final Statistics stats = mock(Statistics.class);
       final RuntimeCondition c = new RuntimeCondition(test, 1.0, TimeUnit.SECONDS);
-      Assert.assertFalse(c.isTriggered(stats));
+      Assert.assertFalse(c.isTriggered());
       verify(test, never()).stopTest();
       Uninterruptibles.sleepUninterruptibly(500, TimeUnit.MILLISECONDS);
-      Assert.assertFalse(c.isTriggered(stats));
+      Assert.assertFalse(c.isTriggered());
       verify(test, never()).stopTest();
       Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
-      Assert.assertTrue(c.isTriggered(stats));
+      Assert.assertTrue(c.isTriggered());
       verify(test).stopTest();
    }
 }

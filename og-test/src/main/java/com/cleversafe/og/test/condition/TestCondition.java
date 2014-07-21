@@ -19,9 +19,8 @@
 
 package com.cleversafe.og.test.condition;
 
-import com.cleversafe.og.statistic.Statistics;
 
 public interface TestCondition
 {
-   boolean isTriggered(Statistics stats);
+   boolean isTriggered();
 }

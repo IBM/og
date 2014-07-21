@@ -21,13 +21,14 @@ package com.cleversafe.og.test;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,8 +39,6 @@ import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.operation.manager.OperationManager;
 import com.cleversafe.og.operation.manager.OperationManagerException;
 import com.cleversafe.og.scheduling.Scheduler;
-import com.cleversafe.og.statistic.Statistics;
-import com.cleversafe.og.test.condition.TestCondition;
 import com.cleversafe.og.util.Pair;
 import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -49,30 +48,25 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 public class LoadTest implements Callable<Boolean>
 {
    private static final Logger _logger = LoggerFactory.getLogger(LoadTest.class);
-   private final EventBus eventBus;
    private final OperationManager operationManager;
    private final Client client;
    private final Scheduler scheduler;
-   private final Statistics stats;
-   private final List<TestCondition> testConditions;
+   private final EventBus eventBus;
    private final ExecutorService executorService;
    private final AtomicBoolean running;
    private final AtomicBoolean success;
 
+   @Inject
    public LoadTest(
-         final EventBus eventBus,
          final OperationManager operationManager,
          final Client client,
          final Scheduler scheduler,
-         final Statistics stats,
-         final List<TestCondition> testConditions)
+         final EventBus eventBus)
    {
-      this.eventBus = checkNotNull(eventBus);
       this.operationManager = checkNotNull(operationManager);
       this.client = checkNotNull(client);
       this.scheduler = checkNotNull(scheduler);
-      this.stats = checkNotNull(stats);
-      this.testConditions = checkNotNull(testConditions);
+      this.eventBus = checkNotNull(eventBus);
       final ThreadFactory fac = new ThreadFactoryBuilder().setNameFormat("test-%d").build();
       this.executorService = Executors.newCachedThreadPool(fac);
       this.running = new AtomicBoolean(true);
@@ -84,7 +78,7 @@ public class LoadTest implements Callable<Boolean>
    {
       try
       {
-         while (isRunning())
+         while (this.running.get())
          {
             final Request nextRequest = this.operationManager.next();
             final ListenableFuture<Response> future = this.client.execute(nextRequest);
@@ -108,20 +102,6 @@ public class LoadTest implements Callable<Boolean>
             _logger.error("Error while shutting down executor service");
       }
       return this.success.get();
-   }
-
-   private boolean isRunning()
-   {
-      if (!this.running.get())
-         return false;
-
-      for (final TestCondition condition : this.testConditions)
-      {
-         if (condition.isTriggered(this.stats))
-            return false;
-      }
-
-      return true;
    }
 
    public void stopTest()

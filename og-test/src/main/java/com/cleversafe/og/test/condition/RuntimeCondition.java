@@ -27,7 +27,6 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.test.LoadTest;
 import com.google.common.util.concurrent.Uninterruptibles;
 
@@ -61,9 +60,8 @@ public class RuntimeCondition implements TestCondition
    }
 
    @Override
-   public boolean isTriggered(final Statistics stats)
+   public boolean isTriggered()
    {
-      // this method ignores the stats, it is concerned with runtime only
       final long currentRuntime = System.nanoTime() - this.timestampStart;
       if (currentRuntime >= this.runtime)
          return true;
