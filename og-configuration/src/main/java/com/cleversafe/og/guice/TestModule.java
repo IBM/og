@@ -77,6 +77,7 @@ import com.cleversafe.og.util.Entities;
 import com.cleversafe.og.util.distribution.Distribution;
 import com.cleversafe.og.util.distribution.LogNormalDistribution;
 import com.cleversafe.og.util.distribution.NormalDistribution;
+import com.cleversafe.og.util.distribution.PoissonDistribution;
 import com.cleversafe.og.util.distribution.UniformDistribution;
 import com.cleversafe.og.util.producer.Producer;
 import com.cleversafe.og.util.producer.Producers;
@@ -504,7 +505,11 @@ public class TestModule extends AbstractModule
       }
       else
       {
-         final Distribution count = new UniformDistribution(concurrency.getCount(), 0.0);
+         Distribution count;
+         if (DistributionType.POISSON == concurrency.getDistribution())
+            count = new PoissonDistribution(concurrency.getCount());
+         else
+            count = new UniformDistribution(concurrency.getCount(), 0.0);
          return new RequestRateScheduler(count, concurrency.getUnit());
       }
    }

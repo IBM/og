@@ -148,12 +148,14 @@
 
 
 // The type of concurrency to use. One of ("iops", "threads").
+// the distribution to use for iops testing. One of ("uniform", "poisson").
 // "concurrency": 1,
 //
 // or
 //
 // "concurrency": {
 // "type": "threads",
+// "distribution": "uniform"
 // "count": 1
 // },
 

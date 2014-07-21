@@ -22,10 +22,12 @@ package com.cleversafe.og.json;
 import java.util.concurrent.TimeUnit;
 
 import com.cleversafe.og.json.enums.ConcurrencyType;
+import com.cleversafe.og.json.enums.DistributionType;
 
 public class ConcurrencyConfig
 {
    ConcurrencyType type;
+   DistributionType distribution;
    double count;
    TimeUnit unit;
    double rampup;
@@ -40,6 +42,7 @@ public class ConcurrencyConfig
    public ConcurrencyConfig()
    {
       this.type = ConcurrencyType.THREADS;
+      this.distribution = DistributionType.UNIFORM;
       this.count = 1.0;
       this.unit = TimeUnit.SECONDS;
       this.rampup = 0.0;
@@ -49,6 +52,11 @@ public class ConcurrencyConfig
    public ConcurrencyType getType()
    {
       return this.type;
+   }
+
+   public DistributionType getDistribution()
+   {
+      return this.distribution;
    }
 
    public double getCount()
