@@ -143,7 +143,7 @@ public class LoadTestTest
    public void testOperationManagerException() throws OperationManagerException
    {
       when(this.operationManager.next()).thenThrow(new OperationManagerException());
-      final boolean success = this.test.runTest();
+      final boolean success = this.test.call();
       Assert.assertFalse(success);
       verify(this.client, atLeast(1)).shutdown(true);
    }
@@ -151,7 +151,7 @@ public class LoadTestTest
    @Test
    public void testLoadTest()
    {
-      final boolean success = this.test.runTest();
+      final boolean success = this.test.call();
       Assert.assertTrue(success);
       Assert.assertTrue(this.stats.get(Operation.WRITE, Counter.OPERATIONS) >= 5);
       verify(this.client, atLeast(5)).execute(this.request);

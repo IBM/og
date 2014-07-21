@@ -22,6 +22,7 @@ package com.cleversafe.og.test;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -47,7 +48,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.Uninterruptibles;
 
-public class LoadTest
+public class LoadTest implements Callable<Boolean>
 {
    private static final Logger _logger = LoggerFactory.getLogger(LoadTest.class);
    private final EventBus eventBus;
@@ -57,7 +58,6 @@ public class LoadTest
    private final Statistics stats;
    private final List<TestCondition> testConditions;
    private final ExecutorService executorService;
-   private final Thread testThread;
    private final AtomicBoolean running;
    private final AtomicBoolean success;
 
@@ -77,13 +77,12 @@ public class LoadTest
       this.testConditions = checkNotNull(testConditions);
       final ThreadFactory fac = new ThreadFactoryBuilder().setNameFormat("test-%d").build();
       this.executorService = Executors.newCachedThreadPool(fac);
-      // FIXME the whole testThread concept is flawed
-      this.testThread = Thread.currentThread();
       this.running = new AtomicBoolean(true);
       this.success = new AtomicBoolean(true);
    }
 
-   public boolean runTest()
+   @Override
+   public Boolean call()
    {
       try
       {
@@ -140,8 +139,6 @@ public class LoadTest
    public void stopTest()
    {
       this.running.set(false);
-      this.testThread.interrupt();
-      Uninterruptibles.joinUninterruptibly(this.testThread);
    }
 
    private Runnable getListener(final Request request, final ListenableFuture<Response> future)
@@ -175,7 +172,6 @@ public class LoadTest
             LoadTest.this.success.set(false);
             LoadTest.this.running.set(false);
             _logger.error("Exception while consuming response", e);
-            LoadTest.this.testThread.interrupt();
          }
       }
    }

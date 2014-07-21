@@ -19,9 +19,11 @@
 
 package com.cleversafe.og.cli;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.util.Locale;
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -49,6 +51,8 @@ import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.test.LoadTest;
 import com.cleversafe.og.util.SizeUnit;
 import com.cleversafe.og.util.Version;
+import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.Uninterruptibles;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -86,18 +90,25 @@ public class OG extends AbstractCLI
       _clientJsonLogger.info(gson.toJson(clientConfig));
 
       ObjectManager objectManager = null;
+      ExecutorService executorService = null;
+      LoadTest test = null;
       try
       {
          final Injector injector = createInjector(testConfig, clientConfig);
          final Statistics stats = injector.getInstance(Statistics.class);
          objectManager = injector.getInstance(ObjectManager.class);
-         final LoadTest test = injector.getInstance(LoadTest.class);
-         Runtime.getRuntime().addShutdownHook(new ShutdownHook(test));
+         test = injector.getInstance(LoadTest.class);
+         executorService = Executors.newSingleThreadExecutor();
+         final CompletionService<Boolean> completionService =
+               new ExecutorCompletionService<Boolean>(executorService);
+         Runtime.getRuntime().addShutdownHook(new ShutdownHook(Thread.currentThread()));
          _consoleLogger.info("Configured.");
          _consoleLogger.info("Test Running...");
          final long timestampStart = System.currentTimeMillis();
-         final boolean success = test.runTest();
+         completionService.submit(test);
+         final boolean success = completionService.take().get();
          final long timestampFinish = System.currentTimeMillis();
+         MoreExecutors.shutdownAndAwaitTermination(executorService, 5, TimeUnit.SECONDS);
          shutdownObjectManager(objectManager);
 
          if (success)
@@ -113,6 +124,9 @@ public class OG extends AbstractCLI
       }
       catch (final Exception e)
       {
+         if (test != null)
+            test.stopTest();
+         MoreExecutors.shutdownAndAwaitTermination(executorService, 1, TimeUnit.HOURS);
          shutdownObjectManager(objectManager);
          _consoleLogger.error("Error provisioning dependencies. Check application log for details");
          _logger.error("", e);
@@ -183,17 +197,18 @@ public class OG extends AbstractCLI
 
    private static class ShutdownHook extends Thread
    {
-      private final LoadTest test;
+      private final Thread mainThread;
 
-      public ShutdownHook(final LoadTest test)
+      public ShutdownHook(final Thread mainThread)
       {
-         this.test = checkNotNull(test);
+         this.mainThread = mainThread;
       }
 
       @Override
       public void run()
       {
-         this.test.stopTest();
+         this.mainThread.interrupt();
+         Uninterruptibles.joinUninterruptibly(this.mainThread, 1, TimeUnit.MINUTES);
       }
    }
 }
