@@ -60,6 +60,7 @@ import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.Entities;
 import com.cleversafe.og.util.ResponseBodyConsumer;
 import com.cleversafe.og.util.io.Streams;
+import com.google.common.util.concurrent.ForwardingListenableFuture;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -161,11 +162,69 @@ public class ApacheClient implements Client
    public ListenableFuture<Response> execute(final Request request)
    {
       checkNotNull(request);
-      final ResponseBodyConsumer consumer =
-            this.responseBodyConsumers.get(request.getMetadata(Metadata.RESPONSE_BODY_PROCESSOR));
-      return this.executorService.submit(new BlockingHttpOperation(this.client,
-            this.authentication, request, consumer, this.gson, this.chunkedEncoding,
-            this.writeThroughput, this.readThroughput));
+      final HttpUriRequest apacheRequest = createRequest(request);
+      final ListenableFuture<Response> baseFuture =
+            this.executorService.submit(new BlockingHttpOperation(request, apacheRequest));
+
+      return new ForwardingListenableFuture.SimpleForwardingListenableFuture<Response>(baseFuture)
+      {
+         @Override
+         public boolean cancel(final boolean mayInterruptIfRunning)
+         {
+            apacheRequest.abort();
+            return delegate().cancel(mayInterruptIfRunning);
+         }
+      };
+   }
+
+   private HttpUriRequest createRequest(final Request request)
+   {
+      final RequestBuilder builder = RequestBuilder.create(request.getMethod().toString())
+            .setUri(request.getUri());
+
+      if (this.authentication != null)
+         builder.addHeader("Authorization", this.authentication.nextAuthorizationHeader(request));
+
+      final Iterator<Entry<String, String>> headers = request.headers();
+      while (headers.hasNext())
+      {
+         final Entry<String, String> header = headers.next();
+         builder.addHeader(header.getKey(), header.getValue());
+      }
+
+      if (EntityType.NONE != request.getEntity().getType())
+         builder.setEntity(createEntity(request));
+
+      return builder.build();
+   }
+
+   private HttpEntity createEntity(final Request request)
+   {
+      // TODO verify httpclient consumes request entity correctly automatically
+      // TODO may need to implement a custom HttpEntity that returns false for isStreaming call,
+      // if this makes a performance difference
+      final InputStream stream = Streams.create(request.getEntity());
+      final InputStreamEntity entity = new ThrottledEntity(stream, request.getEntity().getSize());
+      // TODO chunk size for chunked encoding is hardcoded to 2048 bytes. Can only be overridden
+      // by implementing a custom connection factory
+      entity.setChunked(this.chunkedEncoding);
+      return entity;
+   }
+
+   class ThrottledEntity extends InputStreamEntity
+   {
+      public ThrottledEntity(final InputStream instream, final long length)
+      {
+         super(instream, length);
+      }
+
+      @Override
+      public void writeTo(OutputStream outstream) throws IOException
+      {
+         if (ApacheClient.this.writeThroughput > 0)
+            outstream = Streams.throttle(outstream, ApacheClient.this.writeThroughput);
+         super.writeTo(outstream);
+      }
    }
 
    @Override
@@ -237,50 +296,24 @@ public class ApacheClient implements Client
          }
       };
    }
-   private static class BlockingHttpOperation implements Callable<Response>
+   private class BlockingHttpOperation implements Callable<Response>
    {
-      private final CloseableHttpClient client;
-      private final HttpAuth auth;
       private final Request request;
-      private final ResponseBodyConsumer consumer;
-
+      private final HttpUriRequest apacheRequest;
       private final byte[] buf;
-      final Gson gson;
-      private final boolean chunkedEncoding;
-      private final long writeThroughput;
-      private final long readThroughput;
 
-      public BlockingHttpOperation(
-            final CloseableHttpClient client,
-            final HttpAuth auth,
-            final Request request,
-            final ResponseBodyConsumer consumer,
-            final Gson gson,
-            final boolean chunkedEncoding,
-            final long writeThroughput,
-            final long readThroughput)
+      public BlockingHttpOperation(final Request request, final HttpUriRequest apacheRequest)
       {
-         this.client = client;
-         this.auth = auth;
          this.request = request;
-         this.consumer = consumer;
+         this.apacheRequest = apacheRequest;
          // TODO inject buf size from config
          this.buf = new byte[4096];
-         this.gson = gson;
-         this.chunkedEncoding = chunkedEncoding;
-         this.writeThroughput = writeThroughput;
-         this.readThroughput = readThroughput;
       }
 
       @Override
       public Response call()
       {
          final long timestampStart = System.currentTimeMillis();
-         final RequestBuilder requestBuilder =
-               RequestBuilder.create(this.request.getMethod().toString());
-         setRequestURI(requestBuilder);
-         setRequestHeaders(requestBuilder);
-         setRequestContent(requestBuilder);
          final HttpResponse.Builder responseBuilder = new HttpResponse.Builder();
          final String requestId = this.request.getMetadata(Metadata.REQUEST_ID);
          if (requestId != null)
@@ -288,7 +321,7 @@ public class ApacheClient implements Client
          final Response response;
          try
          {
-            sendRequest(requestBuilder.build(), responseBuilder);
+            sendRequest(this.apacheRequest, responseBuilder);
          }
          catch (final Exception e)
          {
@@ -298,79 +331,18 @@ public class ApacheClient implements Client
          response = responseBuilder.build();
          final long timestampFinish = System.currentTimeMillis();
 
-         _requestLogger.info(this.gson.toJson(new RequestLogEntry(this.request, response,
-               timestampStart, timestampFinish)));
+         final RequestLogEntry entry =
+               new RequestLogEntry(this.request, response, timestampStart, timestampFinish);
+         _requestLogger.info(ApacheClient.this.gson.toJson(entry));
 
          return response;
-      }
-
-      private void setRequestURI(final RequestBuilder requestBuilder)
-      {
-         requestBuilder.setUri(this.request.getUri());
-      }
-
-      private void setRequestHeaders(final RequestBuilder requestBuilder)
-      {
-         setAuthHeader(requestBuilder);
-         final Iterator<Entry<String, String>> headers = this.request.headers();
-         while (headers.hasNext())
-         {
-            final Entry<String, String> header = headers.next();
-            requestBuilder.addHeader(header.getKey(), header.getValue());
-         }
-      }
-
-      private void setAuthHeader(final RequestBuilder requestBuilder)
-      {
-         if (this.auth != null)
-         {
-            final String authValue = this.auth.nextAuthorizationHeader(this.request);
-            requestBuilder.addHeader("Authorization", authValue);
-         }
-
-      }
-
-      private void setRequestContent(final RequestBuilder requestBuilder)
-      {
-         if (EntityType.NONE != this.request.getEntity().getType())
-            requestBuilder.setEntity(createEntity());
-      }
-
-      private HttpEntity createEntity()
-      {
-         // TODO verify httpclient consumes request entity correctly automatically
-         // TODO may need to implement a custom HttpEntity that returns false for isStreaming call,
-         // if this makes a performance difference
-         final InputStream stream = Streams.create(this.request.getEntity());
-         final InputStreamEntity entity =
-               new ThrottledEntity(stream, this.request.getEntity().getSize());
-         // TODO chunk size for chunked encoding is hardcoded to 2048 bytes. Can only be overridden
-         // by implementing a custom connection factory
-         entity.setChunked(this.chunkedEncoding);
-         return entity;
-      }
-
-      class ThrottledEntity extends InputStreamEntity
-      {
-         public ThrottledEntity(final InputStream instream, final long length)
-         {
-            super(instream, length);
-         }
-
-         @Override
-         public void writeTo(OutputStream outstream) throws IOException
-         {
-            if (BlockingHttpOperation.this.writeThroughput > 0)
-               outstream = Streams.throttle(outstream, BlockingHttpOperation.this.writeThroughput);
-            super.writeTo(outstream);
-         }
       }
 
       private void sendRequest(
             final HttpUriRequest apacheRequest,
             final HttpResponse.Builder responseBuilder) throws IOException
       {
-         this.client.execute(apacheRequest, new ResponseHandler<Void>()
+         ApacheClient.this.client.execute(apacheRequest, new ResponseHandler<Void>()
          {
             @Override
             public Void handleResponse(final org.apache.http.HttpResponse response)
@@ -412,15 +384,19 @@ public class ApacheClient implements Client
          if (entity != null)
          {
             InputStream in = entity.getContent();
-            if (this.readThroughput > 0)
-               in = Streams.throttle(in, this.readThroughput);
+            final long readThroughput = ApacheClient.this.readThroughput;
+            if (readThroughput > 0)
+               in = Streams.throttle(in, readThroughput);
 
             // TODO clean this up, should always try to set response entity to response size;
             // will InstrumentedInputStream help with this?
-            if (this.consumer != null)
+            final String consumerId = this.request.getMetadata(Metadata.RESPONSE_BODY_PROCESSOR);
+            final ResponseBodyConsumer consumer =
+                  ApacheClient.this.responseBodyConsumers.get(consumerId);
+            if (consumer != null)
             {
                final Iterator<Entry<String, String>> it =
-                     this.consumer.consume(response.getStatusLine().getStatusCode(), in);
+                     consumer.consume(response.getStatusLine().getStatusCode(), in);
                while (it.hasNext())
                {
                   final Entry<String, String> e = it.next();
