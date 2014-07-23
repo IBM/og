@@ -329,7 +329,7 @@ public class TestModule extends AbstractModule
    @Singleton
    @WriteHeaders
    public Map<Producer<String>, Producer<String>> testWriteHeaders(
-         final Map<Producer<String>, Producer<String>> headers)
+         @TestHeaders final Map<Producer<String>, Producer<String>> headers)
    {
       return provideHeaders(this.config.getWrite(), headers);
    }
@@ -338,7 +338,7 @@ public class TestModule extends AbstractModule
    @Singleton
    @ReadHeaders
    public Map<Producer<String>, Producer<String>> testReadHeaders(
-         final Map<Producer<String>, Producer<String>> headers)
+         @TestHeaders final Map<Producer<String>, Producer<String>> headers)
    {
       return provideHeaders(this.config.getRead(), headers);
    }
@@ -347,7 +347,7 @@ public class TestModule extends AbstractModule
    @Singleton
    @DeleteHeaders
    public Map<Producer<String>, Producer<String>> testDeleteHeaders(
-         final Map<Producer<String>, Producer<String>> headers)
+         @TestHeaders final Map<Producer<String>, Producer<String>> headers)
    {
       return provideHeaders(this.config.getDelete(), headers);
    }
