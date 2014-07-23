@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -60,6 +61,7 @@ import com.cleversafe.og.http.util.Api;
 import com.cleversafe.og.json.ConcurrencyConfig;
 import com.cleversafe.og.json.FilesizeConfig;
 import com.cleversafe.og.json.HostConfig;
+import com.cleversafe.og.json.ObjectManagerConfig;
 import com.cleversafe.og.json.OperationConfig;
 import com.cleversafe.og.json.StoppingConditionsConfig;
 import com.cleversafe.og.json.TestConfig;
@@ -74,6 +76,7 @@ import com.cleversafe.og.scheduling.ConcurrentRequestScheduler;
 import com.cleversafe.og.scheduling.RequestRateScheduler;
 import com.cleversafe.og.scheduling.Scheduler;
 import com.cleversafe.og.util.Entities;
+import com.cleversafe.og.util.SizeUnit;
 import com.cleversafe.og.util.distribution.Distribution;
 import com.cleversafe.og.util.distribution.LogNormalDistribution;
 import com.cleversafe.og.util.distribution.NormalDistribution;
@@ -106,15 +109,9 @@ public class TestModule extends AbstractModule
    {}
 
    @Provides
-   public TestConfig provideJsonConfig()
-   {
-      return this.config;
-   }
-
-   @Provides
    @Singleton
    @TestId
-   public Producer<String> provideTestIdProducer()
+   public Producer<String> testIdProducer()
    {
       return new Producer<String>()
       {
@@ -131,7 +128,7 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @TestScheme
-   public Producer<Scheme> provideTestScheme()
+   public Producer<Scheme> testScheme()
    {
       return Producers.of(this.config.getScheme());
    }
@@ -139,7 +136,7 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @TestHost
-   public Producer<String> provideTesttHost()
+   public Producer<String> testHost()
    {
       return createHost(this.config.getHostSelection(), this.config.getHost());
    }
@@ -147,7 +144,7 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @WriteHost
-   public Producer<String> provideWriteHost(@TestHost final Producer<String> host)
+   public Producer<String> testWriteHost(@TestHost final Producer<String> host)
    {
       return provideHost(this.config.getWrite(), host);
    }
@@ -155,7 +152,7 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @ReadHost
-   public Producer<String> provideReadHost(@TestHost final Producer<String> host)
+   public Producer<String> testReadHost(@TestHost final Producer<String> host)
    {
       return provideHost(this.config.getRead(), host);
    }
@@ -163,7 +160,7 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @DeleteHost
-   public Producer<String> provideDeleteHost(@TestHost final Producer<String> host)
+   public Producer<String> testDeleteHost(@TestHost final Producer<String> host)
    {
       return provideHost(this.config.getDelete(), host);
    }
@@ -172,45 +169,53 @@ public class TestModule extends AbstractModule
          final OperationConfig operationConfig,
          final Producer<String> testHost)
    {
-      if (operationConfig != null)
-      {
-         final List<HostConfig> operationHosts = operationConfig.getHost();
-         if (operationHosts != null && !operationHosts.isEmpty())
-            return createHost(operationConfig.getHostAlgorithm(), operationHosts);
-      }
+      checkNotNull(operationConfig);
+      checkNotNull(testHost);
+
+      final List<HostConfig> operationHost = operationConfig.getHost();
+      if (operationHost != null && !operationHost.isEmpty())
+         return createHost(operationConfig.getHostAlgorithm(), operationHost);
+
       return testHost;
    }
 
    private Producer<String> createHost(
-         final CollectionAlgorithmType algorithm,
-         final List<HostConfig> hosts)
+         final CollectionAlgorithmType hostSelection,
+         final List<HostConfig> host)
    {
-      if (CollectionAlgorithmType.ROUNDROBIN == algorithm)
+      checkNotNull(hostSelection);
+      checkNotNull(host);
+      checkArgument(!host.isEmpty(), "host must not be empty string");
+      for (final HostConfig h : host)
+      {
+         checkNotNull(h);
+         checkNotNull(h.getHost());
+         checkArgument(h.getHost().length() > 0, "host length must be > 0");
+      }
+
+      if (CollectionAlgorithmType.ROUNDROBIN == hostSelection)
       {
          final List<String> hostList = new ArrayList<String>();
-         for (final HostConfig host : hosts)
+         for (final HostConfig h : host)
          {
-            hostList.add(host.getHost());
+            hostList.add(h.getHost());
          }
          return Producers.cycle(hostList);
       }
 
-      else
+      final RandomChoiceProducer.Builder<String> wrc =
+            new RandomChoiceProducer.Builder<String>();
+      for (final HostConfig h : host)
       {
-         final RandomChoiceProducer.Builder<String> wrc =
-               new RandomChoiceProducer.Builder<String>();
-         for (final HostConfig host : hosts)
-         {
-            wrc.withChoice(host.getHost(), host.getWeight());
-         }
-         return wrc.build();
+         wrc.withChoice(h.getHost(), h.getWeight());
       }
+      return wrc.build();
    }
 
    @Provides
    @Singleton
    @TestPort
-   public Producer<Integer> provideTestPort()
+   public Producer<Integer> testPort()
    {
       if (this.config.getPort() != null)
          return Producers.of(this.config.getPort());
@@ -218,41 +223,42 @@ public class TestModule extends AbstractModule
    }
 
    @Provides
-   public Api provideApi()
+   public Api testApi()
    {
-      return this.config.getApi();
+      return checkNotNull(this.config.getApi());
    }
 
    @Provides
    @Singleton
    @TestUriRoot
-   public Producer<String> provideTestUriRoot()
+   public Producer<String> testUriRoot()
    {
-      if (this.config.getUriRoot() != null)
+      final String uriRoot = this.config.getUriRoot();
+      if (uriRoot != null)
       {
-         final String root = CharMatcher.is('/').trimFrom(this.config.getUriRoot());
+         final String root = CharMatcher.is('/').trimFrom(uriRoot);
          if (root.length() > 0)
             return Producers.of(root);
+         return null;
       }
-      else
-      {
-         return Producers.of(this.config.getApi().toString().toLowerCase());
-      }
-      return null;
+
+      return Producers.of(this.config.getApi().toString().toLowerCase());
    }
 
    @Provides
    @Singleton
    @TestContainer
-   public Producer<String> provideTestContainer()
+   public Producer<String> testContainer()
    {
+      final String container = checkNotNull(this.config.getContainer());
+      checkArgument(container.length() > 0, "container must not be empty string");
       return Producers.of(this.config.getContainer());
    }
 
    @Provides
    @Singleton
    @TestQueryParams
-   public Map<String, String> provideTestQueryParams()
+   public Map<String, String> testQueryParams()
    {
       return new HashMap<String, String>();
    }
@@ -260,30 +266,38 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @TestUsername
-   public Producer<String> provideTestUsername()
+   public Producer<String> testUsername()
    {
-      if (this.config.getAuthentication().getUsername() != null)
-         return Producers.of(this.config.getAuthentication().getUsername());
+      final String username = this.config.getAuthentication().getUsername();
+      if (username != null)
+      {
+         checkArgument(username.length() > 0, "username must not be empty string");
+         return Producers.of(username);
+      }
       return null;
    }
 
    @Provides
    @Singleton
    @TestPassword
-   public Producer<String> provideTestPassword()
+   public Producer<String> testPassword()
    {
-      if (this.config.getAuthentication().getPassword() != null)
-         return Producers.of(this.config.getAuthentication().getPassword());
+      final String password = this.config.getAuthentication().getPassword();
+      if (password != null)
+      {
+         checkArgument(password.length() > 0, "password must not be empty string");
+         return Producers.of(password);
+      }
       return null;
    }
 
    @Provides
    @Singleton
-   public HttpAuth providesTestAuth(
+   public HttpAuth testAuthentication(
          @TestUsername final Producer<String> username,
          @TestPassword final Producer<String> password)
    {
-      final AuthType type = this.config.getAuthentication().getType();
+      final AuthType type = checkNotNull(this.config.getAuthentication().getType());
 
       if (username != null && password != null)
       {
@@ -298,7 +312,7 @@ public class TestModule extends AbstractModule
    }
 
    @Provides
-   public StoppingConditionsConfig provideStoppingConditionsConfig()
+   public StoppingConditionsConfig testStoppingConditionsConfig()
    {
       return this.config.getStoppingConditions();
    }
@@ -306,7 +320,7 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @TestHeaders
-   public Map<Producer<String>, Producer<String>> provideTestHeaders()
+   public Map<Producer<String>, Producer<String>> testHeaders()
    {
       return createHeaders(this.config.getHeaders());
    }
@@ -314,43 +328,51 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @WriteHeaders
-   public Map<Producer<String>, Producer<String>> provideWriteHeaders()
+   public Map<Producer<String>, Producer<String>> testWriteHeaders(
+         final Map<Producer<String>, Producer<String>> headers)
    {
-      return provideHeaders(this.config.getWrite());
+      return provideHeaders(this.config.getWrite(), headers);
    }
 
    @Provides
    @Singleton
    @ReadHeaders
-   public Map<Producer<String>, Producer<String>> provideReadHeaders()
+   public Map<Producer<String>, Producer<String>> testReadHeaders(
+         final Map<Producer<String>, Producer<String>> headers)
    {
-      return provideHeaders(this.config.getRead());
+      return provideHeaders(this.config.getRead(), headers);
    }
 
    @Provides
    @Singleton
    @DeleteHeaders
-   public Map<Producer<String>, Producer<String>> provideDeleteHeaders()
+   public Map<Producer<String>, Producer<String>> testDeleteHeaders(
+         final Map<Producer<String>, Producer<String>> headers)
    {
-      return provideHeaders(this.config.getDelete());
+      return provideHeaders(this.config.getDelete(), headers);
    }
 
    private Map<Producer<String>, Producer<String>> provideHeaders(
-         final OperationConfig operationConfig)
+         final OperationConfig operationConfig,
+         final Map<Producer<String>, Producer<String>> testHeaders)
    {
-      final Map<String, String> headers = this.config.getHeaders();
-      if (operationConfig != null && operationConfig.getHeaders() != null)
-         headers.putAll(this.config.getHeaders());
-      return createHeaders(headers);
+      checkNotNull(operationConfig);
+      checkNotNull(testHeaders);
+
+      final Map<String, String> operationHeaders = operationConfig.getHeaders();
+      if (operationHeaders != null && !operationHeaders.isEmpty())
+         return createHeaders(operationHeaders);
+
+      return testHeaders;
    }
 
    private Map<Producer<String>, Producer<String>> createHeaders(final Map<String, String> headers)
    {
       final Map<Producer<String>, Producer<String>> h =
-            new HashMap<Producer<String>, Producer<String>>();
-      for (final Entry<String, String> e : headers.entrySet())
+            new LinkedHashMap<Producer<String>, Producer<String>>();
+      for (final Entry<String, String> header : checkNotNull(headers.entrySet()))
       {
-         h.put(Producers.of(e.getKey()), Producers.of(e.getValue()));
+         h.put(Producers.of(header.getKey()), Producers.of(header.getValue()));
       }
       return h;
    }
@@ -358,12 +380,17 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @TestEntity
-   public Producer<Entity> provideTestEntity()
+   public Producer<Entity> testEntity()
    {
-      if (CollectionAlgorithmType.ROUNDROBIN == this.config.getFilesizeSelection())
+      final CollectionAlgorithmType filesizeSelection =
+            checkNotNull(this.config.getFilesizeSelection());
+      final List<FilesizeConfig> filesizes = checkNotNull(this.config.getFilesize());
+      checkArgument(!filesizes.isEmpty(), "filesize must not be empty");
+
+      if (CollectionAlgorithmType.ROUNDROBIN == filesizeSelection)
       {
          final List<Distribution> distributions = new ArrayList<Distribution>();
-         for (final FilesizeConfig f : this.config.getFilesize())
+         for (final FilesizeConfig f : filesizes)
          {
             distributions.add(createSizeDistribution(f));
          }
@@ -372,7 +399,7 @@ public class TestModule extends AbstractModule
 
       final RandomChoiceProducer.Builder<Distribution> wrc =
             new RandomChoiceProducer.Builder<Distribution>();
-      for (final FilesizeConfig f : this.config.getFilesize())
+      for (final FilesizeConfig f : filesizes)
       {
          wrc.withChoice(createSizeDistribution(f), f.getWeight());
       }
@@ -381,18 +408,31 @@ public class TestModule extends AbstractModule
 
    private static Distribution createSizeDistribution(final FilesizeConfig filesize)
    {
-      final double average = filesize.getAverage() * filesize.getAverageUnit().toBytes(1);
-      final double spread = filesize.getSpread() * filesize.getSpreadUnit().toBytes(1);
-      if (DistributionType.NORMAL == filesize.getDistribution())
-         return new NormalDistribution(average, spread);
-      else if (DistributionType.LOGNORMAL == filesize.getDistribution())
-         return new LogNormalDistribution(average, spread);
-      return new UniformDistribution(average, spread);
+      final SizeUnit averageUnit = checkNotNull(filesize.getAverageUnit());
+      final SizeUnit spreadUnit = checkNotNull(filesize.getSpreadUnit());
+      final DistributionType distribution = checkNotNull(filesize.getDistribution());
+
+      final double average = filesize.getAverage() * averageUnit.toBytes(1);
+      final double spread = filesize.getSpread() * spreadUnit.toBytes(1);
+
+      switch (distribution)
+      {
+         case NORMAL :
+            return new NormalDistribution(average, spread);
+         case LOGNORMAL :
+            return new LogNormalDistribution(average, spread);
+         case UNIFORM :
+            return new UniformDistribution(average, spread);
+         default :
+            throw new IllegalArgumentException(String.format(
+                  "Unacceptable filesize distribution [%s]", distribution));
+      }
    }
 
    private Producer<Entity> createEntityProducer(final Producer<Distribution> distributionProducer)
    {
-      final TestConfig jsonConfig = this.config;
+      final EntityType source = checkNotNull(this.config.getSource());
+      checkArgument(EntityType.NONE != source, "Unacceptable source [%s]", source);
 
       return new Producer<Entity>()
       {
@@ -401,57 +441,57 @@ public class TestModule extends AbstractModule
          {
             final long sample = (long) distributionProducer.produce().nextSample();
 
-            if (EntityType.ZEROES == jsonConfig.getSource())
-               return Entities.zeroes(sample);
-            else
-               return Entities.random(sample);
+            switch (source)
+            {
+               case ZEROES :
+                  return Entities.zeroes(sample);
+               default :
+                  return Entities.random(sample);
+            }
          }
       };
    }
 
-   // TODO simplify this method if possible
    @Provides
    @Singleton
    @TestObjectFileLocation
-   public String provideObjectFileLocation() throws IOException
+   public String testObjectFileLocation() throws IOException
    {
-
-      String path = this.config.getObjectManager().getObjectFileLocation();
-      if (path == null || path.length() == 0)
-         path = "./object";
+      final String path = checkNotNull(this.config.getObjectManager().getObjectFileLocation());
+      checkArgument(path.length() > 0, "path must not be empty string");
 
       final File f = new File(path).getCanonicalFile();
       if (!f.exists())
       {
-         final boolean created = f.mkdirs();
-         if (!created)
+         final boolean success = f.mkdirs();
+         if (!success)
             throw new RuntimeException(String.format(
-                  "Failed to create object location directory [%s]", f));
+                  "Failed to create object location directories", f.toString()));
       }
-      else if (!f.isDirectory())
-      {
-         throw new RuntimeException(String.format("Object location is not a directory [%s]",
-               f.toString()));
-      }
+
+      checkArgument(f.isDirectory(), "object location is not a directory [%s]", f.toString());
       return f.toString();
    }
 
    @Provides
    @Singleton
    @TestObjectFileName
-   public String provideObjectFileName(
-         @TestContainer final Producer<String> container,
-         final Api api)
+   public String testObjectFileName(@TestContainer final Producer<String> container, final Api api)
    {
-      if (this.config.getObjectManager().getObjectFileName() != null)
-         return this.config.getObjectManager().getObjectFileName();
+      checkNotNull(container);
+      checkNotNull(api);
+      final ObjectManagerConfig objectManagerConfig = checkNotNull(this.config.getObjectManager());
+      final String objectFileName = objectManagerConfig.getObjectFileName();
+
+      if (objectFileName != null && !objectFileName.isEmpty())
+         return objectFileName;
       // FIXME this naming scheme will break unless @TestContainer is a constant producer
       return container.produce() + "-" + api.toString().toLowerCase();
    }
 
    @Provides
    @WriteWeight
-   public double provideWriteWeight()
+   public double testWriteWeight()
    {
       final double write = this.config.getWrite().getWeight();
       checkArgument(PERCENTAGE.contains(write), "write must be in range [0.0, 100.0] [%s]", write);
@@ -464,7 +504,7 @@ public class TestModule extends AbstractModule
 
    @Provides
    @ReadWeight
-   public double provideReadWeight()
+   public double testReadWeight()
    {
       final double read = this.config.getRead().getWeight();
       checkArgument(PERCENTAGE.contains(read), "read must be in range [0.0, 100.0] [%s]", read);
@@ -473,7 +513,7 @@ public class TestModule extends AbstractModule
 
    @Provides
    @DeleteWeight
-   public double provideDeleteWeight()
+   public double testDeleteWeight()
    {
       final double delete = this.config.getDelete().getWeight();
       checkArgument(PERCENTAGE.contains(delete), "delete must be in range [0.0, 100.0] [%s]",
@@ -493,24 +533,34 @@ public class TestModule extends AbstractModule
 
    @Provides
    @Singleton
-   public Scheduler provideScheduler(final EventBus eventBus)
+   public Scheduler testScheduler(final EventBus eventBus)
    {
-      final ConcurrencyConfig concurrency = this.config.getConcurrency();
-      if (ConcurrencyType.THREADS == concurrency.getType())
+      checkNotNull(eventBus);
+      final ConcurrencyConfig concurrency = checkNotNull(this.config.getConcurrency());
+      final ConcurrencyType type = checkNotNull(concurrency.getType());
+      final DistributionType distribution = checkNotNull(concurrency.getDistribution());
+
+      if (ConcurrencyType.THREADS == type)
       {
          final Scheduler scheduler =
                new ConcurrentRequestScheduler((int) Math.round(concurrency.getCount()));
          eventBus.register(scheduler);
          return scheduler;
       }
-      else
+
+      Distribution count;
+      switch (distribution)
       {
-         Distribution count;
-         if (DistributionType.POISSON == concurrency.getDistribution())
+         case POISSON :
             count = new PoissonDistribution(concurrency.getCount());
-         else
+            break;
+         case UNIFORM :
             count = new UniformDistribution(concurrency.getCount(), 0.0);
-         return new RequestRateScheduler(count, concurrency.getUnit());
+            break;
+         default :
+            throw new IllegalArgumentException(String.format(
+                  "Unacceptable scheduler distribution [%s]", distribution));
       }
+      return new RequestRateScheduler(count, concurrency.getUnit());
    }
 }
