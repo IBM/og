@@ -93,29 +93,45 @@ public class OG extends AbstractCLI
       _clientJsonLogger.info(gson.toJson(clientConfig));
 
       ObjectManager objectManager = null;
-      ExecutorService executorService = null;
-      LoadTest test = null;
       Client client = null;
       try
       {
          final Injector injector = createInjector(testConfig, clientConfig);
          final Statistics stats = injector.getInstance(Statistics.class);
          objectManager = injector.getInstance(ObjectManager.class);
-         test = injector.getInstance(LoadTest.class);
+         final LoadTest test = injector.getInstance(LoadTest.class);
          client = injector.getInstance(Client.class);
-         executorService = Executors.newSingleThreadExecutor();
+
+         final ExecutorService executorService = Executors.newSingleThreadExecutor();
          final CompletionService<Boolean> completionService =
                new ExecutorCompletionService<Boolean>(executorService);
          Runtime.getRuntime().addShutdownHook(new ShutdownHook(Thread.currentThread()));
          _consoleLogger.info("Configured.");
          _consoleLogger.info("Test Running...");
          final long timestampStart = System.currentTimeMillis();
-         completionService.submit(test);
-         final boolean success = completionService.take().get();
-         final long timestampFinish = System.currentTimeMillis();
-         shutdownClient(client, false);
-         MoreExecutors.shutdownAndAwaitTermination(executorService, 5, TimeUnit.SECONDS);
-         shutdownObjectManager(objectManager);
+         long timestampFinish;
+         boolean success = false;
+         try
+         {
+            completionService.submit(test);
+            success = completionService.take().get();
+         }
+         catch (final InterruptedException e)
+         {
+            _logger.warn("", e);
+         }
+         catch (final ExecutionException e)
+         {
+            _logger.error("", e);
+         }
+         finally
+         {
+            test.stopTest();
+            timestampFinish = System.currentTimeMillis();
+            shutdownClient(client, false);
+            MoreExecutors.shutdownAndAwaitTermination(executorService, 1, TimeUnit.MINUTES);
+            shutdownObjectManager(objectManager);
+         }
 
          if (success)
             _consoleLogger.info("Test Completed.");
@@ -131,9 +147,6 @@ public class OG extends AbstractCLI
       catch (final Exception e)
       {
          shutdownClient(client, true);
-         if (test != null)
-            test.stopTest();
-         MoreExecutors.shutdownAndAwaitTermination(executorService, 1, TimeUnit.HOURS);
          shutdownObjectManager(objectManager);
          _consoleLogger.error("Error provisioning dependencies. Check application log for details");
          _logger.error("", e);
