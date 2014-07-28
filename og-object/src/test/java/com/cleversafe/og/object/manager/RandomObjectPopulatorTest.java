@@ -474,7 +474,7 @@ public class RandomObjectPopulatorTest
    @Test
    public void testIdFilter()
    {
-      final RandomObjectPopulator r = new RandomObjectPopulator(null, "test");
+      final RandomObjectPopulator r = new RandomObjectPopulator(UUID.randomUUID(), "test");
       final FilenameFilter f = r.new IdFilter();
       Assert.assertFalse(f.accept(null, "test" + suffix));
       Assert.assertTrue(f.accept(null, "test0" + suffix));

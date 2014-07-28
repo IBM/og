@@ -34,6 +34,8 @@
 
 package com.cleversafe.og.object.manager;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -136,8 +138,8 @@ public class RandomObjectPopulator extends Thread implements ObjectManager
          final int maxObjectCount,
          final long persistTime)
    {
-      this.vaultId = vaultId;
-      this.directory = directory;
+      this.vaultId = checkNotNull(vaultId);
+      this.directory = checkNotNull(directory);
       if (prefix != null && !prefix.isEmpty())
       {
          this.prefix = prefix;
@@ -151,7 +153,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager
                   RandomObjectPopulator.SUFFIX));
       this.maxObjects = maxObjectCount;
       final File[] files = getIdFiles();
-      if (files.length > 1)
+      if (files != null && files.length > 1)
       {
          this.idFileIndex = this.rand.nextInt(files.length - 1);
       }

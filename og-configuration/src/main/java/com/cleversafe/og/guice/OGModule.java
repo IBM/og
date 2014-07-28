@@ -20,6 +20,7 @@
 package com.cleversafe.og.guice;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -85,6 +86,7 @@ public class OGModule extends AbstractModule
    @Singleton
    public Statistics provideStatistics(final EventBus eventBus)
    {
+      checkNotNull(eventBus);
       final Statistics stats = new Statistics();
       eventBus.register(stats);
       return stats;
@@ -98,6 +100,11 @@ public class OGModule extends AbstractModule
          final Statistics stats,
          final StoppingConditionsConfig config)
    {
+      checkNotNull(test);
+      checkNotNull(eventBus);
+      checkNotNull(stats);
+      checkNotNull(config);
+
       final List<TestCondition> conditions = new ArrayList<TestCondition>();
 
       if (config.getOperations() > 0)
@@ -167,7 +174,7 @@ public class OGModule extends AbstractModule
    @WriteObjectName
    public CachingProducer<String> provideWriteObjectName(final Api api)
    {
-      if (Api.SOH == api)
+      if (Api.SOH == checkNotNull(api))
          return null;
       return new CachingProducer<String>(new UUIDObjectNameProducer());
    }
