@@ -6,8 +6,8 @@
 		<version>1.0.0-SNAPSHOT</version>
 	</parent>
 	<artifactId>og-statistic</artifactId>
-	<name>OG Statistic</name>
-	<description>Counters and statistics implementations</description>
+	<name>Statistic</name>
+	<description>Statistics and counters components</description>
 	<dependencies>
 		<dependency>
 			<groupId>com.cleversafe</groupId>

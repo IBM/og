@@ -6,8 +6,8 @@
 		<version>1.0.0-SNAPSHOT</version>
 	</parent>
 	<artifactId>og-s3</artifactId>
-	<name>OG S3</name>
-	<description>Components for the Amazon S3 HTTP API</description>
+	<name>S3</name>
+	<description>Amazon S3 HTTP API components</description>
 	<dependencies>
 		<dependency>
 			<groupId>com.cleversafe</groupId>

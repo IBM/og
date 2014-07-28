@@ -6,8 +6,8 @@
 		<version>1.0.0-SNAPSHOT</version>
 	</parent>
 	<artifactId>og-scheduling</artifactId>
-	<name>OG Scheduling</name>
-	<description>Components for operation scheduling</description>
+	<name>Scheduling</name>
+	<description>Operation scheduling components</description>
 	<dependencies>
 		<dependency>
 			<groupId>com.cleversafe</groupId>

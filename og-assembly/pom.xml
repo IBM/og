@@ -7,7 +7,7 @@
 	</parent>
 	<artifactId>og-assembly</artifactId>
 	<packaging>pom</packaging>
-	<name>OG Assembly</name>
+	<name>Assembly</name>
 	<description>Packaging components</description>
 	<dependencies>
 		<dependency>

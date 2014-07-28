@@ -6,8 +6,8 @@
 		<version>1.0.0-SNAPSHOT</version>
 	</parent>
 	<artifactId>og-soh</artifactId>
-	<name>OG SOH</name>
-	<description>Components for the Simple Object (SOH) HTTP API</description>
+	<name>SOH</name>
+	<description>Cleversafe SOH HTTP API components</description>
 	<dependencies>
 		<dependency>
 			<groupId>com.cleversafe</groupId>

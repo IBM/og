@@ -6,7 +6,7 @@
 		<version>1.0.0-SNAPSHOT</version>
 	</parent>
 	<artifactId>og-client</artifactId>
-	<name>OG Client</name>
+	<name>Client</name>
 	<description>HTTP Client implementation using the Apache HttpComponents HttpClient library</description>
 	<dependencies>
 		<dependency>

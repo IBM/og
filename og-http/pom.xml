@@ -6,7 +6,7 @@
 		<version>1.0.0-SNAPSHOT</version>
 	</parent>
 	<artifactId>og-http</artifactId>
-	<name>OG HTTP</name>
+	<name>HTTP</name>
 	<description>HTTP protocol components</description>
 	<dependencies>
 		<dependency>

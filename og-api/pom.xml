@@ -6,7 +6,7 @@
 		<version>1.0.0-SNAPSHOT</version>
 	</parent>
 	<artifactId>og-api</artifactId>
-	<name>OG API</name>
+	<name>API</name>
 	<description>Major interfaces, enums, and other components</description>
 	<dependencies>
 	<dependency>
