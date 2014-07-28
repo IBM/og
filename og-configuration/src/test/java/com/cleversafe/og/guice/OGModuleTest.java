@@ -30,8 +30,10 @@ import org.junit.Test;
 import com.cleversafe.og.consumer.ObjectNameConsumer;
 import com.cleversafe.og.http.util.Api;
 import com.cleversafe.og.object.manager.ObjectManager;
+import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.util.producer.CachingProducer;
+import com.cleversafe.og.util.producer.Producer;
 import com.google.common.eventbus.EventBus;
 
 public class OGModuleTest
@@ -39,13 +41,16 @@ public class OGModuleTest
    private OGModule module;
    private ObjectManager objectManager;
    private EventBus eventBus;
+   private Producer<Request> request;
 
    @Before
+   @SuppressWarnings("unchecked")
    public void before()
    {
       this.module = new OGModule();
       this.objectManager = mock(ObjectManager.class);
       this.eventBus = new EventBus();
+      this.request = mock(Producer.class);
    }
 
    @Test(expected = NullPointerException.class)
@@ -59,6 +64,38 @@ public class OGModuleTest
    {
       final Statistics stats = this.module.provideStatistics(this.eventBus);
       Assert.assertNotNull(stats);
+   }
+
+   @Test(expected = NullPointerException.class)
+   public void testProvideRequestProducerNullWrite()
+   {
+      this.module.provideRequestProducer(null, this.request, this.request, 100, 0, 0);
+   }
+
+   @Test(expected = NullPointerException.class)
+   public void testProvideRequestProducerNullRead()
+   {
+      this.module.provideRequestProducer(this.request, null, this.request, 100, 0, 0);
+   }
+
+   @Test(expected = NullPointerException.class)
+   public void testProvideRequestProducerNullDelete()
+   {
+      this.module.provideRequestProducer(this.request, this.request, null, 100, 0, 0);
+   }
+
+   @Test(expected = IllegalArgumentException.class)
+   public void testProvideRequestProducerWeightsNotEqual100()
+   {
+      this.module.provideRequestProducer(this.request, this.request, this.request, 101, 0, 0);
+   }
+
+   @Test
+   public void testProvideRequestProducer()
+   {
+      final Producer<Producer<Request>> p =
+            this.module.provideRequestProducer(this.request, this.request, this.request, 100, 0, 0);
+      Assert.assertNotNull(p);
    }
 
    @Test(expected = NullPointerException.class)

@@ -34,11 +34,11 @@ import com.cleversafe.og.consumer.WriteObjectNameConsumer;
 import com.cleversafe.og.guice.annotation.Delete;
 import com.cleversafe.og.guice.annotation.DeleteObjectName;
 import com.cleversafe.og.guice.annotation.DeleteWeight;
+import com.cleversafe.og.guice.annotation.ObjectFileLocation;
+import com.cleversafe.og.guice.annotation.ObjectFileName;
 import com.cleversafe.og.guice.annotation.Read;
 import com.cleversafe.og.guice.annotation.ReadObjectName;
 import com.cleversafe.og.guice.annotation.ReadWeight;
-import com.cleversafe.og.guice.annotation.ObjectFileLocation;
-import com.cleversafe.og.guice.annotation.ObjectFileName;
 import com.cleversafe.og.guice.annotation.Write;
 import com.cleversafe.og.guice.annotation.WriteObjectName;
 import com.cleversafe.og.guice.annotation.WriteWeight;
@@ -144,6 +144,9 @@ public class OGModule extends AbstractModule
          @ReadWeight final double readWeight,
          @DeleteWeight final double deleteWeight)
    {
+      checkNotNull(write);
+      checkNotNull(read);
+      checkNotNull(delete);
       final double sum = readWeight + writeWeight + deleteWeight;
       checkArgument(DoubleMath.fuzzyEquals(sum, 100.0, ERR),
             "Sum of percentages must be 100.0 [%s]", sum);
