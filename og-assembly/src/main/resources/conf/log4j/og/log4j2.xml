@@ -56,7 +56,7 @@
 		<Logger name="org.apache.http" level="warn"/>
 		<Logger name="org.apache.http.wire" level="error"/>
 		<Logger name="org.apache.http.headers" level="error"/>
-		<Root level="debug">
+		<Root level="info">
 			<AppenderRef ref="ApplicationLog" />
 		</Root>
 	</Loggers>
