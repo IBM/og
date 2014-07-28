@@ -53,15 +53,11 @@ public class OGReader extends AbstractCLI
       try
       {
          in = new FileInputStream(filename);
-         final byte[] objectID = new byte[ID_LENGTH];
-         int numRecords = 0;
-         while (in.read(objectID, 0, ID_LENGTH) == ID_LENGTH)
+         final byte[] buf = new byte[ID_LENGTH];
+         while (in.read(buf) == ID_LENGTH)
          {
-            numRecords++;
-            final String id = BaseEncoding.base16().lowerCase().encode(objectID);
-            _consoleLogger.info(id);
+            _consoleLogger.info(BaseEncoding.base16().lowerCase().encode(buf));
          }
-         _consoleLogger.info("{} records", numRecords);
       }
       finally
       {
