@@ -59,7 +59,6 @@ import com.google.common.util.concurrent.Uninterruptibles;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.LongSerializationPolicy;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
@@ -184,7 +183,6 @@ public class OG extends AbstractCLI
    {
       return new GsonBuilder()
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
-            .setLongSerializationPolicy(LongSerializationPolicy.STRING)
             .registerTypeAdapterFactory(new CaseInsensitiveEnumTypeAdapterFactory())
             // SizeUnit and TimeUnit TypeAdapters must be registered after
             // CaseInsensitiveEnumTypeAdapterFactory in order to override the registration
