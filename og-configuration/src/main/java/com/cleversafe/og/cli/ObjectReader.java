@@ -26,7 +26,7 @@ import java.io.IOException;
 import com.google.common.io.BaseEncoding;
 import com.martiansoftware.jsap.JSAPResult;
 
-public class OGReader extends AbstractCLI
+public class ObjectReader extends AbstractCLI
 {
    private static final String JSAP_RESOURCE_NAME = "ogreader.jsap";
    // TODO place this constant in util somewhere?
