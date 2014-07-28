@@ -238,7 +238,7 @@ public class TestModuleTest
       final OperationConfig operationConfig = mock(OperationConfig.class);
       final List<HostConfig> host = new ArrayList<HostConfig>();
       host.add(new HostConfig("10.1.1.1"));
-      when(operationConfig.getHostAlgorithm()).thenReturn(CollectionAlgorithmType.RANDOM);
+      when(operationConfig.getHostSelection()).thenReturn(CollectionAlgorithmType.RANDOM);
       when(operationConfig.getHost()).thenReturn(host);
       when(this.config.getWrite()).thenReturn(operationConfig);
 
@@ -274,7 +274,7 @@ public class TestModuleTest
       final OperationConfig operationConfig = mock(OperationConfig.class);
       final List<HostConfig> host = new ArrayList<HostConfig>();
       host.add(new HostConfig("10.1.1.1"));
-      when(operationConfig.getHostAlgorithm()).thenReturn(CollectionAlgorithmType.RANDOM);
+      when(operationConfig.getHostSelection()).thenReturn(CollectionAlgorithmType.RANDOM);
       when(operationConfig.getHost()).thenReturn(host);
       when(this.config.getRead()).thenReturn(operationConfig);
 
@@ -310,7 +310,7 @@ public class TestModuleTest
       final OperationConfig operationConfig = mock(OperationConfig.class);
       final List<HostConfig> host = new ArrayList<HostConfig>();
       host.add(new HostConfig("10.1.1.1"));
-      when(operationConfig.getHostAlgorithm()).thenReturn(CollectionAlgorithmType.RANDOM);
+      when(operationConfig.getHostSelection()).thenReturn(CollectionAlgorithmType.RANDOM);
       when(operationConfig.getHost()).thenReturn(host);
       when(this.config.getDelete()).thenReturn(operationConfig);
 

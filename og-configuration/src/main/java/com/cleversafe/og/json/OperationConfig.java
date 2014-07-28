@@ -29,7 +29,7 @@ import com.cleversafe.og.json.enums.CollectionAlgorithmType;
 public class OperationConfig
 {
    double weight;
-   CollectionAlgorithmType hostAlgorithm;
+   CollectionAlgorithmType hostSelection;
    List<HostConfig> host;
    Map<String, String> headers;
 
@@ -42,7 +42,7 @@ public class OperationConfig
    public OperationConfig()
    {
       this.weight = 0.0;
-      this.hostAlgorithm = CollectionAlgorithmType.ROUNDROBIN;
+      this.hostSelection = CollectionAlgorithmType.ROUNDROBIN;
       this.host = new ArrayList<HostConfig>();
       this.headers = new LinkedHashMap<String, String>();
    }
@@ -52,9 +52,9 @@ public class OperationConfig
       return this.weight;
    }
 
-   public CollectionAlgorithmType getHostAlgorithm()
+   public CollectionAlgorithmType getHostSelection()
    {
-      return this.hostAlgorithm;
+      return this.hostSelection;
    }
 
    public List<HostConfig> getHost()

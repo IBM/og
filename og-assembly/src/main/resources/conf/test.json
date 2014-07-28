@@ -72,7 +72,7 @@
 //
 // "write": {
 // "weight": 100.0,
-// "host_algorithm": "roundrobin",
+// "host_selection": "roundrobin",
 // "host": [],
 // "headers": {}
 // },
@@ -86,7 +86,7 @@
 //
 // "read": {
 // "weight": 0.0,
-// "host_algorithm": "roundrobin",
+// "host_selection": "roundrobin",
 // "host": [],
 // "headers": {}
 // },
@@ -100,7 +100,7 @@
 //
 // "delete": {
 // "weight": 0.0,
-// "host_algorithm": "roundrobin",
+// "host_selection": "roundrobin",
 // "host": [],
 // "headers": {}
 // },
@@ -155,7 +155,7 @@
 //
 // "concurrency": {
 // "type": "threads",
-// "distribution": "uniform"
+// "distribution": "uniform",
 // "count": 1
 // },
 

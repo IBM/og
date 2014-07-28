@@ -168,7 +168,7 @@ public class TestModule extends AbstractModule
 
       final List<HostConfig> operationHost = operationConfig.getHost();
       if (operationHost != null && !operationHost.isEmpty())
-         return createHost(operationConfig.getHostAlgorithm(), operationHost);
+         return createHost(operationConfig.getHostSelection(), operationHost);
 
       return testHost;
    }

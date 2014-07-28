@@ -63,7 +63,7 @@ public class OperationConfigTypeAdapterFactoryTest
       final OperationConfig config = this.gson.fromJson(json, OperationConfig.class);
 
       Assert.assertEquals(35.0, config.getWeight(), ERR);
-      Assert.assertEquals(CollectionAlgorithmType.ROUNDROBIN, config.getHostAlgorithm());
+      Assert.assertEquals(CollectionAlgorithmType.ROUNDROBIN, config.getHostSelection());
       Assert.assertNotNull(config.getHost());
       Assert.assertNotNull(config.getHeaders());
    }
@@ -75,7 +75,7 @@ public class OperationConfigTypeAdapterFactoryTest
       final OperationConfig config = this.gson.fromJson(json, OperationConfig.class);
 
       Assert.assertEquals(45.0, config.getWeight(), ERR);
-      Assert.assertEquals(CollectionAlgorithmType.ROUNDROBIN, config.getHostAlgorithm());
+      Assert.assertEquals(CollectionAlgorithmType.ROUNDROBIN, config.getHostSelection());
       Assert.assertNotNull(config.getHost());
       Assert.assertNotNull(config.getHeaders());
    }
