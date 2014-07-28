@@ -435,13 +435,6 @@ public class TestModuleTest
    }
 
    @Test
-   public void testTestQueryParams()
-   {
-      final Map<String, String> m = this.module.testQueryParams();
-      Assert.assertNotNull(m);
-   }
-
-   @Test
    public void testTestUsernameNullUsername()
    {
       when(this.config.getAuthentication()).thenReturn(new AuthenticationConfig());

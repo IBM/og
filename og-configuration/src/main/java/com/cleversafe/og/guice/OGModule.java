@@ -37,8 +37,8 @@ import com.cleversafe.og.guice.annotation.DeleteWeight;
 import com.cleversafe.og.guice.annotation.Read;
 import com.cleversafe.og.guice.annotation.ReadObjectName;
 import com.cleversafe.og.guice.annotation.ReadWeight;
-import com.cleversafe.og.guice.annotation.TestObjectFileLocation;
-import com.cleversafe.og.guice.annotation.TestObjectFileName;
+import com.cleversafe.og.guice.annotation.ObjectFileLocation;
+import com.cleversafe.og.guice.annotation.ObjectFileName;
 import com.cleversafe.og.guice.annotation.Write;
 import com.cleversafe.og.guice.annotation.WriteObjectName;
 import com.cleversafe.og.guice.annotation.WriteWeight;
@@ -163,8 +163,8 @@ public class OGModule extends AbstractModule
    @Provides
    @Singleton
    public ObjectManager provideObjectManager(
-         @TestObjectFileLocation final String objectFileLocation,
-         @TestObjectFileName final String objectFileName)
+         @ObjectFileLocation final String objectFileLocation,
+         @ObjectFileName final String objectFileName)
    {
       return new RandomObjectPopulator(UUID.randomUUID(), objectFileLocation, objectFileName);
    }

@@ -14,7 +14,7 @@
 // -----------------------
 // @author: rveitch
 //
-// Date: Mar 27, 2014
+// Date: Jul 1, 2014
 // ---------------------
 
 package com.cleversafe.og.guice.annotation;
@@ -32,5 +32,5 @@ import com.google.inject.BindingAnnotation;
 @BindingAnnotation
 @Target({FIELD, PARAMETER, METHOD})
 @Retention(RUNTIME)
-public @interface TestObjectFileLocation {
+public @interface Username {
 }

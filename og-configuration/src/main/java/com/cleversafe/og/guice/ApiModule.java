@@ -26,27 +26,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.cleversafe.og.guice.annotation.Container;
 import com.cleversafe.og.guice.annotation.Delete;
 import com.cleversafe.og.guice.annotation.DeleteHeaders;
 import com.cleversafe.og.guice.annotation.DeleteHost;
 import com.cleversafe.og.guice.annotation.DeleteMetadata;
 import com.cleversafe.og.guice.annotation.DeleteObjectName;
 import com.cleversafe.og.guice.annotation.DeleteUri;
+import com.cleversafe.og.guice.annotation.Id;
+import com.cleversafe.og.guice.annotation.Password;
 import com.cleversafe.og.guice.annotation.Read;
 import com.cleversafe.og.guice.annotation.ReadHeaders;
 import com.cleversafe.og.guice.annotation.ReadHost;
 import com.cleversafe.og.guice.annotation.ReadMetadata;
 import com.cleversafe.og.guice.annotation.ReadObjectName;
 import com.cleversafe.og.guice.annotation.ReadUri;
-import com.cleversafe.og.guice.annotation.TestContainer;
-import com.cleversafe.og.guice.annotation.TestEntity;
-import com.cleversafe.og.guice.annotation.TestId;
-import com.cleversafe.og.guice.annotation.TestPassword;
-import com.cleversafe.og.guice.annotation.TestPort;
-import com.cleversafe.og.guice.annotation.TestQueryParams;
-import com.cleversafe.og.guice.annotation.TestScheme;
-import com.cleversafe.og.guice.annotation.TestUriRoot;
-import com.cleversafe.og.guice.annotation.TestUsername;
+import com.cleversafe.og.guice.annotation.UriRoot;
+import com.cleversafe.og.guice.annotation.Username;
 import com.cleversafe.og.guice.annotation.Write;
 import com.cleversafe.og.guice.annotation.WriteHeaders;
 import com.cleversafe.og.guice.annotation.WriteHost;
@@ -86,10 +82,10 @@ public class ApiModule extends AbstractModule
          @WriteUri final Producer<URI> uri,
          @WriteObjectName final CachingProducer<String> object,
          @WriteHeaders final Map<Producer<String>, Producer<String>> headers,
-         @TestEntity final Producer<Entity> entity,
+         final Producer<Entity> entity,
          @WriteMetadata final Map<Producer<String>, Producer<String>> metadata,
-         @TestUsername final Producer<String> username,
-         @TestPassword final Producer<String> password)
+         @Username final Producer<String> username,
+         @Password final Producer<String> password)
    {
       return createRequestProducer(Method.PUT, uri, object, headers, entity, metadata, username,
             password);
@@ -99,22 +95,21 @@ public class ApiModule extends AbstractModule
    @Singleton
    @WriteUri
    public Producer<URI> providWriteUri(
-         @TestScheme final Producer<Scheme> scheme,
+         final Producer<Scheme> scheme,
          @WriteHost final Producer<String> host,
-         @TestPort final Producer<Integer> port,
-         @TestUriRoot final Producer<String> uriRoot,
-         @TestContainer final Producer<String> container,
-         @WriteObjectName final CachingProducer<String> object,
-         @TestQueryParams final Map<String, String> queryParameters)
+         final Producer<Integer> port,
+         @UriRoot final Producer<String> uriRoot,
+         @Container final Producer<String> container,
+         @WriteObjectName final CachingProducer<String> object)
    {
-      return createUri(scheme, host, port, uriRoot, container, object, queryParameters);
+      return createUri(scheme, host, port, uriRoot, container, object);
    }
 
    @Provides
    @WriteMetadata
    public Map<Producer<String>, Producer<String>> provideWriteMetadata(
          final Api api,
-         @TestId final Producer<String> id)
+         @Id final Producer<String> id)
    {
       final Map<Producer<String>, Producer<String>> metadata = createMetadata(id);
       // SOH needs to use a special response procesor to extract the returned object id
@@ -132,8 +127,8 @@ public class ApiModule extends AbstractModule
          @ReadObjectName final CachingProducer<String> object,
          @ReadHeaders final Map<Producer<String>, Producer<String>> headers,
          @ReadMetadata final Map<Producer<String>, Producer<String>> metadata,
-         @TestUsername final Producer<String> username,
-         @TestPassword final Producer<String> password)
+         @Username final Producer<String> username,
+         @Password final Producer<String> password)
    {
       return createRequestProducer(Method.GET, uri, object, headers, Producers.of(Entities.none()),
             metadata, username, password);
@@ -143,21 +138,19 @@ public class ApiModule extends AbstractModule
    @Singleton
    @ReadUri
    public Producer<URI> providReadUri(
-         @TestScheme final Producer<Scheme> scheme,
+         final Producer<Scheme> scheme,
          @ReadHost final Producer<String> host,
-         @TestPort final Producer<Integer> port,
-         @TestUriRoot final Producer<String> uriRoot,
-         @TestContainer final Producer<String> container,
-         @ReadObjectName final CachingProducer<String> object,
-         @TestQueryParams final Map<String, String> queryParameters)
+         final Producer<Integer> port,
+         @UriRoot final Producer<String> uriRoot,
+         @Container final Producer<String> container,
+         @ReadObjectName final CachingProducer<String> object)
    {
-      return createUri(scheme, host, port, uriRoot, container, object, queryParameters);
+      return createUri(scheme, host, port, uriRoot, container, object);
    }
 
    @Provides
    @ReadMetadata
-   public Map<Producer<String>, Producer<String>> provideReadMetadata(
-         @TestId final Producer<String> id)
+   public Map<Producer<String>, Producer<String>> provideReadMetadata(@Id final Producer<String> id)
    {
       return createMetadata(id);
    }
@@ -170,8 +163,8 @@ public class ApiModule extends AbstractModule
          @DeleteObjectName final CachingProducer<String> object,
          @DeleteHeaders final Map<Producer<String>, Producer<String>> headers,
          @DeleteMetadata final Map<Producer<String>, Producer<String>> metadata,
-         @TestUsername final Producer<String> username,
-         @TestPassword final Producer<String> password)
+         @Username final Producer<String> username,
+         @Password final Producer<String> password)
    {
       return createRequestProducer(Method.DELETE, uri, object, headers,
             Producers.of(Entities.none()), metadata, username, password);
@@ -181,21 +174,20 @@ public class ApiModule extends AbstractModule
    @Singleton
    @DeleteUri
    public Producer<URI> providDeleteUri(
-         @TestScheme final Producer<Scheme> scheme,
+         final Producer<Scheme> scheme,
          @DeleteHost final Producer<String> host,
-         @TestPort final Producer<Integer> port,
-         @TestUriRoot final Producer<String> uriRoot,
-         @TestContainer final Producer<String> container,
-         @DeleteObjectName final CachingProducer<String> object,
-         @TestQueryParams final Map<String, String> queryParameters)
+         final Producer<Integer> port,
+         @UriRoot final Producer<String> uriRoot,
+         @Container final Producer<String> container,
+         @DeleteObjectName final CachingProducer<String> object)
    {
-      return createUri(scheme, host, port, uriRoot, container, object, queryParameters);
+      return createUri(scheme, host, port, uriRoot, container, object);
    }
 
    @Provides
    @DeleteMetadata
    public Map<Producer<String>, Producer<String>> provideDeleteMetadata(
-         @TestId final Producer<String> id)
+         @Id final Producer<String> id)
    {
       return createMetadata(id);
    }
@@ -247,8 +239,7 @@ public class ApiModule extends AbstractModule
          final Producer<Integer> port,
          final Producer<String> uriRoot,
          final Producer<String> container,
-         final Producer<String> object,
-         final Map<String, String> queryParameters)
+         final Producer<String> object)
    {
       final List<Producer<String>> path = new ArrayList<Producer<String>>();
       if (uriRoot != null)
@@ -256,15 +247,11 @@ public class ApiModule extends AbstractModule
       path.add(container);
       if (object != null)
          path.add(object);
-      final UriProducer.Builder b = new UriProducer.Builder(host, path)
-            .withScheme(scheme)
-            .onPort(port);
 
-      for (final Entry<String, String> e : queryParameters.entrySet())
-      {
-         b.withQueryParameter(e.getKey(), e.getValue());
-      }
-      return b.build();
+      return new UriProducer.Builder(host, path)
+            .withScheme(scheme)
+            .onPort(port)
+            .build();
    }
 
    @Provides

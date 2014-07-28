@@ -25,32 +25,27 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.cleversafe.og.guice.annotation.Container;
 import com.cleversafe.og.guice.annotation.DeleteHeaders;
 import com.cleversafe.og.guice.annotation.DeleteHost;
 import com.cleversafe.og.guice.annotation.DeleteWeight;
+import com.cleversafe.og.guice.annotation.Headers;
+import com.cleversafe.og.guice.annotation.Host;
+import com.cleversafe.og.guice.annotation.Id;
+import com.cleversafe.og.guice.annotation.ObjectFileLocation;
+import com.cleversafe.og.guice.annotation.ObjectFileName;
+import com.cleversafe.og.guice.annotation.Password;
 import com.cleversafe.og.guice.annotation.ReadHeaders;
 import com.cleversafe.og.guice.annotation.ReadHost;
 import com.cleversafe.og.guice.annotation.ReadWeight;
-import com.cleversafe.og.guice.annotation.TestContainer;
-import com.cleversafe.og.guice.annotation.TestEntity;
-import com.cleversafe.og.guice.annotation.TestHeaders;
-import com.cleversafe.og.guice.annotation.TestHost;
-import com.cleversafe.og.guice.annotation.TestId;
-import com.cleversafe.og.guice.annotation.TestObjectFileLocation;
-import com.cleversafe.og.guice.annotation.TestObjectFileName;
-import com.cleversafe.og.guice.annotation.TestPassword;
-import com.cleversafe.og.guice.annotation.TestPort;
-import com.cleversafe.og.guice.annotation.TestQueryParams;
-import com.cleversafe.og.guice.annotation.TestScheme;
-import com.cleversafe.og.guice.annotation.TestUriRoot;
-import com.cleversafe.og.guice.annotation.TestUsername;
+import com.cleversafe.og.guice.annotation.UriRoot;
+import com.cleversafe.og.guice.annotation.Username;
 import com.cleversafe.og.guice.annotation.WriteHeaders;
 import com.cleversafe.og.guice.annotation.WriteHost;
 import com.cleversafe.og.guice.annotation.WriteWeight;
@@ -110,7 +105,7 @@ public class TestModule extends AbstractModule
 
    @Provides
    @Singleton
-   @TestId
+   @Id
    public Producer<String> testIdProducer()
    {
       return new Producer<String>()
@@ -127,7 +122,6 @@ public class TestModule extends AbstractModule
 
    @Provides
    @Singleton
-   @TestScheme
    public Producer<Scheme> testScheme()
    {
       return Producers.of(this.config.getScheme());
@@ -135,7 +129,7 @@ public class TestModule extends AbstractModule
 
    @Provides
    @Singleton
-   @TestHost
+   @Host
    public Producer<String> testHost()
    {
       return createHost(this.config.getHostSelection(), this.config.getHost());
@@ -144,7 +138,7 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @WriteHost
-   public Producer<String> testWriteHost(@TestHost final Producer<String> host)
+   public Producer<String> testWriteHost(@Host final Producer<String> host)
    {
       return provideHost(this.config.getWrite(), host);
    }
@@ -152,7 +146,7 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @ReadHost
-   public Producer<String> testReadHost(@TestHost final Producer<String> host)
+   public Producer<String> testReadHost(@Host final Producer<String> host)
    {
       return provideHost(this.config.getRead(), host);
    }
@@ -160,7 +154,7 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @DeleteHost
-   public Producer<String> testDeleteHost(@TestHost final Producer<String> host)
+   public Producer<String> testDeleteHost(@Host final Producer<String> host)
    {
       return provideHost(this.config.getDelete(), host);
    }
@@ -214,7 +208,6 @@ public class TestModule extends AbstractModule
 
    @Provides
    @Singleton
-   @TestPort
    public Producer<Integer> testPort()
    {
       if (this.config.getPort() != null)
@@ -230,7 +223,7 @@ public class TestModule extends AbstractModule
 
    @Provides
    @Singleton
-   @TestUriRoot
+   @UriRoot
    public Producer<String> testUriRoot()
    {
       final String uriRoot = this.config.getUriRoot();
@@ -247,7 +240,7 @@ public class TestModule extends AbstractModule
 
    @Provides
    @Singleton
-   @TestContainer
+   @Container
    public Producer<String> testContainer()
    {
       final String container = checkNotNull(this.config.getContainer());
@@ -257,15 +250,7 @@ public class TestModule extends AbstractModule
 
    @Provides
    @Singleton
-   @TestQueryParams
-   public Map<String, String> testQueryParams()
-   {
-      return new HashMap<String, String>();
-   }
-
-   @Provides
-   @Singleton
-   @TestUsername
+   @Username
    public Producer<String> testUsername()
    {
       final String username = this.config.getAuthentication().getUsername();
@@ -279,7 +264,7 @@ public class TestModule extends AbstractModule
 
    @Provides
    @Singleton
-   @TestPassword
+   @Password
    public Producer<String> testPassword()
    {
       final String password = this.config.getAuthentication().getPassword();
@@ -294,8 +279,8 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    public HttpAuth testAuthentication(
-         @TestUsername final Producer<String> username,
-         @TestPassword final Producer<String> password)
+         @Username final Producer<String> username,
+         @Password final Producer<String> password)
    {
       final AuthType type = checkNotNull(this.config.getAuthentication().getType());
 
@@ -319,7 +304,7 @@ public class TestModule extends AbstractModule
 
    @Provides
    @Singleton
-   @TestHeaders
+   @Headers
    public Map<Producer<String>, Producer<String>> testHeaders()
    {
       return createHeaders(this.config.getHeaders());
@@ -329,7 +314,7 @@ public class TestModule extends AbstractModule
    @Singleton
    @WriteHeaders
    public Map<Producer<String>, Producer<String>> testWriteHeaders(
-         @TestHeaders final Map<Producer<String>, Producer<String>> headers)
+         @Headers final Map<Producer<String>, Producer<String>> headers)
    {
       return provideHeaders(this.config.getWrite(), headers);
    }
@@ -338,7 +323,7 @@ public class TestModule extends AbstractModule
    @Singleton
    @ReadHeaders
    public Map<Producer<String>, Producer<String>> testReadHeaders(
-         @TestHeaders final Map<Producer<String>, Producer<String>> headers)
+         @Headers final Map<Producer<String>, Producer<String>> headers)
    {
       return provideHeaders(this.config.getRead(), headers);
    }
@@ -347,7 +332,7 @@ public class TestModule extends AbstractModule
    @Singleton
    @DeleteHeaders
    public Map<Producer<String>, Producer<String>> testDeleteHeaders(
-         @TestHeaders final Map<Producer<String>, Producer<String>> headers)
+         @Headers final Map<Producer<String>, Producer<String>> headers)
    {
       return provideHeaders(this.config.getDelete(), headers);
    }
@@ -379,7 +364,6 @@ public class TestModule extends AbstractModule
 
    @Provides
    @Singleton
-   @TestEntity
    public Producer<Entity> testEntity()
    {
       final CollectionAlgorithmType filesizeSelection =
@@ -454,7 +438,7 @@ public class TestModule extends AbstractModule
 
    @Provides
    @Singleton
-   @TestObjectFileLocation
+   @ObjectFileLocation
    public String testObjectFileLocation() throws IOException
    {
       final String path = checkNotNull(this.config.getObjectManager().getObjectFileLocation());
@@ -475,8 +459,8 @@ public class TestModule extends AbstractModule
 
    @Provides
    @Singleton
-   @TestObjectFileName
-   public String testObjectFileName(@TestContainer final Producer<String> container, final Api api)
+   @ObjectFileName
+   public String testObjectFileName(@Container final Producer<String> container, final Api api)
    {
       checkNotNull(container);
       checkNotNull(api);
