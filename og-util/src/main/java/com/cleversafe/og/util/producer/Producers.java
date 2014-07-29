@@ -21,18 +21,37 @@ package com.cleversafe.og.util.producer;
 
 import java.util.List;
 
+/**
+ * A convenience class for creating producer instances
+ * 
+ * @since 1.0
+ */
 public class Producers
 {
    private Producers()
    {}
 
-   public static <T> Producer<T> of(final T item)
+   /**
+    * Creates a producer that always returns the same value
+    * 
+    * @param value
+    *           the value to produce
+    * @return a producer which always returns the same value
+    */
+   public static <T> Producer<T> of(final T value)
    {
-      return new ConstantProducer<T>(item);
+      return new ConstantProducer<T>(value);
    }
 
-   public static <T> Producer<T> cycle(final List<T> items)
+   /**
+    * Creates a producer that returns values in a cycle
+    * 
+    * @param values
+    *           the values to produce
+    * @return a producer which produces values in a cycle
+    */
+   public static <T> Producer<T> cycle(final List<T> values)
    {
-      return new CycleProducer<T>(items);
+      return new CycleProducer<T>(values);
    }
 }

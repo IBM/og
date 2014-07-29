@@ -19,8 +19,19 @@
 
 package com.cleversafe.og.util.producer;
 
-
+/**
+ * A producer of values
+ * 
+ * @param <T>
+ *           the type of value to produce
+ * @since 1.0
+ */
 public interface Producer<T>
 {
+   /**
+    * Returns the next value from this producer
+    * 
+    * @return the next value. Consecutive calls may return previously returned values or new values.
+    */
    T produce();
 }

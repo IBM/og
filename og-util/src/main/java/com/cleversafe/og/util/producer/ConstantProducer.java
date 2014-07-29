@@ -20,18 +20,32 @@
 package com.cleversafe.og.util.producer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+
+/**
+ * A producer which always produces the same value
+ * 
+ * @param <T>
+ *           the type of value to produce
+ * @since 1.0
+ */
 public class ConstantProducer<T> implements Producer<T>
 {
-   private final T item;
+   private final T value;
 
-   public ConstantProducer(final T item)
+   /**
+    * Constructs a producer using the provided value
+    * 
+    * @param value
+    *           the value this producer should always produce
+    */
+   public ConstantProducer(final T value)
    {
-      this.item = checkNotNull(item);
+      this.value = checkNotNull(value);
    }
 
    @Override
    public T produce()
    {
-      return this.item;
+      return this.value;
    }
 }

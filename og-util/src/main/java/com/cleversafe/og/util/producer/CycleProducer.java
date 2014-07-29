@@ -29,31 +29,55 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * A producer which produces values in a cycle. Example:
+ * <p>
+ * 
+ * <pre>
+ * {@code List<Integer> values = new ArrayList<Integer>();
+ * values.add(1);
+ * values.add(2);
+ * values.add(3);
+ * Producer<Integer> cycle = new CycleProducer<Integer>(values);}
+ * </pre>
+ * <p>
+ * Subsequent calls to produce will return {@code (1, 2, 3, 1, 2, 3, 1)} and so on.
+ * 
+ * @param <T>
+ *           the type of value to produce
+ * @since 1.0
+ */
 public class CycleProducer<T> implements Producer<T>
 {
    private static final Logger _logger = LoggerFactory.getLogger(CycleProducer.class);
-   private final List<T> items;
+   private final List<T> values;
    private final AtomicLong counter;
 
-   public CycleProducer(final List<T> items)
+   /**
+    * Constructs a producer using the provided list of values
+    * 
+    * @param values
+    *           the values to produce
+    */
+   public CycleProducer(final List<T> values)
    {
-      checkNotNull(items);
-      checkArgument(!items.isEmpty(), "items must not be empty");
-      for (final T item : items)
+      checkNotNull(values);
+      checkArgument(!values.isEmpty(), "values must not be empty");
+      for (final T item : values)
       {
-         checkNotNull(item, "items must not contain any null elements");
+         checkNotNull(item, "values must not contain any null elements");
       }
       // defensive copy
-      this.items = new ArrayList<T>();
-      this.items.addAll(items);
+      this.values = new ArrayList<T>();
+      this.values.addAll(values);
       this.counter = new AtomicLong(0);
    }
 
    @Override
    public T produce()
    {
-      final int idx = (int) (this.counter.getAndIncrement() % this.items.size());
-      return this.items.get(idx);
+      final int idx = (int) (this.counter.getAndIncrement() % this.values.size());
+      return this.values.get(idx);
    }
 
 }
