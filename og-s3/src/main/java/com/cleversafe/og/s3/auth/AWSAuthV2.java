@@ -43,6 +43,25 @@ import com.cleversafe.og.operation.Request;
 import com.google.common.base.Splitter;
 import com.google.common.io.BaseEncoding;
 
+/**
+ * An http auth implementation that creates authorization header values using the awsv2 auth
+ * algorithm
+ * <p>
+ * Note: this implementation includes the following limitations:
+ * <ul>
+ * <li>Only path-style requests are supported. Virtual hosts are not supported</li>
+ * <li>Request canonicalization step 4 (other query params) is not supported</li>
+ * <li>Amz header canonicalization steps 3 and 4 are not supported</li>
+ * </ul>
+ * <p>
+ * Additionally, although the documentation does not specify it, the examples indicate that the
+ * x-amz-date header should be ignored when computing canonicalized amz headers. This implementation
+ * chooses to follow this derived behavior
+ * 
+ * @see <a href="http://docs.aws.amazon.com/AmazonS3/latest/dev/RESTAuthentication.html"
+ *      target="_blank">Amazon REST Authentication</a>
+ * @since 1.0
+ */
 public class AWSAuthV2 implements HttpAuth
 {
    private static final Logger _logger = LoggerFactory.getLogger(AWSAuthV2.class);
@@ -153,10 +172,6 @@ public class AWSAuthV2 implements HttpAuth
       return defaultValue;
    }
 
-   // TODO steps 3 and 4 not supported, see canonicalizing request headers
-   // http://docs.aws.amazon.com/AmazonS3/latest/dev/RESTAuthentication.html
-   // TODO documentation doesn't say to, but examples illustrate that x-amz-date
-   // should be ignored when computing canonicalAmzHeaders. Is this correct?
    public String canonicalizedAmzHeaders(final Request request)
    {
       // create canonicalHeaders lazily, usually no x-amz- headers will be present
@@ -189,9 +204,6 @@ public class AWSAuthV2 implements HttpAuth
       return s.toString();
    }
 
-   // TODO only supports path-style requests, virtual hosts not supported
-   // TODO other query params not supported, see step 4 of canonicalizing a request:
-   // http://docs.aws.amazon.com/AmazonS3/latest/dev/RESTAuthentication.html
    public String canonicalizedResource(final Request request)
    {
       // create subresources lazily, usually no subresources will be present

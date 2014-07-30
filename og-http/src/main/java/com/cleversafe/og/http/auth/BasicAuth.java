@@ -29,7 +29,7 @@ import com.cleversafe.og.operation.Request;
 import com.google.common.io.BaseEncoding;
 
 /**
- * An http auth implemenation that creates authorization header values using the basic auth
+ * An http auth implementation that creates authorization header values using the basic auth
  * algorithm
  * 
  * @since 1.0
