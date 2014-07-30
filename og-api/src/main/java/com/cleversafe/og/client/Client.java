@@ -25,7 +25,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * An executor of requests.
- * 
  */
 public interface Client
 {
@@ -34,8 +33,6 @@ public interface Client
     * 
     * @param request
     *           the request to execute
-    * @throws NullPointerExecption
-    *            if request is null
     * @return A future representing the eventual completion of this request
     */
    ListenableFuture<Response> execute(Request request);

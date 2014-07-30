@@ -51,8 +51,6 @@ public interface ObjectManager
     * 
     * @param objectName
     *           the name of the object that the caller has finished reading
-    * @throws NullPointerException
-    *            if objectName is null
     */
    void releaseNameFromRead(ObjectName objectName);
 
@@ -62,8 +60,6 @@ public interface ObjectManager
     * 
     * @param objectName
     *           the name of the object that the caller has finished writing
-    * @throws NullPointerException
-    *            if objectName is null
     */
    void writeNameComplete(ObjectName objectName);
 

@@ -55,8 +55,6 @@ public class LegacyObjectName implements ObjectName
     * @param objectName
     *           the object name, in bytes
     * @return a <code>LegacyObjectName</code> instance
-    * @throws NullPointerException
-    *            if objectName is null
     * @throws IllegalArgumentException
     *            if the length of objectName is not 18
     */
@@ -74,8 +72,6 @@ public class LegacyObjectName implements ObjectName
     * @param objectName
     *           the object name, as a UUID
     * @return a <code>LegacyObjectName</code> instance
-    * @throws NullPointerException
-    *            if objectName is null
     */
    public static LegacyObjectName forUUID(final UUID objectName)
    {

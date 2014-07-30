@@ -40,8 +40,6 @@ public interface Response
     * @param key
     *           the key of the header
     * @return the value for the header with the specified key, or null if no such mapping exists
-    * @throws NullPointerException
-    *            if key is null
     */
    String getHeader(String key);
 
@@ -67,8 +65,6 @@ public interface Response
     *           the key of the metadata entry
     * @return the value for the metadata entry with the specified key, or null if no such mapping
     *         exists
-    * @throws NullPointerException
-    *            if key is null
     */
    String getMetadata(Metadata key);
 
@@ -79,8 +75,6 @@ public interface Response
     *           the key of the metadata entry
     * @return the value for the metadata entry with the specified key, or null if no such mapping
     *         exists
-    * @throws NullPointerException
-    *            if key is null
     */
    String getMetadata(String key);
 

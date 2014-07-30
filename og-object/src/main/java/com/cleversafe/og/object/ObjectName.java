@@ -31,8 +31,6 @@ public interface ObjectName extends Comparable<ObjectName>
     * 
     * @param objectName
     *           the object name, in bytes
-    * @throws NullPointerException
-    *            if objectName is null
     */
    void setName(byte[] objectName);
 
