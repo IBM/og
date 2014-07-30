@@ -25,6 +25,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.cleversafe.og.operation.Entity;
 import com.cleversafe.og.operation.EntityType;
 
+/**
+ * A utility class for creating entity instances
+ * 
+ * @since 1.0
+ */
 public class Entities
 {
    private static final Entity NONE_ENTITY = Entities.create(EntityType.NONE, 0);
@@ -32,16 +37,39 @@ public class Entities
    private Entities()
    {}
 
+   /**
+    * Creates an entity instance representing no entity
+    * 
+    * @return an entity instance
+    */
    public static Entity none()
    {
       return NONE_ENTITY;
    }
 
+   /**
+    * Creates an entity instance representing an entity with random data
+    * 
+    * @param size
+    *           the size of the entity
+    * @return a random entity instance
+    * @throws IllegalArgumentException
+    *            if size is negative
+    */
    public static Entity random(final long size)
    {
       return create(EntityType.RANDOM, size);
    }
 
+   /**
+    * Creates an entity instance representing an entity with zeroes for data
+    * 
+    * @param size
+    *           the size of the entity
+    * @return a zero based entity instance
+    * @throws IllegalArgumentException
+    *            if size is negative
+    */
    public static Entity zeroes(final long size)
    {
       return create(EntityType.ZEROES, size);
