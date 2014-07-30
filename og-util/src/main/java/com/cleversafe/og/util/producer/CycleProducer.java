@@ -63,13 +63,12 @@ public class CycleProducer<T> implements Producer<T>
    {
       checkNotNull(values);
       checkArgument(!values.isEmpty(), "values must not be empty");
-      for (final T item : values)
-      {
-         checkNotNull(item, "values must not contain any null elements");
-      }
       // defensive copy
       this.values = new ArrayList<T>();
-      this.values.addAll(values);
+      for (final T value : values)
+      {
+         this.values.add(checkNotNull(value, "values must not contain any null elements"));
+      }
       this.counter = new AtomicLong(0);
    }
 
