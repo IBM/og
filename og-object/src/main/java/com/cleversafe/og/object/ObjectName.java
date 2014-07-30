@@ -20,9 +20,10 @@
 package com.cleversafe.og.object;
 
 /**
- * An identifying name for an object. Implementers should also override <code>toString</code> to
- * provide a string representation of this name.
+ * An identifying name for an object. Implementers should also override {@code toString} to provide
+ * a string representation of this name.
  * 
+ * @since 1.0
  */
 public interface ObjectName extends Comparable<ObjectName>
 {

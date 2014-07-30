@@ -20,27 +20,18 @@
 package com.cleversafe.og.object.manager;
 
 /**
- * Signals that an unexpected event occurred in an object manager instance while attempting to
- * service a request.
+ * This exception signals that an unexpected event occurred in an object manager instance while
+ * attempting to service a request.
+ * 
+ * @since 1.0
  */
 public class ObjectManagerException extends RuntimeException
 {
    private static final long serialVersionUID = 1L;
 
-   /**
-    * Constructs an <code>ObjectManagerException</code> with <code>null</code> as its error detail
-    * message.
-    */
    public ObjectManagerException()
    {}
 
-   /**
-    * Constructs an <code>ObjectManagerException</code> with the specified detail message.
-    * 
-    * @param message
-    *           The detail message (which is saved for later retrieval by the {@link #getMessage()}
-    *           method)
-    */
    public ObjectManagerException(final String message)
    {
       super(message);

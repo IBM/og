@@ -39,12 +39,29 @@ import com.google.common.collect.Iterables;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.io.BaseEncoding;
 
+/**
+ * A consumer of object names
+ * 
+ * @since 1.0
+ */
 public abstract class ObjectNameConsumer
 {
    protected final ObjectManager objectManager;
    private final Operation operation;
    private final List<Integer> statusCodes;
 
+   /**
+    * Constructs an instance
+    * 
+    * @param objectManager
+    *           the object manager for this instance to work with
+    * @param operation
+    *           the operation type this instance should work with
+    * @param statusCodes
+    *           the status codes this instance should work with
+    * @throws IllegalArgumentException
+    *            if any status code in status codes is invalid
+    */
    public ObjectNameConsumer(
          final ObjectManager objectManager,
          final Operation operation,
@@ -62,6 +79,12 @@ public abstract class ObjectNameConsumer
       this.statusCodes = statusCodes;
    }
 
+   /**
+    * Consumes operations and processes object names
+    * 
+    * @param operation
+    *           the operation to process
+    */
    @Subscribe
    public void consume(final Pair<Request, Response> operation)
    {

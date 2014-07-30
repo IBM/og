@@ -29,8 +29,10 @@ import java.util.UUID;
 import com.google.common.io.BaseEncoding;
 
 /**
- * An <code>ObjectName</code> implementation that represents an object name of a fixed length of 18
+ * An {@code ObjectName} implementation that represents an object name of a fixed length of 18
  * bytes, as is expected by the legacy bin file format.
+ * 
+ * @since 1.0
  */
 public class LegacyObjectName implements ObjectName
 {
@@ -50,11 +52,11 @@ public class LegacyObjectName implements ObjectName
    }
 
    /**
-    * Configures an <code>LegacyObjectName</code> instance, using the provided bytes as the name
+    * Configures an {@code LegacyObjectName} instance, using the provided bytes as the name
     * 
     * @param objectName
     *           the object name, in bytes
-    * @return a <code>LegacyObjectName</code> instance
+    * @return a {@code LegacyObjectName} instance
     * @throws IllegalArgumentException
     *            if the length of objectName is not 18
     */
@@ -65,13 +67,13 @@ public class LegacyObjectName implements ObjectName
    }
 
    /**
-    * Configures an <code>ObjectName</code> instance, using the provided UUID as the name. The most
+    * Configures an {@code ObjectName} instance, using the provided UUID as the name. The most
     * significant and least significant bits of the UUID will represent the first 16 bytes of this
     * instance, and the remaining 2 bytes will be zero padded
     * 
     * @param objectName
     *           the object name, as a UUID
-    * @return a <code>LegacyObjectName</code> instance
+    * @return a {@code LegacyObjectName} instance
     */
    public static LegacyObjectName forUUID(final UUID objectName)
    {
@@ -148,7 +150,7 @@ public class LegacyObjectName implements ObjectName
    @Override
    public int compareTo(final ObjectName o)
    {
-      // TODO this compareTo implementation is heavily borrrowed from String.toString. It is
+      // TODO this compareTo implementation is heavily borrowed from String.toString. It is
       // ignorant of character encoding issues, but in our case we are storing hex digits so it
       // should be sufficient
       final byte[] b1 = toBytes();

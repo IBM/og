@@ -25,6 +25,8 @@ import com.cleversafe.og.object.ObjectName;
  * A collection of objects, and the requisite services for persisting object names to disk.
  * Implementations of this interface may provide varying policies for how and when objects are
  * stored on disk. Caching and retrieval policies may also differ.
+ * 
+ * @since 1.0
  */
 public interface ObjectManager
 {
