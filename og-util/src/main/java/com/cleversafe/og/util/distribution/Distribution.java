@@ -21,6 +21,8 @@ package com.cleversafe.og.util.distribution;
 
 /**
  * An object that emits values based on a configured statistical distribution.
+ * 
+ * @since 1.0
  */
 public interface Distribution
 {

@@ -25,8 +25,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Random;
 
 /**
- * A <code>Distribution</code> implementation that returns values conforming to a lognormal
- * distribution.
+ * A distribution implementation that returns values conforming to a lognormal distribution.
+ * 
+ * @since 1.0
  */
 public class LogNormalDistribution implements Distribution
 {
@@ -35,7 +36,7 @@ public class LogNormalDistribution implements Distribution
    private final Random random;
 
    /**
-    * Constructs a <code>LogNormalDistribution</code> instance
+    * Constructs a lognormal distribution instance
     * 
     * @param average
     *           the average value of this distribution
@@ -52,8 +53,8 @@ public class LogNormalDistribution implements Distribution
    }
 
    /**
-    * Constructs a <code>LogNormalDistribution</code> instance, using the provided
-    * <code>Random</code> instance for random seed data
+    * Constructs a lognormal distribution instance, using the provided random instance for random
+    * seed data
     * 
     * @param average
     *           the average value of this distribution
@@ -63,8 +64,6 @@ public class LogNormalDistribution implements Distribution
     *            if average is negative
     * @throws IllegalArgumentException
     *            if spread is negative
-    * @throws NullPointerException
-    *            if random is null
     */
    public LogNormalDistribution(final double average, final double spread, final Random random)
    {

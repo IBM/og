@@ -25,8 +25,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Random;
 
 /**
- * A <code>Distribution</code> implementation that returns values conforming to a poisson
- * distribution.
+ * A distribution implementation that returns values conforming to a poisson distribution.
+ * 
+ * @since 1.0
  */
 public class PoissonDistribution implements Distribution
 {
@@ -34,7 +35,7 @@ public class PoissonDistribution implements Distribution
    private final Random random;
 
    /**
-    * Constructs a <code>PoissonDistribution</code> instance
+    * Constructs a poisson distribution instance
     * 
     * @param average
     *           the average value of this distribution
@@ -47,15 +48,13 @@ public class PoissonDistribution implements Distribution
    }
 
    /**
-    * Constructs a <code>PoissonDistribution</code> instance, using the provided <code>Random</code>
-    * instance for random seed data
+    * Constructs a poission distribution instance, using the provided random instance for random
+    * seed data
     * 
     * @param average
     *           the average value of this distribution
     * @throws IllegalArgumentException
     *            if average is negative
-    * @throws NullPointerException
-    *            if random is null
     */
    public PoissonDistribution(final double average, final Random random)
    {
@@ -72,7 +71,7 @@ public class PoissonDistribution implements Distribution
    }
 
    /**
-    * This implementation always returns <code>0.0</code>
+    * This implementation always returns {@code 0.0}
     */
    @Override
    public double getSpread()
