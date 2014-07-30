@@ -36,6 +36,11 @@ import com.cleversafe.og.util.producer.ProducerException;
 import com.cleversafe.og.util.producer.Producers;
 import com.google.common.base.Joiner;
 
+/**
+ * A producer of uris
+ * 
+ * @since 1.0
+ */
 public class UriProducer implements Producer<URI>
 {
    private final Producer<Scheme> scheme;
@@ -117,6 +122,9 @@ public class UriProducer implements Producer<URI>
          s.append("?").append(queryParams);
    }
 
+   /**
+    * A uri producer builder
+    */
    public static class Builder
    {
       private Producer<Scheme> scheme;
@@ -126,11 +134,27 @@ public class UriProducer implements Producer<URI>
       private final Map<String, String> queryParameters;
       private boolean trailingSlash;
 
+      /**
+       * Constructs a builder instance using the provided host and path
+       * 
+       * @param host
+       *           the host name or ip address
+       * @param path
+       *           the uri resource path
+       */
       public Builder(final String host, final List<Producer<String>> path)
       {
          this(Producers.of(host), path);
       }
 
+      /**
+       * Constructs a builder instance using the provided host and path producers
+       * 
+       * @param host
+       *           the host name or ip address
+       * @param path
+       *           the uri resource path
+       */
       public Builder(final Producer<String> host, final List<Producer<String>> path)
       {
          this.scheme = Producers.of(Scheme.HTTP);
@@ -139,41 +163,91 @@ public class UriProducer implements Producer<URI>
          this.queryParameters = new LinkedHashMap<String, String>();
       }
 
+      /**
+       * Configures the uri scheme
+       * 
+       * @param scheme
+       *           the uri scheme
+       * @return this builder
+       */
       public Builder withScheme(final Scheme scheme)
       {
          return withScheme(Producers.of(scheme));
       }
 
+      /**
+       * Configures the uri scheme, using the provided producer
+       * 
+       * @param scheme
+       *           the uri scheme
+       * @return this builder
+       */
       public Builder withScheme(final Producer<Scheme> scheme)
       {
          this.scheme = scheme;
          return this;
       }
 
+      /**
+       * Configures the uri port
+       * 
+       * @param port
+       *           the uri port
+       * @return this builder
+       */
       public Builder onPort(final int port)
       {
          checkArgument(port >= 0, "port must be >= 0 [%s]", port);
          return onPort(Producers.of(port));
       }
 
+      /**
+       * Configures the uri port, using the provided producer
+       * 
+       * @param port
+       *           the uri port
+       * @return this builder
+       */
       public Builder onPort(final Producer<Integer> port)
       {
          this.port = port;
          return this;
       }
 
+      /**
+       * Configures a uri query parameter
+       * 
+       * @param key
+       *           the query parameter key
+       * @param value
+       *           the query paremeter value
+       * @return this builder
+       */
       public Builder withQueryParameter(final String key, final String value)
       {
          this.queryParameters.put(key, value);
          return this;
       }
 
+      /**
+       * Configures a trailing slash at the end of the produced uri
+       * 
+       * @return this builder
+       */
       public Builder withTrailingSlash()
       {
          this.trailingSlash = true;
          return this;
       }
 
+      /**
+       * Constructs a uri producer instance
+       * 
+       * @return a uri producer instance
+       * @throws NullPointerException
+       *            if path contains any null elements, or queryParameters contains any null keys or
+       *            values
+       */
       public UriProducer build()
       {
          return new UriProducer(this);

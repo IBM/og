@@ -34,6 +34,11 @@ import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.Entities;
 
+/**
+ * A defacto implementation of the {@code Response} interface
+ * 
+ * @since 1.0
+ */
 public class HttpResponse implements Response
 {
    private final int statusCode;
@@ -107,6 +112,9 @@ public class HttpResponse implements Response
       return this.metadata.entrySet().iterator();
    }
 
+   /**
+    * An http response builder
+    */
    public static class Builder
    {
       private int statusCode;
@@ -114,6 +122,9 @@ public class HttpResponse implements Response
       private Entity entity;
       private final Map<String, String> metadata;
 
+      /**
+       * Constructs a builder
+       */
       public Builder()
       {
          this.headers = new LinkedHashMap<String, String>();
@@ -127,29 +138,73 @@ public class HttpResponse implements Response
          return this;
       }
 
+      /**
+       * Configures a response header to include with this response
+       * 
+       * @param key
+       *           a header key
+       * @param value
+       *           a header value
+       * @return this builder
+       */
       public Builder withHeader(final String key, final String value)
       {
          this.headers.put(key, value);
          return this;
       }
 
+      /**
+       * Configures a response entity to include with this response
+       * 
+       * @param entity
+       *           an entity
+       * @return this builder
+       */
       public Builder withEntity(final Entity entity)
       {
          this.entity = entity;
          return this;
       }
 
+      /**
+       * Configures an additional piece of metadata to include with this response, using a
+       * {@code Metadata} entry as the key
+       * 
+       * @param key
+       *           a metadata key
+       * @param value
+       *           a metadata value
+       * @return this builder
+       */
       public Builder withMetadata(final Metadata key, final String value)
       {
          return withMetadata(key.toString(), value);
       }
 
+      /**
+       * Configures an additional piece of metadata to include with this response
+       * 
+       * @param key
+       *           a metadata key
+       * @param value
+       *           a metadata value
+       * @return this builder
+       */
       public Builder withMetadata(final String key, final String value)
       {
          this.metadata.put(key, value);
          return this;
       }
 
+      /**
+       * Constructs an http response instance
+       * 
+       * @return an http response instance
+       * @throws IllegalArgumentException
+       *            if an invalid status code was configured with this builder
+       * @throws NullPointerException
+       *            if any null header or metadata keys or values were added to this builder
+       */
       public HttpResponse build()
       {
          return new HttpResponse(this);

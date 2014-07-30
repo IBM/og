@@ -34,6 +34,11 @@ import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.util.producer.Producer;
 import com.cleversafe.og.util.producer.Producers;
 
+/**
+ * A producer of requests
+ * 
+ * @since 1.0
+ */
 public class RequestProducer implements Producer<Request>
 {
    private final Producer<Method> method;
@@ -83,6 +88,9 @@ public class RequestProducer implements Producer<Request>
       return context.build();
    }
 
+   /**
+    * A request producer builder
+    */
    public static class Builder
    {
       private final Producer<Method> method;
@@ -91,11 +99,27 @@ public class RequestProducer implements Producer<Request>
       private Producer<Entity> entity;
       private final Map<Producer<String>, Producer<String>> metadata;
 
+      /**
+       * Constructs a builder instance using the provided method and uri
+       * 
+       * @param method
+       *           the request method
+       * @param uri
+       *           the request uri
+       */
       public Builder(final Method method, final URI uri)
       {
          this(Producers.of(method), Producers.of(uri));
       }
 
+      /**
+       * Constructs a builder instance using the provided method and uri producers
+       * 
+       * @param method
+       *           a request method producer
+       * @param uri
+       *           a request uri producer
+       */
       public Builder(final Producer<Method> method, final Producer<URI> uri)
       {
          this.method = method;
@@ -104,45 +128,115 @@ public class RequestProducer implements Producer<Request>
          this.metadata = new LinkedHashMap<Producer<String>, Producer<String>>();
       }
 
+      /**
+       * Configures a request header to include with this request producer
+       * 
+       * @param key
+       *           a header key
+       * @param value
+       *           a header value
+       * @return this builder
+       */
       public Builder withHeader(final String key, final String value)
       {
          return withHeader(Producers.of(key), Producers.of(value));
       }
 
+      /**
+       * Configures a request header to include with this request producer, using producers for the
+       * key and value
+       * 
+       * @param key
+       *           a header key
+       * @param value
+       *           a header value
+       * @return this builder
+       */
       public Builder withHeader(final Producer<String> key, final Producer<String> value)
       {
          this.headers.put(key, value);
          return this;
       }
 
+      /**
+       * Configures a request entity to include with this request producer
+       * 
+       * @param entity
+       *           an entity
+       * @return this builder
+       */
       public Builder withEntity(final Entity entity)
       {
          return withEntity(Producers.of(entity));
       }
 
+      /**
+       * Configures a request entity to include with this request producer, using a producer for the
+       * entity
+       * 
+       * @param entity
+       *           an entity
+       * @return this builder
+       */
       public Builder withEntity(final Producer<Entity> entity)
       {
          this.entity = checkNotNull(entity);
          return this;
       }
 
+      /**
+       * Configures an additional piece of metadata to include with this request producer, using a
+       * {@code Metadata} entry as the key
+       * 
+       * @param key
+       *           a metadata key
+       * @param value
+       *           a metadata value
+       * @return this builder
+       */
       public Builder withMetadata(final Metadata key, final String value)
       {
          return withMetadata(key.toString(), value);
       }
 
+      /**
+       * Configures an additional piece of metadata to include with this request producer
+       * 
+       * @param key
+       *           a metadata key
+       * @param value
+       *           a metadata value
+       * @return this builder
+       */
       public Builder withMetadata(final String key, final String value)
       {
          this.metadata.put(Producers.of(key), Producers.of(value));
          return this;
       }
 
+      /**
+       * Configures an additional piece of metadata to include with this request producer, using
+       * producers for the key and value
+       * 
+       * @param key
+       *           a metadata key
+       * @param value
+       *           a metadata value
+       * @return this builder
+       */
       public Builder withMetadata(final Producer<String> key, final Producer<String> value)
       {
          this.metadata.put(key, value);
          return this;
       }
 
+      /**
+       * Constructs a request producer instance
+       * 
+       * @return a request producer instance
+       * @throws NullPointerException
+       *            if any null header or metadata keys or values were added to this builder
+       */
       public RequestProducer build()
       {
          return new RequestProducer(this);

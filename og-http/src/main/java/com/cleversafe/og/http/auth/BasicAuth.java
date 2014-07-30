@@ -28,6 +28,12 @@ import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Request;
 import com.google.common.io.BaseEncoding;
 
+/**
+ * An http auth implemenation that creates authorization header values using the basic auth
+ * algorithm
+ * 
+ * @since 1.0
+ */
 public class BasicAuth implements HttpAuth
 {
    private static final Logger _logger = LoggerFactory.getLogger(BasicAuth.class);

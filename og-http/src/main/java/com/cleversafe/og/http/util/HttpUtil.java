@@ -36,6 +36,11 @@ import com.cleversafe.og.util.Operation;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Range;
 
+/**
+ * A utility class for working with http components
+ * 
+ * @since 1.0
+ */
 public class HttpUtil
 {
    private static final Logger _logger = LoggerFactory.getLogger(HttpUtil.class);
@@ -54,6 +59,13 @@ public class HttpUtil
    private HttpUtil()
    {}
 
+   /**
+    * Translates the provided method into the corresponding operation
+    * 
+    * @param method
+    *           the method to convert
+    * @return the translated operation instance
+    */
    public static Operation toOperation(final Method method)
    {
       checkNotNull(method);
@@ -72,6 +84,13 @@ public class HttpUtil
       }
    }
 
+   /**
+    * Extracts an object name from the provided uri, if it exists
+    * 
+    * @param uri
+    *           the uri to extract an object name from
+    * @return the contained object name, or null if no object name could be determined
+    */
    public static String getObjectName(final URI uri)
    {
       checkNotNull(uri);
