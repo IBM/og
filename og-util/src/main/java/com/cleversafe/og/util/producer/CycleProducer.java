@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
  * Subsequent calls to produce will return {@code (1, 2, 3, 1, 2, 3, 1)} and so on.
  * 
  * @param <T>
- *           the type of value to produce
+ *           the type of values to produce
  * @since 1.0
  */
 public class CycleProducer<T> implements Producer<T>
