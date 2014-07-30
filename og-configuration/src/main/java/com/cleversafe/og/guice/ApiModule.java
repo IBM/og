@@ -213,7 +213,14 @@ public class ApiModule extends AbstractModule
       final RequestProducer.Builder b = new RequestProducer.Builder(Producers.of(method), uri);
 
       if (object != null)
-         b.withObject(object);
+         b.withMetadata(Producers.of(Metadata.OBJECT_NAME.toString()), new Producer<String>()
+         {
+            @Override
+            public String produce()
+            {
+               return object.getCachedValue();
+            }
+         });
 
       for (final Entry<Producer<String>, Producer<String>> header : headers.entrySet())
       {
@@ -228,7 +235,10 @@ public class ApiModule extends AbstractModule
       }
 
       if (username != null && password != null)
-         b.withCredentials(username, password);
+      {
+         b.withMetadata(Producers.of(Metadata.USERNAME.toString()), username);
+         b.withMetadata(Producers.of(Metadata.PASSWORD.toString()), password);
+      }
 
       return b.build();
    }

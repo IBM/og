@@ -19,7 +19,6 @@
 
 package com.cleversafe.og.http.producer;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URI;
@@ -32,7 +31,6 @@ import com.cleversafe.og.operation.Entity;
 import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
-import com.cleversafe.og.util.producer.CachingProducer;
 import com.cleversafe.og.util.producer.Producer;
 import com.cleversafe.og.util.producer.Producers;
 
@@ -40,18 +38,14 @@ public class RequestProducer implements Producer<Request>
 {
    private final Producer<Method> method;
    private final Producer<URI> uri;
-   private final CachingProducer<String> object;
    private final Map<Producer<String>, Producer<String>> headers;
    private final Producer<Entity> entity;
    private final Map<Producer<String>, Producer<String>> metadata;
-   private final Producer<String> username;
-   private final Producer<String> password;
 
    private RequestProducer(final Builder builder)
    {
       this.method = checkNotNull(builder.method);
       this.uri = checkNotNull(builder.uri);
-      this.object = builder.object;
       // defensive copy
       this.headers = new LinkedHashMap<Producer<String>, Producer<String>>();
       for (final Entry<Producer<String>, Producer<String>> h : checkNotNull(builder.headers).entrySet())
@@ -65,11 +59,6 @@ public class RequestProducer implements Producer<Request>
       {
          this.metadata.put(checkNotNull(m.getKey()), checkNotNull(m.getValue()));
       }
-      this.username = builder.username;
-      this.password = builder.password;
-      checkArgument((this.username != null && this.password != null)
-            || (this.username == null && this.password == null),
-            "username and password must both be either null or not null");
    }
 
    @Override
@@ -77,9 +66,6 @@ public class RequestProducer implements Producer<Request>
    {
       final HttpRequest.Builder context =
             new HttpRequest.Builder(this.method.produce(), this.uri.produce());
-
-      if (this.object != null)
-         context.withMetadata(Metadata.OBJECT_NAME, this.object.getCachedValue());
 
       for (final Entry<Producer<String>, Producer<String>> header : this.headers.entrySet())
       {
@@ -94,12 +80,6 @@ public class RequestProducer implements Producer<Request>
          context.withMetadata(e.getKey().produce(), e.getValue().produce());
       }
 
-      if (this.username != null)
-         context.withMetadata(Metadata.USERNAME, this.username.produce());
-
-      if (this.password != null)
-         context.withMetadata(Metadata.PASSWORD, this.password.produce());
-
       return context.build();
    }
 
@@ -107,12 +87,9 @@ public class RequestProducer implements Producer<Request>
    {
       private final Producer<Method> method;
       private final Producer<URI> uri;
-      private CachingProducer<String> object;
       private final Map<Producer<String>, Producer<String>> headers;
       private Producer<Entity> entity;
       private final Map<Producer<String>, Producer<String>> metadata;
-      private Producer<String> username;
-      private Producer<String> password;
 
       public Builder(final Method method, final URI uri)
       {
@@ -125,12 +102,6 @@ public class RequestProducer implements Producer<Request>
          this.uri = uri;
          this.headers = new LinkedHashMap<Producer<String>, Producer<String>>();
          this.metadata = new LinkedHashMap<Producer<String>, Producer<String>>();
-      }
-
-      public Builder withObject(final CachingProducer<String> object)
-      {
-         this.object = checkNotNull(object);
-         return this;
       }
 
       public Builder withHeader(final String key, final String value)
@@ -169,20 +140,6 @@ public class RequestProducer implements Producer<Request>
       public Builder withMetadata(final Producer<String> key, final Producer<String> value)
       {
          this.metadata.put(key, value);
-         return this;
-      }
-
-      public Builder withCredentials(final String username, final String password)
-      {
-         return withCredentials(Producers.of(username), Producers.of(password));
-      }
-
-      public Builder withCredentials(
-            final Producer<String> username,
-            final Producer<String> password)
-      {
-         this.username = username;
-         this.password = password;
          return this;
       }
 

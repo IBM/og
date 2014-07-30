@@ -21,9 +21,7 @@ package com.cleversafe.og.http.producer;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map.Entry;
 
 import org.junit.Assert;
@@ -36,7 +34,6 @@ import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.util.Entities;
-import com.cleversafe.og.util.producer.CachingProducer;
 import com.cleversafe.og.util.producer.Producer;
 import com.cleversafe.og.util.producer.Producers;
 
@@ -74,12 +71,6 @@ public class RequestProducerTest
    public void testNullUriProducer()
    {
       new RequestProducer.Builder(Producers.of(this.method), (Producer<URI>) null).build();
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void testNullObject()
-   {
-      new RequestProducer.Builder(this.method, this.uri).withObject(null).build();
    }
 
    @Test(expected = NullPointerException.class)
@@ -158,32 +149,6 @@ public class RequestProducerTest
             .withMetadata(Producers.of("aborted"), (Producer<String>) null).build();
    }
 
-   @Test(expected = NullPointerException.class)
-   public void testNullUsername()
-   {
-      new RequestProducer.Builder(this.method, this.uri).withCredentials(null, "password");
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testNullUsername2()
-   {
-      new RequestProducer.Builder(this.method, this.uri)
-            .withCredentials((Producer<String>) null, Producers.of("password")).build();
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void testNullPassword()
-   {
-      new RequestProducer.Builder(this.method, this.uri).withCredentials("username", (String) null);
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testNullPassword2()
-   {
-      new RequestProducer.Builder(this.method, this.uri)
-            .withCredentials(Producers.of("username"), (Producer<String>) null).build();
-   }
-
    @Test
    public void testMethod()
    {
@@ -214,23 +179,6 @@ public class RequestProducerTest
       final Request r =
             new RequestProducer.Builder(Producers.of(this.method), Producers.of(aUri)).build().produce();
       Assert.assertEquals(aUri, r.getUri());
-   }
-
-   @Test
-   public void testObject()
-   {
-      final List<String> list = new ArrayList<String>();
-      list.add("one");
-      list.add("two");
-      list.add("three");
-      final CachingProducer<String> cp = new CachingProducer<String>(Producers.cycle(list));
-      final Producer<Request> p =
-            new RequestProducer.Builder(this.method, this.uri).withObject(cp).build();
-
-      Assert.assertEquals("one", cp.produce());
-      final Request r = p.produce();
-      Assert.assertEquals("one", r.getMetadata(Metadata.OBJECT_NAME));
-      Assert.assertEquals("two", cp.produce());
    }
 
    @Test
@@ -309,25 +257,6 @@ public class RequestProducerTest
       Assert.assertEquals("key1", e.getKey());
       Assert.assertEquals("value1", e.getValue());
       Assert.assertFalse(it.hasNext());
-   }
-
-   @Test
-   public void testNoCredentials()
-   {
-      final Request r = new RequestProducer.Builder(this.method, this.uri).build().produce();
-      Assert.assertNull(r.getMetadata(Metadata.USERNAME));
-      Assert.assertNull(r.getMetadata(Metadata.PASSWORD));
-   }
-
-   @Test
-   public void testCredentials()
-   {
-      final Request r = new RequestProducer.Builder(this.method, this.uri)
-            .withCredentials("username", "password")
-            .build()
-            .produce();
-      Assert.assertEquals("username", r.getMetadata(Metadata.USERNAME));
-      Assert.assertEquals("password", r.getMetadata(Metadata.PASSWORD));
    }
 
    @Test
