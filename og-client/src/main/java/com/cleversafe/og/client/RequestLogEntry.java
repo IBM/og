@@ -32,6 +32,11 @@ import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.google.common.net.HttpHeaders;
 
+/**
+ * A class for assisting in the serialization of a request / response pair
+ * 
+ * @since 1.0
+ */
 public class RequestLogEntry
 {
    final String type = "http";
@@ -60,6 +65,18 @@ public class RequestLogEntry
          "dd/MMM/yyyy:HH:mm:ss Z").withLocale(Locale.US);
    private static final String X_CLV_REQUEST_ID = "X-Clv-Request-Id";
 
+   /**
+    * Constructs an instance
+    * 
+    * @param request
+    *           the request for this operation
+    * @param response
+    *           the response for this operation
+    * @param timestampStart
+    *           the timestamp for the start of this request, in milliseconds
+    * @param timestampFinish
+    *           the timestamp for the end of this request, in milliseconds
+    */
    public RequestLogEntry(
          final Request request,
          final Response response,

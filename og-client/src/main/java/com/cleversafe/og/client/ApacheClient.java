@@ -71,6 +71,12 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.LongSerializationPolicy;
 
+/**
+ * A {@code Client} implementation that uses the Apache HttpComponents HttpClient library as its
+ * backing library for executing http requests
+ * 
+ * @since 1.0
+ */
 public class ApacheClient implements Client
 {
    private static final Logger _logger = LoggerFactory.getLogger(ApacheClient.class);
@@ -426,6 +432,9 @@ public class ApacheClient implements Client
       }
    }
 
+   /**
+    * A builder of apache client instances
+    */
    public static class Builder
    {
       private final Map<String, ResponseBodyConsumer> responseBodyConsumers;
@@ -443,6 +452,13 @@ public class ApacheClient implements Client
       private long writeThroughput;
       private long readThroughput;
 
+      /**
+       * Constructs a new builder
+       * 
+       * @param responseBodyConsumers
+       *           a map of response body processor ids to implementations
+       * @see Metadata
+       */
       public Builder(final Map<String, ResponseBodyConsumer> responseBodyConsumers)
       {
          this.connectTimeout = 0;
@@ -459,84 +475,190 @@ public class ApacheClient implements Client
          this.responseBodyConsumers = responseBodyConsumers;
       }
 
+      /**
+       * Configures the timeout in milliseconds until a connection is established. A timeout of zero
+       * is interpreted as an infinite timeout
+       * 
+       * @param connectTimeout
+       *           connection open timeout, in milliseconds
+       * @return this builder
+       */
       public Builder withConnectTimeout(final int connectTimeout)
       {
          this.connectTimeout = connectTimeout;
          return this;
       }
 
+      /**
+       * Configures the socket {@code SO_TIMEOUT} timeout in milliseconds, the maximum duration
+       * between consecutive packets. A timeout of zero is interpreted as an infinite timeout
+       * 
+       * @param soTimeout
+       *           socket timeout, in milliseconds
+       * @return this builder
+       */
       public Builder withSoTimeout(final int soTimeout)
       {
          this.soTimeout = soTimeout;
          return this;
       }
 
+      /**
+       * Configures the {@code SO_REUSEADDR} socket option
+       * 
+       * @param soReuseAddress
+       *           socket reuse flag
+       * @return this builder
+       */
       public Builder usingSoReuseAddress(final boolean soReuseAddress)
       {
          this.soReuseAddress = soReuseAddress;
          return this;
       }
 
+      /**
+       * Configures {@code SO_LINGER} in <em>seconds</em>. A linger of zero disables linger, and a
+       * linger of {@code -1} uses the system default.
+       * 
+       * @param soLinger
+       *           linger, in seconds
+       * @return this builder
+       */
       public Builder withSoLinger(final int soLinger)
       {
          this.soLinger = soLinger;
          return this;
       }
 
+      /**
+       * Configures the {@code SO_KEEPALIVE} socket option
+       * 
+       * @param soKeepAlive
+       *           keepalive flag
+       * @return this builder
+       */
       public Builder usingSoKeepAlive(final boolean soKeepAlive)
       {
          this.soKeepAlive = soKeepAlive;
          return this;
       }
 
+      /**
+       * Configures the {@code TCP_NODELAY} socket option
+       * 
+       * @param tcpNoDelay
+       *           tcp no delay flag
+       * @return this builder
+       */
       public Builder usingTcpNoDelay(final boolean tcpNoDelay)
       {
          this.tcpNoDelay = tcpNoDelay;
          return this;
       }
 
+      /**
+       * Configures the use of http chunked encoding for request bodies
+       * 
+       * @param chunkedEncoding
+       *           chunked encoding flag
+       * @return this builder
+       */
       public Builder usingChunkedEncoding(final boolean chunkedEncoding)
       {
          this.chunkedEncoding = chunkedEncoding;
          return this;
       }
 
+      /**
+       * Configures the use of expect: 100-continue flag for PUT and POST requests
+       * 
+       * @param expectContinue
+       *           expect continue flag
+       * @return this builder
+       */
       public Builder usingExpectContinue(final boolean expectContinue)
       {
          this.expectContinue = expectContinue;
          return this;
       }
 
+      /**
+       * Configure the duration to wait for a continue response from the target host after sending a
+       * 100-continue message prior to continuing with the request. Duration is in milliseconds
+       * 
+       * @param waitForContinue
+       *           wait for continue duration, in milliseconds
+       * @return this builder
+       */
       public Builder withWaitForContinue(final int waitForContinue)
       {
          this.waitForContinue = waitForContinue;
          return this;
       }
 
+      /**
+       * Configures the use of authentication for every request
+       * 
+       * @param authentication
+       *           the authentication type to use
+       * @return this builder
+       */
       public Builder withAuthentication(final HttpAuth authentication)
       {
          this.authentication = authentication;
          return this;
       }
 
+      /**
+       * Configures the user-agent request header to send with every request
+       * 
+       * @param userAgent
+       *           the user agent string to send
+       * @return this builder
+       */
       public Builder withUserAgent(final String userAgent)
       {
          this.userAgent = userAgent;
          return this;
       }
 
+      /**
+       * Configures throughput throttling for PUT and POST requests
+       * 
+       * @param bytesPerSecond
+       *           maximum throughput
+       * @return this builder
+       */
       public Builder withWriteThroughput(final long bytesPerSecond)
       {
          this.writeThroughput = bytesPerSecond;
          return this;
       }
 
+      /**
+       * Configures throughput throttling for GET and HEAD requests
+       * 
+       * @param bytesPerSecond
+       *           maximum throughput
+       * @return this builder
+       */
       public Builder withReadThroughput(final long bytesPerSecond)
       {
          this.readThroughput = bytesPerSecond;
          return this;
       }
 
+      /**
+       * Constructs a new apache client instance
+       * 
+       * @return an apache client instance
+       * @throws IllegalArgumentException
+       *            if connectTimeout, soTimeout, writeThroughput, or readThroughput are negative
+       * @throws IllegalArgumentException
+       *            if soLinger is less than {@code -1}
+       * @throws IllegalArgumentException
+       *            if waitForContinue is negative or zero
+       */
       public ApacheClient build()
       {
          return new ApacheClient(this);

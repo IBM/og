@@ -35,6 +35,11 @@ import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.impl.client.DefaultRedirectStrategy;
 import org.apache.http.protocol.HttpContext;
 
+/**
+ * A redirect strategy which redirects all methods automatically
+ * 
+ * @since 1.0
+ */
 public class CustomRedirectStrategy extends DefaultRedirectStrategy
 {
    private static final String[] REDIRECT_METHODS = new String[]{
