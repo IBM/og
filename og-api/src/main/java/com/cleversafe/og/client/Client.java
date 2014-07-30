@@ -24,12 +24,14 @@ import com.cleversafe.og.operation.Response;
 import com.google.common.util.concurrent.ListenableFuture;
 
 /**
- * An executor of requests.
+ * An executor of requests
+ * 
+ * @since 1.0
  */
 public interface Client
 {
    /**
-    * Executes a request asynchronously.
+    * Executes a request asynchronously
     * 
     * @param request
     *           the request to execute
@@ -38,7 +40,7 @@ public interface Client
    ListenableFuture<Response> execute(Request request);
 
    /**
-    * Shuts down this client.
+    * Shuts down this client
     * 
     * @param immediate
     *           if true, shuts down this client immediately, else shuts down this client gracefully

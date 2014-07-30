@@ -22,12 +22,14 @@ package com.cleversafe.og.operation.manager;
 import com.cleversafe.og.operation.Request;
 
 /**
- * A producer of requests.
+ * A producer of requests
+ * 
+ * @since 1.0
  */
 public interface OperationManager
 {
    /**
-    * Creates and returns the next request to be executed.
+    * Creates and returns the next request to be executed
     * 
     * @return the next request, to be immediately executed
     * @throws OperationManagerException

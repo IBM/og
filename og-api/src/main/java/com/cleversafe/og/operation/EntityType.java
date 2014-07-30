@@ -20,7 +20,9 @@
 package com.cleversafe.og.operation;
 
 /**
- * An enumeration of supported entity types.
+ * An enumeration of supported entity types
+ * 
+ * @since 1.0
  */
 public enum EntityType
 {

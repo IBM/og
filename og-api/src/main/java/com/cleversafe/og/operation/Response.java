@@ -23,19 +23,21 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 
 /**
- * An object that describes an http response.
+ * An object that describes an http response
+ * 
+ * @since 1.0
  */
 public interface Response
 {
    /**
-    * Gets the status code for this response.
+    * Gets the status code for this response
     * 
     * @return the status code for this response
     */
    int getStatusCode();
 
    /**
-    * Gets the value of the response header with the specified key.
+    * Gets the value of the response header with the specified key
     * 
     * @param key
     *           the key of the header
@@ -44,22 +46,21 @@ public interface Response
    String getHeader(String key);
 
    /**
-    * Returns an iterator over the request headers for this request. The returned iterator must not
-    * support remove operations and should throw <code>UnsupportedOperationException</code> instead.
+    * Returns an iterator over the request headers for this request
     * 
     * @return a request header iterator
     */
    Iterator<Entry<String, String>> headers();
 
    /**
-    * Gets the description of the entity for this response.
+    * Gets the description of the entity for this response
     * 
     * @return the description of the entity for this response
     */
    Entity getEntity();
 
    /**
-    * Gets the value of the response metadata entry with the specified key.
+    * Gets the value of the response metadata entry with the specified key
     * 
     * @param key
     *           the key of the metadata entry
@@ -69,7 +70,7 @@ public interface Response
    String getMetadata(Metadata key);
 
    /**
-    * Gets the value of the response metadata entry with the specified key.
+    * Gets the value of the response metadata entry with the specified key
     * 
     * @param key
     *           the key of the metadata entry
@@ -79,8 +80,7 @@ public interface Response
    String getMetadata(String key);
 
    /**
-    * Returns an iterator over the request metadata for this request. The returned iterator must not
-    * support remove operations and should throw <code>UnsupportedOperationException</code> instead.
+    * Returns an iterator over the request metadata for this request
     * 
     * @return a request metadata iterator
     */

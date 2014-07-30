@@ -20,7 +20,9 @@
 package com.cleversafe.og.operation;
 
 /**
- * An enumeration of supported http methods.
+ * An enumeration of supported http methods
+ * 
+ * @since 1.0
  */
 public enum Method
 {

@@ -24,12 +24,14 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 
 /**
- * An object that describes an http request.
+ * An object that describes an http request
+ * 
+ * @since 1.0
  */
 public interface Request
 {
    /**
-    * Gets the http method for this request.
+    * Gets the http method for this request
     * 
     * @return the http method for this request
     * @see Method
@@ -37,14 +39,14 @@ public interface Request
    Method getMethod();
 
    /**
-    * Gets the uri for this request.
+    * Gets the uri for this request
     * 
     * @return the uri for this request
     */
    URI getUri();
 
    /**
-    * Gets the value of the request header with the specified key.
+    * Gets the value of the request header with the specified key
     * 
     * @param key
     *           the key of the header
@@ -53,22 +55,21 @@ public interface Request
    String getHeader(String key);
 
    /**
-    * Returns an iterator over the request headers for this request. The returned iterator must not
-    * support remove operations and should throw <code>UnsupportedOperationException</code> instead.
+    * Returns an iterator over the request headers for this request
     * 
     * @return a request header iterator
     */
    Iterator<Entry<String, String>> headers();
 
    /**
-    * Gets the description of the entity for this request.
+    * Gets the description of the entity for this request
     * 
     * @return the description of the entity for this request
     */
    Entity getEntity();
 
    /**
-    * Gets the value of the request metadata entry with the specified key.
+    * Gets the value of the request metadata entry with the specified key
     * 
     * @param key
     *           the key of the metadata entry
@@ -78,7 +79,7 @@ public interface Request
    String getMetadata(Metadata key);
 
    /**
-    * Gets the value of the request metadata entry with the specified key.
+    * Gets the value of the request metadata entry with the specified key
     * 
     * @param key
     *           the key of the metadata entry
@@ -88,8 +89,7 @@ public interface Request
    String getMetadata(String key);
 
    /**
-    * Returns an iterator over the request metadata for this request. The returned iterator must not
-    * support remove operations and should throw <code>UnsupportedOperationException</code> instead.
+    * Returns an iterator over the request metadata for this request
     * 
     * @return a request metadata iterator
     */

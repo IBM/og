@@ -19,6 +19,11 @@
 
 package com.cleversafe.og.operation;
 
+/**
+ * An enumeration of well known metadata keys
+ * 
+ * @since 1.0
+ */
 public enum Metadata
 {
    REQUEST_ID,

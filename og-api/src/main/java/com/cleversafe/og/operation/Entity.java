@@ -19,9 +19,10 @@
 
 package com.cleversafe.og.operation;
 
-
 /**
- * A description of an http request entity.
+ * A description of an http request or response body
+ * 
+ * @since 1.0
  */
 public interface Entity
 {
