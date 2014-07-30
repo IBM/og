@@ -26,6 +26,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * A utility class for working with units
+ */
 public class Units
 {
    private static final Map<String, TimeUnit> TIME_UNITS;
@@ -128,6 +131,15 @@ public class Units
    private Units()
    {}
 
+   /**
+    * Returns the associated TimeUnit instance for the provided string
+    * 
+    * @param time
+    *           a time unit string
+    * @return the associated TimeUnit instance for the provided string
+    * @throws IllegalArgumentException
+    *            if no TimeUnit can be determined from the provided string
+    */
    public static TimeUnit time(final String time)
    {
       checkNotNull(time);
@@ -136,6 +148,15 @@ public class Units
       return unit;
    }
 
+   /**
+    * Returns the associated SizeUnit instance for the provided string
+    * 
+    * @param size
+    *           a size unit string
+    * @return the associated SizeUnit instance for the provided string
+    * @throws IllegalArgumentException
+    *            if no SizeUnit can be determined from the provided string
+    */
    public static SizeUnit size(final String size)
    {
       checkNotNull(size);

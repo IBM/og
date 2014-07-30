@@ -19,6 +19,12 @@
 
 package com.cleversafe.og.util;
 
+/**
+ * A SizeUnit represents sizes at a given unit of granularity and provides a utility method to
+ * convert to bytes.
+ * 
+ * @since 1.0
+ */
 public enum SizeUnit
 {
    BYTES {
@@ -129,6 +135,13 @@ public enum SizeUnit
       return s * m;
    }
 
+   /**
+    * Converts this unit to bytes
+    * 
+    * @param size
+    *           the size with this unit
+    * @return size, in bytes
+    */
    public long toBytes(final long size)
    {
       throw new AbstractMethodError();
