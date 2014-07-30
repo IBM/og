@@ -40,6 +40,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * An input stream that is backed by a byte array.
+ * <P>
+ * This class is useful for modeling an arbitrarily long source stream of bytes.
+ * 
+ * @since 1.0
+ */
 public class FixedBufferInputStream extends SizedInputStream
 {
    private static final Logger _logger = LoggerFactory.getLogger(FixedBufferInputStream.class);
@@ -47,6 +54,22 @@ public class FixedBufferInputStream extends SizedInputStream
    private final long size;
    private long available;
 
+   /**
+    * Constructs an input stream of the provided size, using the provided byte array as its source
+    * of data.
+    * <p>
+    * Note: this class does not perform a defensive copy of the provided byte array, so callers must
+    * take care not to modify the byte array after construction of this input stream.
+    * 
+    * @param buf
+    *           the byte array to use as a data source for this input stream
+    * @param size
+    *           the size of this input stream
+    * @throws IllegalArgumentException
+    *            if buf length is zero
+    * @throws IllegalArgumentException
+    *            if size is negative
+    */
    public FixedBufferInputStream(final byte[] buf, final long size)
    {
       this.buf = checkNotNull(buf);

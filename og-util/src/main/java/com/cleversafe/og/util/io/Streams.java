@@ -27,6 +27,11 @@ import java.util.Random;
 
 import com.cleversafe.og.operation.Entity;
 
+/**
+ * A utility class for creating input and output streams
+ * 
+ * @since 1.0
+ */
 public class Streams
 {
    // TODO performance of single random instance used by multiple threads? Need to quantify
@@ -51,6 +56,14 @@ public class Streams
    private Streams()
    {}
 
+   /**
+    * Creates an input stream from the provided entity description. The size of this stream and its
+    * data are determined by the provided entity's size and type, respectively.
+    * 
+    * @param entity
+    *           the description of an entity
+    * @return an input stream instance
+    */
    public static SizedInputStream create(final Entity entity)
    {
       checkNotNull(entity);
@@ -72,11 +85,35 @@ public class Streams
       return buf;
    }
 
+   /**
+    * Creates an input stream which is throttled with a maximum throughput
+    * 
+    * @param in
+    *           the backing input stream to throttle
+    * @param bytesPerSecond
+    *           the maximum throughput this input stream is allowed to read at
+    * @return an instance of an input stream, throttled with a maximum rate of
+    *         {@code bytesPerSecond}
+    * @throws IllegalArgumentException
+    *            if bytesPerSecond is negative or zero
+    */
    public static InputStream throttle(final InputStream in, final long bytesPerSecond)
    {
       return new ThrottledInputStream(in, bytesPerSecond);
    }
 
+   /**
+    * Creates an output stream which is throttled with a maximum throughput
+    * 
+    * @param out
+    *           the backing output stream to throttle
+    * @param bytesPerSecond
+    *           the maximum throughput this input stream is allowed to write at
+    * @return an instance of an output stream, throttled with a maximum rate of
+    *         {@code bytesPerSecond}
+    * @throws IllegalArgumentException
+    *            if bytesPerSecond is negative or zero
+    */
    public static OutputStream throttle(final OutputStream out, final long bytesPerSecond)
    {
       return new ThrottledOutputStream(out, bytesPerSecond);

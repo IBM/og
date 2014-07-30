@@ -21,7 +21,17 @@ package com.cleversafe.og.util.io;
 
 import java.io.InputStream;
 
+/**
+ * An input stream which knows its size
+ * 
+ * @since 1.0
+ */
 public abstract class SizedInputStream extends InputStream
 {
+   /**
+    * Gets the total size of this input stream
+    * 
+    * @return the total size of this input stream
+    */
    public abstract long getSize();
 }

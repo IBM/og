@@ -58,6 +58,10 @@ public class CycleProducer<T> implements Producer<T>
     * 
     * @param values
     *           the values to produce
+    * @throws IllegalArgumentException
+    *            if values is empty
+    * @throws NullPointerException
+    *            if values contains any null elements
     */
    public CycleProducer(final List<T> values)
    {

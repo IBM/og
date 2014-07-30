@@ -28,10 +28,25 @@ import java.io.OutputStream;
 
 import com.google.common.util.concurrent.RateLimiter;
 
+/**
+ * An output stream with a configurable maximum throughput
+ * 
+ * @since 1.0
+ */
 public class ThrottledOutputStream extends FilterOutputStream
 {
    private final RateLimiter rateLimiter;
 
+   /**
+    * Constructs an output stream with a maximum throughput
+    * 
+    * @param out
+    *           the backing output stream to write to
+    * @param bytesPerSecond
+    *           the maximum rate at which this output stream can write
+    * @throws IllegalArgumentException
+    *            if bytesPerSecond is negative or zero
+    */
    public ThrottledOutputStream(final OutputStream out, final long bytesPerSecond)
    {
       super(checkNotNull(out));

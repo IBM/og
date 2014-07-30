@@ -22,7 +22,7 @@ package com.cleversafe.og.util.producer;
 import java.util.List;
 
 /**
- * A convenience class for creating producer instances
+ * A utility class for creating producer instances
  * 
  * @since 1.0
  */

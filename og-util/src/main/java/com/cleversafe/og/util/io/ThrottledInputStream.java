@@ -28,10 +28,25 @@ import java.io.InputStream;
 
 import com.google.common.util.concurrent.RateLimiter;
 
+/**
+ * An input stream with a configurable maximum throughput
+ * 
+ * @since 1.0
+ */
 public class ThrottledInputStream extends FilterInputStream
 {
    private final RateLimiter rateLimiter;
 
+   /**
+    * Constructs an input stream with a maximum throughput
+    * 
+    * @param in
+    *           the backing input stream to read from
+    * @param bytesPerSecond
+    *           the maximum rate at which this input stream can read
+    * @throws IllegalArgumentException
+    *            if bytesPerSecond is negative or zero
+    */
    public ThrottledInputStream(final InputStream in, final long bytesPerSecond)
    {
       super(checkNotNull(in));
