@@ -64,4 +64,10 @@ public class CachingProducer<T> implements Producer<T>
    {
       return this.cachedValue;
    }
+
+   @Override
+   public String toString()
+   {
+      return "CachingProducer [producer=" + this.producer + "]";
+   }
 }

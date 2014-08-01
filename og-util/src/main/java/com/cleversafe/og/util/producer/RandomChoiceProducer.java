@@ -24,6 +24,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 
 import org.slf4j.Logger;
@@ -182,5 +183,16 @@ public class RandomChoiceProducer<T> implements Producer<T>
       {
          return new RandomChoiceProducer<T>(this);
       }
+   }
+
+   @Override
+   public String toString()
+   {
+      final StringBuilder s = new StringBuilder("RandomChoiceProducer [choices=");
+      for (final Choice<T> choice : this.choices)
+      {
+         s.append(String.format(Locale.US, "%nchoice=%s, weight=", choice.value, choice.weight));
+      }
+      return s.append("]").toString();
    }
 }

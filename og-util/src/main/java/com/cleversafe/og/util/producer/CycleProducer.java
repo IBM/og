@@ -24,6 +24,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
@@ -83,4 +84,14 @@ public class CycleProducer<T> implements Producer<T>
       return this.values.get(idx);
    }
 
+   @Override
+   public String toString()
+   {
+      final StringBuilder s = new StringBuilder("CycleProducer [values=");
+      for (final T value : this.values)
+      {
+         s.append(String.format(Locale.US, "%n%s", value));
+      }
+      return s.append("]").toString();
+   }
 }

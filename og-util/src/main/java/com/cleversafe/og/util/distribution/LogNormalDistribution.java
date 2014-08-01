@@ -106,4 +106,10 @@ public class LogNormalDistribution implements Distribution
       } while (result < 0);
       return result;
    }
+
+   @Override
+   public String toString()
+   {
+      return "LogNormalDistribution [average=" + this.average + ", spread=" + this.spread + "]";
+   }
 }

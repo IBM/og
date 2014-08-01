@@ -99,4 +99,10 @@ public class UniformDistribution implements Distribution
       } while (result < 0);
       return result;
    }
+
+   @Override
+   public String toString()
+   {
+      return "UniformDistribution [average=" + this.average + ", spread=" + this.spread + "]";
+   }
 }

@@ -83,52 +83,74 @@ public class ApacheClient implements Client
    private static final Logger _requestLogger = LoggerFactory.getLogger("RequestLogger");
    private final CloseableHttpClient client;
    private final Map<String, ResponseBodyConsumer> responseBodyConsumers;
-   private final ListeningExecutorService executorService;
-   private final Gson gson;
-   private final HttpAuth authentication;
+   private final int connectTimeout;
+   private final int soTimeout;
+   private final boolean soReuseAddress;
+   private final int soLinger;
+   private final boolean soKeepAlive;
+   private final boolean tcpNoDelay;
    private final boolean chunkedEncoding;
+   private final boolean expectContinue;
+   private final int waitForContinue;
+   private final HttpAuth authentication;
+   private final String userAgent;
    private final long writeThroughput;
    private final long readThroughput;
+   private final ListeningExecutorService executorService;
+   private final Gson gson;
 
    private ApacheClient(final Builder builder)
    {
       this.responseBodyConsumers = checkNotNull(builder.responseBodyConsumers);
-
-      // create local copies to prevent builder from changing values between check and use
-      final int connectTimeout = builder.connectTimeout;
-      final int soTimeout = builder.soTimeout;
-      final int soLinger = builder.soLinger;
-      final int waitForContinue = builder.waitForContinue;
-      final String userAgent = builder.userAgent;
+      this.connectTimeout = builder.connectTimeout;
+      this.soTimeout = builder.soTimeout;
+      this.soReuseAddress = builder.soReuseAddress;
+      this.soLinger = builder.soLinger;
+      this.soKeepAlive = builder.soKeepAlive;
+      this.tcpNoDelay = builder.tcpNoDelay;
+      this.chunkedEncoding = builder.chunkedEncoding;
+      this.expectContinue = builder.expectContinue;
+      this.waitForContinue = builder.waitForContinue;
+      this.authentication = builder.authentication;
+      this.userAgent = builder.userAgent;
       this.writeThroughput = builder.writeThroughput;
       this.readThroughput = builder.readThroughput;
-
-      checkArgument(connectTimeout >= 0, "connectTimeout must be >= 0 [%s]", connectTimeout);
-      checkArgument(soTimeout >= 0, "soTimeout must be >= 0 [%s]", soTimeout);
-      checkArgument(soLinger >= -1, "soLinger must be >= -1 [%s]", soLinger);
-      checkArgument(waitForContinue > 0, "waitForContinue must be > 0 [%s]", waitForContinue);
+      // perform checks on instance fields rather than builder fields
+      checkArgument(this.connectTimeout >= 0, "connectTimeout must be >= 0 [%s]",
+            this.connectTimeout);
+      checkArgument(this.soTimeout >= 0, "soTimeout must be >= 0 [%s]", this.soTimeout);
+      checkArgument(this.soLinger >= -1, "soLinger must be >= -1 [%s]", this.soLinger);
+      checkArgument(this.waitForContinue > 0, "waitForContinue must be > 0 [%s]",
+            this.waitForContinue);
       checkArgument(this.writeThroughput >= 0, "writeThroughput must be >= 0 [%s]",
             this.writeThroughput);
       checkArgument(this.readThroughput >= 0, "readThroughput must be >= 0 [%s]",
             this.readThroughput);
 
+      final ThreadFactory fac = new ThreadFactoryBuilder().setNameFormat("client-%d").build();
+      this.executorService = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool(fac));
+      this.gson = new GsonBuilder()
+            .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+            .setLongSerializationPolicy(LongSerializationPolicy.STRING)
+            .create();
+
       final HttpClientBuilder clientBuilder = HttpClients.custom();
-      if (userAgent != null)
-         clientBuilder.setUserAgent(userAgent);
+      if (this.userAgent != null)
+         clientBuilder.setUserAgent(this.userAgent);
 
       this.client = clientBuilder
             // TODO HTTPS: setHostnameVerifier, setSslcontext, and SetSSLSocketFactory methods
             // TODO investigate ConnectionConfig, particularly bufferSize and fragmentSizeHint
             // TODO defaultCredentialsProvider and defaultAuthSchemeRegistry for pre/passive auth?
-            .setRequestExecutor(new HttpRequestExecutor(waitForContinue))
+            .setRequestExecutor(new HttpRequestExecutor(this.waitForContinue))
             .setMaxConnTotal(Integer.MAX_VALUE)
             .setMaxConnPerRoute(Integer.MAX_VALUE)
             .setDefaultSocketConfig(SocketConfig.custom()
-                  .setSoTimeout(soTimeout)
-                  .setSoReuseAddress(builder.soReuseAddress)
-                  .setSoLinger(soLinger)
-                  .setSoKeepAlive(builder.soKeepAlive)
-                  .setTcpNoDelay(builder.tcpNoDelay)
+                  .setSoTimeout(this.soTimeout)
+                  .setSoReuseAddress(this.soReuseAddress)
+                  .setSoLinger(this.soLinger)
+                  .setSoKeepAlive(this.soKeepAlive)
+                  .setTcpNoDelay(this.tcpNoDelay)
                   .build())
             .setConnectionReuseStrategy(DefaultConnectionReuseStrategy.INSTANCE)
             .setKeepAliveStrategy(DefaultConnectionKeepAliveStrategy.INSTANCE)
@@ -139,29 +161,18 @@ public class ApacheClient implements Client
             .disableAutomaticRetries()
             .setRedirectStrategy(new CustomRedirectStrategy())
             .setDefaultRequestConfig(RequestConfig.custom()
-                  .setExpectContinueEnabled(builder.expectContinue)
+                  .setExpectContinueEnabled(this.expectContinue)
                   // TODO investigate performance impact of stale check (30ms reported)
                   .setStaleConnectionCheckEnabled(true)
                   .setRedirectsEnabled(true)
                   .setRelativeRedirectsAllowed(true)
-                  .setConnectTimeout(connectTimeout)
-                  .setSocketTimeout(soTimeout)
+                  .setConnectTimeout(this.connectTimeout)
+                  .setSocketTimeout(this.soTimeout)
                   // TODO should this be infinite? length of time allowed to request a connection
                   // from the pool
                   .setConnectionRequestTimeout(0)
                   .build())
             .build();
-
-      final ThreadFactory fac = new ThreadFactoryBuilder().setNameFormat("client-%d").build();
-      this.executorService = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool(fac));
-      this.gson = new GsonBuilder()
-            .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
-            .setLongSerializationPolicy(LongSerializationPolicy.STRING)
-            .create();
-
-      // optional
-      this.authentication = builder.authentication;
-      this.chunkedEncoding = builder.chunkedEncoding;
    }
 
    @Override
@@ -430,6 +441,24 @@ public class ApacheClient implements Client
          if (totalBytes > 0)
             responseBuilder.withEntity(Entities.zeroes(totalBytes));
       }
+   }
+
+   @Override
+   public String toString()
+   {
+      return "ApacheClient [connectTimeout=" + this.connectTimeout
+            + ", soTimeout=" + this.soTimeout
+            + ", soReuseAddress=" + this.soReuseAddress
+            + ", soLinger=" + this.soLinger
+            + ", soKeepAlive=" + this.soKeepAlive
+            + ", tcpNoDelay=" + this.tcpNoDelay
+            + ", chunkedEncoding=" + this.chunkedEncoding
+            + ", expectContinue=" + this.expectContinue
+            + ", waitForContinue=" + this.waitForContinue
+            + ", authentication=" + this.authentication
+            + ", userAgent=" + this.userAgent
+            + ", writeThroughput=" + this.writeThroughput
+            + ", readThroughput=" + this.readThroughput + "]";
    }
 
    /**

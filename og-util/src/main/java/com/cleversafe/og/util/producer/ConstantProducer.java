@@ -48,4 +48,10 @@ public class ConstantProducer<T> implements Producer<T>
    {
       return this.value;
    }
+
+   @Override
+   public String toString()
+   {
+      return "ConstantProducer [value=" + this.value + "]";
+   }
 }

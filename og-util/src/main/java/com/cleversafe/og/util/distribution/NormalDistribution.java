@@ -102,4 +102,10 @@ public class NormalDistribution implements Distribution
       } while (result < 0);
       return result;
    }
+
+   @Override
+   public String toString()
+   {
+      return "NormalDistribution [average=" + this.average + ", spread=" + this.spread + "]";
+   }
 }

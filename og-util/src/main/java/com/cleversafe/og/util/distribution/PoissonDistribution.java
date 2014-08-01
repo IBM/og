@@ -86,4 +86,10 @@ public class PoissonDistribution implements Distribution
       // 0 is chosen and an infinite sleep occurs.
       return this.average * (-Math.log(1 - this.random.nextDouble()));
    }
+
+   @Override
+   public String toString()
+   {
+      return "PoissonDistribution [average=" + this.average + "]";
+   }
 }
