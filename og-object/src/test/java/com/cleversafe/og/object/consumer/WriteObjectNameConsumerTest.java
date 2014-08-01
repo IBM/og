@@ -38,6 +38,7 @@ import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.cleversafe.og.consumer.ConsumerException;
 import com.cleversafe.og.consumer.ObjectNameConsumer;
 import com.cleversafe.og.consumer.WriteObjectNameConsumer;
 import com.cleversafe.og.http.util.HttpUtil;
@@ -49,7 +50,6 @@ import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.Pair;
-import com.cleversafe.og.util.producer.ProducerException;
 
 public class WriteObjectNameConsumerTest
 {
@@ -178,7 +178,7 @@ public class WriteObjectNameConsumerTest
       verify(this.mockObjectManager, never()).writeNameComplete((isA(ObjectName.class)));
    }
 
-   @Test(expected = ProducerException.class)
+   @Test(expected = ConsumerException.class)
    public void testOperationManagerException()
    {
       when(this.mockRequest.getMethod()).thenReturn(Method.PUT);
@@ -192,7 +192,7 @@ public class WriteObjectNameConsumerTest
       c.consume(new Pair<Request, Response>(this.mockRequest, this.mockResponse));
    }
 
-   @Test(expected = ProducerException.class)
+   @Test(expected = ConsumerException.class)
    public void testNoPendingRequest()
    {
       when(this.mockRequest.getMethod()).thenReturn(Method.PUT);
@@ -204,7 +204,7 @@ public class WriteObjectNameConsumerTest
             .consume(new Pair<Request, Response>(this.mockRequest, this.mockResponse));
    }
 
-   @Test(expected = ProducerException.class)
+   @Test(expected = ConsumerException.class)
    public void testNoObject() throws URISyntaxException
    {
       when(this.mockRequest.getUri()).thenReturn(new URI("http://192.168.8.1/container"));

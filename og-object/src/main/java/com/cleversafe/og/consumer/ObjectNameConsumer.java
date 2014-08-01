@@ -34,7 +34,6 @@ import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.Operation;
 import com.cleversafe.og.util.Pair;
-import com.cleversafe.og.util.producer.ProducerException;
 import com.google.common.collect.Iterables;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.io.BaseEncoding;
@@ -102,7 +101,7 @@ public abstract class ObjectNameConsumer
 
       final String objectString = getObjectString(request, response);
       if (objectString == null)
-         throw new ProducerException("Unable to determine object");
+         throw new ConsumerException("Unable to determine object");
 
       final ObjectName objectName =
             LegacyObjectName.forBytes(BaseEncoding.base16().lowerCase().decode(objectString));
@@ -127,7 +126,7 @@ public abstract class ObjectNameConsumer
       }
       catch (final ObjectManagerException e)
       {
-         throw new ProducerException(e);
+         throw new ConsumerException(e);
       }
    }
 

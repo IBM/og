@@ -36,6 +36,7 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.cleversafe.og.consumer.ConsumerException;
 import com.cleversafe.og.consumer.ObjectNameConsumer;
 import com.cleversafe.og.consumer.ReadObjectNameConsumer;
 import com.cleversafe.og.http.util.HttpUtil;
@@ -47,7 +48,6 @@ import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.Pair;
-import com.cleversafe.og.util.producer.ProducerException;
 
 public class ReadObjectNameConsumerTest
 {
@@ -156,7 +156,7 @@ public class ReadObjectNameConsumerTest
       verify(this.mockObjectManager, never()).releaseNameFromRead((isA(ObjectName.class)));
    }
 
-   @Test(expected = ProducerException.class)
+   @Test(expected = ConsumerException.class)
    public void testOperationManagerException()
    {
       when(this.mockRequest.getMethod()).thenReturn(Method.GET);
@@ -170,7 +170,7 @@ public class ReadObjectNameConsumerTest
       c.consume(new Pair<Request, Response>(this.mockRequest, this.mockResponse));
    }
 
-   @Test(expected = ProducerException.class)
+   @Test(expected = ConsumerException.class)
    public void testNoObject() throws URISyntaxException
    {
       when(this.mockRequest.getUri()).thenReturn(new URI("http://192.168.8.1/container"));
