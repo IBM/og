@@ -16,7 +16,7 @@
 // Date: Jun 28, 2010
 // ---------------------
 
-package com.cleversafe.og.object.manager;
+package com.cleversafe.og.object;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -40,7 +40,9 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import com.cleversafe.og.object.LegacyObjectName;
+import com.cleversafe.og.object.ObjectManagerException;
 import com.cleversafe.og.object.ObjectName;
+import com.cleversafe.og.object.RandomObjectPopulator;
 
 public class RandomObjectPopulatorTest
 {

@@ -17,7 +17,7 @@
 // Date: Jan 15, 2014
 // ---------------------
 
-package com.cleversafe.og.object.manager;
+package com.cleversafe.og.object;
 
 /**
  * This exception signals that an unexpected event occurred in an object manager instance while

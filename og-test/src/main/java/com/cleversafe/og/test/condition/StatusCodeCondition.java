@@ -25,7 +25,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.cleversafe.og.http.util.HttpUtil;
+import com.cleversafe.og.http.HttpUtil;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.statistic.Statistics;

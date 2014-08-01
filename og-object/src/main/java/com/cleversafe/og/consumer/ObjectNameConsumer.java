@@ -24,11 +24,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.List;
 
-import com.cleversafe.og.http.util.HttpUtil;
+import com.cleversafe.og.http.HttpUtil;
 import com.cleversafe.og.object.LegacyObjectName;
+import com.cleversafe.og.object.ObjectManager;
+import com.cleversafe.og.object.ObjectManagerException;
 import com.cleversafe.og.object.ObjectName;
-import com.cleversafe.og.object.manager.ObjectManager;
-import com.cleversafe.og.object.manager.ObjectManagerException;
 import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;

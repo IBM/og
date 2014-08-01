@@ -26,7 +26,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.cleversafe.og.json.ConcurrencyConfig;
-import com.cleversafe.og.json.enums.ConcurrencyType;
+import com.cleversafe.og.json.ConcurrencyType;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;

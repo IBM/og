@@ -51,8 +51,8 @@ import org.apache.http.protocol.HttpRequestExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.cleversafe.og.http.HttpAuth;
 import com.cleversafe.og.http.HttpResponse;
-import com.cleversafe.og.http.auth.HttpAuth;
 import com.cleversafe.og.operation.EntityType;
 import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Request;

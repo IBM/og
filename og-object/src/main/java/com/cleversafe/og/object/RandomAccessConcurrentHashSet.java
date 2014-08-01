@@ -33,7 +33,7 @@
 // Date: Nov 16, 2010
 // ---------------------
 
-package com.cleversafe.og.object.manager;
+package com.cleversafe.og.object;
 
 import java.util.Enumeration;
 import java.util.Iterator;

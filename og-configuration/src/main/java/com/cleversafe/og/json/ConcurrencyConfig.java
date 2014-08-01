@@ -21,9 +21,6 @@ package com.cleversafe.og.json;
 
 import java.util.concurrent.TimeUnit;
 
-import com.cleversafe.og.json.enums.ConcurrencyType;
-import com.cleversafe.og.json.enums.DistributionType;
-
 public class ConcurrencyConfig
 {
    ConcurrencyType type;

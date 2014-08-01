@@ -17,7 +17,7 @@
 // Date: Feb 25, 2014
 // ---------------------
 
-package com.cleversafe.og.operation.manager;
+package com.cleversafe.og.operation;
 
 public class OperationManagerException extends Exception
 {

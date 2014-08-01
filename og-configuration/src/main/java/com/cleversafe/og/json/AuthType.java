@@ -14,15 +14,13 @@
 // -----------------------
 // @author: rveitch
 //
-// Date: Apr 7, 2014
+// Date: Jun 18, 2014
 // ---------------------
 
-package com.cleversafe.og.http.util;
+package com.cleversafe.og.json;
 
-public enum Api
+public enum AuthType
 {
-   SOH,
-   S3,
-   OPENSTACK,
-   WEBDAV;
+   BASIC,
+   AWSV2;
 }

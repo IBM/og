@@ -30,7 +30,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.cleversafe.og.json.enums.DistributionType;
+import com.cleversafe.og.json.DistributionType;
 import com.cleversafe.og.util.SizeUnit;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

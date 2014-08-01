@@ -25,7 +25,7 @@ import java.util.Map;
 
 import com.cleversafe.og.client.ApacheClient;
 import com.cleversafe.og.client.Client;
-import com.cleversafe.og.http.auth.HttpAuth;
+import com.cleversafe.og.http.HttpAuth;
 import com.cleversafe.og.json.ClientConfig;
 import com.cleversafe.og.util.ResponseBodyConsumer;
 import com.cleversafe.og.util.Version;

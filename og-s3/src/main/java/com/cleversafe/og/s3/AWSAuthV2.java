@@ -17,7 +17,7 @@
 // Date: Jun 16, 2014
 // ---------------------
 
-package com.cleversafe.og.s3.auth;
+package com.cleversafe.og.s3;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -37,7 +37,7 @@ import javax.crypto.spec.SecretKeySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.cleversafe.og.http.auth.HttpAuth;
+import com.cleversafe.og.http.HttpAuth;
 import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Request;
 import com.google.common.base.Splitter;

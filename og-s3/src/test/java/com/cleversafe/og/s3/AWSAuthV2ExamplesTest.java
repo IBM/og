@@ -17,7 +17,7 @@
 // Date: Jun 18, 2014
 // ---------------------
 
-package com.cleversafe.og.s3.auth;
+package com.cleversafe.og.s3;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -34,6 +34,7 @@ import com.cleversafe.og.http.HttpRequest;
 import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
+import com.cleversafe.og.s3.AWSAuthV2;
 
 // test data pulled from examples aws auth signing v2 at:
 // http://docs.aws.amazon.com/AmazonS3/latest/dev/RESTAuthentication.html

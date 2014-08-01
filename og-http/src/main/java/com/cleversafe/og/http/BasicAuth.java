@@ -17,7 +17,7 @@
 // Date: Jun 16, 2014
 // ---------------------
 
-package com.cleversafe.og.http.auth;
+package com.cleversafe.og.http;
 
 import java.nio.charset.StandardCharsets;
 

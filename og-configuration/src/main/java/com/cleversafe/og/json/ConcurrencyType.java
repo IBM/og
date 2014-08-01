@@ -14,13 +14,13 @@
 // -----------------------
 // @author: rveitch
 //
-// Date: Jun 18, 2014
+// Date: Jun 23, 2014
 // ---------------------
 
-package com.cleversafe.og.json.enums;
+package com.cleversafe.og.json;
 
-public enum AuthType
+public enum ConcurrencyType
 {
-   BASIC,
-   AWSV2;
+   IOPS,
+   THREADS;
 }

@@ -14,13 +14,15 @@
 // -----------------------
 // @author: rveitch
 //
-// Date: Jun 23, 2014
+// Date: Apr 7, 2014
 // ---------------------
 
-package com.cleversafe.og.json.enums;
+package com.cleversafe.og.http;
 
-public enum ConcurrencyType
+public enum Api
 {
-   IOPS,
-   THREADS;
+   SOH,
+   S3,
+   OPENSTACK,
+   WEBDAV;
 }

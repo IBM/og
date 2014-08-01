@@ -31,7 +31,7 @@ import java.util.TreeMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.cleversafe.og.http.util.HttpUtil;
+import com.cleversafe.og.http.HttpUtil;
 import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;

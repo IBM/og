@@ -19,7 +19,6 @@
 
 package com.cleversafe.og.json;
 
-import com.cleversafe.og.json.enums.AuthType;
 
 public class AuthenticationConfig
 {

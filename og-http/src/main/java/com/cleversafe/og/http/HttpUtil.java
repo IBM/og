@@ -17,7 +17,7 @@
 // Date: Jun 26, 2014
 // ---------------------
 
-package com.cleversafe.og.http.util;
+package com.cleversafe.og.http;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -30,7 +30,6 @@ import java.util.Locale;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.cleversafe.og.http.Scheme;
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.util.Operation;
 import com.google.common.base.Splitter;

@@ -26,8 +26,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.cleversafe.og.operation.OperationManagerException;
 import com.cleversafe.og.operation.Request;
-import com.cleversafe.og.operation.manager.OperationManagerException;
 import com.cleversafe.og.producer.Producer;
 import com.cleversafe.og.producer.ProducerException;
 import com.cleversafe.og.producer.Producers;

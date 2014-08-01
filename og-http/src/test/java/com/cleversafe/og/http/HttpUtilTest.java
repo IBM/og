@@ -17,7 +17,7 @@
 // Date: Jun 29, 2014
 // ---------------------
 
-package com.cleversafe.og.http.util;
+package com.cleversafe.og.http;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -25,6 +25,7 @@ import java.net.URISyntaxException;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.cleversafe.og.http.HttpUtil;
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.util.Operation;
 

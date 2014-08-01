@@ -25,9 +25,9 @@ import java.util.Locale;
 
 import javax.inject.Inject;
 
+import com.cleversafe.og.operation.OperationManager;
+import com.cleversafe.og.operation.OperationManagerException;
 import com.cleversafe.og.operation.Request;
-import com.cleversafe.og.operation.manager.OperationManager;
-import com.cleversafe.og.operation.manager.OperationManagerException;
 import com.cleversafe.og.producer.Producer;
 import com.cleversafe.og.producer.ProducerException;
 

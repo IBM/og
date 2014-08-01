@@ -28,7 +28,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.cleversafe.og.http.util.HttpUtil;
 import com.cleversafe.og.operation.Entity;
 import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Response;

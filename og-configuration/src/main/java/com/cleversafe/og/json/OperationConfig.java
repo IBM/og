@@ -24,8 +24,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.cleversafe.og.json.enums.CollectionAlgorithmType;
-
 public class OperationConfig
 {
    double weight;

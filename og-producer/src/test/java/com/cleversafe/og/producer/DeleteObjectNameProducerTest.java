@@ -26,9 +26,9 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.cleversafe.og.object.ObjectManager;
+import com.cleversafe.og.object.ObjectManagerException;
 import com.cleversafe.og.object.ObjectName;
-import com.cleversafe.og.object.manager.ObjectManager;
-import com.cleversafe.og.object.manager.ObjectManagerException;
 import com.cleversafe.og.producer.DeleteObjectNameProducer;
 import com.cleversafe.og.producer.Producer;
 import com.cleversafe.og.producer.ProducerException;

@@ -19,7 +19,6 @@
 
 package com.cleversafe.og.json;
 
-import com.cleversafe.og.json.enums.DistributionType;
 import com.cleversafe.og.util.SizeUnit;
 
 public class FilesizeConfig

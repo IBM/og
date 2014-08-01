@@ -17,9 +17,8 @@
 // Date: Feb 6, 2014
 // ---------------------
 
-package com.cleversafe.og.operation.manager;
+package com.cleversafe.og.operation;
 
-import com.cleversafe.og.operation.Request;
 
 /**
  * A producer of requests

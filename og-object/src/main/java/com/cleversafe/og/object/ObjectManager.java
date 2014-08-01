@@ -17,9 +17,8 @@
 // Date: Jan 15, 2014
 // ---------------------
 
-package com.cleversafe.og.object.manager;
+package com.cleversafe.og.object;
 
-import com.cleversafe.og.object.ObjectName;
 
 /**
  * A collection of objects, and the requisite services for persisting object names to disk.

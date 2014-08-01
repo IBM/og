@@ -30,7 +30,6 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.cleversafe.og.cli.report.Summary;
 import com.cleversafe.og.client.Client;
 import com.cleversafe.og.guice.ApiModule;
 import com.cleversafe.og.guice.ClientModule;
@@ -47,8 +46,8 @@ import com.cleversafe.og.json.type.HostConfigTypeAdapterFactory;
 import com.cleversafe.og.json.type.OperationConfigTypeAdapterFactory;
 import com.cleversafe.og.json.type.SizeUnitTypeAdapter;
 import com.cleversafe.og.json.type.TimeUnitTypeAdapter;
-import com.cleversafe.og.object.manager.ObjectManager;
-import com.cleversafe.og.object.manager.ObjectManagerException;
+import com.cleversafe.og.object.ObjectManager;
+import com.cleversafe.og.object.ObjectManagerException;
 import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.test.LoadTest;
 import com.cleversafe.og.util.SizeUnit;

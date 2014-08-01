@@ -28,8 +28,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.cleversafe.og.consumer.ObjectNameConsumer;
-import com.cleversafe.og.http.util.Api;
-import com.cleversafe.og.object.manager.ObjectManager;
+import com.cleversafe.og.http.Api;
+import com.cleversafe.og.object.ObjectManager;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.producer.CachingProducer;
 import com.cleversafe.og.producer.Producer;

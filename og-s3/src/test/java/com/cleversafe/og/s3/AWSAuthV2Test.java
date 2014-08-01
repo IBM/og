@@ -17,7 +17,7 @@
 // Date: Jul 9, 2014
 // ---------------------
 
-package com.cleversafe.og.s3.auth;
+package com.cleversafe.og.s3;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -36,6 +36,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.cleversafe.og.operation.Request;
+import com.cleversafe.og.s3.AWSAuthV2;
 
 public class AWSAuthV2Test
 {

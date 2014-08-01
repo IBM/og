@@ -21,8 +21,8 @@ package com.cleversafe.og.producer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.cleversafe.og.object.manager.ObjectManager;
-import com.cleversafe.og.object.manager.ObjectManagerException;
+import com.cleversafe.og.object.ObjectManager;
+import com.cleversafe.og.object.ObjectManagerException;
 
 public class ReadObjectNameProducer implements Producer<String>
 {

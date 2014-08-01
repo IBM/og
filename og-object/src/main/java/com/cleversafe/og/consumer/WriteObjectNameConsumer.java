@@ -21,8 +21,8 @@ package com.cleversafe.og.consumer;
 
 import java.util.List;
 
+import com.cleversafe.og.object.ObjectManager;
 import com.cleversafe.og.object.ObjectName;
-import com.cleversafe.og.object.manager.ObjectManager;
 import com.cleversafe.og.util.Operation;
 
 /**

@@ -50,8 +50,8 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import com.cleversafe.og.http.BasicAuth;
 import com.cleversafe.og.http.HttpRequest;
-import com.cleversafe.og.http.auth.BasicAuth;
 import com.cleversafe.og.operation.Entity;
 import com.cleversafe.og.operation.EntityType;
 import com.cleversafe.og.operation.Metadata;
