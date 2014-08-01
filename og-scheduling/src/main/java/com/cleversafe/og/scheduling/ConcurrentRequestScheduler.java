@@ -75,7 +75,7 @@ public class ConcurrentRequestScheduler implements Scheduler
    }
 
    /**
-    * Informs this scheduler that it should allow the calling thread on {@link waitForNext} to
+    * Informs this scheduler that it should allow the calling thread on {@link #waitForNext} to
     * proceed
     * 
     * @param operation

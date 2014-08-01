@@ -20,7 +20,7 @@
 package com.cleversafe.og.scheduling;
 
 /**
- * A scheduler allows for a number of calls to {@link waitForNext} at a configured rate
+ * A scheduler allows for a number of calls to {@link #waitForNext} at a configured rate
  * 
  * @since 1.0
  */
