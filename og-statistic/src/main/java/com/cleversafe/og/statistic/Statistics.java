@@ -40,12 +40,34 @@ import com.cleversafe.og.util.Pair;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.AtomicLongMap;
 
+/**
+ * An aggregator of counters including:
+ * <ul>
+ * <li>operations</li>
+ * <li>bytes</li>
+ * <li>aborts</li>
+ * <li>status codes</li>
+ * </ul>
+ * <p>
+ * statistics are gathered and stored for the following operation types:
+ * <ul>
+ * <li>all</li>
+ * <li>write</li>
+ * <li>read</li>
+ * <li>delete</li>
+ * </ul>
+ * 
+ * @since 1.0
+ */
 public class Statistics
 {
    private static final Logger _logger = LoggerFactory.getLogger(Statistics.class);
    private final Map<Operation, AtomicLongMap<Counter>> counters;
    private final Map<Operation, AtomicLongMap<Integer>> scCounters;
 
+   /**
+    * Constructs an instance
+    */
    public Statistics()
    {
       this.counters = new HashMap<Operation, AtomicLongMap<Counter>>();
@@ -57,6 +79,12 @@ public class Statistics
       }
    }
 
+   /**
+    * Updates this instance with data from a completed operation
+    * 
+    * @param result
+    *           the completed operation
+    */
    @Subscribe
    public void update(final Pair<Request, Response> result)
    {
@@ -101,6 +129,15 @@ public class Statistics
       this.scCounters.get(operation).incrementAndGet(statusCode);
    }
 
+   /**
+    * Gets a counter
+    * 
+    * @param operation
+    *           the operation type of the counter to get
+    * @param counter
+    *           the counter type to get
+    * @return the counter's current value
+    */
    public long get(final Operation operation, final Counter counter)
    {
       checkNotNull(operation);
@@ -108,6 +145,15 @@ public class Statistics
       return this.counters.get(operation).get(counter);
    }
 
+   /**
+    * Gets a status code counter
+    * 
+    * @param operation
+    *           the operation type of the counter to get
+    * @param statusCode
+    *           the status code
+    * @return the current status code value
+    */
    public long getStatusCode(final Operation operation, final int statusCode)
    {
       checkNotNull(operation);
@@ -117,6 +163,13 @@ public class Statistics
       return this.scCounters.get(operation).get(statusCode);
    }
 
+   /**
+    * An iterator of status code counters for a given operation type
+    * 
+    * @param operation
+    *           the operatio type to get status code counter values for
+    * @return an iterator of status code counters
+    */
    public Iterator<Entry<Integer, Long>> statusCodeIterator(final Operation operation)
    {
       checkNotNull(operation);

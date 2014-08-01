@@ -19,7 +19,15 @@
 
 package com.cleversafe.og.scheduling;
 
+/**
+ * A scheduler allows for a number of calls to {@link waitForNext} at a configured rate
+ * 
+ * @since 1.0
+ */
 public interface Scheduler
 {
+   /**
+    * Blocks until permitted to continue
+    */
    void waitForNext();
 }

@@ -35,6 +35,12 @@ import java.util.Map.Entry;
 import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.util.ResponseBodyConsumer;
 
+/**
+ * A response body consumer which processes and returns an SOH object name from the response body of
+ * an SOH PUT response
+ * 
+ * @since 1.0
+ */
 public class SOHWriteResponseBodyConsumer implements ResponseBodyConsumer
 {
    @Override

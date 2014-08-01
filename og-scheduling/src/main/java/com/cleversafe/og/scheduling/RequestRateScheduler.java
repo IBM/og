@@ -28,6 +28,11 @@ import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.util.distribution.Distribution;
 
+/**
+ * A scheduler which permits calls at a configured rate
+ * 
+ * @since 1.0
+ */
 public class RequestRateScheduler implements Scheduler
 {
    private static final Logger _logger = LoggerFactory.getLogger(RequestRateScheduler.class);
@@ -35,6 +40,14 @@ public class RequestRateScheduler implements Scheduler
    private final TimeUnit unit;
    private long lastCalledTimestamp;
 
+   /**
+    * Construcst an instace using the provided rate {@code count / unit }
+    * 
+    * @param count
+    *           the numerator of the rate to configure
+    * @param unit
+    *           the denominator of the rate to configure
+    */
    public RequestRateScheduler(final Distribution count, final TimeUnit unit)
    {
       this.count = checkNotNull(count);
