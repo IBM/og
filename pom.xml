@@ -32,6 +32,7 @@
 		<module>og-util</module>
 		<module>og-s3</module>
 		<module>og-client</module>
+		<module>og-producer</module>
 	</modules>
 	<scm>
 		<url>http://git.cleversafe.net</url>
@@ -220,6 +221,11 @@
 			<dependency>
 				<groupId>com.cleversafe</groupId>
 				<artifactId>og-s3</artifactId>
+				<version>1.0.0-SNAPSHOT</version>
+			</dependency>
+			<dependency>
+				<groupId>com.cleversafe</groupId>
+				<artifactId>og-producer</artifactId>
 				<version>1.0.0-SNAPSHOT</version>
 			</dependency>
 			<dependency>

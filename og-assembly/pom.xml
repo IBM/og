@@ -54,6 +54,10 @@
 			<groupId>com.cleversafe</groupId>
 			<artifactId>og-s3</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>com.cleversafe</groupId>
+			<artifactId>og-producer</artifactId>
+		</dependency>
 	</dependencies>
 	<build>
 		<finalName>${display.version}</finalName>
