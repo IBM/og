@@ -31,8 +31,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.statistic.Counter;
 import com.cleversafe.og.statistic.Statistics;
@@ -40,7 +38,6 @@ import com.cleversafe.og.util.Operation;
 
 public class Summary
 {
-   private static final Logger _logger = LoggerFactory.getLogger(Summary.class);
    private static final DateTimeFormatter FORMATTER = DateTimeFormat.forPattern(
          "dd/MMM/yyyy:HH:mm:ss Z").withLocale(Locale.US);
    private final Statistics stats;
@@ -95,22 +92,22 @@ public class Summary
    {
       retrieveStats();
 
-      return String.format(Locale.US, "Start: %s\n", FORMATTER.print(this.timestampStart)) +
-            String.format(Locale.US, "End: %s\n", FORMATTER.print(this.timestampFinish)) +
-            String.format(Locale.US, "Runtime: %.2f Seconds\n", this.runtime) +
-            String.format(Locale.US, "Operations: %s\n", this.summary.operations) +
-            String.format(Locale.US, "Aborts: %s\n\n", this.summary.aborts) +
-            "[Write]\n" + getOperation(this.summary.write) +
-            "[Read]\n" + getOperation(this.summary.read) +
-            "[Delete]\n" + getOperation(this.summary.delete);
+      return String.format(Locale.US, "Start: %s%n", FORMATTER.print(this.summary.timestampStart)) +
+            String.format(Locale.US, "End: %s%n", FORMATTER.print(this.summary.timestampFinish)) +
+            String.format(Locale.US, "Runtime: %.2f Seconds%n", this.summary.runtime) +
+            String.format(Locale.US, "Operations: %s%n", this.summary.operations) +
+            String.format(Locale.US, "Aborts: %s%n%n", this.summary.aborts) +
+            "[Write]%n" + getOperation(this.summary.write) +
+            "[Read]%n" + getOperation(this.summary.read) +
+            "[Delete]%n" + getOperation(this.summary.delete);
    }
 
    private String getOperation(final OperationStats opStats)
    {
-      final String format = "Operations: %s\nBytes: %s\nAborts: %s\nStatus Codes:\n%s\n";
+      final String format = "Operations: %s%nBytes: %s%nAborts: %s%nStatus Codes:%n%s%n";
       String statusCodes = getStatusCodes(opStats);
       if (statusCodes.length() == 0)
-         statusCodes = "N/A\n";
+         statusCodes = "N/A%n";
 
       return String.format(Locale.US, format, opStats.operations, opStats.bytes, opStats.aborts,
             statusCodes);
@@ -124,7 +121,7 @@ public class Summary
          s.append(sc.getKey())
                .append(": ")
                .append(sc.getValue())
-               .append("\n");
+               .append(String.format("%n"));
       }
       return s.toString();
    }

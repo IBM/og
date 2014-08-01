@@ -21,9 +21,6 @@ package com.cleversafe.og.http;
 
 import java.nio.charset.StandardCharsets;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Request;
 import com.google.common.io.BaseEncoding;
@@ -36,8 +33,6 @@ import com.google.common.io.BaseEncoding;
  */
 public class BasicAuth implements HttpAuth
 {
-   private static final Logger _logger = LoggerFactory.getLogger(BasicAuth.class);
-
    public BasicAuth()
    {}
 

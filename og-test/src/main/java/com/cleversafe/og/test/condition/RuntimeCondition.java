@@ -24,15 +24,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.cleversafe.og.test.LoadTest;
 import com.google.common.util.concurrent.Uninterruptibles;
 
 public class RuntimeCondition implements TestCondition
 {
-   private static final Logger _logger = LoggerFactory.getLogger(RuntimeCondition.class);
    private final LoadTest test;
    private final long runtime;
    private final long timestampStart;

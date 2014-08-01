@@ -22,9 +22,6 @@ package com.cleversafe.og.test.condition;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.cleversafe.og.http.HttpUtil;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
@@ -36,7 +33,6 @@ import com.google.common.eventbus.Subscribe;
 
 public class StatusCodeCondition implements TestCondition
 {
-   private static final Logger _logger = LoggerFactory.getLogger(StatusCodeCondition.class);
    private final Operation operation;
    private final int statusCode;
    private final long thresholdValue;

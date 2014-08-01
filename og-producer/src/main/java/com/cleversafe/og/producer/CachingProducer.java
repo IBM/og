@@ -21,9 +21,6 @@ package com.cleversafe.og.producer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * A producer which remembers the last value it produced
  * 
@@ -33,7 +30,6 @@ import org.slf4j.LoggerFactory;
  */
 public class CachingProducer<T> implements Producer<T>
 {
-   private static final Logger _logger = LoggerFactory.getLogger(CachingProducer.class);
    private final Producer<T> producer;
    private T cachedValue;
 

@@ -22,9 +22,6 @@ package com.cleversafe.og.test.condition;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.statistic.Counter;
@@ -36,7 +33,6 @@ import com.google.common.eventbus.Subscribe;
 
 public class CounterCondition implements TestCondition
 {
-   private static final Logger _logger = LoggerFactory.getLogger(CounterCondition.class);
    private final Operation operation;
    private final Counter counter;
    private final long thresholdValue;

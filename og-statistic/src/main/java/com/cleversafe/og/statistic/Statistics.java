@@ -28,9 +28,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.cleversafe.og.http.HttpUtil;
 import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Request;
@@ -61,7 +58,6 @@ import com.google.common.util.concurrent.AtomicLongMap;
  */
 public class Statistics
 {
-   private static final Logger _logger = LoggerFactory.getLogger(Statistics.class);
    private final Map<Operation, AtomicLongMap<Counter>> counters;
    private final Map<Operation, AtomicLongMap<Integer>> scCounters;
 

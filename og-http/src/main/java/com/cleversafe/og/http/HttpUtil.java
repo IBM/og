@@ -27,9 +27,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.util.Operation;
 import com.google.common.base.Splitter;
@@ -42,7 +39,6 @@ import com.google.common.collect.Range;
  */
 public class HttpUtil
 {
-   private static final Logger _logger = LoggerFactory.getLogger(HttpUtil.class);
    private static final Splitter URI_SPLITTER = Splitter.on("/").omitEmptyStrings();
    public static final Range<Integer> VALID_STATUS_CODES = Range.closed(100, 599);
    public static final List<Integer> SUCCESS_STATUS_CODES;

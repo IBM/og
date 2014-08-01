@@ -37,9 +37,6 @@ package com.cleversafe.og.util.io;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * An input stream that is backed by a byte array.
  * <P>
@@ -49,7 +46,6 @@ import org.slf4j.LoggerFactory;
  */
 public class FixedBufferInputStream extends SizedInputStream
 {
-   private static final Logger _logger = LoggerFactory.getLogger(FixedBufferInputStream.class);
    private final byte[] buf;
    private final long size;
    private long available;

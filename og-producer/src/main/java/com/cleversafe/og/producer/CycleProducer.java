@@ -27,9 +27,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * A producer which produces values in a cycle. Example:
  * <p>
@@ -50,7 +47,6 @@ import org.slf4j.LoggerFactory;
  */
 public class CycleProducer<T> implements Producer<T>
 {
-   private static final Logger _logger = LoggerFactory.getLogger(CycleProducer.class);
    private final List<T> values;
    private final AtomicLong counter;
 

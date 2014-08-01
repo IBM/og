@@ -27,9 +27,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * A producer which chooses a random value to produce
  * 
@@ -39,7 +36,6 @@ import org.slf4j.LoggerFactory;
  */
 public class RandomChoiceProducer<T> implements Producer<T>
 {
-   private static final Logger _logger = LoggerFactory.getLogger(RandomChoiceProducer.class);
    private final List<Choice<T>> choices;
    private final Random random;
 

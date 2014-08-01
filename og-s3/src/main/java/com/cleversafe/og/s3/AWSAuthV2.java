@@ -34,9 +34,6 @@ import java.util.TreeMap;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.cleversafe.og.http.HttpAuth;
 import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Request;
@@ -64,7 +61,6 @@ import com.google.common.io.BaseEncoding;
  */
 public class AWSAuthV2 implements HttpAuth
 {
-   private static final Logger _logger = LoggerFactory.getLogger(AWSAuthV2.class);
    private static final String HMAC_SHA1 = "HmacSHA1";
    private static final Splitter QUERY_SPLITTER = Splitter.on("&");
    private static final Splitter PARAM_SPLITTER = Splitter.on("=");
