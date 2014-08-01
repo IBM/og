@@ -17,5 +17,9 @@
 			<groupId>com.cleversafe</groupId>
 			<artifactId>og-scheduling</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>com.cleversafe</groupId>
+			<artifactId>og-producer</artifactId>
+		</dependency>
 	</dependencies>
 </project>

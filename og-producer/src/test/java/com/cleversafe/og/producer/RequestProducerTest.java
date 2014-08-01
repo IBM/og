@@ -17,7 +17,7 @@
 // Date: Jun 30, 2014
 // ---------------------
 
-package com.cleversafe.og.http.producer;
+package com.cleversafe.og.producer;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -33,9 +33,10 @@ import com.cleversafe.og.operation.EntityType;
 import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
+import com.cleversafe.og.producer.Producer;
+import com.cleversafe.og.producer.Producers;
+import com.cleversafe.og.producer.RequestProducer;
 import com.cleversafe.og.util.Entities;
-import com.cleversafe.og.util.producer.Producer;
-import com.cleversafe.og.util.producer.Producers;
 
 public class RequestProducerTest
 {

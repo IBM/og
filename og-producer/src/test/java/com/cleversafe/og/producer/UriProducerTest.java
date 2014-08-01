@@ -17,7 +17,7 @@
 // Date: Jun 29, 2014
 // ---------------------
 
-package com.cleversafe.og.http.producer;
+package com.cleversafe.og.producer;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -29,9 +29,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.cleversafe.og.http.Scheme;
-import com.cleversafe.og.util.producer.Producer;
-import com.cleversafe.og.util.producer.ProducerException;
-import com.cleversafe.og.util.producer.Producers;
+import com.cleversafe.og.producer.Producer;
+import com.cleversafe.og.producer.ProducerException;
+import com.cleversafe.og.producer.Producers;
+import com.cleversafe.og.producer.UriProducer;
 
 public class UriProducerTest
 {

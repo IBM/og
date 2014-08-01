@@ -31,9 +31,9 @@ import com.cleversafe.og.consumer.ObjectNameConsumer;
 import com.cleversafe.og.http.util.Api;
 import com.cleversafe.og.object.manager.ObjectManager;
 import com.cleversafe.og.operation.Request;
+import com.cleversafe.og.producer.CachingProducer;
+import com.cleversafe.og.producer.Producer;
 import com.cleversafe.og.statistic.Statistics;
-import com.cleversafe.og.util.producer.CachingProducer;
-import com.cleversafe.og.util.producer.Producer;
 import com.google.common.eventbus.EventBus;
 
 public class OGModuleTest

@@ -28,8 +28,8 @@ import javax.inject.Inject;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.manager.OperationManager;
 import com.cleversafe.og.operation.manager.OperationManagerException;
-import com.cleversafe.og.util.producer.Producer;
-import com.cleversafe.og.util.producer.ProducerException;
+import com.cleversafe.og.producer.Producer;
+import com.cleversafe.og.producer.ProducerException;
 
 public class SimpleOperationManager implements OperationManager
 {

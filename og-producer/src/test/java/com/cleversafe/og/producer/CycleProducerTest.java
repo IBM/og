@@ -17,7 +17,7 @@
 // Date: Jun 28, 2014
 // ---------------------
 
-package com.cleversafe.og.util.producer;
+package com.cleversafe.og.producer;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,6 +25,9 @@ import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
+
+import com.cleversafe.og.producer.CycleProducer;
+import com.cleversafe.og.producer.Producer;
 
 public class CycleProducerTest
 {

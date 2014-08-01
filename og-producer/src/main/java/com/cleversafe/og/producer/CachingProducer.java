@@ -17,7 +17,7 @@
 // Date: Jul 1, 2014
 // ---------------------
 
-package com.cleversafe.og.util.producer;
+package com.cleversafe.og.producer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

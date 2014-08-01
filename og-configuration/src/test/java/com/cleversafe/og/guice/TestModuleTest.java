@@ -54,13 +54,13 @@ import com.cleversafe.og.json.enums.ConcurrencyType;
 import com.cleversafe.og.json.enums.DistributionType;
 import com.cleversafe.og.operation.Entity;
 import com.cleversafe.og.operation.EntityType;
+import com.cleversafe.og.producer.Producer;
+import com.cleversafe.og.producer.Producers;
 import com.cleversafe.og.s3.auth.AWSAuthV2;
 import com.cleversafe.og.scheduling.ConcurrentRequestScheduler;
 import com.cleversafe.og.scheduling.RequestRateScheduler;
 import com.cleversafe.og.scheduling.Scheduler;
 import com.cleversafe.og.util.SizeUnit;
-import com.cleversafe.og.util.producer.Producer;
-import com.cleversafe.og.util.producer.Producers;
 import com.google.common.eventbus.EventBus;
 import com.google.common.io.Files;
 

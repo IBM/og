@@ -17,7 +17,7 @@
 // Date: Mar 12, 2014
 // ---------------------
 
-package com.cleversafe.og.util.producer;
+package com.cleversafe.og.producer;
 
 /**
  * A producer of values

@@ -17,7 +17,7 @@
 // Date: Apr 8, 2014
 // ---------------------
 
-package com.cleversafe.og.util.producer;
+package com.cleversafe.og.producer;
 
 public class ProducerException extends RuntimeException
 {

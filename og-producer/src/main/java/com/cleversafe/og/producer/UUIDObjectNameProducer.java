@@ -17,11 +17,9 @@
 // Date: Apr 6, 2014
 // ---------------------
 
-package com.cleversafe.og.object.producer;
+package com.cleversafe.og.producer;
 
 import java.util.UUID;
-
-import com.cleversafe.og.util.producer.Producer;
 
 public class UUIDObjectNameProducer implements Producer<String>
 {

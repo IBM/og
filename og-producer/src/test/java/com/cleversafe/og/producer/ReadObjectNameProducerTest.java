@@ -17,7 +17,7 @@
 // Date: Jun 29, 2014
 // ---------------------
 
-package com.cleversafe.og.object.producer;
+package com.cleversafe.og.producer;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -29,10 +29,11 @@ import org.junit.Test;
 import com.cleversafe.og.object.ObjectName;
 import com.cleversafe.og.object.manager.ObjectManager;
 import com.cleversafe.og.object.manager.ObjectManagerException;
-import com.cleversafe.og.util.producer.Producer;
-import com.cleversafe.og.util.producer.ProducerException;
+import com.cleversafe.og.producer.Producer;
+import com.cleversafe.og.producer.ProducerException;
+import com.cleversafe.og.producer.ReadObjectNameProducer;
 
-public class DeleteObjectNameProducerTest
+public class ReadObjectNameProducerTest
 {
    private ObjectManager mockObjectManager;
 
@@ -45,26 +46,26 @@ public class DeleteObjectNameProducerTest
    @Test(expected = NullPointerException.class)
    public void testNullObjectManager()
    {
-      new DeleteObjectNameProducer(null);
+      new ReadObjectNameProducer(null);
    }
 
    @Test
-   public void testDeleteObjectNameProducer()
+   public void testReadObjectNameProducer()
    {
       final String objectString = "objectName";
       final ObjectName mockObjectName = mock(ObjectName.class);
       when(mockObjectName.toString()).thenReturn(objectString);
-      when(this.mockObjectManager.getNameForDelete()).thenReturn(mockObjectName);
+      when(this.mockObjectManager.acquireNameForRead()).thenReturn(mockObjectName);
 
-      final Producer<String> p = new DeleteObjectNameProducer(this.mockObjectManager);
+      final Producer<String> p = new ReadObjectNameProducer(this.mockObjectManager);
       Assert.assertEquals(objectString, p.produce());
    }
 
    @Test(expected = ProducerException.class)
    public void testProducerException()
    {
-      when(this.mockObjectManager.getNameForDelete()).thenThrow(new ObjectManagerException());
-      final Producer<String> p = new DeleteObjectNameProducer(this.mockObjectManager);
+      when(this.mockObjectManager.acquireNameForRead()).thenThrow(new ObjectManagerException());
+      final Producer<String> p = new ReadObjectNameProducer(this.mockObjectManager);
       p.produce();
    }
 }

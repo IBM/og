@@ -17,7 +17,7 @@
 // Date: Mar 19, 2014
 // ---------------------
 
-package com.cleversafe.og.http.producer;
+package com.cleversafe.og.producer;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -32,9 +32,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import com.cleversafe.og.http.Scheme;
-import com.cleversafe.og.util.producer.Producer;
-import com.cleversafe.og.util.producer.ProducerException;
-import com.cleversafe.og.util.producer.Producers;
 import com.google.common.base.Joiner;
 
 /**

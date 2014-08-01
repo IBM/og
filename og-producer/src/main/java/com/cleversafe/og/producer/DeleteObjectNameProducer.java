@@ -17,14 +17,12 @@
 // Date: Mar 29, 2014
 // ---------------------
 
-package com.cleversafe.og.object.producer;
+package com.cleversafe.og.producer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.cleversafe.og.object.manager.ObjectManager;
 import com.cleversafe.og.object.manager.ObjectManagerException;
-import com.cleversafe.og.util.producer.Producer;
-import com.cleversafe.og.util.producer.ProducerException;
 
 public class DeleteObjectNameProducer implements Producer<String>
 {

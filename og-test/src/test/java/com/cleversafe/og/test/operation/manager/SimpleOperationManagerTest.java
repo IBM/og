@@ -28,9 +28,9 @@ import org.junit.Test;
 
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.manager.OperationManagerException;
-import com.cleversafe.og.util.producer.Producer;
-import com.cleversafe.og.util.producer.ProducerException;
-import com.cleversafe.og.util.producer.Producers;
+import com.cleversafe.og.producer.Producer;
+import com.cleversafe.og.producer.ProducerException;
+import com.cleversafe.og.producer.Producers;
 
 public class SimpleOperationManagerTest
 {

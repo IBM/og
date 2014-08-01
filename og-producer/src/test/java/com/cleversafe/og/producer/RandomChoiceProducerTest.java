@@ -17,7 +17,7 @@
 // Date: Jun 28, 2014
 // ---------------------
 
-package com.cleversafe.og.util.producer;
+package com.cleversafe.og.producer;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -25,6 +25,10 @@ import java.util.Random;
 
 import org.junit.Assert;
 import org.junit.Test;
+
+import com.cleversafe.og.producer.Producer;
+import com.cleversafe.og.producer.Producers;
+import com.cleversafe.og.producer.RandomChoiceProducer;
 
 public class RandomChoiceProducerTest
 {

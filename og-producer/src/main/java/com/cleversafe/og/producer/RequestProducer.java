@@ -17,7 +17,7 @@
 // Date: Mar 19, 2014
 // ---------------------
 
-package com.cleversafe.og.http.producer;
+package com.cleversafe.og.producer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -32,8 +32,6 @@ import com.cleversafe.og.operation.Entity;
 import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
-import com.cleversafe.og.util.producer.Producer;
-import com.cleversafe.og.util.producer.Producers;
 
 /**
  * A producer of requests

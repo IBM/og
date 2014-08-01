@@ -17,12 +17,13 @@
 // Date: Jun 29, 2014
 // ---------------------
 
-package com.cleversafe.og.object.producer;
+package com.cleversafe.og.producer;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.cleversafe.og.util.producer.Producer;
+import com.cleversafe.og.producer.Producer;
+import com.cleversafe.og.producer.UUIDObjectNameProducer;
 
 public class UUIDObjectNameProducerTest
 {
