@@ -47,4 +47,10 @@ public class ReadObjectNameProducer implements Producer<String>
          throw new ProducerException(e);
       }
    }
+
+   @Override
+   public String toString()
+   {
+      return "ReadObjectNameProducer []";
+   }
 }

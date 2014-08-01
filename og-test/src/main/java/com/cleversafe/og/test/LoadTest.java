@@ -21,6 +21,7 @@ package com.cleversafe.og.test;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Callable;
@@ -149,5 +150,15 @@ public class LoadTest implements Callable<Boolean>
             LoadTest.this.eventBus.post(new Pair<Request, Response>(request, response));
          }
       });
+   }
+
+   @Override
+   public String toString()
+   {
+      return String.format(Locale.US,
+            "LoadTest [%noperationManager=%s,%n%nscheduler=%s,%n%nclient=%s%n]",
+            this.operationManager,
+            this.scheduler,
+            this.client);
    }
 }

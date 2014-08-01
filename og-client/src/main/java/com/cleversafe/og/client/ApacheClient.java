@@ -446,19 +446,33 @@ public class ApacheClient implements Client
    @Override
    public String toString()
    {
-      return "ApacheClient [connectTimeout=" + this.connectTimeout
-            + ", soTimeout=" + this.soTimeout
-            + ", soReuseAddress=" + this.soReuseAddress
-            + ", soLinger=" + this.soLinger
-            + ", soKeepAlive=" + this.soKeepAlive
-            + ", tcpNoDelay=" + this.tcpNoDelay
-            + ", chunkedEncoding=" + this.chunkedEncoding
-            + ", expectContinue=" + this.expectContinue
-            + ", waitForContinue=" + this.waitForContinue
-            + ", authentication=" + this.authentication
-            + ", userAgent=" + this.userAgent
-            + ", writeThroughput=" + this.writeThroughput
-            + ", readThroughput=" + this.readThroughput + "]";
+      return String.format("ApacheClient [%n"
+            + "connectTimeout=%s,%n"
+            + "soTimeout=%s,%n"
+            + "soReuseAddress=%s,%n"
+            + "soLinger=%s,%n"
+            + "soKeepAlive=%s,%n"
+            + "tcpNoDelay=%s,%n"
+            + "chunkedEncoding=%s,%n"
+            + "expectContinue=%s,%n"
+            + "waitForContinue=%s,%n"
+            + "authentication=%s,%n"
+            + "userAgent=%s,%n"
+            + "writeThroughput=%s,%n"
+            + "readThroughput=%s%n]",
+            this.connectTimeout,
+            this.soTimeout,
+            this.soReuseAddress,
+            this.soLinger,
+            this.soKeepAlive,
+            this.tcpNoDelay,
+            this.chunkedEncoding,
+            this.expectContinue,
+            this.waitForContinue,
+            this.authentication,
+            this.userAgent,
+            this.writeThroughput,
+            this.readThroughput);
    }
 
    /**

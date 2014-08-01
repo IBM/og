@@ -21,6 +21,8 @@ package com.cleversafe.og.test.operation.manager;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Locale;
+
 import javax.inject.Inject;
 
 import com.cleversafe.og.operation.Request;
@@ -51,5 +53,11 @@ public class SimpleOperationManager implements OperationManager
       {
          throw new OperationManagerException(e);
       }
+   }
+
+   @Override
+   public String toString()
+   {
+      return String.format(Locale.US, "SimpleOperationManager [%nrequestMix=%s%n]", this.requestMix);
    }
 }

@@ -90,4 +90,10 @@ public class RequestRateScheduler implements Scheduler
          return timestamp - this.lastCalledTimestamp;
       return 0;
    }
+
+   @Override
+   public String toString()
+   {
+      return "RequestRateScheduler [count=" + this.count + ", unit=" + this.unit + "]";
+   }
 }

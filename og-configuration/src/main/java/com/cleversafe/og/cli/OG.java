@@ -100,6 +100,8 @@ public class OG extends AbstractCLI
          objectManager = injector.getInstance(ObjectManager.class);
          final LoadTest test = injector.getInstance(LoadTest.class);
          client = injector.getInstance(Client.class);
+         _logger.info("{}", test);
+         _logger.info("{}", objectManager);
 
          final ExecutorService executorService = Executors.newSingleThreadExecutor();
          final CompletionService<Boolean> completionService =

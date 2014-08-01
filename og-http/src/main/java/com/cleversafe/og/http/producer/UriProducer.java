@@ -27,6 +27,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -252,5 +253,19 @@ public class UriProducer implements Producer<URI>
       {
          return new UriProducer(this);
       }
+   }
+
+   @Override
+   public String toString()
+   {
+      return String.format(
+            Locale.US,
+            "UriProducer [%nscheme=%s,%nhost=%s,%nport=%s,%npath=%s,%nqueryParameters=%s,%ntrailingSlash=%s%n]",
+            this.scheme,
+            this.host,
+            this.port,
+            this.path,
+            this.queryParameters,
+            this.trailingSlash);
    }
 }

@@ -30,4 +30,10 @@ public class UUIDObjectNameProducer implements Producer<String>
    {
       return UUID.randomUUID().toString().replace("-", "") + "0000";
    }
+
+   @Override
+   public String toString()
+   {
+      return "UUIDObjectNameProducer []";
+   }
 }

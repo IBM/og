@@ -491,4 +491,12 @@ public class RandomObjectPopulator extends Thread implements ObjectManager
       }
       this.saver.shutdown();
    }
+
+   @Override
+   public String toString()
+   {
+      return "RandomObjectPopulator [maxObjects=" + this.maxObjects
+            + ", directory=" + this.directory
+            + ", prefix=" + this.prefix + "]";
+   }
 }

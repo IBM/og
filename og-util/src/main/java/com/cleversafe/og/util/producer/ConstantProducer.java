@@ -52,6 +52,6 @@ public class ConstantProducer<T> implements Producer<T>
    @Override
    public String toString()
    {
-      return "ConstantProducer [value=" + this.value + "]";
+      return "ConstantProducer [" + this.value + "]";
    }
 }

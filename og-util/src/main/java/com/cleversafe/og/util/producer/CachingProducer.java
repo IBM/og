@@ -68,6 +68,6 @@ public class CachingProducer<T> implements Producer<T>
    @Override
    public String toString()
    {
-      return "CachingProducer [producer=" + this.producer + "]";
+      return "CachingProducer [" + this.producer + "]";
    }
 }

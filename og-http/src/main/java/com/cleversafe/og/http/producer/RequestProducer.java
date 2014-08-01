@@ -23,6 +23,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URI;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -241,5 +242,17 @@ public class RequestProducer implements Producer<Request>
       {
          return new RequestProducer(this);
       }
+   }
+
+   @Override
+   public String toString()
+   {
+      return String.format(Locale.US,
+            "RequestProducer [%nmethod=%s,%nuri=%s,%nheaders=%s,%nentity=%s,%nmetadata=%s%n]",
+            this.method,
+            this.uri,
+            this.headers,
+            this.entity,
+            this.metadata);
    }
 }

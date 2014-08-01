@@ -188,11 +188,12 @@ public class RandomChoiceProducer<T> implements Producer<T>
    @Override
    public String toString()
    {
-      final StringBuilder s = new StringBuilder("RandomChoiceProducer [choices=");
+      final StringBuilder s = new StringBuilder("RandomChoiceProducer [");
       for (final Choice<T> choice : this.choices)
       {
-         s.append(String.format(Locale.US, "%nchoice=%s, weight=", choice.value, choice.weight));
+         s.append(String.format(Locale.US, "%nchoice=%s,%nweight=%s,", choice.value,
+               choice.weight));
       }
-      return s.append("]").toString();
+      return s.append(String.format("%n]")).toString();
    }
 }

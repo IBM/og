@@ -47,4 +47,10 @@ public class DeleteObjectNameProducer implements Producer<String>
          throw new ProducerException(e);
       }
    }
+
+   @Override
+   public String toString()
+   {
+      return "DeleteObjectNameProducer []";
+   }
 }

@@ -37,6 +37,7 @@ import com.google.common.eventbus.Subscribe;
 public class ConcurrentRequestScheduler implements Scheduler
 {
    private static final Logger _logger = LoggerFactory.getLogger(ConcurrentRequestScheduler.class);
+   private final int concurrentRequests;
    private final Semaphore sem;
 
    /**
@@ -50,6 +51,7 @@ public class ConcurrentRequestScheduler implements Scheduler
    public ConcurrentRequestScheduler(final int concurrentRequests)
    {
       checkArgument(concurrentRequests > 0, "concurrentRequests must be > 0");
+      this.concurrentRequests = concurrentRequests;
       this.sem = new Semaphore(concurrentRequests - 1);
    }
 
@@ -83,5 +85,11 @@ public class ConcurrentRequestScheduler implements Scheduler
    public void complete(final Pair<Request, Response> operation)
    {
       this.sem.release();
+   }
+
+   @Override
+   public String toString()
+   {
+      return "ConcurrentRequestScheduler [concurrentRequests=" + this.concurrentRequests + "]";
    }
 }

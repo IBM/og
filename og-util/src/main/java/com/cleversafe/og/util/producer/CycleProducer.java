@@ -87,11 +87,11 @@ public class CycleProducer<T> implements Producer<T>
    @Override
    public String toString()
    {
-      final StringBuilder s = new StringBuilder("CycleProducer [values=");
+      final StringBuilder s = new StringBuilder("CycleProducer [");
       for (final T value : this.values)
       {
          s.append(String.format(Locale.US, "%n%s", value));
       }
-      return s.append("]").toString();
+      return s.append(String.format("%n]")).toString();
    }
 }
