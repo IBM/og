@@ -25,15 +25,16 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.util.ResponseBodyConsumer;
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * A response body consumer which processes and returns an SOH object name from the response body of
@@ -48,7 +49,10 @@ public class SOHWriteResponseBodyConsumer implements ResponseBodyConsumer
          throws IOException
    {
       if (statusCode != 201)
-         return Collections.emptyIterator();
+      {
+         final Set<Entry<String, String>> emptySet = ImmutableSet.of();
+         return emptySet.iterator();
+      }
       checkNotNull(response);
 
       final BufferedReader reader =

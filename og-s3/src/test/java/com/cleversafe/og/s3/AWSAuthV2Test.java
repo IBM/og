@@ -24,10 +24,10 @@ import static org.mockito.Mockito.when;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -35,6 +35,7 @@ import org.junit.Test;
 
 import com.cleversafe.og.operation.Request;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 
 public class AWSAuthV2Test
@@ -52,7 +53,8 @@ public class AWSAuthV2Test
    @Test
    public void testCanonicalizedAmzHeadersNoHeaders()
    {
-      final Iterator<Entry<String, String>> it = Collections.emptyIterator();
+      final Set<Entry<String, String>> emptySet = ImmutableSet.of();
+      final Iterator<Entry<String, String>> it = emptySet.iterator();
       when(this.request.headers()).thenReturn(it);
       Assert.assertEquals("", this.auth.canonicalizedAmzHeaders(this.request));
    }
