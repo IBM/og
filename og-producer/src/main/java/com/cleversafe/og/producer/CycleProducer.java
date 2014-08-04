@@ -22,10 +22,11 @@ package com.cleversafe.og.producer;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicLong;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * A producer which produces values in a cycle. Example:
@@ -64,12 +65,7 @@ public class CycleProducer<T> implements Producer<T>
    {
       checkNotNull(values);
       checkArgument(!values.isEmpty(), "values must not be empty");
-      // defensive copy
-      this.values = new ArrayList<T>();
-      for (final T value : values)
-      {
-         this.values.add(checkNotNull(value, "values must not contain any null elements"));
-      }
+      this.values = ImmutableList.copyOf(values);
       this.counter = new AtomicLong(0);
    }
 

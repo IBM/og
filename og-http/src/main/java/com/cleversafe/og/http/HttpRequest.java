@@ -22,7 +22,6 @@ package com.cleversafe.og.http;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URI;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Locale;
@@ -38,6 +37,7 @@ import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.util.Entities;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * A defacto implementation of the {@code Request} interface
@@ -58,23 +58,9 @@ public class HttpRequest implements Request
    {
       this.method = checkNotNull(builder.method);
       this.uri = checkNotNull(builder.uri);
-      // defensive copy
-      final Map<String, String> mutableHeaders = new LinkedHashMap<String, String>();
-      for (final Entry<String, String> h : checkNotNull(builder.headers).entrySet())
-      {
-         mutableHeaders.put(checkNotNull(h.getKey()), checkNotNull(h.getValue()));
-      }
-      // support immutable iteration via headers method
-      this.headers = Collections.unmodifiableMap(mutableHeaders);
+      this.headers = ImmutableMap.copyOf(builder.headers);
       this.entity = checkNotNull(builder.entity);
-      // defensive copy
-      final Map<String, String> mutableMetadata = new LinkedHashMap<String, String>();
-      for (final Entry<String, String> m : checkNotNull(builder.metadata).entrySet())
-      {
-         mutableMetadata.put(checkNotNull(m.getKey()), checkNotNull(m.getValue()));
-      }
-      // support immutable iteration via metadata method
-      this.metadata = Collections.unmodifiableMap(mutableMetadata);
+      this.metadata = ImmutableMap.copyOf(builder.metadata);
    }
 
    @Override

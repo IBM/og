@@ -24,15 +24,15 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import com.cleversafe.og.http.Scheme;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * A producer of uris
@@ -54,18 +54,8 @@ public class UriProducer implements Producer<URI>
       this.scheme = checkNotNull(builder.scheme);
       this.host = checkNotNull(builder.host);
       this.port = builder.port;
-      // defensive copy
-      this.path = new ArrayList<Producer<String>>();
-      for (final Producer<String> p : checkNotNull(builder.path))
-      {
-         this.path.add(checkNotNull(p));
-      }
-      // defensive copy
-      this.queryParameters = new LinkedHashMap<String, String>();
-      for (final Entry<String, String> qp : checkNotNull(builder.queryParameters).entrySet())
-      {
-         this.queryParameters.put(checkNotNull(qp.getKey()), checkNotNull(qp.getValue()));
-      }
+      this.path = ImmutableList.copyOf(builder.path);
+      this.queryParameters = ImmutableMap.copyOf(builder.queryParameters);
       this.trailingSlash = builder.trailingSlash;
    }
 

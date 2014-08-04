@@ -22,7 +22,6 @@ package com.cleversafe.og.http;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -32,6 +31,7 @@ import com.cleversafe.og.operation.Entity;
 import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.Entities;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * A defacto implementation of the {@code Response} interface
@@ -50,23 +50,9 @@ public class HttpResponse implements Response
       this.statusCode = builder.statusCode;
       checkArgument(HttpUtil.VALID_STATUS_CODES.contains(this.statusCode),
             "statusCode must be a valid status code [%s]", this.statusCode);
-      // defensive copy
-      final Map<String, String> mutableHeaders = new LinkedHashMap<String, String>();
-      for (final Entry<String, String> h : checkNotNull(builder.headers).entrySet())
-      {
-         mutableHeaders.put(checkNotNull(h.getKey()), checkNotNull(h.getValue()));
-      }
-      // support immutable iteration via headers method
-      this.headers = Collections.unmodifiableMap(mutableHeaders);
+      this.headers = ImmutableMap.copyOf(builder.headers);
       this.entity = checkNotNull(builder.entity);
-      // defensive copy
-      final Map<String, String> mutableMetadata = new LinkedHashMap<String, String>();
-      for (final Entry<String, String> m : checkNotNull(builder.metadata).entrySet())
-      {
-         mutableMetadata.put(checkNotNull(m.getKey()), checkNotNull(m.getValue()));
-      }
-      // support immutable iteration via metadata method
-      this.metadata = Collections.unmodifiableMap(mutableMetadata);
+      this.metadata = ImmutableMap.copyOf(builder.metadata);
    }
 
    @Override
