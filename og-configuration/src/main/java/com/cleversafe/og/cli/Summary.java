@@ -91,15 +91,17 @@ public class Summary
    public String toString()
    {
       retrieveStats();
-
-      return String.format(Locale.US, "Start: %s%n", FORMATTER.print(this.summary.timestampStart)) +
-            String.format(Locale.US, "End: %s%n", FORMATTER.print(this.summary.timestampFinish)) +
-            String.format(Locale.US, "Runtime: %.2f Seconds%n", this.summary.runtime) +
-            String.format(Locale.US, "Operations: %s%n", this.summary.operations) +
-            String.format(Locale.US, "Aborts: %s%n%n", this.summary.aborts) +
-            "[Write]%n" + getOperation(this.summary.write) +
-            "[Read]%n" + getOperation(this.summary.read) +
-            "[Delete]%n" + getOperation(this.summary.delete);
+      final String format =
+            "Start: %s%nEnd: %s%nRuntime: %.2f Seconds%nOperations: %s%nAborts: %s%n%n[Write]%n%s[Read]%n%s[Delete]%n%s";
+      return String.format(Locale.US, format,
+            FORMATTER.print(this.summary.timestampStart),
+            FORMATTER.print(this.summary.timestampFinish),
+            this.summary.runtime,
+            this.summary.operations,
+            this.summary.aborts,
+            getOperation(this.summary.write),
+            getOperation(this.summary.read),
+            getOperation(this.summary.delete));
    }
 
    private String getOperation(final OperationStats opStats)
@@ -107,7 +109,7 @@ public class Summary
       final String format = "Operations: %s%nBytes: %s%nAborts: %s%nStatus Codes:%n%s%n";
       String statusCodes = getStatusCodes(opStats);
       if (statusCodes.length() == 0)
-         statusCodes = "N/A%n";
+         statusCodes = String.format("N/A%n");
 
       return String.format(Locale.US, format, opStats.operations, opStats.bytes, opStats.aborts,
             statusCodes);
