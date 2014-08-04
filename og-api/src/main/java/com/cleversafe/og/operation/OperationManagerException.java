@@ -19,10 +19,9 @@
 
 package com.cleversafe.og.operation;
 
+@SuppressWarnings("serial")
 public class OperationManagerException extends Exception
 {
-   private static final long serialVersionUID = 1L;
-
    public OperationManagerException()
    {}
 

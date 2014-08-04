@@ -19,10 +19,9 @@
 
 package com.cleversafe.og.producer;
 
+@SuppressWarnings("serial")
 public class ProducerException extends RuntimeException
 {
-   private static final long serialVersionUID = 1L;
-
    public ProducerException()
    {}
 
