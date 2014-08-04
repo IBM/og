@@ -19,10 +19,9 @@
 
 package com.cleversafe.og.http;
 
-import java.nio.charset.StandardCharsets;
-
 import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Request;
+import com.google.common.base.Charsets;
 import com.google.common.io.BaseEncoding;
 
 /**
@@ -42,7 +41,7 @@ public class BasicAuth implements HttpAuth
       final String username = request.getMetadata(Metadata.USERNAME);
       final String password = request.getMetadata(Metadata.PASSWORD);
       final String credentials = username + ":" + password;
-      final String b64 = BaseEncoding.base64().encode(credentials.getBytes(StandardCharsets.UTF_8));
+      final String b64 = BaseEncoding.base64().encode(credentials.getBytes(Charsets.UTF_8));
       return "Basic " + b64;
    }
 }

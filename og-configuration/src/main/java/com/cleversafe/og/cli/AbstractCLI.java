@@ -24,13 +24,13 @@ import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.util.Version;
+import com.google.common.base.Charsets;
 import com.google.gson.Gson;
 import com.martiansoftware.jsap.JSAP;
 import com.martiansoftware.jsap.JSAPResult;
@@ -107,7 +107,7 @@ public abstract class AbstractCLI
          if (userConfig == null)
             json = new File(getResource(defaultConfigResource).toURI());
          final Reader reader =
-               new InputStreamReader(new FileInputStream(json), StandardCharsets.UTF_8);
+               new InputStreamReader(new FileInputStream(json), Charsets.UTF_8);
          config = gson.fromJson(reader, cls);
       }
       catch (final Exception e)

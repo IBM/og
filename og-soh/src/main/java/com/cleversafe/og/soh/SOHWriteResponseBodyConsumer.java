@@ -25,7 +25,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -34,6 +33,7 @@ import java.util.Map.Entry;
 
 import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.util.ResponseBodyConsumer;
+import com.google.common.base.Charsets;
 
 /**
  * A response body consumer which processes and returns an SOH object name from the response body of
@@ -52,7 +52,7 @@ public class SOHWriteResponseBodyConsumer implements ResponseBodyConsumer
       checkNotNull(response);
 
       final BufferedReader reader =
-            new BufferedReader(new InputStreamReader(response, StandardCharsets.UTF_8));
+            new BufferedReader(new InputStreamReader(response, Charsets.UTF_8));
 
       final Map<String, String> metadata = new HashMap<String, String>(1);
       metadata.put(Metadata.OBJECT_NAME.toString(), reader.readLine());

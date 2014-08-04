@@ -24,7 +24,6 @@ import static org.mockito.Mockito.mock;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.Map.Entry;
 
@@ -32,6 +31,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.cleversafe.og.operation.Metadata;
+import com.google.common.base.Charsets;
 
 public class SOHWriteResponseBodyConsumerTest
 {
@@ -59,8 +59,7 @@ public class SOHWriteResponseBodyConsumerTest
       {
          s.append("objectName").append(i).append("\n");
       }
-      final InputStream in =
-            new ByteArrayInputStream(s.toString().getBytes(StandardCharsets.UTF_8));
+      final InputStream in = new ByteArrayInputStream(s.toString().getBytes(Charsets.UTF_8));
       final Iterator<Entry<String, String>> it = consumer.consume(201, in);
       Assert.assertTrue(it.hasNext());
       final Entry<String, String> e = it.next();

@@ -19,7 +19,6 @@
 
 package com.cleversafe.og.s3;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -33,6 +32,7 @@ import javax.crypto.spec.SecretKeySpec;
 import com.cleversafe.og.http.HttpAuth;
 import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Request;
+import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -107,13 +107,13 @@ public class AWSAuthV2 implements HttpAuth
    private String signature(final Request request, final String awsSecretAccessKey)
    {
       return BaseEncoding.base64().encode(
-            hmacSha1(awsSecretAccessKey, stringToSign(request).getBytes(StandardCharsets.UTF_8)));
+            hmacSha1(awsSecretAccessKey, stringToSign(request).getBytes(Charsets.UTF_8)));
    }
 
    public byte[] hmacSha1(final String awsSecretAccessKey, final byte[] data)
    {
       final SecretKeySpec signingKey =
-            new SecretKeySpec(awsSecretAccessKey.getBytes(StandardCharsets.UTF_8), HMAC_SHA1);
+            new SecretKeySpec(awsSecretAccessKey.getBytes(Charsets.UTF_8), HMAC_SHA1);
       Mac mac;
       try
       {
