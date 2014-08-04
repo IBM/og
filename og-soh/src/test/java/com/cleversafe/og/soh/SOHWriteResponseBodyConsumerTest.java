@@ -53,14 +53,20 @@ public class SOHWriteResponseBodyConsumerTest
    @Test
    public void testConsume() throws IOException
    {
-      final SOHWriteResponseBodyConsumer c = new SOHWriteResponseBodyConsumer();
+      final SOHWriteResponseBodyConsumer consumer = new SOHWriteResponseBodyConsumer();
+      final StringBuilder s = new StringBuilder();
+      for (int i = 0; i < 10000; i++)
+      {
+         s.append("objectName").append(i).append("\n");
+      }
       final InputStream in =
-            new ByteArrayInputStream("objectName".getBytes(StandardCharsets.UTF_8));
-      final Iterator<Entry<String, String>> it = c.consume(201, in);
+            new ByteArrayInputStream(s.toString().getBytes(StandardCharsets.UTF_8));
+      final Iterator<Entry<String, String>> it = consumer.consume(201, in);
       Assert.assertTrue(it.hasNext());
       final Entry<String, String> e = it.next();
       Assert.assertEquals(Metadata.OBJECT_NAME.toString(), e.getKey());
-      Assert.assertEquals("objectName", e.getValue());
+      Assert.assertEquals("objectName0", e.getValue());
       Assert.assertFalse(it.hasNext());
+      Assert.assertEquals(0, in.available());
    }
 }

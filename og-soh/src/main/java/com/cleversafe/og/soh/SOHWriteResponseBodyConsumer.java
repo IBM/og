@@ -56,7 +56,10 @@ public class SOHWriteResponseBodyConsumer implements ResponseBodyConsumer
 
       final Map<String, String> metadata = new HashMap<String, String>(1);
       metadata.put(Metadata.OBJECT_NAME.toString(), reader.readLine());
-
+      while ((reader.readLine()) != null)
+      {
+         // consume the stream, for SOH writes there should never be anything else
+      }
       return metadata.entrySet().iterator();
    }
 }
