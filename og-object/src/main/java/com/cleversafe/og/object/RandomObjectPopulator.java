@@ -420,12 +420,18 @@ public class RandomObjectPopulator extends Thread implements ObjectManager
             else
             {
                // We borrowed from the end of the file so nothing is lost from truncating
-               try (final RandomAccessFile truncater = new RandomAccessFile(surplus, "rwd"))
+               RandomAccessFile truncater = null;
+               try
                {
+                  truncater = new RandomAccessFile(surplus, "rwd");
                   truncater.setLength(skip);
                }
+               finally
+               {
+                  if (truncater != null)
+                     truncater.close();
+               }
             }
-
          }
       }
 
