@@ -29,7 +29,6 @@ import static org.mockito.Mockito.when;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -48,6 +47,7 @@ import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.Pair;
+import com.google.common.collect.Lists;
 
 public class ReadObjectNameConsumerTest
 {
@@ -89,7 +89,7 @@ public class ReadObjectNameConsumerTest
    @Test(expected = NullPointerException.class)
    public void testStatusCodesNullElement()
    {
-      final List<Integer> sc = new ArrayList<Integer>();
+      final List<Integer> sc = Lists.newArrayList();
       sc.add(null);
       new ReadObjectNameConsumer(this.mockObjectManager, sc);
    }
@@ -97,7 +97,7 @@ public class ReadObjectNameConsumerTest
    @Test(expected = IllegalArgumentException.class)
    public void testSmallStatusCode()
    {
-      final List<Integer> sc = new ArrayList<Integer>();
+      final List<Integer> sc = Lists.newArrayList();
       sc.add(99);
       new ReadObjectNameConsumer(this.mockObjectManager, sc);
    }
@@ -105,7 +105,7 @@ public class ReadObjectNameConsumerTest
    @Test(expected = IllegalArgumentException.class)
    public void testLargeStatusCode()
    {
-      final List<Integer> sc = new ArrayList<Integer>();
+      final List<Integer> sc = Lists.newArrayList();
       sc.add(600);
       new ReadObjectNameConsumer(this.mockObjectManager, sc);
    }

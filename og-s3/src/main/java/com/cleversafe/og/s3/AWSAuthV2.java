@@ -20,16 +20,13 @@
 package com.cleversafe.og.s3;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.SortedMap;
-import java.util.TreeMap;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -38,6 +35,8 @@ import com.cleversafe.og.http.HttpAuth;
 import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Request;
 import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.io.BaseEncoding;
 
 /**
@@ -67,7 +66,7 @@ public class AWSAuthV2 implements HttpAuth
    private static final List<String> SUBRESOURCES;
    static
    {
-      final List<String> subresources = new ArrayList<String>();
+      final List<String> subresources = Lists.newArrayList();
       subresources.add("acl");
       subresources.add("lifecycle");
       subresources.add("location");
@@ -181,7 +180,7 @@ public class AWSAuthV2 implements HttpAuth
          if (keyLower.startsWith("x-amz-") && !"x-amz-date".equals(keyLower))
          {
             if (canonicalHeaders == null)
-               canonicalHeaders = new TreeMap<String, String>();
+               canonicalHeaders = Maps.newTreeMap();
 
             canonicalHeaders.put(keyLower, header.getValue().trim());
          }
@@ -210,7 +209,7 @@ public class AWSAuthV2 implements HttpAuth
          if (SUBRESOURCES.contains(q.getKey()))
          {
             if (subresources == null)
-               subresources = new TreeMap<String, String>();
+               subresources = Maps.newTreeMap();
 
             subresources.put(q.getKey(), q.getValue());
          }
@@ -236,7 +235,7 @@ public class AWSAuthV2 implements HttpAuth
       if (query == null || query.length() == 0)
          return Collections.emptyMap();
 
-      final Map<String, String> queryParameters = new HashMap<String, String>();
+      final Map<String, String> queryParameters = Maps.newHashMap();
 
       for (final String q : QUERY_SPLITTER.split(query))
       {

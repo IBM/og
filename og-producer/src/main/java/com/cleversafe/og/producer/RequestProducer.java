@@ -22,7 +22,6 @@ package com.cleversafe.og.producer;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -33,6 +32,7 @@ import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.util.Pair;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 /**
  * A producer of requests
@@ -114,8 +114,8 @@ public class RequestProducer implements Producer<Request>
       {
          this.method = method;
          this.uri = uri;
-         this.headers = new ArrayList<Pair<Producer<String>, Producer<String>>>();
-         this.metadata = new ArrayList<Pair<Producer<String>, Producer<String>>>();
+         this.headers = Lists.newArrayList();
+         this.metadata = Lists.newArrayList();
       }
 
       /**

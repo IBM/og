@@ -20,7 +20,6 @@
 package com.cleversafe.og.producer;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -29,10 +28,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.cleversafe.og.http.Scheme;
-import com.cleversafe.og.producer.Producer;
-import com.cleversafe.og.producer.ProducerException;
-import com.cleversafe.og.producer.Producers;
-import com.cleversafe.og.producer.UriProducer;
+import com.google.common.collect.Lists;
 
 public class UriProducerTest
 {
@@ -45,7 +41,7 @@ public class UriProducerTest
    {
       this.host = "192.168.8.1";
       this.container = "container";
-      this.path = new ArrayList<Producer<String>>();
+      this.path = Lists.newArrayList();
       this.path.add(Producers.of(this.container));
    }
 
@@ -174,7 +170,7 @@ public class UriProducerTest
    @Test
    public void testPath()
    {
-      final List<Producer<String>> aPath = new ArrayList<Producer<String>>();
+      final List<Producer<String>> aPath = Lists.newArrayList();
       aPath.add(Producers.of("container"));
       aPath.add(Producers.of("object"));
       final Producer<URI> p = new UriProducer.Builder(this.host, aPath).build();
@@ -223,7 +219,7 @@ public class UriProducerTest
    @Test(expected = ProducerException.class)
    public void testBadUri()
    {
-      final List<Producer<String>> badPath = new ArrayList<Producer<String>>();
+      final List<Producer<String>> badPath = Lists.newArrayList();
       badPath.add(Producers.of("containe\r"));
       final Producer<URI> p = new UriProducer.Builder(this.host, badPath).build();
       p.produce();
@@ -232,7 +228,7 @@ public class UriProducerTest
    @Test
    public void testPathModification()
    {
-      final List<Producer<String>> path = new ArrayList<Producer<String>>();
+      final List<Producer<String>> path = Lists.newArrayList();
       path.add(Producers.of("container"));
       final Producer<URI> p = new UriProducer.Builder(this.host, this.path).build();
       path.add(Producers.of("object"));

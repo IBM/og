@@ -19,14 +19,14 @@
 
 package com.cleversafe.og.json;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.cleversafe.og.http.Api;
 import com.cleversafe.og.http.Scheme;
 import com.cleversafe.og.operation.EntityType;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 public class TestConfig
 {
@@ -53,17 +53,17 @@ public class TestConfig
    {
       this.scheme = Scheme.HTTP;
       this.hostSelection = CollectionAlgorithmType.ROUNDROBIN;
-      this.host = new ArrayList<HostConfig>();
+      this.host = Lists.newArrayList();
       this.port = null;
       this.api = Api.SOH;
       this.uriRoot = null;
       this.container = null;
-      this.headers = new LinkedHashMap<String, String>();
+      this.headers = Maps.newLinkedHashMap();
       this.write = new OperationConfig();
       this.read = new OperationConfig();
       this.delete = new OperationConfig();
       this.filesizeSelection = CollectionAlgorithmType.RANDOM;
-      this.filesize = new ArrayList<FilesizeConfig>();
+      this.filesize = Lists.newArrayList();
       this.filesize.add(new FilesizeConfig());
       this.source = EntityType.RANDOM;
       this.concurrency = new ConcurrencyConfig();

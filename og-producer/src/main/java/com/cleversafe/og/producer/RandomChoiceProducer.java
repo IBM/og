@@ -22,10 +22,11 @@ package com.cleversafe.og.producer;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
+
+import com.google.common.collect.Lists;
 
 /**
  * A producer which chooses a random value to produce
@@ -105,7 +106,7 @@ public class RandomChoiceProducer<T> implements Producer<T>
        */
       public Builder()
       {
-         this.choices = new ArrayList<Choice<T>>();
+         this.choices = Lists.newArrayList();
          this.random = new Random();
       }
 

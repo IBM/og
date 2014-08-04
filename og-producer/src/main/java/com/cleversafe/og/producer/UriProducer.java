@@ -24,7 +24,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -33,6 +32,7 @@ import com.cleversafe.og.http.Scheme;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 
 /**
  * A producer of uris
@@ -148,7 +148,7 @@ public class UriProducer implements Producer<URI>
          this.scheme = Producers.of(Scheme.HTTP);
          this.host = host;
          this.path = path;
-         this.queryParameters = new LinkedHashMap<String, String>();
+         this.queryParameters = Maps.newLinkedHashMap();
       }
 
       /**

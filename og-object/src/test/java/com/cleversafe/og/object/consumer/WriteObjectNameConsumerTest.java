@@ -29,9 +29,7 @@ import static org.mockito.Mockito.when;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -50,6 +48,8 @@ import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.Pair;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 public class WriteObjectNameConsumerTest
 {
@@ -70,7 +70,7 @@ public class WriteObjectNameConsumerTest
       this.mockResponse = mock(Response.class);
       when(this.mockResponse.getMetadata(Metadata.REQUEST_ID)).thenReturn("1");
 
-      this.pendingRequests = new HashMap<String, Request>();
+      this.pendingRequests = Maps.newHashMap();
       this.pendingRequests.put("1", this.mockRequest);
    }
 
@@ -95,7 +95,7 @@ public class WriteObjectNameConsumerTest
    @Test(expected = NullPointerException.class)
    public void testStatusCodesNullElement()
    {
-      final List<Integer> sc = new ArrayList<Integer>();
+      final List<Integer> sc = Lists.newArrayList();
       sc.add(null);
       new WriteObjectNameConsumer(this.mockObjectManager, sc);
    }
@@ -103,7 +103,7 @@ public class WriteObjectNameConsumerTest
    @Test(expected = IllegalArgumentException.class)
    public void testSmallStatusCode()
    {
-      final List<Integer> sc = new ArrayList<Integer>();
+      final List<Integer> sc = Lists.newArrayList();
       sc.add(99);
       new WriteObjectNameConsumer(this.mockObjectManager, sc);
    }
@@ -111,7 +111,7 @@ public class WriteObjectNameConsumerTest
    @Test(expected = IllegalArgumentException.class)
    public void testLargeStatusCode()
    {
-      final List<Integer> sc = new ArrayList<Integer>();
+      final List<Integer> sc = Lists.newArrayList();
       sc.add(600);
       new WriteObjectNameConsumer(this.mockObjectManager, sc);
    }

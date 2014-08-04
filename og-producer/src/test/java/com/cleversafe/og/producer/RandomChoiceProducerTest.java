@@ -19,16 +19,13 @@
 
 package com.cleversafe.og.producer;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.cleversafe.og.producer.Producer;
-import com.cleversafe.og.producer.Producers;
-import com.cleversafe.og.producer.RandomChoiceProducer;
+import com.google.common.collect.Maps;
 
 public class RandomChoiceProducerTest
 {
@@ -82,7 +79,7 @@ public class RandomChoiceProducerTest
       b.withRandom(new Random());
       final Producer<Integer> p = b.build();
 
-      final Map<Integer, Integer> counts = new HashMap<Integer, Integer>();
+      final Map<Integer, Integer> counts = Maps.newHashMap();
       counts.put(1, 0);
       counts.put(2, 0);
       counts.put(3, 0);

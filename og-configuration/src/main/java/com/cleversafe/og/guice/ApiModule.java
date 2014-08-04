@@ -20,8 +20,6 @@
 package com.cleversafe.og.guice;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -63,6 +61,8 @@ import com.cleversafe.og.producer.UriProducer;
 import com.cleversafe.og.soh.SOHWriteResponseBodyConsumer;
 import com.cleversafe.og.util.Entities;
 import com.cleversafe.og.util.ResponseBodyConsumer;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -194,8 +194,7 @@ public class ApiModule extends AbstractModule
 
    public Map<Producer<String>, Producer<String>> createMetadata(final Producer<String> id)
    {
-      final Map<Producer<String>, Producer<String>> metadata =
-            new HashMap<Producer<String>, Producer<String>>();
+      final Map<Producer<String>, Producer<String>> metadata = Maps.newHashMap();
       metadata.put(Producers.of(Metadata.REQUEST_ID.toString()), id);
       return metadata;
    }
@@ -251,7 +250,7 @@ public class ApiModule extends AbstractModule
          final Producer<String> container,
          final Producer<String> object)
    {
-      final List<Producer<String>> path = new ArrayList<Producer<String>>();
+      final List<Producer<String>> path = Lists.newArrayList();
       if (uriRoot != null)
          path.add(uriRoot);
       path.add(container);
@@ -268,8 +267,7 @@ public class ApiModule extends AbstractModule
    @Singleton
    public Map<String, ResponseBodyConsumer> provideResponseBodyConsumers()
    {
-      final Map<String, ResponseBodyConsumer> consumers =
-            new HashMap<String, ResponseBodyConsumer>();
+      final Map<String, ResponseBodyConsumer> consumers = Maps.newHashMap();
       consumers.put(SOH_PUT_OBJECT, new SOHWriteResponseBodyConsumer());
 
       return consumers;

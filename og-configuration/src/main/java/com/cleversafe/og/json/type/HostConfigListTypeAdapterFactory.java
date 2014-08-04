@@ -20,10 +20,10 @@
 package com.cleversafe.og.json.type;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import com.cleversafe.og.json.HostConfig;
+import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
 import com.google.gson.TypeAdapterFactory;
@@ -64,7 +64,7 @@ public class HostConfigListTypeAdapterFactory implements TypeAdapterFactory
          {
             if (JsonToken.STRING == in.peek())
             {
-               final List<HostConfig> host = new ArrayList<HostConfig>(1);
+               final List<HostConfig> host = Lists.newArrayList();
                host.add(new HostConfig(in.nextString()));
                return (T) host;
             }

@@ -24,7 +24,6 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -61,6 +60,8 @@ import com.cleversafe.og.scheduling.ConcurrentRequestScheduler;
 import com.cleversafe.og.scheduling.RequestRateScheduler;
 import com.cleversafe.og.scheduling.Scheduler;
 import com.cleversafe.og.util.SizeUnit;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.eventbus.EventBus;
 import com.google.common.io.Files;
 
@@ -107,7 +108,7 @@ public class TestModuleTest
    public void testTestHostNullHostSelection()
    {
       when(this.config.getHostSelection()).thenReturn(null);
-      final List<HostConfig> hostConfig = new ArrayList<HostConfig>();
+      final List<HostConfig> hostConfig = Lists.newArrayList();
       hostConfig.add(new HostConfig());
       when(this.config.getHost()).thenReturn(hostConfig);
       this.module.testHost();
@@ -125,7 +126,7 @@ public class TestModuleTest
    public void testTestHostEmptyHost()
    {
       when(this.config.getHostSelection()).thenReturn(CollectionAlgorithmType.RANDOM);
-      final List<HostConfig> hostConfig = new ArrayList<HostConfig>();
+      final List<HostConfig> hostConfig = Lists.newArrayList();
       when(this.config.getHost()).thenReturn(hostConfig);
       this.module.testHost();
    }
@@ -134,7 +135,7 @@ public class TestModuleTest
    public void testTestHostNullHostConfig()
    {
       when(this.config.getHostSelection()).thenReturn(CollectionAlgorithmType.RANDOM);
-      final List<HostConfig> hostConfig = new ArrayList<HostConfig>();
+      final List<HostConfig> hostConfig = Lists.newArrayList();
       hostConfig.add(null);
       when(this.config.getHost()).thenReturn(hostConfig);
       this.module.testHost();
@@ -144,7 +145,7 @@ public class TestModuleTest
    public void testTestHostSingleHostEmptyHost()
    {
       when(this.config.getHostSelection()).thenReturn(CollectionAlgorithmType.ROUNDROBIN);
-      final List<HostConfig> hostConfig = new ArrayList<HostConfig>();
+      final List<HostConfig> hostConfig = Lists.newArrayList();
       hostConfig.add(new HostConfig(""));
       when(this.config.getHost()).thenReturn(hostConfig);
       this.module.testHost();
@@ -154,7 +155,7 @@ public class TestModuleTest
    public void testTestHostSingleHostRoundRobin()
    {
       when(this.config.getHostSelection()).thenReturn(CollectionAlgorithmType.ROUNDROBIN);
-      final List<HostConfig> hostConfig = new ArrayList<HostConfig>();
+      final List<HostConfig> hostConfig = Lists.newArrayList();
       hostConfig.add(new HostConfig("192.168.8.1"));
       when(this.config.getHost()).thenReturn(hostConfig);
       final Producer<String> p = this.module.testHost();
@@ -168,7 +169,7 @@ public class TestModuleTest
    public void testTestHostSingleHostRandom()
    {
       when(this.config.getHostSelection()).thenReturn(CollectionAlgorithmType.RANDOM);
-      final List<HostConfig> hostConfig = new ArrayList<HostConfig>();
+      final List<HostConfig> hostConfig = Lists.newArrayList();
       hostConfig.add(new HostConfig("192.168.8.1"));
       when(this.config.getHost()).thenReturn(hostConfig);
       final Producer<String> p = this.module.testHost();
@@ -182,7 +183,7 @@ public class TestModuleTest
    public void testTestHostMultipleHostRoundRobin()
    {
       when(this.config.getHostSelection()).thenReturn(CollectionAlgorithmType.ROUNDROBIN);
-      final List<HostConfig> hostConfig = new ArrayList<HostConfig>();
+      final List<HostConfig> hostConfig = Lists.newArrayList();
       hostConfig.add(new HostConfig("192.168.8.1"));
       hostConfig.add(new HostConfig("192.168.8.2"));
       when(this.config.getHost()).thenReturn(hostConfig);
@@ -198,7 +199,7 @@ public class TestModuleTest
    public void testTestHostMultipleHostRandom()
    {
       when(this.config.getHostSelection()).thenReturn(CollectionAlgorithmType.RANDOM);
-      final List<HostConfig> hostConfig = new ArrayList<HostConfig>();
+      final List<HostConfig> hostConfig = Lists.newArrayList();
       hostConfig.add(new HostConfig("192.168.8.1"));
       when(this.config.getHost()).thenReturn(hostConfig);
       final Producer<String> p = this.module.testHost();
@@ -236,7 +237,7 @@ public class TestModuleTest
    public void testTestWriteHostOverride()
    {
       final OperationConfig operationConfig = mock(OperationConfig.class);
-      final List<HostConfig> host = new ArrayList<HostConfig>();
+      final List<HostConfig> host = Lists.newArrayList();
       host.add(new HostConfig("10.1.1.1"));
       when(operationConfig.getHostSelection()).thenReturn(CollectionAlgorithmType.RANDOM);
       when(operationConfig.getHost()).thenReturn(host);
@@ -272,7 +273,7 @@ public class TestModuleTest
    public void testTestReadHostOverride()
    {
       final OperationConfig operationConfig = mock(OperationConfig.class);
-      final List<HostConfig> host = new ArrayList<HostConfig>();
+      final List<HostConfig> host = Lists.newArrayList();
       host.add(new HostConfig("10.1.1.1"));
       when(operationConfig.getHostSelection()).thenReturn(CollectionAlgorithmType.RANDOM);
       when(operationConfig.getHost()).thenReturn(host);
@@ -308,7 +309,7 @@ public class TestModuleTest
    public void testTestDeleteHostOverride()
    {
       final OperationConfig operationConfig = mock(OperationConfig.class);
-      final List<HostConfig> host = new ArrayList<HostConfig>();
+      final List<HostConfig> host = Lists.newArrayList();
       host.add(new HostConfig("10.1.1.1"));
       when(operationConfig.getHostSelection()).thenReturn(CollectionAlgorithmType.RANDOM);
       when(operationConfig.getHost()).thenReturn(host);
@@ -569,7 +570,7 @@ public class TestModuleTest
    @Test
    public void testTestHeaders()
    {
-      final Map<String, String> inMap = new LinkedHashMap<String, String>();
+      final Map<String, String> inMap = Maps.newLinkedHashMap();
       for (int i = 0; i < 10; i++)
       {
          inMap.put(String.valueOf(10 - i), String.valueOf(10 - i));
@@ -610,8 +611,7 @@ public class TestModuleTest
    public void testTestWriteHeadersDefault()
    {
       when(this.config.getWrite()).thenReturn(new OperationConfig());
-      final Map<Producer<String>, Producer<String>> testHeaders =
-            new LinkedHashMap<Producer<String>, Producer<String>>();
+      final Map<Producer<String>, Producer<String>> testHeaders = Maps.newLinkedHashMap();
       testHeaders.put(Producers.of("key"), Producers.of("value"));
 
       final Map<Producer<String>, Producer<String>> p = this.module.testWriteHeaders(testHeaders);
@@ -626,13 +626,12 @@ public class TestModuleTest
    public void testTestWriteHeadersOverride()
    {
       final OperationConfig operationConfig = mock(OperationConfig.class);
-      final Map<String, String> operationHeaders = new LinkedHashMap<String, String>();
+      final Map<String, String> operationHeaders = Maps.newLinkedHashMap();
       operationHeaders.put("opKey", "opValue");
       when(operationConfig.getHeaders()).thenReturn(operationHeaders);
       when(this.config.getWrite()).thenReturn(operationConfig);
 
-      final Map<Producer<String>, Producer<String>> testHeaders =
-            new LinkedHashMap<Producer<String>, Producer<String>>();
+      final Map<Producer<String>, Producer<String>> testHeaders = Maps.newLinkedHashMap();
       testHeaders.put(Producers.of("key"), Producers.of("value"));
 
       final Map<Producer<String>, Producer<String>> p = this.module.testWriteHeaders(testHeaders);
@@ -662,8 +661,7 @@ public class TestModuleTest
    public void testTestReadHeadersDefault()
    {
       when(this.config.getRead()).thenReturn(new OperationConfig());
-      final Map<Producer<String>, Producer<String>> testHeaders =
-            new LinkedHashMap<Producer<String>, Producer<String>>();
+      final Map<Producer<String>, Producer<String>> testHeaders = Maps.newLinkedHashMap();
       testHeaders.put(Producers.of("key"), Producers.of("value"));
 
       final Map<Producer<String>, Producer<String>> p = this.module.testReadHeaders(testHeaders);
@@ -678,13 +676,12 @@ public class TestModuleTest
    public void testTestReadHeadersOverride()
    {
       final OperationConfig operationConfig = mock(OperationConfig.class);
-      final Map<String, String> operationHeaders = new LinkedHashMap<String, String>();
+      final Map<String, String> operationHeaders = Maps.newLinkedHashMap();
       operationHeaders.put("opKey", "opValue");
       when(operationConfig.getHeaders()).thenReturn(operationHeaders);
       when(this.config.getRead()).thenReturn(operationConfig);
 
-      final Map<Producer<String>, Producer<String>> testHeaders =
-            new LinkedHashMap<Producer<String>, Producer<String>>();
+      final Map<Producer<String>, Producer<String>> testHeaders = Maps.newLinkedHashMap();
       testHeaders.put(Producers.of("key"), Producers.of("value"));
 
       final Map<Producer<String>, Producer<String>> p = this.module.testReadHeaders(testHeaders);
@@ -714,8 +711,7 @@ public class TestModuleTest
    public void testTestDeleteHeadersDefault()
    {
       when(this.config.getDelete()).thenReturn(new OperationConfig());
-      final Map<Producer<String>, Producer<String>> testHeaders =
-            new LinkedHashMap<Producer<String>, Producer<String>>();
+      final Map<Producer<String>, Producer<String>> testHeaders = Maps.newLinkedHashMap();
       testHeaders.put(Producers.of("key"), Producers.of("value"));
 
       final Map<Producer<String>, Producer<String>> p = this.module.testDeleteHeaders(testHeaders);
@@ -730,13 +726,12 @@ public class TestModuleTest
    public void testTestDeleteHeadersOverride()
    {
       final OperationConfig operationConfig = mock(OperationConfig.class);
-      final Map<String, String> operationHeaders = new LinkedHashMap<String, String>();
+      final Map<String, String> operationHeaders = Maps.newLinkedHashMap();
       operationHeaders.put("opKey", "opValue");
       when(operationConfig.getHeaders()).thenReturn(operationHeaders);
       when(this.config.getDelete()).thenReturn(operationConfig);
 
-      final Map<Producer<String>, Producer<String>> testHeaders =
-            new LinkedHashMap<Producer<String>, Producer<String>>();
+      final Map<Producer<String>, Producer<String>> testHeaders = Maps.newLinkedHashMap();
       testHeaders.put(Producers.of("key"), Producers.of("value"));
 
       final Map<Producer<String>, Producer<String>> p = this.module.testDeleteHeaders(testHeaders);
@@ -766,7 +761,7 @@ public class TestModuleTest
    public void testTestEntityEmptyFilesize()
    {
       when(this.config.getFilesizeSelection()).thenReturn(CollectionAlgorithmType.ROUNDROBIN);
-      final List<FilesizeConfig> filesize = new ArrayList<FilesizeConfig>();
+      final List<FilesizeConfig> filesize = Lists.newArrayList();
       when(this.config.getFilesize()).thenReturn(filesize);
       this.module.testEntity();
    }
@@ -779,7 +774,7 @@ public class TestModuleTest
       when(f.getDistribution()).thenReturn(DistributionType.POISSON);
       when(f.getAverageUnit()).thenReturn(SizeUnit.MEBIBYTES);
       when(f.getSpreadUnit()).thenReturn(SizeUnit.MEBIBYTES);
-      final List<FilesizeConfig> filesize = new ArrayList<FilesizeConfig>();
+      final List<FilesizeConfig> filesize = Lists.newArrayList();
       filesize.add(f);
       when(this.config.getFilesize()).thenReturn(filesize);
       this.module.testEntity();
@@ -789,7 +784,7 @@ public class TestModuleTest
    public void testTestEntityNullSource()
    {
       when(this.config.getFilesizeSelection()).thenReturn(CollectionAlgorithmType.ROUNDROBIN);
-      final List<FilesizeConfig> filesize = new ArrayList<FilesizeConfig>();
+      final List<FilesizeConfig> filesize = Lists.newArrayList();
       filesize.add(new FilesizeConfig(10.0));
       when(this.config.getSource()).thenReturn(null);
       when(this.config.getFilesize()).thenReturn(filesize);
@@ -800,7 +795,7 @@ public class TestModuleTest
    public void testTestEntityNoneSource()
    {
       when(this.config.getFilesizeSelection()).thenReturn(CollectionAlgorithmType.ROUNDROBIN);
-      final List<FilesizeConfig> filesize = new ArrayList<FilesizeConfig>();
+      final List<FilesizeConfig> filesize = Lists.newArrayList();
       filesize.add(new FilesizeConfig(10.0));
       when(this.config.getSource()).thenReturn(EntityType.NONE);
       when(this.config.getFilesize()).thenReturn(filesize);
@@ -811,7 +806,7 @@ public class TestModuleTest
    public void testTestEntitySingleFilesizeZeroesSource()
    {
       when(this.config.getFilesizeSelection()).thenReturn(CollectionAlgorithmType.ROUNDROBIN);
-      final List<FilesizeConfig> filesize = new ArrayList<FilesizeConfig>();
+      final List<FilesizeConfig> filesize = Lists.newArrayList();
       filesize.add(new FilesizeConfig(10.0));
       when(this.config.getSource()).thenReturn(EntityType.ZEROES);
       when(this.config.getFilesize()).thenReturn(filesize);
@@ -827,7 +822,7 @@ public class TestModuleTest
    public void testTestEntitySingleFilesizeRandomSource()
    {
       when(this.config.getFilesizeSelection()).thenReturn(CollectionAlgorithmType.ROUNDROBIN);
-      final List<FilesizeConfig> filesize = new ArrayList<FilesizeConfig>();
+      final List<FilesizeConfig> filesize = Lists.newArrayList();
       filesize.add(new FilesizeConfig(10.0));
       when(this.config.getSource()).thenReturn(EntityType.RANDOM);
       when(this.config.getFilesize()).thenReturn(filesize);
@@ -843,7 +838,7 @@ public class TestModuleTest
    public void testTestEntityMultipleFilesizeRoundRobin()
    {
       when(this.config.getFilesizeSelection()).thenReturn(CollectionAlgorithmType.ROUNDROBIN);
-      final List<FilesizeConfig> filesize = new ArrayList<FilesizeConfig>();
+      final List<FilesizeConfig> filesize = Lists.newArrayList();
       filesize.add(new FilesizeConfig(10.0));
       filesize.add(new FilesizeConfig(25.0));
       when(this.config.getSource()).thenReturn(EntityType.RANDOM);
@@ -862,7 +857,7 @@ public class TestModuleTest
    public void testTestEntityMultipleFilesizeRandom()
    {
       when(this.config.getFilesizeSelection()).thenReturn(CollectionAlgorithmType.RANDOM);
-      final List<FilesizeConfig> filesize = new ArrayList<FilesizeConfig>();
+      final List<FilesizeConfig> filesize = Lists.newArrayList();
       filesize.add(new FilesizeConfig(10.0));
       filesize.add(new FilesizeConfig(25.0));
       when(this.config.getSource()).thenReturn(EntityType.RANDOM);

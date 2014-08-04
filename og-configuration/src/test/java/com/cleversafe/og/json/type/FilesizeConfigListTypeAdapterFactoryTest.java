@@ -19,7 +19,6 @@
 
 package com.cleversafe.og.json.type;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Assert;
@@ -27,6 +26,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.cleversafe.og.json.FilesizeConfig;
+import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -108,7 +108,7 @@ public class FilesizeConfigListTypeAdapterFactoryTest
    @Test
    public void testSerialization()
    {
-      final List<FilesizeConfig> config = new ArrayList<FilesizeConfig>();
+      final List<FilesizeConfig> config = Lists.newArrayList();
       config.add(new FilesizeConfig(100.0));
 
       final String typeAdapterSerialization = this.gson.toJson(config);

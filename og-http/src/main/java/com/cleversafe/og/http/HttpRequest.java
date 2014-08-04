@@ -23,7 +23,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URI;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -38,6 +37,7 @@ import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.util.Entities;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 
 /**
  * A defacto implementation of the {@code Request} interface
@@ -137,10 +137,10 @@ public class HttpRequest implements Request
       {
          this.method = method;
          this.uri = uri;
-         this.headers = new LinkedHashMap<String, String>();
+         this.headers = Maps.newLinkedHashMap();
          this.headers.put("Date", RFC1123.print(new DateTime()));
          this.entity = Entities.none();
-         this.metadata = new LinkedHashMap<String, String>();
+         this.metadata = Maps.newLinkedHashMap();
       }
 
       /**

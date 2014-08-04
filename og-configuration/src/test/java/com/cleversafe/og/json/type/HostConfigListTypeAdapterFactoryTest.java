@@ -19,7 +19,6 @@
 
 package com.cleversafe.og.json.type;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Assert;
@@ -27,6 +26,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.cleversafe.og.json.HostConfig;
+import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -96,7 +96,7 @@ public class HostConfigListTypeAdapterFactoryTest
    @Test
    public void testSerialization()
    {
-      final List<HostConfig> config = new ArrayList<HostConfig>();
+      final List<HostConfig> config = Lists.newArrayList();
       config.add(new HostConfig("127.0.0.1"));
 
       final String typeAdapterSerialization = this.gson.toJson(config);

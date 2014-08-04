@@ -19,15 +19,13 @@
 
 package com.cleversafe.og.util;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.cleversafe.og.util.SizeUnit;
-import com.cleversafe.og.util.Units;
+import com.google.common.collect.Lists;
 
 public class UnitsTest
 {
@@ -54,7 +52,7 @@ public class UnitsTest
    @Test
    public void testNanos()
    {
-      final List<String> input = new ArrayList<String>();
+      final List<String> input = Lists.newArrayList();
       input.add("ns");
       input.add("nano");
       input.add("nanos");
@@ -68,7 +66,7 @@ public class UnitsTest
    @Test
    public void testMicros()
    {
-      final List<String> input = new ArrayList<String>();
+      final List<String> input = Lists.newArrayList();
       input.add("micro");
       input.add("micros");
       input.add("microsec");
@@ -81,7 +79,7 @@ public class UnitsTest
    @Test
    public void testMillis()
    {
-      final List<String> input = new ArrayList<String>();
+      final List<String> input = Lists.newArrayList();
       input.add("ms");
       input.add("milli");
       input.add("millis");
@@ -95,7 +93,7 @@ public class UnitsTest
    @Test
    public void testSecs()
    {
-      final List<String> input = new ArrayList<String>();
+      final List<String> input = Lists.newArrayList();
       input.add("s");
       input.add("sec");
       input.add("secs");
@@ -107,7 +105,7 @@ public class UnitsTest
    @Test
    public void testMins()
    {
-      final List<String> input = new ArrayList<String>();
+      final List<String> input = Lists.newArrayList();
       input.add("m");
       input.add("min");
       input.add("mins");
@@ -119,7 +117,7 @@ public class UnitsTest
    @Test
    public void testHrs()
    {
-      final List<String> input = new ArrayList<String>();
+      final List<String> input = Lists.newArrayList();
       input.add("h");
       input.add("hr");
       input.add("hrs");
@@ -131,7 +129,7 @@ public class UnitsTest
    @Test
    public void testDays()
    {
-      final List<String> input = new ArrayList<String>();
+      final List<String> input = Lists.newArrayList();
       input.add("d");
       input.add("day");
       input.add("days");
@@ -149,7 +147,7 @@ public class UnitsTest
    @Test
    public void testBadTimeInput()
    {
-      final List<String> input = new ArrayList<String>();
+      final List<String> input = Lists.newArrayList();
       input.add("foo");
       input.add("_");
       input.add("nano_seconds");
@@ -191,7 +189,7 @@ public class UnitsTest
    @Test
    public void testBytes()
    {
-      final List<String> input = new ArrayList<String>();
+      final List<String> input = Lists.newArrayList();
       input.add("b");
       input.add("byte");
       input.add("bytes");
@@ -201,7 +199,7 @@ public class UnitsTest
    @Test
    public void testKilobytes()
    {
-      final List<String> input = new ArrayList<String>();
+      final List<String> input = Lists.newArrayList();
       input.add("kb");
       input.add("kilobyte");
       input.add("kilobytes");
@@ -211,7 +209,7 @@ public class UnitsTest
    @Test
    public void testKibibytes()
    {
-      final List<String> input = new ArrayList<String>();
+      final List<String> input = Lists.newArrayList();
       input.add("kib");
       input.add("kibibyte");
       input.add("kibibytes");
@@ -221,7 +219,7 @@ public class UnitsTest
    @Test
    public void testMegabytes()
    {
-      final List<String> input = new ArrayList<String>();
+      final List<String> input = Lists.newArrayList();
       input.add("mb");
       input.add("megabyte");
       input.add("megabytes");
@@ -231,7 +229,7 @@ public class UnitsTest
    @Test
    public void testMebibytes()
    {
-      final List<String> input = new ArrayList<String>();
+      final List<String> input = Lists.newArrayList();
       input.add("mib");
       input.add("mebibyte");
       input.add("mebibytes");
@@ -241,7 +239,7 @@ public class UnitsTest
    @Test
    public void testGigabytes()
    {
-      final List<String> input = new ArrayList<String>();
+      final List<String> input = Lists.newArrayList();
       input.add("gb");
       input.add("gigabyte");
       input.add("gigabytes");
@@ -251,7 +249,7 @@ public class UnitsTest
    @Test
    public void testGibibytes()
    {
-      final List<String> input = new ArrayList<String>();
+      final List<String> input = Lists.newArrayList();
       input.add("gib");
       input.add("gibibyte");
       input.add("gibibytes");
@@ -261,7 +259,7 @@ public class UnitsTest
    @Test
    public void testTerabytes()
    {
-      final List<String> input = new ArrayList<String>();
+      final List<String> input = Lists.newArrayList();
       input.add("tb");
       input.add("terabyte");
       input.add("terabytes");
@@ -271,7 +269,7 @@ public class UnitsTest
    @Test
    public void testTebibytes()
    {
-      final List<String> input = new ArrayList<String>();
+      final List<String> input = Lists.newArrayList();
       input.add("tib");
       input.add("tebibyte");
       input.add("tebibytes");
@@ -281,7 +279,7 @@ public class UnitsTest
    @Test
    public void testPetabytes()
    {
-      final List<String> input = new ArrayList<String>();
+      final List<String> input = Lists.newArrayList();
       input.add("pb");
       input.add("petabyte");
       input.add("petabytes");
@@ -291,7 +289,7 @@ public class UnitsTest
    @Test
    public void testPebibytes()
    {
-      final List<String> input = new ArrayList<String>();
+      final List<String> input = Lists.newArrayList();
       input.add("pib");
       input.add("pebibyte");
       input.add("pebibytes");
@@ -309,7 +307,7 @@ public class UnitsTest
    @Test
    public void testBadSizeInput()
    {
-      final List<String> input = new ArrayList<String>();
+      final List<String> input = Lists.newArrayList();
       input.add("cleverbyte");
       input.add("_");
       input.add("mega_byte");

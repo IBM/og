@@ -20,10 +20,10 @@
 package com.cleversafe.og.json.type;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import com.cleversafe.og.json.FilesizeConfig;
+import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
 import com.google.gson.TypeAdapterFactory;
@@ -63,7 +63,7 @@ public class FilesizeConfigListTypeAdapterFactory implements TypeAdapterFactory
          @SuppressWarnings("unchecked")
          public T read(final JsonReader in) throws IOException
          {
-            final List<FilesizeConfig> filesize = new ArrayList<FilesizeConfig>(1);
+            final List<FilesizeConfig> filesize = Lists.newArrayList();
 
             if (JsonToken.NUMBER == in.peek())
             {

@@ -22,9 +22,10 @@ package com.cleversafe.og.util;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import com.google.common.collect.Maps;
 
 /**
  * A utility class for working with units
@@ -36,7 +37,7 @@ public class Units
 
    static
    {
-      TIME_UNITS = new HashMap<String, TimeUnit>();
+      TIME_UNITS = Maps.newHashMap();
       TIME_UNITS.put("NS", TimeUnit.NANOSECONDS);
       TIME_UNITS.put("NANO", TimeUnit.NANOSECONDS);
       TIME_UNITS.put("NANOS", TimeUnit.NANOSECONDS);
@@ -82,7 +83,7 @@ public class Units
       TIME_UNITS.put("DAY", TimeUnit.DAYS);
       TIME_UNITS.put("DAYS", TimeUnit.DAYS);
 
-      SIZE_UNITS = new HashMap<String, SizeUnit>();
+      SIZE_UNITS = Maps.newHashMap();
       SIZE_UNITS.put("B", SizeUnit.BYTES);
       SIZE_UNITS.put("BYTE", SizeUnit.BYTES);
       SIZE_UNITS.put("BYTES", SizeUnit.BYTES);

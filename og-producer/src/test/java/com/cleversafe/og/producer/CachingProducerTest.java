@@ -19,15 +19,12 @@
 
 package com.cleversafe.og.producer;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.cleversafe.og.producer.CachingProducer;
-import com.cleversafe.og.producer.Producer;
-import com.cleversafe.og.producer.Producers;
+import com.google.common.collect.Lists;
 
 public class CachingProducerTest
 {
@@ -40,7 +37,7 @@ public class CachingProducerTest
    @Test
    public void testCachingProducer()
    {
-      final List<Integer> ints = new ArrayList<Integer>();
+      final List<Integer> ints = Lists.newArrayList();
       ints.add(1);
       ints.add(2);
       ints.add(3);

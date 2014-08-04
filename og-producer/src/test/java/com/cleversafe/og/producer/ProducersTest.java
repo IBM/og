@@ -19,13 +19,12 @@
 
 package com.cleversafe.og.producer;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import org.junit.Test;
 
-import com.cleversafe.og.producer.Producers;
+import com.google.common.collect.Lists;
 
 public class ProducersTest
 {
@@ -56,7 +55,7 @@ public class ProducersTest
    @Test(expected = NullPointerException.class)
    public void testNullCycleElement()
    {
-      final List<Integer> list = new ArrayList<Integer>();
+      final List<Integer> list = Lists.newArrayList();
       list.add(null);
       Producers.cycle(list);
    }
@@ -64,7 +63,7 @@ public class ProducersTest
    @Test
    public void testCycle()
    {
-      final List<Integer> list = new ArrayList<Integer>();
+      final List<Integer> list = Lists.newArrayList();
       list.add(1);
       Producers.cycle(list);
    }

@@ -22,7 +22,6 @@ package com.cleversafe.og.statistic;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
@@ -38,6 +37,7 @@ import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.Entities;
 import com.cleversafe.og.util.Operation;
 import com.cleversafe.og.util.Pair;
+import com.google.common.collect.Lists;
 
 public class StatisticsTest
 {
@@ -193,7 +193,7 @@ public class StatisticsTest
    {
       final int threadCount = 10;
       final int operationCount = 1000;
-      final List<Thread> threads = new ArrayList<Thread>();
+      final List<Thread> threads = Lists.newArrayList();
       for (int i = 0; i < threadCount; i++)
       {
          threads.add(new Thread(new Runnable()

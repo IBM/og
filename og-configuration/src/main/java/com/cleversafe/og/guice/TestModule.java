@@ -24,8 +24,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -81,6 +79,8 @@ import com.cleversafe.og.util.distribution.NormalDistribution;
 import com.cleversafe.og.util.distribution.PoissonDistribution;
 import com.cleversafe.og.util.distribution.UniformDistribution;
 import com.google.common.base.CharMatcher;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Range;
 import com.google.common.eventbus.EventBus;
 import com.google.common.math.DoubleMath;
@@ -189,7 +189,7 @@ public class TestModule extends AbstractModule
 
       if (CollectionAlgorithmType.ROUNDROBIN == hostSelection)
       {
-         final List<String> hostList = new ArrayList<String>();
+         final List<String> hostList = Lists.newArrayList();
          for (final HostConfig h : host)
          {
             hostList.add(h.getHost());
@@ -353,8 +353,7 @@ public class TestModule extends AbstractModule
 
    private Map<Producer<String>, Producer<String>> createHeaders(final Map<String, String> headers)
    {
-      final Map<Producer<String>, Producer<String>> h =
-            new LinkedHashMap<Producer<String>, Producer<String>>();
+      final Map<Producer<String>, Producer<String>> h = Maps.newLinkedHashMap();
       for (final Entry<String, String> header : checkNotNull(headers.entrySet()))
       {
          h.put(Producers.of(header.getKey()), Producers.of(header.getValue()));
@@ -373,7 +372,7 @@ public class TestModule extends AbstractModule
 
       if (CollectionAlgorithmType.ROUNDROBIN == filesizeSelection)
       {
-         final List<Distribution> distributions = new ArrayList<Distribution>();
+         final List<Distribution> distributions = Lists.newArrayList();
          for (final FilesizeConfig f : filesizes)
          {
             distributions.add(createSizeDistribution(f));

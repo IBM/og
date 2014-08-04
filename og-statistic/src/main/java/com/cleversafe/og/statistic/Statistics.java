@@ -22,7 +22,6 @@ package com.cleversafe.og.statistic;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -34,6 +33,7 @@ import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.Operation;
 import com.cleversafe.og.util.Pair;
+import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.AtomicLongMap;
 
@@ -66,8 +66,8 @@ public class Statistics
     */
    public Statistics()
    {
-      this.counters = new HashMap<Operation, AtomicLongMap<Counter>>();
-      this.scCounters = new HashMap<Operation, AtomicLongMap<Integer>>();
+      this.counters = Maps.newHashMap();
+      this.scCounters = Maps.newHashMap();
       for (final Operation operation : Operation.values())
       {
          this.counters.put(operation, AtomicLongMap.<Counter> create());

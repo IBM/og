@@ -19,9 +19,10 @@
 
 package com.cleversafe.og.json;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import com.google.common.collect.Maps;
 
 public class StoppingConditionsConfig
 {
@@ -36,7 +37,7 @@ public class StoppingConditionsConfig
       this.operations = 0;
       this.runtime = 0.0;
       this.runtimeUnit = TimeUnit.SECONDS;
-      this.statusCodes = new HashMap<Integer, Integer>();
+      this.statusCodes = Maps.newHashMap();
       this.aborts = 0;
    }
 

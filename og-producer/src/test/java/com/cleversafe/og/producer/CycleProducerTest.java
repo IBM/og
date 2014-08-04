@@ -19,15 +19,13 @@
 
 package com.cleversafe.og.producer;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.cleversafe.og.producer.CycleProducer;
-import com.cleversafe.og.producer.Producer;
+import com.google.common.collect.Lists;
 
 public class CycleProducerTest
 {
@@ -46,7 +44,7 @@ public class CycleProducerTest
    @Test(expected = NullPointerException.class)
    public void testNullElement()
    {
-      final List<Integer> list = new ArrayList<Integer>();
+      final List<Integer> list = Lists.newArrayList();
       list.add(null);
       new CycleProducer<Integer>(list);
    }
@@ -54,7 +52,7 @@ public class CycleProducerTest
    @Test
    public void testOneElement()
    {
-      final List<Integer> list = new ArrayList<Integer>();
+      final List<Integer> list = Lists.newArrayList();
       list.add(1);
       final Producer<Integer> p = new CycleProducer<Integer>(list);
       for (int i = 0; i < 10; i++)
@@ -66,7 +64,7 @@ public class CycleProducerTest
    @Test
    public void testNElements()
    {
-      final List<Integer> list = new ArrayList<Integer>();
+      final List<Integer> list = Lists.newArrayList();
       list.add(1);
       list.add(2);
       list.add(3);
@@ -82,7 +80,7 @@ public class CycleProducerTest
    @Test
    public void testListModification()
    {
-      final List<Integer> list = new ArrayList<Integer>();
+      final List<Integer> list = Lists.newArrayList();
       list.add(1);
       list.add(2);
       final Producer<Integer> p = new CycleProducer<Integer>(list);

@@ -25,18 +25,16 @@ import static org.mockito.Mockito.when;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.TreeMap;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.cleversafe.og.operation.Request;
-import com.cleversafe.og.s3.AWSAuthV2;
+import com.google.common.collect.Maps;
 
 public class AWSAuthV2Test
 {
@@ -61,7 +59,7 @@ public class AWSAuthV2Test
    @Test
    public void testCanonicalizedAmzHeadersNoAmzHeaders()
    {
-      final Map<String, String> headers = new HashMap<String, String>();
+      final Map<String, String> headers = Maps.newHashMap();
       headers.put("Foo", "Bar");
       headers.put("Baz", "test");
       when(this.request.headers()).thenReturn(headers.entrySet().iterator());
@@ -71,7 +69,7 @@ public class AWSAuthV2Test
    @Test
    public void testCanonicalizedAmzHeadersSingleAmzHeader()
    {
-      final Map<String, String> headers = new HashMap<String, String>();
+      final Map<String, String> headers = Maps.newHashMap();
       headers.put("x-amz-foo", "bar");
       when(this.request.headers()).thenReturn(headers.entrySet().iterator());
       Assert.assertEquals("x-amz-foo:bar\n", this.auth.canonicalizedAmzHeaders(this.request));
@@ -80,7 +78,7 @@ public class AWSAuthV2Test
    @Test
    public void testCanonicalizedAmzHeadersSingleAmzHeaderCapitalizedKey()
    {
-      final Map<String, String> headers = new HashMap<String, String>();
+      final Map<String, String> headers = Maps.newHashMap();
       headers.put("x-AmZ-Foo", "bar");
       when(this.request.headers()).thenReturn(headers.entrySet().iterator());
       Assert.assertEquals("x-amz-foo:bar\n", this.auth.canonicalizedAmzHeaders(this.request));
@@ -89,7 +87,7 @@ public class AWSAuthV2Test
    @Test
    public void testCanonicalizedAmzHeadersSingleAmzHeaderCapitalizedValue()
    {
-      final Map<String, String> headers = new HashMap<String, String>();
+      final Map<String, String> headers = Maps.newHashMap();
       headers.put("x-amz-foo", "Bar");
       when(this.request.headers()).thenReturn(headers.entrySet().iterator());
       Assert.assertEquals("x-amz-foo:Bar\n", this.auth.canonicalizedAmzHeaders(this.request));
@@ -98,7 +96,7 @@ public class AWSAuthV2Test
    @Test
    public void testCanonicalizedAmzHeadersSingleAmzHeaderKeySpaces()
    {
-      final Map<String, String> headers = new HashMap<String, String>();
+      final Map<String, String> headers = Maps.newHashMap();
       headers.put(" x-amz-foo ", "bar");
       when(this.request.headers()).thenReturn(headers.entrySet().iterator());
       Assert.assertEquals("x-amz-foo:bar\n", this.auth.canonicalizedAmzHeaders(this.request));
@@ -107,7 +105,7 @@ public class AWSAuthV2Test
    @Test
    public void testCanonicalizedAmzHeadersSingleAmzHeaderValueSpaces()
    {
-      final Map<String, String> headers = new HashMap<String, String>();
+      final Map<String, String> headers = Maps.newHashMap();
       headers.put("x-amz-foo", " bar ");
       when(this.request.headers()).thenReturn(headers.entrySet().iterator());
       Assert.assertEquals("x-amz-foo:bar\n", this.auth.canonicalizedAmzHeaders(this.request));
@@ -116,7 +114,7 @@ public class AWSAuthV2Test
    @Test
    public void testCanonicalizedAmzHeadersXAmzDate()
    {
-      final Map<String, String> headers = new HashMap<String, String>();
+      final Map<String, String> headers = Maps.newHashMap();
       headers.put("x-amz-date", "datexyz");
       when(this.request.headers()).thenReturn(headers.entrySet().iterator());
       Assert.assertEquals("", this.auth.canonicalizedAmzHeaders(this.request));
@@ -125,7 +123,7 @@ public class AWSAuthV2Test
    @Test
    public void testCanonicalizedAmzHeadersMultipleAmzHeaders()
    {
-      final Map<String, String> headers = new HashMap<String, String>();
+      final Map<String, String> headers = Maps.newHashMap();
       headers.put("x-amz-date", "datexyz");
       headers.put("x-AMz-foo", "foo");
       headers.put("x-amz-Baz", " baz  ");
@@ -244,7 +242,7 @@ public class AWSAuthV2Test
    @Test
    public void testJoinQueryParametersSingleQueryParameterNoValue()
    {
-      final Map<String, String> queryParameters = new HashMap<String, String>();
+      final Map<String, String> queryParameters = Maps.newHashMap();
       queryParameters.put("torrent", null);
       final String query = this.auth.joinQueryParameters(queryParameters);
       Assert.assertEquals("torrent", query);
@@ -253,7 +251,7 @@ public class AWSAuthV2Test
    @Test
    public void testJoinQueryParametersSingleQueryParameterWithValue()
    {
-      final Map<String, String> queryParameters = new HashMap<String, String>();
+      final Map<String, String> queryParameters = Maps.newHashMap();
       queryParameters.put("uploadId", "1");
       final String query = this.auth.joinQueryParameters(queryParameters);
       Assert.assertEquals("uploadId=1", query);
@@ -262,7 +260,7 @@ public class AWSAuthV2Test
    @Test
    public void testJoinQueryParametersMultipleQueryParameters()
    {
-      final Map<String, String> queryParameters = new TreeMap<String, String>();
+      final Map<String, String> queryParameters = Maps.newTreeMap();
       queryParameters.put("uploadId", "1");
       queryParameters.put("torrent", null);
       final String query = this.auth.joinQueryParameters(queryParameters);

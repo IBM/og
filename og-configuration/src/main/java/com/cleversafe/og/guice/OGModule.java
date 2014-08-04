@@ -22,7 +22,6 @@ package com.cleversafe.og.guice;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -64,6 +63,7 @@ import com.cleversafe.og.test.condition.StatusCodeCondition;
 import com.cleversafe.og.test.condition.TestCondition;
 import com.cleversafe.og.test.operation.manager.SimpleOperationManager;
 import com.cleversafe.og.util.Operation;
+import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.google.common.math.DoubleMath;
 import com.google.inject.AbstractModule;
@@ -105,7 +105,7 @@ public class OGModule extends AbstractModule
       checkNotNull(stats);
       checkNotNull(config);
 
-      final List<TestCondition> conditions = new ArrayList<TestCondition>();
+      final List<TestCondition> conditions = Lists.newArrayList();
 
       if (config.getOperations() > 0)
          conditions.add(new CounterCondition(Operation.ALL, Counter.OPERATIONS,
@@ -205,7 +205,7 @@ public class OGModule extends AbstractModule
          final EventBus eventBus)
    {
       final List<Integer> sc = HttpUtil.SUCCESS_STATUS_CODES;
-      final List<ObjectNameConsumer> consumers = new ArrayList<ObjectNameConsumer>();
+      final List<ObjectNameConsumer> consumers = Lists.newArrayList();
       consumers.add(new WriteObjectNameConsumer(objectManager, sc));
       consumers.add(new ReadObjectNameConsumer(objectManager, sc));
 

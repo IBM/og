@@ -19,10 +19,11 @@
 
 package com.cleversafe.og.json;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 public class OperationConfig
 {
@@ -41,8 +42,8 @@ public class OperationConfig
    {
       this.weight = 0.0;
       this.hostSelection = CollectionAlgorithmType.ROUNDROBIN;
-      this.host = new ArrayList<HostConfig>();
-      this.headers = new LinkedHashMap<String, String>();
+      this.host = Lists.newArrayList();
+      this.headers = Maps.newLinkedHashMap();
    }
 
    public double getWeight()

@@ -37,8 +37,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -64,6 +62,8 @@ import com.cleversafe.og.util.SizeUnit;
 import com.github.tomakehurst.wiremock.client.RequestPatternBuilder;
 import com.github.tomakehurst.wiremock.http.RequestMethod;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 public class ApacheClientTest
 {
@@ -82,7 +82,7 @@ public class ApacheClientTest
    @Before()
    public void before() throws URISyntaxException
    {
-      this.responseBodyConsumers = new HashMap<String, ResponseBodyConsumer>();
+      this.responseBodyConsumers = Maps.newHashMap();
       this.client = new ApacheClient.Builder(this.responseBodyConsumers).build();
 
       // write
@@ -119,7 +119,7 @@ public class ApacheClientTest
       this.objectUri = new URI("http://127.0.0.1:8080/container/object");
       this.delayedUri = new URI("http://127.0.0.1:8080/delayed");
       this.redirectUri = new URI("http://127.0.0.1:8080/intermediate");
-      this.redirectStatuses = new ArrayList<Integer>();
+      this.redirectStatuses = Lists.newArrayList();
       this.redirectStatuses.add(301);
       this.redirectStatuses.add(302);
       this.redirectStatuses.add(307);

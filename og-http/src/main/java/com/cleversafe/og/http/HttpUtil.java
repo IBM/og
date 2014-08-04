@@ -22,7 +22,6 @@ package com.cleversafe.og.http;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -30,6 +29,7 @@ import java.util.Locale;
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.util.Operation;
 import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Range;
 
 /**
@@ -44,7 +44,7 @@ public class HttpUtil
    public static final List<Integer> SUCCESS_STATUS_CODES;
    static
    {
-      final List<Integer> sc = new ArrayList<Integer>();
+      final List<Integer> sc = Lists.newArrayList();
       sc.add(200);
       sc.add(201);
       sc.add(204);

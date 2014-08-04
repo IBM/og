@@ -26,7 +26,6 @@ import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
 import org.joda.time.format.DateTimeFormat;
@@ -35,6 +34,7 @@ import org.joda.time.format.DateTimeFormatter;
 import com.cleversafe.og.statistic.Counter;
 import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.util.Operation;
+import com.google.common.collect.Maps;
 
 public class Summary
 {
@@ -83,7 +83,7 @@ public class Summary
    {
       private long operations = 0;
       private long bytes = 0;
-      private final Map<Integer, Long> statusCodes = new TreeMap<Integer, Long>();
+      private final Map<Integer, Long> statusCodes = Maps.newTreeMap();
       private long aborts = 0;
    }
 

@@ -23,7 +23,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -32,6 +31,7 @@ import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.Entities;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 
 /**
  * A defacto implementation of the {@code Response} interface
@@ -112,9 +112,9 @@ public class HttpResponse implements Response
        */
       public Builder()
       {
-         this.headers = new LinkedHashMap<String, String>();
+         this.headers = Maps.newLinkedHashMap();
          this.entity = Entities.none();
-         this.metadata = new LinkedHashMap<String, String>();
+         this.metadata = Maps.newLinkedHashMap();
       }
 
       public Builder withStatusCode(final int statusCode)
