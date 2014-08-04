@@ -106,7 +106,7 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @Id
-   public Producer<String> testIdProducer()
+   public Producer<String> provideIdProducer()
    {
       return new Producer<String>()
       {
@@ -122,7 +122,7 @@ public class TestModule extends AbstractModule
 
    @Provides
    @Singleton
-   public Producer<Scheme> testScheme()
+   public Producer<Scheme> provideScheme()
    {
       return Producers.of(this.config.getScheme());
    }
@@ -130,7 +130,7 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @Host
-   public Producer<String> testHost()
+   public Producer<String> provideHost()
    {
       return createHost(this.config.getHostSelection(), this.config.getHost());
    }
@@ -138,7 +138,7 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @WriteHost
-   public Producer<String> testWriteHost(@Host final Producer<String> host)
+   public Producer<String> provideWriteHost(@Host final Producer<String> host)
    {
       return provideHost(this.config.getWrite(), host);
    }
@@ -146,7 +146,7 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @ReadHost
-   public Producer<String> testReadHost(@Host final Producer<String> host)
+   public Producer<String> provideReadHost(@Host final Producer<String> host)
    {
       return provideHost(this.config.getRead(), host);
    }
@@ -154,7 +154,7 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @DeleteHost
-   public Producer<String> testDeleteHost(@Host final Producer<String> host)
+   public Producer<String> provideDeleteHost(@Host final Producer<String> host)
    {
       return provideHost(this.config.getDelete(), host);
    }
@@ -208,7 +208,7 @@ public class TestModule extends AbstractModule
 
    @Provides
    @Singleton
-   public Producer<Integer> testPort()
+   public Producer<Integer> providePort()
    {
       if (this.config.getPort() != null)
          return Producers.of(this.config.getPort());
@@ -216,7 +216,7 @@ public class TestModule extends AbstractModule
    }
 
    @Provides
-   public Api testApi()
+   public Api provideApi()
    {
       return checkNotNull(this.config.getApi());
    }
@@ -224,7 +224,7 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @UriRoot
-   public Producer<String> testUriRoot()
+   public Producer<String> provideUriRoot()
    {
       final String uriRoot = this.config.getUriRoot();
       if (uriRoot != null)
@@ -241,7 +241,7 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @Container
-   public Producer<String> testContainer()
+   public Producer<String> provideContainer()
    {
       final String container = checkNotNull(this.config.getContainer());
       checkArgument(container.length() > 0, "container must not be empty string");
@@ -251,7 +251,7 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @Username
-   public Producer<String> testUsername()
+   public Producer<String> provideUsername()
    {
       final String username = this.config.getAuthentication().getUsername();
       if (username != null)
@@ -265,7 +265,7 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @Password
-   public Producer<String> testPassword()
+   public Producer<String> providePassword()
    {
       final String password = this.config.getAuthentication().getPassword();
       if (password != null)
@@ -278,7 +278,7 @@ public class TestModule extends AbstractModule
 
    @Provides
    @Singleton
-   public HttpAuth testAuthentication(
+   public HttpAuth provideAuthentication(
          @Username final Producer<String> username,
          @Password final Producer<String> password)
    {
@@ -297,7 +297,7 @@ public class TestModule extends AbstractModule
    }
 
    @Provides
-   public StoppingConditionsConfig testStoppingConditionsConfig()
+   public StoppingConditionsConfig provideStoppingConditionsConfig()
    {
       return this.config.getStoppingConditions();
    }
@@ -305,7 +305,7 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @Headers
-   public Map<Producer<String>, Producer<String>> testHeaders()
+   public Map<Producer<String>, Producer<String>> provideHeaders()
    {
       return createHeaders(this.config.getHeaders());
    }
@@ -313,7 +313,7 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @WriteHeaders
-   public Map<Producer<String>, Producer<String>> testWriteHeaders(
+   public Map<Producer<String>, Producer<String>> provideWriteHeaders(
          @Headers final Map<Producer<String>, Producer<String>> headers)
    {
       return provideHeaders(this.config.getWrite(), headers);
@@ -322,7 +322,7 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @ReadHeaders
-   public Map<Producer<String>, Producer<String>> testReadHeaders(
+   public Map<Producer<String>, Producer<String>> provideReadHeaders(
          @Headers final Map<Producer<String>, Producer<String>> headers)
    {
       return provideHeaders(this.config.getRead(), headers);
@@ -331,7 +331,7 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @DeleteHeaders
-   public Map<Producer<String>, Producer<String>> testDeleteHeaders(
+   public Map<Producer<String>, Producer<String>> provideDeleteHeaders(
          @Headers final Map<Producer<String>, Producer<String>> headers)
    {
       return provideHeaders(this.config.getDelete(), headers);
@@ -363,7 +363,7 @@ public class TestModule extends AbstractModule
 
    @Provides
    @Singleton
-   public Producer<Entity> testEntity()
+   public Producer<Entity> provideEntity()
    {
       final CollectionAlgorithmType filesizeSelection =
             checkNotNull(this.config.getFilesizeSelection());
@@ -438,7 +438,7 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @ObjectFileLocation
-   public String testObjectFileLocation() throws IOException
+   public String provideObjectFileLocation() throws IOException
    {
       final String path = checkNotNull(this.config.getObjectManager().getObjectFileLocation());
       checkArgument(path.length() > 0, "path must not be empty string");
@@ -459,7 +459,7 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @ObjectFileName
-   public String testObjectFileName(@Container final Producer<String> container, final Api api)
+   public String provideObjectFileName(@Container final Producer<String> container, final Api api)
    {
       checkNotNull(container);
       checkNotNull(api);
@@ -474,7 +474,7 @@ public class TestModule extends AbstractModule
 
    @Provides
    @WriteWeight
-   public double testWriteWeight()
+   public double provideWriteWeight()
    {
       final double write = this.config.getWrite().getWeight();
       checkArgument(PERCENTAGE.contains(write), "write must be in range [0.0, 100.0] [%s]", write);
@@ -487,7 +487,7 @@ public class TestModule extends AbstractModule
 
    @Provides
    @ReadWeight
-   public double testReadWeight()
+   public double provideReadWeight()
    {
       final double read = this.config.getRead().getWeight();
       checkArgument(PERCENTAGE.contains(read), "read must be in range [0.0, 100.0] [%s]", read);
@@ -496,7 +496,7 @@ public class TestModule extends AbstractModule
 
    @Provides
    @DeleteWeight
-   public double testDeleteWeight()
+   public double provideDeleteWeight()
    {
       final double delete = this.config.getDelete().getWeight();
       checkArgument(PERCENTAGE.contains(delete), "delete must be in range [0.0, 100.0] [%s]",
@@ -516,7 +516,7 @@ public class TestModule extends AbstractModule
 
    @Provides
    @Singleton
-   public Scheduler testScheduler(final EventBus eventBus)
+   public Scheduler provideScheduler(final EventBus eventBus)
    {
       checkNotNull(eventBus);
       final ConcurrencyConfig concurrency = checkNotNull(this.config.getConcurrency());

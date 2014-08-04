@@ -85,80 +85,80 @@ public class TestModuleTest
    }
 
    @Test
-   public void testTestIdProducer()
+   public void testProvideIdProducer()
    {
-      Assert.assertNotNull(this.module.testIdProducer());
+      Assert.assertNotNull(this.module.provideIdProducer());
    }
 
    @Test(expected = NullPointerException.class)
-   public void testTestSchemeNullScheme()
+   public void testProvideSchemeNullScheme()
    {
-      this.module.testScheme();
+      this.module.provideScheme();
    }
 
    @Test
-   public void testTestScheme()
+   public void testProvideScheme()
    {
       when(this.config.getScheme()).thenReturn(Scheme.HTTP);
-      final Producer<Scheme> p = this.module.testScheme();
+      final Producer<Scheme> p = this.module.provideScheme();
       Assert.assertEquals(Scheme.HTTP, p.produce());
    }
 
    @Test(expected = NullPointerException.class)
-   public void testTestHostNullHostSelection()
+   public void testProvideHostNullHostSelection()
    {
       when(this.config.getHostSelection()).thenReturn(null);
       final List<HostConfig> hostConfig = Lists.newArrayList();
       hostConfig.add(new HostConfig());
       when(this.config.getHost()).thenReturn(hostConfig);
-      this.module.testHost();
+      this.module.provideHost();
    }
 
    @Test(expected = NullPointerException.class)
-   public void testTestHostNullHost()
+   public void testProvideHostNullHost()
    {
       when(this.config.getHostSelection()).thenReturn(CollectionAlgorithmType.RANDOM);
       when(this.config.getHost()).thenReturn(null);
-      this.module.testHost();
+      this.module.provideHost();
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testTestHostEmptyHost()
+   public void testProvideHostEmptyHost()
    {
       when(this.config.getHostSelection()).thenReturn(CollectionAlgorithmType.RANDOM);
       final List<HostConfig> hostConfig = Lists.newArrayList();
       when(this.config.getHost()).thenReturn(hostConfig);
-      this.module.testHost();
+      this.module.provideHost();
    }
 
    @Test(expected = NullPointerException.class)
-   public void testTestHostNullHostConfig()
+   public void testProvideHostNullHostConfig()
    {
       when(this.config.getHostSelection()).thenReturn(CollectionAlgorithmType.RANDOM);
       final List<HostConfig> hostConfig = Lists.newArrayList();
       hostConfig.add(null);
       when(this.config.getHost()).thenReturn(hostConfig);
-      this.module.testHost();
+      this.module.provideHost();
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testTestHostSingleHostEmptyHost()
+   public void testProvideHostSingleHostEmptyHost()
    {
       when(this.config.getHostSelection()).thenReturn(CollectionAlgorithmType.ROUNDROBIN);
       final List<HostConfig> hostConfig = Lists.newArrayList();
       hostConfig.add(new HostConfig(""));
       when(this.config.getHost()).thenReturn(hostConfig);
-      this.module.testHost();
+      this.module.provideHost();
    }
 
    @Test
-   public void testTestHostSingleHostRoundRobin()
+   public void testProvideHostSingleHostRoundRobin()
    {
       when(this.config.getHostSelection()).thenReturn(CollectionAlgorithmType.ROUNDROBIN);
       final List<HostConfig> hostConfig = Lists.newArrayList();
       hostConfig.add(new HostConfig("192.168.8.1"));
       when(this.config.getHost()).thenReturn(hostConfig);
-      final Producer<String> p = this.module.testHost();
+      final Producer<String> p = this.module.provideHost();
       for (int i = 0; i < 100; i++)
       {
          Assert.assertEquals("192.168.8.1", p.produce());
@@ -166,13 +166,13 @@ public class TestModuleTest
    }
 
    @Test
-   public void testTestHostSingleHostRandom()
+   public void testProvideHostSingleHostRandom()
    {
       when(this.config.getHostSelection()).thenReturn(CollectionAlgorithmType.RANDOM);
       final List<HostConfig> hostConfig = Lists.newArrayList();
       hostConfig.add(new HostConfig("192.168.8.1"));
       when(this.config.getHost()).thenReturn(hostConfig);
-      final Producer<String> p = this.module.testHost();
+      final Producer<String> p = this.module.provideHost();
       for (int i = 0; i < 100; i++)
       {
          Assert.assertEquals("192.168.8.1", p.produce());
@@ -180,14 +180,14 @@ public class TestModuleTest
    }
 
    @Test
-   public void testTestHostMultipleHostRoundRobin()
+   public void testProvideHostMultipleHostRoundRobin()
    {
       when(this.config.getHostSelection()).thenReturn(CollectionAlgorithmType.ROUNDROBIN);
       final List<HostConfig> hostConfig = Lists.newArrayList();
       hostConfig.add(new HostConfig("192.168.8.1"));
       hostConfig.add(new HostConfig("192.168.8.2"));
       when(this.config.getHost()).thenReturn(hostConfig);
-      final Producer<String> p = this.module.testHost();
+      final Producer<String> p = this.module.provideHost();
       for (int i = 0; i < 100; i++)
       {
          Assert.assertEquals("192.168.8.1", p.produce());
@@ -196,13 +196,13 @@ public class TestModuleTest
    }
 
    @Test(expected = AssertionError.class)
-   public void testTestHostMultipleHostRandom()
+   public void testProvideHostMultipleHostRandom()
    {
       when(this.config.getHostSelection()).thenReturn(CollectionAlgorithmType.RANDOM);
       final List<HostConfig> hostConfig = Lists.newArrayList();
       hostConfig.add(new HostConfig("192.168.8.1"));
       when(this.config.getHost()).thenReturn(hostConfig);
-      final Producer<String> p = this.module.testHost();
+      final Producer<String> p = this.module.provideHost();
       for (int i = 0; i < 100; i++)
       {
          // Should not exhibit roundrobin behavior over a large sample, expect assertion error
@@ -212,29 +212,29 @@ public class TestModuleTest
    }
 
    @Test(expected = NullPointerException.class)
-   public void testTestWriteHostNullOperationConfig()
+   public void testProvideWriteHostNullOperationConfig()
    {
       when(this.config.getWrite()).thenReturn(null);
-      this.module.testWriteHost(Producers.of("192.168.8.1"));
+      this.module.provideWriteHost(Producers.of("192.168.8.1"));
    }
 
    @Test(expected = NullPointerException.class)
-   public void testTestWriteHostNullTestHost()
+   public void testProvideWriteHostNullTestHost()
    {
       when(this.config.getWrite()).thenReturn(new OperationConfig());
-      this.module.testWriteHost(null);
+      this.module.provideWriteHost(null);
    }
 
    @Test
-   public void testTestWriteHostDefault()
+   public void testProvideWriteHostDefault()
    {
       when(this.config.getWrite()).thenReturn(new OperationConfig());
-      final Producer<String> p = this.module.testWriteHost(Producers.of("192.168.8.1"));
+      final Producer<String> p = this.module.provideWriteHost(Producers.of("192.168.8.1"));
       Assert.assertEquals("192.168.8.1", p.produce());
    }
 
    @Test
-   public void testTestWriteHostOverride()
+   public void testProvideWriteHostOverride()
    {
       final OperationConfig operationConfig = mock(OperationConfig.class);
       final List<HostConfig> host = Lists.newArrayList();
@@ -243,34 +243,34 @@ public class TestModuleTest
       when(operationConfig.getHost()).thenReturn(host);
       when(this.config.getWrite()).thenReturn(operationConfig);
 
-      final Producer<String> p = this.module.testWriteHost(Producers.of("192.168.8.1"));
+      final Producer<String> p = this.module.provideWriteHost(Producers.of("192.168.8.1"));
       Assert.assertEquals("10.1.1.1", p.produce());
    }
 
    @Test(expected = NullPointerException.class)
-   public void testTestReadHostNullOperationConfig()
+   public void testProvideReadHostNullOperationConfig()
    {
       when(this.config.getRead()).thenReturn(null);
-      this.module.testReadHost(Producers.of("192.168.8.1"));
+      this.module.provideReadHost(Producers.of("192.168.8.1"));
    }
 
    @Test(expected = NullPointerException.class)
-   public void testTestReadHostNullTestHost()
+   public void testProvideReadHostNullTestHost()
    {
       when(this.config.getRead()).thenReturn(new OperationConfig());
-      this.module.testReadHost(null);
+      this.module.provideReadHost(null);
    }
 
    @Test
-   public void testTestReadHostDefault()
+   public void testProvideReadHostDefault()
    {
       when(this.config.getRead()).thenReturn(new OperationConfig());
-      final Producer<String> p = this.module.testReadHost(Producers.of("192.168.8.1"));
+      final Producer<String> p = this.module.provideReadHost(Producers.of("192.168.8.1"));
       Assert.assertEquals("192.168.8.1", p.produce());
    }
 
    @Test
-   public void testTestReadHostOverride()
+   public void testProvideReadHostOverride()
    {
       final OperationConfig operationConfig = mock(OperationConfig.class);
       final List<HostConfig> host = Lists.newArrayList();
@@ -279,34 +279,34 @@ public class TestModuleTest
       when(operationConfig.getHost()).thenReturn(host);
       when(this.config.getRead()).thenReturn(operationConfig);
 
-      final Producer<String> p = this.module.testReadHost(Producers.of("192.168.8.1"));
+      final Producer<String> p = this.module.provideReadHost(Producers.of("192.168.8.1"));
       Assert.assertEquals("10.1.1.1", p.produce());
    }
 
    @Test(expected = NullPointerException.class)
-   public void testTestDeleteHostNullOperationConfig()
+   public void testProvideDeleteHostNullOperationConfig()
    {
       when(this.config.getDelete()).thenReturn(null);
-      this.module.testDeleteHost(Producers.of("192.168.8.1"));
+      this.module.provideDeleteHost(Producers.of("192.168.8.1"));
    }
 
    @Test(expected = NullPointerException.class)
-   public void testTestDeleteHostNullTestHost()
+   public void testProvideDeleteHostNullTestHost()
    {
       when(this.config.getDelete()).thenReturn(new OperationConfig());
-      this.module.testDeleteHost(null);
+      this.module.provideDeleteHost(null);
    }
 
    @Test
-   public void testTestDeleteHostDefault()
+   public void testProvideDeleteHostDefault()
    {
       when(this.config.getDelete()).thenReturn(new OperationConfig());
-      final Producer<String> p = this.module.testDeleteHost(Producers.of("192.168.8.1"));
+      final Producer<String> p = this.module.provideDeleteHost(Producers.of("192.168.8.1"));
       Assert.assertEquals("192.168.8.1", p.produce());
    }
 
    @Test
-   public void testTestDeleteHostOverride()
+   public void testProvideDeleteHostOverride()
    {
       final OperationConfig operationConfig = mock(OperationConfig.class);
       final List<HostConfig> host = Lists.newArrayList();
@@ -315,260 +315,260 @@ public class TestModuleTest
       when(operationConfig.getHost()).thenReturn(host);
       when(this.config.getDelete()).thenReturn(operationConfig);
 
-      final Producer<String> p = this.module.testDeleteHost(Producers.of("192.168.8.1"));
+      final Producer<String> p = this.module.provideDeleteHost(Producers.of("192.168.8.1"));
       Assert.assertEquals("10.1.1.1", p.produce());
    }
 
    @Test
-   public void testTestPortNullPort()
+   public void testProvidePortNullPort()
    {
       when(this.config.getPort()).thenReturn(null);
-      final Producer<Integer> p = this.module.testPort();
+      final Producer<Integer> p = this.module.providePort();
       Assert.assertNull(p);
    }
 
    @Test
-   public void testTestPort()
+   public void testProvidePort()
    {
       when(this.config.getPort()).thenReturn(80);
-      final Producer<Integer> p = this.module.testPort();
+      final Producer<Integer> p = this.module.providePort();
       Assert.assertNotNull(p);
       Assert.assertEquals(Integer.valueOf(80), p.produce());
    }
 
    @Test(expected = NullPointerException.class)
-   public void testTestApiNullApi()
+   public void testProvideApiNullApi()
    {
       when(this.config.getApi()).thenReturn(null);
-      this.module.testApi();
+      this.module.provideApi();
    }
 
    @Test
-   public void testTestApi()
+   public void testProvideApi()
    {
       when(this.config.getApi()).thenReturn(Api.S3);
-      final Api api = this.module.testApi();
+      final Api api = this.module.provideApi();
       Assert.assertEquals(Api.S3, api);
    }
 
    @Test
-   public void testUriRootNullUriRoot()
+   public void testProvideUriRootNullUriRoot()
    {
       when(this.config.getUriRoot()).thenReturn(null);
       when(this.config.getApi()).thenReturn(Api.S3);
-      final Producer<String> p = this.module.testUriRoot();
+      final Producer<String> p = this.module.provideUriRoot();
       Assert.assertEquals("s3", p.produce());
    }
 
    @Test
-   public void testUriRootSlash()
+   public void testProvideUriRootSlash()
    {
       when(this.config.getUriRoot()).thenReturn("/");
       when(this.config.getApi()).thenReturn(Api.S3);
-      Assert.assertNull(this.module.testUriRoot());
+      Assert.assertNull(this.module.provideUriRoot());
    }
 
    @Test
-   public void testUriRootCustomRoot()
+   public void testProvideUriRootCustomRoot()
    {
       when(this.config.getUriRoot()).thenReturn("foo");
       when(this.config.getApi()).thenReturn(Api.S3);
-      final Producer<String> p = this.module.testUriRoot();
+      final Producer<String> p = this.module.provideUriRoot();
       Assert.assertEquals("foo", p.produce());
    }
 
    @Test
-   public void testUriRootCustomRoot2()
+   public void testProvideUriRootCustomRoot2()
    {
       when(this.config.getUriRoot()).thenReturn("/foo");
       when(this.config.getApi()).thenReturn(Api.S3);
-      final Producer<String> p = this.module.testUriRoot();
+      final Producer<String> p = this.module.provideUriRoot();
       Assert.assertEquals("foo", p.produce());
    }
 
    @Test
-   public void testUriRootCustomRoot3()
+   public void testProvideUriRootCustomRoot3()
    {
       when(this.config.getUriRoot()).thenReturn("foo/");
       when(this.config.getApi()).thenReturn(Api.S3);
-      final Producer<String> p = this.module.testUriRoot();
+      final Producer<String> p = this.module.provideUriRoot();
       Assert.assertEquals("foo", p.produce());
    }
 
    @Test
-   public void testUriRootCustomRoot4()
+   public void testProvideUriRootCustomRoot4()
    {
       when(this.config.getUriRoot()).thenReturn("/foo/");
       when(this.config.getApi()).thenReturn(Api.S3);
-      final Producer<String> p = this.module.testUriRoot();
+      final Producer<String> p = this.module.provideUriRoot();
       Assert.assertEquals("foo", p.produce());
    }
 
    @Test
-   public void testUriRootCustomRoot5()
+   public void testProvideUriRootCustomRoot5()
    {
       when(this.config.getUriRoot()).thenReturn("//foo///");
       when(this.config.getApi()).thenReturn(Api.S3);
-      final Producer<String> p = this.module.testUriRoot();
+      final Producer<String> p = this.module.provideUriRoot();
       Assert.assertEquals("foo", p.produce());
    }
 
    @Test(expected = NullPointerException.class)
-   public void testTestContainerNullContainer()
+   public void testProvideContainerNullContainer()
    {
       when(this.config.getContainer()).thenReturn(null);
-      this.module.testContainer();
+      this.module.provideContainer();
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testTestContainerEmptyContainer()
+   public void testProvideContainerEmptyContainer()
    {
       when(this.config.getContainer()).thenReturn("");
-      this.module.testContainer();
+      this.module.provideContainer();
    }
 
    @Test
-   public void testTestContainer()
+   public void testProvideContainer()
    {
       when(this.config.getContainer()).thenReturn("container");
-      final Producer<String> p = this.module.testContainer();
+      final Producer<String> p = this.module.provideContainer();
       Assert.assertEquals("container", p.produce());
    }
 
    @Test
-   public void testTestUsernameNullUsername()
+   public void testProvideUsernameNullUsername()
    {
       when(this.config.getAuthentication()).thenReturn(new AuthenticationConfig());
-      Assert.assertNull(this.module.testUsername());
+      Assert.assertNull(this.module.provideUsername());
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testTestUsernameEmptyUsername()
+   public void testProvideUsernameEmptyUsername()
    {
       final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
       when(authConfig.getUsername()).thenReturn("");
       when(this.config.getAuthentication()).thenReturn(authConfig);
-      this.module.testUsername();
+      this.module.provideUsername();
    }
 
    @Test
-   public void testTestUsername()
+   public void testProvideUsername()
    {
       final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
       when(authConfig.getUsername()).thenReturn("user");
       when(this.config.getAuthentication()).thenReturn(authConfig);
-      final Producer<String> p = this.module.testUsername();
+      final Producer<String> p = this.module.provideUsername();
       Assert.assertNotNull(p);
       Assert.assertEquals("user", p.produce());
    }
 
    @Test
-   public void testTestPasswordNullPassword()
+   public void testProvidePasswordNullPassword()
    {
       when(this.config.getAuthentication()).thenReturn(new AuthenticationConfig());
-      Assert.assertNull(this.module.testPassword());
+      Assert.assertNull(this.module.providePassword());
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testTestPasswordEmptyPassword()
+   public void testProvidePasswordEmptyPassword()
    {
       final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
       when(authConfig.getPassword()).thenReturn("");
       when(this.config.getAuthentication()).thenReturn(authConfig);
-      this.module.testPassword();
+      this.module.providePassword();
    }
 
    @Test
-   public void testTestPassword()
+   public void testProvidePassword()
    {
       final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
       when(authConfig.getPassword()).thenReturn("password");
       when(this.config.getAuthentication()).thenReturn(authConfig);
-      final Producer<String> p = this.module.testPassword();
+      final Producer<String> p = this.module.providePassword();
       Assert.assertNotNull(p);
       Assert.assertEquals("password", p.produce());
    }
 
    @Test(expected = NullPointerException.class)
-   public void testTestAuthenticationNullAuthType()
+   public void testProvideAuthenticationNullAuthType()
    {
       final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
       when(authConfig.getType()).thenReturn(null);
       when(this.config.getAuthentication()).thenReturn(authConfig);
-      this.module.testAuthentication(Producers.of("username"), Producers.of("password"));
+      this.module.provideAuthentication(Producers.of("username"), Producers.of("password"));
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testTestAuthenticationNullUsername()
+   public void testProvideAuthenticationNullUsername()
    {
       final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
       when(authConfig.getType()).thenReturn(AuthType.BASIC);
       when(this.config.getAuthentication()).thenReturn(authConfig);
-      this.module.testAuthentication(null, Producers.of("password"));
+      this.module.provideAuthentication(null, Producers.of("password"));
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testTestAuthenticationNullPassword()
+   public void testProvideAuthenticationNullPassword()
    {
       final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
       when(authConfig.getType()).thenReturn(AuthType.BASIC);
       when(this.config.getAuthentication()).thenReturn(authConfig);
-      this.module.testAuthentication(Producers.of("username"), null);
+      this.module.provideAuthentication(Producers.of("username"), null);
    }
 
    @Test
-   public void testTestAuthenticationNullBoth()
+   public void testProvideAuthenticationNullBoth()
    {
       final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
       when(authConfig.getType()).thenReturn(AuthType.BASIC);
       when(this.config.getAuthentication()).thenReturn(authConfig);
-      Assert.assertNull(this.module.testAuthentication(null, null));
+      Assert.assertNull(this.module.provideAuthentication(null, null));
    }
 
    @Test
-   public void testTestAuthenticationBasicAuth()
+   public void testProvideAuthenticationBasicAuth()
    {
       final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
       when(authConfig.getType()).thenReturn(AuthType.BASIC);
       when(this.config.getAuthentication()).thenReturn(authConfig);
       final HttpAuth auth =
-            this.module.testAuthentication(Producers.of("username"), Producers.of("password"));
+            this.module.provideAuthentication(Producers.of("username"), Producers.of("password"));
 
       Assert.assertNotNull(auth);
       Assert.assertTrue(auth instanceof BasicAuth);
    }
 
    @Test
-   public void testTestAuthenticationAWSAuthV2()
+   public void testProvideAuthenticationAWSAuthV2()
    {
       final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
       when(authConfig.getType()).thenReturn(AuthType.AWSV2);
       when(this.config.getAuthentication()).thenReturn(authConfig);
       final HttpAuth auth =
-            this.module.testAuthentication(Producers.of("username"), Producers.of("password"));
+            this.module.provideAuthentication(Producers.of("username"), Producers.of("password"));
 
       Assert.assertNotNull(auth);
       Assert.assertTrue(auth instanceof AWSAuthV2);
    }
 
    @Test(expected = NullPointerException.class)
-   public void testTestHeadersNullHeaders()
+   public void testProvideHeadersNullHeaders()
    {
       when(this.config.getHeaders()).thenReturn(null);
-      this.module.testHeaders();
+      this.module.provideHeaders();
    }
 
    @Test
-   public void testTestHeadersEmptyHeaders()
+   public void testProvideHeadersEmptyHeaders()
    {
       when(this.config.getHeaders()).thenReturn(new LinkedHashMap<String, String>());
-      final Map<Producer<String>, Producer<String>> m = this.module.testHeaders();
+      final Map<Producer<String>, Producer<String>> m = this.module.provideHeaders();
       Assert.assertNotNull(m);
       Assert.assertTrue(m.isEmpty());
    }
 
    @Test
-   public void testTestHeaders()
+   public void testProvideHeaders()
    {
       final Map<String, String> inMap = Maps.newLinkedHashMap();
       for (int i = 0; i < 10; i++)
@@ -576,7 +576,7 @@ public class TestModuleTest
          inMap.put(String.valueOf(10 - i), String.valueOf(10 - i));
       }
       when(this.config.getHeaders()).thenReturn(inMap);
-      final Map<Producer<String>, Producer<String>> m = this.module.testHeaders();
+      final Map<Producer<String>, Producer<String>> m = this.module.provideHeaders();
       Assert.assertNotNull(m);
       final Iterator<Entry<Producer<String>, Producer<String>>> it = m.entrySet().iterator();
       int i = 0;
@@ -593,28 +593,29 @@ public class TestModuleTest
    }
 
    @Test(expected = NullPointerException.class)
-   public void testTestWriteHeadersNullOperationConfig()
+   public void testProvideWriteHeadersNullOperationConfig()
    {
       when(this.config.getWrite()).thenReturn(null);
       final Map<Producer<String>, Producer<String>> testHeaders = ImmutableMap.of();
-      this.module.testWriteHeaders(testHeaders);
+      this.module.provideWriteHeaders(testHeaders);
    }
 
    @Test(expected = NullPointerException.class)
-   public void testTestWriteHeadersNullTestHeaders()
+   public void testProvideWriteHeadersNullTestHeaders()
    {
       when(this.config.getWrite()).thenReturn(new OperationConfig());
-      this.module.testWriteHeaders(null);
+      this.module.provideWriteHeaders(null);
    }
 
    @Test
-   public void testTestWriteHeadersDefault()
+   public void testProvideWriteHeadersDefault()
    {
       when(this.config.getWrite()).thenReturn(new OperationConfig());
       final Map<Producer<String>, Producer<String>> testHeaders = Maps.newLinkedHashMap();
       testHeaders.put(Producers.of("key"), Producers.of("value"));
 
-      final Map<Producer<String>, Producer<String>> p = this.module.testWriteHeaders(testHeaders);
+      final Map<Producer<String>, Producer<String>> p =
+            this.module.provideWriteHeaders(testHeaders);
       Assert.assertNotNull(p);
       Assert.assertEquals(1, p.size());
       final Entry<Producer<String>, Producer<String>> e = p.entrySet().iterator().next();
@@ -623,7 +624,7 @@ public class TestModuleTest
    }
 
    @Test
-   public void testTestWriteHeadersOverride()
+   public void testProvideWriteHeadersOverride()
    {
       final OperationConfig operationConfig = mock(OperationConfig.class);
       final Map<String, String> operationHeaders = Maps.newLinkedHashMap();
@@ -634,7 +635,8 @@ public class TestModuleTest
       final Map<Producer<String>, Producer<String>> testHeaders = Maps.newLinkedHashMap();
       testHeaders.put(Producers.of("key"), Producers.of("value"));
 
-      final Map<Producer<String>, Producer<String>> p = this.module.testWriteHeaders(testHeaders);
+      final Map<Producer<String>, Producer<String>> p =
+            this.module.provideWriteHeaders(testHeaders);
       Assert.assertNotNull(p);
       Assert.assertEquals(1, p.size());
       final Entry<Producer<String>, Producer<String>> e = p.entrySet().iterator().next();
@@ -643,28 +645,28 @@ public class TestModuleTest
    }
 
    @Test(expected = NullPointerException.class)
-   public void testTestReadHeadersNullOperationConfig()
+   public void testProvideReadHeadersNullOperationConfig()
    {
       when(this.config.getRead()).thenReturn(null);
       final Map<Producer<String>, Producer<String>> testHeaders = ImmutableMap.of();
-      this.module.testReadHeaders(testHeaders);
+      this.module.provideReadHeaders(testHeaders);
    }
 
    @Test(expected = NullPointerException.class)
-   public void testTestReadHeadersNullTestHeaders()
+   public void testProvideReadHeadersNullTestHeaders()
    {
       when(this.config.getRead()).thenReturn(new OperationConfig());
-      this.module.testReadHeaders(null);
+      this.module.provideReadHeaders(null);
    }
 
    @Test
-   public void testTestReadHeadersDefault()
+   public void testProvideReadHeadersDefault()
    {
       when(this.config.getRead()).thenReturn(new OperationConfig());
       final Map<Producer<String>, Producer<String>> testHeaders = Maps.newLinkedHashMap();
       testHeaders.put(Producers.of("key"), Producers.of("value"));
 
-      final Map<Producer<String>, Producer<String>> p = this.module.testReadHeaders(testHeaders);
+      final Map<Producer<String>, Producer<String>> p = this.module.provideReadHeaders(testHeaders);
       Assert.assertNotNull(p);
       Assert.assertEquals(1, p.size());
       final Entry<Producer<String>, Producer<String>> e = p.entrySet().iterator().next();
@@ -673,7 +675,7 @@ public class TestModuleTest
    }
 
    @Test
-   public void testTestReadHeadersOverride()
+   public void testProvideReadHeadersOverride()
    {
       final OperationConfig operationConfig = mock(OperationConfig.class);
       final Map<String, String> operationHeaders = Maps.newLinkedHashMap();
@@ -684,7 +686,7 @@ public class TestModuleTest
       final Map<Producer<String>, Producer<String>> testHeaders = Maps.newLinkedHashMap();
       testHeaders.put(Producers.of("key"), Producers.of("value"));
 
-      final Map<Producer<String>, Producer<String>> p = this.module.testReadHeaders(testHeaders);
+      final Map<Producer<String>, Producer<String>> p = this.module.provideReadHeaders(testHeaders);
       Assert.assertNotNull(p);
       Assert.assertEquals(1, p.size());
       final Entry<Producer<String>, Producer<String>> e = p.entrySet().iterator().next();
@@ -693,28 +695,29 @@ public class TestModuleTest
    }
 
    @Test(expected = NullPointerException.class)
-   public void testTestDeleteHeadersNullOperationConfig()
+   public void testProvideDeleteHeadersNullOperationConfig()
    {
       when(this.config.getDelete()).thenReturn(null);
       final Map<Producer<String>, Producer<String>> testHeaders = ImmutableMap.of();
-      this.module.testDeleteHeaders(testHeaders);
+      this.module.provideDeleteHeaders(testHeaders);
    }
 
    @Test(expected = NullPointerException.class)
-   public void testTestDeleteHeadersNullTestHeaders()
+   public void testProvideDeleteHeadersNullTestHeaders()
    {
       when(this.config.getDelete()).thenReturn(new OperationConfig());
-      this.module.testDeleteHeaders(null);
+      this.module.provideDeleteHeaders(null);
    }
 
    @Test
-   public void testTestDeleteHeadersDefault()
+   public void testProvideDeleteHeadersDefault()
    {
       when(this.config.getDelete()).thenReturn(new OperationConfig());
       final Map<Producer<String>, Producer<String>> testHeaders = Maps.newLinkedHashMap();
       testHeaders.put(Producers.of("key"), Producers.of("value"));
 
-      final Map<Producer<String>, Producer<String>> p = this.module.testDeleteHeaders(testHeaders);
+      final Map<Producer<String>, Producer<String>> p =
+            this.module.provideDeleteHeaders(testHeaders);
       Assert.assertNotNull(p);
       Assert.assertEquals(1, p.size());
       final Entry<Producer<String>, Producer<String>> e = p.entrySet().iterator().next();
@@ -723,7 +726,7 @@ public class TestModuleTest
    }
 
    @Test
-   public void testTestDeleteHeadersOverride()
+   public void testProvideDeleteHeadersOverride()
    {
       final OperationConfig operationConfig = mock(OperationConfig.class);
       final Map<String, String> operationHeaders = Maps.newLinkedHashMap();
@@ -734,7 +737,8 @@ public class TestModuleTest
       final Map<Producer<String>, Producer<String>> testHeaders = Maps.newLinkedHashMap();
       testHeaders.put(Producers.of("key"), Producers.of("value"));
 
-      final Map<Producer<String>, Producer<String>> p = this.module.testDeleteHeaders(testHeaders);
+      final Map<Producer<String>, Producer<String>> p =
+            this.module.provideDeleteHeaders(testHeaders);
       Assert.assertNotNull(p);
       Assert.assertEquals(1, p.size());
       final Entry<Producer<String>, Producer<String>> e = p.entrySet().iterator().next();
@@ -743,31 +747,31 @@ public class TestModuleTest
    }
 
    @Test(expected = NullPointerException.class)
-   public void testTestEntityNullFilesizeSelection()
+   public void testProvideEntityNullFilesizeSelection()
    {
       when(this.config.getFilesizeSelection()).thenReturn(null);
-      this.module.testEntity();
+      this.module.provideEntity();
    }
 
    @Test(expected = NullPointerException.class)
-   public void testTestEntityNullFilesize()
+   public void testProvideEntityNullFilesize()
    {
       when(this.config.getFilesizeSelection()).thenReturn(CollectionAlgorithmType.ROUNDROBIN);
       when(this.config.getFilesize()).thenReturn(null);
-      this.module.testEntity();
+      this.module.provideEntity();
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testTestEntityEmptyFilesize()
+   public void testProvideEntityEmptyFilesize()
    {
       when(this.config.getFilesizeSelection()).thenReturn(CollectionAlgorithmType.ROUNDROBIN);
       final List<FilesizeConfig> filesize = Lists.newArrayList();
       when(this.config.getFilesize()).thenReturn(filesize);
-      this.module.testEntity();
+      this.module.provideEntity();
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testTestEntityPoissonDistribution()
+   public void testProvideEntityPoissonDistribution()
    {
       when(this.config.getFilesizeSelection()).thenReturn(CollectionAlgorithmType.ROUNDROBIN);
       final FilesizeConfig f = mock(FilesizeConfig.class);
@@ -777,40 +781,40 @@ public class TestModuleTest
       final List<FilesizeConfig> filesize = Lists.newArrayList();
       filesize.add(f);
       when(this.config.getFilesize()).thenReturn(filesize);
-      this.module.testEntity();
+      this.module.provideEntity();
    }
 
    @Test(expected = NullPointerException.class)
-   public void testTestEntityNullSource()
+   public void testProvideEntityNullSource()
    {
       when(this.config.getFilesizeSelection()).thenReturn(CollectionAlgorithmType.ROUNDROBIN);
       final List<FilesizeConfig> filesize = Lists.newArrayList();
       filesize.add(new FilesizeConfig(10.0));
       when(this.config.getSource()).thenReturn(null);
       when(this.config.getFilesize()).thenReturn(filesize);
-      this.module.testEntity();
+      this.module.provideEntity();
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testTestEntityNoneSource()
+   public void testProvideEntityNoneSource()
    {
       when(this.config.getFilesizeSelection()).thenReturn(CollectionAlgorithmType.ROUNDROBIN);
       final List<FilesizeConfig> filesize = Lists.newArrayList();
       filesize.add(new FilesizeConfig(10.0));
       when(this.config.getSource()).thenReturn(EntityType.NONE);
       when(this.config.getFilesize()).thenReturn(filesize);
-      this.module.testEntity();
+      this.module.provideEntity();
    }
 
    @Test
-   public void testTestEntitySingleFilesizeZeroesSource()
+   public void testProvideEntitySingleFilesizeZeroesSource()
    {
       when(this.config.getFilesizeSelection()).thenReturn(CollectionAlgorithmType.ROUNDROBIN);
       final List<FilesizeConfig> filesize = Lists.newArrayList();
       filesize.add(new FilesizeConfig(10.0));
       when(this.config.getSource()).thenReturn(EntityType.ZEROES);
       when(this.config.getFilesize()).thenReturn(filesize);
-      final Producer<Entity> p = this.module.testEntity();
+      final Producer<Entity> p = this.module.provideEntity();
 
       Assert.assertNotNull(p);
       final Entity e = p.produce();
@@ -819,14 +823,14 @@ public class TestModuleTest
    }
 
    @Test
-   public void testTestEntitySingleFilesizeRandomSource()
+   public void testProvideEntitySingleFilesizeRandomSource()
    {
       when(this.config.getFilesizeSelection()).thenReturn(CollectionAlgorithmType.ROUNDROBIN);
       final List<FilesizeConfig> filesize = Lists.newArrayList();
       filesize.add(new FilesizeConfig(10.0));
       when(this.config.getSource()).thenReturn(EntityType.RANDOM);
       when(this.config.getFilesize()).thenReturn(filesize);
-      final Producer<Entity> p = this.module.testEntity();
+      final Producer<Entity> p = this.module.provideEntity();
 
       Assert.assertNotNull(p);
       final Entity e = p.produce();
@@ -835,7 +839,7 @@ public class TestModuleTest
    }
 
    @Test
-   public void testTestEntityMultipleFilesizeRoundRobin()
+   public void testProvideEntityMultipleFilesizeRoundRobin()
    {
       when(this.config.getFilesizeSelection()).thenReturn(CollectionAlgorithmType.ROUNDROBIN);
       final List<FilesizeConfig> filesize = Lists.newArrayList();
@@ -843,7 +847,7 @@ public class TestModuleTest
       filesize.add(new FilesizeConfig(25.0));
       when(this.config.getSource()).thenReturn(EntityType.RANDOM);
       when(this.config.getFilesize()).thenReturn(filesize);
-      final Producer<Entity> p = this.module.testEntity();
+      final Producer<Entity> p = this.module.provideEntity();
 
       Assert.assertNotNull(p);
       for (int i = 0; i < 100; i++)
@@ -854,7 +858,7 @@ public class TestModuleTest
    }
 
    @Test(expected = AssertionError.class)
-   public void testTestEntityMultipleFilesizeRandom()
+   public void testProvideEntityMultipleFilesizeRandom()
    {
       when(this.config.getFilesizeSelection()).thenReturn(CollectionAlgorithmType.RANDOM);
       final List<FilesizeConfig> filesize = Lists.newArrayList();
@@ -862,7 +866,7 @@ public class TestModuleTest
       filesize.add(new FilesizeConfig(25.0));
       when(this.config.getSource()).thenReturn(EntityType.RANDOM);
       when(this.config.getFilesize()).thenReturn(filesize);
-      final Producer<Entity> p = this.module.testEntity();
+      final Producer<Entity> p = this.module.provideEntity();
 
       Assert.assertNotNull(p);
       for (int i = 0; i < 100; i++)
@@ -874,38 +878,38 @@ public class TestModuleTest
    }
 
    @Test(expected = NullPointerException.class)
-   public void testTestObjectFileLocationNullLocation() throws IOException
+   public void testProvideObjectFileLocationNullLocation() throws IOException
    {
       final ObjectManagerConfig objectManagerConfig = mock(ObjectManagerConfig.class);
       when(objectManagerConfig.getObjectFileLocation()).thenReturn(null);
       when(this.config.getObjectManager()).thenReturn(objectManagerConfig);
 
-      this.module.testObjectFileLocation();
+      this.module.provideObjectFileLocation();
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testTestObjectFileLocationEmptyLocation() throws IOException
+   public void testProvideObjectFileLocationEmptyLocation() throws IOException
    {
       final ObjectManagerConfig objectManagerConfig = mock(ObjectManagerConfig.class);
       when(objectManagerConfig.getObjectFileLocation()).thenReturn("");
       when(this.config.getObjectManager()).thenReturn(objectManagerConfig);
 
-      this.module.testObjectFileLocation();
+      this.module.provideObjectFileLocation();
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testTestObjectFileLocationExistingIsFile() throws IOException
+   public void testProvideObjectFileLocationExistingIsFile() throws IOException
    {
       final ObjectManagerConfig objectManagerConfig = mock(ObjectManagerConfig.class);
       final File existing = File.createTempFile("existing", null);
       when(objectManagerConfig.getObjectFileLocation()).thenReturn(existing.toString());
       when(this.config.getObjectManager()).thenReturn(objectManagerConfig);
 
-      this.module.testObjectFileLocation();
+      this.module.provideObjectFileLocation();
    }
 
    @Test
-   public void testTestObjectFileLocationNonExisting() throws IOException
+   public void testProvideObjectFileLocationNonExisting() throws IOException
    {
       final ObjectManagerConfig objectManagerConfig = mock(ObjectManagerConfig.class);
       final File existing = Files.createTempDir();
@@ -913,217 +917,217 @@ public class TestModuleTest
       when(objectManagerConfig.getObjectFileLocation()).thenReturn(nonExisting.toString());
       when(this.config.getObjectManager()).thenReturn(objectManagerConfig);
 
-      this.module.testObjectFileLocation();
+      this.module.provideObjectFileLocation();
    }
 
    @Test(expected = NullPointerException.class)
-   public void testTestObjectFileNameNullContainer()
+   public void testProvideObjectFileNameNullContainer()
    {
-      this.module.testObjectFileName(null, Api.S3);
+      this.module.provideObjectFileName(null, Api.S3);
    }
 
    @Test(expected = NullPointerException.class)
-   public void testTestObjectFileNameNullApi()
+   public void testProvideObjectFileNameNullApi()
    {
-      this.module.testObjectFileName(Producers.of("container"), null);
+      this.module.provideObjectFileName(Producers.of("container"), null);
    }
 
    @Test
-   public void testTestObjectFileNameNullObjectFileName()
+   public void testProvideObjectFileNameNullObjectFileName()
    {
       final ObjectManagerConfig objectManagerConfig = mock(ObjectManagerConfig.class);
       when(objectManagerConfig.getObjectFileName()).thenReturn(null);
       when(this.config.getObjectManager()).thenReturn(objectManagerConfig);
-      final String name = this.module.testObjectFileName(Producers.of("container"), Api.S3);
+      final String name = this.module.provideObjectFileName(Producers.of("container"), Api.S3);
 
       Assert.assertEquals("container-s3", name);
    }
 
    @Test
-   public void testTestObjectFileNameEmptyObjectFileName()
+   public void testProvideObjectFileNameEmptyObjectFileName()
    {
       final ObjectManagerConfig objectManagerConfig = mock(ObjectManagerConfig.class);
       when(objectManagerConfig.getObjectFileName()).thenReturn("");
       when(this.config.getObjectManager()).thenReturn(objectManagerConfig);
-      final String name = this.module.testObjectFileName(Producers.of("container"), Api.S3);
+      final String name = this.module.provideObjectFileName(Producers.of("container"), Api.S3);
 
       Assert.assertEquals("container-s3", name);
    }
 
    @Test
-   public void testTestObjectFileName()
+   public void testProvideObjectFileName()
    {
       final ObjectManagerConfig objectManagerConfig = mock(ObjectManagerConfig.class);
       when(objectManagerConfig.getObjectFileName()).thenReturn("myObjectFileName");
       when(this.config.getObjectManager()).thenReturn(objectManagerConfig);
-      final String name = this.module.testObjectFileName(Producers.of("container"), Api.S3);
+      final String name = this.module.provideObjectFileName(Producers.of("container"), Api.S3);
 
       Assert.assertEquals("myObjectFileName", name);
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testTestWriteWeightNegative()
+   public void testProvideWriteWeightNegative()
    {
       when(this.config.getWrite()).thenReturn(new OperationConfig(-1.0));
       when(this.config.getRead()).thenReturn(new OperationConfig(50.0));
       when(this.config.getDelete()).thenReturn(new OperationConfig(50.0));
 
-      this.module.testWriteWeight();
+      this.module.provideWriteWeight();
    }
 
    @Test
-   public void testTestWriteWeightZero()
+   public void testProvideWriteWeightZero()
    {
       when(this.config.getWrite()).thenReturn(new OperationConfig(0.0));
       when(this.config.getRead()).thenReturn(new OperationConfig(50.0));
       when(this.config.getDelete()).thenReturn(new OperationConfig(50.0));
 
-      Assert.assertEquals(0.0, this.module.testWriteWeight(), ERR);
+      Assert.assertEquals(0.0, this.module.provideWriteWeight(), ERR);
    }
 
    @Test
-   public void testTestWriteWeightPositive()
+   public void testProvideWriteWeightPositive()
    {
       when(this.config.getWrite()).thenReturn(new OperationConfig(50.0));
       when(this.config.getRead()).thenReturn(new OperationConfig(50.0));
       when(this.config.getDelete()).thenReturn(new OperationConfig(50.0));
 
-      Assert.assertEquals(50.0, this.module.testWriteWeight(), ERR);
+      Assert.assertEquals(50.0, this.module.provideWriteWeight(), ERR);
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testTestWriteWeightGreaterThan100()
+   public void testProvideWriteWeightGreaterThan100()
    {
       when(this.config.getWrite()).thenReturn(new OperationConfig(101.0));
       when(this.config.getRead()).thenReturn(new OperationConfig(50.0));
       when(this.config.getDelete()).thenReturn(new OperationConfig(50.0));
 
-      this.module.testWriteWeight();
+      this.module.provideWriteWeight();
    }
 
    @Test
-   public void testTestWriteWeightAllZero()
+   public void testProvideWriteWeightAllZero()
    {
       when(this.config.getWrite()).thenReturn(new OperationConfig(0.0));
       when(this.config.getRead()).thenReturn(new OperationConfig(0.0));
       when(this.config.getDelete()).thenReturn(new OperationConfig(0.0));
 
-      Assert.assertEquals(100.0, this.module.testWriteWeight(), ERR);
+      Assert.assertEquals(100.0, this.module.provideWriteWeight(), ERR);
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testTestReadWeightNegative()
+   public void testProvideReadWeightNegative()
    {
       when(this.config.getRead()).thenReturn(new OperationConfig(-1.0));
-      this.module.testReadWeight();
+      this.module.provideReadWeight();
    }
 
    @Test
-   public void testTestReadWeightZero()
+   public void testProvideReadWeightZero()
    {
       when(this.config.getRead()).thenReturn(new OperationConfig(0.0));
-      Assert.assertEquals(0.0, this.module.testReadWeight(), ERR);
+      Assert.assertEquals(0.0, this.module.provideReadWeight(), ERR);
    }
 
    @Test
-   public void testTestReadWeightPositive()
+   public void testProvideReadWeightPositive()
    {
       when(this.config.getRead()).thenReturn(new OperationConfig(50.0));
-      Assert.assertEquals(50.0, this.module.testReadWeight(), ERR);
+      Assert.assertEquals(50.0, this.module.provideReadWeight(), ERR);
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testTestReadWeightGreaterThan100()
+   public void testProvideReadWeightGreaterThan100()
    {
       when(this.config.getRead()).thenReturn(new OperationConfig(101.0));
-      this.module.testReadWeight();
+      this.module.provideReadWeight();
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testTestDeleteWeightNegative()
+   public void testProvideDeleteWeightNegative()
    {
       when(this.config.getDelete()).thenReturn(new OperationConfig(-1.0));
-      this.module.testDeleteWeight();
+      this.module.provideDeleteWeight();
    }
 
    @Test
-   public void testTestDeleteWeightZero()
+   public void testProvideDeleteWeightZero()
    {
       when(this.config.getDelete()).thenReturn(new OperationConfig(0.0));
-      Assert.assertEquals(0.0, this.module.testDeleteWeight(), ERR);
+      Assert.assertEquals(0.0, this.module.provideDeleteWeight(), ERR);
    }
 
    @Test
-   public void testTestDeleteWeightPositive()
+   public void testProvideDeleteWeightPositive()
    {
       when(this.config.getDelete()).thenReturn(new OperationConfig(50.0));
-      Assert.assertEquals(50.0, this.module.testDeleteWeight(), ERR);
+      Assert.assertEquals(50.0, this.module.provideDeleteWeight(), ERR);
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testTestDeleteWeightGreaterThan100()
+   public void testProvideDeleteWeightGreaterThan100()
    {
       when(this.config.getDelete()).thenReturn(new OperationConfig(101.0));
-      this.module.testDeleteWeight();
+      this.module.provideDeleteWeight();
    }
 
    @Test(expected = NullPointerException.class)
-   public void testTestSchedulerNullEventBus()
+   public void testProvideSchedulerNullEventBus()
    {
-      this.module.testScheduler(null);
+      this.module.provideScheduler(null);
    }
 
    @Test(expected = NullPointerException.class)
-   public void testTestSchedulerNullConcurrencyConfig()
+   public void testProvideSchedulerNullConcurrencyConfig()
    {
       when(this.config.getConcurrency()).thenReturn(null);
-      this.module.testScheduler(new EventBus());
+      this.module.provideScheduler(new EventBus());
    }
 
    @Test(expected = NullPointerException.class)
-   public void testTestSchedulerNullConcurrencyType()
+   public void testProvideSchedulerNullConcurrencyType()
    {
       final ConcurrencyConfig concurrencyConfig = mock(ConcurrencyConfig.class);
       when(concurrencyConfig.getType()).thenReturn(null);
       when(this.config.getConcurrency()).thenReturn(concurrencyConfig);
-      this.module.testScheduler(new EventBus());
+      this.module.provideScheduler(new EventBus());
    }
 
    @Test(expected = NullPointerException.class)
-   public void testTestSchedulerNullDistributionType()
+   public void testProvideSchedulerNullDistributionType()
    {
       final ConcurrencyConfig concurrencyConfig = mock(ConcurrencyConfig.class);
       when(concurrencyConfig.getType()).thenReturn(ConcurrencyType.THREADS);
       when(concurrencyConfig.getDistribution()).thenReturn(null);
       when(this.config.getConcurrency()).thenReturn(concurrencyConfig);
-      this.module.testScheduler(new EventBus());
+      this.module.provideScheduler(new EventBus());
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testTestSchedulerInvalidDistributionType()
+   public void testProvideSchedulerInvalidDistributionType()
    {
       final ConcurrencyConfig concurrencyConfig = mock(ConcurrencyConfig.class);
       when(concurrencyConfig.getType()).thenReturn(ConcurrencyType.IOPS);
       when(concurrencyConfig.getDistribution()).thenReturn(DistributionType.NORMAL);
       when(this.config.getConcurrency()).thenReturn(concurrencyConfig);
-      this.module.testScheduler(new EventBus());
+      this.module.provideScheduler(new EventBus());
    }
 
    @Test
-   public void testTestSchedulerThreads()
+   public void testProvideSchedulerThreads()
    {
       final ConcurrencyConfig concurrencyConfig = mock(ConcurrencyConfig.class);
       when(concurrencyConfig.getType()).thenReturn(ConcurrencyType.THREADS);
       when(concurrencyConfig.getDistribution()).thenReturn(DistributionType.UNIFORM);
       when(concurrencyConfig.getCount()).thenReturn(1.0);
       when(this.config.getConcurrency()).thenReturn(concurrencyConfig);
-      final Scheduler s = this.module.testScheduler(new EventBus());
+      final Scheduler s = this.module.provideScheduler(new EventBus());
 
       Assert.assertTrue(s instanceof ConcurrentRequestScheduler);
    }
 
    @Test
-   public void testTestSchedulerIOps()
+   public void testProvideSchedulerIOps()
    {
       final ConcurrencyConfig concurrencyConfig = mock(ConcurrencyConfig.class);
       when(concurrencyConfig.getType()).thenReturn(ConcurrencyType.IOPS);
@@ -1131,7 +1135,7 @@ public class TestModuleTest
       when(concurrencyConfig.getCount()).thenReturn(1.0);
       when(concurrencyConfig.getUnit()).thenReturn(TimeUnit.SECONDS);
       when(this.config.getConcurrency()).thenReturn(concurrencyConfig);
-      final Scheduler s = this.module.testScheduler(new EventBus());
+      final Scheduler s = this.module.provideScheduler(new EventBus());
 
       Assert.assertTrue(s instanceof RequestRateScheduler);
    }
