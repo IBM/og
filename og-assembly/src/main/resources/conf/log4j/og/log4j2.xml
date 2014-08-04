@@ -17,8 +17,8 @@
 			fileName="${log_path}/${application.log}"
 			filePattern="${log_path}/${application.log}-%i.gz">
 			<PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%t] %l - %m%n"/>
-			<SizeBasedTriggeringPolicy size="100MB" />
-			<DefaultRolloverStrategy max="20"/>
+			<SizeBasedTriggeringPolicy size="500MB" />
+			<DefaultRolloverStrategy max="25"/>
 		</RollingRandomAccessFile>
 		<RollingRandomAccessFile name="RequestLog" append="true"
 			fileName="${test_path}/${request.log}"
