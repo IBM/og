@@ -24,7 +24,6 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -60,6 +59,7 @@ import com.cleversafe.og.scheduling.ConcurrentRequestScheduler;
 import com.cleversafe.og.scheduling.RequestRateScheduler;
 import com.cleversafe.og.scheduling.Scheduler;
 import com.cleversafe.og.util.SizeUnit;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.EventBus;
@@ -596,7 +596,7 @@ public class TestModuleTest
    public void testTestWriteHeadersNullOperationConfig()
    {
       when(this.config.getWrite()).thenReturn(null);
-      final Map<Producer<String>, Producer<String>> testHeaders = Collections.emptyMap();
+      final Map<Producer<String>, Producer<String>> testHeaders = ImmutableMap.of();
       this.module.testWriteHeaders(testHeaders);
    }
 
@@ -646,7 +646,7 @@ public class TestModuleTest
    public void testTestReadHeadersNullOperationConfig()
    {
       when(this.config.getRead()).thenReturn(null);
-      final Map<Producer<String>, Producer<String>> testHeaders = Collections.emptyMap();
+      final Map<Producer<String>, Producer<String>> testHeaders = ImmutableMap.of();
       this.module.testReadHeaders(testHeaders);
    }
 
@@ -696,7 +696,7 @@ public class TestModuleTest
    public void testTestDeleteHeadersNullOperationConfig()
    {
       when(this.config.getDelete()).thenReturn(null);
-      final Map<Producer<String>, Producer<String>> testHeaders = Collections.emptyMap();
+      final Map<Producer<String>, Producer<String>> testHeaders = ImmutableMap.of();
       this.module.testDeleteHeaders(testHeaders);
    }
 

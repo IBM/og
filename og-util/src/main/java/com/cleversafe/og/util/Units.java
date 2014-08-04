@@ -25,7 +25,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.collect.Maps;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * A utility class for working with units
@@ -37,96 +37,98 @@ public class Units
 
    static
    {
-      TIME_UNITS = Maps.newHashMap();
-      TIME_UNITS.put("NS", TimeUnit.NANOSECONDS);
-      TIME_UNITS.put("NANO", TimeUnit.NANOSECONDS);
-      TIME_UNITS.put("NANOS", TimeUnit.NANOSECONDS);
-      TIME_UNITS.put("NANOSEC", TimeUnit.NANOSECONDS);
-      TIME_UNITS.put("NANOSECS", TimeUnit.NANOSECONDS);
-      TIME_UNITS.put("NANOSECOND", TimeUnit.NANOSECONDS);
-      TIME_UNITS.put("NANOSECONDS", TimeUnit.NANOSECONDS);
+      TIME_UNITS = ImmutableMap.<String, TimeUnit> builder()
+            .put("NS", TimeUnit.NANOSECONDS)
+            .put("NANO", TimeUnit.NANOSECONDS)
+            .put("NANOS", TimeUnit.NANOSECONDS)
+            .put("NANOSEC", TimeUnit.NANOSECONDS)
+            .put("NANOSECS", TimeUnit.NANOSECONDS)
+            .put("NANOSECOND", TimeUnit.NANOSECONDS)
+            .put("NANOSECONDS", TimeUnit.NANOSECONDS)
 
-      TIME_UNITS.put("MICRO", TimeUnit.MICROSECONDS);
-      TIME_UNITS.put("MICROS", TimeUnit.MICROSECONDS);
-      TIME_UNITS.put("MICROSEC", TimeUnit.MICROSECONDS);
-      TIME_UNITS.put("MICROSECS", TimeUnit.MICROSECONDS);
-      TIME_UNITS.put("MICROSECOND", TimeUnit.MICROSECONDS);
-      TIME_UNITS.put("MICROSECONDS", TimeUnit.MICROSECONDS);
+            .put("MICRO", TimeUnit.MICROSECONDS)
+            .put("MICROS", TimeUnit.MICROSECONDS)
+            .put("MICROSEC", TimeUnit.MICROSECONDS)
+            .put("MICROSECS", TimeUnit.MICROSECONDS)
+            .put("MICROSECOND", TimeUnit.MICROSECONDS)
+            .put("MICROSECONDS", TimeUnit.MICROSECONDS)
 
-      TIME_UNITS.put("MS", TimeUnit.MILLISECONDS);
-      TIME_UNITS.put("MILLI", TimeUnit.MILLISECONDS);
-      TIME_UNITS.put("MILLIS", TimeUnit.MILLISECONDS);
-      TIME_UNITS.put("MILLISEC", TimeUnit.MILLISECONDS);
-      TIME_UNITS.put("MILLISECS", TimeUnit.MILLISECONDS);
-      TIME_UNITS.put("MILLISECOND", TimeUnit.MILLISECONDS);
-      TIME_UNITS.put("MILLISECONDS", TimeUnit.MILLISECONDS);
+            .put("MS", TimeUnit.MILLISECONDS)
+            .put("MILLI", TimeUnit.MILLISECONDS)
+            .put("MILLIS", TimeUnit.MILLISECONDS)
+            .put("MILLISEC", TimeUnit.MILLISECONDS)
+            .put("MILLISECS", TimeUnit.MILLISECONDS)
+            .put("MILLISECOND", TimeUnit.MILLISECONDS)
+            .put("MILLISECONDS", TimeUnit.MILLISECONDS)
 
-      TIME_UNITS.put("S", TimeUnit.SECONDS);
-      TIME_UNITS.put("SEC", TimeUnit.SECONDS);
-      TIME_UNITS.put("SECS", TimeUnit.SECONDS);
-      TIME_UNITS.put("SECOND", TimeUnit.SECONDS);
-      TIME_UNITS.put("SECONDS", TimeUnit.SECONDS);
+            .put("S", TimeUnit.SECONDS)
+            .put("SEC", TimeUnit.SECONDS)
+            .put("SECS", TimeUnit.SECONDS)
+            .put("SECOND", TimeUnit.SECONDS)
+            .put("SECONDS", TimeUnit.SECONDS)
 
-      TIME_UNITS.put("M", TimeUnit.MINUTES);
-      TIME_UNITS.put("MIN", TimeUnit.MINUTES);
-      TIME_UNITS.put("MINS", TimeUnit.MINUTES);
-      TIME_UNITS.put("MINUTE", TimeUnit.MINUTES);
-      TIME_UNITS.put("MINUTES", TimeUnit.MINUTES);
+            .put("M", TimeUnit.MINUTES)
+            .put("MIN", TimeUnit.MINUTES)
+            .put("MINS", TimeUnit.MINUTES)
+            .put("MINUTE", TimeUnit.MINUTES)
+            .put("MINUTES", TimeUnit.MINUTES)
 
-      TIME_UNITS.put("H", TimeUnit.HOURS);
-      TIME_UNITS.put("HR", TimeUnit.HOURS);
-      TIME_UNITS.put("HRS", TimeUnit.HOURS);
-      TIME_UNITS.put("HOUR", TimeUnit.HOURS);
-      TIME_UNITS.put("HOURS", TimeUnit.HOURS);
+            .put("H", TimeUnit.HOURS)
+            .put("HR", TimeUnit.HOURS)
+            .put("HRS", TimeUnit.HOURS)
+            .put("HOUR", TimeUnit.HOURS)
+            .put("HOURS", TimeUnit.HOURS)
 
-      TIME_UNITS.put("D", TimeUnit.DAYS);
-      TIME_UNITS.put("DAY", TimeUnit.DAYS);
-      TIME_UNITS.put("DAYS", TimeUnit.DAYS);
+            .put("D", TimeUnit.DAYS)
+            .put("DAY", TimeUnit.DAYS)
+            .put("DAYS", TimeUnit.DAYS)
+            .build();
 
-      SIZE_UNITS = Maps.newHashMap();
-      SIZE_UNITS.put("B", SizeUnit.BYTES);
-      SIZE_UNITS.put("BYTE", SizeUnit.BYTES);
-      SIZE_UNITS.put("BYTES", SizeUnit.BYTES);
+      SIZE_UNITS = ImmutableMap.<String, SizeUnit> builder()
+            .put("B", SizeUnit.BYTES)
+            .put("BYTE", SizeUnit.BYTES)
+            .put("BYTES", SizeUnit.BYTES)
 
-      SIZE_UNITS.put("KB", SizeUnit.KILOBYTES);
-      SIZE_UNITS.put("KILOBYTE", SizeUnit.KILOBYTES);
-      SIZE_UNITS.put("KILOBYTES", SizeUnit.KILOBYTES);
+            .put("KB", SizeUnit.KILOBYTES)
+            .put("KILOBYTE", SizeUnit.KILOBYTES)
+            .put("KILOBYTES", SizeUnit.KILOBYTES)
 
-      SIZE_UNITS.put("KIB", SizeUnit.KIBIBYTES);
-      SIZE_UNITS.put("KIBIBYTE", SizeUnit.KIBIBYTES);
-      SIZE_UNITS.put("KIBIBYTES", SizeUnit.KIBIBYTES);
+            .put("KIB", SizeUnit.KIBIBYTES)
+            .put("KIBIBYTE", SizeUnit.KIBIBYTES)
+            .put("KIBIBYTES", SizeUnit.KIBIBYTES)
 
-      SIZE_UNITS.put("MB", SizeUnit.MEGABYTES);
-      SIZE_UNITS.put("MEGABYTE", SizeUnit.MEGABYTES);
-      SIZE_UNITS.put("MEGABYTES", SizeUnit.MEGABYTES);
+            .put("MB", SizeUnit.MEGABYTES)
+            .put("MEGABYTE", SizeUnit.MEGABYTES)
+            .put("MEGABYTES", SizeUnit.MEGABYTES)
 
-      SIZE_UNITS.put("MIB", SizeUnit.MEBIBYTES);
-      SIZE_UNITS.put("MEBIBYTE", SizeUnit.MEBIBYTES);
-      SIZE_UNITS.put("MEBIBYTES", SizeUnit.MEBIBYTES);
+            .put("MIB", SizeUnit.MEBIBYTES)
+            .put("MEBIBYTE", SizeUnit.MEBIBYTES)
+            .put("MEBIBYTES", SizeUnit.MEBIBYTES)
 
-      SIZE_UNITS.put("GB", SizeUnit.GIGABYTES);
-      SIZE_UNITS.put("GIGABYTE", SizeUnit.GIGABYTES);
-      SIZE_UNITS.put("GIGABYTES", SizeUnit.GIGABYTES);
+            .put("GB", SizeUnit.GIGABYTES)
+            .put("GIGABYTE", SizeUnit.GIGABYTES)
+            .put("GIGABYTES", SizeUnit.GIGABYTES)
 
-      SIZE_UNITS.put("GIB", SizeUnit.GIBIBYTES);
-      SIZE_UNITS.put("GIBIBYTE", SizeUnit.GIBIBYTES);
-      SIZE_UNITS.put("GIBIBYTES", SizeUnit.GIBIBYTES);
+            .put("GIB", SizeUnit.GIBIBYTES)
+            .put("GIBIBYTE", SizeUnit.GIBIBYTES)
+            .put("GIBIBYTES", SizeUnit.GIBIBYTES)
 
-      SIZE_UNITS.put("TB", SizeUnit.TERABYTES);
-      SIZE_UNITS.put("TERABYTE", SizeUnit.TERABYTES);
-      SIZE_UNITS.put("TERABYTES", SizeUnit.TERABYTES);
+            .put("TB", SizeUnit.TERABYTES)
+            .put("TERABYTE", SizeUnit.TERABYTES)
+            .put("TERABYTES", SizeUnit.TERABYTES)
 
-      SIZE_UNITS.put("TIB", SizeUnit.TEBIBYTES);
-      SIZE_UNITS.put("TEBIBYTE", SizeUnit.TEBIBYTES);
-      SIZE_UNITS.put("TEBIBYTES", SizeUnit.TEBIBYTES);
+            .put("TIB", SizeUnit.TEBIBYTES)
+            .put("TEBIBYTE", SizeUnit.TEBIBYTES)
+            .put("TEBIBYTES", SizeUnit.TEBIBYTES)
 
-      SIZE_UNITS.put("PB", SizeUnit.PETABYTES);
-      SIZE_UNITS.put("PETABYTE", SizeUnit.PETABYTES);
-      SIZE_UNITS.put("PETABYTES", SizeUnit.PETABYTES);
+            .put("PB", SizeUnit.PETABYTES)
+            .put("PETABYTE", SizeUnit.PETABYTES)
+            .put("PETABYTES", SizeUnit.PETABYTES)
 
-      SIZE_UNITS.put("PIB", SizeUnit.PEBIBYTES);
-      SIZE_UNITS.put("PEBIBYTE", SizeUnit.PEBIBYTES);
-      SIZE_UNITS.put("PEBIBYTES", SizeUnit.PEBIBYTES);
+            .put("PIB", SizeUnit.PEBIBYTES)
+            .put("PEBIBYTE", SizeUnit.PEBIBYTES)
+            .put("PEBIBYTES", SizeUnit.PEBIBYTES)
+            .build();
    }
 
    private Units()

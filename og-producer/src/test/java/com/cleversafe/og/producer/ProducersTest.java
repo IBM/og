@@ -19,11 +19,11 @@
 
 package com.cleversafe.og.producer;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 public class ProducersTest
@@ -49,7 +49,7 @@ public class ProducersTest
    @Test(expected = IllegalArgumentException.class)
    public void testZeroCycle()
    {
-      Producers.cycle(Collections.emptyList());
+      Producers.cycle(ImmutableList.of());
    }
 
    @Test(expected = NullPointerException.class)

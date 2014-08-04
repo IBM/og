@@ -34,6 +34,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.cleversafe.og.operation.Request;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 public class AWSAuthV2Test
@@ -234,7 +235,7 @@ public class AWSAuthV2Test
    @Test
    public void testJoinQueryParametersEmptyMap()
    {
-      final Map<String, String> queryParameters = Collections.emptyMap();
+      final Map<String, String> queryParameters = ImmutableMap.of();
       final String query = this.auth.joinQueryParameters(queryParameters);
       Assert.assertEquals("", query);
    }

@@ -20,7 +20,6 @@
 package com.cleversafe.og.s3;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -35,7 +34,8 @@ import com.cleversafe.og.http.HttpAuth;
 import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Request;
 import com.google.common.base.Splitter;
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.io.BaseEncoding;
 
@@ -63,27 +63,22 @@ public class AWSAuthV2 implements HttpAuth
    private static final String HMAC_SHA1 = "HmacSHA1";
    private static final Splitter QUERY_SPLITTER = Splitter.on("&");
    private static final Splitter PARAM_SPLITTER = Splitter.on("=");
-   private static final List<String> SUBRESOURCES;
-   static
-   {
-      final List<String> subresources = Lists.newArrayList();
-      subresources.add("acl");
-      subresources.add("lifecycle");
-      subresources.add("location");
-      subresources.add("logging");
-      subresources.add("notification");
-      subresources.add("partNumber");
-      subresources.add("policy");
-      subresources.add("requestPayment");
-      subresources.add("torrent");
-      subresources.add("uploadId");
-      subresources.add("uploads");
-      subresources.add("versionId");
-      subresources.add("versioning");
-      subresources.add("versions");
-      subresources.add("website");
-      SUBRESOURCES = Collections.unmodifiableList(subresources);
-   }
+   private static final List<String> SUBRESOURCES = ImmutableList.of(
+         "acl",
+         "lifecycle",
+         "location",
+         "logging",
+         "notification",
+         "partNumber",
+         "policy",
+         "requestPayment",
+         "torrent",
+         "uploadId",
+         "uploads",
+         "versionId",
+         "versioning",
+         "versions",
+         "website");
 
    public AWSAuthV2()
    {}
@@ -233,7 +228,7 @@ public class AWSAuthV2 implements HttpAuth
    {
       // short circuit common case where there are no query parameters
       if (query == null || query.length() == 0)
-         return Collections.emptyMap();
+         return ImmutableMap.of();
 
       final Map<String, String> queryParameters = Maps.newHashMap();
 
