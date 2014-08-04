@@ -39,13 +39,4 @@ public class OperationManagerException extends Exception
    {
       super(message, cause);
    }
-
-   public OperationManagerException(
-         final String message,
-         final Throwable cause,
-         final boolean enableSuppression,
-         final boolean writableStackTrace)
-   {
-      super(message, cause, enableSuppression, writableStackTrace);
-   }
 }

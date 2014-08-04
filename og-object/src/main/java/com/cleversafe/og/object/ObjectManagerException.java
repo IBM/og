@@ -40,4 +40,9 @@ public class ObjectManagerException extends RuntimeException
    {
       super(cause);
    }
+
+   public ObjectManagerException(final String message, final Throwable cause)
+   {
+      super(message, cause);
+   }
 }

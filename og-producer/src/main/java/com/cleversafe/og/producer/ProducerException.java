@@ -39,13 +39,4 @@ public class ProducerException extends RuntimeException
    {
       super(message, cause);
    }
-
-   public ProducerException(
-         final String message,
-         final Throwable cause,
-         final boolean enableSuppression,
-         final boolean writableStackTrace)
-   {
-      super(message, cause, enableSuppression, writableStackTrace);
-   }
 }
