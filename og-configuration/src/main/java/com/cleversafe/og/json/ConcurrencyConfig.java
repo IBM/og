@@ -27,8 +27,8 @@ public class ConcurrencyConfig
    DistributionType distribution;
    double count;
    TimeUnit unit;
-   double rampup;
-   TimeUnit rampupUnit;
+   double ramp;
+   TimeUnit rampUnit;
 
    public ConcurrencyConfig(final double count)
    {
@@ -42,8 +42,8 @@ public class ConcurrencyConfig
       this.distribution = DistributionType.UNIFORM;
       this.count = 1.0;
       this.unit = TimeUnit.SECONDS;
-      this.rampup = 0.0;
-      this.rampupUnit = TimeUnit.SECONDS;
+      this.ramp = 0.0;
+      this.rampUnit = TimeUnit.SECONDS;
    }
 
    public ConcurrencyType getType()
@@ -66,13 +66,13 @@ public class ConcurrencyConfig
       return this.unit;
    }
 
-   public double getRampup()
+   public double getRamp()
    {
-      return this.rampup;
+      return this.ramp;
    }
 
-   public TimeUnit getRampupUnit()
+   public TimeUnit getRampUnit()
    {
-      return this.rampupUnit;
+      return this.rampUnit;
    }
 }

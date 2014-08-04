@@ -67,8 +67,8 @@ public class ConcurrencyConfigTypeAdapterFactoryTest
       Assert.assertEquals(ConcurrencyType.THREADS, config.getType());
       Assert.assertEquals(5.0, config.getCount(), ERR);
       Assert.assertEquals(TimeUnit.SECONDS, config.getUnit());
-      Assert.assertEquals(0.0, config.getRampup(), ERR);
-      Assert.assertEquals(TimeUnit.SECONDS, config.getRampupUnit());
+      Assert.assertEquals(0.0, config.getRamp(), ERR);
+      Assert.assertEquals(TimeUnit.SECONDS, config.getRampUnit());
    }
 
    @Test
@@ -80,8 +80,8 @@ public class ConcurrencyConfigTypeAdapterFactoryTest
       Assert.assertEquals(ConcurrencyType.THREADS, config.getType());
       Assert.assertEquals(10.0, config.getCount(), ERR);
       Assert.assertEquals(TimeUnit.SECONDS, config.getUnit());
-      Assert.assertEquals(0.0, config.getRampup(), ERR);
-      Assert.assertEquals(TimeUnit.SECONDS, config.getRampupUnit());
+      Assert.assertEquals(0.0, config.getRamp(), ERR);
+      Assert.assertEquals(TimeUnit.SECONDS, config.getRampUnit());
    }
 
    @Test
