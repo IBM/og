@@ -469,6 +469,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager
    public void testComplete()
    {
       this.testEnded = true;
+      shutdownSaverThread();
       try
       {
          join();
@@ -486,7 +487,25 @@ public class RandomObjectPopulator extends Thread implements ObjectManager
       {
          throw new ObjectManagerException(e);
       }
+   }
+
+   private void shutdownSaverThread()
+   {
       this.saver.shutdown();
+      while (!this.saver.isTerminated())
+      {
+         try
+         {
+            this.saver.awaitTermination(10, TimeUnit.SECONDS);
+
+         }
+
+         catch (final InterruptedException e)
+
+         {
+            _logger.error("", e);
+         }
+      }
    }
 
    @Override
