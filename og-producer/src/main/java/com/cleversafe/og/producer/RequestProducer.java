@@ -22,16 +22,17 @@ package com.cleversafe.og.producer;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URI;
-import java.util.LinkedHashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.Map.Entry;
 
 import com.cleversafe.og.http.HttpRequest;
 import com.cleversafe.og.operation.Entity;
 import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
+import com.cleversafe.og.util.Pair;
+import com.google.common.collect.ImmutableList;
 
 /**
  * A producer of requests
@@ -42,27 +43,17 @@ public class RequestProducer implements Producer<Request>
 {
    private final Producer<Method> method;
    private final Producer<URI> uri;
-   private final Map<Producer<String>, Producer<String>> headers;
+   private final List<Pair<Producer<String>, Producer<String>>> headers;
    private final Producer<Entity> entity;
-   private final Map<Producer<String>, Producer<String>> metadata;
+   private final List<Pair<Producer<String>, Producer<String>>> metadata;
 
    private RequestProducer(final Builder builder)
    {
       this.method = checkNotNull(builder.method);
       this.uri = checkNotNull(builder.uri);
-      // defensive copy
-      this.headers = new LinkedHashMap<Producer<String>, Producer<String>>();
-      for (final Entry<Producer<String>, Producer<String>> h : checkNotNull(builder.headers).entrySet())
-      {
-         this.headers.put(checkNotNull(h.getKey()), checkNotNull(h.getValue()));
-      }
+      this.headers = ImmutableList.copyOf(builder.headers);
       this.entity = builder.entity;
-      // defensive copy
-      this.metadata = new LinkedHashMap<Producer<String>, Producer<String>>();
-      for (final Entry<Producer<String>, Producer<String>> m : checkNotNull(builder.metadata).entrySet())
-      {
-         this.metadata.put(checkNotNull(m.getKey()), checkNotNull(m.getValue()));
-      }
+      this.metadata = ImmutableList.copyOf(builder.metadata);
    }
 
    @Override
@@ -71,7 +62,7 @@ public class RequestProducer implements Producer<Request>
       final HttpRequest.Builder context =
             new HttpRequest.Builder(this.method.produce(), this.uri.produce());
 
-      for (final Entry<Producer<String>, Producer<String>> header : this.headers.entrySet())
+      for (final Pair<Producer<String>, Producer<String>> header : this.headers)
       {
          context.withHeader(header.getKey().produce(), header.getValue().produce());
       }
@@ -79,9 +70,9 @@ public class RequestProducer implements Producer<Request>
       if (this.entity != null)
          context.withEntity(this.entity.produce());
 
-      for (final Entry<Producer<String>, Producer<String>> e : this.metadata.entrySet())
+      for (final Pair<Producer<String>, Producer<String>> m : this.metadata)
       {
-         context.withMetadata(e.getKey().produce(), e.getValue().produce());
+         context.withMetadata(m.getKey().produce(), m.getValue().produce());
       }
 
       return context.build();
@@ -94,9 +85,9 @@ public class RequestProducer implements Producer<Request>
    {
       private final Producer<Method> method;
       private final Producer<URI> uri;
-      private final Map<Producer<String>, Producer<String>> headers;
+      private final List<Pair<Producer<String>, Producer<String>>> headers;
       private Producer<Entity> entity;
-      private final Map<Producer<String>, Producer<String>> metadata;
+      private final List<Pair<Producer<String>, Producer<String>>> metadata;
 
       /**
        * Constructs a builder instance using the provided method and uri
@@ -123,8 +114,8 @@ public class RequestProducer implements Producer<Request>
       {
          this.method = method;
          this.uri = uri;
-         this.headers = new LinkedHashMap<Producer<String>, Producer<String>>();
-         this.metadata = new LinkedHashMap<Producer<String>, Producer<String>>();
+         this.headers = new ArrayList<Pair<Producer<String>, Producer<String>>>();
+         this.metadata = new ArrayList<Pair<Producer<String>, Producer<String>>>();
       }
 
       /**
@@ -153,7 +144,7 @@ public class RequestProducer implements Producer<Request>
        */
       public Builder withHeader(final Producer<String> key, final Producer<String> value)
       {
-         this.headers.put(key, value);
+         this.headers.add(new Pair<Producer<String>, Producer<String>>(key, value));
          return this;
       }
 
@@ -209,8 +200,7 @@ public class RequestProducer implements Producer<Request>
        */
       public Builder withMetadata(final String key, final String value)
       {
-         this.metadata.put(Producers.of(key), Producers.of(value));
-         return this;
+         return withMetadata(Producers.of(key), Producers.of(value));
       }
 
       /**
@@ -225,7 +215,7 @@ public class RequestProducer implements Producer<Request>
        */
       public Builder withMetadata(final Producer<String> key, final Producer<String> value)
       {
-         this.metadata.put(key, value);
+         this.metadata.add(new Pair<Producer<String>, Producer<String>>(key, value));
          return this;
       }
 
