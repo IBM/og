@@ -26,9 +26,9 @@ import java.io.IOException;
 import com.google.common.io.BaseEncoding;
 import com.martiansoftware.jsap.JSAPResult;
 
-public class ObjectReader extends AbstractCLI
+public class ObjectFile extends AbstractCLI
 {
-   private static final String JSAP_RESOURCE_NAME = "ogreader.jsap";
+   private static final String JSAP_RESOURCE_NAME = "objectfile.jsap";
    // TODO place this constant in util somewhere?
    private static int ID_LENGTH = 18;
 
