@@ -63,6 +63,7 @@ import com.cleversafe.og.test.condition.StatusCodeCondition;
 import com.cleversafe.og.test.condition.TestCondition;
 import com.cleversafe.og.test.operation.manager.SimpleOperationManager;
 import com.cleversafe.og.util.Operation;
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.google.common.math.DoubleMath;
@@ -175,11 +176,11 @@ public class OGModule extends AbstractModule
    @Provides
    @Singleton
    @WriteObjectName
-   public CachingProducer<String> provideWriteObjectName(final Api api)
+   public Optional<CachingProducer<String>> provideWriteObjectName(final Api api)
    {
       if (Api.SOH == checkNotNull(api))
-         return null;
-      return new CachingProducer<String>(new UUIDObjectNameProducer());
+         return Optional.absent();
+      return Optional.of(new CachingProducer<String>(new UUIDObjectNameProducer()));
    }
 
    @Provides

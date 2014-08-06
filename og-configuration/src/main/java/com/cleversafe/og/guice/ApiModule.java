@@ -61,6 +61,7 @@ import com.cleversafe.og.producer.UriProducer;
 import com.cleversafe.og.soh.SOHWriteResponseBodyConsumer;
 import com.cleversafe.og.util.Entities;
 import com.cleversafe.og.util.ResponseBodyConsumer;
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.AbstractModule;
@@ -80,12 +81,12 @@ public class ApiModule extends AbstractModule
    @Write
    public Producer<Request> provideWrite(
          @WriteUri final Producer<URI> uri,
-         @WriteObjectName final CachingProducer<String> object,
+         @WriteObjectName final Optional<CachingProducer<String>> object,
          @WriteHeaders final Map<Producer<String>, Producer<String>> headers,
          final Producer<Entity> entity,
          @WriteMetadata final Map<Producer<String>, Producer<String>> metadata,
-         @Username final Producer<String> username,
-         @Password final Producer<String> password)
+         @Username final Optional<Producer<String>> username,
+         @Password final Optional<Producer<String>> password)
    {
       return createRequestProducer(Method.PUT, uri, object, headers, entity, metadata, username,
             password);
@@ -97,10 +98,10 @@ public class ApiModule extends AbstractModule
    public Producer<URI> providWriteUri(
          final Producer<Scheme> scheme,
          @WriteHost final Producer<String> host,
-         final Producer<Integer> port,
-         @UriRoot final Producer<String> uriRoot,
+         final Optional<Producer<Integer>> port,
+         @UriRoot final Optional<Producer<String>> uriRoot,
          @Container final Producer<String> container,
-         @WriteObjectName final CachingProducer<String> object)
+         @WriteObjectName final Optional<CachingProducer<String>> object)
    {
       return createUri(scheme, host, port, uriRoot, container, object);
    }
@@ -127,11 +128,11 @@ public class ApiModule extends AbstractModule
          @ReadObjectName final CachingProducer<String> object,
          @ReadHeaders final Map<Producer<String>, Producer<String>> headers,
          @ReadMetadata final Map<Producer<String>, Producer<String>> metadata,
-         @Username final Producer<String> username,
-         @Password final Producer<String> password)
+         @Username final Optional<Producer<String>> username,
+         @Password final Optional<Producer<String>> password)
    {
-      return createRequestProducer(Method.GET, uri, object, headers, Producers.of(Entities.none()),
-            metadata, username, password);
+      return createRequestProducer(Method.GET, uri, Optional.of(object), headers,
+            Producers.of(Entities.none()), metadata, username, password);
    }
 
    @Provides
@@ -140,12 +141,12 @@ public class ApiModule extends AbstractModule
    public Producer<URI> providReadUri(
          final Producer<Scheme> scheme,
          @ReadHost final Producer<String> host,
-         final Producer<Integer> port,
-         @UriRoot final Producer<String> uriRoot,
+         final Optional<Producer<Integer>> port,
+         @UriRoot final Optional<Producer<String>> uriRoot,
          @Container final Producer<String> container,
          @ReadObjectName final CachingProducer<String> object)
    {
-      return createUri(scheme, host, port, uriRoot, container, object);
+      return createUri(scheme, host, port, uriRoot, container, Optional.of(object));
    }
 
    @Provides
@@ -163,10 +164,10 @@ public class ApiModule extends AbstractModule
          @DeleteObjectName final CachingProducer<String> object,
          @DeleteHeaders final Map<Producer<String>, Producer<String>> headers,
          @DeleteMetadata final Map<Producer<String>, Producer<String>> metadata,
-         @Username final Producer<String> username,
-         @Password final Producer<String> password)
+         @Username final Optional<Producer<String>> username,
+         @Password final Optional<Producer<String>> password)
    {
-      return createRequestProducer(Method.DELETE, uri, object, headers,
+      return createRequestProducer(Method.DELETE, uri, Optional.of(object), headers,
             Producers.of(Entities.none()), metadata, username, password);
    }
 
@@ -176,12 +177,12 @@ public class ApiModule extends AbstractModule
    public Producer<URI> providDeleteUri(
          final Producer<Scheme> scheme,
          @DeleteHost final Producer<String> host,
-         final Producer<Integer> port,
-         @UriRoot final Producer<String> uriRoot,
+         final Optional<Producer<Integer>> port,
+         @UriRoot final Optional<Producer<String>> uriRoot,
          @Container final Producer<String> container,
          @DeleteObjectName final CachingProducer<String> object)
    {
-      return createUri(scheme, host, port, uriRoot, container, object);
+      return createUri(scheme, host, port, uriRoot, container, Optional.of(object));
    }
 
    @Provides
@@ -202,22 +203,22 @@ public class ApiModule extends AbstractModule
    private Producer<Request> createRequestProducer(
          final Method method,
          final Producer<URI> uri,
-         final CachingProducer<String> object,
+         final Optional<CachingProducer<String>> object,
          final Map<Producer<String>, Producer<String>> headers,
          final Producer<Entity> entity,
          final Map<Producer<String>, Producer<String>> metadata,
-         final Producer<String> username,
-         final Producer<String> password)
+         final Optional<Producer<String>> username,
+         final Optional<Producer<String>> password)
    {
       final RequestProducer.Builder b = new RequestProducer.Builder(Producers.of(method), uri);
 
-      if (object != null)
+      if (object.isPresent())
          b.withMetadata(Producers.of(Metadata.OBJECT_NAME.toString()), new Producer<String>()
          {
             @Override
             public String produce()
             {
-               return object.getCachedValue();
+               return object.get().getCachedValue();
             }
          });
 
@@ -233,10 +234,10 @@ public class ApiModule extends AbstractModule
          b.withMetadata(m.getKey(), m.getValue());
       }
 
-      if (username != null && password != null)
+      if (username.isPresent() && password.isPresent())
       {
-         b.withMetadata(Producers.of(Metadata.USERNAME.toString()), username);
-         b.withMetadata(Producers.of(Metadata.PASSWORD.toString()), password);
+         b.withMetadata(Producers.of(Metadata.USERNAME.toString()), username.get());
+         b.withMetadata(Producers.of(Metadata.PASSWORD.toString()), password.get());
       }
 
       return b.build();
@@ -245,22 +246,24 @@ public class ApiModule extends AbstractModule
    private Producer<URI> createUri(
          final Producer<Scheme> scheme,
          final Producer<String> host,
-         final Producer<Integer> port,
-         final Producer<String> uriRoot,
+         final Optional<Producer<Integer>> port,
+         final Optional<Producer<String>> uriRoot,
          final Producer<String> container,
-         final Producer<String> object)
+         final Optional<CachingProducer<String>> object)
    {
       final List<Producer<String>> path = Lists.newArrayList();
-      if (uriRoot != null)
-         path.add(uriRoot);
+      if (uriRoot.isPresent())
+         path.add(uriRoot.get());
       path.add(container);
-      if (object != null)
-         path.add(object);
+      if (object.isPresent())
+         path.add(object.get());
 
-      return new UriProducer.Builder(host, path)
-            .withScheme(scheme)
-            .onPort(port)
-            .build();
+      final UriProducer.Builder b = new UriProducer.Builder(host, path).withScheme(scheme);
+
+      if (port.isPresent())
+         b.onPort(port.get());
+
+      return b.build();
    }
 
    @Provides

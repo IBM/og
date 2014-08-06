@@ -59,6 +59,7 @@ import com.cleversafe.og.scheduling.ConcurrentRequestScheduler;
 import com.cleversafe.og.scheduling.RequestRateScheduler;
 import com.cleversafe.og.scheduling.Scheduler;
 import com.cleversafe.og.util.SizeUnit;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -320,20 +321,20 @@ public class TestModuleTest
    }
 
    @Test
-   public void testProvidePortNullPort()
+   public void testProvidePortAbsentPort()
    {
       when(this.config.getPort()).thenReturn(null);
-      final Producer<Integer> p = this.module.providePort();
-      Assert.assertNull(p);
+      final Optional<Producer<Integer>> p = this.module.providePort();
+      Assert.assertTrue(!p.isPresent());
    }
 
    @Test
    public void testProvidePort()
    {
       when(this.config.getPort()).thenReturn(80);
-      final Producer<Integer> p = this.module.providePort();
-      Assert.assertNotNull(p);
-      Assert.assertEquals(Integer.valueOf(80), p.produce());
+      final Optional<Producer<Integer>> p = this.module.providePort();
+      Assert.assertTrue(p.isPresent());
+      Assert.assertEquals(Integer.valueOf(80), p.get().produce());
    }
 
    @Test(expected = NullPointerException.class)
@@ -356,8 +357,8 @@ public class TestModuleTest
    {
       when(this.config.getUriRoot()).thenReturn(null);
       when(this.config.getApi()).thenReturn(Api.S3);
-      final Producer<String> p = this.module.provideUriRoot();
-      Assert.assertEquals("s3", p.produce());
+      final Optional<Producer<String>> p = this.module.provideUriRoot();
+      Assert.assertEquals("s3", p.get().produce());
    }
 
    @Test
@@ -365,7 +366,7 @@ public class TestModuleTest
    {
       when(this.config.getUriRoot()).thenReturn("/");
       when(this.config.getApi()).thenReturn(Api.S3);
-      Assert.assertNull(this.module.provideUriRoot());
+      Assert.assertTrue(!this.module.provideUriRoot().isPresent());
    }
 
    @Test
@@ -373,8 +374,8 @@ public class TestModuleTest
    {
       when(this.config.getUriRoot()).thenReturn("foo");
       when(this.config.getApi()).thenReturn(Api.S3);
-      final Producer<String> p = this.module.provideUriRoot();
-      Assert.assertEquals("foo", p.produce());
+      final Optional<Producer<String>> p = this.module.provideUriRoot();
+      Assert.assertEquals("foo", p.get().produce());
    }
 
    @Test
@@ -382,8 +383,8 @@ public class TestModuleTest
    {
       when(this.config.getUriRoot()).thenReturn("/foo");
       when(this.config.getApi()).thenReturn(Api.S3);
-      final Producer<String> p = this.module.provideUriRoot();
-      Assert.assertEquals("foo", p.produce());
+      final Optional<Producer<String>> p = this.module.provideUriRoot();
+      Assert.assertEquals("foo", p.get().produce());
    }
 
    @Test
@@ -391,8 +392,8 @@ public class TestModuleTest
    {
       when(this.config.getUriRoot()).thenReturn("foo/");
       when(this.config.getApi()).thenReturn(Api.S3);
-      final Producer<String> p = this.module.provideUriRoot();
-      Assert.assertEquals("foo", p.produce());
+      final Optional<Producer<String>> p = this.module.provideUriRoot();
+      Assert.assertEquals("foo", p.get().produce());
    }
 
    @Test
@@ -400,8 +401,8 @@ public class TestModuleTest
    {
       when(this.config.getUriRoot()).thenReturn("/foo/");
       when(this.config.getApi()).thenReturn(Api.S3);
-      final Producer<String> p = this.module.provideUriRoot();
-      Assert.assertEquals("foo", p.produce());
+      final Optional<Producer<String>> p = this.module.provideUriRoot();
+      Assert.assertEquals("foo", p.get().produce());
    }
 
    @Test
@@ -409,8 +410,8 @@ public class TestModuleTest
    {
       when(this.config.getUriRoot()).thenReturn("//foo///");
       when(this.config.getApi()).thenReturn(Api.S3);
-      final Producer<String> p = this.module.provideUriRoot();
-      Assert.assertEquals("foo", p.produce());
+      final Optional<Producer<String>> p = this.module.provideUriRoot();
+      Assert.assertEquals("foo", p.get().produce());
    }
 
    @Test(expected = NullPointerException.class)
@@ -439,7 +440,7 @@ public class TestModuleTest
    public void testProvideUsernameNullUsername()
    {
       when(this.config.getAuthentication()).thenReturn(new AuthenticationConfig());
-      Assert.assertNull(this.module.provideUsername());
+      Assert.assertTrue(!this.module.provideUsername().isPresent());
    }
 
    @Test(expected = IllegalArgumentException.class)
@@ -457,16 +458,16 @@ public class TestModuleTest
       final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
       when(authConfig.getUsername()).thenReturn("user");
       when(this.config.getAuthentication()).thenReturn(authConfig);
-      final Producer<String> p = this.module.provideUsername();
-      Assert.assertNotNull(p);
-      Assert.assertEquals("user", p.produce());
+      final Optional<Producer<String>> p = this.module.provideUsername();
+      Assert.assertTrue(p.isPresent());
+      Assert.assertEquals("user", p.get().produce());
    }
 
    @Test
    public void testProvidePasswordNullPassword()
    {
       when(this.config.getAuthentication()).thenReturn(new AuthenticationConfig());
-      Assert.assertNull(this.module.providePassword());
+      Assert.assertTrue(!this.module.providePassword().isPresent());
    }
 
    @Test(expected = IllegalArgumentException.class)
@@ -484,9 +485,9 @@ public class TestModuleTest
       final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
       when(authConfig.getPassword()).thenReturn("password");
       when(this.config.getAuthentication()).thenReturn(authConfig);
-      final Producer<String> p = this.module.providePassword();
-      Assert.assertNotNull(p);
-      Assert.assertEquals("password", p.produce());
+      final Optional<Producer<String>> p = this.module.providePassword();
+      Assert.assertTrue(p.isPresent());
+      Assert.assertEquals("password", p.get().produce());
    }
 
    @Test(expected = NullPointerException.class)
@@ -495,34 +496,38 @@ public class TestModuleTest
       final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
       when(authConfig.getType()).thenReturn(null);
       when(this.config.getAuthentication()).thenReturn(authConfig);
-      this.module.provideAuthentication(Producers.of("username"), Producers.of("password"));
+      this.module.provideAuthentication(Optional.of(Producers.of("username")),
+            Optional.of(Producers.of("password")));
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testProvideAuthenticationNullUsername()
+   public void testProvideAuthenticationAbsentUsername()
    {
       final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
       when(authConfig.getType()).thenReturn(AuthType.BASIC);
       when(this.config.getAuthentication()).thenReturn(authConfig);
-      this.module.provideAuthentication(null, Producers.of("password"));
+      this.module.provideAuthentication(Optional.fromNullable((Producer<String>) null),
+            Optional.of(Producers.of("password")));
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testProvideAuthenticationNullPassword()
+   public void testProvideAuthenticationAbsentPassword()
    {
       final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
       when(authConfig.getType()).thenReturn(AuthType.BASIC);
       when(this.config.getAuthentication()).thenReturn(authConfig);
-      this.module.provideAuthentication(Producers.of("username"), null);
+      this.module.provideAuthentication(Optional.of(Producers.of("username")),
+            Optional.fromNullable((Producer<String>) null));
    }
 
    @Test
-   public void testProvideAuthenticationNullBoth()
+   public void testProvideAuthenticationAbsentBoth()
    {
       final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
       when(authConfig.getType()).thenReturn(AuthType.BASIC);
       when(this.config.getAuthentication()).thenReturn(authConfig);
-      Assert.assertNull(this.module.provideAuthentication(null, null));
+      final Optional<Producer<String>> o = Optional.absent();
+      Assert.assertTrue(!this.module.provideAuthentication(o, o).isPresent());
    }
 
    @Test
@@ -531,11 +536,12 @@ public class TestModuleTest
       final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
       when(authConfig.getType()).thenReturn(AuthType.BASIC);
       when(this.config.getAuthentication()).thenReturn(authConfig);
-      final HttpAuth auth =
-            this.module.provideAuthentication(Producers.of("username"), Producers.of("password"));
+      final Optional<HttpAuth> auth =
+            this.module.provideAuthentication(Optional.of(Producers.of("username")),
+                  Optional.of(Producers.of("password")));
 
-      Assert.assertNotNull(auth);
-      Assert.assertTrue(auth instanceof BasicAuth);
+      Assert.assertTrue(auth.isPresent());
+      Assert.assertTrue(auth.get() instanceof BasicAuth);
    }
 
    @Test
@@ -544,11 +550,12 @@ public class TestModuleTest
       final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
       when(authConfig.getType()).thenReturn(AuthType.AWSV2);
       when(this.config.getAuthentication()).thenReturn(authConfig);
-      final HttpAuth auth =
-            this.module.provideAuthentication(Producers.of("username"), Producers.of("password"));
+      final Optional<HttpAuth> auth =
+            this.module.provideAuthentication(Optional.of(Producers.of("username")),
+                  Optional.of(Producers.of("password")));
 
-      Assert.assertNotNull(auth);
-      Assert.assertTrue(auth instanceof AWSAuthV2);
+      Assert.assertTrue(auth.isPresent());
+      Assert.assertTrue(auth.get() instanceof AWSAuthV2);
    }
 
    @Test(expected = NullPointerException.class)

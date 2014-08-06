@@ -34,6 +34,7 @@ import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.producer.CachingProducer;
 import com.cleversafe.og.producer.Producer;
 import com.cleversafe.og.statistic.Statistics;
+import com.google.common.base.Optional;
 import com.google.common.eventbus.EventBus;
 
 public class OGModuleTest
@@ -129,15 +130,15 @@ public class OGModuleTest
    @Test
    public void testProvideWriteObjectNameSOH()
    {
-      final CachingProducer<String> p = this.module.provideWriteObjectName(Api.SOH);
-      Assert.assertNull(p);
+      final Optional<CachingProducer<String>> p = this.module.provideWriteObjectName(Api.SOH);
+      Assert.assertTrue(!p.isPresent());
    }
 
    @Test
    public void testProvideWriteObjectNameS3()
    {
-      final CachingProducer<String> p = this.module.provideWriteObjectName(Api.S3);
-      Assert.assertNotNull(p);
+      final Optional<CachingProducer<String>> p = this.module.provideWriteObjectName(Api.S3);
+      Assert.assertTrue(p.isPresent());
    }
 
    @Test(expected = NullPointerException.class)

@@ -25,7 +25,6 @@ import java.net.URISyntaxException;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.cleversafe.og.http.HttpUtil;
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.util.Operation;
 
@@ -94,40 +93,40 @@ public class HttpUtilTest
    @Test
    public void testRootUriNoObject() throws URISyntaxException
    {
-      Assert.assertNull(HttpUtil.getObjectName(new URI("http://192.168.8.1/container")));
+      Assert.assertTrue(!HttpUtil.getObjectName(new URI("http://192.168.8.1/container")).isPresent());
    }
 
    @Test
    public void testRootUriObject() throws URISyntaxException
    {
       Assert.assertEquals("object",
-            HttpUtil.getObjectName(new URI("https://192.168.8.1/container/object")));
+            HttpUtil.getObjectName(new URI("https://192.168.8.1/container/object")).get());
    }
 
    @Test
    public void testRootUriObjectSlash() throws URISyntaxException
    {
       Assert.assertEquals("object",
-            HttpUtil.getObjectName(new URI("http://192.168.8.1/container/object/")));
+            HttpUtil.getObjectName(new URI("http://192.168.8.1/container/object/")).get());
    }
 
    @Test
    public void testNoObject() throws URISyntaxException
    {
-      Assert.assertNull(HttpUtil.getObjectName(new URI("http://192.168.8.1/soh/container")));
+      Assert.assertTrue(!HttpUtil.getObjectName(new URI("http://192.168.8.1/soh/container")).isPresent());
    }
 
    @Test
    public void testObject() throws URISyntaxException
    {
       Assert.assertEquals("object",
-            HttpUtil.getObjectName(new URI("https://192.168.8.1/soh/container/object")));
+            HttpUtil.getObjectName(new URI("https://192.168.8.1/soh/container/object")).get());
    }
 
    @Test
    public void testObjectSlash() throws URISyntaxException
    {
       Assert.assertEquals("object",
-            HttpUtil.getObjectName(new URI("http://192.168.8.1/soh/container/object/")));
+            HttpUtil.getObjectName(new URI("http://192.168.8.1/soh/container/object/")).get());
    }
 }

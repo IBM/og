@@ -29,6 +29,7 @@ import com.cleversafe.og.http.HttpAuth;
 import com.cleversafe.og.json.ClientConfig;
 import com.cleversafe.og.util.ResponseBodyConsumer;
 import com.cleversafe.og.util.Version;
+import com.google.common.base.Optional;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -49,10 +50,10 @@ public class ClientModule extends AbstractModule
    @Provides
    @Singleton
    public Client provideClient(
-         final HttpAuth authentication,
+         final Optional<HttpAuth> authentication,
          final Map<String, ResponseBodyConsumer> responseBodyConsumers)
    {
-      return new ApacheClient.Builder(responseBodyConsumers)
+      final ApacheClient.Builder b = new ApacheClient.Builder(responseBodyConsumers)
             .withConnectTimeout(this.config.getConnectTimeout())
             .withSoTimeout(this.config.getSoTimeout())
             .usingSoReuseAddress(this.config.isSoReuseAddress())
@@ -62,10 +63,13 @@ public class ClientModule extends AbstractModule
             .usingChunkedEncoding(this.config.isChunkedEncoding())
             .usingExpectContinue(this.config.isExpectContinue())
             .withWaitForContinue(this.config.getWaitForContinue())
-            .withAuthentication(authentication)
             .withUserAgent(Version.displayVersion())
             .withWriteThroughput(this.config.getWriteThroughput())
-            .withReadThroughput(this.config.getReadThroughput())
-            .build();
+            .withReadThroughput(this.config.getReadThroughput());
+
+      if (authentication.isPresent())
+         b.withAuthentication(authentication.get());
+
+      return b.build();
    }
 }
