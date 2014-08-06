@@ -65,12 +65,14 @@ public class LoadTest implements Callable<Boolean>
          final OperationManager operationManager,
          final Client client,
          final Scheduler scheduler,
-         final EventBus eventBus)
+         final EventBus eventBus,
+         final LoadTestSubscriberExceptionHandler handler)
    {
       this.operationManager = checkNotNull(operationManager);
       this.client = checkNotNull(client);
       this.scheduler = checkNotNull(scheduler);
       this.eventBus = checkNotNull(eventBus);
+      checkNotNull(handler).setLoadTest(this);
       this.running = true;
       this.success = true;
       this.activeOperations = new ConcurrentHashMap<String, ListenableFuture<Response>>();
@@ -111,6 +113,12 @@ public class LoadTest implements Callable<Boolean>
       {
          operation.getValue().cancel(true);
       }
+   }
+
+   public void abortTest()
+   {
+      this.success = false;
+      stopTest();
    }
 
    private void addCallback(final Request request, final ListenableFuture<Response> future)

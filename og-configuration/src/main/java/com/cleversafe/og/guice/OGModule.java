@@ -56,6 +56,7 @@ import com.cleversafe.og.supplier.RandomChoiceSupplier;
 import com.cleversafe.og.supplier.ReadObjectNameSupplier;
 import com.cleversafe.og.supplier.UUIDObjectNameSupplier;
 import com.cleversafe.og.test.LoadTest;
+import com.cleversafe.og.test.LoadTestSubscriberExceptionHandler;
 import com.cleversafe.og.test.condition.CounterCondition;
 import com.cleversafe.og.test.condition.RuntimeCondition;
 import com.cleversafe.og.test.condition.StatusCodeCondition;
@@ -79,8 +80,21 @@ public class OGModule extends AbstractModule
    protected void configure()
    {
       bind(OperationManager.class).to(SimpleOperationManager.class).in(Singleton.class);
-      bind(EventBus.class).in(Singleton.class);
       bind(LoadTest.class).in(Singleton.class);
+   }
+
+   @Provides
+   @Singleton
+   public LoadTestSubscriberExceptionHandler provideSubscriberHandler()
+   {
+      return new LoadTestSubscriberExceptionHandler();
+   }
+
+   @Provides
+   @Singleton
+   public EventBus provideEventBus(final LoadTestSubscriberExceptionHandler handler)
+   {
+      return new EventBus(handler);
    }
 
    @Provides

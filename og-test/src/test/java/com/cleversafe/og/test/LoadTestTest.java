@@ -48,16 +48,19 @@ import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.test.condition.CounterCondition;
 import com.cleversafe.og.test.condition.TestCondition;
 import com.cleversafe.og.util.Operation;
+import com.cleversafe.og.util.Pair;
 import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.SettableFuture;
 
 public class LoadTestTest
 {
    private Request request;
-   Response response;
+   private Response response;
    private OperationManager operationManager;
    private Client client;
    private Scheduler scheduler;
+   private LoadTestSubscriberExceptionHandler handler;
    private EventBus eventBus;
    private Statistics stats;
    private LoadTest test;
@@ -82,9 +85,12 @@ public class LoadTestTest
 
       this.scheduler = new ConcurrentRequestScheduler(1);
 
-      this.eventBus = new EventBus();
+      this.handler = new LoadTestSubscriberExceptionHandler();
+      this.eventBus = new EventBus(this.handler);
 
-      this.test = new LoadTest(this.operationManager, this.client, this.scheduler, this.eventBus);
+      this.test =
+            new LoadTest(this.operationManager, this.client, this.scheduler, this.eventBus,
+                  this.handler);
 
       this.stats = new Statistics();
       final TestCondition condition =
@@ -98,25 +104,31 @@ public class LoadTestTest
    @Test(expected = NullPointerException.class)
    public void testNullOperationManager()
    {
-      new LoadTest(null, this.client, this.scheduler, this.eventBus);
+      new LoadTest(null, this.client, this.scheduler, this.eventBus, this.handler);
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullClient()
    {
-      new LoadTest(this.operationManager, null, this.scheduler, this.eventBus);
+      new LoadTest(this.operationManager, null, this.scheduler, this.eventBus, this.handler);
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullScheduler()
    {
-      new LoadTest(this.operationManager, this.client, null, this.eventBus);
+      new LoadTest(this.operationManager, this.client, null, this.eventBus, this.handler);
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullEventBus()
    {
-      new LoadTest(this.operationManager, this.client, this.scheduler, null);
+      new LoadTest(this.operationManager, this.client, this.scheduler, null, this.handler);
+   }
+
+   @Test(expected = NullPointerException.class)
+   public void testNullHandler()
+   {
+      new LoadTest(this.operationManager, this.client, this.scheduler, this.eventBus, null);
    }
 
    @Test
@@ -126,6 +138,21 @@ public class LoadTestTest
       final boolean success = this.test.call();
       Assert.assertFalse(success);
       verify(this.client, never()).shutdown(true);
+   }
+
+   @Test
+   public void testEventBusSubscriberException()
+   {
+      this.eventBus.register(new Object()
+      {
+         @Subscribe
+         public void consume(final Pair<Request, Response> operation)
+         {
+            throw new RuntimeException();
+         }
+      });
+      final boolean success = this.test.call();
+      Assert.assertFalse(success);
    }
 
    @Test
