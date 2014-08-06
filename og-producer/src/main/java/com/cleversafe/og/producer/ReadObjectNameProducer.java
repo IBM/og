@@ -22,7 +22,6 @@ package com.cleversafe.og.producer;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.cleversafe.og.object.ObjectManager;
-import com.cleversafe.og.object.ObjectManagerException;
 
 public class ReadObjectNameProducer implements Producer<String>
 {
@@ -36,14 +35,7 @@ public class ReadObjectNameProducer implements Producer<String>
    @Override
    public String produce()
    {
-      try
-      {
-         return this.objectManager.acquireNameForRead().toString();
-      }
-      catch (final ObjectManagerException e)
-      {
-         throw new ProducerException(e);
-      }
+      return this.objectManager.acquireNameForRead().toString();
    }
 
    @Override

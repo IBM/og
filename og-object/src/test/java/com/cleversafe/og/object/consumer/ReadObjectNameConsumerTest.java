@@ -35,7 +35,6 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.cleversafe.og.consumer.ConsumerException;
 import com.cleversafe.og.consumer.ObjectNameConsumer;
 import com.cleversafe.og.consumer.ReadObjectNameConsumer;
 import com.cleversafe.og.http.HttpUtil;
@@ -156,10 +155,12 @@ public class ReadObjectNameConsumerTest
       verify(this.mockObjectManager, never()).releaseNameFromRead((isA(ObjectName.class)));
    }
 
-   @Test(expected = ConsumerException.class)
-   public void testOperationManagerException()
+   @Test(expected = ObjectManagerException.class)
+   public void testObjectManagerException()
    {
       when(this.mockRequest.getMethod()).thenReturn(Method.GET);
+      when(this.mockRequest.getMetadata(Metadata.OBJECT_NAME)).thenReturn(
+            "52f7ee3599723d3d9ead2cc492c8209f0010");
       when(this.mockResponse.getStatusCode()).thenReturn(200);
       doThrow(new ObjectManagerException()).when(this.mockObjectManager).releaseNameFromRead(
             any(ObjectName.class));
@@ -170,7 +171,7 @@ public class ReadObjectNameConsumerTest
       c.consume(new Pair<Request, Response>(this.mockRequest, this.mockResponse));
    }
 
-   @Test(expected = ConsumerException.class)
+   @Test(expected = IllegalStateException.class)
    public void testNoObject() throws URISyntaxException
    {
       when(this.mockRequest.getUri()).thenReturn(new URI("http://192.168.8.1/container"));

@@ -29,7 +29,6 @@ import com.cleversafe.og.operation.OperationManager;
 import com.cleversafe.og.operation.OperationManagerException;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.producer.Producer;
-import com.cleversafe.og.producer.ProducerException;
 
 public class SimpleOperationManager implements OperationManager
 {
@@ -49,7 +48,7 @@ public class SimpleOperationManager implements OperationManager
          final Producer<Request> producer = this.requestMix.produce();
          return producer.produce();
       }
-      catch (final ProducerException e)
+      catch (final Exception e)
       {
          throw new OperationManagerException(e);
       }

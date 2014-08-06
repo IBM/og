@@ -216,7 +216,7 @@ public class UriProducerTest
       Assert.assertEquals("key2=value2&key1=value1", uri.getQuery());
    }
 
-   @Test(expected = ProducerException.class)
+   @Test(expected = IllegalArgumentException.class)
    public void testBadUri()
    {
       final List<Producer<String>> badPath = Lists.newArrayList();

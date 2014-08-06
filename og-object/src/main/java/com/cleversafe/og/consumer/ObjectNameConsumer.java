@@ -27,7 +27,6 @@ import java.util.List;
 import com.cleversafe.og.http.HttpUtil;
 import com.cleversafe.og.object.LegacyObjectName;
 import com.cleversafe.og.object.ObjectManager;
-import com.cleversafe.og.object.ObjectManagerException;
 import com.cleversafe.og.object.ObjectName;
 import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Request;
@@ -101,7 +100,7 @@ public abstract class ObjectNameConsumer
 
       final String objectString = getObjectString(request, response);
       if (objectString == null)
-         throw new ConsumerException("Unable to determine object");
+         throw new IllegalStateException("Unable to determine object");
 
       final ObjectName objectName =
             LegacyObjectName.forBytes(BaseEncoding.base16().lowerCase().decode(objectString));
@@ -120,14 +119,7 @@ public abstract class ObjectNameConsumer
 
    private void updateManager(final ObjectName objectName)
    {
-      try
-      {
-         updateObjectManager(objectName);
-      }
-      catch (final ObjectManagerException e)
-      {
-         throw new ConsumerException(e);
-      }
+      updateObjectManager(objectName);
    }
 
    protected abstract void updateObjectManager(ObjectName objectName);

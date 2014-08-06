@@ -76,7 +76,7 @@ public class RandomChoiceProducer<T> implements Producer<T>
          }
          previousWeights += choice.currentWeight;
       }
-      throw new ProducerException("Incorrect weight calculation");
+      throw new IllegalStateException("Incorrect weight calculation");
    }
 
    private double getCurrentWeights()

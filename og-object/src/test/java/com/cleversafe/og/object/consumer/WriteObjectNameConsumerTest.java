@@ -31,12 +31,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
 
-import com.cleversafe.og.consumer.ConsumerException;
 import com.cleversafe.og.consumer.ObjectNameConsumer;
 import com.cleversafe.og.consumer.WriteObjectNameConsumer;
 import com.cleversafe.og.http.HttpUtil;
@@ -49,12 +47,10 @@ import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.Pair;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 public class WriteObjectNameConsumerTest
 {
    private ObjectManager mockObjectManager;
-   private Map<String, Request> pendingRequests;
    private List<Integer> statusCodes;
    private Request mockRequest;
    private Response mockResponse;
@@ -69,9 +65,6 @@ public class WriteObjectNameConsumerTest
             new URI("http://192.168.8.1/soh/container/5c18be1057404792923dc487ca40f2370000"));
       this.mockResponse = mock(Response.class);
       when(this.mockResponse.getMetadata(Metadata.REQUEST_ID)).thenReturn("1");
-
-      this.pendingRequests = Maps.newHashMap();
-      this.pendingRequests.put("1", this.mockRequest);
    }
 
    @Test(expected = NullPointerException.class)
@@ -178,10 +171,12 @@ public class WriteObjectNameConsumerTest
       verify(this.mockObjectManager, never()).writeNameComplete((isA(ObjectName.class)));
    }
 
-   @Test(expected = ConsumerException.class)
-   public void testOperationManagerException()
+   @Test(expected = ObjectManagerException.class)
+   public void testObjectManagerException()
    {
       when(this.mockRequest.getMethod()).thenReturn(Method.PUT);
+      when(this.mockRequest.getMetadata(Metadata.OBJECT_NAME)).thenReturn(
+            "52f7ee3599723d3d9ead2cc492c8209f0010");
       when(this.mockResponse.getStatusCode()).thenReturn(201);
       doThrow(new ObjectManagerException()).when(this.mockObjectManager).writeNameComplete(
             any(ObjectName.class));
@@ -192,19 +187,7 @@ public class WriteObjectNameConsumerTest
       c.consume(new Pair<Request, Response>(this.mockRequest, this.mockResponse));
    }
 
-   @Test(expected = ConsumerException.class)
-   public void testNoPendingRequest()
-   {
-      when(this.mockRequest.getMethod()).thenReturn(Method.PUT);
-      when(this.mockResponse.getStatusCode()).thenReturn(201);
-      // clear all pending requests
-      this.pendingRequests.clear();
-
-      new WriteObjectNameConsumer(this.mockObjectManager, this.statusCodes)
-            .consume(new Pair<Request, Response>(this.mockRequest, this.mockResponse));
-   }
-
-   @Test(expected = ConsumerException.class)
+   @Test(expected = IllegalStateException.class)
    public void testNoObject() throws URISyntaxException
    {
       when(this.mockRequest.getUri()).thenReturn(new URI("http://192.168.8.1/container"));

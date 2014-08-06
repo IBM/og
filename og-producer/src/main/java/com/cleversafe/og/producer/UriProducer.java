@@ -79,7 +79,7 @@ public class UriProducer implements Producer<URI>
       {
          // Wrapping checked exception as unchecked because most callers will not be able to handle
          // it and I don't want to include URISyntaxException in the entire signature chain
-         throw new ProducerException(e);
+         throw new IllegalArgumentException(e);
       }
    }
 

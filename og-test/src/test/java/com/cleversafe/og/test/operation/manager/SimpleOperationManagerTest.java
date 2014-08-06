@@ -26,10 +26,10 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.cleversafe.og.object.ObjectManagerException;
 import com.cleversafe.og.operation.OperationManagerException;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.producer.Producer;
-import com.cleversafe.og.producer.ProducerException;
 import com.cleversafe.og.producer.Producers;
 
 public class SimpleOperationManagerTest
@@ -63,7 +63,7 @@ public class SimpleOperationManagerTest
    @Test(expected = OperationManagerException.class)
    public void testProduceOperationManagerException() throws OperationManagerException
    {
-      when(this.requestMix.produce()).thenThrow(new ProducerException());
+      when(this.requestMix.produce()).thenThrow(new IllegalStateException());
       final SimpleOperationManager m = new SimpleOperationManager(this.requestMix);
       m.next();
    }
@@ -73,7 +73,7 @@ public class SimpleOperationManagerTest
    {
       @SuppressWarnings("unchecked")
       final Producer<Request> p = mock(Producer.class);
-      when(p.produce()).thenThrow(new ProducerException());
+      when(p.produce()).thenThrow(new ObjectManagerException());
       when(this.requestMix.produce()).thenReturn(p);
       final SimpleOperationManager m = new SimpleOperationManager(this.requestMix);
       m.next();

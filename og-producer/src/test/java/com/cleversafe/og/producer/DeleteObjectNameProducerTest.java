@@ -29,9 +29,6 @@ import org.junit.Test;
 import com.cleversafe.og.object.ObjectManager;
 import com.cleversafe.og.object.ObjectManagerException;
 import com.cleversafe.og.object.ObjectName;
-import com.cleversafe.og.producer.DeleteObjectNameProducer;
-import com.cleversafe.og.producer.Producer;
-import com.cleversafe.og.producer.ProducerException;
 
 public class DeleteObjectNameProducerTest
 {
@@ -61,7 +58,7 @@ public class DeleteObjectNameProducerTest
       Assert.assertEquals(objectString, p.produce());
    }
 
-   @Test(expected = ProducerException.class)
+   @Test(expected = ObjectManagerException.class)
    public void testProducerException()
    {
       when(this.mockObjectManager.getNameForDelete()).thenThrow(new ObjectManagerException());
