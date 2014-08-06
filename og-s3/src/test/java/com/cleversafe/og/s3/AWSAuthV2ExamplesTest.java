@@ -30,10 +30,10 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import com.cleversafe.og.api.Metadata;
+import com.cleversafe.og.api.Method;
+import com.cleversafe.og.api.Request;
 import com.cleversafe.og.http.HttpRequest;
-import com.cleversafe.og.operation.Metadata;
-import com.cleversafe.og.operation.Method;
-import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.s3.AWSAuthV2;
 
 // test data pulled from examples aws auth signing v2 at:

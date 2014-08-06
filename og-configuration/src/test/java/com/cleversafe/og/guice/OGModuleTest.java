@@ -27,10 +27,10 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.cleversafe.og.consumer.ObjectNameConsumer;
+import com.cleversafe.og.api.Request;
 import com.cleversafe.og.http.Api;
 import com.cleversafe.og.object.ObjectManager;
-import com.cleversafe.og.operation.Request;
+import com.cleversafe.og.object.ObjectNameConsumer;
 import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.supplier.CachingSupplier;
 import com.google.common.base.Optional;

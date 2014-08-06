@@ -26,8 +26,8 @@ import java.util.concurrent.Semaphore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.cleversafe.og.operation.Request;
-import com.cleversafe.og.operation.Response;
+import com.cleversafe.og.api.Request;
+import com.cleversafe.og.api.Response;
 import com.cleversafe.og.util.Pair;
 import com.google.common.eventbus.Subscribe;
 

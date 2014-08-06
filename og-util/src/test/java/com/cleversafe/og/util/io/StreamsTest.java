@@ -29,7 +29,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.cleversafe.og.operation.Entity;
+import com.cleversafe.og.api.Entity;
 import com.cleversafe.og.util.Entities;
 
 public class StreamsTest

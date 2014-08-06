@@ -17,7 +17,7 @@
 // Date: Jul 11, 2014
 // ---------------------
 
-package com.cleversafe.og.log4j2;
+package com.cleversafe.og.cli;
 
 import java.util.Locale;
 

@@ -30,7 +30,7 @@ import java.util.Map.Entry;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.cleversafe.og.operation.Metadata;
+import com.cleversafe.og.api.Metadata;
 import com.google.common.base.Charsets;
 
 public class SOHWriteResponseBodyConsumerTest

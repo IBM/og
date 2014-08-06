@@ -17,10 +17,8 @@
 // Date: Jan 21, 2014
 // ---------------------
 
-package com.cleversafe.og.client;
+package com.cleversafe.og.api;
 
-import com.cleversafe.og.operation.Request;
-import com.cleversafe.og.operation.Response;
 import com.google.common.util.concurrent.ListenableFuture;
 
 /**

@@ -17,7 +17,7 @@
 // Date: Jan 24, 2014
 // ---------------------
 
-package com.cleversafe.og.operation;
+package com.cleversafe.og.api;
 
 /**
  * A description of an http request or response body

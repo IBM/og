@@ -28,11 +28,11 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.cleversafe.og.operation.Entity;
-import com.cleversafe.og.operation.EntityType;
-import com.cleversafe.og.operation.Metadata;
-import com.cleversafe.og.operation.Method;
-import com.cleversafe.og.operation.Request;
+import com.cleversafe.og.api.Entity;
+import com.cleversafe.og.api.EntityType;
+import com.cleversafe.og.api.Metadata;
+import com.cleversafe.og.api.Method;
+import com.cleversafe.og.api.Request;
 import com.cleversafe.og.supplier.Suppliers;
 import com.cleversafe.og.supplier.RequestSupplier;
 import com.cleversafe.og.util.Entities;

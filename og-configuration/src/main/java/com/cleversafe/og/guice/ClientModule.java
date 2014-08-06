@@ -23,8 +23,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Map;
 
+import com.cleversafe.og.api.Client;
 import com.cleversafe.og.client.ApacheClient;
-import com.cleversafe.og.client.Client;
 import com.cleversafe.og.http.HttpAuth;
 import com.cleversafe.og.json.ClientConfig;
 import com.cleversafe.og.util.ResponseBodyConsumer;

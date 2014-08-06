@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.cleversafe.og.client.Client;
+import com.cleversafe.og.api.Client;
 import com.cleversafe.og.guice.ApiModule;
 import com.cleversafe.og.guice.ClientModule;
 import com.cleversafe.og.guice.OGModule;

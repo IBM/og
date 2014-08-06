@@ -31,10 +31,10 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
-import com.cleversafe.og.operation.Entity;
-import com.cleversafe.og.operation.Metadata;
-import com.cleversafe.og.operation.Method;
-import com.cleversafe.og.operation.Request;
+import com.cleversafe.og.api.Entity;
+import com.cleversafe.og.api.Metadata;
+import com.cleversafe.og.api.Method;
+import com.cleversafe.og.api.Request;
 import com.cleversafe.og.util.Entities;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;

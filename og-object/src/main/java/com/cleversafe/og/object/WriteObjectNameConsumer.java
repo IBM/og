@@ -17,20 +17,18 @@
 // Date: Jun 29, 2014
 // ---------------------
 
-package com.cleversafe.og.consumer;
+package com.cleversafe.og.object;
 
 import java.util.List;
 
-import com.cleversafe.og.object.ObjectManager;
-import com.cleversafe.og.object.ObjectName;
 import com.cleversafe.og.util.Operation;
 
 /**
- * A {@code ObjectNameConsumer} implementation which consumes object names for read operations
+ * A {@code ObjectNameConsumer} implementation which consumes object names for write operations
  * 
  * @since 1.0
  */
-public class ReadObjectNameConsumer extends ObjectNameConsumer
+public class WriteObjectNameConsumer extends ObjectNameConsumer
 {
    /**
     * Constructs an instance
@@ -42,14 +40,14 @@ public class ReadObjectNameConsumer extends ObjectNameConsumer
     * @throws IllegalArgumentException
     *            if any status code in status codes is invalid
     */
-   public ReadObjectNameConsumer(final ObjectManager objectManager, final List<Integer> statusCodes)
+   public WriteObjectNameConsumer(final ObjectManager objectManager, final List<Integer> statusCodes)
    {
-      super(objectManager, Operation.READ, statusCodes);
+      super(objectManager, Operation.WRITE, statusCodes);
    }
 
    @Override
    protected void updateObjectManager(final ObjectName objectName)
    {
-      this.objectManager.releaseNameFromRead(objectName);
+      this.objectManager.writeNameComplete(objectName);
    }
 }

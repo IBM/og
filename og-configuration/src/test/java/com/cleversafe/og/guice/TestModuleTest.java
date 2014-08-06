@@ -35,6 +35,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.cleversafe.og.api.Entity;
+import com.cleversafe.og.api.EntityType;
 import com.cleversafe.og.http.Api;
 import com.cleversafe.og.http.BasicAuth;
 import com.cleversafe.og.http.HttpAuth;
@@ -50,8 +52,6 @@ import com.cleversafe.og.json.HostConfig;
 import com.cleversafe.og.json.ObjectManagerConfig;
 import com.cleversafe.og.json.OperationConfig;
 import com.cleversafe.og.json.TestConfig;
-import com.cleversafe.og.operation.Entity;
-import com.cleversafe.og.operation.EntityType;
 import com.cleversafe.og.s3.AWSAuthV2;
 import com.cleversafe.og.scheduling.ConcurrentRequestScheduler;
 import com.cleversafe.og.scheduling.RequestRateScheduler;

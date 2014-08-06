@@ -26,8 +26,8 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.cleversafe.og.operation.Request;
-import com.cleversafe.og.operation.Response;
+import com.cleversafe.og.api.Request;
+import com.cleversafe.og.api.Response;
 import com.cleversafe.og.util.Pair;
 import com.google.common.util.concurrent.Uninterruptibles;
 

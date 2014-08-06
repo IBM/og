@@ -14,21 +14,19 @@
 // -----------------------
 // @author: rveitch
 //
-// Date: Jan 29, 2014
+// Date: Feb 24, 2014
 // ---------------------
 
-package com.cleversafe.og.operation;
+package com.cleversafe.og.api;
 
 /**
- * An enumeration of supported http methods
+ * An enumeration of supported entity types
  * 
  * @since 1.0
  */
-public enum Method
+public enum EntityType
 {
-   GET,
-   HEAD,
-   POST,
-   PUT,
-   DELETE;
+   NONE,
+   RANDOM,
+   ZEROES;
 }

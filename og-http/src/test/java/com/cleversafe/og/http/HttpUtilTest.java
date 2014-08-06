@@ -25,7 +25,7 @@ import java.net.URISyntaxException;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.cleversafe.og.operation.Method;
+import com.cleversafe.og.api.Method;
 import com.cleversafe.og.util.Operation;
 
 public class HttpUtilTest

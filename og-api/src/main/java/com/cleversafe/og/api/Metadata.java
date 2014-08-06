@@ -17,7 +17,7 @@
 // Date: Jun 13, 2014
 // ---------------------
 
-package com.cleversafe.og.operation;
+package com.cleversafe.og.api;
 
 /**
  * An enumeration of well known metadata keys

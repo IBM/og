@@ -17,7 +17,7 @@
 // Date: Feb 25, 2014
 // ---------------------
 
-package com.cleversafe.og.operation;
+package com.cleversafe.og.api;
 
 @SuppressWarnings("serial")
 public class OperationManagerException extends Exception

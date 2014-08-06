@@ -22,9 +22,9 @@ package com.cleversafe.og.json;
 import java.util.List;
 import java.util.Map;
 
+import com.cleversafe.og.api.EntityType;
 import com.cleversafe.og.http.Api;
 import com.cleversafe.og.http.Scheme;
-import com.cleversafe.og.operation.EntityType;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 

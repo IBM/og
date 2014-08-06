@@ -17,7 +17,7 @@
 // Date: Apr 7, 2014
 // ---------------------
 
-package com.cleversafe.og.test.operation.manager;
+package com.cleversafe.og.test;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -25,9 +25,9 @@ import java.util.Locale;
 
 import javax.inject.Inject;
 
-import com.cleversafe.og.operation.OperationManager;
-import com.cleversafe.og.operation.OperationManagerException;
-import com.cleversafe.og.operation.Request;
+import com.cleversafe.og.api.OperationManager;
+import com.cleversafe.og.api.OperationManagerException;
+import com.cleversafe.og.api.Request;
 import com.google.common.base.Supplier;
 
 public class SimpleOperationManager implements OperationManager

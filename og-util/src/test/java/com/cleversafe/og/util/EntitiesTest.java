@@ -22,8 +22,8 @@ package com.cleversafe.og.util;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.cleversafe.og.operation.Entity;
-import com.cleversafe.og.operation.EntityType;
+import com.cleversafe.og.api.Entity;
+import com.cleversafe.og.api.EntityType;
 
 public class EntitiesTest
 {

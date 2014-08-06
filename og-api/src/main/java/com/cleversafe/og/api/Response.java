@@ -17,7 +17,7 @@
 // Date: Feb 21, 2014
 // ---------------------
 
-package com.cleversafe.og.operation;
+package com.cleversafe.og.api;
 
 import java.util.Iterator;
 import java.util.Map.Entry;

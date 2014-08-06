@@ -17,7 +17,7 @@
 // Date: Jun 29, 2014
 // ---------------------
 
-package com.cleversafe.og.object.consumer;
+package com.cleversafe.og.object;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.isA;
@@ -35,16 +35,16 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.cleversafe.og.consumer.ObjectNameConsumer;
-import com.cleversafe.og.consumer.WriteObjectNameConsumer;
+import com.cleversafe.og.api.Metadata;
+import com.cleversafe.og.api.Method;
+import com.cleversafe.og.api.Request;
+import com.cleversafe.og.api.Response;
 import com.cleversafe.og.http.HttpUtil;
 import com.cleversafe.og.object.ObjectManager;
 import com.cleversafe.og.object.ObjectManagerException;
 import com.cleversafe.og.object.ObjectName;
-import com.cleversafe.og.operation.Metadata;
-import com.cleversafe.og.operation.Method;
-import com.cleversafe.og.operation.Request;
-import com.cleversafe.og.operation.Response;
+import com.cleversafe.og.object.ObjectNameConsumer;
+import com.cleversafe.og.object.WriteObjectNameConsumer;
 import com.cleversafe.og.util.Pair;
 import com.google.common.collect.Lists;
 

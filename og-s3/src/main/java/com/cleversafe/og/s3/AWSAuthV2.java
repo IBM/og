@@ -29,9 +29,9 @@ import java.util.SortedMap;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
+import com.cleversafe.og.api.Metadata;
+import com.cleversafe.og.api.Request;
 import com.cleversafe.og.http.HttpAuth;
-import com.cleversafe.og.operation.Metadata;
-import com.cleversafe.og.operation.Request;
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;

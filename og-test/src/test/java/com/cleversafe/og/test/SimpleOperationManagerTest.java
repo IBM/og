@@ -17,7 +17,7 @@
 // Date: Jul 9, 2014
 // ---------------------
 
-package com.cleversafe.og.test.operation.manager;
+package com.cleversafe.og.test;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -26,10 +26,11 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.cleversafe.og.api.OperationManagerException;
+import com.cleversafe.og.api.Request;
 import com.cleversafe.og.object.ObjectManagerException;
-import com.cleversafe.og.operation.OperationManagerException;
-import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.supplier.Suppliers;
+import com.cleversafe.og.test.SimpleOperationManager;
 import com.google.common.base.Supplier;
 
 public class SimpleOperationManagerTest

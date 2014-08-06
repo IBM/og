@@ -30,10 +30,10 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.cleversafe.og.operation.Metadata;
-import com.cleversafe.og.operation.Method;
-import com.cleversafe.og.operation.Request;
-import com.cleversafe.og.operation.Response;
+import com.cleversafe.og.api.Metadata;
+import com.cleversafe.og.api.Method;
+import com.cleversafe.og.api.Request;
+import com.cleversafe.og.api.Response;
 import com.cleversafe.og.util.Entities;
 import com.cleversafe.og.util.Operation;
 import com.cleversafe.og.util.Pair;

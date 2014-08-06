@@ -17,20 +17,17 @@
 // Date: Mar 29, 2014
 // ---------------------
 
-package com.cleversafe.og.consumer;
+package com.cleversafe.og.object;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.List;
 
+import com.cleversafe.og.api.Metadata;
+import com.cleversafe.og.api.Request;
+import com.cleversafe.og.api.Response;
 import com.cleversafe.og.http.HttpUtil;
-import com.cleversafe.og.object.LegacyObjectName;
-import com.cleversafe.og.object.ObjectManager;
-import com.cleversafe.og.object.ObjectName;
-import com.cleversafe.og.operation.Metadata;
-import com.cleversafe.og.operation.Request;
-import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.Operation;
 import com.cleversafe.og.util.Pair;
 import com.google.common.collect.Iterables;

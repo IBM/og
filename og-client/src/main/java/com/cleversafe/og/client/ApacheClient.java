@@ -51,12 +51,13 @@ import org.apache.http.protocol.HttpRequestExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.cleversafe.og.api.Client;
+import com.cleversafe.og.api.EntityType;
+import com.cleversafe.og.api.Metadata;
+import com.cleversafe.og.api.Request;
+import com.cleversafe.og.api.Response;
 import com.cleversafe.og.http.HttpAuth;
 import com.cleversafe.og.http.HttpResponse;
-import com.cleversafe.og.operation.EntityType;
-import com.cleversafe.og.operation.Metadata;
-import com.cleversafe.og.operation.Request;
-import com.cleversafe.og.operation.Response;
 import com.cleversafe.og.util.Entities;
 import com.cleversafe.og.util.ResponseBodyConsumer;
 import com.cleversafe.og.util.io.Streams;

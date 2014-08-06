@@ -22,8 +22,8 @@ package com.cleversafe.og.test.condition;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.cleversafe.og.operation.Request;
-import com.cleversafe.og.operation.Response;
+import com.cleversafe.og.api.Request;
+import com.cleversafe.og.api.Response;
 import com.cleversafe.og.statistic.Counter;
 import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.test.LoadTest;

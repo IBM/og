@@ -17,7 +17,7 @@
 // Date: Feb 6, 2014
 // ---------------------
 
-package com.cleversafe.og.operation;
+package com.cleversafe.og.api;
 
 /**
  * A creator of requests

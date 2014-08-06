@@ -25,11 +25,11 @@ import java.util.Locale;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
-import com.cleversafe.og.operation.EntityType;
-import com.cleversafe.og.operation.Metadata;
-import com.cleversafe.og.operation.Method;
-import com.cleversafe.og.operation.Request;
-import com.cleversafe.og.operation.Response;
+import com.cleversafe.og.api.EntityType;
+import com.cleversafe.og.api.Metadata;
+import com.cleversafe.og.api.Method;
+import com.cleversafe.og.api.Request;
+import com.cleversafe.og.api.Response;
 import com.google.common.net.HttpHeaders;
 
 /**

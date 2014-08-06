@@ -26,9 +26,9 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.cleversafe.og.operation.Entity;
-import com.cleversafe.og.operation.Metadata;
-import com.cleversafe.og.operation.Response;
+import com.cleversafe.og.api.Entity;
+import com.cleversafe.og.api.Metadata;
+import com.cleversafe.og.api.Response;
 import com.cleversafe.og.util.Entities;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;

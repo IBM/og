@@ -17,11 +17,13 @@
 // Date: Jul 12, 2014
 // ---------------------
 
-package com.cleversafe.og.log4j2;
+package com.cleversafe.og.cli;
 
 import org.apache.logging.log4j.core.lookup.StrLookup;
 import org.junit.Assert;
 import org.junit.Test;
+
+import com.cleversafe.og.cli.OGDatetimeLookup;
 
 public class OGDatetimeLookupTest
 {

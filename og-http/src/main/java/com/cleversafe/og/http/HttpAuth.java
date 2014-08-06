@@ -19,7 +19,7 @@
 
 package com.cleversafe.og.http;
 
-import com.cleversafe.og.operation.Request;
+import com.cleversafe.og.api.Request;
 
 /**
  * A creator of http authorization headers

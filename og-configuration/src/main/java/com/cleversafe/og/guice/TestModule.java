@@ -29,6 +29,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.cleversafe.og.api.Entity;
+import com.cleversafe.og.api.EntityType;
 import com.cleversafe.og.guice.annotation.Container;
 import com.cleversafe.og.guice.annotation.DeleteHeaders;
 import com.cleversafe.og.guice.annotation.DeleteHost;
@@ -62,8 +64,6 @@ import com.cleversafe.og.json.ObjectManagerConfig;
 import com.cleversafe.og.json.OperationConfig;
 import com.cleversafe.og.json.StoppingConditionsConfig;
 import com.cleversafe.og.json.TestConfig;
-import com.cleversafe.og.operation.Entity;
-import com.cleversafe.og.operation.EntityType;
 import com.cleversafe.og.s3.AWSAuthV2;
 import com.cleversafe.og.scheduling.ConcurrentRequestScheduler;
 import com.cleversafe.og.scheduling.RequestRateScheduler;

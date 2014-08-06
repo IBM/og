@@ -19,8 +19,8 @@
 
 package com.cleversafe.og.http;
 
-import com.cleversafe.og.operation.Metadata;
-import com.cleversafe.og.operation.Request;
+import com.cleversafe.og.api.Metadata;
+import com.cleversafe.og.api.Request;
 import com.google.common.base.Charsets;
 import com.google.common.io.BaseEncoding;
 

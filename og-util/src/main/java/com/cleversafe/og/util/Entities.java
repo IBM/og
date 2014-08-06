@@ -22,8 +22,8 @@ package com.cleversafe.og.util;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.cleversafe.og.operation.Entity;
-import com.cleversafe.og.operation.EntityType;
+import com.cleversafe.og.api.Entity;
+import com.cleversafe.og.api.EntityType;
 
 /**
  * A utility class for creating entity instances
