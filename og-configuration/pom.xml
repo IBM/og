@@ -51,6 +51,10 @@
 		</dependency>
 		<dependency>
 			<groupId>com.cleversafe</groupId>
+			<artifactId>og-supplier</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.cleversafe</groupId>
 			<artifactId>og-test</artifactId>
 		</dependency>
 		<dependency>

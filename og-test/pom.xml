@@ -19,7 +19,7 @@
 		</dependency>
 		<dependency>
 			<groupId>com.cleversafe</groupId>
-			<artifactId>og-producer</artifactId>
+			<artifactId>og-supplier</artifactId>
 		</dependency>
 	</dependencies>
 </project>
