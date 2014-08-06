@@ -26,16 +26,17 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 
+import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
 
 /**
- * A producer which chooses a random value to produce
+ * A supplier which chooses a random value to supply
  * 
  * @param <T>
- *           the type of values to produce
+ *           the type of values to supply
  * @since 1.0
  */
-public class RandomChoiceProducer<T> implements Producer<T>
+public class RandomChoiceProducer<T> implements Supplier<T>
 {
    private final List<Choice<T>> choices;
    private final Random random;
@@ -50,10 +51,10 @@ public class RandomChoiceProducer<T> implements Producer<T>
    private static class Choice<S>
    {
       private final S value;
-      private final Producer<? extends Number> weight;
+      private final Supplier<? extends Number> weight;
       private double currentWeight;
 
-      private Choice(final S choice, final Producer<? extends Number> weight)
+      private Choice(final S choice, final Supplier<? extends Number> weight)
       {
          this.value = choice;
          this.weight = weight;
@@ -62,7 +63,7 @@ public class RandomChoiceProducer<T> implements Producer<T>
    }
 
    @Override
-   public T produce()
+   public T get()
    {
       final double totalWeight = getCurrentWeights();
       final double rnd = this.random.nextDouble() * totalWeight;
@@ -84,14 +85,14 @@ public class RandomChoiceProducer<T> implements Producer<T>
       double currentTotalWeight = 0.0;
       for (final Choice<T> choice : this.choices)
       {
-         choice.currentWeight = choice.weight.produce().doubleValue();
+         choice.currentWeight = choice.weight.get().doubleValue();
          currentTotalWeight += choice.currentWeight;
       }
       return currentTotalWeight;
    }
 
    /**
-    * A builder of random choice producer instances
+    * A builder of random choice supplier instances
     * 
     * @param <T>
     *           the type of values to add to this builder
@@ -148,7 +149,7 @@ public class RandomChoiceProducer<T> implements Producer<T>
        *           the weight to give the choice, which may be dynamic
        * @return this builder
        */
-      public Builder<T> withChoice(final T choice, final Producer<? extends Number> weight)
+      public Builder<T> withChoice(final T choice, final Supplier<? extends Number> weight)
       {
          checkNotNull(choice);
          checkNotNull(weight);
@@ -170,9 +171,9 @@ public class RandomChoiceProducer<T> implements Producer<T>
       }
 
       /**
-       * Creates a random choice producer instance
+       * Creates a random choice supplier instance
        * 
-       * @return a new random choice producer instance
+       * @return a new random choice supplier instance
        * @throws IllegalArgumentException
        *            if no choices were added prior to calling this method
        */

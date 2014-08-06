@@ -26,10 +26,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 
 /**
- * A producer which produces values in a cycle. Example:
+ * A supplier which supplies values in a cycle. Example:
  * <p>
  * 
  * <pre>
@@ -37,25 +38,25 @@ import com.google.common.collect.ImmutableList;
  * values.add(1);
  * values.add(2);
  * values.add(3);
- * Producer<Integer> cycle = new CycleProducer<Integer>(values);}
+ * Supplier<Integer> cycle = new CycleProducer<Integer>(values);}
  * </pre>
  * <p>
- * Subsequent calls to produce will return {@code (1, 2, 3, 1, 2, 3, 1)} and so on.
+ * Subsequent calls to get will return {@code (1, 2, 3, 1, 2, 3, 1)} and so on.
  * 
  * @param <T>
- *           the type of values to produce
+ *           the type of values to supply
  * @since 1.0
  */
-public class CycleProducer<T> implements Producer<T>
+public class CycleProducer<T> implements Supplier<T>
 {
    private final List<T> values;
    private final AtomicLong counter;
 
    /**
-    * Constructs a producer using the provided list of values
+    * Constructs a supplier using the provided list of values
     * 
     * @param values
-    *           the values to produce
+    *           the values to supply
     * @throws IllegalArgumentException
     *            if values is empty
     * @throws NullPointerException
@@ -70,7 +71,7 @@ public class CycleProducer<T> implements Producer<T>
    }
 
    @Override
-   public T produce()
+   public T get()
    {
       final int idx = (int) (this.counter.getAndIncrement() % this.values.size());
       return this.values.get(idx);

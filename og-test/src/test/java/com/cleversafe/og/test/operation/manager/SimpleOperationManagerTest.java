@@ -29,21 +29,21 @@ import org.junit.Test;
 import com.cleversafe.og.object.ObjectManagerException;
 import com.cleversafe.og.operation.OperationManagerException;
 import com.cleversafe.og.operation.Request;
-import com.cleversafe.og.producer.Producer;
 import com.cleversafe.og.producer.Producers;
+import com.google.common.base.Supplier;
 
 public class SimpleOperationManagerTest
 {
-   private Producer<Producer<Request>> requestMix;
+   private Supplier<Supplier<Request>> requestMix;
    private Request request;
 
    @Before
    @SuppressWarnings("unchecked")
    public void before()
    {
-      this.requestMix = mock(Producer.class);
+      this.requestMix = mock(Supplier.class);
       this.request = mock(Request.class);
-      when(this.requestMix.produce()).thenReturn(Producers.of(this.request));
+      when(this.requestMix.get()).thenReturn(Producers.of(this.request));
    }
 
    @Test(expected = NullPointerException.class)
@@ -63,7 +63,7 @@ public class SimpleOperationManagerTest
    @Test(expected = OperationManagerException.class)
    public void testProduceOperationManagerException() throws OperationManagerException
    {
-      when(this.requestMix.produce()).thenThrow(new IllegalStateException());
+      when(this.requestMix.get()).thenThrow(new IllegalStateException());
       final SimpleOperationManager m = new SimpleOperationManager(this.requestMix);
       m.next();
    }
@@ -72,9 +72,9 @@ public class SimpleOperationManagerTest
    public void testProduceOperationManagerException2() throws OperationManagerException
    {
       @SuppressWarnings("unchecked")
-      final Producer<Request> p = mock(Producer.class);
-      when(p.produce()).thenThrow(new ObjectManagerException());
-      when(this.requestMix.produce()).thenReturn(p);
+      final Supplier<Request> p = mock(Supplier.class);
+      when(p.get()).thenThrow(new ObjectManagerException());
+      when(this.requestMix.get()).thenReturn(p);
       final SimpleOperationManager m = new SimpleOperationManager(this.requestMix);
       m.next();
    }

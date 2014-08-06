@@ -21,22 +21,24 @@ package com.cleversafe.og.producer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.common.base.Supplier;
+
 /**
- * A producer which always produces the same value
+ * A supplier which always supplies the same value
  * 
  * @param <T>
- *           the type of value to produce
+ *           the type of value to supply
  * @since 1.0
  */
-public class ConstantProducer<T> implements Producer<T>
+public class ConstantProducer<T> implements Supplier<T>
 {
    private final T value;
 
    /**
-    * Constructs a producer using the provided value
+    * Constructs a supplier using the provided value
     * 
     * @param value
-    *           the value this producer should always produce
+    *           the value this supplier should always supply
     */
    public ConstantProducer(final T value)
    {
@@ -44,7 +46,7 @@ public class ConstantProducer<T> implements Producer<T>
    }
 
    @Override
-   public T produce()
+   public T get()
    {
       return this.value;
    }

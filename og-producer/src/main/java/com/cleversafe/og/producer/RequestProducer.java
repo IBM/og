@@ -31,6 +31,7 @@ import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.util.Pair;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -39,13 +40,13 @@ import com.google.common.collect.Lists;
  * 
  * @since 1.0
  */
-public class RequestProducer implements Producer<Request>
+public class RequestProducer implements Supplier<Request>
 {
-   private final Producer<Method> method;
-   private final Producer<URI> uri;
-   private final List<Pair<Producer<String>, Producer<String>>> headers;
-   private final Producer<Entity> entity;
-   private final List<Pair<Producer<String>, Producer<String>>> metadata;
+   private final Supplier<Method> method;
+   private final Supplier<URI> uri;
+   private final List<Pair<Supplier<String>, Supplier<String>>> headers;
+   private final Supplier<Entity> entity;
+   private final List<Pair<Supplier<String>, Supplier<String>>> metadata;
 
    private RequestProducer(final Builder builder)
    {
@@ -57,22 +58,22 @@ public class RequestProducer implements Producer<Request>
    }
 
    @Override
-   public Request produce()
+   public Request get()
    {
       final HttpRequest.Builder context =
-            new HttpRequest.Builder(this.method.produce(), this.uri.produce());
+            new HttpRequest.Builder(this.method.get(), this.uri.get());
 
-      for (final Pair<Producer<String>, Producer<String>> header : this.headers)
+      for (final Pair<Supplier<String>, Supplier<String>> header : this.headers)
       {
-         context.withHeader(header.getKey().produce(), header.getValue().produce());
+         context.withHeader(header.getKey().get(), header.getValue().get());
       }
 
       if (this.entity != null)
-         context.withEntity(this.entity.produce());
+         context.withEntity(this.entity.get());
 
-      for (final Pair<Producer<String>, Producer<String>> m : this.metadata)
+      for (final Pair<Supplier<String>, Supplier<String>> m : this.metadata)
       {
-         context.withMetadata(m.getKey().produce(), m.getValue().produce());
+         context.withMetadata(m.getKey().get(), m.getValue().get());
       }
 
       return context.build();
@@ -83,11 +84,11 @@ public class RequestProducer implements Producer<Request>
     */
    public static class Builder
    {
-      private final Producer<Method> method;
-      private final Producer<URI> uri;
-      private final List<Pair<Producer<String>, Producer<String>>> headers;
-      private Producer<Entity> entity;
-      private final List<Pair<Producer<String>, Producer<String>>> metadata;
+      private final Supplier<Method> method;
+      private final Supplier<URI> uri;
+      private final List<Pair<Supplier<String>, Supplier<String>>> headers;
+      private Supplier<Entity> entity;
+      private final List<Pair<Supplier<String>, Supplier<String>>> metadata;
 
       /**
        * Constructs a builder instance using the provided method and uri
@@ -110,7 +111,7 @@ public class RequestProducer implements Producer<Request>
        * @param uri
        *           a request uri producer
        */
-      public Builder(final Producer<Method> method, final Producer<URI> uri)
+      public Builder(final Supplier<Method> method, final Supplier<URI> uri)
       {
          this.method = method;
          this.uri = uri;
@@ -142,9 +143,9 @@ public class RequestProducer implements Producer<Request>
        *           a header value
        * @return this builder
        */
-      public Builder withHeader(final Producer<String> key, final Producer<String> value)
+      public Builder withHeader(final Supplier<String> key, final Supplier<String> value)
       {
-         this.headers.add(new Pair<Producer<String>, Producer<String>>(key, value));
+         this.headers.add(new Pair<Supplier<String>, Supplier<String>>(key, value));
          return this;
       }
 
@@ -168,7 +169,7 @@ public class RequestProducer implements Producer<Request>
        *           an entity
        * @return this builder
        */
-      public Builder withEntity(final Producer<Entity> entity)
+      public Builder withEntity(final Supplier<Entity> entity)
       {
          this.entity = checkNotNull(entity);
          return this;
@@ -213,9 +214,9 @@ public class RequestProducer implements Producer<Request>
        *           a metadata value
        * @return this builder
        */
-      public Builder withMetadata(final Producer<String> key, final Producer<String> value)
+      public Builder withMetadata(final Supplier<String> key, final Supplier<String> value)
       {
-         this.metadata.add(new Pair<Producer<String>, Producer<String>>(key, value));
+         this.metadata.add(new Pair<Supplier<String>, Supplier<String>>(key, value));
          return this;
       }
 

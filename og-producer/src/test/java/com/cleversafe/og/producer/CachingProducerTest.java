@@ -24,28 +24,29 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
 
 public class CachingProducerTest
 {
    @Test(expected = NullPointerException.class)
-   public void testNullProducer()
+   public void testNullSupplier()
    {
-      new CachingProducer<String>((Producer<String>) null);
+      new CachingProducer<String>((Supplier<String>) null);
    }
 
    @Test
-   public void testCachingProducer()
+   public void testCachingSupplier()
    {
       final List<Integer> ints = Lists.newArrayList();
       ints.add(1);
       ints.add(2);
       ints.add(3);
-      final Producer<Integer> cycle = Producers.cycle(ints);
+      final Supplier<Integer> cycle = Producers.cycle(ints);
       final CachingProducer<Integer> p = new CachingProducer<Integer>(cycle);
       for (int i = 0; i < 10; i++)
       {
-         Assert.assertEquals(p.produce(), p.getCachedValue());
+         Assert.assertEquals(p.get(), p.getCachedValue());
       }
    }
 }

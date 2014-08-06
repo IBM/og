@@ -21,10 +21,12 @@ package com.cleversafe.og.producer;
 
 import java.util.UUID;
 
-public class UUIDObjectNameProducer implements Producer<String>
+import com.google.common.base.Supplier;
+
+public class UUIDObjectNameProducer implements Supplier<String>
 {
    @Override
-   public String produce()
+   public String get()
    {
       return UUID.randomUUID().toString().replace("-", "") + "0000";
    }

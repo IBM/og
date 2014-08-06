@@ -52,7 +52,6 @@ import com.cleversafe.og.json.OperationConfig;
 import com.cleversafe.og.json.TestConfig;
 import com.cleversafe.og.operation.Entity;
 import com.cleversafe.og.operation.EntityType;
-import com.cleversafe.og.producer.Producer;
 import com.cleversafe.og.producer.Producers;
 import com.cleversafe.og.s3.AWSAuthV2;
 import com.cleversafe.og.scheduling.ConcurrentRequestScheduler;
@@ -60,6 +59,7 @@ import com.cleversafe.og.scheduling.RequestRateScheduler;
 import com.cleversafe.og.scheduling.Scheduler;
 import com.cleversafe.og.util.SizeUnit;
 import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -86,9 +86,9 @@ public class TestModuleTest
    }
 
    @Test
-   public void testProvideIdProducer()
+   public void testProvideIdSupplier()
    {
-      Assert.assertNotNull(this.module.provideIdProducer());
+      Assert.assertNotNull(this.module.provideIdSupplier());
    }
 
    @Test(expected = NullPointerException.class)
@@ -101,8 +101,8 @@ public class TestModuleTest
    public void testProvideScheme()
    {
       when(this.config.getScheme()).thenReturn(Scheme.HTTP);
-      final Producer<Scheme> p = this.module.provideScheme();
-      Assert.assertEquals(Scheme.HTTP, p.produce());
+      final Supplier<Scheme> p = this.module.provideScheme();
+      Assert.assertEquals(Scheme.HTTP, p.get());
    }
 
    @Test(expected = NullPointerException.class)
@@ -159,10 +159,10 @@ public class TestModuleTest
       final List<HostConfig> hostConfig = Lists.newArrayList();
       hostConfig.add(new HostConfig("192.168.8.1"));
       when(this.config.getHost()).thenReturn(hostConfig);
-      final Producer<String> p = this.module.provideHost();
+      final Supplier<String> p = this.module.provideHost();
       for (int i = 0; i < 100; i++)
       {
-         Assert.assertEquals("192.168.8.1", p.produce());
+         Assert.assertEquals("192.168.8.1", p.get());
       }
    }
 
@@ -173,10 +173,10 @@ public class TestModuleTest
       final List<HostConfig> hostConfig = Lists.newArrayList();
       hostConfig.add(new HostConfig("192.168.8.1"));
       when(this.config.getHost()).thenReturn(hostConfig);
-      final Producer<String> p = this.module.provideHost();
+      final Supplier<String> p = this.module.provideHost();
       for (int i = 0; i < 100; i++)
       {
-         Assert.assertEquals("192.168.8.1", p.produce());
+         Assert.assertEquals("192.168.8.1", p.get());
       }
    }
 
@@ -188,11 +188,11 @@ public class TestModuleTest
       hostConfig.add(new HostConfig("192.168.8.1"));
       hostConfig.add(new HostConfig("192.168.8.2"));
       when(this.config.getHost()).thenReturn(hostConfig);
-      final Producer<String> p = this.module.provideHost();
+      final Supplier<String> p = this.module.provideHost();
       for (int i = 0; i < 100; i++)
       {
-         Assert.assertEquals("192.168.8.1", p.produce());
-         Assert.assertEquals("192.168.8.2", p.produce());
+         Assert.assertEquals("192.168.8.1", p.get());
+         Assert.assertEquals("192.168.8.2", p.get());
       }
    }
 
@@ -203,12 +203,12 @@ public class TestModuleTest
       final List<HostConfig> hostConfig = Lists.newArrayList();
       hostConfig.add(new HostConfig("192.168.8.1"));
       when(this.config.getHost()).thenReturn(hostConfig);
-      final Producer<String> p = this.module.provideHost();
+      final Supplier<String> p = this.module.provideHost();
       for (int i = 0; i < 100; i++)
       {
          // Should not exhibit roundrobin behavior over a large sample, expect assertion error
-         Assert.assertEquals("192.168.8.1", p.produce());
-         Assert.assertEquals("192.168.8.2", p.produce());
+         Assert.assertEquals("192.168.8.1", p.get());
+         Assert.assertEquals("192.168.8.2", p.get());
       }
    }
 
@@ -230,8 +230,8 @@ public class TestModuleTest
    public void testProvideWriteHostDefault()
    {
       when(this.config.getWrite()).thenReturn(new OperationConfig());
-      final Producer<String> p = this.module.provideWriteHost(Producers.of("192.168.8.1"));
-      Assert.assertEquals("192.168.8.1", p.produce());
+      final Supplier<String> p = this.module.provideWriteHost(Producers.of("192.168.8.1"));
+      Assert.assertEquals("192.168.8.1", p.get());
    }
 
    @Test
@@ -244,8 +244,8 @@ public class TestModuleTest
       when(operationConfig.getHost()).thenReturn(host);
       when(this.config.getWrite()).thenReturn(operationConfig);
 
-      final Producer<String> p = this.module.provideWriteHost(Producers.of("192.168.8.1"));
-      Assert.assertEquals("10.1.1.1", p.produce());
+      final Supplier<String> p = this.module.provideWriteHost(Producers.of("192.168.8.1"));
+      Assert.assertEquals("10.1.1.1", p.get());
    }
 
    @Test(expected = NullPointerException.class)
@@ -266,8 +266,8 @@ public class TestModuleTest
    public void testProvideReadHostDefault()
    {
       when(this.config.getRead()).thenReturn(new OperationConfig());
-      final Producer<String> p = this.module.provideReadHost(Producers.of("192.168.8.1"));
-      Assert.assertEquals("192.168.8.1", p.produce());
+      final Supplier<String> p = this.module.provideReadHost(Producers.of("192.168.8.1"));
+      Assert.assertEquals("192.168.8.1", p.get());
    }
 
    @Test
@@ -280,8 +280,8 @@ public class TestModuleTest
       when(operationConfig.getHost()).thenReturn(host);
       when(this.config.getRead()).thenReturn(operationConfig);
 
-      final Producer<String> p = this.module.provideReadHost(Producers.of("192.168.8.1"));
-      Assert.assertEquals("10.1.1.1", p.produce());
+      final Supplier<String> p = this.module.provideReadHost(Producers.of("192.168.8.1"));
+      Assert.assertEquals("10.1.1.1", p.get());
    }
 
    @Test(expected = NullPointerException.class)
@@ -302,8 +302,8 @@ public class TestModuleTest
    public void testProvideDeleteHostDefault()
    {
       when(this.config.getDelete()).thenReturn(new OperationConfig());
-      final Producer<String> p = this.module.provideDeleteHost(Producers.of("192.168.8.1"));
-      Assert.assertEquals("192.168.8.1", p.produce());
+      final Supplier<String> p = this.module.provideDeleteHost(Producers.of("192.168.8.1"));
+      Assert.assertEquals("192.168.8.1", p.get());
    }
 
    @Test
@@ -316,15 +316,15 @@ public class TestModuleTest
       when(operationConfig.getHost()).thenReturn(host);
       when(this.config.getDelete()).thenReturn(operationConfig);
 
-      final Producer<String> p = this.module.provideDeleteHost(Producers.of("192.168.8.1"));
-      Assert.assertEquals("10.1.1.1", p.produce());
+      final Supplier<String> p = this.module.provideDeleteHost(Producers.of("192.168.8.1"));
+      Assert.assertEquals("10.1.1.1", p.get());
    }
 
    @Test
    public void testProvidePortAbsentPort()
    {
       when(this.config.getPort()).thenReturn(null);
-      final Optional<Producer<Integer>> p = this.module.providePort();
+      final Optional<Supplier<Integer>> p = this.module.providePort();
       Assert.assertTrue(!p.isPresent());
    }
 
@@ -332,9 +332,9 @@ public class TestModuleTest
    public void testProvidePort()
    {
       when(this.config.getPort()).thenReturn(80);
-      final Optional<Producer<Integer>> p = this.module.providePort();
+      final Optional<Supplier<Integer>> p = this.module.providePort();
       Assert.assertTrue(p.isPresent());
-      Assert.assertEquals(Integer.valueOf(80), p.get().produce());
+      Assert.assertEquals(Integer.valueOf(80), p.get().get());
    }
 
    @Test(expected = NullPointerException.class)
@@ -357,8 +357,8 @@ public class TestModuleTest
    {
       when(this.config.getUriRoot()).thenReturn(null);
       when(this.config.getApi()).thenReturn(Api.S3);
-      final Optional<Producer<String>> p = this.module.provideUriRoot();
-      Assert.assertEquals("s3", p.get().produce());
+      final Optional<Supplier<String>> p = this.module.provideUriRoot();
+      Assert.assertEquals("s3", p.get().get());
    }
 
    @Test
@@ -374,8 +374,8 @@ public class TestModuleTest
    {
       when(this.config.getUriRoot()).thenReturn("foo");
       when(this.config.getApi()).thenReturn(Api.S3);
-      final Optional<Producer<String>> p = this.module.provideUriRoot();
-      Assert.assertEquals("foo", p.get().produce());
+      final Optional<Supplier<String>> p = this.module.provideUriRoot();
+      Assert.assertEquals("foo", p.get().get());
    }
 
    @Test
@@ -383,8 +383,8 @@ public class TestModuleTest
    {
       when(this.config.getUriRoot()).thenReturn("/foo");
       when(this.config.getApi()).thenReturn(Api.S3);
-      final Optional<Producer<String>> p = this.module.provideUriRoot();
-      Assert.assertEquals("foo", p.get().produce());
+      final Optional<Supplier<String>> p = this.module.provideUriRoot();
+      Assert.assertEquals("foo", p.get().get());
    }
 
    @Test
@@ -392,8 +392,8 @@ public class TestModuleTest
    {
       when(this.config.getUriRoot()).thenReturn("foo/");
       when(this.config.getApi()).thenReturn(Api.S3);
-      final Optional<Producer<String>> p = this.module.provideUriRoot();
-      Assert.assertEquals("foo", p.get().produce());
+      final Optional<Supplier<String>> p = this.module.provideUriRoot();
+      Assert.assertEquals("foo", p.get().get());
    }
 
    @Test
@@ -401,8 +401,8 @@ public class TestModuleTest
    {
       when(this.config.getUriRoot()).thenReturn("/foo/");
       when(this.config.getApi()).thenReturn(Api.S3);
-      final Optional<Producer<String>> p = this.module.provideUriRoot();
-      Assert.assertEquals("foo", p.get().produce());
+      final Optional<Supplier<String>> p = this.module.provideUriRoot();
+      Assert.assertEquals("foo", p.get().get());
    }
 
    @Test
@@ -410,8 +410,8 @@ public class TestModuleTest
    {
       when(this.config.getUriRoot()).thenReturn("//foo///");
       when(this.config.getApi()).thenReturn(Api.S3);
-      final Optional<Producer<String>> p = this.module.provideUriRoot();
-      Assert.assertEquals("foo", p.get().produce());
+      final Optional<Supplier<String>> p = this.module.provideUriRoot();
+      Assert.assertEquals("foo", p.get().get());
    }
 
    @Test(expected = NullPointerException.class)
@@ -432,8 +432,8 @@ public class TestModuleTest
    public void testProvideContainer()
    {
       when(this.config.getContainer()).thenReturn("container");
-      final Producer<String> p = this.module.provideContainer();
-      Assert.assertEquals("container", p.produce());
+      final Supplier<String> p = this.module.provideContainer();
+      Assert.assertEquals("container", p.get());
    }
 
    @Test
@@ -458,9 +458,9 @@ public class TestModuleTest
       final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
       when(authConfig.getUsername()).thenReturn("user");
       when(this.config.getAuthentication()).thenReturn(authConfig);
-      final Optional<Producer<String>> p = this.module.provideUsername();
+      final Optional<Supplier<String>> p = this.module.provideUsername();
       Assert.assertTrue(p.isPresent());
-      Assert.assertEquals("user", p.get().produce());
+      Assert.assertEquals("user", p.get().get());
    }
 
    @Test
@@ -485,9 +485,9 @@ public class TestModuleTest
       final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
       when(authConfig.getPassword()).thenReturn("password");
       when(this.config.getAuthentication()).thenReturn(authConfig);
-      final Optional<Producer<String>> p = this.module.providePassword();
+      final Optional<Supplier<String>> p = this.module.providePassword();
       Assert.assertTrue(p.isPresent());
-      Assert.assertEquals("password", p.get().produce());
+      Assert.assertEquals("password", p.get().get());
    }
 
    @Test(expected = NullPointerException.class)
@@ -506,7 +506,7 @@ public class TestModuleTest
       final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
       when(authConfig.getType()).thenReturn(AuthType.BASIC);
       when(this.config.getAuthentication()).thenReturn(authConfig);
-      this.module.provideAuthentication(Optional.fromNullable((Producer<String>) null),
+      this.module.provideAuthentication(Optional.fromNullable((Supplier<String>) null),
             Optional.of(Producers.of("password")));
    }
 
@@ -517,7 +517,7 @@ public class TestModuleTest
       when(authConfig.getType()).thenReturn(AuthType.BASIC);
       when(this.config.getAuthentication()).thenReturn(authConfig);
       this.module.provideAuthentication(Optional.of(Producers.of("username")),
-            Optional.fromNullable((Producer<String>) null));
+            Optional.fromNullable((Supplier<String>) null));
    }
 
    @Test
@@ -526,7 +526,7 @@ public class TestModuleTest
       final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
       when(authConfig.getType()).thenReturn(AuthType.BASIC);
       when(this.config.getAuthentication()).thenReturn(authConfig);
-      final Optional<Producer<String>> o = Optional.absent();
+      final Optional<Supplier<String>> o = Optional.absent();
       Assert.assertTrue(!this.module.provideAuthentication(o, o).isPresent());
    }
 
@@ -569,7 +569,7 @@ public class TestModuleTest
    public void testProvideHeadersEmptyHeaders()
    {
       when(this.config.getHeaders()).thenReturn(new LinkedHashMap<String, String>());
-      final Map<Producer<String>, Producer<String>> m = this.module.provideHeaders();
+      final Map<Supplier<String>, Supplier<String>> m = this.module.provideHeaders();
       Assert.assertNotNull(m);
       Assert.assertTrue(m.isEmpty());
    }
@@ -583,15 +583,15 @@ public class TestModuleTest
          inMap.put(String.valueOf(10 - i), String.valueOf(10 - i));
       }
       when(this.config.getHeaders()).thenReturn(inMap);
-      final Map<Producer<String>, Producer<String>> m = this.module.provideHeaders();
+      final Map<Supplier<String>, Supplier<String>> m = this.module.provideHeaders();
       Assert.assertNotNull(m);
-      final Iterator<Entry<Producer<String>, Producer<String>>> it = m.entrySet().iterator();
+      final Iterator<Entry<Supplier<String>, Supplier<String>>> it = m.entrySet().iterator();
       int i = 0;
       while (it.hasNext())
       {
-         final Entry<Producer<String>, Producer<String>> e = it.next();
-         final String key = e.getKey().produce();
-         final String value = e.getValue().produce();
+         final Entry<Supplier<String>, Supplier<String>> e = it.next();
+         final String key = e.getKey().get();
+         final String value = e.getValue().get();
          final String iKey = String.valueOf(10 - i);
          Assert.assertEquals(iKey, key);
          Assert.assertEquals(inMap.get(iKey), value);
@@ -603,7 +603,7 @@ public class TestModuleTest
    public void testProvideWriteHeadersNullOperationConfig()
    {
       when(this.config.getWrite()).thenReturn(null);
-      final Map<Producer<String>, Producer<String>> testHeaders = ImmutableMap.of();
+      final Map<Supplier<String>, Supplier<String>> testHeaders = ImmutableMap.of();
       this.module.provideWriteHeaders(testHeaders);
    }
 
@@ -618,16 +618,16 @@ public class TestModuleTest
    public void testProvideWriteHeadersDefault()
    {
       when(this.config.getWrite()).thenReturn(new OperationConfig());
-      final Map<Producer<String>, Producer<String>> testHeaders = Maps.newLinkedHashMap();
+      final Map<Supplier<String>, Supplier<String>> testHeaders = Maps.newLinkedHashMap();
       testHeaders.put(Producers.of("key"), Producers.of("value"));
 
-      final Map<Producer<String>, Producer<String>> p =
+      final Map<Supplier<String>, Supplier<String>> p =
             this.module.provideWriteHeaders(testHeaders);
       Assert.assertNotNull(p);
       Assert.assertEquals(1, p.size());
-      final Entry<Producer<String>, Producer<String>> e = p.entrySet().iterator().next();
-      Assert.assertEquals("key", e.getKey().produce());
-      Assert.assertEquals("value", e.getValue().produce());
+      final Entry<Supplier<String>, Supplier<String>> e = p.entrySet().iterator().next();
+      Assert.assertEquals("key", e.getKey().get());
+      Assert.assertEquals("value", e.getValue().get());
    }
 
    @Test
@@ -639,23 +639,23 @@ public class TestModuleTest
       when(operationConfig.getHeaders()).thenReturn(operationHeaders);
       when(this.config.getWrite()).thenReturn(operationConfig);
 
-      final Map<Producer<String>, Producer<String>> testHeaders = Maps.newLinkedHashMap();
+      final Map<Supplier<String>, Supplier<String>> testHeaders = Maps.newLinkedHashMap();
       testHeaders.put(Producers.of("key"), Producers.of("value"));
 
-      final Map<Producer<String>, Producer<String>> p =
+      final Map<Supplier<String>, Supplier<String>> p =
             this.module.provideWriteHeaders(testHeaders);
       Assert.assertNotNull(p);
       Assert.assertEquals(1, p.size());
-      final Entry<Producer<String>, Producer<String>> e = p.entrySet().iterator().next();
-      Assert.assertEquals("opKey", e.getKey().produce());
-      Assert.assertEquals("opValue", e.getValue().produce());
+      final Entry<Supplier<String>, Supplier<String>> e = p.entrySet().iterator().next();
+      Assert.assertEquals("opKey", e.getKey().get());
+      Assert.assertEquals("opValue", e.getValue().get());
    }
 
    @Test(expected = NullPointerException.class)
    public void testProvideReadHeadersNullOperationConfig()
    {
       when(this.config.getRead()).thenReturn(null);
-      final Map<Producer<String>, Producer<String>> testHeaders = ImmutableMap.of();
+      final Map<Supplier<String>, Supplier<String>> testHeaders = ImmutableMap.of();
       this.module.provideReadHeaders(testHeaders);
    }
 
@@ -670,15 +670,15 @@ public class TestModuleTest
    public void testProvideReadHeadersDefault()
    {
       when(this.config.getRead()).thenReturn(new OperationConfig());
-      final Map<Producer<String>, Producer<String>> testHeaders = Maps.newLinkedHashMap();
+      final Map<Supplier<String>, Supplier<String>> testHeaders = Maps.newLinkedHashMap();
       testHeaders.put(Producers.of("key"), Producers.of("value"));
 
-      final Map<Producer<String>, Producer<String>> p = this.module.provideReadHeaders(testHeaders);
+      final Map<Supplier<String>, Supplier<String>> p = this.module.provideReadHeaders(testHeaders);
       Assert.assertNotNull(p);
       Assert.assertEquals(1, p.size());
-      final Entry<Producer<String>, Producer<String>> e = p.entrySet().iterator().next();
-      Assert.assertEquals("key", e.getKey().produce());
-      Assert.assertEquals("value", e.getValue().produce());
+      final Entry<Supplier<String>, Supplier<String>> e = p.entrySet().iterator().next();
+      Assert.assertEquals("key", e.getKey().get());
+      Assert.assertEquals("value", e.getValue().get());
    }
 
    @Test
@@ -690,22 +690,22 @@ public class TestModuleTest
       when(operationConfig.getHeaders()).thenReturn(operationHeaders);
       when(this.config.getRead()).thenReturn(operationConfig);
 
-      final Map<Producer<String>, Producer<String>> testHeaders = Maps.newLinkedHashMap();
+      final Map<Supplier<String>, Supplier<String>> testHeaders = Maps.newLinkedHashMap();
       testHeaders.put(Producers.of("key"), Producers.of("value"));
 
-      final Map<Producer<String>, Producer<String>> p = this.module.provideReadHeaders(testHeaders);
+      final Map<Supplier<String>, Supplier<String>> p = this.module.provideReadHeaders(testHeaders);
       Assert.assertNotNull(p);
       Assert.assertEquals(1, p.size());
-      final Entry<Producer<String>, Producer<String>> e = p.entrySet().iterator().next();
-      Assert.assertEquals("opKey", e.getKey().produce());
-      Assert.assertEquals("opValue", e.getValue().produce());
+      final Entry<Supplier<String>, Supplier<String>> e = p.entrySet().iterator().next();
+      Assert.assertEquals("opKey", e.getKey().get());
+      Assert.assertEquals("opValue", e.getValue().get());
    }
 
    @Test(expected = NullPointerException.class)
    public void testProvideDeleteHeadersNullOperationConfig()
    {
       when(this.config.getDelete()).thenReturn(null);
-      final Map<Producer<String>, Producer<String>> testHeaders = ImmutableMap.of();
+      final Map<Supplier<String>, Supplier<String>> testHeaders = ImmutableMap.of();
       this.module.provideDeleteHeaders(testHeaders);
    }
 
@@ -720,16 +720,16 @@ public class TestModuleTest
    public void testProvideDeleteHeadersDefault()
    {
       when(this.config.getDelete()).thenReturn(new OperationConfig());
-      final Map<Producer<String>, Producer<String>> testHeaders = Maps.newLinkedHashMap();
+      final Map<Supplier<String>, Supplier<String>> testHeaders = Maps.newLinkedHashMap();
       testHeaders.put(Producers.of("key"), Producers.of("value"));
 
-      final Map<Producer<String>, Producer<String>> p =
+      final Map<Supplier<String>, Supplier<String>> p =
             this.module.provideDeleteHeaders(testHeaders);
       Assert.assertNotNull(p);
       Assert.assertEquals(1, p.size());
-      final Entry<Producer<String>, Producer<String>> e = p.entrySet().iterator().next();
-      Assert.assertEquals("key", e.getKey().produce());
-      Assert.assertEquals("value", e.getValue().produce());
+      final Entry<Supplier<String>, Supplier<String>> e = p.entrySet().iterator().next();
+      Assert.assertEquals("key", e.getKey().get());
+      Assert.assertEquals("value", e.getValue().get());
    }
 
    @Test
@@ -741,16 +741,16 @@ public class TestModuleTest
       when(operationConfig.getHeaders()).thenReturn(operationHeaders);
       when(this.config.getDelete()).thenReturn(operationConfig);
 
-      final Map<Producer<String>, Producer<String>> testHeaders = Maps.newLinkedHashMap();
+      final Map<Supplier<String>, Supplier<String>> testHeaders = Maps.newLinkedHashMap();
       testHeaders.put(Producers.of("key"), Producers.of("value"));
 
-      final Map<Producer<String>, Producer<String>> p =
+      final Map<Supplier<String>, Supplier<String>> p =
             this.module.provideDeleteHeaders(testHeaders);
       Assert.assertNotNull(p);
       Assert.assertEquals(1, p.size());
-      final Entry<Producer<String>, Producer<String>> e = p.entrySet().iterator().next();
-      Assert.assertEquals("opKey", e.getKey().produce());
-      Assert.assertEquals("opValue", e.getValue().produce());
+      final Entry<Supplier<String>, Supplier<String>> e = p.entrySet().iterator().next();
+      Assert.assertEquals("opKey", e.getKey().get());
+      Assert.assertEquals("opValue", e.getValue().get());
    }
 
    @Test(expected = NullPointerException.class)
@@ -821,10 +821,10 @@ public class TestModuleTest
       filesize.add(new FilesizeConfig(10.0));
       when(this.config.getSource()).thenReturn(EntityType.ZEROES);
       when(this.config.getFilesize()).thenReturn(filesize);
-      final Producer<Entity> p = this.module.provideEntity();
+      final Supplier<Entity> p = this.module.provideEntity();
 
       Assert.assertNotNull(p);
-      final Entity e = p.produce();
+      final Entity e = p.get();
       Assert.assertEquals(EntityType.ZEROES, e.getType());
       Assert.assertEquals(SizeUnit.MEBIBYTES.toBytes(10), e.getSize());
    }
@@ -837,10 +837,10 @@ public class TestModuleTest
       filesize.add(new FilesizeConfig(10.0));
       when(this.config.getSource()).thenReturn(EntityType.RANDOM);
       when(this.config.getFilesize()).thenReturn(filesize);
-      final Producer<Entity> p = this.module.provideEntity();
+      final Supplier<Entity> p = this.module.provideEntity();
 
       Assert.assertNotNull(p);
-      final Entity e = p.produce();
+      final Entity e = p.get();
       Assert.assertEquals(EntityType.RANDOM, e.getType());
       Assert.assertEquals(SizeUnit.MEBIBYTES.toBytes(10), e.getSize());
    }
@@ -854,13 +854,13 @@ public class TestModuleTest
       filesize.add(new FilesizeConfig(25.0));
       when(this.config.getSource()).thenReturn(EntityType.RANDOM);
       when(this.config.getFilesize()).thenReturn(filesize);
-      final Producer<Entity> p = this.module.provideEntity();
+      final Supplier<Entity> p = this.module.provideEntity();
 
       Assert.assertNotNull(p);
       for (int i = 0; i < 100; i++)
       {
-         Assert.assertEquals(SizeUnit.MEBIBYTES.toBytes(10), p.produce().getSize());
-         Assert.assertEquals(SizeUnit.MEBIBYTES.toBytes(25), p.produce().getSize());
+         Assert.assertEquals(SizeUnit.MEBIBYTES.toBytes(10), p.get().getSize());
+         Assert.assertEquals(SizeUnit.MEBIBYTES.toBytes(25), p.get().getSize());
       }
    }
 
@@ -873,14 +873,14 @@ public class TestModuleTest
       filesize.add(new FilesizeConfig(25.0));
       when(this.config.getSource()).thenReturn(EntityType.RANDOM);
       when(this.config.getFilesize()).thenReturn(filesize);
-      final Producer<Entity> p = this.module.provideEntity();
+      final Supplier<Entity> p = this.module.provideEntity();
 
       Assert.assertNotNull(p);
       for (int i = 0; i < 100; i++)
       {
          // Should not exhibit roundrobin behavior over a large sample, expect assertion error
-         Assert.assertEquals(SizeUnit.MEBIBYTES.toBytes(10), p.produce().getSize());
-         Assert.assertEquals(SizeUnit.MEBIBYTES.toBytes(25), p.produce().getSize());
+         Assert.assertEquals(SizeUnit.MEBIBYTES.toBytes(10), p.get().getSize());
+         Assert.assertEquals(SizeUnit.MEBIBYTES.toBytes(25), p.get().getSize());
       }
    }
 

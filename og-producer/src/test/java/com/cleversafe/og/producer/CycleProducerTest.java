@@ -25,6 +25,7 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
 
 public class CycleProducerTest
@@ -54,10 +55,10 @@ public class CycleProducerTest
    {
       final List<Integer> list = Lists.newArrayList();
       list.add(1);
-      final Producer<Integer> p = new CycleProducer<Integer>(list);
+      final Supplier<Integer> p = new CycleProducer<Integer>(list);
       for (int i = 0; i < 10; i++)
       {
-         Assert.assertEquals(Integer.valueOf(1), p.produce());
+         Assert.assertEquals(Integer.valueOf(1), p.get());
       }
    }
 
@@ -68,12 +69,12 @@ public class CycleProducerTest
       list.add(1);
       list.add(2);
       list.add(3);
-      final Producer<Integer> p = new CycleProducer<Integer>(list);
+      final Supplier<Integer> p = new CycleProducer<Integer>(list);
       for (int i = 0; i < 10; i++)
       {
-         Assert.assertEquals(Integer.valueOf(1), p.produce());
-         Assert.assertEquals(Integer.valueOf(2), p.produce());
-         Assert.assertEquals(Integer.valueOf(3), p.produce());
+         Assert.assertEquals(Integer.valueOf(1), p.get());
+         Assert.assertEquals(Integer.valueOf(2), p.get());
+         Assert.assertEquals(Integer.valueOf(3), p.get());
       }
    }
 
@@ -83,12 +84,12 @@ public class CycleProducerTest
       final List<Integer> list = Lists.newArrayList();
       list.add(1);
       list.add(2);
-      final Producer<Integer> p = new CycleProducer<Integer>(list);
+      final Supplier<Integer> p = new CycleProducer<Integer>(list);
       list.add(3);
       for (int i = 0; i < 10; i++)
       {
-         Assert.assertEquals(Integer.valueOf(1), p.produce());
-         Assert.assertEquals(Integer.valueOf(2), p.produce());
+         Assert.assertEquals(Integer.valueOf(1), p.get());
+         Assert.assertEquals(Integer.valueOf(2), p.get());
       }
    }
 }

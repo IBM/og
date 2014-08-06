@@ -50,7 +50,6 @@ import com.cleversafe.og.operation.OperationManager;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.producer.CachingProducer;
 import com.cleversafe.og.producer.DeleteObjectNameProducer;
-import com.cleversafe.og.producer.Producer;
 import com.cleversafe.og.producer.RandomChoiceProducer;
 import com.cleversafe.og.producer.ReadObjectNameProducer;
 import com.cleversafe.og.producer.UUIDObjectNameProducer;
@@ -64,6 +63,7 @@ import com.cleversafe.og.test.condition.TestCondition;
 import com.cleversafe.og.test.operation.manager.SimpleOperationManager;
 import com.cleversafe.og.util.Operation;
 import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.google.common.math.DoubleMath;
@@ -137,10 +137,10 @@ public class OGModule extends AbstractModule
 
    @Provides
    @Singleton
-   public Producer<Producer<Request>> provideRequestProducer(
-         @Write final Producer<Request> write,
-         @Read final Producer<Request> read,
-         @Delete final Producer<Request> delete,
+   public Supplier<Supplier<Request>> provideRequestSupplier(
+         @Write final Supplier<Request> write,
+         @Read final Supplier<Request> read,
+         @Delete final Supplier<Request> delete,
          @WriteWeight final double writeWeight,
          @ReadWeight final double readWeight,
          @DeleteWeight final double deleteWeight)
@@ -152,8 +152,8 @@ public class OGModule extends AbstractModule
       checkArgument(DoubleMath.fuzzyEquals(sum, 100.0, ERR),
             "Sum of percentages must be 100.0 [%s]", sum);
 
-      final RandomChoiceProducer.Builder<Producer<Request>> wrc =
-            new RandomChoiceProducer.Builder<Producer<Request>>();
+      final RandomChoiceProducer.Builder<Supplier<Request>> wrc =
+            new RandomChoiceProducer.Builder<Supplier<Request>>();
       if (writeWeight > 0.0)
          wrc.withChoice(write, writeWeight);
       if (readWeight > 0.0)

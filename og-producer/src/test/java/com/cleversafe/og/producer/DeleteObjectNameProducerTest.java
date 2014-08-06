@@ -29,6 +29,7 @@ import org.junit.Test;
 import com.cleversafe.og.object.ObjectManager;
 import com.cleversafe.og.object.ObjectManagerException;
 import com.cleversafe.og.object.ObjectName;
+import com.google.common.base.Supplier;
 
 public class DeleteObjectNameProducerTest
 {
@@ -47,22 +48,22 @@ public class DeleteObjectNameProducerTest
    }
 
    @Test
-   public void testDeleteObjectNameProducer()
+   public void testDeleteObjectNameSupplier()
    {
       final String objectString = "objectName";
       final ObjectName mockObjectName = mock(ObjectName.class);
       when(mockObjectName.toString()).thenReturn(objectString);
       when(this.mockObjectManager.getNameForDelete()).thenReturn(mockObjectName);
 
-      final Producer<String> p = new DeleteObjectNameProducer(this.mockObjectManager);
-      Assert.assertEquals(objectString, p.produce());
+      final Supplier<String> p = new DeleteObjectNameProducer(this.mockObjectManager);
+      Assert.assertEquals(objectString, p.get());
    }
 
    @Test(expected = ObjectManagerException.class)
-   public void testProducerException()
+   public void testSupplierException()
    {
       when(this.mockObjectManager.getNameForDelete()).thenThrow(new ObjectManagerException());
-      final Producer<String> p = new DeleteObjectNameProducer(this.mockObjectManager);
-      p.produce();
+      final Supplier<String> p = new DeleteObjectNameProducer(this.mockObjectManager);
+      p.get();
    }
 }

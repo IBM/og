@@ -28,14 +28,14 @@ import javax.inject.Inject;
 import com.cleversafe.og.operation.OperationManager;
 import com.cleversafe.og.operation.OperationManagerException;
 import com.cleversafe.og.operation.Request;
-import com.cleversafe.og.producer.Producer;
+import com.google.common.base.Supplier;
 
 public class SimpleOperationManager implements OperationManager
 {
-   private final Producer<Producer<Request>> requestMix;
+   private final Supplier<Supplier<Request>> requestMix;
 
    @Inject
-   public SimpleOperationManager(final Producer<Producer<Request>> requestMix)
+   public SimpleOperationManager(final Supplier<Supplier<Request>> requestMix)
    {
       this.requestMix = checkNotNull(requestMix);
    }
@@ -45,8 +45,8 @@ public class SimpleOperationManager implements OperationManager
    {
       try
       {
-         final Producer<Request> producer = this.requestMix.produce();
-         return producer.produce();
+         final Supplier<Request> producer = this.requestMix.get();
+         return producer.get();
       }
       catch (final Exception e)
       {

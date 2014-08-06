@@ -22,8 +22,9 @@ package com.cleversafe.og.producer;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.cleversafe.og.object.ObjectManager;
+import com.google.common.base.Supplier;
 
-public class ReadObjectNameProducer implements Producer<String>
+public class ReadObjectNameProducer implements Supplier<String>
 {
    private final ObjectManager objectManager;
 
@@ -33,7 +34,7 @@ public class ReadObjectNameProducer implements Producer<String>
    }
 
    @Override
-   public String produce()
+   public String get()
    {
       return this.objectManager.acquireNameForRead().toString();
    }

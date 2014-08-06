@@ -64,7 +64,6 @@ import com.cleversafe.og.json.StoppingConditionsConfig;
 import com.cleversafe.og.json.TestConfig;
 import com.cleversafe.og.operation.Entity;
 import com.cleversafe.og.operation.EntityType;
-import com.cleversafe.og.producer.Producer;
 import com.cleversafe.og.producer.Producers;
 import com.cleversafe.og.producer.RandomChoiceProducer;
 import com.cleversafe.og.s3.AWSAuthV2;
@@ -80,6 +79,7 @@ import com.cleversafe.og.util.distribution.PoissonDistribution;
 import com.cleversafe.og.util.distribution.UniformDistribution;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Range;
@@ -107,14 +107,14 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @Id
-   public Producer<String> provideIdProducer()
+   public Supplier<String> provideIdSupplier()
    {
-      return new Producer<String>()
+      return new Supplier<String>()
       {
          private final AtomicLong id = new AtomicLong();
 
          @Override
-         public String produce()
+         public String get()
          {
             return String.valueOf(this.id.getAndIncrement());
          }
@@ -123,7 +123,7 @@ public class TestModule extends AbstractModule
 
    @Provides
    @Singleton
-   public Producer<Scheme> provideScheme()
+   public Supplier<Scheme> provideScheme()
    {
       return Producers.of(this.config.getScheme());
    }
@@ -131,7 +131,7 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @Host
-   public Producer<String> provideHost()
+   public Supplier<String> provideHost()
    {
       return createHost(this.config.getHostSelection(), this.config.getHost());
    }
@@ -139,7 +139,7 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @WriteHost
-   public Producer<String> provideWriteHost(@Host final Producer<String> host)
+   public Supplier<String> provideWriteHost(@Host final Supplier<String> host)
    {
       return provideHost(this.config.getWrite(), host);
    }
@@ -147,7 +147,7 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @ReadHost
-   public Producer<String> provideReadHost(@Host final Producer<String> host)
+   public Supplier<String> provideReadHost(@Host final Supplier<String> host)
    {
       return provideHost(this.config.getRead(), host);
    }
@@ -155,14 +155,14 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @DeleteHost
-   public Producer<String> provideDeleteHost(@Host final Producer<String> host)
+   public Supplier<String> provideDeleteHost(@Host final Supplier<String> host)
    {
       return provideHost(this.config.getDelete(), host);
    }
 
-   private Producer<String> provideHost(
+   private Supplier<String> provideHost(
          final OperationConfig operationConfig,
-         final Producer<String> testHost)
+         final Supplier<String> testHost)
    {
       checkNotNull(operationConfig);
       checkNotNull(testHost);
@@ -174,7 +174,7 @@ public class TestModule extends AbstractModule
       return testHost;
    }
 
-   private Producer<String> createHost(
+   private Supplier<String> createHost(
          final CollectionAlgorithmType hostSelection,
          final List<HostConfig> host)
    {
@@ -209,7 +209,7 @@ public class TestModule extends AbstractModule
 
    @Provides
    @Singleton
-   public Optional<Producer<Integer>> providePort()
+   public Optional<Supplier<Integer>> providePort()
    {
       if (this.config.getPort() != null)
          return Optional.of(Producers.of(this.config.getPort()));
@@ -225,7 +225,7 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @UriRoot
-   public Optional<Producer<String>> provideUriRoot()
+   public Optional<Supplier<String>> provideUriRoot()
    {
       final String uriRoot = this.config.getUriRoot();
       if (uriRoot != null)
@@ -242,7 +242,7 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @Container
-   public Producer<String> provideContainer()
+   public Supplier<String> provideContainer()
    {
       final String container = checkNotNull(this.config.getContainer());
       checkArgument(container.length() > 0, "container must not be empty string");
@@ -252,7 +252,7 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @Username
-   public Optional<Producer<String>> provideUsername()
+   public Optional<Supplier<String>> provideUsername()
    {
       final String username = this.config.getAuthentication().getUsername();
       if (username != null)
@@ -266,7 +266,7 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @Password
-   public Optional<Producer<String>> providePassword()
+   public Optional<Supplier<String>> providePassword()
    {
       final String password = this.config.getAuthentication().getPassword();
       if (password != null)
@@ -280,8 +280,8 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    public Optional<HttpAuth> provideAuthentication(
-         @Username final Optional<Producer<String>> username,
-         @Password final Optional<Producer<String>> password)
+         @Username final Optional<Supplier<String>> username,
+         @Password final Optional<Supplier<String>> password)
    {
       final AuthType type = checkNotNull(this.config.getAuthentication().getType());
 
@@ -308,7 +308,7 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @Headers
-   public Map<Producer<String>, Producer<String>> provideHeaders()
+   public Map<Supplier<String>, Supplier<String>> provideHeaders()
    {
       return createHeaders(this.config.getHeaders());
    }
@@ -316,8 +316,8 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @WriteHeaders
-   public Map<Producer<String>, Producer<String>> provideWriteHeaders(
-         @Headers final Map<Producer<String>, Producer<String>> headers)
+   public Map<Supplier<String>, Supplier<String>> provideWriteHeaders(
+         @Headers final Map<Supplier<String>, Supplier<String>> headers)
    {
       return provideHeaders(this.config.getWrite(), headers);
    }
@@ -325,8 +325,8 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @ReadHeaders
-   public Map<Producer<String>, Producer<String>> provideReadHeaders(
-         @Headers final Map<Producer<String>, Producer<String>> headers)
+   public Map<Supplier<String>, Supplier<String>> provideReadHeaders(
+         @Headers final Map<Supplier<String>, Supplier<String>> headers)
    {
       return provideHeaders(this.config.getRead(), headers);
    }
@@ -334,15 +334,15 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @DeleteHeaders
-   public Map<Producer<String>, Producer<String>> provideDeleteHeaders(
-         @Headers final Map<Producer<String>, Producer<String>> headers)
+   public Map<Supplier<String>, Supplier<String>> provideDeleteHeaders(
+         @Headers final Map<Supplier<String>, Supplier<String>> headers)
    {
       return provideHeaders(this.config.getDelete(), headers);
    }
 
-   private Map<Producer<String>, Producer<String>> provideHeaders(
+   private Map<Supplier<String>, Supplier<String>> provideHeaders(
          final OperationConfig operationConfig,
-         final Map<Producer<String>, Producer<String>> testHeaders)
+         final Map<Supplier<String>, Supplier<String>> testHeaders)
    {
       checkNotNull(operationConfig);
       checkNotNull(testHeaders);
@@ -354,9 +354,9 @@ public class TestModule extends AbstractModule
       return testHeaders;
    }
 
-   private Map<Producer<String>, Producer<String>> createHeaders(final Map<String, String> headers)
+   private Map<Supplier<String>, Supplier<String>> createHeaders(final Map<String, String> headers)
    {
-      final Map<Producer<String>, Producer<String>> h = Maps.newLinkedHashMap();
+      final Map<Supplier<String>, Supplier<String>> h = Maps.newLinkedHashMap();
       for (final Entry<String, String> header : checkNotNull(headers.entrySet()))
       {
          h.put(Producers.of(header.getKey()), Producers.of(header.getValue()));
@@ -366,7 +366,7 @@ public class TestModule extends AbstractModule
 
    @Provides
    @Singleton
-   public Producer<Entity> provideEntity()
+   public Supplier<Entity> provideEntity()
    {
       final CollectionAlgorithmType filesizeSelection =
             checkNotNull(this.config.getFilesizeSelection());
@@ -380,7 +380,7 @@ public class TestModule extends AbstractModule
          {
             distributions.add(createSizeDistribution(f));
          }
-         return createEntityProducer(Producers.cycle(distributions));
+         return createEntitySupplier(Producers.cycle(distributions));
       }
 
       final RandomChoiceProducer.Builder<Distribution> wrc =
@@ -389,7 +389,7 @@ public class TestModule extends AbstractModule
       {
          wrc.withChoice(createSizeDistribution(f), f.getWeight());
       }
-      return createEntityProducer(wrc.build());
+      return createEntitySupplier(wrc.build());
    }
 
    private static Distribution createSizeDistribution(final FilesizeConfig filesize)
@@ -415,17 +415,17 @@ public class TestModule extends AbstractModule
       }
    }
 
-   private Producer<Entity> createEntityProducer(final Producer<Distribution> distributionProducer)
+   private Supplier<Entity> createEntitySupplier(final Supplier<Distribution> distributionSupplier)
    {
       final EntityType source = checkNotNull(this.config.getSource());
       checkArgument(EntityType.NONE != source, "Unacceptable source [%s]", source);
 
-      return new Producer<Entity>()
+      return new Supplier<Entity>()
       {
          @Override
-         public Entity produce()
+         public Entity get()
          {
-            final long sample = (long) distributionProducer.produce().nextSample();
+            final long sample = (long) distributionSupplier.get().nextSample();
 
             switch (source)
             {
@@ -462,7 +462,7 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @ObjectFileName
-   public String provideObjectFileName(@Container final Producer<String> container, final Api api)
+   public String provideObjectFileName(@Container final Supplier<String> container, final Api api)
    {
       checkNotNull(container);
       checkNotNull(api);
@@ -472,7 +472,7 @@ public class TestModule extends AbstractModule
       if (objectFileName != null && !objectFileName.isEmpty())
          return objectFileName;
       // FIXME this naming scheme will break unless @TestContainer is a constant producer
-      return container.produce() + "-" + api.toString().toLowerCase();
+      return container.get() + "-" + api.toString().toLowerCase();
    }
 
    @Provides

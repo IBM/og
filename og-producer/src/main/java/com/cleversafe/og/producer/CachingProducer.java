@@ -21,40 +21,42 @@ package com.cleversafe.og.producer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.common.base.Supplier;
+
 /**
- * A producer which remembers the last value it produced
+ * A supplier which remembers the last value it supplied
  * 
  * @param <T>
- *           the type of value to produce
+ *           the type of value to supply
  * @since 1.0
  */
-public class CachingProducer<T> implements Producer<T>
+public class CachingProducer<T> implements Supplier<T>
 {
-   private final Producer<T> producer;
+   private final Supplier<T> supplier;
    private T cachedValue;
 
    /**
-    * Constructs a producer using the provided base producer
+    * Constructs a supplier using the provided base supplier
     * 
-    * @param producer
-    *           the base producer to cache values for
+    * @param supplier
+    *           the base supplier to cache values for
     */
-   public CachingProducer(final Producer<T> producer)
+   public CachingProducer(final Supplier<T> supplier)
    {
-      this.producer = checkNotNull(producer);
+      this.supplier = checkNotNull(supplier);
    }
 
    @Override
-   public T produce()
+   public T get()
    {
-      this.cachedValue = this.producer.produce();
+      this.cachedValue = this.supplier.get();
       return this.cachedValue;
    }
 
    /**
-    * Returns the most recently produced value
+    * Returns the most recently supplied value
     * 
-    * @return the most recently produced value, or null if {@code produce} has never been called
+    * @return the most recently supplied value, or null if {@code get} has never been called
     */
    public T getCachedValue()
    {
@@ -64,6 +66,6 @@ public class CachingProducer<T> implements Producer<T>
    @Override
    public String toString()
    {
-      return "CachingProducer [" + this.producer + "]";
+      return "CachingProducer [" + this.supplier + "]";
    }
 }

@@ -22,8 +22,7 @@ package com.cleversafe.og.producer;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.cleversafe.og.producer.ConstantProducer;
-import com.cleversafe.og.producer.Producer;
+import com.google.common.base.Supplier;
 
 public class ConstantProducerTest
 {
@@ -34,12 +33,12 @@ public class ConstantProducerTest
    }
 
    @Test
-   public void testConstantProducer()
+   public void testConstantSupplier()
    {
-      final Producer<Integer> p = new ConstantProducer<Integer>(1);
+      final Supplier<Integer> p = new ConstantProducer<Integer>(1);
       for (int i = 0; i < 10; i++)
       {
-         Assert.assertEquals(Integer.valueOf(1), p.produce());
+         Assert.assertEquals(Integer.valueOf(1), p.get());
       }
    }
 }

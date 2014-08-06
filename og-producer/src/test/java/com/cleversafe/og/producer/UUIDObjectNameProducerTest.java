@@ -22,18 +22,17 @@ package com.cleversafe.og.producer;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.cleversafe.og.producer.Producer;
-import com.cleversafe.og.producer.UUIDObjectNameProducer;
+import com.google.common.base.Supplier;
 
 public class UUIDObjectNameProducerTest
 {
    @Test
    public void testUUIDObjectNameProducer()
    {
-      final Producer<String> p = new UUIDObjectNameProducer();
-      final String u1 = p.produce();
-      final String u2 = p.produce();
-      final String u3 = p.produce();
+      final Supplier<String> p = new UUIDObjectNameProducer();
+      final String u1 = p.get();
+      final String u2 = p.get();
+      final String u3 = p.get();
       Assert.assertNotEquals(u1, u2);
       Assert.assertNotEquals(u1, u3);
       Assert.assertNotEquals(u2, u3);

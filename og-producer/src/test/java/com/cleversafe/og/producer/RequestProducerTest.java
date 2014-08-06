@@ -33,10 +33,8 @@ import com.cleversafe.og.operation.EntityType;
 import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
-import com.cleversafe.og.producer.Producer;
-import com.cleversafe.og.producer.Producers;
-import com.cleversafe.og.producer.RequestProducer;
 import com.cleversafe.og.util.Entities;
+import com.google.common.base.Supplier;
 
 public class RequestProducerTest
 {
@@ -57,9 +55,9 @@ public class RequestProducerTest
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullMethodProducer()
+   public void testNullMethodSupplier()
    {
-      new RequestProducer.Builder((Producer<Method>) null, Producers.of(this.uri)).build();
+      new RequestProducer.Builder((Supplier<Method>) null, Producers.of(this.uri)).build();
    }
 
    @Test(expected = NullPointerException.class)
@@ -69,9 +67,9 @@ public class RequestProducerTest
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullUriProducer()
+   public void testNullUriSupplier()
    {
-      new RequestProducer.Builder(Producers.of(this.method), (Producer<URI>) null).build();
+      new RequestProducer.Builder(Producers.of(this.method), (Supplier<URI>) null).build();
    }
 
    @Test(expected = NullPointerException.class)
@@ -87,17 +85,17 @@ public class RequestProducerTest
    }
 
    @Test(expected = NullPointerException.class)
-   public void testHeaderNullKeyProducer()
+   public void testHeaderNullKeySupplier()
    {
-      new RequestProducer.Builder(this.method, this.uri).withHeader((Producer<String>) null,
+      new RequestProducer.Builder(this.method, this.uri).withHeader((Supplier<String>) null,
             Producers.of("value")).build();
    }
 
    @Test(expected = NullPointerException.class)
-   public void testHeaderNullValueProducer()
+   public void testHeaderNullValueSupplier()
    {
       new RequestProducer.Builder(this.method, this.uri).withHeader(Producers.of("key"),
-            (Producer<String>) null).build();
+            (Supplier<String>) null).build();
    }
 
    @Test(expected = NullPointerException.class)
@@ -107,9 +105,9 @@ public class RequestProducerTest
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullEntityProducer()
+   public void testNullEntitySupplier()
    {
-      new RequestProducer.Builder(this.method, this.uri).withEntity((Producer<Entity>) null);
+      new RequestProducer.Builder(this.method, this.uri).withEntity((Supplier<Entity>) null);
    }
 
    @Test(expected = NullPointerException.class)
@@ -128,7 +126,7 @@ public class RequestProducerTest
    public void testMetadataNullKey3()
    {
       new RequestProducer.Builder(this.method, this.uri)
-            .withMetadata((Producer<String>) null, Producers.of("value")).build();
+            .withMetadata((Supplier<String>) null, Producers.of("value")).build();
    }
 
    @Test(expected = NullPointerException.class)
@@ -147,21 +145,21 @@ public class RequestProducerTest
    public void testMetadataNullValue3()
    {
       new RequestProducer.Builder(this.method, this.uri)
-            .withMetadata(Producers.of("aborted"), (Producer<String>) null).build();
+            .withMetadata(Producers.of("aborted"), (Supplier<String>) null).build();
    }
 
    @Test
    public void testMethod()
    {
-      final Request r = new RequestProducer.Builder(Method.HEAD, this.uri).build().produce();
+      final Request r = new RequestProducer.Builder(Method.HEAD, this.uri).build().get();
       Assert.assertEquals(Method.HEAD, r.getMethod());
    }
 
    @Test
-   public void testMethodProducer()
+   public void testMethodSupplier()
    {
       final Request r =
-            new RequestProducer.Builder(Producers.of(Method.DELETE), Producers.of(this.uri)).build().produce();
+            new RequestProducer.Builder(Producers.of(Method.DELETE), Producers.of(this.uri)).build().get();
       Assert.assertEquals(Method.DELETE, r.getMethod());
    }
 
@@ -169,16 +167,16 @@ public class RequestProducerTest
    public void testUri() throws URISyntaxException
    {
       final URI aUri = new URI("http://10.1.1.1/container/object");
-      final Request r = new RequestProducer.Builder(this.method, aUri).build().produce();
+      final Request r = new RequestProducer.Builder(this.method, aUri).build().get();
       Assert.assertEquals(aUri, r.getUri());
    }
 
    @Test
-   public void testUriProducer() throws URISyntaxException
+   public void testUriSupplier() throws URISyntaxException
    {
       final URI aUri = new URI("http://10.1.1.1/container/object");
       final Request r =
-            new RequestProducer.Builder(Producers.of(this.method), Producers.of(aUri)).build().produce();
+            new RequestProducer.Builder(Producers.of(this.method), Producers.of(aUri)).build().get();
       Assert.assertEquals(aUri, r.getUri());
    }
 
@@ -189,7 +187,7 @@ public class RequestProducerTest
             .withHeader("key2", "value2")
             .withHeader(Producers.of("key1"), Producers.of("value1"))
             .build();
-      final Request r = p.produce();
+      final Request r = p.get();
       final Iterator<Entry<String, String>> it = r.headers();
       // Skip Date header which is automatically added
       it.next();
@@ -208,7 +206,7 @@ public class RequestProducerTest
    @Test
    public void testNoEntity()
    {
-      final Request r = new RequestProducer.Builder(this.method, this.uri).build().produce();
+      final Request r = new RequestProducer.Builder(this.method, this.uri).build().get();
       Assert.assertEquals(EntityType.NONE, r.getEntity().getType());
       Assert.assertEquals(0, r.getEntity().getSize());
    }
@@ -219,18 +217,18 @@ public class RequestProducerTest
       final Request r = new RequestProducer.Builder(this.method, this.uri)
             .withEntity(Entities.zeroes(12345))
             .build()
-            .produce();
+            .get();
       Assert.assertEquals(EntityType.ZEROES, r.getEntity().getType());
       Assert.assertEquals(12345, r.getEntity().getSize());
    }
 
    @Test
-   public void testEntityProducer()
+   public void testEntitySupplier()
    {
       final Request r = new RequestProducer.Builder(this.method, this.uri)
             .withEntity(Producers.of(Entities.zeroes(12345)))
             .build()
-            .produce();
+            .get();
       Assert.assertEquals(EntityType.ZEROES, r.getEntity().getType());
       Assert.assertEquals(12345, r.getEntity().getSize());
    }
@@ -243,7 +241,7 @@ public class RequestProducerTest
             .withMetadata(Metadata.ABORTED, "value2")
             .withMetadata(Producers.of("key1"), Producers.of("value1"))
             .build()
-            .produce();
+            .get();
       final Iterator<Entry<String, String>> it = r.metadata();
 
       Assert.assertTrue(it.hasNext());
@@ -267,7 +265,7 @@ public class RequestProducerTest
             new RequestProducer.Builder(this.method, this.uri).withHeader("key1", "value1");
       final RequestProducer rp = b.build();
       b.withHeader("key2", "value2");
-      final Request r = rp.produce();
+      final Request r = rp.get();
       Assert.assertEquals("value1", r.getHeader("key1"));
       Assert.assertNull(r.getHeader("key2"));
    }
@@ -279,7 +277,7 @@ public class RequestProducerTest
             new RequestProducer.Builder(this.method, this.uri).withMetadata("key1", "value1");
       final RequestProducer rp = b.build();
       b.withMetadata("key2", "value2");
-      final Request r = rp.produce();
+      final Request r = rp.get();
       Assert.assertEquals("value1", r.getMetadata("key1"));
       Assert.assertNull(r.getMetadata("key2"));
    }

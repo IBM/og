@@ -30,6 +30,7 @@ import java.util.Map;
 
 import com.cleversafe.og.http.Scheme;
 import com.google.common.base.Joiner;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -39,12 +40,12 @@ import com.google.common.collect.Maps;
  * 
  * @since 1.0
  */
-public class UriProducer implements Producer<URI>
+public class UriProducer implements Supplier<URI>
 {
-   private final Producer<Scheme> scheme;
-   private final Producer<String> host;
-   private final Producer<Integer> port;
-   private final List<Producer<String>> path;
+   private final Supplier<Scheme> scheme;
+   private final Supplier<String> host;
+   private final Supplier<Integer> port;
+   private final List<Supplier<String>> path;
    private final Map<String, String> queryParameters;
    private final boolean trailingSlash;
    private static final Joiner.MapJoiner PARAM_JOINER = Joiner.on('&').withKeyValueSeparator("=");
@@ -60,12 +61,12 @@ public class UriProducer implements Producer<URI>
    }
 
    @Override
-   public URI produce()
+   public URI get()
    {
       final StringBuilder s = new StringBuilder()
-            .append(this.scheme.produce())
+            .append(this.scheme.get())
             .append("://")
-            .append(this.host.produce());
+            .append(this.host.get());
       appendPort(s);
       appendPath(s);
       appendTrailingSlash(s);
@@ -86,14 +87,14 @@ public class UriProducer implements Producer<URI>
    private void appendPort(final StringBuilder s)
    {
       if (this.port != null)
-         s.append(":").append(this.port.produce());
+         s.append(":").append(this.port.get());
    }
 
    private void appendPath(final StringBuilder s)
    {
-      for (final Producer<String> part : this.path)
+      for (final Supplier<String> part : this.path)
       {
-         s.append("/").append(part.produce());
+         s.append("/").append(part.get());
       }
    }
 
@@ -115,10 +116,10 @@ public class UriProducer implements Producer<URI>
     */
    public static class Builder
    {
-      private Producer<Scheme> scheme;
-      private final Producer<String> host;
-      private Producer<Integer> port;
-      private final List<Producer<String>> path;
+      private Supplier<Scheme> scheme;
+      private final Supplier<String> host;
+      private Supplier<Integer> port;
+      private final List<Supplier<String>> path;
       private final Map<String, String> queryParameters;
       private boolean trailingSlash;
 
@@ -130,7 +131,7 @@ public class UriProducer implements Producer<URI>
        * @param path
        *           the uri resource path
        */
-      public Builder(final String host, final List<Producer<String>> path)
+      public Builder(final String host, final List<Supplier<String>> path)
       {
          this(Producers.of(host), path);
       }
@@ -143,7 +144,7 @@ public class UriProducer implements Producer<URI>
        * @param path
        *           the uri resource path
        */
-      public Builder(final Producer<String> host, final List<Producer<String>> path)
+      public Builder(final Supplier<String> host, final List<Supplier<String>> path)
       {
          this.scheme = Producers.of(Scheme.HTTP);
          this.host = host;
@@ -170,7 +171,7 @@ public class UriProducer implements Producer<URI>
        *           the uri scheme
        * @return this builder
        */
-      public Builder withScheme(final Producer<Scheme> scheme)
+      public Builder withScheme(final Supplier<Scheme> scheme)
       {
          this.scheme = scheme;
          return this;
@@ -196,7 +197,7 @@ public class UriProducer implements Producer<URI>
        *           the uri port
        * @return this builder
        */
-      public Builder onPort(final Producer<Integer> port)
+      public Builder onPort(final Supplier<Integer> port)
       {
          this.port = port;
          return this;

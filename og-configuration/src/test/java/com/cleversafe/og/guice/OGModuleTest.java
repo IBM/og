@@ -32,9 +32,9 @@ import com.cleversafe.og.http.Api;
 import com.cleversafe.og.object.ObjectManager;
 import com.cleversafe.og.operation.Request;
 import com.cleversafe.og.producer.CachingProducer;
-import com.cleversafe.og.producer.Producer;
 import com.cleversafe.og.statistic.Statistics;
 import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
 import com.google.common.eventbus.EventBus;
 
 public class OGModuleTest
@@ -42,7 +42,7 @@ public class OGModuleTest
    private OGModule module;
    private ObjectManager objectManager;
    private EventBus eventBus;
-   private Producer<Request> request;
+   private Supplier<Request> request;
 
    @Before
    @SuppressWarnings("unchecked")
@@ -51,7 +51,7 @@ public class OGModuleTest
       this.module = new OGModule();
       this.objectManager = mock(ObjectManager.class);
       this.eventBus = new EventBus();
-      this.request = mock(Producer.class);
+      this.request = mock(Supplier.class);
    }
 
    @Test(expected = NullPointerException.class)
@@ -68,34 +68,34 @@ public class OGModuleTest
    }
 
    @Test(expected = NullPointerException.class)
-   public void testProvideRequestProducerNullWrite()
+   public void testProvideRequestSupplierNullWrite()
    {
-      this.module.provideRequestProducer(null, this.request, this.request, 100, 0, 0);
+      this.module.provideRequestSupplier(null, this.request, this.request, 100, 0, 0);
    }
 
    @Test(expected = NullPointerException.class)
-   public void testProvideRequestProducerNullRead()
+   public void testProvideRequestSupplierNullRead()
    {
-      this.module.provideRequestProducer(this.request, null, this.request, 100, 0, 0);
+      this.module.provideRequestSupplier(this.request, null, this.request, 100, 0, 0);
    }
 
    @Test(expected = NullPointerException.class)
-   public void testProvideRequestProducerNullDelete()
+   public void testProvideRequestSupplierNullDelete()
    {
-      this.module.provideRequestProducer(this.request, this.request, null, 100, 0, 0);
+      this.module.provideRequestSupplier(this.request, this.request, null, 100, 0, 0);
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testProvideRequestProducerWeightsNotEqual100()
+   public void testProvideRequestSupplierWeightsNotEqual100()
    {
-      this.module.provideRequestProducer(this.request, this.request, this.request, 101, 0, 0);
+      this.module.provideRequestSupplier(this.request, this.request, this.request, 101, 0, 0);
    }
 
    @Test
-   public void testProvideRequestProducer()
+   public void testProvideRequestSupplier()
    {
-      final Producer<Producer<Request>> p =
-            this.module.provideRequestProducer(this.request, this.request, this.request, 100, 0, 0);
+      final Supplier<Supplier<Request>> p =
+            this.module.provideRequestSupplier(this.request, this.request, this.request, 100, 0, 0);
       Assert.assertNotNull(p);
    }
 
