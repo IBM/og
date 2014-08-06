@@ -22,6 +22,7 @@ package com.cleversafe.og.guice;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Map;
+import java.util.Map.Entry;
 
 import com.cleversafe.og.api.Client;
 import com.cleversafe.og.client.ApacheClient;
@@ -53,7 +54,7 @@ public class ClientModule extends AbstractModule
          final Optional<HttpAuth> authentication,
          final Map<String, ResponseBodyConsumer> responseBodyConsumers)
    {
-      final ApacheClient.Builder b = new ApacheClient.Builder(responseBodyConsumers)
+      final ApacheClient.Builder b = new ApacheClient.Builder()
             .withConnectTimeout(this.config.getConnectTimeout())
             .withSoTimeout(this.config.getSoTimeout())
             .usingSoReuseAddress(this.config.isSoReuseAddress())
@@ -69,6 +70,11 @@ public class ClientModule extends AbstractModule
 
       if (authentication.isPresent())
          b.withAuthentication(authentication.get());
+
+      for (final Entry<String, ResponseBodyConsumer> consumer : responseBodyConsumers.entrySet())
+      {
+         b.withResponseBodyConsumer(consumer.getKey(), consumer.getValue());
+      }
 
       return b.build();
    }

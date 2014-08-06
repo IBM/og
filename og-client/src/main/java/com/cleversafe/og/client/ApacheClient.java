@@ -61,6 +61,8 @@ import com.cleversafe.og.http.HttpResponse;
 import com.cleversafe.og.util.Entities;
 import com.cleversafe.og.util.ResponseBodyConsumer;
 import com.cleversafe.og.util.io.Streams;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ForwardingListenableFuture;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -82,8 +84,6 @@ public class ApacheClient implements Client
 {
    private static final Logger _logger = LoggerFactory.getLogger(ApacheClient.class);
    private static final Logger _requestLogger = LoggerFactory.getLogger("RequestLogger");
-   private final CloseableHttpClient client;
-   private final Map<String, ResponseBodyConsumer> responseBodyConsumers;
    private final int connectTimeout;
    private final int soTimeout;
    private final boolean soReuseAddress;
@@ -97,12 +97,13 @@ public class ApacheClient implements Client
    private final String userAgent;
    private final long writeThroughput;
    private final long readThroughput;
+   private final Map<String, ResponseBodyConsumer> responseBodyConsumers;
+   private final CloseableHttpClient client;
    private final ListeningExecutorService executorService;
    private final Gson gson;
 
    private ApacheClient(final Builder builder)
    {
-      this.responseBodyConsumers = checkNotNull(builder.responseBodyConsumers);
       this.connectTimeout = builder.connectTimeout;
       this.soTimeout = builder.soTimeout;
       this.soReuseAddress = builder.soReuseAddress;
@@ -116,6 +117,7 @@ public class ApacheClient implements Client
       this.userAgent = builder.userAgent;
       this.writeThroughput = builder.writeThroughput;
       this.readThroughput = builder.readThroughput;
+      this.responseBodyConsumers = ImmutableMap.copyOf(builder.responseBodyConsumers);
       // perform checks on instance fields rather than builder fields
       checkArgument(this.connectTimeout >= 0, "connectTimeout must be >= 0 [%s]",
             this.connectTimeout);
@@ -408,7 +410,7 @@ public class ApacheClient implements Client
 
             // TODO clean this up, should always try to set response entity to response size;
             // will InstrumentedInputStream help with this?
-            final String consumerId = this.request.getMetadata(Metadata.RESPONSE_BODY_PROCESSOR);
+            final String consumerId = this.request.getMetadata(Metadata.RESPONSE_BODY_CONSUMER);
             final ResponseBodyConsumer consumer =
                   ApacheClient.this.responseBodyConsumers.get(consumerId);
             if (consumer != null)
@@ -481,7 +483,6 @@ public class ApacheClient implements Client
     */
    public static class Builder
    {
-      private final Map<String, ResponseBodyConsumer> responseBodyConsumers;
       private int connectTimeout;
       private int soTimeout;
       private boolean soReuseAddress;
@@ -495,15 +496,12 @@ public class ApacheClient implements Client
       private String userAgent;
       private long writeThroughput;
       private long readThroughput;
+      private final Map<String, ResponseBodyConsumer> responseBodyConsumers;
 
       /**
        * Constructs a new builder
-       * 
-       * @param responseBodyConsumers
-       *           a map of response body processor ids to implementations
-       * @see Metadata
        */
-      public Builder(final Map<String, ResponseBodyConsumer> responseBodyConsumers)
+      public Builder()
       {
          this.connectTimeout = 0;
          this.soTimeout = 0;
@@ -516,7 +514,7 @@ public class ApacheClient implements Client
          this.waitForContinue = 3000;
          this.writeThroughput = 0;
          this.readThroughput = 0;
-         this.responseBodyConsumers = responseBodyConsumers;
+         this.responseBodyConsumers = Maps.newHashMap();
       }
 
       /**
@@ -689,6 +687,25 @@ public class ApacheClient implements Client
       public Builder withReadThroughput(final long bytesPerSecond)
       {
          this.readThroughput = bytesPerSecond;
+         return this;
+      }
+
+      /**
+       * Configures a response body consumer to be used to process response bodies for requests
+       * configured with a matching consumerId
+       * 
+       * @param consumerId
+       *           the consumerId for which the provided consumer should be used
+       * @param consumer
+       *           a response body consumer
+       * @return this builder
+       * @see Metadata#RESPONSE_BODY_CONSUMER
+       */
+      public Builder withResponseBodyConsumer(
+            final String consumerId,
+            final ResponseBodyConsumer consumer)
+      {
+         this.responseBodyConsumers.put(consumerId, consumer);
          return this;
       }
 

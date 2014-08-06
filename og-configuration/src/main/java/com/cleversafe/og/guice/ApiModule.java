@@ -115,7 +115,7 @@ public class ApiModule extends AbstractModule
       final Map<Supplier<String>, Supplier<String>> metadata = createMetadata(id);
       // SOH needs to use a special response procesor to extract the returned object id
       if (Api.SOH == api)
-         metadata.put(Suppliers.of(Metadata.RESPONSE_BODY_PROCESSOR.toString()),
+         metadata.put(Suppliers.of(Metadata.RESPONSE_BODY_CONSUMER.toString()),
                Suppliers.of(SOH_PUT_OBJECT));
       return metadata;
    }
