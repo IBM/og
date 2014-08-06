@@ -52,11 +52,11 @@ import com.cleversafe.og.json.OperationConfig;
 import com.cleversafe.og.json.TestConfig;
 import com.cleversafe.og.operation.Entity;
 import com.cleversafe.og.operation.EntityType;
-import com.cleversafe.og.producer.Producers;
 import com.cleversafe.og.s3.AWSAuthV2;
 import com.cleversafe.og.scheduling.ConcurrentRequestScheduler;
 import com.cleversafe.og.scheduling.RequestRateScheduler;
 import com.cleversafe.og.scheduling.Scheduler;
+import com.cleversafe.og.supplier.Suppliers;
 import com.cleversafe.og.util.SizeUnit;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
@@ -216,7 +216,7 @@ public class TestModuleTest
    public void testProvideWriteHostNullOperationConfig()
    {
       when(this.config.getWrite()).thenReturn(null);
-      this.module.provideWriteHost(Producers.of("192.168.8.1"));
+      this.module.provideWriteHost(Suppliers.of("192.168.8.1"));
    }
 
    @Test(expected = NullPointerException.class)
@@ -230,7 +230,7 @@ public class TestModuleTest
    public void testProvideWriteHostDefault()
    {
       when(this.config.getWrite()).thenReturn(new OperationConfig());
-      final Supplier<String> p = this.module.provideWriteHost(Producers.of("192.168.8.1"));
+      final Supplier<String> p = this.module.provideWriteHost(Suppliers.of("192.168.8.1"));
       Assert.assertEquals("192.168.8.1", p.get());
    }
 
@@ -244,7 +244,7 @@ public class TestModuleTest
       when(operationConfig.getHost()).thenReturn(host);
       when(this.config.getWrite()).thenReturn(operationConfig);
 
-      final Supplier<String> p = this.module.provideWriteHost(Producers.of("192.168.8.1"));
+      final Supplier<String> p = this.module.provideWriteHost(Suppliers.of("192.168.8.1"));
       Assert.assertEquals("10.1.1.1", p.get());
    }
 
@@ -252,7 +252,7 @@ public class TestModuleTest
    public void testProvideReadHostNullOperationConfig()
    {
       when(this.config.getRead()).thenReturn(null);
-      this.module.provideReadHost(Producers.of("192.168.8.1"));
+      this.module.provideReadHost(Suppliers.of("192.168.8.1"));
    }
 
    @Test(expected = NullPointerException.class)
@@ -266,7 +266,7 @@ public class TestModuleTest
    public void testProvideReadHostDefault()
    {
       when(this.config.getRead()).thenReturn(new OperationConfig());
-      final Supplier<String> p = this.module.provideReadHost(Producers.of("192.168.8.1"));
+      final Supplier<String> p = this.module.provideReadHost(Suppliers.of("192.168.8.1"));
       Assert.assertEquals("192.168.8.1", p.get());
    }
 
@@ -280,7 +280,7 @@ public class TestModuleTest
       when(operationConfig.getHost()).thenReturn(host);
       when(this.config.getRead()).thenReturn(operationConfig);
 
-      final Supplier<String> p = this.module.provideReadHost(Producers.of("192.168.8.1"));
+      final Supplier<String> p = this.module.provideReadHost(Suppliers.of("192.168.8.1"));
       Assert.assertEquals("10.1.1.1", p.get());
    }
 
@@ -288,7 +288,7 @@ public class TestModuleTest
    public void testProvideDeleteHostNullOperationConfig()
    {
       when(this.config.getDelete()).thenReturn(null);
-      this.module.provideDeleteHost(Producers.of("192.168.8.1"));
+      this.module.provideDeleteHost(Suppliers.of("192.168.8.1"));
    }
 
    @Test(expected = NullPointerException.class)
@@ -302,7 +302,7 @@ public class TestModuleTest
    public void testProvideDeleteHostDefault()
    {
       when(this.config.getDelete()).thenReturn(new OperationConfig());
-      final Supplier<String> p = this.module.provideDeleteHost(Producers.of("192.168.8.1"));
+      final Supplier<String> p = this.module.provideDeleteHost(Suppliers.of("192.168.8.1"));
       Assert.assertEquals("192.168.8.1", p.get());
    }
 
@@ -316,7 +316,7 @@ public class TestModuleTest
       when(operationConfig.getHost()).thenReturn(host);
       when(this.config.getDelete()).thenReturn(operationConfig);
 
-      final Supplier<String> p = this.module.provideDeleteHost(Producers.of("192.168.8.1"));
+      final Supplier<String> p = this.module.provideDeleteHost(Suppliers.of("192.168.8.1"));
       Assert.assertEquals("10.1.1.1", p.get());
    }
 
@@ -496,8 +496,8 @@ public class TestModuleTest
       final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
       when(authConfig.getType()).thenReturn(null);
       when(this.config.getAuthentication()).thenReturn(authConfig);
-      this.module.provideAuthentication(Optional.of(Producers.of("username")),
-            Optional.of(Producers.of("password")));
+      this.module.provideAuthentication(Optional.of(Suppliers.of("username")),
+            Optional.of(Suppliers.of("password")));
    }
 
    @Test(expected = IllegalArgumentException.class)
@@ -507,7 +507,7 @@ public class TestModuleTest
       when(authConfig.getType()).thenReturn(AuthType.BASIC);
       when(this.config.getAuthentication()).thenReturn(authConfig);
       this.module.provideAuthentication(Optional.fromNullable((Supplier<String>) null),
-            Optional.of(Producers.of("password")));
+            Optional.of(Suppliers.of("password")));
    }
 
    @Test(expected = IllegalArgumentException.class)
@@ -516,7 +516,7 @@ public class TestModuleTest
       final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
       when(authConfig.getType()).thenReturn(AuthType.BASIC);
       when(this.config.getAuthentication()).thenReturn(authConfig);
-      this.module.provideAuthentication(Optional.of(Producers.of("username")),
+      this.module.provideAuthentication(Optional.of(Suppliers.of("username")),
             Optional.fromNullable((Supplier<String>) null));
    }
 
@@ -537,8 +537,8 @@ public class TestModuleTest
       when(authConfig.getType()).thenReturn(AuthType.BASIC);
       when(this.config.getAuthentication()).thenReturn(authConfig);
       final Optional<HttpAuth> auth =
-            this.module.provideAuthentication(Optional.of(Producers.of("username")),
-                  Optional.of(Producers.of("password")));
+            this.module.provideAuthentication(Optional.of(Suppliers.of("username")),
+                  Optional.of(Suppliers.of("password")));
 
       Assert.assertTrue(auth.isPresent());
       Assert.assertTrue(auth.get() instanceof BasicAuth);
@@ -551,8 +551,8 @@ public class TestModuleTest
       when(authConfig.getType()).thenReturn(AuthType.AWSV2);
       when(this.config.getAuthentication()).thenReturn(authConfig);
       final Optional<HttpAuth> auth =
-            this.module.provideAuthentication(Optional.of(Producers.of("username")),
-                  Optional.of(Producers.of("password")));
+            this.module.provideAuthentication(Optional.of(Suppliers.of("username")),
+                  Optional.of(Suppliers.of("password")));
 
       Assert.assertTrue(auth.isPresent());
       Assert.assertTrue(auth.get() instanceof AWSAuthV2);
@@ -619,7 +619,7 @@ public class TestModuleTest
    {
       when(this.config.getWrite()).thenReturn(new OperationConfig());
       final Map<Supplier<String>, Supplier<String>> testHeaders = Maps.newLinkedHashMap();
-      testHeaders.put(Producers.of("key"), Producers.of("value"));
+      testHeaders.put(Suppliers.of("key"), Suppliers.of("value"));
 
       final Map<Supplier<String>, Supplier<String>> p =
             this.module.provideWriteHeaders(testHeaders);
@@ -640,7 +640,7 @@ public class TestModuleTest
       when(this.config.getWrite()).thenReturn(operationConfig);
 
       final Map<Supplier<String>, Supplier<String>> testHeaders = Maps.newLinkedHashMap();
-      testHeaders.put(Producers.of("key"), Producers.of("value"));
+      testHeaders.put(Suppliers.of("key"), Suppliers.of("value"));
 
       final Map<Supplier<String>, Supplier<String>> p =
             this.module.provideWriteHeaders(testHeaders);
@@ -671,7 +671,7 @@ public class TestModuleTest
    {
       when(this.config.getRead()).thenReturn(new OperationConfig());
       final Map<Supplier<String>, Supplier<String>> testHeaders = Maps.newLinkedHashMap();
-      testHeaders.put(Producers.of("key"), Producers.of("value"));
+      testHeaders.put(Suppliers.of("key"), Suppliers.of("value"));
 
       final Map<Supplier<String>, Supplier<String>> p = this.module.provideReadHeaders(testHeaders);
       Assert.assertNotNull(p);
@@ -691,7 +691,7 @@ public class TestModuleTest
       when(this.config.getRead()).thenReturn(operationConfig);
 
       final Map<Supplier<String>, Supplier<String>> testHeaders = Maps.newLinkedHashMap();
-      testHeaders.put(Producers.of("key"), Producers.of("value"));
+      testHeaders.put(Suppliers.of("key"), Suppliers.of("value"));
 
       final Map<Supplier<String>, Supplier<String>> p = this.module.provideReadHeaders(testHeaders);
       Assert.assertNotNull(p);
@@ -721,7 +721,7 @@ public class TestModuleTest
    {
       when(this.config.getDelete()).thenReturn(new OperationConfig());
       final Map<Supplier<String>, Supplier<String>> testHeaders = Maps.newLinkedHashMap();
-      testHeaders.put(Producers.of("key"), Producers.of("value"));
+      testHeaders.put(Suppliers.of("key"), Suppliers.of("value"));
 
       final Map<Supplier<String>, Supplier<String>> p =
             this.module.provideDeleteHeaders(testHeaders);
@@ -742,7 +742,7 @@ public class TestModuleTest
       when(this.config.getDelete()).thenReturn(operationConfig);
 
       final Map<Supplier<String>, Supplier<String>> testHeaders = Maps.newLinkedHashMap();
-      testHeaders.put(Producers.of("key"), Producers.of("value"));
+      testHeaders.put(Suppliers.of("key"), Suppliers.of("value"));
 
       final Map<Supplier<String>, Supplier<String>> p =
             this.module.provideDeleteHeaders(testHeaders);
@@ -936,7 +936,7 @@ public class TestModuleTest
    @Test(expected = NullPointerException.class)
    public void testProvideObjectFileNameNullApi()
    {
-      this.module.provideObjectFileName(Producers.of("container"), null);
+      this.module.provideObjectFileName(Suppliers.of("container"), null);
    }
 
    @Test
@@ -945,7 +945,7 @@ public class TestModuleTest
       final ObjectManagerConfig objectManagerConfig = mock(ObjectManagerConfig.class);
       when(objectManagerConfig.getObjectFileName()).thenReturn(null);
       when(this.config.getObjectManager()).thenReturn(objectManagerConfig);
-      final String name = this.module.provideObjectFileName(Producers.of("container"), Api.S3);
+      final String name = this.module.provideObjectFileName(Suppliers.of("container"), Api.S3);
 
       Assert.assertEquals("container-s3", name);
    }
@@ -956,7 +956,7 @@ public class TestModuleTest
       final ObjectManagerConfig objectManagerConfig = mock(ObjectManagerConfig.class);
       when(objectManagerConfig.getObjectFileName()).thenReturn("");
       when(this.config.getObjectManager()).thenReturn(objectManagerConfig);
-      final String name = this.module.provideObjectFileName(Producers.of("container"), Api.S3);
+      final String name = this.module.provideObjectFileName(Suppliers.of("container"), Api.S3);
 
       Assert.assertEquals("container-s3", name);
    }
@@ -967,7 +967,7 @@ public class TestModuleTest
       final ObjectManagerConfig objectManagerConfig = mock(ObjectManagerConfig.class);
       when(objectManagerConfig.getObjectFileName()).thenReturn("myObjectFileName");
       when(this.config.getObjectManager()).thenReturn(objectManagerConfig);
-      final String name = this.module.provideObjectFileName(Producers.of("container"), Api.S3);
+      final String name = this.module.provideObjectFileName(Suppliers.of("container"), Api.S3);
 
       Assert.assertEquals("myObjectFileName", name);
    }

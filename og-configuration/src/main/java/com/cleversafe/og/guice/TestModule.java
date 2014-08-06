@@ -64,12 +64,12 @@ import com.cleversafe.og.json.StoppingConditionsConfig;
 import com.cleversafe.og.json.TestConfig;
 import com.cleversafe.og.operation.Entity;
 import com.cleversafe.og.operation.EntityType;
-import com.cleversafe.og.producer.Producers;
-import com.cleversafe.og.producer.RandomChoiceProducer;
 import com.cleversafe.og.s3.AWSAuthV2;
 import com.cleversafe.og.scheduling.ConcurrentRequestScheduler;
 import com.cleversafe.og.scheduling.RequestRateScheduler;
 import com.cleversafe.og.scheduling.Scheduler;
+import com.cleversafe.og.supplier.RandomChoiceSupplier;
+import com.cleversafe.og.supplier.Suppliers;
 import com.cleversafe.og.util.Entities;
 import com.cleversafe.og.util.SizeUnit;
 import com.cleversafe.og.util.distribution.Distribution;
@@ -125,7 +125,7 @@ public class TestModule extends AbstractModule
    @Singleton
    public Supplier<Scheme> provideScheme()
    {
-      return Producers.of(this.config.getScheme());
+      return Suppliers.of(this.config.getScheme());
    }
 
    @Provides
@@ -195,11 +195,11 @@ public class TestModule extends AbstractModule
          {
             hostList.add(h.getHost());
          }
-         return Producers.cycle(hostList);
+         return Suppliers.cycle(hostList);
       }
 
-      final RandomChoiceProducer.Builder<String> wrc =
-            new RandomChoiceProducer.Builder<String>();
+      final RandomChoiceSupplier.Builder<String> wrc =
+            new RandomChoiceSupplier.Builder<String>();
       for (final HostConfig h : host)
       {
          wrc.withChoice(h.getHost(), h.getWeight());
@@ -212,7 +212,7 @@ public class TestModule extends AbstractModule
    public Optional<Supplier<Integer>> providePort()
    {
       if (this.config.getPort() != null)
-         return Optional.of(Producers.of(this.config.getPort()));
+         return Optional.of(Suppliers.of(this.config.getPort()));
       return Optional.absent();
    }
 
@@ -232,11 +232,11 @@ public class TestModule extends AbstractModule
       {
          final String root = CharMatcher.is('/').trimFrom(uriRoot);
          if (root.length() > 0)
-            return Optional.of(Producers.of(root));
+            return Optional.of(Suppliers.of(root));
          return Optional.absent();
       }
 
-      return Optional.of(Producers.of(this.config.getApi().toString().toLowerCase()));
+      return Optional.of(Suppliers.of(this.config.getApi().toString().toLowerCase()));
    }
 
    @Provides
@@ -246,7 +246,7 @@ public class TestModule extends AbstractModule
    {
       final String container = checkNotNull(this.config.getContainer());
       checkArgument(container.length() > 0, "container must not be empty string");
-      return Producers.of(this.config.getContainer());
+      return Suppliers.of(this.config.getContainer());
    }
 
    @Provides
@@ -258,7 +258,7 @@ public class TestModule extends AbstractModule
       if (username != null)
       {
          checkArgument(username.length() > 0, "username must not be empty string");
-         return Optional.of(Producers.of(username));
+         return Optional.of(Suppliers.of(username));
       }
       return Optional.absent();
    }
@@ -272,7 +272,7 @@ public class TestModule extends AbstractModule
       if (password != null)
       {
          checkArgument(password.length() > 0, "password must not be empty string");
-         return Optional.of(Producers.of(password));
+         return Optional.of(Suppliers.of(password));
       }
       return Optional.absent();
    }
@@ -359,7 +359,7 @@ public class TestModule extends AbstractModule
       final Map<Supplier<String>, Supplier<String>> h = Maps.newLinkedHashMap();
       for (final Entry<String, String> header : checkNotNull(headers.entrySet()))
       {
-         h.put(Producers.of(header.getKey()), Producers.of(header.getValue()));
+         h.put(Suppliers.of(header.getKey()), Suppliers.of(header.getValue()));
       }
       return h;
    }
@@ -380,11 +380,11 @@ public class TestModule extends AbstractModule
          {
             distributions.add(createSizeDistribution(f));
          }
-         return createEntitySupplier(Producers.cycle(distributions));
+         return createEntitySupplier(Suppliers.cycle(distributions));
       }
 
-      final RandomChoiceProducer.Builder<Distribution> wrc =
-            new RandomChoiceProducer.Builder<Distribution>();
+      final RandomChoiceSupplier.Builder<Distribution> wrc =
+            new RandomChoiceSupplier.Builder<Distribution>();
       for (final FilesizeConfig f : filesizes)
       {
          wrc.withChoice(createSizeDistribution(f), f.getWeight());
@@ -471,7 +471,7 @@ public class TestModule extends AbstractModule
 
       if (objectFileName != null && !objectFileName.isEmpty())
          return objectFileName;
-      // FIXME this naming scheme will break unless @TestContainer is a constant producer
+      // FIXME this naming scheme will break unless @TestContainer is a constant supplier
       return container.get() + "-" + api.toString().toLowerCase();
    }
 

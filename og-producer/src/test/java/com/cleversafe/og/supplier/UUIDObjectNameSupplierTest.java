@@ -17,19 +17,19 @@
 // Date: Jun 29, 2014
 // ---------------------
 
-package com.cleversafe.og.producer;
+package com.cleversafe.og.supplier;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.google.common.base.Supplier;
 
-public class UUIDObjectNameProducerTest
+public class UUIDObjectNameSupplierTest
 {
    @Test
-   public void testUUIDObjectNameProducer()
+   public void testUUIDObjectNameSupplier()
    {
-      final Supplier<String> p = new UUIDObjectNameProducer();
+      final Supplier<String> p = new UUIDObjectNameSupplier();
       final String u1 = p.get();
       final String u2 = p.get();
       final String u3 = p.get();

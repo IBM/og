@@ -17,13 +17,13 @@
 // Date: Apr 6, 2014
 // ---------------------
 
-package com.cleversafe.og.producer;
+package com.cleversafe.og.supplier;
 
 import java.util.UUID;
 
 import com.google.common.base.Supplier;
 
-public class UUIDObjectNameProducer implements Supplier<String>
+public class UUIDObjectNameSupplier implements Supplier<String>
 {
    @Override
    public String get()
@@ -34,6 +34,6 @@ public class UUIDObjectNameProducer implements Supplier<String>
    @Override
    public String toString()
    {
-      return "UUIDObjectNameProducer []";
+      return "UUIDObjectNameSupplier []";
    }
 }

@@ -17,7 +17,7 @@
 // Date: Jun 29, 2014
 // ---------------------
 
-package com.cleversafe.og.producer;
+package com.cleversafe.og.supplier;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -29,9 +29,10 @@ import org.junit.Test;
 import com.cleversafe.og.object.ObjectManager;
 import com.cleversafe.og.object.ObjectManagerException;
 import com.cleversafe.og.object.ObjectName;
+import com.cleversafe.og.supplier.DeleteObjectNameSupplier;
 import com.google.common.base.Supplier;
 
-public class DeleteObjectNameProducerTest
+public class DeleteObjectNameSupplierTest
 {
    private ObjectManager mockObjectManager;
 
@@ -44,7 +45,7 @@ public class DeleteObjectNameProducerTest
    @Test(expected = NullPointerException.class)
    public void testNullObjectManager()
    {
-      new DeleteObjectNameProducer(null);
+      new DeleteObjectNameSupplier(null);
    }
 
    @Test
@@ -55,7 +56,7 @@ public class DeleteObjectNameProducerTest
       when(mockObjectName.toString()).thenReturn(objectString);
       when(this.mockObjectManager.getNameForDelete()).thenReturn(mockObjectName);
 
-      final Supplier<String> p = new DeleteObjectNameProducer(this.mockObjectManager);
+      final Supplier<String> p = new DeleteObjectNameSupplier(this.mockObjectManager);
       Assert.assertEquals(objectString, p.get());
    }
 
@@ -63,7 +64,7 @@ public class DeleteObjectNameProducerTest
    public void testSupplierException()
    {
       when(this.mockObjectManager.getNameForDelete()).thenThrow(new ObjectManagerException());
-      final Supplier<String> p = new DeleteObjectNameProducer(this.mockObjectManager);
+      final Supplier<String> p = new DeleteObjectNameSupplier(this.mockObjectManager);
       p.get();
    }
 }

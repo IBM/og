@@ -17,7 +17,7 @@
 // Date: Mar 19, 2014
 // ---------------------
 
-package com.cleversafe.og.producer;
+package com.cleversafe.og.supplier;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -36,11 +36,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 /**
- * A producer of uris
+ * A supplier of uris
  * 
  * @since 1.0
  */
-public class UriProducer implements Supplier<URI>
+public class UriSupplier implements Supplier<URI>
 {
    private final Supplier<Scheme> scheme;
    private final Supplier<String> host;
@@ -50,7 +50,7 @@ public class UriProducer implements Supplier<URI>
    private final boolean trailingSlash;
    private static final Joiner.MapJoiner PARAM_JOINER = Joiner.on('&').withKeyValueSeparator("=");
 
-   private UriProducer(final Builder builder)
+   private UriSupplier(final Builder builder)
    {
       this.scheme = checkNotNull(builder.scheme);
       this.host = checkNotNull(builder.host);
@@ -112,7 +112,7 @@ public class UriProducer implements Supplier<URI>
    }
 
    /**
-    * A uri producer builder
+    * A uri supplier builder
     */
    public static class Builder
    {
@@ -133,11 +133,11 @@ public class UriProducer implements Supplier<URI>
        */
       public Builder(final String host, final List<Supplier<String>> path)
       {
-         this(Producers.of(host), path);
+         this(Suppliers.of(host), path);
       }
 
       /**
-       * Constructs a builder instance using the provided host and path producers
+       * Constructs a builder instance using the provided host and path suppliers
        * 
        * @param host
        *           the host name or ip address
@@ -146,7 +146,7 @@ public class UriProducer implements Supplier<URI>
        */
       public Builder(final Supplier<String> host, final List<Supplier<String>> path)
       {
-         this.scheme = Producers.of(Scheme.HTTP);
+         this.scheme = Suppliers.of(Scheme.HTTP);
          this.host = host;
          this.path = path;
          this.queryParameters = Maps.newLinkedHashMap();
@@ -161,11 +161,11 @@ public class UriProducer implements Supplier<URI>
        */
       public Builder withScheme(final Scheme scheme)
       {
-         return withScheme(Producers.of(scheme));
+         return withScheme(Suppliers.of(scheme));
       }
 
       /**
-       * Configures the uri scheme, using the provided producer
+       * Configures the uri scheme, using the provided supplier
        * 
        * @param scheme
        *           the uri scheme
@@ -187,11 +187,11 @@ public class UriProducer implements Supplier<URI>
       public Builder onPort(final int port)
       {
          checkArgument(port >= 0, "port must be >= 0 [%s]", port);
-         return onPort(Producers.of(port));
+         return onPort(Suppliers.of(port));
       }
 
       /**
-       * Configures the uri port, using the provided producer
+       * Configures the uri port, using the provided supplier
        * 
        * @param port
        *           the uri port
@@ -219,7 +219,7 @@ public class UriProducer implements Supplier<URI>
       }
 
       /**
-       * Configures a trailing slash at the end of the produced uri
+       * Configures a trailing slash at the end of the supplied uri
        * 
        * @return this builder
        */
@@ -230,16 +230,16 @@ public class UriProducer implements Supplier<URI>
       }
 
       /**
-       * Constructs a uri producer instance
+       * Constructs a uri supplier instance
        * 
-       * @return a uri producer instance
+       * @return a uri supplier instance
        * @throws NullPointerException
        *            if path contains any null elements, or queryParameters contains any null keys or
        *            values
        */
-      public UriProducer build()
+      public UriSupplier build()
       {
-         return new UriProducer(this);
+         return new UriSupplier(this);
       }
    }
 
@@ -248,7 +248,7 @@ public class UriProducer implements Supplier<URI>
    {
       return String.format(
             Locale.US,
-            "UriProducer [%nscheme=%s,%nhost=%s,%nport=%s,%npath=%s,%nqueryParameters=%s,%ntrailingSlash=%s%n]",
+            "UriSupplier [%nscheme=%s,%nhost=%s,%nport=%s,%npath=%s,%nqueryParameters=%s,%ntrailingSlash=%s%n]",
             this.scheme,
             this.host,
             this.port,

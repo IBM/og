@@ -17,7 +17,7 @@
 // Date: Mar 19, 2014
 // ---------------------
 
-package com.cleversafe.og.producer;
+package com.cleversafe.og.supplier;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -30,7 +30,7 @@ import com.google.common.base.Supplier;
  *           the type of value to supply
  * @since 1.0
  */
-public class ConstantProducer<T> implements Supplier<T>
+public class ConstantSupplier<T> implements Supplier<T>
 {
    private final T value;
 
@@ -40,7 +40,7 @@ public class ConstantProducer<T> implements Supplier<T>
     * @param value
     *           the value this supplier should always supply
     */
-   public ConstantProducer(final T value)
+   public ConstantSupplier(final T value)
    {
       this.value = checkNotNull(value);
    }
@@ -54,6 +54,6 @@ public class ConstantProducer<T> implements Supplier<T>
    @Override
    public String toString()
    {
-      return "ConstantProducer [" + this.value + "]";
+      return "ConstantSupplier [" + this.value + "]";
    }
 }

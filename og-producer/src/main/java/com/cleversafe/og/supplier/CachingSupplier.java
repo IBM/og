@@ -17,7 +17,7 @@
 // Date: Jul 1, 2014
 // ---------------------
 
-package com.cleversafe.og.producer;
+package com.cleversafe.og.supplier;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -30,7 +30,7 @@ import com.google.common.base.Supplier;
  *           the type of value to supply
  * @since 1.0
  */
-public class CachingProducer<T> implements Supplier<T>
+public class CachingSupplier<T> implements Supplier<T>
 {
    private final Supplier<T> supplier;
    private T cachedValue;
@@ -41,7 +41,7 @@ public class CachingProducer<T> implements Supplier<T>
     * @param supplier
     *           the base supplier to cache values for
     */
-   public CachingProducer(final Supplier<T> supplier)
+   public CachingSupplier(final Supplier<T> supplier)
    {
       this.supplier = checkNotNull(supplier);
    }
@@ -66,6 +66,6 @@ public class CachingProducer<T> implements Supplier<T>
    @Override
    public String toString()
    {
-      return "CachingProducer [" + this.supplier + "]";
+      return "CachingSupplier [" + this.supplier + "]";
    }
 }

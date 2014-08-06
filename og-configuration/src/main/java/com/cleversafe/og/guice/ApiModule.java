@@ -53,11 +53,11 @@ import com.cleversafe.og.operation.Entity;
 import com.cleversafe.og.operation.Metadata;
 import com.cleversafe.og.operation.Method;
 import com.cleversafe.og.operation.Request;
-import com.cleversafe.og.producer.CachingProducer;
-import com.cleversafe.og.producer.Producers;
-import com.cleversafe.og.producer.RequestProducer;
-import com.cleversafe.og.producer.UriProducer;
 import com.cleversafe.og.soh.SOHWriteResponseBodyConsumer;
+import com.cleversafe.og.supplier.CachingSupplier;
+import com.cleversafe.og.supplier.Suppliers;
+import com.cleversafe.og.supplier.RequestSupplier;
+import com.cleversafe.og.supplier.UriSupplier;
 import com.cleversafe.og.util.Entities;
 import com.cleversafe.og.util.ResponseBodyConsumer;
 import com.google.common.base.Optional;
@@ -81,7 +81,7 @@ public class ApiModule extends AbstractModule
    @Write
    public Supplier<Request> provideWrite(
          @WriteUri final Supplier<URI> uri,
-         @WriteObjectName final Optional<CachingProducer<String>> object,
+         @WriteObjectName final Optional<CachingSupplier<String>> object,
          @WriteHeaders final Map<Supplier<String>, Supplier<String>> headers,
          final Supplier<Entity> entity,
          @WriteMetadata final Map<Supplier<String>, Supplier<String>> metadata,
@@ -101,7 +101,7 @@ public class ApiModule extends AbstractModule
          final Optional<Supplier<Integer>> port,
          @UriRoot final Optional<Supplier<String>> uriRoot,
          @Container final Supplier<String> container,
-         @WriteObjectName final Optional<CachingProducer<String>> object)
+         @WriteObjectName final Optional<CachingSupplier<String>> object)
    {
       return createUri(scheme, host, port, uriRoot, container, object);
    }
@@ -115,8 +115,8 @@ public class ApiModule extends AbstractModule
       final Map<Supplier<String>, Supplier<String>> metadata = createMetadata(id);
       // SOH needs to use a special response procesor to extract the returned object id
       if (Api.SOH == api)
-         metadata.put(Producers.of(Metadata.RESPONSE_BODY_PROCESSOR.toString()),
-               Producers.of(SOH_PUT_OBJECT));
+         metadata.put(Suppliers.of(Metadata.RESPONSE_BODY_PROCESSOR.toString()),
+               Suppliers.of(SOH_PUT_OBJECT));
       return metadata;
    }
 
@@ -125,14 +125,14 @@ public class ApiModule extends AbstractModule
    @Read
    public Supplier<Request> provideRead(
          @ReadUri final Supplier<URI> uri,
-         @ReadObjectName final CachingProducer<String> object,
+         @ReadObjectName final CachingSupplier<String> object,
          @ReadHeaders final Map<Supplier<String>, Supplier<String>> headers,
          @ReadMetadata final Map<Supplier<String>, Supplier<String>> metadata,
          @Username final Optional<Supplier<String>> username,
          @Password final Optional<Supplier<String>> password)
    {
       return createRequestSupplier(Method.GET, uri, Optional.of(object), headers,
-            Producers.of(Entities.none()), metadata, username, password);
+            Suppliers.of(Entities.none()), metadata, username, password);
    }
 
    @Provides
@@ -144,7 +144,7 @@ public class ApiModule extends AbstractModule
          final Optional<Supplier<Integer>> port,
          @UriRoot final Optional<Supplier<String>> uriRoot,
          @Container final Supplier<String> container,
-         @ReadObjectName final CachingProducer<String> object)
+         @ReadObjectName final CachingSupplier<String> object)
    {
       return createUri(scheme, host, port, uriRoot, container, Optional.of(object));
    }
@@ -161,14 +161,14 @@ public class ApiModule extends AbstractModule
    @Delete
    public Supplier<Request> provideDelete(
          @DeleteUri final Supplier<URI> uri,
-         @DeleteObjectName final CachingProducer<String> object,
+         @DeleteObjectName final CachingSupplier<String> object,
          @DeleteHeaders final Map<Supplier<String>, Supplier<String>> headers,
          @DeleteMetadata final Map<Supplier<String>, Supplier<String>> metadata,
          @Username final Optional<Supplier<String>> username,
          @Password final Optional<Supplier<String>> password)
    {
       return createRequestSupplier(Method.DELETE, uri, Optional.of(object), headers,
-            Producers.of(Entities.none()), metadata, username, password);
+            Suppliers.of(Entities.none()), metadata, username, password);
    }
 
    @Provides
@@ -180,7 +180,7 @@ public class ApiModule extends AbstractModule
          final Optional<Supplier<Integer>> port,
          @UriRoot final Optional<Supplier<String>> uriRoot,
          @Container final Supplier<String> container,
-         @DeleteObjectName final CachingProducer<String> object)
+         @DeleteObjectName final CachingSupplier<String> object)
    {
       return createUri(scheme, host, port, uriRoot, container, Optional.of(object));
    }
@@ -196,24 +196,24 @@ public class ApiModule extends AbstractModule
    public Map<Supplier<String>, Supplier<String>> createMetadata(final Supplier<String> id)
    {
       final Map<Supplier<String>, Supplier<String>> metadata = Maps.newHashMap();
-      metadata.put(Producers.of(Metadata.REQUEST_ID.toString()), id);
+      metadata.put(Suppliers.of(Metadata.REQUEST_ID.toString()), id);
       return metadata;
    }
 
    private Supplier<Request> createRequestSupplier(
          final Method method,
          final Supplier<URI> uri,
-         final Optional<CachingProducer<String>> object,
+         final Optional<CachingSupplier<String>> object,
          final Map<Supplier<String>, Supplier<String>> headers,
          final Supplier<Entity> entity,
          final Map<Supplier<String>, Supplier<String>> metadata,
          final Optional<Supplier<String>> username,
          final Optional<Supplier<String>> password)
    {
-      final RequestProducer.Builder b = new RequestProducer.Builder(Producers.of(method), uri);
+      final RequestSupplier.Builder b = new RequestSupplier.Builder(Suppliers.of(method), uri);
 
       if (object.isPresent())
-         b.withMetadata(Producers.of(Metadata.OBJECT_NAME.toString()), new Supplier<String>()
+         b.withMetadata(Suppliers.of(Metadata.OBJECT_NAME.toString()), new Supplier<String>()
          {
             @Override
             public String get()
@@ -236,8 +236,8 @@ public class ApiModule extends AbstractModule
 
       if (username.isPresent() && password.isPresent())
       {
-         b.withMetadata(Producers.of(Metadata.USERNAME.toString()), username.get());
-         b.withMetadata(Producers.of(Metadata.PASSWORD.toString()), password.get());
+         b.withMetadata(Suppliers.of(Metadata.USERNAME.toString()), username.get());
+         b.withMetadata(Suppliers.of(Metadata.PASSWORD.toString()), password.get());
       }
 
       return b.build();
@@ -249,7 +249,7 @@ public class ApiModule extends AbstractModule
          final Optional<Supplier<Integer>> port,
          final Optional<Supplier<String>> uriRoot,
          final Supplier<String> container,
-         final Optional<CachingProducer<String>> object)
+         final Optional<CachingSupplier<String>> object)
    {
       final List<Supplier<String>> path = Lists.newArrayList();
       if (uriRoot.isPresent())
@@ -258,7 +258,7 @@ public class ApiModule extends AbstractModule
       if (object.isPresent())
          path.add(object.get());
 
-      final UriProducer.Builder b = new UriProducer.Builder(host, path).withScheme(scheme);
+      final UriSupplier.Builder b = new UriSupplier.Builder(host, path).withScheme(scheme);
 
       if (port.isPresent())
          b.onPort(port.get());

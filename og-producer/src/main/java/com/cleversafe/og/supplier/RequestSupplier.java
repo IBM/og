@@ -17,7 +17,7 @@
 // Date: Mar 19, 2014
 // ---------------------
 
-package com.cleversafe.og.producer;
+package com.cleversafe.og.supplier;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -36,11 +36,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 /**
- * A producer of requests
+ * A supplier of requests
  * 
  * @since 1.0
  */
-public class RequestProducer implements Supplier<Request>
+public class RequestSupplier implements Supplier<Request>
 {
    private final Supplier<Method> method;
    private final Supplier<URI> uri;
@@ -48,7 +48,7 @@ public class RequestProducer implements Supplier<Request>
    private final Supplier<Entity> entity;
    private final List<Pair<Supplier<String>, Supplier<String>>> metadata;
 
-   private RequestProducer(final Builder builder)
+   private RequestSupplier(final Builder builder)
    {
       this.method = checkNotNull(builder.method);
       this.uri = checkNotNull(builder.uri);
@@ -80,7 +80,7 @@ public class RequestProducer implements Supplier<Request>
    }
 
    /**
-    * A request producer builder
+    * A request supplier builder
     */
    public static class Builder
    {
@@ -100,16 +100,16 @@ public class RequestProducer implements Supplier<Request>
        */
       public Builder(final Method method, final URI uri)
       {
-         this(Producers.of(method), Producers.of(uri));
+         this(Suppliers.of(method), Suppliers.of(uri));
       }
 
       /**
-       * Constructs a builder instance using the provided method and uri producers
+       * Constructs a builder instance using the provided method and uri suppliers
        * 
        * @param method
-       *           a request method producer
+       *           a request method supplier
        * @param uri
-       *           a request uri producer
+       *           a request uri supplier
        */
       public Builder(final Supplier<Method> method, final Supplier<URI> uri)
       {
@@ -120,7 +120,7 @@ public class RequestProducer implements Supplier<Request>
       }
 
       /**
-       * Configures a request header to include with this request producer
+       * Configures a request header to include with this request suppliers
        * 
        * @param key
        *           a header key
@@ -130,11 +130,11 @@ public class RequestProducer implements Supplier<Request>
        */
       public Builder withHeader(final String key, final String value)
       {
-         return withHeader(Producers.of(key), Producers.of(value));
+         return withHeader(Suppliers.of(key), Suppliers.of(value));
       }
 
       /**
-       * Configures a request header to include with this request producer, using producers for the
+       * Configures a request header to include with this request supplier, using suppliers for the
        * key and value
        * 
        * @param key
@@ -150,7 +150,7 @@ public class RequestProducer implements Supplier<Request>
       }
 
       /**
-       * Configures a request entity to include with this request producer
+       * Configures a request entity to include with this request supplier
        * 
        * @param entity
        *           an entity
@@ -158,11 +158,11 @@ public class RequestProducer implements Supplier<Request>
        */
       public Builder withEntity(final Entity entity)
       {
-         return withEntity(Producers.of(entity));
+         return withEntity(Suppliers.of(entity));
       }
 
       /**
-       * Configures a request entity to include with this request producer, using a producer for the
+       * Configures a request entity to include with this request supplier, using a supplier for the
        * entity
        * 
        * @param entity
@@ -176,7 +176,7 @@ public class RequestProducer implements Supplier<Request>
       }
 
       /**
-       * Configures an additional piece of metadata to include with this request producer, using a
+       * Configures an additional piece of metadata to include with this request supplier, using a
        * {@code Metadata} entry as the key
        * 
        * @param key
@@ -191,7 +191,7 @@ public class RequestProducer implements Supplier<Request>
       }
 
       /**
-       * Configures an additional piece of metadata to include with this request producer
+       * Configures an additional piece of metadata to include with this request supplier
        * 
        * @param key
        *           a metadata key
@@ -201,12 +201,12 @@ public class RequestProducer implements Supplier<Request>
        */
       public Builder withMetadata(final String key, final String value)
       {
-         return withMetadata(Producers.of(key), Producers.of(value));
+         return withMetadata(Suppliers.of(key), Suppliers.of(value));
       }
 
       /**
-       * Configures an additional piece of metadata to include with this request producer, using
-       * producers for the key and value
+       * Configures an additional piece of metadata to include with this request supplier, using
+       * suppliers for the key and value
        * 
        * @param key
        *           a metadata key
@@ -221,15 +221,15 @@ public class RequestProducer implements Supplier<Request>
       }
 
       /**
-       * Constructs a request producer instance
+       * Constructs a request supplier instance
        * 
-       * @return a request producer instance
+       * @return a request supplier instance
        * @throws NullPointerException
        *            if any null header or metadata keys or values were added to this builder
        */
-      public RequestProducer build()
+      public RequestSupplier build()
       {
-         return new RequestProducer(this);
+         return new RequestSupplier(this);
       }
    }
 
@@ -237,7 +237,7 @@ public class RequestProducer implements Supplier<Request>
    public String toString()
    {
       return String.format(Locale.US,
-            "RequestProducer [%nmethod=%s,%nuri=%s,%nheaders=%s,%nentity=%s,%nmetadata=%s%n]",
+            "RequestSupplier [%nmethod=%s,%nuri=%s,%nheaders=%s,%nentity=%s,%nmetadata=%s%n]",
             this.method,
             this.uri,
             this.headers,

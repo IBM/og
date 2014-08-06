@@ -17,7 +17,7 @@
 // Date: Mar 21, 2014
 // ---------------------
 
-package com.cleversafe.og.producer;
+package com.cleversafe.og.supplier;
 
 import java.util.List;
 
@@ -28,9 +28,9 @@ import com.google.common.base.Supplier;
  * 
  * @since 1.0
  */
-public class Producers
+public class Suppliers
 {
-   private Producers()
+   private Suppliers()
    {}
 
    /**
@@ -42,7 +42,7 @@ public class Producers
     */
    public static <T> Supplier<T> of(final T value)
    {
-      return new ConstantProducer<T>(value);
+      return new ConstantSupplier<T>(value);
    }
 
    /**
@@ -54,6 +54,6 @@ public class Producers
     */
    public static <T> Supplier<T> cycle(final List<T> values)
    {
-      return new CycleProducer<T>(values);
+      return new CycleSupplier<T>(values);
    }
 }

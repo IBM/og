@@ -17,25 +17,26 @@
 // Date: Jun 28, 2014
 // ---------------------
 
-package com.cleversafe.og.producer;
+package com.cleversafe.og.supplier;
 
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.cleversafe.og.supplier.ConstantSupplier;
 import com.google.common.base.Supplier;
 
-public class ConstantProducerTest
+public class ConstantSupplierTest
 {
    @Test(expected = NullPointerException.class)
    public void testNull()
    {
-      new ConstantProducer<Integer>(null);
+      new ConstantSupplier<Integer>(null);
    }
 
    @Test
    public void testConstantSupplier()
    {
-      final Supplier<Integer> p = new ConstantProducer<Integer>(1);
+      final Supplier<Integer> p = new ConstantSupplier<Integer>(1);
       for (int i = 0; i < 10; i++)
       {
          Assert.assertEquals(Integer.valueOf(1), p.get());

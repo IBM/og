@@ -29,7 +29,7 @@ import org.junit.Test;
 import com.cleversafe.og.object.ObjectManagerException;
 import com.cleversafe.og.operation.OperationManagerException;
 import com.cleversafe.og.operation.Request;
-import com.cleversafe.og.producer.Producers;
+import com.cleversafe.og.supplier.Suppliers;
 import com.google.common.base.Supplier;
 
 public class SimpleOperationManagerTest
@@ -43,7 +43,7 @@ public class SimpleOperationManagerTest
    {
       this.requestMix = mock(Supplier.class);
       this.request = mock(Request.class);
-      when(this.requestMix.get()).thenReturn(Producers.of(this.request));
+      when(this.requestMix.get()).thenReturn(Suppliers.of(this.request));
    }
 
    @Test(expected = NullPointerException.class)
@@ -53,7 +53,7 @@ public class SimpleOperationManagerTest
    }
 
    @Test
-   public void testProduce() throws OperationManagerException
+   public void testNext() throws OperationManagerException
    {
       final SimpleOperationManager m = new SimpleOperationManager(this.requestMix);
       final Request r = m.next();
@@ -61,7 +61,7 @@ public class SimpleOperationManagerTest
    }
 
    @Test(expected = OperationManagerException.class)
-   public void testProduceOperationManagerException() throws OperationManagerException
+   public void testGetOperationManagerException() throws OperationManagerException
    {
       when(this.requestMix.get()).thenThrow(new IllegalStateException());
       final SimpleOperationManager m = new SimpleOperationManager(this.requestMix);
@@ -69,7 +69,7 @@ public class SimpleOperationManagerTest
    }
 
    @Test(expected = OperationManagerException.class)
-   public void testProduceOperationManagerException2() throws OperationManagerException
+   public void testGetOperationManagerException2() throws OperationManagerException
    {
       @SuppressWarnings("unchecked")
       final Supplier<Request> p = mock(Supplier.class);

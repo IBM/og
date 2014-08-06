@@ -17,22 +17,24 @@
 // Date: Jul 1, 2014
 // ---------------------
 
-package com.cleversafe.og.producer;
+package com.cleversafe.og.supplier;
 
 import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.cleversafe.og.supplier.CachingSupplier;
+import com.cleversafe.og.supplier.Suppliers;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
 
-public class CachingProducerTest
+public class CachingSupplierTest
 {
    @Test(expected = NullPointerException.class)
    public void testNullSupplier()
    {
-      new CachingProducer<String>((Supplier<String>) null);
+      new CachingSupplier<String>((Supplier<String>) null);
    }
 
    @Test
@@ -42,8 +44,8 @@ public class CachingProducerTest
       ints.add(1);
       ints.add(2);
       ints.add(3);
-      final Supplier<Integer> cycle = Producers.cycle(ints);
-      final CachingProducer<Integer> p = new CachingProducer<Integer>(cycle);
+      final Supplier<Integer> cycle = Suppliers.cycle(ints);
+      final CachingSupplier<Integer> p = new CachingSupplier<Integer>(cycle);
       for (int i = 0; i < 10; i++)
       {
          Assert.assertEquals(p.get(), p.getCachedValue());

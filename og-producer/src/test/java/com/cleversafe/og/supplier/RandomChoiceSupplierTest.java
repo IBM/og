@@ -17,7 +17,7 @@
 // Date: Jun 28, 2014
 // ---------------------
 
-package com.cleversafe.og.producer;
+package com.cleversafe.og.supplier;
 
 import java.util.Map;
 import java.util.Random;
@@ -25,45 +25,47 @@ import java.util.Random;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.cleversafe.og.supplier.Suppliers;
+import com.cleversafe.og.supplier.RandomChoiceSupplier;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Maps;
 
-public class RandomChoiceProducerTest
+public class RandomChoiceSupplierTest
 {
    @Test(expected = IllegalArgumentException.class)
    public void testNoChoice()
    {
-      new RandomChoiceProducer.Builder<Integer>().build();
+      new RandomChoiceSupplier.Builder<Integer>().build();
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullChoice()
    {
-      new RandomChoiceProducer.Builder<Integer>().withChoice(null).build();
+      new RandomChoiceSupplier.Builder<Integer>().withChoice(null).build();
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullRandom()
    {
-      new RandomChoiceProducer.Builder<Integer>().withChoice(1).withRandom(null).build();
+      new RandomChoiceSupplier.Builder<Integer>().withChoice(1).withRandom(null).build();
    }
 
    @Test(expected = IllegalArgumentException.class)
    public void testNegativeWeight()
    {
-      new RandomChoiceProducer.Builder<Integer>().withChoice(1, -1.0).build();
+      new RandomChoiceSupplier.Builder<Integer>().withChoice(1, -1.0).build();
    }
 
    @Test(expected = IllegalArgumentException.class)
    public void testZeroWeight()
    {
-      new RandomChoiceProducer.Builder<Integer>().withChoice(1, 0.0).build();
+      new RandomChoiceSupplier.Builder<Integer>().withChoice(1, 0.0).build();
    }
 
    @Test
    public void testOneChoice()
    {
-      final Supplier<Integer> p = new RandomChoiceProducer.Builder<Integer>().withChoice(1).build();
+      final Supplier<Integer> p = new RandomChoiceSupplier.Builder<Integer>().withChoice(1).build();
       for (int i = 0; i < 10; i++)
       {
          Assert.assertEquals(Integer.valueOf(1), p.get());
@@ -73,10 +75,10 @@ public class RandomChoiceProducerTest
    @Test
    public void testNChoices()
    {
-      final RandomChoiceProducer.Builder<Integer> b = new RandomChoiceProducer.Builder<Integer>();
+      final RandomChoiceSupplier.Builder<Integer> b = new RandomChoiceSupplier.Builder<Integer>();
       b.withChoice(1, 33);
-      b.withChoice(2, Producers.of(33.5));
-      b.withChoice(3, Producers.of(33));
+      b.withChoice(2, Suppliers.of(33.5));
+      b.withChoice(3, Suppliers.of(33));
       b.withRandom(new Random());
       final Supplier<Integer> p = b.build();
 

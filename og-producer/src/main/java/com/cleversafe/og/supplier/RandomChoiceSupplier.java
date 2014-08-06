@@ -17,7 +17,7 @@
 // Date: Jun 24, 2014
 // ---------------------
 
-package com.cleversafe.og.producer;
+package com.cleversafe.og.supplier;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -36,12 +36,12 @@ import com.google.common.collect.Lists;
  *           the type of values to supply
  * @since 1.0
  */
-public class RandomChoiceProducer<T> implements Supplier<T>
+public class RandomChoiceSupplier<T> implements Supplier<T>
 {
    private final List<Choice<T>> choices;
    private final Random random;
 
-   private RandomChoiceProducer(final Builder<T> builder)
+   private RandomChoiceSupplier(final Builder<T> builder)
    {
       this.choices = checkNotNull(builder.choices);
       checkArgument(!this.choices.isEmpty(), "choices must not be empty");
@@ -137,7 +137,7 @@ public class RandomChoiceProducer<T> implements Supplier<T>
       public Builder<T> withChoice(final T choice, final double weight)
       {
          checkArgument(weight > 0.0, "weight must be > 0.0 [%s]", weight);
-         return withChoice(choice, Producers.of(weight));
+         return withChoice(choice, Suppliers.of(weight));
       }
 
       /**
@@ -177,16 +177,16 @@ public class RandomChoiceProducer<T> implements Supplier<T>
        * @throws IllegalArgumentException
        *            if no choices were added prior to calling this method
        */
-      public RandomChoiceProducer<T> build()
+      public RandomChoiceSupplier<T> build()
       {
-         return new RandomChoiceProducer<T>(this);
+         return new RandomChoiceSupplier<T>(this);
       }
    }
 
    @Override
    public String toString()
    {
-      final StringBuilder s = new StringBuilder("RandomChoiceProducer [");
+      final StringBuilder s = new StringBuilder("RandomChoiceSupplier [");
       for (final Choice<T> choice : this.choices)
       {
          s.append(String.format(Locale.US, "%nchoice=%s,%nweight=%s,", choice.value,

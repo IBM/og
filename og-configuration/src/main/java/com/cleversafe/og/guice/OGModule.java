@@ -48,13 +48,13 @@ import com.cleversafe.og.object.ObjectManager;
 import com.cleversafe.og.object.RandomObjectPopulator;
 import com.cleversafe.og.operation.OperationManager;
 import com.cleversafe.og.operation.Request;
-import com.cleversafe.og.producer.CachingProducer;
-import com.cleversafe.og.producer.DeleteObjectNameProducer;
-import com.cleversafe.og.producer.RandomChoiceProducer;
-import com.cleversafe.og.producer.ReadObjectNameProducer;
-import com.cleversafe.og.producer.UUIDObjectNameProducer;
 import com.cleversafe.og.statistic.Counter;
 import com.cleversafe.og.statistic.Statistics;
+import com.cleversafe.og.supplier.CachingSupplier;
+import com.cleversafe.og.supplier.DeleteObjectNameSupplier;
+import com.cleversafe.og.supplier.RandomChoiceSupplier;
+import com.cleversafe.og.supplier.ReadObjectNameSupplier;
+import com.cleversafe.og.supplier.UUIDObjectNameSupplier;
 import com.cleversafe.og.test.LoadTest;
 import com.cleversafe.og.test.condition.CounterCondition;
 import com.cleversafe.og.test.condition.RuntimeCondition;
@@ -152,8 +152,8 @@ public class OGModule extends AbstractModule
       checkArgument(DoubleMath.fuzzyEquals(sum, 100.0, ERR),
             "Sum of percentages must be 100.0 [%s]", sum);
 
-      final RandomChoiceProducer.Builder<Supplier<Request>> wrc =
-            new RandomChoiceProducer.Builder<Supplier<Request>>();
+      final RandomChoiceSupplier.Builder<Supplier<Request>> wrc =
+            new RandomChoiceSupplier.Builder<Supplier<Request>>();
       if (writeWeight > 0.0)
          wrc.withChoice(write, writeWeight);
       if (readWeight > 0.0)
@@ -176,27 +176,27 @@ public class OGModule extends AbstractModule
    @Provides
    @Singleton
    @WriteObjectName
-   public Optional<CachingProducer<String>> provideWriteObjectName(final Api api)
+   public Optional<CachingSupplier<String>> provideWriteObjectName(final Api api)
    {
       if (Api.SOH == checkNotNull(api))
          return Optional.absent();
-      return Optional.of(new CachingProducer<String>(new UUIDObjectNameProducer()));
+      return Optional.of(new CachingSupplier<String>(new UUIDObjectNameSupplier()));
    }
 
    @Provides
    @Singleton
    @ReadObjectName
-   public CachingProducer<String> provideReadObjectName(final ObjectManager objectManager)
+   public CachingSupplier<String> provideReadObjectName(final ObjectManager objectManager)
    {
-      return new CachingProducer<String>(new ReadObjectNameProducer(objectManager));
+      return new CachingSupplier<String>(new ReadObjectNameSupplier(objectManager));
    }
 
    @Provides
    @Singleton
    @DeleteObjectName
-   public CachingProducer<String> provideDeleteObjectName(final ObjectManager objectManager)
+   public CachingSupplier<String> provideDeleteObjectName(final ObjectManager objectManager)
    {
-      return new CachingProducer<String>(new DeleteObjectNameProducer(objectManager));
+      return new CachingSupplier<String>(new DeleteObjectNameSupplier(objectManager));
    }
 
    @Provides

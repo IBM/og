@@ -17,18 +17,18 @@
 // Date: Mar 29, 2014
 // ---------------------
 
-package com.cleversafe.og.producer;
+package com.cleversafe.og.supplier;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.cleversafe.og.object.ObjectManager;
 import com.google.common.base.Supplier;
 
-public class DeleteObjectNameProducer implements Supplier<String>
+public class DeleteObjectNameSupplier implements Supplier<String>
 {
    private final ObjectManager objectManager;
 
-   public DeleteObjectNameProducer(final ObjectManager objectManager)
+   public DeleteObjectNameSupplier(final ObjectManager objectManager)
    {
       this.objectManager = checkNotNull(objectManager);
    }
@@ -42,6 +42,6 @@ public class DeleteObjectNameProducer implements Supplier<String>
    @Override
    public String toString()
    {
-      return "DeleteObjectNameProducer []";
+      return "DeleteObjectNameSupplier []";
    }
 }

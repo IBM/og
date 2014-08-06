@@ -31,8 +31,8 @@ import com.cleversafe.og.consumer.ObjectNameConsumer;
 import com.cleversafe.og.http.Api;
 import com.cleversafe.og.object.ObjectManager;
 import com.cleversafe.og.operation.Request;
-import com.cleversafe.og.producer.CachingProducer;
 import com.cleversafe.og.statistic.Statistics;
+import com.cleversafe.og.supplier.CachingSupplier;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.eventbus.EventBus;
@@ -130,14 +130,14 @@ public class OGModuleTest
    @Test
    public void testProvideWriteObjectNameSOH()
    {
-      final Optional<CachingProducer<String>> p = this.module.provideWriteObjectName(Api.SOH);
+      final Optional<CachingSupplier<String>> p = this.module.provideWriteObjectName(Api.SOH);
       Assert.assertTrue(!p.isPresent());
    }
 
    @Test
    public void testProvideWriteObjectNameS3()
    {
-      final Optional<CachingProducer<String>> p = this.module.provideWriteObjectName(Api.S3);
+      final Optional<CachingSupplier<String>> p = this.module.provideWriteObjectName(Api.S3);
       Assert.assertTrue(p.isPresent());
    }
 
@@ -150,7 +150,7 @@ public class OGModuleTest
    @Test
    public void testProvideReadObjectName()
    {
-      final CachingProducer<String> p = this.module.provideReadObjectName(this.objectManager);
+      final CachingSupplier<String> p = this.module.provideReadObjectName(this.objectManager);
       Assert.assertNotNull(p);
    }
 
@@ -163,7 +163,7 @@ public class OGModuleTest
    @Test
    public void testProvideDeleteObjectName()
    {
-      final CachingProducer<String> p = this.module.provideDeleteObjectName(this.objectManager);
+      final CachingSupplier<String> p = this.module.provideDeleteObjectName(this.objectManager);
       Assert.assertNotNull(p);
    }
 

@@ -17,39 +17,40 @@
 // Date: Jun 28, 2014
 // ---------------------
 
-package com.cleversafe.og.producer;
+package com.cleversafe.og.supplier;
 
 import java.util.List;
 
 import org.junit.Test;
 
+import com.cleversafe.og.supplier.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-public class ProducersTest
+public class SuppliersTest
 {
    @Test(expected = NullPointerException.class)
    public void testNullOf()
    {
-      Producers.of(null);
+      Suppliers.of(null);
    }
 
    @Test
    public void testOf()
    {
-      Producers.of(1);
+      Suppliers.of(1);
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullCycle()
    {
-      Producers.cycle(null);
+      Suppliers.cycle(null);
    }
 
    @Test(expected = IllegalArgumentException.class)
    public void testZeroCycle()
    {
-      Producers.cycle(ImmutableList.of());
+      Suppliers.cycle(ImmutableList.of());
    }
 
    @Test(expected = NullPointerException.class)
@@ -57,7 +58,7 @@ public class ProducersTest
    {
       final List<Integer> list = Lists.newArrayList();
       list.add(null);
-      Producers.cycle(list);
+      Suppliers.cycle(list);
    }
 
    @Test
@@ -65,6 +66,6 @@ public class ProducersTest
    {
       final List<Integer> list = Lists.newArrayList();
       list.add(1);
-      Producers.cycle(list);
+      Suppliers.cycle(list);
    }
 }

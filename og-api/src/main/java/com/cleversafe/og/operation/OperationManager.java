@@ -19,9 +19,8 @@
 
 package com.cleversafe.og.operation;
 
-
 /**
- * A producer of requests
+ * A creator of requests
  * 
  * @since 1.0
  */

@@ -45,8 +45,8 @@ public class SimpleOperationManager implements OperationManager
    {
       try
       {
-         final Supplier<Request> producer = this.requestMix.get();
-         return producer.get();
+         final Supplier<Request> supplier = this.requestMix.get();
+         return supplier.get();
       }
       catch (final Exception e)
       {

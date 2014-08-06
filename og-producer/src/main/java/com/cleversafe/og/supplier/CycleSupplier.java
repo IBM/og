@@ -17,7 +17,7 @@
 // Date: Jun 23, 2014
 // ---------------------
 
-package com.cleversafe.og.producer;
+package com.cleversafe.og.supplier;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -38,7 +38,7 @@ import com.google.common.collect.ImmutableList;
  * values.add(1);
  * values.add(2);
  * values.add(3);
- * Supplier<Integer> cycle = new CycleProducer<Integer>(values);}
+ * Supplier<Integer> cycle = new CycleSupplier<Integer>(values);}
  * </pre>
  * <p>
  * Subsequent calls to get will return {@code (1, 2, 3, 1, 2, 3, 1)} and so on.
@@ -47,7 +47,7 @@ import com.google.common.collect.ImmutableList;
  *           the type of values to supply
  * @since 1.0
  */
-public class CycleProducer<T> implements Supplier<T>
+public class CycleSupplier<T> implements Supplier<T>
 {
    private final List<T> values;
    private final AtomicLong counter;
@@ -62,7 +62,7 @@ public class CycleProducer<T> implements Supplier<T>
     * @throws NullPointerException
     *            if values contains any null elements
     */
-   public CycleProducer(final List<T> values)
+   public CycleSupplier(final List<T> values)
    {
       checkNotNull(values);
       checkArgument(!values.isEmpty(), "values must not be empty");
@@ -80,7 +80,7 @@ public class CycleProducer<T> implements Supplier<T>
    @Override
    public String toString()
    {
-      final StringBuilder s = new StringBuilder("CycleProducer [");
+      final StringBuilder s = new StringBuilder("CycleSupplier [");
       for (final T value : this.values)
       {
          s.append(String.format(Locale.US, "%n%s", value));

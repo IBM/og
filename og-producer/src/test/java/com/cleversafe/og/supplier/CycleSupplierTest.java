@@ -17,7 +17,7 @@
 // Date: Jun 28, 2014
 // ---------------------
 
-package com.cleversafe.og.producer;
+package com.cleversafe.og.supplier;
 
 import java.util.Collections;
 import java.util.List;
@@ -25,21 +25,22 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.cleversafe.og.supplier.CycleSupplier;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
 
-public class CycleProducerTest
+public class CycleSupplierTest
 {
    @Test(expected = NullPointerException.class)
    public void testNull()
    {
-      new CycleProducer<Integer>(null);
+      new CycleSupplier<Integer>(null);
    }
 
    @Test(expected = IllegalArgumentException.class)
    public void testEmptyList()
    {
-      new CycleProducer<Integer>(Collections.<Integer> emptyList());
+      new CycleSupplier<Integer>(Collections.<Integer> emptyList());
    }
 
    @Test(expected = NullPointerException.class)
@@ -47,7 +48,7 @@ public class CycleProducerTest
    {
       final List<Integer> list = Lists.newArrayList();
       list.add(null);
-      new CycleProducer<Integer>(list);
+      new CycleSupplier<Integer>(list);
    }
 
    @Test
@@ -55,7 +56,7 @@ public class CycleProducerTest
    {
       final List<Integer> list = Lists.newArrayList();
       list.add(1);
-      final Supplier<Integer> p = new CycleProducer<Integer>(list);
+      final Supplier<Integer> p = new CycleSupplier<Integer>(list);
       for (int i = 0; i < 10; i++)
       {
          Assert.assertEquals(Integer.valueOf(1), p.get());
@@ -69,7 +70,7 @@ public class CycleProducerTest
       list.add(1);
       list.add(2);
       list.add(3);
-      final Supplier<Integer> p = new CycleProducer<Integer>(list);
+      final Supplier<Integer> p = new CycleSupplier<Integer>(list);
       for (int i = 0; i < 10; i++)
       {
          Assert.assertEquals(Integer.valueOf(1), p.get());
@@ -84,7 +85,7 @@ public class CycleProducerTest
       final List<Integer> list = Lists.newArrayList();
       list.add(1);
       list.add(2);
-      final Supplier<Integer> p = new CycleProducer<Integer>(list);
+      final Supplier<Integer> p = new CycleSupplier<Integer>(list);
       list.add(3);
       for (int i = 0; i < 10; i++)
       {
