@@ -64,12 +64,10 @@ public class ClientModule extends AbstractModule
             .usingChunkedEncoding(this.config.isChunkedEncoding())
             .usingExpectContinue(this.config.isExpectContinue())
             .withWaitForContinue(this.config.getWaitForContinue())
+            .withAuthentication(authentication.orNull())
             .withUserAgent(Version.displayVersion())
             .withWriteThroughput(this.config.getWriteThroughput())
             .withReadThroughput(this.config.getReadThroughput());
-
-      if (authentication.isPresent())
-         b.withAuthentication(authentication.get());
 
       for (final Entry<String, ResponseBodyConsumer> consumer : responseBodyConsumers.entrySet())
       {
