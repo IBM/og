@@ -1,14 +1,27 @@
 <?xml version="1.0"?>
 <jsap>
 	<parameters>
-		<unflaggedOption>
-			<id>object_file</id>
-			<required>true</required>
-			<stringParser>
-				<classname>FileStringParser</classname>
-			</stringParser>
-			<help>A relative or absolute path to an og object file</help>
-		</unflaggedOption>
+	    <switch>
+            <id>write</id>
+            <shortFlag>w</shortFlag>
+            <longFlag>write</longFlag>
+            <help>Read plain text source and output in object file format</help>
+        </switch>
+        <switch>
+            <id>read</id>
+            <shortFlag>r</shortFlag>
+            <longFlag>read</longFlag>
+            <help>Read object source and output in plain text file format</help>
+        </switch>
+        <flaggedOption>
+            <id>output</id>
+            <shortFlag>o</shortFlag>
+            <longFlag>output</longFlag>
+            <stringParser>
+            <classname>FileStringParser</classname>
+            </stringParser>
+            <help>A relative or absolute path to an output file, rather than stdout</help>
+        </flaggedOption>
 		<switch>
 			<id>version</id>
 			<shortFlag>v</shortFlag>
@@ -21,5 +34,12 @@
 			<longFlag>help</longFlag>
 			<help>Prints this help and exits</help>
 		</switch>
+		<unflaggedOption>
+            <id>input</id>
+            <stringParser>
+            <classname>FileStringParser</classname>
+            </stringParser>
+            <help>A relative or absolute path to an input file, rather than stdin</help>
+        </unflaggedOption>
 	</parameters>
 </jsap>
