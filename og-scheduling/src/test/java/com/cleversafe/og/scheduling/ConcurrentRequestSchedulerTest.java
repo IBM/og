@@ -89,7 +89,7 @@ public class ConcurrentRequestSchedulerTest
             Uninterruptibles.sleepUninterruptibly(threadWait, TimeUnit.MILLISECONDS);
             final Request request = mock(Request.class);
             final Response response = mock(Response.class);
-            s.complete(new Pair<Request, Response>(request, response));
+            s.complete(Pair.of(request, response));
          }
       });
    }

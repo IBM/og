@@ -98,7 +98,7 @@ public class CounterConditionTest
       when(request.getEntity()).thenReturn(Entities.none());
       final Response response = mock(Response.class);
       when(response.getEntity()).thenReturn(Entities.none());
-      final Pair<Request, Response> operation = new Pair<Request, Response>(request, response);
+      final Pair<Request, Response> operation = Pair.of(request, response);
 
       final CounterCondition c =
             new CounterCondition(Operation.WRITE, Counter.OPERATIONS, 2, this.test, this.stats);

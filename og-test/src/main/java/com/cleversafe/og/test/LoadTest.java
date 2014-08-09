@@ -155,7 +155,7 @@ public class LoadTest implements Callable<Boolean>
 
          private void postOperation(final Response response)
          {
-            LoadTest.this.eventBus.post(new Pair<Request, Response>(request, response));
+            LoadTest.this.eventBus.post(Pair.of(request, response));
          }
       });
    }

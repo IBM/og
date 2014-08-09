@@ -35,6 +35,12 @@ public class Pair<K, V>
    private final K key;
    private final V value;
 
+   private Pair(final K key, final V value)
+   {
+      this.key = checkNotNull(key);
+      this.value = checkNotNull(value);
+   }
+
    /**
     * Constructs a pair instance
     * 
@@ -43,10 +49,9 @@ public class Pair<K, V>
     * @param value
     *           the value for this pair
     */
-   public Pair(final K key, final V value)
+   public static <K, V> Pair<K, V> of(final K key, final V value)
    {
-      this.key = checkNotNull(key);
-      this.value = checkNotNull(value);
+      return new Pair<K, V>(key, value);
    }
 
    /**

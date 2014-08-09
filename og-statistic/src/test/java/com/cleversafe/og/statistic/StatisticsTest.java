@@ -56,7 +56,7 @@ public class StatisticsTest
       this.response = mock(Response.class);
       when(this.response.getStatusCode()).thenReturn(201);
       when(this.response.getEntity()).thenReturn(Entities.none());
-      this.operation = new Pair<Request, Response>(this.request, this.response);
+      this.operation = Pair.of(this.request, this.response);
    }
 
    @Test(expected = NullPointerException.class)

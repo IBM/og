@@ -40,11 +40,6 @@ import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
 import com.cleversafe.og.http.HttpUtil;
-import com.cleversafe.og.object.ObjectManager;
-import com.cleversafe.og.object.ObjectManagerException;
-import com.cleversafe.og.object.ObjectName;
-import com.cleversafe.og.object.ObjectNameConsumer;
-import com.cleversafe.og.object.WriteObjectNameConsumer;
 import com.cleversafe.og.util.Pair;
 import com.google.common.collect.Lists;
 
@@ -126,7 +121,7 @@ public class WriteObjectNameConsumerTest
       final ObjectNameConsumer c =
             new WriteObjectNameConsumer(this.mockObjectManager, this.statusCodes);
 
-      c.consume(new Pair<Request, Response>(this.mockRequest, this.mockResponse));
+      c.consume(Pair.of(this.mockRequest, this.mockResponse));
       verify(this.mockObjectManager).writeNameComplete(isA(ObjectName.class));
    }
 
@@ -142,7 +137,7 @@ public class WriteObjectNameConsumerTest
       final ObjectNameConsumer c =
             new WriteObjectNameConsumer(this.mockObjectManager, this.statusCodes);
 
-      c.consume(new Pair<Request, Response>(this.mockRequest, this.mockResponse));
+      c.consume(Pair.of(this.mockRequest, this.mockResponse));
       verify(this.mockObjectManager).writeNameComplete(isA(ObjectName.class));
    }
 
@@ -155,7 +150,7 @@ public class WriteObjectNameConsumerTest
       final ObjectNameConsumer c =
             new WriteObjectNameConsumer(this.mockObjectManager, this.statusCodes);
 
-      c.consume(new Pair<Request, Response>(this.mockRequest, this.mockResponse));
+      c.consume(Pair.of(this.mockRequest, this.mockResponse));
       verify(this.mockObjectManager, never()).writeNameComplete(isA(ObjectName.class));
    }
 
@@ -167,7 +162,7 @@ public class WriteObjectNameConsumerTest
       final ObjectNameConsumer c =
             new WriteObjectNameConsumer(this.mockObjectManager, this.statusCodes);
 
-      c.consume(new Pair<Request, Response>(this.mockRequest, this.mockResponse));
+      c.consume(Pair.of(this.mockRequest, this.mockResponse));
       verify(this.mockObjectManager, never()).writeNameComplete((isA(ObjectName.class)));
    }
 
@@ -184,7 +179,7 @@ public class WriteObjectNameConsumerTest
       final ObjectNameConsumer c =
             new WriteObjectNameConsumer(this.mockObjectManager, this.statusCodes);
 
-      c.consume(new Pair<Request, Response>(this.mockRequest, this.mockResponse));
+      c.consume(Pair.of(this.mockRequest, this.mockResponse));
    }
 
    @Test(expected = IllegalStateException.class)
@@ -195,6 +190,6 @@ public class WriteObjectNameConsumerTest
       when(this.mockResponse.getStatusCode()).thenReturn(201);
 
       new WriteObjectNameConsumer(this.mockObjectManager, this.statusCodes)
-            .consume(new Pair<Request, Response>(this.mockRequest, this.mockResponse));
+            .consume(Pair.of(this.mockRequest, this.mockResponse));
    }
 }

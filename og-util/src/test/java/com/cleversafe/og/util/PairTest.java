@@ -22,26 +22,24 @@ package com.cleversafe.og.util;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.cleversafe.og.util.Pair;
-
 public class PairTest
 {
    @Test(expected = NullPointerException.class)
    public void testNullKey()
    {
-      new Pair<String, String>(null, "value");
+      Pair.of(null, "value");
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullValue()
    {
-      new Pair<String, String>("key", null);
+      Pair.of("key", null);
    }
 
    @Test
    public void testPair()
    {
-      final Pair<String, String> p = new Pair<String, String>("key", "value");
+      final Pair<String, String> p = Pair.of("key", "value");
       Assert.assertEquals("key", p.getKey());
       Assert.assertEquals("value", p.getValue());
    }

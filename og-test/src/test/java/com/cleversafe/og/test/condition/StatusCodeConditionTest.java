@@ -122,7 +122,7 @@ public class StatusCodeConditionTest
       final Response response = mock(Response.class);
       when(response.getEntity()).thenReturn(Entities.none());
       when(response.getStatusCode()).thenReturn(200);
-      final Pair<Request, Response> operation = new Pair<Request, Response>(request, response);
+      final Pair<Request, Response> operation = Pair.of(request, response);
 
       final StatusCodeCondition c =
             new StatusCodeCondition(Operation.WRITE, 200, 2, this.test, this.stats);

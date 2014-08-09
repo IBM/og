@@ -145,7 +145,7 @@ public class RequestSupplier implements Supplier<Request>
        */
       public Builder withHeader(final Supplier<String> key, final Supplier<String> value)
       {
-         this.headers.add(new Pair<Supplier<String>, Supplier<String>>(key, value));
+         this.headers.add(Pair.of(key, value));
          return this;
       }
 
@@ -216,7 +216,7 @@ public class RequestSupplier implements Supplier<Request>
        */
       public Builder withMetadata(final Supplier<String> key, final Supplier<String> value)
       {
-         this.metadata.add(new Pair<Supplier<String>, Supplier<String>>(key, value));
+         this.metadata.add(Pair.of(key, value));
          return this;
       }
 

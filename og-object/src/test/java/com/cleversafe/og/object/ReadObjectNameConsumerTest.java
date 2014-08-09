@@ -40,11 +40,6 @@ import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
 import com.cleversafe.og.http.HttpUtil;
-import com.cleversafe.og.object.ObjectManager;
-import com.cleversafe.og.object.ObjectManagerException;
-import com.cleversafe.og.object.ObjectName;
-import com.cleversafe.og.object.ObjectNameConsumer;
-import com.cleversafe.og.object.ReadObjectNameConsumer;
 import com.cleversafe.og.util.Pair;
 import com.google.common.collect.Lists;
 
@@ -126,7 +121,7 @@ public class ReadObjectNameConsumerTest
       final ObjectNameConsumer c =
             new ReadObjectNameConsumer(this.mockObjectManager, this.statusCodes);
 
-      c.consume(new Pair<Request, Response>(this.mockRequest, this.mockResponse));
+      c.consume(Pair.of(this.mockRequest, this.mockResponse));
       verify(this.mockObjectManager).releaseNameFromRead(isA(ObjectName.class));
    }
 
@@ -139,7 +134,7 @@ public class ReadObjectNameConsumerTest
       final ObjectNameConsumer c =
             new ReadObjectNameConsumer(this.mockObjectManager, this.statusCodes);
 
-      c.consume(new Pair<Request, Response>(this.mockRequest, this.mockResponse));
+      c.consume(Pair.of(this.mockRequest, this.mockResponse));
       verify(this.mockObjectManager, never()).releaseNameFromRead(isA(ObjectName.class));
    }
 
@@ -151,7 +146,7 @@ public class ReadObjectNameConsumerTest
       final ObjectNameConsumer c =
             new ReadObjectNameConsumer(this.mockObjectManager, this.statusCodes);
 
-      c.consume(new Pair<Request, Response>(this.mockRequest, this.mockResponse));
+      c.consume(Pair.of(this.mockRequest, this.mockResponse));
       verify(this.mockObjectManager, never()).releaseNameFromRead((isA(ObjectName.class)));
    }
 
@@ -168,7 +163,7 @@ public class ReadObjectNameConsumerTest
       final ObjectNameConsumer c =
             new ReadObjectNameConsumer(this.mockObjectManager, this.statusCodes);
 
-      c.consume(new Pair<Request, Response>(this.mockRequest, this.mockResponse));
+      c.consume(Pair.of(this.mockRequest, this.mockResponse));
    }
 
    @Test(expected = IllegalStateException.class)
@@ -179,6 +174,6 @@ public class ReadObjectNameConsumerTest
       when(this.mockResponse.getStatusCode()).thenReturn(200);
 
       new ReadObjectNameConsumer(this.mockObjectManager, this.statusCodes)
-            .consume(new Pair<Request, Response>(this.mockRequest, this.mockResponse));
+            .consume(Pair.of(this.mockRequest, this.mockResponse));
    }
 }
