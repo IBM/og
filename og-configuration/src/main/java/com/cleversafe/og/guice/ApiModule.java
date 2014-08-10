@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.cleversafe.og.api.Entity;
+import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.Metadata;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
@@ -58,7 +58,7 @@ import com.cleversafe.og.supplier.CachingSupplier;
 import com.cleversafe.og.supplier.Suppliers;
 import com.cleversafe.og.supplier.RequestSupplier;
 import com.cleversafe.og.supplier.UriSupplier;
-import com.cleversafe.og.util.Entities;
+import com.cleversafe.og.util.Bodies;
 import com.cleversafe.og.util.ResponseBodyConsumer;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
@@ -83,12 +83,12 @@ public class ApiModule extends AbstractModule
          @WriteUri final Supplier<URI> uri,
          @WriteObjectName final Optional<CachingSupplier<String>> object,
          @WriteHeaders final Map<Supplier<String>, Supplier<String>> headers,
-         final Supplier<Entity> entity,
+         final Supplier<Body> body,
          @WriteMetadata final Map<Supplier<String>, Supplier<String>> metadata,
          @Username final Optional<Supplier<String>> username,
          @Password final Optional<Supplier<String>> password)
    {
-      return createRequestSupplier(Method.PUT, uri, object, headers, entity, metadata, username,
+      return createRequestSupplier(Method.PUT, uri, object, headers, body, metadata, username,
             password);
    }
 
@@ -132,7 +132,7 @@ public class ApiModule extends AbstractModule
          @Password final Optional<Supplier<String>> password)
    {
       return createRequestSupplier(Method.GET, uri, Optional.of(object), headers,
-            Suppliers.of(Entities.none()), metadata, username, password);
+            Suppliers.of(Bodies.none()), metadata, username, password);
    }
 
    @Provides
@@ -168,7 +168,7 @@ public class ApiModule extends AbstractModule
          @Password final Optional<Supplier<String>> password)
    {
       return createRequestSupplier(Method.DELETE, uri, Optional.of(object), headers,
-            Suppliers.of(Entities.none()), metadata, username, password);
+            Suppliers.of(Bodies.none()), metadata, username, password);
    }
 
    @Provides
@@ -205,7 +205,7 @@ public class ApiModule extends AbstractModule
          final Supplier<URI> uri,
          final Optional<CachingSupplier<String>> object,
          final Map<Supplier<String>, Supplier<String>> headers,
-         final Supplier<Entity> entity,
+         final Supplier<Body> body,
          final Map<Supplier<String>, Supplier<String>> metadata,
          final Optional<Supplier<String>> username,
          final Optional<Supplier<String>> password)
@@ -227,7 +227,7 @@ public class ApiModule extends AbstractModule
          b.withHeader(header.getKey(), header.getValue());
       }
 
-      b.withEntity(entity);
+      b.withBody(body);
 
       for (final Entry<Supplier<String>, Supplier<String>> m : metadata.entrySet())
       {

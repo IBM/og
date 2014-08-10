@@ -22,56 +22,56 @@ package com.cleversafe.og.util;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.cleversafe.og.api.Entity;
-import com.cleversafe.og.api.EntityType;
+import com.cleversafe.og.api.Body;
+import com.cleversafe.og.api.Data;
 
-public class EntitiesTest
+public class BodiesTest
 {
    @Test
    public void testNone()
    {
-      final Entity e = Entities.none();
-      Assert.assertEquals(EntityType.NONE, e.getType());
+      final Body e = Bodies.none();
+      Assert.assertEquals(Data.NONE, e.getData());
       Assert.assertEquals(0, e.getSize());
    }
 
    @Test(expected = IllegalArgumentException.class)
    public void testRandomNegativeSize()
    {
-      Entities.random(-1);
+      Bodies.random(-1);
    }
 
    @Test(expected = IllegalArgumentException.class)
    public void testZeroesNegativeSize()
    {
-      Entities.zeroes(-1);
+      Bodies.zeroes(-1);
    }
 
    @Test
    public void testRandomZeroSize()
    {
-      Entities.random(0);
+      Bodies.random(0);
    }
 
    @Test
    public void testZeroesZeroSize()
    {
-      Entities.zeroes(0);
+      Bodies.zeroes(0);
    }
 
    @Test
    public void testRandomPositiveSize()
    {
-      final Entity e = Entities.random(1);
-      Assert.assertEquals(EntityType.RANDOM, e.getType());
+      final Body e = Bodies.random(1);
+      Assert.assertEquals(Data.RANDOM, e.getData());
       Assert.assertEquals(1, e.getSize());
    }
 
    @Test
    public void testZeroesPositiveSize()
    {
-      final Entity e = Entities.zeroes(1);
-      Assert.assertEquals(EntityType.ZEROES, e.getType());
+      final Body e = Bodies.zeroes(1);
+      Assert.assertEquals(Data.ZEROES, e.getData());
       Assert.assertEquals(1, e.getSize());
    }
 }

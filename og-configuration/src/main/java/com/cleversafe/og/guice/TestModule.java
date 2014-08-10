@@ -29,8 +29,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicLong;
 
-import com.cleversafe.og.api.Entity;
-import com.cleversafe.og.api.EntityType;
+import com.cleversafe.og.api.Body;
+import com.cleversafe.og.api.Data;
 import com.cleversafe.og.guice.annotation.Container;
 import com.cleversafe.og.guice.annotation.DeleteHeaders;
 import com.cleversafe.og.guice.annotation.DeleteHost;
@@ -70,7 +70,7 @@ import com.cleversafe.og.scheduling.RequestRateScheduler;
 import com.cleversafe.og.scheduling.Scheduler;
 import com.cleversafe.og.supplier.RandomChoiceSupplier;
 import com.cleversafe.og.supplier.Suppliers;
-import com.cleversafe.og.util.Entities;
+import com.cleversafe.og.util.Bodies;
 import com.cleversafe.og.util.SizeUnit;
 import com.cleversafe.og.util.distribution.Distribution;
 import com.cleversafe.og.util.distribution.LogNormalDistribution;
@@ -366,7 +366,7 @@ public class TestModule extends AbstractModule
 
    @Provides
    @Singleton
-   public Supplier<Entity> provideEntity()
+   public Supplier<Body> provideBody()
    {
       final CollectionAlgorithmType filesizeSelection =
             checkNotNull(this.config.getFilesizeSelection());
@@ -380,7 +380,7 @@ public class TestModule extends AbstractModule
          {
             distributions.add(createSizeDistribution(f));
          }
-         return createEntitySupplier(Suppliers.cycle(distributions));
+         return createBodySupplier(Suppliers.cycle(distributions));
       }
 
       final RandomChoiceSupplier.Builder<Distribution> wrc =
@@ -389,7 +389,7 @@ public class TestModule extends AbstractModule
       {
          wrc.withChoice(createSizeDistribution(f), f.getWeight());
       }
-      return createEntitySupplier(wrc.build());
+      return createBodySupplier(wrc.build());
    }
 
    private static Distribution createSizeDistribution(final FilesizeConfig filesize)
@@ -415,24 +415,24 @@ public class TestModule extends AbstractModule
       }
    }
 
-   private Supplier<Entity> createEntitySupplier(final Supplier<Distribution> distributionSupplier)
+   private Supplier<Body> createBodySupplier(final Supplier<Distribution> distributionSupplier)
    {
-      final EntityType source = checkNotNull(this.config.getSource());
-      checkArgument(EntityType.NONE != source, "Unacceptable source [%s]", source);
+      final Data source = checkNotNull(this.config.getSource());
+      checkArgument(Data.NONE != source, "Unacceptable source [%s]", source);
 
-      return new Supplier<Entity>()
+      return new Supplier<Body>()
       {
          @Override
-         public Entity get()
+         public Body get()
          {
             final long sample = (long) distributionSupplier.get().nextSample();
 
             switch (source)
             {
                case ZEROES :
-                  return Entities.zeroes(sample);
+                  return Bodies.zeroes(sample);
                default :
-                  return Entities.random(sample);
+                  return Bodies.random(sample);
             }
          }
       };

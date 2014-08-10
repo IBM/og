@@ -25,7 +25,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Random;
 
-import com.cleversafe.og.api.Entity;
+import com.cleversafe.og.api.Body;
 
 /**
  * A utility class for creating input and output streams
@@ -57,24 +57,24 @@ public class Streams
    {}
 
    /**
-    * Creates an input stream from the provided entity description. The size of this stream and its
-    * data are determined by the provided entity's size and type, respectively.
+    * Creates an input stream from the provided body description. The size of this stream and its
+    * data are determined by the provided body's size and type, respectively.
     * 
-    * @param entity
-    *           the description of an entity
+    * @param body
+    *           the description of an body
     * @return an input stream instance
     */
-   public static SizedInputStream create(final Entity entity)
+   public static SizedInputStream create(final Body body)
    {
-      checkNotNull(entity);
-      switch (entity.getType())
+      checkNotNull(body);
+      switch (body.getData())
       {
          case NONE :
             return NONE_INPUTSTREAM;
          case ZEROES :
-            return new FixedBufferInputStream(ZERO_BUF, entity.getSize());
+            return new FixedBufferInputStream(ZERO_BUF, body.getSize());
          default :
-            return new FixedBufferInputStream(createRandomBuffer(), entity.getSize());
+            return new FixedBufferInputStream(createRandomBuffer(), body.getSize());
       }
    }
 

@@ -35,8 +35,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.cleversafe.og.api.Entity;
-import com.cleversafe.og.api.EntityType;
+import com.cleversafe.og.api.Body;
+import com.cleversafe.og.api.Data;
 import com.cleversafe.og.http.Api;
 import com.cleversafe.og.http.BasicAuth;
 import com.cleversafe.og.http.HttpAuth;
@@ -754,31 +754,31 @@ public class TestModuleTest
    }
 
    @Test(expected = NullPointerException.class)
-   public void testProvideEntityNullFilesizeSelection()
+   public void testProvideBodyNullFilesizeSelection()
    {
       when(this.config.getFilesizeSelection()).thenReturn(null);
-      this.module.provideEntity();
+      this.module.provideBody();
    }
 
    @Test(expected = NullPointerException.class)
-   public void testProvideEntityNullFilesize()
+   public void testProvideBodyNullFilesize()
    {
       when(this.config.getFilesizeSelection()).thenReturn(CollectionAlgorithmType.ROUNDROBIN);
       when(this.config.getFilesize()).thenReturn(null);
-      this.module.provideEntity();
+      this.module.provideBody();
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testProvideEntityEmptyFilesize()
+   public void testProvideBodyEmptyFilesize()
    {
       when(this.config.getFilesizeSelection()).thenReturn(CollectionAlgorithmType.ROUNDROBIN);
       final List<FilesizeConfig> filesize = Lists.newArrayList();
       when(this.config.getFilesize()).thenReturn(filesize);
-      this.module.provideEntity();
+      this.module.provideBody();
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testProvideEntityPoissonDistribution()
+   public void testProvideBodyPoissonDistribution()
    {
       when(this.config.getFilesizeSelection()).thenReturn(CollectionAlgorithmType.ROUNDROBIN);
       final FilesizeConfig f = mock(FilesizeConfig.class);
@@ -788,73 +788,73 @@ public class TestModuleTest
       final List<FilesizeConfig> filesize = Lists.newArrayList();
       filesize.add(f);
       when(this.config.getFilesize()).thenReturn(filesize);
-      this.module.provideEntity();
+      this.module.provideBody();
    }
 
    @Test(expected = NullPointerException.class)
-   public void testProvideEntityNullSource()
+   public void testProvideBodyNullSource()
    {
       when(this.config.getFilesizeSelection()).thenReturn(CollectionAlgorithmType.ROUNDROBIN);
       final List<FilesizeConfig> filesize = Lists.newArrayList();
       filesize.add(new FilesizeConfig(10.0));
       when(this.config.getSource()).thenReturn(null);
       when(this.config.getFilesize()).thenReturn(filesize);
-      this.module.provideEntity();
+      this.module.provideBody();
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testProvideEntityNoneSource()
+   public void testProvideBodyNoneSource()
    {
       when(this.config.getFilesizeSelection()).thenReturn(CollectionAlgorithmType.ROUNDROBIN);
       final List<FilesizeConfig> filesize = Lists.newArrayList();
       filesize.add(new FilesizeConfig(10.0));
-      when(this.config.getSource()).thenReturn(EntityType.NONE);
+      when(this.config.getSource()).thenReturn(Data.NONE);
       when(this.config.getFilesize()).thenReturn(filesize);
-      this.module.provideEntity();
+      this.module.provideBody();
    }
 
    @Test
-   public void testProvideEntitySingleFilesizeZeroesSource()
+   public void testProvideBodySingleFilesizeZeroesSource()
    {
       when(this.config.getFilesizeSelection()).thenReturn(CollectionAlgorithmType.ROUNDROBIN);
       final List<FilesizeConfig> filesize = Lists.newArrayList();
       filesize.add(new FilesizeConfig(10.0));
-      when(this.config.getSource()).thenReturn(EntityType.ZEROES);
+      when(this.config.getSource()).thenReturn(Data.ZEROES);
       when(this.config.getFilesize()).thenReturn(filesize);
-      final Supplier<Entity> p = this.module.provideEntity();
+      final Supplier<Body> p = this.module.provideBody();
 
       Assert.assertNotNull(p);
-      final Entity e = p.get();
-      Assert.assertEquals(EntityType.ZEROES, e.getType());
+      final Body e = p.get();
+      Assert.assertEquals(Data.ZEROES, e.getData());
       Assert.assertEquals(SizeUnit.MEBIBYTES.toBytes(10), e.getSize());
    }
 
    @Test
-   public void testProvideEntitySingleFilesizeRandomSource()
+   public void testProvideBodySingleFilesizeRandomSource()
    {
       when(this.config.getFilesizeSelection()).thenReturn(CollectionAlgorithmType.ROUNDROBIN);
       final List<FilesizeConfig> filesize = Lists.newArrayList();
       filesize.add(new FilesizeConfig(10.0));
-      when(this.config.getSource()).thenReturn(EntityType.RANDOM);
+      when(this.config.getSource()).thenReturn(Data.RANDOM);
       when(this.config.getFilesize()).thenReturn(filesize);
-      final Supplier<Entity> p = this.module.provideEntity();
+      final Supplier<Body> p = this.module.provideBody();
 
       Assert.assertNotNull(p);
-      final Entity e = p.get();
-      Assert.assertEquals(EntityType.RANDOM, e.getType());
+      final Body e = p.get();
+      Assert.assertEquals(Data.RANDOM, e.getData());
       Assert.assertEquals(SizeUnit.MEBIBYTES.toBytes(10), e.getSize());
    }
 
    @Test
-   public void testProvideEntityMultipleFilesizeRoundRobin()
+   public void testProvideBodyMultipleFilesizeRoundRobin()
    {
       when(this.config.getFilesizeSelection()).thenReturn(CollectionAlgorithmType.ROUNDROBIN);
       final List<FilesizeConfig> filesize = Lists.newArrayList();
       filesize.add(new FilesizeConfig(10.0));
       filesize.add(new FilesizeConfig(25.0));
-      when(this.config.getSource()).thenReturn(EntityType.RANDOM);
+      when(this.config.getSource()).thenReturn(Data.RANDOM);
       when(this.config.getFilesize()).thenReturn(filesize);
-      final Supplier<Entity> p = this.module.provideEntity();
+      final Supplier<Body> p = this.module.provideBody();
 
       Assert.assertNotNull(p);
       for (int i = 0; i < 100; i++)
@@ -865,15 +865,15 @@ public class TestModuleTest
    }
 
    @Test(expected = AssertionError.class)
-   public void testProvideEntityMultipleFilesizeRandom()
+   public void testProvideBodyMultipleFilesizeRandom()
    {
       when(this.config.getFilesizeSelection()).thenReturn(CollectionAlgorithmType.RANDOM);
       final List<FilesizeConfig> filesize = Lists.newArrayList();
       filesize.add(new FilesizeConfig(10.0));
       filesize.add(new FilesizeConfig(25.0));
-      when(this.config.getSource()).thenReturn(EntityType.RANDOM);
+      when(this.config.getSource()).thenReturn(Data.RANDOM);
       when(this.config.getFilesize()).thenReturn(filesize);
-      final Supplier<Entity> p = this.module.provideEntity();
+      final Supplier<Body> p = this.module.provideBody();
 
       Assert.assertNotNull(p);
       for (int i = 0; i < 100; i++)

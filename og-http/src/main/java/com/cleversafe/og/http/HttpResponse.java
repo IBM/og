@@ -26,10 +26,10 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.cleversafe.og.api.Entity;
+import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.Metadata;
 import com.cleversafe.og.api.Response;
-import com.cleversafe.og.util.Entities;
+import com.cleversafe.og.util.Bodies;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
@@ -42,7 +42,7 @@ public class HttpResponse implements Response
 {
    private final int statusCode;
    private final Map<String, String> headers;
-   private final Entity entity;
+   private final Body body;
    private final Map<String, String> metadata;
 
    private HttpResponse(final Builder builder)
@@ -51,7 +51,7 @@ public class HttpResponse implements Response
       checkArgument(HttpUtil.VALID_STATUS_CODES.contains(this.statusCode),
             "statusCode must be a valid status code [%s]", this.statusCode);
       this.headers = ImmutableMap.copyOf(builder.headers);
-      this.entity = checkNotNull(builder.entity);
+      this.body = checkNotNull(builder.body);
       this.metadata = ImmutableMap.copyOf(builder.metadata);
    }
 
@@ -74,9 +74,9 @@ public class HttpResponse implements Response
    }
 
    @Override
-   public Entity getEntity()
+   public Body getBody()
    {
-      return this.entity;
+      return this.body;
    }
 
    @Override
@@ -104,7 +104,7 @@ public class HttpResponse implements Response
    {
       private int statusCode;
       private final Map<String, String> headers;
-      private Entity entity;
+      private Body body;
       private final Map<String, String> metadata;
 
       /**
@@ -113,7 +113,7 @@ public class HttpResponse implements Response
       public Builder()
       {
          this.headers = Maps.newLinkedHashMap();
-         this.entity = Entities.none();
+         this.body = Bodies.none();
          this.metadata = Maps.newLinkedHashMap();
       }
 
@@ -139,15 +139,15 @@ public class HttpResponse implements Response
       }
 
       /**
-       * Configures a response entity to include with this response
+       * Configures a response body to include with this response
        * 
-       * @param entity
-       *           an entity
+       * @param body
+       *           a body
        * @return this builder
        */
-      public Builder withEntity(final Entity entity)
+      public Builder withBody(final Body body)
       {
-         this.entity = entity;
+         this.body = body;
          return this;
       }
 

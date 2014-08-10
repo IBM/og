@@ -22,7 +22,7 @@ package com.cleversafe.og.json;
 import java.util.List;
 import java.util.Map;
 
-import com.cleversafe.og.api.EntityType;
+import com.cleversafe.og.api.Data;
 import com.cleversafe.og.http.Api;
 import com.cleversafe.og.http.Scheme;
 import com.google.common.collect.Lists;
@@ -43,7 +43,7 @@ public class TestConfig
    OperationConfig delete;
    CollectionAlgorithmType filesizeSelection;
    List<FilesizeConfig> filesize;
-   EntityType source;
+   Data source;
    ConcurrencyConfig concurrency;
    AuthenticationConfig authentication;
    StoppingConditionsConfig stoppingConditions;
@@ -65,7 +65,7 @@ public class TestConfig
       this.filesizeSelection = CollectionAlgorithmType.RANDOM;
       this.filesize = Lists.newArrayList();
       this.filesize.add(new FilesizeConfig());
-      this.source = EntityType.RANDOM;
+      this.source = Data.RANDOM;
       this.concurrency = new ConcurrencyConfig();
       this.authentication = new AuthenticationConfig();
       this.stoppingConditions = new StoppingConditionsConfig();
@@ -137,7 +137,7 @@ public class TestConfig
       return this.filesize;
    }
 
-   public EntityType getSource()
+   public Data getSource()
    {
       return this.source;
    }

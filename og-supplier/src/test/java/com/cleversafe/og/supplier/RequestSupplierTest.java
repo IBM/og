@@ -28,14 +28,12 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.cleversafe.og.api.Entity;
-import com.cleversafe.og.api.EntityType;
+import com.cleversafe.og.api.Body;
+import com.cleversafe.og.api.Data;
 import com.cleversafe.og.api.Metadata;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
-import com.cleversafe.og.supplier.Suppliers;
-import com.cleversafe.og.supplier.RequestSupplier;
-import com.cleversafe.og.util.Entities;
+import com.cleversafe.og.util.Bodies;
 import com.google.common.base.Supplier;
 
 public class RequestSupplierTest
@@ -101,15 +99,15 @@ public class RequestSupplierTest
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullEntity()
+   public void testNullBody()
    {
-      new RequestSupplier.Builder(this.method, this.uri).withEntity((Entity) null);
+      new RequestSupplier.Builder(this.method, this.uri).withBody((Body) null);
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullEntitySupplier()
+   public void testNullBodySupplier()
    {
-      new RequestSupplier.Builder(this.method, this.uri).withEntity((Supplier<Entity>) null);
+      new RequestSupplier.Builder(this.method, this.uri).withBody((Supplier<Body>) null);
    }
 
    @Test(expected = NullPointerException.class)
@@ -206,33 +204,33 @@ public class RequestSupplierTest
    }
 
    @Test
-   public void testNoEntity()
+   public void testNoBody()
    {
       final Request r = new RequestSupplier.Builder(this.method, this.uri).build().get();
-      Assert.assertEquals(EntityType.NONE, r.getEntity().getType());
-      Assert.assertEquals(0, r.getEntity().getSize());
+      Assert.assertEquals(Data.NONE, r.getBody().getData());
+      Assert.assertEquals(0, r.getBody().getSize());
    }
 
    @Test
-   public void testEntity()
+   public void testBody()
    {
       final Request r = new RequestSupplier.Builder(this.method, this.uri)
-            .withEntity(Entities.zeroes(12345))
+            .withBody(Bodies.zeroes(12345))
             .build()
             .get();
-      Assert.assertEquals(EntityType.ZEROES, r.getEntity().getType());
-      Assert.assertEquals(12345, r.getEntity().getSize());
+      Assert.assertEquals(Data.ZEROES, r.getBody().getData());
+      Assert.assertEquals(12345, r.getBody().getSize());
    }
 
    @Test
-   public void testEntitySupplier()
+   public void testBodySupplier()
    {
       final Request r = new RequestSupplier.Builder(this.method, this.uri)
-            .withEntity(Suppliers.of(Entities.zeroes(12345)))
+            .withBody(Suppliers.of(Bodies.zeroes(12345)))
             .build()
             .get();
-      Assert.assertEquals(EntityType.ZEROES, r.getEntity().getType());
-      Assert.assertEquals(12345, r.getEntity().getSize());
+      Assert.assertEquals(Data.ZEROES, r.getBody().getData());
+      Assert.assertEquals(12345, r.getBody().getSize());
    }
 
    @Test

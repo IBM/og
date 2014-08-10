@@ -109,9 +109,9 @@ public class Statistics
    private long getBytes(final Operation operation, final Request request, final Response response)
    {
       if (Operation.WRITE == operation)
-         return request.getEntity().getSize();
+         return request.getBody().getSize();
       else if (Operation.READ == operation)
-         return response.getEntity().getSize();
+         return response.getBody().getSize();
       return 0;
    }
 

@@ -34,7 +34,7 @@ import com.cleversafe.og.api.Metadata;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
-import com.cleversafe.og.util.Entities;
+import com.cleversafe.og.util.Bodies;
 import com.cleversafe.og.util.Operation;
 import com.cleversafe.og.util.Pair;
 import com.google.common.collect.Lists;
@@ -52,10 +52,10 @@ public class StatisticsTest
       this.stats = new Statistics();
       this.request = mock(Request.class);
       when(this.request.getMethod()).thenReturn(Method.PUT);
-      when(this.request.getEntity()).thenReturn(Entities.random(1024));
+      when(this.request.getBody()).thenReturn(Bodies.random(1024));
       this.response = mock(Response.class);
       when(this.response.getStatusCode()).thenReturn(201);
-      when(this.response.getEntity()).thenReturn(Entities.none());
+      when(this.response.getBody()).thenReturn(Bodies.none());
       this.operation = Pair.of(this.request, this.response);
    }
 
@@ -101,8 +101,8 @@ public class StatisticsTest
    public void testUpdateReadBytes()
    {
       when(this.request.getMethod()).thenReturn(Method.GET);
-      when(this.request.getEntity()).thenReturn(Entities.none());
-      when(this.response.getEntity()).thenReturn(Entities.zeroes(1024));
+      when(this.request.getBody()).thenReturn(Bodies.none());
+      when(this.response.getBody()).thenReturn(Bodies.zeroes(1024));
       this.stats.update(this.operation);
       assertAll(Operation.READ, 1, 1024, 0, 201, 1);
    }
@@ -111,7 +111,7 @@ public class StatisticsTest
    public void testDeleteReadBytes()
    {
       when(this.request.getMethod()).thenReturn(Method.DELETE);
-      when(this.request.getEntity()).thenReturn(Entities.none());
+      when(this.request.getBody()).thenReturn(Bodies.none());
       this.stats.update(this.operation);
       assertAll(Operation.DELETE, 1, 0, 0, 201, 1);
    }

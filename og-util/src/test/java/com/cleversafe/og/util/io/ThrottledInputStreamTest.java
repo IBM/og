@@ -29,7 +29,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.cleversafe.og.util.Entities;
+import com.cleversafe.og.util.Bodies;
 
 @SuppressWarnings("resource")
 public class ThrottledInputStreamTest
@@ -69,7 +69,7 @@ public class ThrottledInputStreamTest
    @Test
    public void testReadByte() throws IOException
    {
-      final InputStream in = Streams.create(Entities.zeroes(10000));
+      final InputStream in = Streams.create(Bodies.zeroes(10000));
       final InputStream throttled = new ThrottledInputStream(in, 1000);
       final long timestampStart = System.nanoTime();
       for (int i = 0; i < 100; i++)
@@ -85,7 +85,7 @@ public class ThrottledInputStreamTest
    @Test
    public void testReadByteArray() throws IOException
    {
-      final InputStream in = Streams.create(Entities.zeroes(10000));
+      final InputStream in = Streams.create(Bodies.zeroes(10000));
       final InputStream throttled = new ThrottledInputStream(in, 1000);
       final byte[] buf = new byte[100];
       final long timestampStart = System.nanoTime();

@@ -31,7 +31,7 @@ import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
 import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.test.LoadTest;
-import com.cleversafe.og.util.Entities;
+import com.cleversafe.og.util.Bodies;
 import com.cleversafe.og.util.Operation;
 import com.cleversafe.og.util.Pair;
 
@@ -118,9 +118,9 @@ public class StatusCodeConditionTest
    {
       final Request request = mock(Request.class);
       when(request.getMethod()).thenReturn(Method.PUT);
-      when(request.getEntity()).thenReturn(Entities.none());
+      when(request.getBody()).thenReturn(Bodies.none());
       final Response response = mock(Response.class);
-      when(response.getEntity()).thenReturn(Entities.none());
+      when(response.getBody()).thenReturn(Bodies.none());
       when(response.getStatusCode()).thenReturn(200);
       final Pair<Request, Response> operation = Pair.of(request, response);
 

@@ -28,11 +28,11 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.cleversafe.og.api.Entity;
-import com.cleversafe.og.api.EntityType;
+import com.cleversafe.og.api.Body;
+import com.cleversafe.og.api.Data;
 import com.cleversafe.og.api.Metadata;
 import com.cleversafe.og.api.Method;
-import com.cleversafe.og.util.Entities;
+import com.cleversafe.og.util.Bodies;
 
 public class HttpRequestTest
 {
@@ -71,9 +71,9 @@ public class HttpRequestTest
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullEntity()
+   public void testNullBody()
    {
-      new HttpRequest.Builder(this.method, this.uri).withEntity(null).build();
+      new HttpRequest.Builder(this.method, this.uri).withBody(null).build();
    }
 
    @Test(expected = NullPointerException.class)
@@ -192,20 +192,20 @@ public class HttpRequestTest
    }
 
    @Test
-   public void testDefaultEntity()
+   public void testDefaultBody()
    {
       final HttpRequest r = new HttpRequest.Builder(this.method, this.uri).build();
-      Assert.assertEquals(EntityType.NONE, r.getEntity().getType());
-      Assert.assertEquals(0, r.getEntity().getSize());
+      Assert.assertEquals(Data.NONE, r.getBody().getData());
+      Assert.assertEquals(0, r.getBody().getSize());
    }
 
    @Test
-   public void testEntity()
+   public void testBody()
    {
-      final Entity e = Entities.zeroes(12345);
-      final HttpRequest r = new HttpRequest.Builder(this.method, this.uri).withEntity(e).build();
-      Assert.assertEquals(EntityType.ZEROES, r.getEntity().getType());
-      Assert.assertEquals(12345, r.getEntity().getSize());
+      final Body e = Bodies.zeroes(12345);
+      final HttpRequest r = new HttpRequest.Builder(this.method, this.uri).withBody(e).build();
+      Assert.assertEquals(Data.ZEROES, r.getBody().getData());
+      Assert.assertEquals(12345, r.getBody().getSize());
    }
 
    @Test

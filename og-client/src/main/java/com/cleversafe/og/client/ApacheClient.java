@@ -52,13 +52,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.api.Client;
-import com.cleversafe.og.api.EntityType;
+import com.cleversafe.og.api.Data;
 import com.cleversafe.og.api.Metadata;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
 import com.cleversafe.og.http.HttpAuth;
 import com.cleversafe.og.http.HttpResponse;
-import com.cleversafe.og.util.Entities;
+import com.cleversafe.og.util.Bodies;
 import com.cleversafe.og.util.ResponseBodyConsumer;
 import com.cleversafe.og.util.io.Streams;
 import com.google.common.collect.ImmutableMap;
@@ -212,7 +212,7 @@ public class ApacheClient implements Client
          builder.addHeader(header.getKey(), header.getValue());
       }
 
-      if (EntityType.NONE != request.getEntity().getType())
+      if (Data.NONE != request.getBody().getData())
          builder.setEntity(createEntity(request));
 
       return builder.build();
@@ -223,8 +223,8 @@ public class ApacheClient implements Client
       // TODO verify httpclient consumes request entity correctly automatically
       // TODO may need to implement a custom HttpEntity that returns false for isStreaming call,
       // if this makes a performance difference
-      final InputStream stream = Streams.create(request.getEntity());
-      final InputStreamEntity entity = new ThrottledEntity(stream, request.getEntity().getSize());
+      final InputStream stream = Streams.create(request.getBody());
+      final InputStreamEntity entity = new ThrottledEntity(stream, request.getBody().getSize());
       // TODO chunk size for chunked encoding is hardcoded to 2048 bytes. Can only be overridden
       // by implementing a custom connection factory
       entity.setChunked(this.chunkedEncoding);
@@ -442,7 +442,7 @@ public class ApacheClient implements Client
          }
 
          if (totalBytes > 0)
-            responseBuilder.withEntity(Entities.zeroes(totalBytes));
+            responseBuilder.withBody(Bodies.zeroes(totalBytes));
       }
    }
 

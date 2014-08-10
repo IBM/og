@@ -25,7 +25,7 @@ import java.util.Locale;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
-import com.cleversafe.og.api.EntityType;
+import com.cleversafe.og.api.Data;
 import com.cleversafe.og.api.Metadata;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
@@ -103,14 +103,14 @@ public class RequestLogEntry
       this.objectId = objectName;
 
       long objectSize = 0;
-      if (EntityType.NONE != request.getEntity().getType())
-         objectSize = request.getEntity().getSize();
+      if (Data.NONE != request.getBody().getData())
+         objectSize = request.getBody().getSize();
 
       this.status = response.getStatusCode();
       // TODO requestLength will not equal objectLength with AWSv4 request overhead
       this.requestLength = objectSize;
       // TODO is this correct?
-      this.responseLength = response.getEntity().getSize();
+      this.responseLength = response.getBody().getSize();
       this.userAgent = request.getHeader(HttpHeaders.USER_AGENT);
       // TODO ask: dsnet access.log uses System.currentTimeMillis() - request.getTimeStamp();
       this.requestLatency = this.timestampFinish - this.timestampStart;

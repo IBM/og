@@ -52,16 +52,16 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.Client;
-import com.cleversafe.og.api.Entity;
-import com.cleversafe.og.api.EntityType;
+import com.cleversafe.og.api.Data;
 import com.cleversafe.og.api.Metadata;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
 import com.cleversafe.og.http.BasicAuth;
 import com.cleversafe.og.http.HttpRequest;
-import com.cleversafe.og.util.Entities;
+import com.cleversafe.og.util.Bodies;
 import com.cleversafe.og.util.ResponseBodyConsumer;
 import com.cleversafe.og.util.SizeUnit;
 import com.github.tomakehurst.wiremock.client.RequestPatternBuilder;
@@ -246,75 +246,75 @@ public class ApacheClientTest
    }
 
    @Test
-   public void testPutRequestNoneEntity() throws InterruptedException, ExecutionException
+   public void testPutRequestNoneBody() throws InterruptedException, ExecutionException
    {
-      testWriteWithEntity(Method.PUT, null, "");
+      testWriteWithBody(Method.PUT, null, "");
    }
 
    // TODO test SOH write at integration test level, using real byteBufferConsumer
    @Test
-   public void testPutRequestWithEntity() throws InterruptedException, ExecutionException
+   public void testPutRequestWithBody() throws InterruptedException, ExecutionException
    {
-      testWriteWithEntity(Method.PUT, Entities.zeroes(1024), new String(new byte[1024]));
+      testWriteWithBody(Method.PUT, Bodies.zeroes(1024), new String(new byte[1024]));
    }
 
    @Test
-   public void testPostRequestNoneEntity() throws InterruptedException, ExecutionException
+   public void testPostRequestNoneBody() throws InterruptedException, ExecutionException
    {
-      testWriteWithEntity(Method.POST, null, "");
+      testWriteWithBody(Method.POST, null, "");
    }
 
    @Test
-   public void testPostRequestWithEntity() throws InterruptedException, ExecutionException
+   public void testPostRequestWithBody() throws InterruptedException, ExecutionException
    {
-      testWriteWithEntity(Method.POST, Entities.zeroes(1024), new String(new byte[1024]));
+      testWriteWithBody(Method.POST, Bodies.zeroes(1024), new String(new byte[1024]));
    }
 
-   private void testWriteWithEntity(final Method method, final Entity entity, final String body)
+   private void testWriteWithBody(final Method method, final Body body, final String bodyString)
          throws InterruptedException, ExecutionException
    {
       final HttpRequest.Builder b = new HttpRequest.Builder(method, this.objectUri);
-      if (entity != null)
-         b.withEntity(entity);
+      if (body != null)
+         b.withBody(body);
 
       final Request request = b.build();
       final Response response = this.client.execute(request).get();
       Assert.assertEquals(200, response.getStatusCode());
-      Assert.assertEquals(EntityType.NONE, response.getEntity().getType());
-      Assert.assertEquals(0, response.getEntity().getSize());
+      Assert.assertEquals(Data.NONE, response.getBody().getData());
+      Assert.assertEquals(0, response.getBody().getSize());
       verify(requestedFor(method, this.objectUri.getPath())
-            .withRequestBody(equalTo(body)));
+            .withRequestBody(equalTo(bodyString)));
    }
 
    @Test
    public void testGetRequest() throws InterruptedException, ExecutionException
    {
-      testReadRequest(Method.GET, 200, EntityType.ZEROES, 1024);
+      testReadRequest(Method.GET, 200, Data.ZEROES, 1024);
    }
 
    @Test
    public void testHeadRequest() throws InterruptedException, ExecutionException
    {
-      testReadRequest(Method.HEAD, 200, EntityType.NONE, 0);
+      testReadRequest(Method.HEAD, 200, Data.NONE, 0);
    }
 
    @Test
    public void testDeleteRequest() throws InterruptedException, ExecutionException
    {
-      testReadRequest(Method.DELETE, 204, EntityType.NONE, 0);
+      testReadRequest(Method.DELETE, 204, Data.NONE, 0);
    }
 
    private void testReadRequest(
          final Method method,
          final int statusCode,
-         final EntityType type,
+         final Data type,
          final long size) throws InterruptedException, ExecutionException
    {
       final Request request = new HttpRequest.Builder(method, this.objectUri).build();
       final Response response = this.client.execute(request).get();
       Assert.assertEquals(statusCode, response.getStatusCode());
-      Assert.assertEquals(type, response.getEntity().getType());
-      Assert.assertEquals(size, response.getEntity().getSize());
+      Assert.assertEquals(type, response.getBody().getData());
+      Assert.assertEquals(size, response.getBody().getSize());
       verify(requestedFor(method, this.objectUri.getPath()));
    }
 
@@ -338,7 +338,7 @@ public class ApacheClientTest
             .usingChunkedEncoding(false)
             .build();
       final Request request = new HttpRequest.Builder(Method.PUT, this.objectUri)
-            .withEntity(Entities.zeroes(2048))
+            .withBody(Bodies.zeroes(2048))
             .build();
       client.execute(request).get();
       verify(putRequestedFor(urlEqualTo(this.objectUri.getPath()))
@@ -353,7 +353,7 @@ public class ApacheClientTest
             .usingChunkedEncoding(true)
             .build();
       final Request request = new HttpRequest.Builder(Method.PUT, this.objectUri)
-            .withEntity(Entities.zeroes(2048))
+            .withBody(Bodies.zeroes(2048))
             .build();
       client.execute(request).get();
       verify(putRequestedFor(urlEqualTo(this.objectUri.getPath()))
@@ -368,7 +368,7 @@ public class ApacheClientTest
             .usingExpectContinue(true)
             .build();
       final Request request = new HttpRequest.Builder(Method.PUT, this.objectUri)
-            .withEntity(Entities.zeroes(2048))
+            .withBody(Bodies.zeroes(2048))
             .build();
       client.execute(request).get();
       verify(putRequestedFor(urlEqualTo(this.objectUri.getPath()))
@@ -382,7 +382,7 @@ public class ApacheClientTest
             .usingExpectContinue(false)
             .build();
       final Request request = new HttpRequest.Builder(Method.PUT, this.objectUri)
-            .withEntity(Entities.zeroes(2048))
+            .withBody(Bodies.zeroes(2048))
             .build();
       client.execute(request).get();
       verify(putRequestedFor(urlEqualTo(this.objectUri.getPath()))
@@ -522,7 +522,7 @@ public class ApacheClientTest
          final String rsc = String.valueOf(redirectStatusCode);
          final Request request = new HttpRequest.Builder(method, this.redirectUri)
                .withHeader("RedirectStatus", rsc)
-               .withEntity(Entities.zeroes(1024))
+               .withBody(Bodies.zeroes(1024))
                .build();
          final Response response = client.execute(request).get();
          Assert.assertEquals(200, response.getStatusCode());
@@ -605,7 +605,7 @@ public class ApacheClientTest
       final Client client =
             new ApacheClient.Builder().withWriteThroughput(tput).build();
       final Request request =
-            new HttpRequest.Builder(Method.PUT, this.objectUri).withEntity(Entities.zeroes(size)).build();
+            new HttpRequest.Builder(Method.PUT, this.objectUri).withBody(Bodies.zeroes(size)).build();
       final long timestampStart = System.nanoTime();
       client.execute(request).get();
       final long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - timestampStart);

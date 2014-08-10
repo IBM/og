@@ -14,30 +14,19 @@
 // -----------------------
 // @author: rveitch
 //
-// Date: Jan 24, 2014
+// Date: Feb 24, 2014
 // ---------------------
 
 package com.cleversafe.og.api;
 
 /**
- * A description of an http request or response body
+ * An enumeration of supported body data types
  * 
  * @since 1.0
  */
-public interface Entity
+public enum Data
 {
-   /**
-    * Gets the type of this entity.
-    * 
-    * @return the type of this entity
-    * @see EntityType
-    */
-   EntityType getType();
-
-   /**
-    * Gets the size of this entity.
-    * 
-    * @return the size of this entity
-    */
-   long getSize();
+   NONE,
+   RANDOM,
+   ZEROES;
 }

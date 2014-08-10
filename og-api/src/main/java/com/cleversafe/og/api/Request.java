@@ -62,11 +62,11 @@ public interface Request
    Iterator<Entry<String, String>> headers();
 
    /**
-    * Gets the description of the entity for this request
+    * Gets the description of the body for this request
     * 
-    * @return the description of the entity for this request
+    * @return the description of the body for this request
     */
-   Entity getEntity();
+   Body getBody();
 
    /**
     * Gets the value of the request metadata entry with the specified key

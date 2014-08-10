@@ -29,8 +29,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.cleversafe.og.api.Entity;
-import com.cleversafe.og.util.Entities;
+import com.cleversafe.og.api.Body;
+import com.cleversafe.og.util.Bodies;
 
 public class StreamsTest
 {
@@ -45,7 +45,7 @@ public class StreamsTest
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullEntity()
+   public void testNullBody()
    {
       Streams.create(null);
    }
@@ -53,7 +53,7 @@ public class StreamsTest
    @Test
    public void testNoneCreate() throws IOException
    {
-      final Entity e = Entities.none();
+      final Body e = Bodies.none();
       final SizedInputStream i = Streams.create(e);
       Assert.assertEquals(-1, i.read());
       Assert.assertEquals(0, i.getSize());
@@ -62,7 +62,7 @@ public class StreamsTest
    @Test
    public void testRandomCreateInputStream() throws IOException
    {
-      final Entity e = Entities.random(1024);
+      final Body e = Bodies.random(1024);
       final SizedInputStream stream = Streams.create(e);
       Assert.assertEquals(1024, stream.getSize());
       final byte[] buf = new byte[1024];
@@ -79,7 +79,7 @@ public class StreamsTest
    @Test
    public void testZeroesCreateInputStream() throws IOException
    {
-      final Entity e = Entities.zeroes(1024);
+      final Body e = Bodies.zeroes(1024);
       final SizedInputStream stream = Streams.create(e);
       Assert.assertEquals(1024, stream.getSize());
       final byte[] buf = new byte[1024];

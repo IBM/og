@@ -31,11 +31,11 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
-import com.cleversafe.og.api.Entity;
+import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.Metadata;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
-import com.cleversafe.og.util.Entities;
+import com.cleversafe.og.util.Bodies;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
@@ -49,7 +49,7 @@ public class HttpRequest implements Request
    private final Method method;
    private final URI uri;
    private final Map<String, String> headers;
-   private final Entity entity;
+   private final Body body;
    private final Map<String, String> metadata;
    private static final DateTimeFormatter RFC1123 =
          DateTimeFormat.forPattern("EEE, dd MMM yyyy HH:mm:ss zzz").withLocale(Locale.US);
@@ -59,7 +59,7 @@ public class HttpRequest implements Request
       this.method = checkNotNull(builder.method);
       this.uri = checkNotNull(builder.uri);
       this.headers = ImmutableMap.copyOf(builder.headers);
-      this.entity = checkNotNull(builder.entity);
+      this.body = checkNotNull(builder.body);
       this.metadata = ImmutableMap.copyOf(builder.metadata);
    }
 
@@ -88,9 +88,9 @@ public class HttpRequest implements Request
    }
 
    @Override
-   public Entity getEntity()
+   public Body getBody()
    {
-      return this.entity;
+      return this.body;
    }
 
    @Override
@@ -119,7 +119,7 @@ public class HttpRequest implements Request
       private final Method method;
       private final URI uri;
       private final Map<String, String> headers;
-      private Entity entity;
+      private Body body;
       private final Map<String, String> metadata;
 
       /**
@@ -139,7 +139,7 @@ public class HttpRequest implements Request
          this.uri = uri;
          this.headers = Maps.newLinkedHashMap();
          this.headers.put("Date", RFC1123.print(new DateTime()));
-         this.entity = Entities.none();
+         this.body = Bodies.none();
          this.metadata = Maps.newLinkedHashMap();
       }
 
@@ -159,15 +159,15 @@ public class HttpRequest implements Request
       }
 
       /**
-       * Configures a request entity to include with this request
+       * Configures a request body to include with this request
        * 
-       * @param entity
-       *           an entity
+       * @param body
+       *           a body
        * @return this builder
        */
-      public Builder withEntity(final Entity entity)
+      public Builder withBody(final Body body)
       {
-         this.entity = entity;
+         this.body = body;
          return this;
       }
 

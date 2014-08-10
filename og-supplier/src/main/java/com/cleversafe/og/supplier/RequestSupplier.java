@@ -25,7 +25,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.Locale;
 
-import com.cleversafe.og.api.Entity;
+import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.Metadata;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
@@ -45,7 +45,7 @@ public class RequestSupplier implements Supplier<Request>
    private final Supplier<Method> method;
    private final Supplier<URI> uri;
    private final List<Pair<Supplier<String>, Supplier<String>>> headers;
-   private final Supplier<Entity> entity;
+   private final Supplier<Body> body;
    private final List<Pair<Supplier<String>, Supplier<String>>> metadata;
 
    private RequestSupplier(final Builder builder)
@@ -53,7 +53,7 @@ public class RequestSupplier implements Supplier<Request>
       this.method = checkNotNull(builder.method);
       this.uri = checkNotNull(builder.uri);
       this.headers = ImmutableList.copyOf(builder.headers);
-      this.entity = builder.entity;
+      this.body = builder.body;
       this.metadata = ImmutableList.copyOf(builder.metadata);
    }
 
@@ -68,8 +68,8 @@ public class RequestSupplier implements Supplier<Request>
          context.withHeader(header.getKey().get(), header.getValue().get());
       }
 
-      if (this.entity != null)
-         context.withEntity(this.entity.get());
+      if (this.body != null)
+         context.withBody(this.body.get());
 
       for (final Pair<Supplier<String>, Supplier<String>> m : this.metadata)
       {
@@ -87,7 +87,7 @@ public class RequestSupplier implements Supplier<Request>
       private final Supplier<Method> method;
       private final Supplier<URI> uri;
       private final List<Pair<Supplier<String>, Supplier<String>>> headers;
-      private Supplier<Entity> entity;
+      private Supplier<Body> body;
       private final List<Pair<Supplier<String>, Supplier<String>>> metadata;
 
       /**
@@ -150,28 +150,28 @@ public class RequestSupplier implements Supplier<Request>
       }
 
       /**
-       * Configures a request entity to include with this request supplier
+       * Configures a request body to include with this request supplier
        * 
-       * @param entity
-       *           an entity
+       * @param body
+       *           an body
        * @return this builder
        */
-      public Builder withEntity(final Entity entity)
+      public Builder withBody(final Body body)
       {
-         return withEntity(Suppliers.of(entity));
+         return withBody(Suppliers.of(body));
       }
 
       /**
-       * Configures a request entity to include with this request supplier, using a supplier for the
-       * entity
+       * Configures a request body to include with this request supplier, using a supplier for the
+       * body
        * 
-       * @param entity
-       *           an entity
+       * @param body
+       *           an body
        * @return this builder
        */
-      public Builder withEntity(final Supplier<Entity> entity)
+      public Builder withBody(final Supplier<Body> body)
       {
-         this.entity = checkNotNull(entity);
+         this.body = checkNotNull(body);
          return this;
       }
 
@@ -237,11 +237,11 @@ public class RequestSupplier implements Supplier<Request>
    public String toString()
    {
       return String.format(Locale.US,
-            "RequestSupplier [%nmethod=%s,%nuri=%s,%nheaders=%s,%nentity=%s,%nmetadata=%s%n]",
+            "RequestSupplier [%nmethod=%s,%nuri=%s,%nheaders=%s,%nbody=%s,%nmetadata=%s%n]",
             this.method,
             this.uri,
             this.headers,
-            this.entity,
+            this.body,
             this.metadata);
    }
 }
