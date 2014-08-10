@@ -20,6 +20,7 @@
 package com.cleversafe.og.util.io;
 
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,17 +30,22 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.cleversafe.og.util.Bodies;
+import com.cleversafe.og.api.Body;
+import com.cleversafe.og.api.Data;
 
 @SuppressWarnings("resource")
 public class ThrottledInputStreamTest
 {
    private InputStream in;
+   private Body body;
 
    @Before
    public void before()
    {
       this.in = mock(InputStream.class);
+      this.body = mock(Body.class);
+      when(this.body.getData()).thenReturn(Data.ZEROES);
+      when(this.body.getSize()).thenReturn(10000L);
    }
 
    @Test(expected = NullPointerException.class)
@@ -69,7 +75,7 @@ public class ThrottledInputStreamTest
    @Test
    public void testReadByte() throws IOException
    {
-      final InputStream in = Streams.create(Bodies.zeroes(10000));
+      final InputStream in = Streams.create(this.body);
       final InputStream throttled = new ThrottledInputStream(in, 1000);
       final long timestampStart = System.nanoTime();
       for (int i = 0; i < 100; i++)
@@ -85,7 +91,7 @@ public class ThrottledInputStreamTest
    @Test
    public void testReadByteArray() throws IOException
    {
-      final InputStream in = Streams.create(Bodies.zeroes(10000));
+      final InputStream in = Streams.create(this.body);
       final InputStream throttled = new ThrottledInputStream(in, 1000);
       final byte[] buf = new byte[100];
       final long timestampStart = System.nanoTime();

@@ -34,7 +34,7 @@ import com.cleversafe.og.api.Metadata;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
-import com.cleversafe.og.util.Bodies;
+import com.cleversafe.og.http.Bodies;
 import com.cleversafe.og.util.Operation;
 import com.cleversafe.og.util.Pair;
 import com.google.common.collect.Lists;

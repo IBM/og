@@ -17,13 +17,14 @@
 // Date: Jun 28, 2014
 // ---------------------
 
-package com.cleversafe.og.util;
+package com.cleversafe.og.http;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.Data;
+import com.cleversafe.og.http.Bodies;
 
 public class BodiesTest
 {

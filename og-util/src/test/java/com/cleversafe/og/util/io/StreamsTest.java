@@ -20,6 +20,7 @@
 package com.cleversafe.og.util.io;
 
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,18 +31,20 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.cleversafe.og.api.Body;
-import com.cleversafe.og.util.Bodies;
+import com.cleversafe.og.api.Data;
 
 public class StreamsTest
 {
    private InputStream in;
    private OutputStream out;
+   private Body body;
 
    @Before
    public void before()
    {
       this.in = mock(InputStream.class);
       this.out = mock(OutputStream.class);
+      this.body = mock(Body.class);
    }
 
    @Test(expected = NullPointerException.class)
@@ -53,8 +56,9 @@ public class StreamsTest
    @Test
    public void testNoneCreate() throws IOException
    {
-      final Body e = Bodies.none();
-      final SizedInputStream i = Streams.create(e);
+      when(this.body.getData()).thenReturn(Data.NONE);
+      when(this.body.getSize()).thenReturn(0L);
+      final SizedInputStream i = Streams.create(this.body);
       Assert.assertEquals(-1, i.read());
       Assert.assertEquals(0, i.getSize());
    }
@@ -62,8 +66,9 @@ public class StreamsTest
    @Test
    public void testRandomCreateInputStream() throws IOException
    {
-      final Body e = Bodies.random(1024);
-      final SizedInputStream stream = Streams.create(e);
+      when(this.body.getData()).thenReturn(Data.RANDOM);
+      when(this.body.getSize()).thenReturn(1024L);
+      final SizedInputStream stream = Streams.create(this.body);
       Assert.assertEquals(1024, stream.getSize());
       final byte[] buf = new byte[1024];
       Assert.assertEquals(1024, stream.read(buf));
@@ -79,8 +84,9 @@ public class StreamsTest
    @Test
    public void testZeroesCreateInputStream() throws IOException
    {
-      final Body e = Bodies.zeroes(1024);
-      final SizedInputStream stream = Streams.create(e);
+      when(this.body.getData()).thenReturn(Data.ZEROES);
+      when(this.body.getSize()).thenReturn(1024L);
+      final SizedInputStream stream = Streams.create(this.body);
       Assert.assertEquals(1024, stream.getSize());
       final byte[] buf = new byte[1024];
       Assert.assertEquals(1024, stream.read(buf));

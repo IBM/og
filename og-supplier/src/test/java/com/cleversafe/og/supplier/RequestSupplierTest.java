@@ -33,7 +33,7 @@ import com.cleversafe.og.api.Data;
 import com.cleversafe.og.api.Metadata;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
-import com.cleversafe.og.util.Bodies;
+import com.cleversafe.og.http.Bodies;
 import com.google.common.base.Supplier;
 
 public class RequestSupplierTest

@@ -32,7 +32,6 @@ import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.Data;
 import com.cleversafe.og.api.Metadata;
 import com.cleversafe.og.api.Method;
-import com.cleversafe.og.util.Bodies;
 
 public class HttpRequestTest
 {
