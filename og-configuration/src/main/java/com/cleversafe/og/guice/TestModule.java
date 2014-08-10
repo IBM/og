@@ -198,8 +198,7 @@ public class TestModule extends AbstractModule
          return Suppliers.cycle(hostList);
       }
 
-      final RandomSupplier.Builder<String> wrc =
-            new RandomSupplier.Builder<String>();
+      final RandomSupplier.Builder<String> wrc = Suppliers.random();
       for (final HostConfig h : host)
       {
          wrc.withChoice(h.getHost(), h.getWeight());
@@ -383,8 +382,7 @@ public class TestModule extends AbstractModule
          return createBodySupplier(Suppliers.cycle(distributions));
       }
 
-      final RandomSupplier.Builder<Distribution> wrc =
-            new RandomSupplier.Builder<Distribution>();
+      final RandomSupplier.Builder<Distribution> wrc = Suppliers.random();
       for (final FilesizeConfig f : filesizes)
       {
          wrc.withChoice(createSizeDistribution(f), f.getWeight());

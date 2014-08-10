@@ -56,4 +56,14 @@ public class Suppliers
    {
       return new CycleSupplier<T>(values);
    }
+
+   /**
+    * Creates a random supplier builder
+    * 
+    * @return a random supplier builder
+    */
+   public static <T> RandomSupplier.Builder<T> random()
+   {
+      return new RandomSupplier.Builder<T>();
+   }
 }

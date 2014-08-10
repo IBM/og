@@ -54,6 +54,7 @@ import com.cleversafe.og.supplier.CachingSupplier;
 import com.cleversafe.og.supplier.DeleteObjectNameSupplier;
 import com.cleversafe.og.supplier.RandomSupplier;
 import com.cleversafe.og.supplier.ReadObjectNameSupplier;
+import com.cleversafe.og.supplier.Suppliers;
 import com.cleversafe.og.supplier.UUIDObjectNameSupplier;
 import com.cleversafe.og.test.LoadTest;
 import com.cleversafe.og.test.LoadTestSubscriberExceptionHandler;
@@ -166,8 +167,7 @@ public class OGModule extends AbstractModule
       checkArgument(DoubleMath.fuzzyEquals(sum, 100.0, ERR),
             "Sum of percentages must be 100.0 [%s]", sum);
 
-      final RandomSupplier.Builder<Supplier<Request>> wrc =
-            new RandomSupplier.Builder<Supplier<Request>>();
+      final RandomSupplier.Builder<Supplier<Request>> wrc = Suppliers.random();
       if (writeWeight > 0.0)
          wrc.withChoice(write, writeWeight);
       if (readWeight > 0.0)
