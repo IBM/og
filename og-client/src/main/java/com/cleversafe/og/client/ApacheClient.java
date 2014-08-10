@@ -59,7 +59,7 @@ import com.cleversafe.og.api.Response;
 import com.cleversafe.og.http.Bodies;
 import com.cleversafe.og.http.HttpAuth;
 import com.cleversafe.og.http.HttpResponse;
-import com.cleversafe.og.util.ResponseBodyConsumer;
+import com.cleversafe.og.http.ResponseBodyConsumer;
 import com.cleversafe.og.util.io.Streams;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;

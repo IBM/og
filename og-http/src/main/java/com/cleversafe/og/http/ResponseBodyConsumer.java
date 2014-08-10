@@ -17,7 +17,7 @@
 // Date: Jul 15, 2014
 // ---------------------
 
-package com.cleversafe.og.util;
+package com.cleversafe.og.http;
 
 import java.io.IOException;
 import java.io.InputStream;

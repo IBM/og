@@ -32,7 +32,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import com.cleversafe.og.api.Metadata;
-import com.cleversafe.og.util.ResponseBodyConsumer;
+import com.cleversafe.og.http.ResponseBodyConsumer;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
 

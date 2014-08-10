@@ -62,7 +62,7 @@ import com.cleversafe.og.api.Response;
 import com.cleversafe.og.http.BasicAuth;
 import com.cleversafe.og.http.Bodies;
 import com.cleversafe.og.http.HttpRequest;
-import com.cleversafe.og.util.ResponseBodyConsumer;
+import com.cleversafe.og.http.ResponseBodyConsumer;
 import com.cleversafe.og.util.SizeUnit;
 import com.github.tomakehurst.wiremock.client.RequestPatternBuilder;
 import com.github.tomakehurst.wiremock.http.RequestMethod;
