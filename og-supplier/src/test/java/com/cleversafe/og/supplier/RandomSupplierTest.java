@@ -26,46 +26,46 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.cleversafe.og.supplier.Suppliers;
-import com.cleversafe.og.supplier.RandomChoiceSupplier;
+import com.cleversafe.og.supplier.RandomSupplier;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Maps;
 
-public class RandomChoiceSupplierTest
+public class RandomSupplierTest
 {
    @Test(expected = IllegalArgumentException.class)
    public void testNoChoice()
    {
-      new RandomChoiceSupplier.Builder<Integer>().build();
+      new RandomSupplier.Builder<Integer>().build();
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullChoice()
    {
-      new RandomChoiceSupplier.Builder<Integer>().withChoice(null).build();
+      new RandomSupplier.Builder<Integer>().withChoice(null).build();
    }
 
    @Test(expected = NullPointerException.class)
    public void testNullRandom()
    {
-      new RandomChoiceSupplier.Builder<Integer>().withChoice(1).withRandom(null).build();
+      new RandomSupplier.Builder<Integer>().withChoice(1).withRandom(null).build();
    }
 
    @Test(expected = IllegalArgumentException.class)
    public void testNegativeWeight()
    {
-      new RandomChoiceSupplier.Builder<Integer>().withChoice(1, -1.0).build();
+      new RandomSupplier.Builder<Integer>().withChoice(1, -1.0).build();
    }
 
    @Test(expected = IllegalArgumentException.class)
    public void testZeroWeight()
    {
-      new RandomChoiceSupplier.Builder<Integer>().withChoice(1, 0.0).build();
+      new RandomSupplier.Builder<Integer>().withChoice(1, 0.0).build();
    }
 
    @Test
    public void testOneChoice()
    {
-      final Supplier<Integer> p = new RandomChoiceSupplier.Builder<Integer>().withChoice(1).build();
+      final Supplier<Integer> p = new RandomSupplier.Builder<Integer>().withChoice(1).build();
       for (int i = 0; i < 10; i++)
       {
          Assert.assertEquals(Integer.valueOf(1), p.get());
@@ -75,7 +75,7 @@ public class RandomChoiceSupplierTest
    @Test
    public void testNChoices()
    {
-      final RandomChoiceSupplier.Builder<Integer> b = new RandomChoiceSupplier.Builder<Integer>();
+      final RandomSupplier.Builder<Integer> b = new RandomSupplier.Builder<Integer>();
       b.withChoice(1, 33);
       b.withChoice(2, Suppliers.of(33.5));
       b.withChoice(3, Suppliers.of(33));

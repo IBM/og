@@ -69,7 +69,7 @@ import com.cleversafe.og.s3.AWSAuthV2;
 import com.cleversafe.og.scheduling.ConcurrentRequestScheduler;
 import com.cleversafe.og.scheduling.RequestRateScheduler;
 import com.cleversafe.og.scheduling.Scheduler;
-import com.cleversafe.og.supplier.RandomChoiceSupplier;
+import com.cleversafe.og.supplier.RandomSupplier;
 import com.cleversafe.og.supplier.Suppliers;
 import com.cleversafe.og.util.SizeUnit;
 import com.cleversafe.og.util.distribution.Distribution;
@@ -198,8 +198,8 @@ public class TestModule extends AbstractModule
          return Suppliers.cycle(hostList);
       }
 
-      final RandomChoiceSupplier.Builder<String> wrc =
-            new RandomChoiceSupplier.Builder<String>();
+      final RandomSupplier.Builder<String> wrc =
+            new RandomSupplier.Builder<String>();
       for (final HostConfig h : host)
       {
          wrc.withChoice(h.getHost(), h.getWeight());
@@ -383,8 +383,8 @@ public class TestModule extends AbstractModule
          return createBodySupplier(Suppliers.cycle(distributions));
       }
 
-      final RandomChoiceSupplier.Builder<Distribution> wrc =
-            new RandomChoiceSupplier.Builder<Distribution>();
+      final RandomSupplier.Builder<Distribution> wrc =
+            new RandomSupplier.Builder<Distribution>();
       for (final FilesizeConfig f : filesizes)
       {
          wrc.withChoice(createSizeDistribution(f), f.getWeight());

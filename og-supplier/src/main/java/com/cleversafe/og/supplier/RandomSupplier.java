@@ -36,12 +36,12 @@ import com.google.common.collect.Lists;
  *           the type of values to supply
  * @since 1.0
  */
-public class RandomChoiceSupplier<T> implements Supplier<T>
+public class RandomSupplier<T> implements Supplier<T>
 {
    private final List<Choice<T>> choices;
    private final Random random;
 
-   private RandomChoiceSupplier(final Builder<T> builder)
+   private RandomSupplier(final Builder<T> builder)
    {
       this.choices = checkNotNull(builder.choices);
       checkArgument(!this.choices.isEmpty(), "choices must not be empty");
@@ -177,9 +177,9 @@ public class RandomChoiceSupplier<T> implements Supplier<T>
        * @throws IllegalArgumentException
        *            if no choices were added prior to calling this method
        */
-      public RandomChoiceSupplier<T> build()
+      public RandomSupplier<T> build()
       {
-         return new RandomChoiceSupplier<T>(this);
+         return new RandomSupplier<T>(this);
       }
    }
 
