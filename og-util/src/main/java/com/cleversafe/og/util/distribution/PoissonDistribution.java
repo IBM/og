@@ -19,9 +19,6 @@
 
 package com.cleversafe.og.util.distribution;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.util.Random;
 
 /**
@@ -29,24 +26,8 @@ import java.util.Random;
  * 
  * @since 1.0
  */
-public class PoissonDistribution implements Distribution
+public class PoissonDistribution extends AbstractDistribution
 {
-   private final double average;
-   private final Random random;
-
-   /**
-    * Constructs a poisson distribution instance
-    * 
-    * @param average
-    *           the average value of this distribution
-    * @throws IllegalArgumentException
-    *            if average is negative
-    */
-   public PoissonDistribution(final double average)
-   {
-      this(average, new Random());
-   }
-
    /**
     * Constructs a poission distribution instance, using the provided random instance for random
     * seed data
@@ -58,16 +39,7 @@ public class PoissonDistribution implements Distribution
     */
    public PoissonDistribution(final double average, final Random random)
    {
-      checkArgument(average >= 0.0, "average must be >= 0.0 [%s]", average);
-      checkNotNull(random);
-      this.average = average;
-      this.random = random;
-   }
-
-   @Override
-   public double getAverage()
-   {
-      return this.average;
+      super(average, 0.0, random);
    }
 
    /**
@@ -76,7 +48,7 @@ public class PoissonDistribution implements Distribution
    @Override
    public double getSpread()
    {
-      return 0.0;
+      return super.getSpread();
    }
 
    @Override

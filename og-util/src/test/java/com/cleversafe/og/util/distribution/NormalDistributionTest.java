@@ -22,36 +22,42 @@ package com.cleversafe.og.util.distribution;
 import java.util.Random;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
-
-import com.cleversafe.og.util.distribution.NormalDistribution;
 
 public class NormalDistributionTest
 {
    private static final double ERR = Math.pow(0.1, 6);
+   private Random random;
+
+   @Before
+   public void before()
+   {
+      this.random = new Random();
+   }
 
    @Test(expected = IllegalArgumentException.class)
    public void testNegativeMean()
    {
-      new NormalDistribution(-1.0, 10.0);
+      new NormalDistribution(-1.0, 10.0, this.random);
    }
 
    @Test
    public void testZeroMean()
    {
-      new NormalDistribution(0.0, 10.0);
+      new NormalDistribution(0.0, 10.0, this.random);
    }
 
    @Test(expected = IllegalArgumentException.class)
    public void testNegativeSpread()
    {
-      new NormalDistribution(10.0, -1.0);
+      new NormalDistribution(10.0, -1.0, this.random);
    }
 
    @Test
    public void testZeroSpread()
    {
-      new NormalDistribution(10.0, 0.0);
+      new NormalDistribution(10.0, 0.0, this.random);
    }
 
    @Test(expected = NullPointerException.class)
@@ -63,7 +69,7 @@ public class NormalDistributionTest
    @Test
    public void testBasicNormalDistribution()
    {
-      final NormalDistribution nd = new NormalDistribution(10.0, 10.0);
+      final NormalDistribution nd = new NormalDistribution(10.0, 10.0, this.random);
       Assert.assertEquals(10.0, nd.getAverage(), ERR);
       Assert.assertEquals(10.0, nd.getSpread(), ERR);
       nd.nextSample();
@@ -83,7 +89,7 @@ public class NormalDistributionTest
    @Test
    public void testZeroSpreadValue()
    {
-      final NormalDistribution nd = new NormalDistribution(10.0, 0.0);
+      final NormalDistribution nd = new NormalDistribution(10.0, 0.0, this.random);
       for (int i = 0; i < 100; i++)
       {
          Assert.assertEquals(10, nd.nextSample(), 0.00001);

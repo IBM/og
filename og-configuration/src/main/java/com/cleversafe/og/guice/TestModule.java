@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.cleversafe.og.api.Body;
@@ -399,14 +400,15 @@ public class TestModule extends AbstractModule
       final double average = filesize.getAverage() * averageUnit.toBytes(1);
       final double spread = filesize.getSpread() * spreadUnit.toBytes(1);
 
+      final Random random = new Random();
       switch (distribution)
       {
          case NORMAL :
-            return new NormalDistribution(average, spread);
+            return new NormalDistribution(average, spread, random);
          case LOGNORMAL :
-            return new LogNormalDistribution(average, spread);
+            return new LogNormalDistribution(average, spread, random);
          case UNIFORM :
-            return new UniformDistribution(average, spread);
+            return new UniformDistribution(average, spread, random);
          default :
             throw new IllegalArgumentException(String.format(
                   "Unacceptable filesize distribution [%s]", distribution));
@@ -533,13 +535,14 @@ public class TestModule extends AbstractModule
       }
 
       Distribution count;
+      final Random random = new Random();
       switch (distribution)
       {
          case POISSON :
-            count = new PoissonDistribution(concurrency.getCount());
+            count = new PoissonDistribution(concurrency.getCount(), random);
             break;
          case UNIFORM :
-            count = new UniformDistribution(concurrency.getCount(), 0.0);
+            count = new UniformDistribution(concurrency.getCount(), 0.0, random);
             break;
          default :
             throw new IllegalArgumentException(String.format(
