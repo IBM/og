@@ -45,7 +45,7 @@ public class UniformDistributionTest
    @Test
    public void testZeroMean()
    {
-      new UniformDistribution(0.0, 10.0, this.random);
+      new UniformDistribution(0.0, 0.0, this.random);
    }
 
    @Test(expected = IllegalArgumentException.class)
@@ -64,6 +64,18 @@ public class UniformDistributionTest
    public void testNullRandom()
    {
       new UniformDistribution(10.0, 10.0, null);
+   }
+
+   @Test(expected = IllegalArgumentException.class)
+   public void testNegativeMin()
+   {
+      new UniformDistribution(5.0, 11.0, this.random);
+   }
+
+   @Test
+   public void testZeroMin()
+   {
+      new UniformDistribution(5.0, 10.0, this.random);
    }
 
    @Test

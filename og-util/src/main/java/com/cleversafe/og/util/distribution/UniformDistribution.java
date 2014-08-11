@@ -19,6 +19,8 @@
 
 package com.cleversafe.og.util.distribution;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import java.util.Random;
 
 /**
@@ -28,6 +30,8 @@ import java.util.Random;
  */
 public class UniformDistribution extends AbstractDistribution
 {
+   private final double min;
+
    /**
     * Constructs a uniform distribution instance, using the provided random instance for random seed
     * data
@@ -45,18 +49,14 @@ public class UniformDistribution extends AbstractDistribution
    public UniformDistribution(final double average, final double spread, final Random random)
    {
       super(average, spread, random);
+      this.min = average - (spread / 2);
+      checkArgument(this.min >= 0.0, "min must be >= 0.0 [%s]", this.min);
    }
 
    @Override
    public double nextSample()
    {
-      double result;
-      final double halfWidth = this.spread / 2;
-      do
-      {
-         result = (this.average - halfWidth) + (this.spread * this.random.nextDouble());
-      } while (result < 0);
-      return result;
+      return this.min + (this.spread * this.random.nextDouble());
    }
 
    @Override
