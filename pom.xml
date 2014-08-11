@@ -314,6 +314,11 @@
 				<artifactId>jsr305</artifactId>
 				<version>3.0.0</version>
 			</dependency>
+			<dependency>
+				<groupId>com.tngtech.java</groupId>
+				<artifactId>junit-dataprovider</artifactId>
+				<version>1.8.0</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 	<dependencies>
@@ -352,6 +357,11 @@
 		<dependency>
 			<groupId>com.google.code.findbugs</groupId>
 			<artifactId>jsr305</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.tngtech.java</groupId>
+			<artifactId>junit-dataprovider</artifactId>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 </project>
