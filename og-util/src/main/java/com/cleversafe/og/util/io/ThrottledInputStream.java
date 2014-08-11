@@ -59,7 +59,7 @@ public class ThrottledInputStream extends FilterInputStream
    {
       final int b = super.read();
       if (b > -1)
-         this.rateLimiter.acquire();
+         throttle(1);
 
       return b;
    }
@@ -75,8 +75,21 @@ public class ThrottledInputStream extends FilterInputStream
    {
       final int bytesRead = super.read(b, off, len);
       if (bytesRead > 0)
-         this.rateLimiter.acquire(bytesRead);
+         throttle(bytesRead);
 
       return bytesRead;
+   }
+
+   private void throttle(final int bytes)
+   {
+      if (bytes == 1)
+         this.rateLimiter.acquire();
+      else if (bytes > 1)
+      {
+         // acquire blocks based on previously acquired permits. If multiple bytes read, call
+         // acquire twice so throttling occurs even if read is only called once (small files)
+         this.rateLimiter.acquire(bytes - 1);
+         this.rateLimiter.acquire();
+      }
    }
 }

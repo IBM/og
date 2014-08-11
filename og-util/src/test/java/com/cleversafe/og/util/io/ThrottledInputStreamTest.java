@@ -96,7 +96,6 @@ public class ThrottledInputStreamTest
       final byte[] buf = new byte[100];
       final long timestampStart = System.nanoTime();
       throttled.read(buf);
-      throttled.read(buf);
       final long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - timestampStart);
       final long delta = Math.abs(duration - 100);
       // within 10% of expected duration (100 milliseconds)

@@ -58,7 +58,7 @@ public class ThrottledOutputStream extends FilterOutputStream
    public void write(final int b) throws IOException
    {
       super.write(b);
-      this.rateLimiter.acquire();
+      throttle(1);
    }
 
    @Override
@@ -72,6 +72,19 @@ public class ThrottledOutputStream extends FilterOutputStream
    {
       // out.write rather than super.write, FilterOutputStream.write calls write(int b) in loop
       this.out.write(b, off, len);
-      this.rateLimiter.acquire(len);
+      throttle(len);
+   }
+
+   private void throttle(final int bytes)
+   {
+      if (bytes == 1)
+         this.rateLimiter.acquire();
+      else if (bytes > 1)
+      {
+         // acquire blocks based on previously acquired permits. If multiple bytes written, call
+         // acquire twice so throttling occurs even if write is only called once (small files)
+         this.rateLimiter.acquire(bytes - 1);
+         this.rateLimiter.acquire();
+      }
    }
 }
