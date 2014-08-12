@@ -19,28 +19,30 @@
 
 package com.cleversafe.og.util;
 
-import org.junit.Assert;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+
 import org.junit.Test;
 
 public class PairTest
 {
    @Test(expected = NullPointerException.class)
-   public void testNullKey()
+   public void nullKey()
    {
       Pair.of(null, "value");
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullValue()
+   public void nullValue()
    {
       Pair.of("key", null);
    }
 
    @Test
-   public void testPair()
+   public void pair()
    {
       final Pair<String, String> p = Pair.of("key", "value");
-      Assert.assertEquals("key", p.getKey());
-      Assert.assertEquals("value", p.getValue());
+      assertThat(p.getKey(), is("key"));
+      assertThat(p.getValue(), is("value"));
    }
 }

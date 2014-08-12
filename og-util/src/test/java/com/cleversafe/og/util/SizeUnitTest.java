@@ -19,16 +19,16 @@
 
 package com.cleversafe.og.util;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+
 import java.util.Arrays;
 import java.util.Collection;
 
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-
-import com.cleversafe.og.util.SizeUnit;
 
 // TODO test long overflow conditions
 @RunWith(value = Parameterized.class)
@@ -48,69 +48,69 @@ public class SizeUnitTest
    }
 
    @Test
-   public void testBytes()
+   public void bytes()
    {
-      Assert.assertEquals(this.size, SizeUnit.BYTES.toBytes(this.size));
+      assertThat(SizeUnit.BYTES.toBytes(this.size), is(this.size));
    }
 
    @Test
-   public void testKilobytes()
+   public void kilobytes()
    {
-      Assert.assertEquals(si(this.size, 1), SizeUnit.KILOBYTES.toBytes(this.size));
+      assertThat(SizeUnit.KILOBYTES.toBytes(this.size), is(si(this.size, 1)));
    }
 
    @Test
-   public void testKibibytes()
+   public void kibibytes()
    {
-      Assert.assertEquals(iec(this.size, 1), SizeUnit.KIBIBYTES.toBytes(this.size));
+      assertThat(SizeUnit.KIBIBYTES.toBytes(this.size), is(iec(this.size, 1)));
    }
 
    @Test
-   public void testMegabytes()
+   public void megabytes()
    {
-      Assert.assertEquals(si(this.size, 2), SizeUnit.MEGABYTES.toBytes(this.size));
+      assertThat(SizeUnit.MEGABYTES.toBytes(this.size), is(si(this.size, 2)));
    }
 
    @Test
-   public void testMebibytes()
+   public void mebibytes()
    {
-      Assert.assertEquals(iec(this.size, 2), SizeUnit.MEBIBYTES.toBytes(this.size));
+      assertThat(SizeUnit.MEBIBYTES.toBytes(this.size), is(iec(this.size, 2)));
    }
 
    @Test
-   public void testGigabytes()
+   public void gigabytes()
    {
-      Assert.assertEquals(si(this.size, 3), SizeUnit.GIGABYTES.toBytes(this.size));
+      assertThat(SizeUnit.GIGABYTES.toBytes(this.size), is(si(this.size, 3)));
    }
 
    @Test
-   public void testGibibytes()
+   public void gibibytes()
    {
-      Assert.assertEquals(iec(this.size, 3), SizeUnit.GIBIBYTES.toBytes(this.size));
+      assertThat(SizeUnit.GIBIBYTES.toBytes(this.size), is(iec(this.size, 3)));
    }
 
    @Test
-   public void testTerabytes()
+   public void terabytes()
    {
-      Assert.assertEquals(si(this.size, 4), SizeUnit.TERABYTES.toBytes(this.size));
+      assertThat(SizeUnit.TERABYTES.toBytes(this.size), is(si(this.size, 4)));
    }
 
    @Test
-   public void testTebibytes()
+   public void tebibytes()
    {
-      Assert.assertEquals(iec(this.size, 4), SizeUnit.TEBIBYTES.toBytes(this.size));
+      assertThat(SizeUnit.TEBIBYTES.toBytes(this.size), is(iec(this.size, 4)));
    }
 
    @Test
-   public void testPetabytes()
+   public void petabytes()
    {
-      Assert.assertEquals(si(this.size, 5), SizeUnit.PETABYTES.toBytes(this.size));
+      assertThat(SizeUnit.PETABYTES.toBytes(this.size), is(si(this.size, 5)));
    }
 
    @Test
-   public void testPebibytes()
+   public void pebibytes()
    {
-      Assert.assertEquals(iec(this.size, 5), SizeUnit.PEBIBYTES.toBytes(this.size));
+      assertThat(SizeUnit.PEBIBYTES.toBytes(this.size), is(iec(this.size, 5)));
    }
 
    private static long si(final long size, final int exp)

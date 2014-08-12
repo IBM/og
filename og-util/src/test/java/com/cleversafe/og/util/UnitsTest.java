@@ -19,310 +19,132 @@
 
 package com.cleversafe.og.util;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
+import com.tngtech.java.junit.dataprovider.DataProvider;
+import com.tngtech.java.junit.dataprovider.DataProviderRunner;
+import com.tngtech.java.junit.dataprovider.UseDataProvider;
 
+@RunWith(DataProviderRunner.class)
 public class UnitsTest
 {
-   @Test(expected = NullPointerException.class)
-   public void testNullTime()
-   {
-      Units.time(null);
-   }
+   @Rule
+   public ExpectedException thrown = ExpectedException.none();
 
-   @Test(expected = IllegalArgumentException.class)
-   public void testEmptyTimeString()
+   @DataProvider
+   public static Object[][] provideInvalidTime()
    {
-      Units.time("");
-   }
-
-   @Test
-   public void testCaseInsensitiveTime()
-   {
-      final TimeUnit t1 = Units.time("seconds");
-      final TimeUnit t2 = Units.time("sECONds");
-      Assert.assertEquals(t1, t2);
-   }
-
-   @Test
-   public void testNanos()
-   {
-      final List<String> input = Lists.newArrayList();
-      input.add("ns");
-      input.add("nano");
-      input.add("nanos");
-      input.add("nanosec");
-      input.add("nanosecs");
-      input.add("nanosecond");
-      input.add("nanoseconds");
-      testTimeUnit(input, TimeUnit.NANOSECONDS);
-   }
-
-   @Test
-   public void testMicros()
-   {
-      final List<String> input = Lists.newArrayList();
-      input.add("micro");
-      input.add("micros");
-      input.add("microsec");
-      input.add("microsecs");
-      input.add("microsecond");
-      input.add("microseconds");
-      testTimeUnit(input, TimeUnit.MICROSECONDS);
-   }
-
-   @Test
-   public void testMillis()
-   {
-      final List<String> input = Lists.newArrayList();
-      input.add("ms");
-      input.add("milli");
-      input.add("millis");
-      input.add("millisec");
-      input.add("millisecs");
-      input.add("millisecond");
-      input.add("milliseconds");
-      testTimeUnit(input, TimeUnit.MILLISECONDS);
-   }
-
-   @Test
-   public void testSecs()
-   {
-      final List<String> input = Lists.newArrayList();
-      input.add("s");
-      input.add("sec");
-      input.add("secs");
-      input.add("second");
-      input.add("seconds");
-      testTimeUnit(input, TimeUnit.SECONDS);
-   }
-
-   @Test
-   public void testMins()
-   {
-      final List<String> input = Lists.newArrayList();
-      input.add("m");
-      input.add("min");
-      input.add("mins");
-      input.add("minute");
-      input.add("minutes");
-      testTimeUnit(input, TimeUnit.MINUTES);
-   }
-
-   @Test
-   public void testHrs()
-   {
-      final List<String> input = Lists.newArrayList();
-      input.add("h");
-      input.add("hr");
-      input.add("hrs");
-      input.add("hour");
-      input.add("hours");
-      testTimeUnit(input, TimeUnit.HOURS);
-   }
-
-   @Test
-   public void testDays()
-   {
-      final List<String> input = Lists.newArrayList();
-      input.add("d");
-      input.add("day");
-      input.add("days");
-      testTimeUnit(input, TimeUnit.DAYS);
-   }
-
-   private void testTimeUnit(final List<String> input, final TimeUnit unit)
-   {
-      for (final String i : input)
+      return new Object[][]
       {
-         Assert.assertEquals(unit, Units.time(i));
+            {null, NullPointerException.class},
+            {"", IllegalArgumentException.class},
+            {"nano_seconds", IllegalArgumentException.class}
+      };
+   }
+
+   @Test
+   @UseDataProvider("provideInvalidTime")
+   public void invalidTime(final String invalidTime, final Class<Exception> expectedException)
+   {
+      this.thrown.expect(expectedException);
+      Units.time(invalidTime);
+   }
+
+   @DataProvider
+   public static Object[][] provideTime()
+   {
+      return new Object[][]
+      {
+            {ImmutableList.of("ns", "nano", "nanos", "nanosec", "nanosecs", "nanosecond",
+                  "nanoseconds"), TimeUnit.NANOSECONDS},
+            {ImmutableList.of("micro", "micros", "microsec", "microsecs", "microsecond",
+                  "microseconds"), TimeUnit.MICROSECONDS},
+            {ImmutableList.of("ms", "milli", "millis", "millisec", "millisecs", "millisecond",
+                  "milliseconds"), TimeUnit.MILLISECONDS},
+            {ImmutableList.of("s", "sec", "secs", "second", "seconds"), TimeUnit.SECONDS},
+            {ImmutableList.of("m", "min", "mins", "minute", "minutes"), TimeUnit.MINUTES},
+            {ImmutableList.of("h", "hr", "hrs", "hour", "hours"), TimeUnit.HOURS},
+            {ImmutableList.of("d", "day", "days"), TimeUnit.DAYS}
+      };
+   }
+
+   @Test
+   @UseDataProvider("provideTime")
+   public void time(final List<String> units, final TimeUnit unit)
+   {
+      for (final String u : units)
+      {
+         assertThat(Units.time(u), is(unit));
       }
    }
 
    @Test
-   public void testBadTimeInput()
+   public void caseInsensitiveTime()
    {
-      final List<String> input = Lists.newArrayList();
-      input.add("foo");
-      input.add("_");
-      input.add("nano_seconds");
+      assertThat(Units.time("seconds"), is(Units.time("sECONds")));
+   }
 
-      for (final String i : input)
+   @DataProvider
+   public static Object[][] provideInvalidSize()
+   {
+      return new Object[][]
       {
-         try
-         {
-            Units.time(i);
-            // should never get here
-            Assert.assertTrue(false);
-         }
-         catch (final IllegalArgumentException e)
-         {
-         }
-      }
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void testNullSize()
-   {
-      Units.size(null);
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testEmptySizeString()
-   {
-      Units.size("");
+            {null, NullPointerException.class},
+            {"", IllegalArgumentException.class},
+            {"mega_byte", IllegalArgumentException.class}
+      };
    }
 
    @Test
-   public void testCaseInsensitiveSize()
+   @UseDataProvider("provideInvalidSize")
+   public void invalidSize(final String invalidSize, final Class<Exception> expectedException)
    {
-      final SizeUnit s1 = Units.size("bytes");
-      final SizeUnit s2 = Units.size("bYTEs");
-      Assert.assertEquals(s1, s2);
+      this.thrown.expect(expectedException);
+      Units.size(invalidSize);
    }
 
-   @Test
-   public void testBytes()
+   @DataProvider
+   public static Object[][] provideSize()
    {
-      final List<String> input = Lists.newArrayList();
-      input.add("b");
-      input.add("byte");
-      input.add("bytes");
-      testSizeUnit(input, SizeUnit.BYTES);
-   }
-
-   @Test
-   public void testKilobytes()
-   {
-      final List<String> input = Lists.newArrayList();
-      input.add("kb");
-      input.add("kilobyte");
-      input.add("kilobytes");
-      testSizeUnit(input, SizeUnit.KILOBYTES);
-   }
-
-   @Test
-   public void testKibibytes()
-   {
-      final List<String> input = Lists.newArrayList();
-      input.add("kib");
-      input.add("kibibyte");
-      input.add("kibibytes");
-      testSizeUnit(input, SizeUnit.KIBIBYTES);
-   }
-
-   @Test
-   public void testMegabytes()
-   {
-      final List<String> input = Lists.newArrayList();
-      input.add("mb");
-      input.add("megabyte");
-      input.add("megabytes");
-      testSizeUnit(input, SizeUnit.MEGABYTES);
-   }
-
-   @Test
-   public void testMebibytes()
-   {
-      final List<String> input = Lists.newArrayList();
-      input.add("mib");
-      input.add("mebibyte");
-      input.add("mebibytes");
-      testSizeUnit(input, SizeUnit.MEBIBYTES);
-   }
-
-   @Test
-   public void testGigabytes()
-   {
-      final List<String> input = Lists.newArrayList();
-      input.add("gb");
-      input.add("gigabyte");
-      input.add("gigabytes");
-      testSizeUnit(input, SizeUnit.GIGABYTES);
-   }
-
-   @Test
-   public void testGibibytes()
-   {
-      final List<String> input = Lists.newArrayList();
-      input.add("gib");
-      input.add("gibibyte");
-      input.add("gibibytes");
-      testSizeUnit(input, SizeUnit.GIBIBYTES);
-   }
-
-   @Test
-   public void testTerabytes()
-   {
-      final List<String> input = Lists.newArrayList();
-      input.add("tb");
-      input.add("terabyte");
-      input.add("terabytes");
-      testSizeUnit(input, SizeUnit.TERABYTES);
-   }
-
-   @Test
-   public void testTebibytes()
-   {
-      final List<String> input = Lists.newArrayList();
-      input.add("tib");
-      input.add("tebibyte");
-      input.add("tebibytes");
-      testSizeUnit(input, SizeUnit.TEBIBYTES);
-   }
-
-   @Test
-   public void testPetabytes()
-   {
-      final List<String> input = Lists.newArrayList();
-      input.add("pb");
-      input.add("petabyte");
-      input.add("petabytes");
-      testSizeUnit(input, SizeUnit.PETABYTES);
-   }
-
-   @Test
-   public void testPebibytes()
-   {
-      final List<String> input = Lists.newArrayList();
-      input.add("pib");
-      input.add("pebibyte");
-      input.add("pebibytes");
-      testSizeUnit(input, SizeUnit.PEBIBYTES);
-   }
-
-   private void testSizeUnit(final List<String> input, final SizeUnit unit)
-   {
-      for (final String i : input)
+      return new Object[][]
       {
-         Assert.assertEquals(unit, Units.size(i));
+            {ImmutableList.of("b", "byte", "bytes"), SizeUnit.BYTES},
+            {ImmutableList.of("kb", "kilobyte", "kilobytes"), SizeUnit.KILOBYTES},
+            {ImmutableList.of("kib", "kibibyte", "kibibytes"), SizeUnit.KIBIBYTES},
+            {ImmutableList.of("mb", "megabyte", "megabytes"), SizeUnit.MEGABYTES},
+            {ImmutableList.of("mib", "mebibyte", "mebibytes"), SizeUnit.MEBIBYTES},
+            {ImmutableList.of("gb", "gigabyte", "gigabytes"), SizeUnit.GIGABYTES},
+            {ImmutableList.of("gib", "gibibyte", "gibibytes"), SizeUnit.GIBIBYTES},
+            {ImmutableList.of("tb", "terabyte", "terabytes"), SizeUnit.TERABYTES},
+            {ImmutableList.of("tib", "tebibyte", "tebibytes"), SizeUnit.TEBIBYTES},
+            {ImmutableList.of("pb", "petabyte", "petabytes"), SizeUnit.PETABYTES},
+            {ImmutableList.of("pib", "pebibyte", "pebibytes"), SizeUnit.PEBIBYTES},
+      };
+   }
+
+   @Test
+   @UseDataProvider("provideSize")
+   public void size(final List<String> units, final SizeUnit unit)
+   {
+      for (final String u : units)
+      {
+         assertThat(Units.size(u), is(unit));
       }
    }
 
    @Test
-   public void testBadSizeInput()
+   public void caseInsensitiveSize()
    {
-      final List<String> input = Lists.newArrayList();
-      input.add("cleverbyte");
-      input.add("_");
-      input.add("mega_byte");
-
-      for (final String i : input)
-      {
-         try
-         {
-            Units.size(i);
-            // should never get here
-            Assert.assertTrue(false);
-         }
-         catch (final IllegalArgumentException e)
-         {
-         }
-      }
+      assertThat(Units.size("bytes"), is(Units.size("bYTEs")));
    }
 }
