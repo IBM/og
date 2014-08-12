@@ -19,6 +19,8 @@
 
 package com.cleversafe.og.util.distribution;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import java.util.Random;
 
 /**
@@ -44,6 +46,8 @@ public class NormalDistribution extends AbstractDistribution
    public NormalDistribution(final double average, final double spread, final Random random)
    {
       super(average, spread, random);
+      final double min = average - (3 * spread);
+      checkArgument(min >= 0.0, "three standard deviations must be >= 0.0 [%s]", min);
    }
 
    /**
@@ -58,7 +62,7 @@ public class NormalDistribution extends AbstractDistribution
       do
       {
          result = this.average + (this.spread * this.random.nextGaussian());
-      } while (result < 0);
+      } while (result < 0.0);
       return result;
    }
 

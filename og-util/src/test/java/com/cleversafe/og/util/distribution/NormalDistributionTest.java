@@ -45,7 +45,7 @@ public class NormalDistributionTest
    @Test
    public void testZeroMean()
    {
-      new NormalDistribution(0.0, 10.0, this.random);
+      new NormalDistribution(0.0, 0.0, this.random);
    }
 
    @Test(expected = IllegalArgumentException.class)
@@ -66,21 +66,24 @@ public class NormalDistributionTest
       new NormalDistribution(10.0, 10.0, null);
    }
 
-   @Test
-   public void testBasicNormalDistribution()
+   @Test(expected = IllegalArgumentException.class)
+   public void testNegativeMin()
    {
-      final NormalDistribution nd = new NormalDistribution(10.0, 10.0, this.random);
-      Assert.assertEquals(10.0, nd.getAverage(), ERR);
-      Assert.assertEquals(10.0, nd.getSpread(), ERR);
-      nd.nextSample();
-      nd.nextSample();
-      nd.nextSample();
+      new NormalDistribution(5.0, 11.0, this.random);
    }
 
    @Test
-   public void testNormalDistributionWithRandom()
+   public void testZeroMin()
    {
-      final NormalDistribution nd = new NormalDistribution(10.0, 10.0, new Random());
+      new NormalDistribution(6.0, 2.0, this.random);
+   }
+
+   @Test
+   public void testBasicNormalDistribution()
+   {
+      final NormalDistribution nd = new NormalDistribution(10.0, 0.0, this.random);
+      Assert.assertEquals(10.0, nd.getAverage(), ERR);
+      Assert.assertEquals(0.0, nd.getSpread(), ERR);
       nd.nextSample();
       nd.nextSample();
       nd.nextSample();
