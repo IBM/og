@@ -19,10 +19,11 @@
 
 package com.cleversafe.og.test;
 
+import static org.hamcrest.CoreMatchers.sameInstance;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -30,7 +31,6 @@ import com.cleversafe.og.api.OperationManagerException;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.object.ObjectManagerException;
 import com.cleversafe.og.supplier.Suppliers;
-import com.cleversafe.og.test.SimpleOperationManager;
 import com.google.common.base.Supplier;
 
 public class SimpleOperationManagerTest
@@ -48,35 +48,32 @@ public class SimpleOperationManagerTest
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullRequestMix()
+   public void nullRequestMix()
    {
       new SimpleOperationManager(null);
    }
 
    @Test
-   public void testNext() throws OperationManagerException
+   public void next() throws OperationManagerException
    {
-      final SimpleOperationManager m = new SimpleOperationManager(this.requestMix);
-      final Request r = m.next();
-      Assert.assertEquals(r, this.request);
+      final Request request = new SimpleOperationManager(this.requestMix).next();
+      assertThat(request, sameInstance(this.request));
    }
 
    @Test(expected = OperationManagerException.class)
-   public void testGetOperationManagerException() throws OperationManagerException
+   public void getOperationManagerException() throws OperationManagerException
    {
       when(this.requestMix.get()).thenThrow(new IllegalStateException());
-      final SimpleOperationManager m = new SimpleOperationManager(this.requestMix);
-      m.next();
+      new SimpleOperationManager(this.requestMix).next();
    }
 
    @Test(expected = OperationManagerException.class)
-   public void testGetOperationManagerException2() throws OperationManagerException
+   public void getOperationManagerException2() throws OperationManagerException
    {
       @SuppressWarnings("unchecked")
       final Supplier<Request> p = mock(Supplier.class);
       when(p.get()).thenThrow(new ObjectManagerException());
       when(this.requestMix.get()).thenReturn(p);
-      final SimpleOperationManager m = new SimpleOperationManager(this.requestMix);
-      m.next();
+      new SimpleOperationManager(this.requestMix).next();
    }
 }

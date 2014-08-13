@@ -19,6 +19,9 @@
 
 package com.cleversafe.og.test;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.number.OrderingComparison.greaterThanOrEqualTo;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -28,9 +31,11 @@ import static org.mockito.Mockito.when;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
 
 import com.cleversafe.og.api.Client;
 import com.cleversafe.og.api.Metadata;
@@ -52,9 +57,15 @@ import com.cleversafe.og.util.Pair;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.SettableFuture;
+import com.tngtech.java.junit.dataprovider.DataProvider;
+import com.tngtech.java.junit.dataprovider.DataProviderRunner;
+import com.tngtech.java.junit.dataprovider.UseDataProvider;
 
+@RunWith(DataProviderRunner.class)
 public class LoadTestTest
 {
+   @Rule
+   public ExpectedException thrown = ExpectedException.none();
    private Request request;
    private Response response;
    private OperationManager operationManager;
@@ -84,15 +95,13 @@ public class LoadTestTest
       when(this.client.execute(this.request)).thenReturn(future);
 
       this.scheduler = new ConcurrentRequestScheduler(1);
-
       this.handler = new LoadTestSubscriberExceptionHandler();
       this.eventBus = new EventBus(this.handler);
-
+      this.stats = new Statistics();
       this.test =
             new LoadTest(this.operationManager, this.client, this.scheduler, this.eventBus,
                   this.handler);
 
-      this.stats = new Statistics();
       final TestCondition condition =
             new CounterCondition(Operation.WRITE, Counter.OPERATIONS, 5, this.test, this.stats);
 
@@ -101,47 +110,47 @@ public class LoadTestTest
       this.eventBus.register(condition);
    }
 
-   @Test(expected = NullPointerException.class)
-   public void testNullOperationManager()
+   @DataProvider
+   public static Object[][] provideInvalidLoadTest()
    {
-      new LoadTest(null, this.client, this.scheduler, this.eventBus, this.handler);
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void testNullClient()
-   {
-      new LoadTest(this.operationManager, null, this.scheduler, this.eventBus, this.handler);
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void testNullScheduler()
-   {
-      new LoadTest(this.operationManager, this.client, null, this.eventBus, this.handler);
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void testNullEventBus()
-   {
-      new LoadTest(this.operationManager, this.client, this.scheduler, null, this.handler);
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void testNullHandler()
-   {
-      new LoadTest(this.operationManager, this.client, this.scheduler, this.eventBus, null);
+      final OperationManager operationManager = mock(OperationManager.class);
+      final Client client = mock(Client.class);
+      final Scheduler scheduler = mock(Scheduler.class);
+      final EventBus eventBus = mock(EventBus.class);
+      final LoadTestSubscriberExceptionHandler handler =
+            mock(LoadTestSubscriberExceptionHandler.class);
+      return new Object[][]{
+            {null, client, scheduler, eventBus, handler},
+            {operationManager, null, scheduler, eventBus, handler},
+            {operationManager, client, null, eventBus, handler},
+            {operationManager, client, scheduler, null, handler},
+            {operationManager, client, scheduler, eventBus, null}
+      };
    }
 
    @Test
-   public void testOperationManagerException() throws OperationManagerException
+   @UseDataProvider("provideInvalidLoadTest")
+   public void invalidLoadTest(
+         final OperationManager operationManager,
+         final Client client,
+         final Scheduler scheduler,
+         final EventBus eventBus,
+         final LoadTestSubscriberExceptionHandler handler)
+   {
+      this.thrown.expect(NullPointerException.class);
+      new LoadTest(operationManager, client, scheduler, eventBus, handler);
+   }
+
+   @Test
+   public void operationManagerException() throws OperationManagerException
    {
       when(this.operationManager.next()).thenThrow(new OperationManagerException());
-      final boolean success = this.test.call();
-      Assert.assertFalse(success);
+      assertThat(this.test.call(), is(false));
       verify(this.client, never()).shutdown(true);
    }
 
    @Test
-   public void testEventBusSubscriberException()
+   public void eventBusSubscriberException()
    {
       this.eventBus.register(new Object()
       {
@@ -151,16 +160,14 @@ public class LoadTestTest
             throw new RuntimeException();
          }
       });
-      final boolean success = this.test.call();
-      Assert.assertFalse(success);
+      assertThat(this.test.call(), is(false));
    }
 
    @Test
-   public void testLoadTest()
+   public void loadTest()
    {
-      final boolean success = this.test.call();
-      Assert.assertTrue(success);
-      Assert.assertTrue(this.stats.get(Operation.WRITE, Counter.OPERATIONS) >= 5);
+      assertThat(this.test.call(), is(true));
+      assertThat(this.stats.get(Operation.WRITE, Counter.OPERATIONS), greaterThanOrEqualTo(5L));
       verify(this.client, atLeast(5)).execute(this.request);
       verify(this.client, never()).shutdown(true);
    }

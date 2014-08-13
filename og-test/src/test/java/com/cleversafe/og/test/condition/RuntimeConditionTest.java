@@ -19,66 +19,64 @@
 
 package com.cleversafe.og.test.condition;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
 
 import com.cleversafe.og.test.LoadTest;
 import com.google.common.util.concurrent.Uninterruptibles;
+import com.tngtech.java.junit.dataprovider.DataProvider;
+import com.tngtech.java.junit.dataprovider.DataProviderRunner;
+import com.tngtech.java.junit.dataprovider.UseDataProvider;
 
+@RunWith(DataProviderRunner.class)
 public class RuntimeConditionTest
 {
-   @Test(expected = NullPointerException.class)
-   public void testNullLoadTest()
-   {
-      new RuntimeCondition(null, 1.0, TimeUnit.SECONDS);
-   }
+   @Rule
+   public ExpectedException thrown = ExpectedException.none();
 
-   @Test(expected = IllegalArgumentException.class)
-   public void testNegativeRuntime()
+   @DataProvider
+   public static Object[][] provideInvalidRuntimeCondition()
    {
       final LoadTest test = mock(LoadTest.class);
-      new RuntimeCondition(test, -1.0, TimeUnit.SECONDS);
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testZeroRuntime()
-   {
-      final LoadTest test = mock(LoadTest.class);
-      new RuntimeCondition(test, 0.0, TimeUnit.SECONDS);
+      final TimeUnit unit = TimeUnit.SECONDS;
+      return new Object[][]{
+            {null, 1.0, unit, NullPointerException.class},
+            {test, -1.0, unit, IllegalArgumentException.class},
+            {test, 0.0, unit, IllegalArgumentException.class},
+            {test, 1.0, null, NullPointerException.class}
+      };
    }
 
    @Test
-   public void testPositiveRuntime()
+   @UseDataProvider("provideInvalidRuntimeCondition")
+   public void invalidRuntimeCondition(
+         final LoadTest test,
+         final double runtime,
+         final TimeUnit unit,
+         final Class<Exception> expectedException)
    {
-      final LoadTest test = mock(LoadTest.class);
-      new RuntimeCondition(test, 1.0, TimeUnit.SECONDS);
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void testNullTimeUnit()
-   {
-      final LoadTest test = mock(LoadTest.class);
-      new RuntimeCondition(test, 1.0, null);
+      this.thrown.expect(expectedException);
+      new RuntimeCondition(test, runtime, unit);
    }
 
    @Test
-   public void testRuntimeCondition()
+   public void runtimeCondition()
    {
-      final LoadTest test = mock(LoadTest.class);
-      final RuntimeCondition c = new RuntimeCondition(test, 1.0, TimeUnit.SECONDS);
-      Assert.assertFalse(c.isTriggered());
-      verify(test, never()).stopTest();
-      Uninterruptibles.sleepUninterruptibly(500, TimeUnit.MILLISECONDS);
-      Assert.assertFalse(c.isTriggered());
-      verify(test, never()).stopTest();
-      Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
-      Assert.assertTrue(c.isTriggered());
-      verify(test).stopTest();
+      final RuntimeCondition condition =
+            new RuntimeCondition(mock(LoadTest.class), 50, TimeUnit.MILLISECONDS);
+
+      assertThat(condition.isTriggered(), is(false));
+      Uninterruptibles.sleepUninterruptibly(25, TimeUnit.MILLISECONDS);
+      assertThat(condition.isTriggered(), is(false));
+      Uninterruptibles.sleepUninterruptibly(50, TimeUnit.MILLISECONDS);
+      assertThat(condition.isTriggered(), is(true));
    }
 }

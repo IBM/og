@@ -19,13 +19,14 @@
 
 package com.cleversafe.og.util.io;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.number.OrderingComparison.lessThan;
 import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -90,7 +91,7 @@ public class ThrottledOutputStreamTest
       final long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - timestampStart);
       final long delta = Math.abs(duration - 100);
       // within 10% of expected duration (100 milliseconds)
-      Assert.assertTrue(delta < 10);
+      assertThat(delta, lessThan(10L));
    }
 
    @Test
@@ -103,6 +104,6 @@ public class ThrottledOutputStreamTest
       final long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - timestampStart);
       final long delta = Math.abs(duration - 100);
       // within 10% of expected duration (100 milliseconds)
-      Assert.assertTrue(delta < 10);
+      assertThat(delta, lessThan(10L));
    }
 }

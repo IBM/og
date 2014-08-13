@@ -19,12 +19,15 @@
 
 package com.cleversafe.og.test.condition;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.junit.Assert;
-import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
 
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
@@ -34,102 +37,72 @@ import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.test.LoadTest;
 import com.cleversafe.og.util.Operation;
 import com.cleversafe.og.util.Pair;
+import com.tngtech.java.junit.dataprovider.DataProvider;
+import com.tngtech.java.junit.dataprovider.DataProviderRunner;
+import com.tngtech.java.junit.dataprovider.UseDataProvider;
 
+@RunWith(DataProviderRunner.class)
 public class StatusCodeConditionTest
 {
-   private LoadTest test;
-   private Statistics stats;
+   @Rule
+   public final ExpectedException thrown = ExpectedException.none();
 
-   @Before
-   public void before()
+   @DataProvider
+   public static Object[][] provideInvalidStatusCodeCondition()
    {
-      this.test = mock(LoadTest.class);
-      this.stats = new Statistics();
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void testNullOperation()
-   {
-      new StatusCodeCondition(null, 200, 1, this.test, this.stats);
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testNegativeStatusCode()
-   {
-      new StatusCodeCondition(Operation.WRITE, -1, 1, this.test, this.stats);
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testZeroStatusCode()
-   {
-      new StatusCodeCondition(Operation.WRITE, 0, 1, this.test, this.stats);
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testSmallStatusCode()
-   {
-      new StatusCodeCondition(Operation.WRITE, 99, 1, this.test, this.stats);
+      final Operation operation = Operation.WRITE;
+      final LoadTest test = mock(LoadTest.class);
+      final Statistics stats = new Statistics();
+      return new Object[][]{
+            {null, 200, 1, test, stats, NullPointerException.class},
+            {operation, -1, 1, test, stats, IllegalArgumentException.class},
+            {operation, 0, 1, test, stats, IllegalArgumentException.class},
+            {operation, 99, 1, test, stats, IllegalArgumentException.class},
+            {operation, 600, 1, test, stats, IllegalArgumentException.class},
+            {operation, 200, -1, test, stats, IllegalArgumentException.class},
+            {operation, 200, 0, test, stats, IllegalArgumentException.class},
+            {operation, 200, 1, null, stats, NullPointerException.class},
+            {operation, 200, 1, test, null, NullPointerException.class},
+      };
    }
 
    @Test
-   public void testMediumStatusCode()
+   @UseDataProvider("provideInvalidStatusCodeCondition")
+   public void invalidStatusCodeCondition(
+         final Operation operation,
+         final int statusCode,
+         final long thresholdValue,
+         final LoadTest test,
+         final Statistics stats,
+         final Class<Exception> expectedException)
    {
-      new StatusCodeCondition(Operation.WRITE, 200, 1, this.test, this.stats);
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testLargeStatusCode()
-   {
-      new StatusCodeCondition(Operation.WRITE, 600, 1, this.test, this.stats);
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testNegativeThreshold()
-   {
-      new StatusCodeCondition(Operation.WRITE, 200, -1, this.test, this.stats);
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testZeroThreshold()
-   {
-      new StatusCodeCondition(Operation.WRITE, 200, 0, this.test, this.stats);
+      this.thrown.expect(expectedException);
+      new StatusCodeCondition(operation, statusCode, thresholdValue, test, stats);
    }
 
    @Test
-   public void testPositiveThreshold()
+   public void statusCodeCondition()
    {
-      new StatusCodeCondition(Operation.WRITE, 200, 1, this.test, this.stats);
-   }
+      final LoadTest test = mock(LoadTest.class);
+      final Statistics stats = new Statistics();
 
-   @Test(expected = NullPointerException.class)
-   public void testNullLoadTest()
-   {
-      new StatusCodeCondition(Operation.WRITE, 200, 1, null, this.stats);
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void testNullStatistics()
-   {
-      new StatusCodeCondition(Operation.WRITE, 200, 1, this.test, null);
-   }
-
-   @Test
-   public void testStatusCodeCondition()
-   {
       final Request request = mock(Request.class);
       when(request.getMethod()).thenReturn(Method.PUT);
       when(request.getBody()).thenReturn(Bodies.none());
+
       final Response response = mock(Response.class);
       when(response.getBody()).thenReturn(Bodies.none());
       when(response.getStatusCode()).thenReturn(200);
+
       final Pair<Request, Response> operation = Pair.of(request, response);
 
-      final StatusCodeCondition c =
-            new StatusCodeCondition(Operation.WRITE, 200, 2, this.test, this.stats);
-      Assert.assertFalse(c.isTriggered());
-      this.stats.update(operation);
-      Assert.assertFalse(c.isTriggered());
-      this.stats.update(operation);
-      Assert.assertTrue(c.isTriggered());
+      final StatusCodeCondition condition =
+            new StatusCodeCondition(Operation.WRITE, 200, 2, test, stats);
+
+      assertThat(condition.isTriggered(), is(false));
+      stats.update(operation);
+      assertThat(condition.isTriggered(), is(false));
+      stats.update(operation);
+      assertThat(condition.isTriggered(), is(true));
    }
 }

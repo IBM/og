@@ -19,12 +19,15 @@
 
 package com.cleversafe.og.test.condition;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.junit.Assert;
-import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
 
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
@@ -35,77 +38,69 @@ import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.test.LoadTest;
 import com.cleversafe.og.util.Operation;
 import com.cleversafe.og.util.Pair;
+import com.tngtech.java.junit.dataprovider.DataProvider;
+import com.tngtech.java.junit.dataprovider.DataProviderRunner;
+import com.tngtech.java.junit.dataprovider.UseDataProvider;
 
+@RunWith(DataProviderRunner.class)
 public class CounterConditionTest
 {
-   private LoadTest test;
-   private Statistics stats;
+   @Rule
+   public ExpectedException thrown = ExpectedException.none();
 
-   @Before
-   public void before()
+   @DataProvider
+   public static Object[][] provideInvalidCounterCondition()
    {
-      this.test = mock(LoadTest.class);
-      this.stats = new Statistics();
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void testNullOperation()
-   {
-      new CounterCondition(null, Counter.BYTES, 1, this.test, this.stats);
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void testNullCounter()
-   {
-      new CounterCondition(Operation.WRITE, null, 1, this.test, this.stats);
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testNegativeThreshold()
-   {
-      new CounterCondition(Operation.WRITE, Counter.BYTES, -1, this.test, this.stats);
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testZeroThreshold()
-   {
-      new CounterCondition(Operation.WRITE, Counter.BYTES, 0, this.test, this.stats);
+      final LoadTest test = mock(LoadTest.class);
+      final Statistics stats = new Statistics();
+      final Operation operation = Operation.WRITE;
+      final Counter counter = Counter.BYTES;
+      return new Object[][]{
+            {null, counter, 1, test, stats, NullPointerException.class},
+            {operation, null, 1, test, stats, NullPointerException.class},
+            {operation, counter, -1, test, stats, IllegalArgumentException.class},
+            {operation, counter, 0, test, stats, IllegalArgumentException.class},
+            {operation, counter, 1, null, stats, NullPointerException.class},
+            {operation, counter, 1, test, null, NullPointerException.class},
+      };
    }
 
    @Test
-   public void testPositiveThreshold()
+   @UseDataProvider("provideInvalidCounterCondition")
+   public void invalidCounterCondition(
+         final Operation operation,
+         final Counter counter,
+         final long thresholdValue,
+         final LoadTest test,
+         final Statistics stats,
+         final Class<Exception> expectedException)
    {
-      new CounterCondition(Operation.WRITE, Counter.BYTES, 1, this.test, this.stats);
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void testNullLoadTest()
-   {
-      new CounterCondition(Operation.WRITE, Counter.BYTES, 1, null, this.stats);
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void testNullStatistics()
-   {
-      new CounterCondition(Operation.WRITE, Counter.BYTES, 1, this.test, null);
+      this.thrown.expect(expectedException);
+      new CounterCondition(operation, counter, thresholdValue, test, stats);
    }
 
    @Test
-   public void testCounterCondition()
+   public void counterCondition()
    {
+      final LoadTest test = mock(LoadTest.class);
+      final Statistics stats = new Statistics();
+
       final Request request = mock(Request.class);
       when(request.getMethod()).thenReturn(Method.PUT);
       when(request.getBody()).thenReturn(Bodies.none());
+
       final Response response = mock(Response.class);
       when(response.getBody()).thenReturn(Bodies.none());
+
       final Pair<Request, Response> operation = Pair.of(request, response);
 
-      final CounterCondition c =
-            new CounterCondition(Operation.WRITE, Counter.OPERATIONS, 2, this.test, this.stats);
-      Assert.assertFalse(c.isTriggered());
-      this.stats.update(operation);
-      Assert.assertFalse(c.isTriggered());
-      this.stats.update(operation);
-      Assert.assertTrue(c.isTriggered());
+      final CounterCondition condition =
+            new CounterCondition(Operation.WRITE, Counter.OPERATIONS, 2, test, stats);
+
+      assertThat(condition.isTriggered(), is(false));
+      stats.update(operation);
+      assertThat(condition.isTriggered(), is(false));
+      stats.update(operation);
+      assertThat(condition.isTriggered(), is(true));
    }
 }
