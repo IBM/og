@@ -19,6 +19,8 @@
 
 package com.cleversafe.og.util.io;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.number.OrderingComparison.lessThan;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -26,79 +28,86 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
 
 import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.Data;
+import com.tngtech.java.junit.dataprovider.DataProvider;
+import com.tngtech.java.junit.dataprovider.DataProviderRunner;
+import com.tngtech.java.junit.dataprovider.UseDataProvider;
 
 @SuppressWarnings("resource")
+@RunWith(DataProviderRunner.class)
 public class ThrottledInputStreamTest
 {
-   private InputStream in;
+   @Rule
+   public ExpectedException thrown = ExpectedException.none();
    private Body body;
 
    @Before
    public void before()
    {
-      this.in = mock(InputStream.class);
       this.body = mock(Body.class);
       when(this.body.getData()).thenReturn(Data.ZEROES);
       when(this.body.getSize()).thenReturn(10000L);
    }
 
-   @Test(expected = NullPointerException.class)
-   public void testNullInputStream()
+   @DataProvider
+   public static Object[][] provideInvalidThrottleInputStream()
    {
-      new ThrottledInputStream(null, 10);
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testNegativeBytesPerSecond()
-   {
-      new ThrottledInputStream(this.in, -1);
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testZeroBytesPerSecond()
-   {
-      new ThrottledInputStream(this.in, 0);
+      final InputStream in = mock(InputStream.class);
+      return new Object[][]{
+            {null, 1, NullPointerException.class},
+            {in, -1, IllegalArgumentException.class},
+            {in, 0, IllegalArgumentException.class}
+      };
    }
 
    @Test
-   public void testPositiveBytesPerSecond()
+   @UseDataProvider("provideInvalidThrottleInputStream")
+   public void invalidInputStream(
+         final InputStream in,
+         final long bytesPerSecond,
+         final Class<Exception> expectedException)
    {
-      new ThrottledInputStream(this.in, 1);
+      this.thrown.expect(expectedException);
+      Streams.throttle(in, bytesPerSecond);
    }
 
    @Test
-   public void testReadByte() throws IOException
+   public void positiveBytesPerSecond()
    {
-      final InputStream in = Streams.create(this.body);
-      final InputStream throttled = new ThrottledInputStream(in, 1000);
+      new ThrottledInputStream(mock(InputStream.class), 1);
+   }
+
+   @Test
+   public void readOneByteAtATime() throws IOException
+   {
+      final InputStream in = new ThrottledInputStream(Streams.create(this.body), 1000);
       final long timestampStart = System.nanoTime();
       for (int i = 0; i < 100; i++)
       {
-         throttled.read();
+         in.read();
       }
       final long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - timestampStart);
       final long delta = Math.abs(duration - 100);
       // within 10% of expected duration (100 milliseconds)
-      Assert.assertTrue(delta < 10);
+      assertThat(delta, lessThan(10L));
    }
 
    @Test
-   public void testReadByteArray() throws IOException
+   public void read() throws IOException
    {
-      final InputStream in = Streams.create(this.body);
-      final InputStream throttled = new ThrottledInputStream(in, 1000);
-      final byte[] buf = new byte[100];
+      final InputStream in = new ThrottledInputStream(Streams.create(this.body), 1000);
       final long timestampStart = System.nanoTime();
-      throttled.read(buf);
+      in.read(new byte[100]);
       final long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - timestampStart);
       final long delta = Math.abs(duration - 100);
       // within 10% of expected duration (100 milliseconds)
-      Assert.assertTrue(delta < 10);
+      assertThat(delta, lessThan(10L));
    }
 }

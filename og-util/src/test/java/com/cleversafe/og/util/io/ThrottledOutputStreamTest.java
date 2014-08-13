@@ -27,11 +27,21 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+
+import com.tngtech.java.junit.dataprovider.DataProvider;
+import com.tngtech.java.junit.dataprovider.DataProviderRunner;
+import com.tngtech.java.junit.dataprovider.UseDataProvider;
 
 @SuppressWarnings("resource")
+@RunWith(DataProviderRunner.class)
 public class ThrottledOutputStreamTest
 {
+   @Rule
+   public ExpectedException thrown = ExpectedException.none();
    private OutputStream out;
 
    @Before
@@ -40,32 +50,36 @@ public class ThrottledOutputStreamTest
       this.out = mock(OutputStream.class);
    }
 
-   @Test(expected = NullPointerException.class)
-   public void testNullOutputStream()
+   @DataProvider
+   public static Object[][] provideInvalidThrottleOutputStream()
    {
-      new ThrottledOutputStream(null, 10);
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testNegativeBytesPerSecond()
-   {
-      new ThrottledOutputStream(this.out, -1);
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testZeroBytesPerSecond()
-   {
-      new ThrottledOutputStream(this.out, 0);
+      final OutputStream out = mock(OutputStream.class);
+      return new Object[][]{
+            {null, 1, NullPointerException.class},
+            {out, -1, IllegalArgumentException.class},
+            {out, 0, IllegalArgumentException.class}
+      };
    }
 
    @Test
-   public void testPositiveBytesPerSecond()
+   @UseDataProvider("provideInvalidThrottleOutputStream")
+   public void invalidOutputStream(
+         final OutputStream out,
+         final long bytesPerSecond,
+         final Class<Exception> expectedException)
+   {
+      this.thrown.expect(expectedException);
+      Streams.throttle(out, bytesPerSecond);
+   }
+
+   @Test
+   public void positiveBytesPerSecond()
    {
       new ThrottledOutputStream(this.out, 1);
    }
 
    @Test
-   public void testWriteByte() throws IOException
+   public void writeOneByteAtATime() throws IOException
    {
       final OutputStream throttled = new ThrottledOutputStream(this.out, 1000);
       final long timestampStart = System.nanoTime();
@@ -80,7 +94,7 @@ public class ThrottledOutputStreamTest
    }
 
    @Test
-   public void testWriteByteArray() throws IOException
+   public void write() throws IOException
    {
       final OutputStream throttled = new ThrottledOutputStream(this.out, 1000);
       final byte[] buf = new byte[100];

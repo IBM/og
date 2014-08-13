@@ -19,6 +19,8 @@
 
 package com.cleversafe.og.util.io;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -26,7 +28,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -35,109 +36,70 @@ import com.cleversafe.og.api.Data;
 
 public class StreamsTest
 {
-   private InputStream in;
-   private OutputStream out;
    private Body body;
 
    @Before
    public void before()
    {
-      this.in = mock(InputStream.class);
-      this.out = mock(OutputStream.class);
       this.body = mock(Body.class);
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullBody()
+   public void nullBody()
    {
       Streams.create(null);
    }
 
    @Test
-   public void testNoneCreate() throws IOException
+   public void createNone() throws IOException
    {
       when(this.body.getData()).thenReturn(Data.NONE);
       when(this.body.getSize()).thenReturn(0L);
-      final InputStream i = Streams.create(this.body);
-      Assert.assertEquals(-1, i.read());
+      assertThat(Streams.create(this.body).read(), is(-1));
    }
 
    @Test
-   public void testRandomCreateInputStream() throws IOException
+   public void createRandom() throws IOException
    {
       when(this.body.getData()).thenReturn(Data.RANDOM);
       when(this.body.getSize()).thenReturn(1024L);
-      final InputStream stream = Streams.create(this.body);
+      final InputStream in = Streams.create(this.body);
       final byte[] buf = new byte[1024];
-      Assert.assertEquals(1024, stream.read(buf));
       boolean nonZero = false;
+
+      assertThat(in.read(buf), is(1024));
       for (int i = 0; i < buf.length; i++)
       {
          if (buf[i] != 0)
             nonZero = true;
       }
-      Assert.assertTrue(nonZero);
+      assertThat(nonZero, is(true));
    }
 
    @Test
-   public void testZeroesCreateInputStream() throws IOException
+   public void createZeroes() throws IOException
    {
       when(this.body.getData()).thenReturn(Data.ZEROES);
       when(this.body.getSize()).thenReturn(1024L);
-      final InputStream stream = Streams.create(this.body);
+      final InputStream in = Streams.create(this.body);
       final byte[] buf = new byte[1024];
-      Assert.assertEquals(1024, stream.read(buf));
+
+      assertThat(in.read(buf), is(1024));
       for (int i = 0; i < buf.length; i++)
       {
-         Assert.assertEquals(0, buf[i]);
+         assertThat((int) buf[i], is(0));
       }
    }
 
-   @Test(expected = NullPointerException.class)
-   public void testThrottleInputStreamNullStream()
+   @Test
+   public void throttleInputStream()
    {
-      Streams.throttle((InputStream) null, 10);
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testThrottleInputStreamNegativeBytesPerSecond()
-   {
-      Streams.throttle(this.in, -1);
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testThrottleInputStreamZeroBytesPerSecond()
-   {
-      Streams.throttle(this.in, 0);
+      Streams.throttle(mock(InputStream.class), 1);
    }
 
    @Test
-   public void testThrottleInputStreamPositiveBytesPerSecond()
+   public void throttleOutputStream()
    {
-      Streams.throttle(this.in, 1);
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void testThrottleOutputStreamNullStream()
-   {
-      Streams.throttle((OutputStream) null, 10);
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testThrottleOutputStreamNegativeBytesPerSecond()
-   {
-      Streams.throttle(this.out, -1);
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testThrottleOutputStreamZeroBytesPerSecond()
-   {
-      Streams.throttle(this.out, 0);
-   }
-
-   @Test
-   public void testThrottleOutputStreamPositiveBytesPerSecond()
-   {
-      Streams.throttle(this.out, 1);
+      Streams.throttle(mock(OutputStream.class), 1);
    }
 }
