@@ -19,49 +19,39 @@
 
 package com.cleversafe.og.util.distribution;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+
 import java.util.Random;
 
-import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
 public class PoissonDistributionTest
 {
-   private static final double ERR = Math.pow(0.1, 6);
-   private Random random;
-
-   @Before
-   public void before()
-   {
-      this.random = new Random();
-   }
-
    @Test(expected = IllegalArgumentException.class)
-   public void testNegativeMean()
+   public void negativeAverage()
    {
-      new PoissonDistribution(-1.0, this.random);
+      new PoissonDistribution(-1.0, new Random());
    }
 
    @Test
-   public void testZeroMean()
+   public void zeroAverage()
    {
-      new PoissonDistribution(0.0, this.random);
+      new PoissonDistribution(0.0, new Random());
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullRandom()
+   public void nullRandom()
    {
       new PoissonDistribution(10.0, null);
    }
 
    @Test
-   public void testBasicPoissonDistribution()
+   public void sample()
    {
-      final PoissonDistribution pd = new PoissonDistribution(10.0, this.random);
-      Assert.assertEquals(10.0, pd.getAverage(), ERR);
-      Assert.assertEquals(0.0, pd.getSpread(), ERR);
-      pd.nextSample();
-      pd.nextSample();
-      pd.nextSample();
+      final PoissonDistribution d = new PoissonDistribution(10.0, new Random());
+      assertThat(d.getAverage(), is(10.0));
+      assertThat(d.getSpread(), is(0.0));
+      d.nextSample();
    }
 }

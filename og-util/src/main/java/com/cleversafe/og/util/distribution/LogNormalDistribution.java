@@ -19,6 +19,8 @@
 
 package com.cleversafe.og.util.distribution;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import java.util.Random;
 
 /**
@@ -44,6 +46,9 @@ public class LogNormalDistribution extends AbstractDistribution
    public LogNormalDistribution(final double average, final double spread, final Random random)
    {
       super(average, spread, random);
+      // FIXME how does sigma work for lognormal? What is a good left bound to prevent negatives?
+      if (average == 0.0)
+         checkArgument(spread == 0.0, "spread must be 0 if average is 0 [%s]", spread);
    }
 
    /**
