@@ -37,6 +37,6 @@ public class UniformDistributionTest extends AbstractDistributionTest
    @Test
    public void zeroMin()
    {
-      new UniformDistribution(5.0, 10.0, new Random());
+      new UniformDistribution(5.0, 5.0, new Random());
    }
 }

@@ -49,14 +49,14 @@ public class UniformDistribution extends AbstractDistribution
    public UniformDistribution(final double average, final double spread, final Random random)
    {
       super(average, spread, random);
-      this.min = average - (spread / 2);
+      this.min = average - spread;
       checkArgument(this.min >= 0.0, "min must be >= 0.0 [%s]", this.min);
    }
 
    @Override
    public double nextSample()
    {
-      return this.min + (this.spread * this.random.nextDouble());
+      return this.min + (2 * this.spread * this.random.nextDouble());
    }
 
    @Override
