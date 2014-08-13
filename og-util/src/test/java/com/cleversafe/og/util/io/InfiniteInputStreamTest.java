@@ -34,13 +34,13 @@ import com.tngtech.java.junit.dataprovider.UseDataProvider;
 
 @SuppressWarnings("resource")
 @RunWith(DataProviderRunner.class)
-public class FixedBufferInputStreamTest
+public class InfiniteInputStreamTest
 {
    @Rule
    public ExpectedException thrown = ExpectedException.none();
    private static final int BUF_LENGTH = 5;
    private byte[] buf;
-   private FixedBufferInputStream in;
+   private InfiniteInputStream in;
 
    @Before
    public void before()
@@ -50,19 +50,19 @@ public class FixedBufferInputStreamTest
       {
          this.buf[i] = (byte) i;
       }
-      this.in = new FixedBufferInputStream(this.buf);
+      this.in = new InfiniteInputStream(this.buf);
    }
 
    @Test(expected = NullPointerException.class)
    public void nullBuffer()
    {
-      new FixedBufferInputStream(null);
+      new InfiniteInputStream(null);
    }
 
    @Test(expected = IllegalArgumentException.class)
    public void emptyBuffer()
    {
-      new FixedBufferInputStream(new byte[0]);
+      new InfiniteInputStream(new byte[0]);
    }
 
    @Test

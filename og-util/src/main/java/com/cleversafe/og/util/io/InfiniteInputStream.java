@@ -46,7 +46,7 @@ import java.io.InputStream;
  * 
  * @since 1.0
  */
-public class FixedBufferInputStream extends InputStream
+public class InfiniteInputStream extends InputStream
 {
    private final byte[] buf;
    private int cursor;
@@ -63,7 +63,7 @@ public class FixedBufferInputStream extends InputStream
     * @throws IllegalArgumentException
     *            if buf length is zero
     */
-   public FixedBufferInputStream(final byte[] buf)
+   public InfiniteInputStream(final byte[] buf)
    {
       this.buf = checkNotNull(buf);
       checkArgument(buf.length > 0, "buf length must be > 0 [%s]", buf.length);

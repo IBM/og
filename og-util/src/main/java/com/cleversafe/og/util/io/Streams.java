@@ -75,7 +75,7 @@ public class Streams
 
    private static InputStream create(final byte[] buf, final long size)
    {
-      final InputStream in = ByteStreams.limit(new FixedBufferInputStream(buf), size);
+      final InputStream in = ByteStreams.limit(new InfiniteInputStream(buf), size);
       // mark the stream so that reset is supported in case of http redirect
       in.mark(Integer.MAX_VALUE);
       return in;
