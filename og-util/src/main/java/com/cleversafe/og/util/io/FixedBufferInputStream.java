@@ -37,6 +37,8 @@ package com.cleversafe.og.util.io;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.io.InputStream;
+
 /**
  * An input stream that is backed by a byte array.
  * <P>
@@ -44,49 +46,35 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * 
  * @since 1.0
  */
-public class FixedBufferInputStream extends SizedInputStream
+public class FixedBufferInputStream extends InputStream
 {
    private final byte[] buf;
-   private final long size;
-   private long available;
+   private int cursor;
+   private int mark;
 
    /**
-    * Constructs an input stream of the provided size, using the provided byte array as its source
-    * of data.
+    * Constructs an infinite input stream, using the provided byte array as its source of data.
     * <p>
     * Note: this class does not perform a defensive copy of the provided byte array, so callers must
     * take care not to modify the byte array after construction of this input stream.
     * 
     * @param buf
     *           the byte array to use as a data source for this input stream
-    * @param size
-    *           the size of this input stream
     * @throws IllegalArgumentException
     *            if buf length is zero
-    * @throws IllegalArgumentException
-    *            if size is negative
     */
-   public FixedBufferInputStream(final byte[] buf, final long size)
+   public FixedBufferInputStream(final byte[] buf)
    {
       this.buf = checkNotNull(buf);
       checkArgument(buf.length > 0, "buf length must be > 0 [%s]", buf.length);
-      checkArgument(size >= 0, "size must be >= 0, [%s]", size);
-
-      this.size = size;
-      this.available = size;
+      this.cursor = 0;
+      this.mark = 0;
    }
 
    @Override
    public int read()
    {
-      if (this.available == 0)
-      {
-         return -1;
-      }
-
-      final int idx = (int) ((this.size - this.available) % this.buf.length);
-      this.available--;
-      return this.buf[idx];
+      return this.buf[updateCursor(1)];
    }
 
    @Override
@@ -96,58 +84,54 @@ public class FixedBufferInputStream extends SizedInputStream
    }
 
    @Override
-   // TODO: implement internal state that tracks our cursor or offset position
    public int read(final byte[] b, final int off, final int len)
    {
       checkNotNull(b);
       if (off < 0 || len < 0 || len > b.length - off)
-      {
          throw new IndexOutOfBoundsException();
-      }
       else if (len == 0)
-      {
          return 0;
-      }
-      else if (this.available == 0)
+
+      int copied = 0;
+      while (copied < len)
       {
-         return -1;
+         final int toCopy = Math.min(this.buf.length - this.cursor, len - copied);
+         System.arraycopy(this.buf, this.cursor, b, off + copied, toCopy);
+         updateCursor(toCopy);
+         copied += toCopy;
       }
 
-      int offset = off;
-      for (int i = 0; i < len / this.buf.length
-            && this.available >= this.buf.length; i++)
-      {
-         System.arraycopy(this.buf, 0, b, offset, this.buf.length);
-         offset += this.buf.length;
-         this.available -= this.buf.length;
-      }
-
-      final int min = (int) Math.min(this.available, len - (offset - off));
-      if (min > 0)
-      {
-         System.arraycopy(this.buf, 0, b, offset, min);
-         offset += min;
-         this.available -= min;
-      }
-
-      return offset - off;
-   }
-
-   @Override
-   public void reset()
-   {
-      this.available = this.size;
+      return len;
    }
 
    @Override
    public int available()
    {
-      return (int) Math.min(this.available, Integer.MAX_VALUE);
+      return Integer.MAX_VALUE;
    }
 
    @Override
-   public long getSize()
+   public void mark(final int readlimit)
    {
-      return this.size;
+      this.mark = this.cursor;
+   }
+
+   @Override
+   public void reset()
+   {
+      this.cursor = this.mark;
+   }
+
+   @Override
+   public boolean markSupported()
+   {
+      return true;
+   }
+
+   private int updateCursor(final int amount)
+   {
+      final int oldCursor = this.cursor;
+      this.cursor = (this.cursor + amount) % this.buf.length;
+      return oldCursor;
    }
 }

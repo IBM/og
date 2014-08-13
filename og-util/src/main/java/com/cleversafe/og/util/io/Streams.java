@@ -26,6 +26,7 @@ import java.io.OutputStream;
 import java.util.Random;
 
 import com.cleversafe.og.api.Body;
+import com.google.common.io.ByteStreams;
 
 /**
  * A utility class for creating input and output streams
@@ -38,18 +39,12 @@ public class Streams
    private static final Random RANDOM = new Random();
    private static final int BUF_SIZE = 1024;
    private static final byte[] ZERO_BUF = new byte[BUF_SIZE];
-   private static final SizedInputStream NONE_INPUTSTREAM = new SizedInputStream()
+   private static final InputStream NONE_INPUTSTREAM = new InputStream()
    {
       @Override
       public int read()
       {
          return -1;
-      }
-
-      @Override
-      public long getSize()
-      {
-         return 0;
       }
    };
 
@@ -64,7 +59,7 @@ public class Streams
     *           the description of an body
     * @return an input stream instance
     */
-   public static SizedInputStream create(final Body body)
+   public static InputStream create(final Body body)
    {
       checkNotNull(body);
       switch (body.getData())
@@ -72,10 +67,18 @@ public class Streams
          case NONE :
             return NONE_INPUTSTREAM;
          case ZEROES :
-            return new FixedBufferInputStream(ZERO_BUF, body.getSize());
+            return create(ZERO_BUF, body.getSize());
          default :
-            return new FixedBufferInputStream(createRandomBuffer(), body.getSize());
+            return create(createRandomBuffer(), body.getSize());
       }
+   }
+
+   private static InputStream create(final byte[] buf, final long size)
+   {
+      final InputStream in = ByteStreams.limit(new FixedBufferInputStream(buf), size);
+      // mark the stream so that reset is supported in case of http redirect
+      in.mark(Integer.MAX_VALUE);
+      return in;
    }
 
    private static byte[] createRandomBuffer()

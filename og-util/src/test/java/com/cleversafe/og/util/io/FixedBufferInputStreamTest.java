@@ -19,175 +19,137 @@
 
 package com.cleversafe.og.util.io;
 
-import org.junit.Assert;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+
+import com.tngtech.java.junit.dataprovider.DataProvider;
+import com.tngtech.java.junit.dataprovider.DataProviderRunner;
+import com.tngtech.java.junit.dataprovider.UseDataProvider;
 
 @SuppressWarnings("resource")
+@RunWith(DataProviderRunner.class)
 public class FixedBufferInputStreamTest
 {
-   private long size;
+   @Rule
+   public ExpectedException thrown = ExpectedException.none();
+   private static final int BUF_LENGTH = 5;
    private byte[] buf;
-   private FixedBufferInputStream stream;
+   private FixedBufferInputStream in;
 
    @Before
    public void before()
    {
-      this.size = 1024;
-      this.buf = new byte[]{1, 2, 3, 4, 5};
-      this.stream = new FixedBufferInputStream(this.buf, this.size);
+      this.buf = new byte[BUF_LENGTH];
+      for (int i = 0; i < this.buf.length; i++)
+      {
+         this.buf[i] = (byte) i;
+      }
+      this.in = new FixedBufferInputStream(this.buf);
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullBuf()
+   public void nullBuffer()
    {
-      new FixedBufferInputStream(null, 1);
+      new FixedBufferInputStream(null);
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testZeroLengthBuf()
+   public void emptyBuffer()
    {
-      new FixedBufferInputStream(new byte[0], 1);
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testNegativeSize()
-   {
-      new FixedBufferInputStream(new byte[1], -1);
+      new FixedBufferInputStream(new byte[0]);
    }
 
    @Test
-   public void testZeroSize()
+   public void readOneByteAtATime()
    {
-      new FixedBufferInputStream(new byte[1], 0);
-   }
-
-   @Test
-   public void testPositiveSize()
-   {
-      new FixedBufferInputStream(new byte[1], 1);
-   }
-
-   @Test
-   public void testGetSize()
-   {
-      Assert.assertEquals(this.size, this.stream.getSize());
-   }
-
-   @Test
-   public void testReadOneByteAtATime()
-   {
-      int counter = 0;
-      int val;
-      while ((val = this.stream.read()) > -1)
+      for (int i = 0; i < 2 * this.buf.length; i++)
       {
-         Assert.assertEquals(this.buf[counter % this.buf.length], val);
-         Assert.assertEquals(this.size - counter - 1, this.stream.available());
-         counter++;
+         assertThat(this.in.read(), is((int) this.buf[i % this.buf.length]));
+         assertThat(this.in.available(), is(Integer.MAX_VALUE));
       }
    }
 
    @Test(expected = NullPointerException.class)
-   public void testReadNullBuf()
+   public void readNullBuffer()
    {
-      new FixedBufferInputStream(new byte[1], 1).read(null);
+      this.in.read(null);
    }
 
-   @Test
-   public void testReadZeroBuf()
-   {
-      final int i = this.stream.read(new byte[0]);
-      Assert.assertEquals(0, i);
-   }
-
-   @Test
-   public void testSmallBuf()
-   {
-      final byte[] small = new byte[4];
-      this.stream.read(small);
-      for (int j = 0; j < small.length; j++)
-      {
-         Assert.assertEquals(this.buf[j], small[j]);
-      }
-   }
-
-   @Test
-   public void testLargeBuf()
-   {
-      final byte[] large = new byte[6];
-      this.stream.read(large);
-      for (int j = 0; j < large.length; j++)
-      {
-         Assert.assertEquals(this.buf[j % this.buf.length], large[j]);
-      }
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void testIdxReadNullBuf()
-   {
-      this.stream.read(null, 0, 1);
-   }
-
-   @Test
-   public void testIdxReadZeroBuf()
-   {
-      final int i = this.stream.read(new byte[0], 0, 0);
-      Assert.assertEquals(0, i);
-   }
-
-   @Test(expected = IndexOutOfBoundsException.class)
-   public void testIdxReadNegativeOffset()
-   {
-      this.stream.read(new byte[1], -1, 1);
-   }
-
-   @Test(expected = IndexOutOfBoundsException.class)
-   public void testIdxReadLargeOffset()
+   @DataProvider
+   public static Object[][] provideInvalidRead()
    {
       final byte[] buf = new byte[1];
-      this.stream.read(buf, buf.length, 1);
-   }
-
-   @Test(expected = IndexOutOfBoundsException.class)
-   public void testIdxReadNegativeLength()
-   {
-      this.stream.read(new byte[0], 0, -1);
-   }
-
-   @Test
-   public void testIdxReadZeroLength()
-   {
-      final int i = this.stream.read(new byte[1], 0, 0);
-      Assert.assertEquals(0, i);
+      return new Object[][]{
+            {null, 0, 1, NullPointerException.class},
+            {buf, -1, 1, IndexOutOfBoundsException.class},
+            {buf, buf.length, 1, IndexOutOfBoundsException.class},
+            {buf, 0, -1, IndexOutOfBoundsException.class},
+            {buf, 0, buf.length + 1, IndexOutOfBoundsException.class},
+            {buf, 1, buf.length, IndexOutOfBoundsException.class}
+      };
    }
 
    @Test
-   public void testIdxReadPositiveLength()
+   @UseDataProvider("provideInvalidRead")
+   public void invalidRead(
+         final byte[] buf,
+         final int off,
+         final int len,
+         final Class<Exception> expectedException)
    {
-      final int i = this.stream.read(new byte[1], 0, 1);
-      Assert.assertEquals(1, i);
+      this.thrown.expect(expectedException);
+      this.in.read(buf, off, len);
+   }
+
+   @DataProvider
+   public static Object[][] provideRead()
+   {
+      return new Object[][]{
+            {new byte[0]},
+            {new byte[BUF_LENGTH - 1]},
+            {new byte[BUF_LENGTH]},
+            {new byte[BUF_LENGTH + 1]}
+      };
    }
 
    @Test
-   public void testExhaustedRead()
+   @UseDataProvider("provideRead")
+   public void read(final byte[] readBuffer)
    {
-      while (this.stream.available() > 0)
+      assertThat(this.in.read(readBuffer), is(readBuffer.length));
+
+      for (int i = 0; i < readBuffer.length; i++)
       {
-         this.stream.read();
+         assertThat(readBuffer[i], is(this.buf[i % this.buf.length]));
+         assertThat(this.in.available(), is(Integer.MAX_VALUE));
       }
-      final int i = this.stream.read(new byte[1]);
-      Assert.assertEquals(-1, i);
    }
 
    @Test
-   public void testReset()
+   public void readZeroLength()
    {
-      final int size = 10;
-      final FixedBufferInputStream i = new FixedBufferInputStream(new byte[1], size);
-      Assert.assertEquals(size, i.available());
-      i.read();
-      Assert.assertEquals(size - 1, i.available());
-      i.reset();
-      Assert.assertEquals(size, i.available());
+      assertThat(this.in.read(new byte[1], 0, 0), is(0));
+   }
+
+   @Test
+   public void readPositiveLength()
+   {
+      assertThat(this.in.read(new byte[1], 0, 1), is(1));
+   }
+
+   @Test
+   public void reset()
+   {
+      this.in.read();
+      this.in.mark(Integer.MAX_VALUE);
+      final int r1 = this.in.read();
+      this.in.reset();
+      assertThat(this.in.read(), is(r1));
    }
 }

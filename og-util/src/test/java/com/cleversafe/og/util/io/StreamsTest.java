@@ -58,9 +58,8 @@ public class StreamsTest
    {
       when(this.body.getData()).thenReturn(Data.NONE);
       when(this.body.getSize()).thenReturn(0L);
-      final SizedInputStream i = Streams.create(this.body);
+      final InputStream i = Streams.create(this.body);
       Assert.assertEquals(-1, i.read());
-      Assert.assertEquals(0, i.getSize());
    }
 
    @Test
@@ -68,8 +67,7 @@ public class StreamsTest
    {
       when(this.body.getData()).thenReturn(Data.RANDOM);
       when(this.body.getSize()).thenReturn(1024L);
-      final SizedInputStream stream = Streams.create(this.body);
-      Assert.assertEquals(1024, stream.getSize());
+      final InputStream stream = Streams.create(this.body);
       final byte[] buf = new byte[1024];
       Assert.assertEquals(1024, stream.read(buf));
       boolean nonZero = false;
@@ -86,8 +84,7 @@ public class StreamsTest
    {
       when(this.body.getData()).thenReturn(Data.ZEROES);
       when(this.body.getSize()).thenReturn(1024L);
-      final SizedInputStream stream = Streams.create(this.body);
-      Assert.assertEquals(1024, stream.getSize());
+      final InputStream stream = Streams.create(this.body);
       final byte[] buf = new byte[1024];
       Assert.assertEquals(1024, stream.read(buf));
       for (int i = 0; i < buf.length; i++)
