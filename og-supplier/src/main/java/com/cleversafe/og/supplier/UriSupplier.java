@@ -186,7 +186,7 @@ public class UriSupplier implements Supplier<URI>
        */
       public Builder onPort(final int port)
       {
-         checkArgument(port >= 0, "port must be >= 0 [%s]", port);
+         checkArgument(port > 0 && port < 65536, "port must be in range [1, 65535] [%s]", port);
          return onPort(Suppliers.of(port));
       }
 
