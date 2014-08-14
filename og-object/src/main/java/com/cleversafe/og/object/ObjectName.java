@@ -28,14 +28,6 @@ package com.cleversafe.og.object;
 public interface ObjectName extends Comparable<ObjectName>
 {
    /**
-    * Sets the name for this object, using the provided bytes
-    * 
-    * @param objectName
-    *           the object name, in bytes
-    */
-   void setName(byte[] objectName);
-
-   /**
     * Convert this instance's internal representation into bytes
     * 
     * @return this object name as bytes

@@ -41,14 +41,16 @@ public class LegacyObjectName implements ObjectName
 
    private LegacyObjectName(final byte[] objectName)
    {
-      this.bytes = ByteBuffer.allocate(ID_LENGTH);
-      this.bytes.put(objectName);
+      this.bytes = ByteBuffer.allocate(ID_LENGTH)
+            .put(objectName);
    }
 
    private LegacyObjectName(final UUID objectName)
    {
-      this.bytes = ByteBuffer.allocate(ID_LENGTH);
-      setUUID(objectName);
+      this.bytes = ByteBuffer.allocate(ID_LENGTH)
+            .putLong(objectName.getMostSignificantBits())
+            .putLong(objectName.getLeastSignificantBits())
+            .putShort((short) 0);
    }
 
    /**
@@ -62,7 +64,9 @@ public class LegacyObjectName implements ObjectName
     */
    public static LegacyObjectName forBytes(final byte[] objectName)
    {
-      LegacyObjectName.validateBytes(objectName);
+      checkNotNull(objectName);
+      checkArgument(objectName.length == ID_LENGTH, "objectName length must be = 0 [%s]",
+            objectName.length);
       return new LegacyObjectName(objectName);
    }
 
@@ -79,53 +83,6 @@ public class LegacyObjectName implements ObjectName
    {
       checkNotNull(objectName);
       return new LegacyObjectName(objectName);
-   }
-
-   /**
-    * {@inheritDoc}
-    * 
-    * @throws IllegalArgumentException
-    *            if the length of objectName is not 18
-    */
-   @Override
-   public void setName(final byte[] objectName)
-   {
-      LegacyObjectName.validateBytes(objectName);
-      this.bytes.clear();
-      this.bytes.put(objectName);
-   }
-
-   public void setName(final UUID objectName)
-   {
-      checkNotNull(objectName);
-      this.bytes.clear();
-      setUUID(objectName);
-   }
-
-   @Override
-   public byte[] toBytes()
-   {
-      return this.bytes.array();
-   }
-
-   @Override
-   public String toString()
-   {
-      return BaseEncoding.base16().lowerCase().encode(toBytes());
-   }
-
-   private static void validateBytes(final byte[] objectName)
-   {
-      checkNotNull(objectName);
-      checkArgument(objectName.length == ID_LENGTH, "objectName length must be = 0 [%s]",
-            objectName.length);
-   }
-
-   private void setUUID(final UUID objectName)
-   {
-      this.bytes.putLong(objectName.getMostSignificantBits());
-      this.bytes.putLong(objectName.getLeastSignificantBits());
-      this.bytes.putShort((short) 0);
    }
 
    @Override
@@ -169,5 +126,17 @@ public class LegacyObjectName implements ObjectName
          k++;
       }
       return len1 - len2;
+   }
+
+   @Override
+   public byte[] toBytes()
+   {
+      return this.bytes.array();
+   }
+
+   @Override
+   public String toString()
+   {
+      return BaseEncoding.base16().lowerCase().encode(toBytes());
    }
 }

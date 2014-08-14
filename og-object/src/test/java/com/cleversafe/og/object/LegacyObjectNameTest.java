@@ -19,142 +19,80 @@
 
 package com.cleversafe.og.object;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 public class LegacyObjectNameTest
 {
    @Test(expected = NullPointerException.class)
-   public void testNullObjectNameBytes()
+   public void nullObjectNameBytes()
    {
       LegacyObjectName.forBytes(null);
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testObjectNameBytesLessThan18()
+   public void objectNameBytesLessThan18()
    {
       LegacyObjectName.forBytes(new byte[LegacyObjectName.ID_LENGTH - 1]);
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testObjectNameBytesGreaterThan18()
+   public void objectNameBytesGreaterThan18()
    {
       LegacyObjectName.forBytes(new byte[LegacyObjectName.ID_LENGTH + 1]);
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullObjectNameUUID()
+   public void nullObjectNameUUID()
    {
       LegacyObjectName.forUUID(null);
    }
 
    @Test
-   public void testLegacyObjectNameBytes()
+   public void legacyObjectNameBytes()
    {
       final UUID uuid = UUID.randomUUID();
-      final byte[] bid = createBytes(uuid);
-      final String sid = uuid.toString().replace("-", "") + "0000";
-      final LegacyObjectName objectName = LegacyObjectName.forBytes(bid);
-      Assert.assertEquals(sid, objectName.toString());
-      assertBytesEqual(uuid, objectName);
+      final LegacyObjectName objectName = LegacyObjectName.forBytes(bytes(uuid));
+      assertThat(objectName.toString(), is(string(uuid)));
    }
 
    @Test
-   public void testLegacyObjectNameUUID()
+   public void legacyObjectNameUUID()
    {
       final UUID uuid = UUID.randomUUID();
-      final String sid = uuid.toString().replace("-", "") + "0000";
       final LegacyObjectName objectName = LegacyObjectName.forUUID(uuid);
-      Assert.assertEquals(sid, objectName.toString());
-      assertBytesEqual(uuid, objectName);
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void testSetNullBytes()
-   {
-      final LegacyObjectName objectName = LegacyObjectName.forUUID(UUID.randomUUID());
-      objectName.setName((byte[]) null);
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testSetBytesLessThan18()
-   {
-      final LegacyObjectName objectName = LegacyObjectName.forUUID(UUID.randomUUID());
-      objectName.setName(new byte[LegacyObjectName.ID_LENGTH - 1]);
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testSetBytesGreaterThan18()
-   {
-      final LegacyObjectName objectName = LegacyObjectName.forUUID(UUID.randomUUID());
-      objectName.setName(new byte[LegacyObjectName.ID_LENGTH + 1]);
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void testSetNullUUID()
-   {
-      final LegacyObjectName objectName = LegacyObjectName.forUUID(UUID.randomUUID());
-      objectName.setName((UUID) null);
+      assertThat(objectName.toString(), is(string(uuid)));
    }
 
    @Test
-   public void testSetObjectNameBytes()
+   public void compareEqualsNull()
    {
-      final LegacyObjectName objectName = LegacyObjectName.forUUID(UUID.randomUUID());
-      final UUID uuid = UUID.randomUUID();
-      final byte[] bid = createBytes(uuid);
-      final String sid = uuid.toString().replace("-", "") + "0000";
-      objectName.setName(bid);
-      Assert.assertEquals(sid, objectName.toString());
-      assertBytesEqual(uuid, objectName);
+      assertThat(LegacyObjectName.forUUID(UUID.randomUUID()).equals(null), is(false));
    }
 
    @Test
-   public void testSetObjectNameUUID()
+   public void compareEqualsNonMatchingType()
    {
       final LegacyObjectName objectName = LegacyObjectName.forUUID(UUID.randomUUID());
-      final UUID uuid = UUID.randomUUID();
-      final String sid = uuid.toString().replace("-", "") + "0000";
-      objectName.setName(uuid);
-      Assert.assertEquals(sid, objectName.toString());
-      assertBytesEqual(uuid, objectName);
+      assertThat(objectName.equals("NOT_AN_OBJECT_NAME"), is(false));
    }
 
-   @Test
-   public void testCompareEqualsNull()
+   private byte[] bytes(final UUID uuid)
    {
-      final LegacyObjectName objectName = LegacyObjectName.forUUID(UUID.randomUUID());
-      Assert.assertFalse(objectName.equals(null));
+      return ByteBuffer.allocate(18)
+            .putLong(uuid.getMostSignificantBits())
+            .putLong(uuid.getLeastSignificantBits())
+            .putShort((short) 0)
+            .array();
    }
 
-   @Test
-   public void testCompareEqualsType()
+   private String string(final UUID uuid)
    {
-      final LegacyObjectName objectName = LegacyObjectName.forUUID(UUID.randomUUID());
-      Assert.assertFalse(objectName.equals("NOT_AN_OBJECT_NAME"));
-   }
-
-   private void assertBytesEqual(final UUID uuid, final LegacyObjectName objectName)
-   {
-
-      final byte[] expectedBytes = createBytes(uuid);
-      final byte[] actualBytes = objectName.toBytes();
-      Assert.assertEquals(expectedBytes.length, actualBytes.length);
-      for (int i = 0; i < expectedBytes.length; i++)
-      {
-         Assert.assertEquals(expectedBytes[0], actualBytes[0]);
-      }
-   }
-
-   private byte[] createBytes(final UUID uuid)
-   {
-      final ByteBuffer buf = ByteBuffer.allocate(18);
-      buf.putLong(uuid.getMostSignificantBits());
-      buf.putLong(uuid.getLeastSignificantBits());
-      buf.putShort((short) 0);
-      return buf.array();
+      return uuid.toString().replace("-", "") + "0000";
    }
 }
