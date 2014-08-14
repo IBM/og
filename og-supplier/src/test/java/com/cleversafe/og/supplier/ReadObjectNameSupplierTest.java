@@ -19,18 +19,17 @@
 
 package com.cleversafe.og.supplier;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.cleversafe.og.object.ObjectManager;
 import com.cleversafe.og.object.ObjectManagerException;
 import com.cleversafe.og.object.ObjectName;
-import com.cleversafe.og.supplier.ReadObjectNameSupplier;
-import com.google.common.base.Supplier;
 
 public class ReadObjectNameSupplierTest
 {
@@ -43,28 +42,26 @@ public class ReadObjectNameSupplierTest
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullObjectManager()
+   public void nullObjectManager()
    {
       new ReadObjectNameSupplier(null);
    }
 
    @Test
-   public void testReadObjectNameSupplier()
+   public void readObjectNameSupplier()
    {
-      final String objectString = "objectName";
+      final String object = "objectName";
       final ObjectName mockObjectName = mock(ObjectName.class);
-      when(mockObjectName.toString()).thenReturn(objectString);
+      when(mockObjectName.toString()).thenReturn(object);
       when(this.mockObjectManager.acquireNameForRead()).thenReturn(mockObjectName);
 
-      final Supplier<String> p = new ReadObjectNameSupplier(this.mockObjectManager);
-      Assert.assertEquals(objectString, p.get());
+      assertThat(new ReadObjectNameSupplier(this.mockObjectManager).get(), is(object));
    }
 
    @Test(expected = ObjectManagerException.class)
-   public void testSupplierException()
+   public void supplierException()
    {
       when(this.mockObjectManager.acquireNameForRead()).thenThrow(new ObjectManagerException());
-      final Supplier<String> p = new ReadObjectNameSupplier(this.mockObjectManager);
-      p.get();
+      new ReadObjectNameSupplier(this.mockObjectManager).get();
    }
 }

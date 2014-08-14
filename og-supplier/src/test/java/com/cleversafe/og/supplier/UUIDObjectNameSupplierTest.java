@@ -19,7 +19,10 @@
 
 package com.cleversafe.og.supplier;
 
-import org.junit.Assert;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+
 import org.junit.Test;
 
 import com.google.common.base.Supplier;
@@ -27,14 +30,9 @@ import com.google.common.base.Supplier;
 public class UUIDObjectNameSupplierTest
 {
    @Test
-   public void testUUIDObjectNameSupplier()
+   public void uuidObjectNameSupplier()
    {
-      final Supplier<String> p = new UUIDObjectNameSupplier();
-      final String u1 = p.get();
-      final String u2 = p.get();
-      final String u3 = p.get();
-      Assert.assertNotEquals(u1, u2);
-      Assert.assertNotEquals(u1, u3);
-      Assert.assertNotEquals(u2, u3);
+      final Supplier<String> s = new UUIDObjectNameSupplier();
+      assertThat(s.get(), is(not(s.get())));
    }
 }

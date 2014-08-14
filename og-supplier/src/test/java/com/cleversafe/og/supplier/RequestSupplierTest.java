@@ -19,12 +19,15 @@
 
 package com.cleversafe.og.supplier;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Iterator;
 import java.util.Map.Entry;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -49,236 +52,239 @@ public class RequestSupplierTest
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullMethod()
+   public void nullMethod()
    {
       new RequestSupplier.Builder((Method) null, this.uri).build();
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullMethodSupplier()
+   public void nullMethodSupplier()
    {
       new RequestSupplier.Builder((Supplier<Method>) null, Suppliers.of(this.uri)).build();
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullUri()
+   public void nullUri()
    {
       new RequestSupplier.Builder(this.method, (URI) null).build();
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullUriSupplier()
+   public void nullUriSupplier()
    {
       new RequestSupplier.Builder(Suppliers.of(this.method), (Supplier<URI>) null).build();
    }
 
    @Test(expected = NullPointerException.class)
-   public void testHeaderNullKey()
+   public void headerNullKey()
    {
       new RequestSupplier.Builder(this.method, this.uri).withHeader(null, "value");
    }
 
    @Test(expected = NullPointerException.class)
-   public void testHeaderNullValue()
-   {
-      new RequestSupplier.Builder(this.method, this.uri).withHeader("key", null);
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void testHeaderNullKeySupplier()
+   public void headerNullKeySupplier()
    {
       new RequestSupplier.Builder(this.method, this.uri).withHeader((Supplier<String>) null,
             Suppliers.of("value")).build();
    }
 
    @Test(expected = NullPointerException.class)
-   public void testHeaderNullValueSupplier()
+   public void headerNullValue()
+   {
+      new RequestSupplier.Builder(this.method, this.uri).withHeader("key", null);
+   }
+
+   @Test(expected = NullPointerException.class)
+   public void headerNullValueSupplier()
    {
       new RequestSupplier.Builder(this.method, this.uri).withHeader(Suppliers.of("key"),
             (Supplier<String>) null).build();
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullBody()
+   public void nullBody()
    {
       new RequestSupplier.Builder(this.method, this.uri).withBody((Body) null);
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullBodySupplier()
+   public void nullBodySupplier()
    {
       new RequestSupplier.Builder(this.method, this.uri).withBody((Supplier<Body>) null);
    }
 
    @Test(expected = NullPointerException.class)
-   public void testMetadataNullKey()
-   {
-      new RequestSupplier.Builder(this.method, this.uri).withMetadata((Metadata) null, "value");
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void testMetadataNullKey2()
+   public void metadataNullKey()
    {
       new RequestSupplier.Builder(this.method, this.uri).withMetadata((String) null, "value");
    }
 
    @Test(expected = NullPointerException.class)
-   public void testMetadataNullKey3()
+   public void metadataNullKeyEnum()
+   {
+      new RequestSupplier.Builder(this.method, this.uri).withMetadata((Metadata) null, "value");
+   }
+
+   @Test(expected = NullPointerException.class)
+   public void metadataNullKeySupplier()
    {
       new RequestSupplier.Builder(this.method, this.uri)
             .withMetadata((Supplier<String>) null, Suppliers.of("value")).build();
    }
 
    @Test(expected = NullPointerException.class)
-   public void testMetadataNullValue()
-   {
-      new RequestSupplier.Builder(this.method, this.uri).withMetadata(Metadata.ABORTED, null);
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void testMetadataNullValue2()
+   public void metadataNullValue()
    {
       new RequestSupplier.Builder(this.method, this.uri).withMetadata("aborted", null);
    }
 
    @Test(expected = NullPointerException.class)
-   public void testMetadataNullValue3()
+   public void metadataNullValue2()
+   {
+      new RequestSupplier.Builder(this.method, this.uri).withMetadata(Metadata.ABORTED, null);
+   }
+
+   @Test(expected = NullPointerException.class)
+   public void metadataNullValueSupplier()
    {
       new RequestSupplier.Builder(this.method, this.uri)
             .withMetadata(Suppliers.of("aborted"), (Supplier<String>) null).build();
    }
 
    @Test
-   public void testMethod()
+   public void method()
    {
-      final Request r = new RequestSupplier.Builder(Method.HEAD, this.uri).build().get();
-      Assert.assertEquals(Method.HEAD, r.getMethod());
+      final Request request = new RequestSupplier.Builder(Method.HEAD, this.uri).build().get();
+      assertThat(request.getMethod(), is(Method.HEAD));
    }
 
    @Test
-   public void testMethodSupplier()
+   public void methodSupplier()
    {
-      final Request r =
+      final Request request =
             new RequestSupplier.Builder(Suppliers.of(Method.DELETE), Suppliers.of(this.uri)).build().get();
-      Assert.assertEquals(Method.DELETE, r.getMethod());
+      assertThat(request.getMethod(), is(Method.DELETE));
    }
 
    @Test
-   public void testUri() throws URISyntaxException
+   public void uri()
    {
-      final URI aUri = new URI("http://10.1.1.1/container/object");
-      final Request r = new RequestSupplier.Builder(this.method, aUri).build().get();
-      Assert.assertEquals(aUri, r.getUri());
+      final Request request = new RequestSupplier.Builder(this.method, this.uri).build().get();
+      assertThat(request.getUri(), is(this.uri));
    }
 
    @Test
-   public void testUriSupplier() throws URISyntaxException
+   public void uriSupplier()
    {
-      final URI aUri = new URI("http://10.1.1.1/container/object");
-      final Request r =
-            new RequestSupplier.Builder(Suppliers.of(this.method), Suppliers.of(aUri)).build().get();
-      Assert.assertEquals(aUri, r.getUri());
+      final Request request =
+            new RequestSupplier.Builder(Suppliers.of(this.method), Suppliers.of(this.uri)).build().get();
+      assertThat(request.getUri(), is(this.uri));
    }
 
    @Test
-   public void testHeaders()
+   public void headers()
    {
-      final RequestSupplier p = new RequestSupplier.Builder(this.method, this.uri)
+      final Request request = new RequestSupplier.Builder(this.method, this.uri)
             .withHeader("key2", "value2")
             .withHeader(Suppliers.of("key1"), Suppliers.of("value1"))
-            .build();
-      final Request r = p.get();
-      final Iterator<Entry<String, String>> it = r.headers();
+            .build()
+            .get();
+      final Iterator<Entry<String, String>> it = request.headers();
       // Skip Date header which is automatically added
       it.next();
-      Assert.assertTrue(it.hasNext());
+      assertThat(it.hasNext(), is(true));
+
       Entry<String, String> e = it.next();
-      Assert.assertEquals("key2", e.getKey());
-      Assert.assertEquals("value2", e.getValue());
+      assertThat(e.getKey(), is("key2"));
+      assertThat(e.getValue(), is("value2"));
+      assertThat(it.hasNext(), is(true));
 
-      Assert.assertTrue(it.hasNext());
       e = it.next();
-      Assert.assertEquals("key1", e.getKey());
-      Assert.assertEquals("value1", e.getValue());
-      Assert.assertFalse(it.hasNext());
+      assertThat(e.getKey(), is("key1"));
+      assertThat(e.getValue(), is("value1"));
+      assertThat(it.hasNext(), is(false));
    }
 
    @Test
-   public void testNoBody()
+   public void headerModification()
    {
-      final Request r = new RequestSupplier.Builder(this.method, this.uri).build().get();
-      Assert.assertEquals(Data.NONE, r.getBody().getData());
-      Assert.assertEquals(0, r.getBody().getSize());
+      final RequestSupplier.Builder b =
+            new RequestSupplier.Builder(this.method, this.uri).withHeader("key1", "value1");
+      final RequestSupplier s = b.build();
+      b.withHeader("key2", "value2");
+      final Request request = s.get();
+
+      assertThat(request.getHeader("key1"), is("value1"));
+      assertThat(request.getHeader("key2"), nullValue());
    }
 
    @Test
-   public void testBody()
+   public void noBody()
    {
-      final Request r = new RequestSupplier.Builder(this.method, this.uri)
+      final Request request = new RequestSupplier.Builder(this.method, this.uri).build().get();
+      assertThat(request.getBody().getData(), is(Data.NONE));
+      assertThat(request.getBody().getSize(), is(0L));
+   }
+
+   @Test
+   public void body()
+   {
+      final Request request = new RequestSupplier.Builder(this.method, this.uri)
             .withBody(Bodies.zeroes(12345))
             .build()
             .get();
-      Assert.assertEquals(Data.ZEROES, r.getBody().getData());
-      Assert.assertEquals(12345, r.getBody().getSize());
+      assertThat(request.getBody().getData(), is(Data.ZEROES));
+      assertThat(request.getBody().getSize(), is(12345L));
    }
 
    @Test
-   public void testBodySupplier()
+   public void bodySupplier()
    {
-      final Request r = new RequestSupplier.Builder(this.method, this.uri)
+      final Request request = new RequestSupplier.Builder(this.method, this.uri)
             .withBody(Suppliers.of(Bodies.zeroes(12345)))
             .build()
             .get();
-      Assert.assertEquals(Data.ZEROES, r.getBody().getData());
-      Assert.assertEquals(12345, r.getBody().getSize());
+      assertThat(request.getBody().getData(), is(Data.ZEROES));
+      assertThat(request.getBody().getSize(), is(12345L));
    }
 
    @Test
-   public void testMetadata()
+   public void metadata()
    {
-      final Request r = new RequestSupplier.Builder(this.method, this.uri)
+      final Request request = new RequestSupplier.Builder(this.method, this.uri)
             .withMetadata("key3", "value3")
             .withMetadata(Metadata.ABORTED, "value2")
             .withMetadata(Suppliers.of("key1"), Suppliers.of("value1"))
             .build()
             .get();
-      final Iterator<Entry<String, String>> it = r.metadata();
+      final Iterator<Entry<String, String>> it = request.metadata();
 
-      Assert.assertTrue(it.hasNext());
+      assertThat(it.hasNext(), is(true));
       Entry<String, String> e = it.next();
-      Assert.assertEquals("key3", e.getKey());
-      Assert.assertEquals("value3", e.getValue());
-      Assert.assertTrue(it.hasNext());
+      assertThat(e.getKey(), is("key3"));
+      assertThat(e.getValue(), is("value3"));
+      assertThat(it.hasNext(), is(true));
+
       e = it.next();
-      Assert.assertEquals("ABORTED", e.getKey());
-      Assert.assertEquals("value2", e.getValue());
+      assertThat(e.getKey(), is("ABORTED"));
+      assertThat(e.getValue(), is("value2"));
+
       e = it.next();
-      Assert.assertEquals("key1", e.getKey());
-      Assert.assertEquals("value1", e.getValue());
-      Assert.assertFalse(it.hasNext());
+      assertThat(e.getKey(), is("key1"));
+      assertThat(e.getValue(), is("value1"));
+      assertThat(it.hasNext(), is(false));
    }
 
    @Test
-   public void testHeaderModification()
-   {
-      final RequestSupplier.Builder b =
-            new RequestSupplier.Builder(this.method, this.uri).withHeader("key1", "value1");
-      final RequestSupplier rp = b.build();
-      b.withHeader("key2", "value2");
-      final Request r = rp.get();
-      Assert.assertEquals("value1", r.getHeader("key1"));
-      Assert.assertNull(r.getHeader("key2"));
-   }
-
-   @Test
-   public void testMetadataModification()
+   public void metadataModification()
    {
       final RequestSupplier.Builder b =
             new RequestSupplier.Builder(this.method, this.uri).withMetadata("key1", "value1");
-      final RequestSupplier rp = b.build();
+      final RequestSupplier s = b.build();
       b.withMetadata("key2", "value2");
-      final Request r = rp.get();
-      Assert.assertEquals("value1", r.getMetadata("key1"));
-      Assert.assertNull(r.getMetadata("key2"));
+      final Request request = s.get();
+
+      assertThat(request.getMetadata("key1"), is("value1"));
+      assertThat(request.getMetadata("key2"), nullValue());
    }
 }

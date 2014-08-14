@@ -19,36 +19,30 @@
 
 package com.cleversafe.og.supplier;
 
-import java.util.List;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 
-import org.junit.Assert;
 import org.junit.Test;
 
-import com.cleversafe.og.supplier.CachingSupplier;
-import com.cleversafe.og.supplier.Suppliers;
 import com.google.common.base.Supplier;
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
 
 public class CachingSupplierTest
 {
    @Test(expected = NullPointerException.class)
-   public void testNullSupplier()
+   public void nullSupplier()
    {
       new CachingSupplier<String>((Supplier<String>) null);
    }
 
    @Test
-   public void testCachingSupplier()
+   public void cachingSupplier()
    {
-      final List<Integer> ints = Lists.newArrayList();
-      ints.add(1);
-      ints.add(2);
-      ints.add(3);
-      final Supplier<Integer> cycle = Suppliers.cycle(ints);
-      final CachingSupplier<Integer> p = new CachingSupplier<Integer>(cycle);
+      final Supplier<Integer> cycle = Suppliers.cycle(ImmutableList.of(1, 2, 3));
+      final CachingSupplier<Integer> cache = new CachingSupplier<Integer>(cycle);
       for (int i = 0; i < 10; i++)
       {
-         Assert.assertEquals(p.get(), p.getCachedValue());
+         assertThat(cache.get(), is(cache.getCachedValue()));
       }
    }
 }

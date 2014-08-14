@@ -19,9 +19,11 @@
 
 package com.cleversafe.og.supplier;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+
 import java.util.List;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import com.google.common.base.Supplier;
@@ -31,35 +33,35 @@ import com.google.common.collect.Lists;
 public class SuppliersTest
 {
    @Test(expected = NullPointerException.class)
-   public void testNullOf()
+   public void nullOf()
    {
       Suppliers.of(null);
    }
 
    @Test
-   public void testOf()
+   public void of()
    {
-      final Supplier<Integer> p = Suppliers.of(1);
+      final Supplier<Integer> s = Suppliers.of(1);
       for (int i = 0; i < 10; i++)
       {
-         Assert.assertEquals(Integer.valueOf(1), p.get());
+         assertThat(s.get(), is(1));
       }
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullCycle()
+   public void nullCycle()
    {
       Suppliers.cycle(null);
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testZeroCycle()
+   public void emptyCycle()
    {
       Suppliers.cycle(ImmutableList.of());
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullCycleElement()
+   public void nullCycleElement()
    {
       final List<Integer> list = Lists.newArrayList();
       list.add(null);
@@ -67,43 +69,29 @@ public class SuppliersTest
    }
 
    @Test
-   public void testCycle()
+   public void cycleOneElement()
    {
-      final List<Integer> list = Lists.newArrayList();
-      list.add(1);
-      Suppliers.cycle(list);
-   }
-
-   @Test
-   public void testOneElement()
-   {
-      final List<Integer> list = Lists.newArrayList();
-      list.add(1);
-      final Supplier<Integer> p = Suppliers.cycle(list);
+      final Supplier<Integer> p = Suppliers.cycle(ImmutableList.of(1));
       for (int i = 0; i < 10; i++)
       {
-         Assert.assertEquals(Integer.valueOf(1), p.get());
+         assertThat(p.get(), is(1));
       }
    }
 
    @Test
-   public void testNElements()
+   public void cycleMultipleElements()
    {
-      final List<Integer> list = Lists.newArrayList();
-      list.add(1);
-      list.add(2);
-      list.add(3);
-      final Supplier<Integer> p = Suppliers.cycle(list);
+      final Supplier<Integer> p = Suppliers.cycle(ImmutableList.of(1, 2, 3));
       for (int i = 0; i < 10; i++)
       {
-         Assert.assertEquals(Integer.valueOf(1), p.get());
-         Assert.assertEquals(Integer.valueOf(2), p.get());
-         Assert.assertEquals(Integer.valueOf(3), p.get());
+         assertThat(p.get(), is(1));
+         assertThat(p.get(), is(2));
+         assertThat(p.get(), is(3));
       }
    }
 
    @Test
-   public void testListModification()
+   public void cycleModification()
    {
       final List<Integer> list = Lists.newArrayList();
       list.add(1);
@@ -112,8 +100,8 @@ public class SuppliersTest
       list.add(3);
       for (int i = 0; i < 10; i++)
       {
-         Assert.assertEquals(Integer.valueOf(1), p.get());
-         Assert.assertEquals(Integer.valueOf(2), p.get());
+         assertThat(p.get(), is(1));
+         assertThat(p.get(), is(2));
       }
    }
 }

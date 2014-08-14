@@ -19,18 +19,17 @@
 
 package com.cleversafe.og.supplier;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.cleversafe.og.object.ObjectManager;
 import com.cleversafe.og.object.ObjectManagerException;
 import com.cleversafe.og.object.ObjectName;
-import com.cleversafe.og.supplier.DeleteObjectNameSupplier;
-import com.google.common.base.Supplier;
 
 public class DeleteObjectNameSupplierTest
 {
@@ -43,28 +42,26 @@ public class DeleteObjectNameSupplierTest
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullObjectManager()
+   public void nullObjectManager()
    {
       new DeleteObjectNameSupplier(null);
    }
 
    @Test
-   public void testDeleteObjectNameSupplier()
+   public void deleteObjectNameSupplier()
    {
-      final String objectString = "objectName";
+      final String object = "objectName";
       final ObjectName mockObjectName = mock(ObjectName.class);
-      when(mockObjectName.toString()).thenReturn(objectString);
+      when(mockObjectName.toString()).thenReturn(object);
       when(this.mockObjectManager.getNameForDelete()).thenReturn(mockObjectName);
 
-      final Supplier<String> p = new DeleteObjectNameSupplier(this.mockObjectManager);
-      Assert.assertEquals(objectString, p.get());
+      assertThat(new DeleteObjectNameSupplier(this.mockObjectManager).get(), is(object));
    }
 
    @Test(expected = ObjectManagerException.class)
-   public void testSupplierException()
+   public void supplierException()
    {
       when(this.mockObjectManager.getNameForDelete()).thenThrow(new ObjectManagerException());
-      final Supplier<String> p = new DeleteObjectNameSupplier(this.mockObjectManager);
-      p.get();
+      new DeleteObjectNameSupplier(this.mockObjectManager).get();
    }
 }

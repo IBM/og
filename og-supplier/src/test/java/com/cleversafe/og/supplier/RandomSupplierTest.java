@@ -19,68 +19,69 @@
 
 package com.cleversafe.og.supplier;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.is;
+
 import java.util.Map;
 import java.util.Random;
 
-import org.junit.Assert;
 import org.junit.Test;
 
-import com.cleversafe.og.supplier.Suppliers;
-import com.cleversafe.og.supplier.RandomSupplier;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Maps;
 
 public class RandomSupplierTest
 {
    @Test(expected = IllegalArgumentException.class)
-   public void testNoChoice()
+   public void noChoice()
    {
       new RandomSupplier.Builder<Integer>().build();
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullChoice()
+   public void nullChoice()
    {
       new RandomSupplier.Builder<Integer>().withChoice(null).build();
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullRandom()
+   public void nullRandom()
    {
       new RandomSupplier.Builder<Integer>().withChoice(1).withRandom(null).build();
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testNegativeWeight()
+   public void negativeWeight()
    {
       new RandomSupplier.Builder<Integer>().withChoice(1, -1.0).build();
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testZeroWeight()
+   public void zeroWeight()
    {
       new RandomSupplier.Builder<Integer>().withChoice(1, 0.0).build();
    }
 
    @Test
-   public void testOneChoice()
+   public void oneChoice()
    {
-      final Supplier<Integer> p = new RandomSupplier.Builder<Integer>().withChoice(1).build();
+      final Supplier<Integer> s = new RandomSupplier.Builder<Integer>().withChoice(1).build();
       for (int i = 0; i < 10; i++)
       {
-         Assert.assertEquals(Integer.valueOf(1), p.get());
+         assertThat(s.get(), is(1));
       }
    }
 
    @Test
-   public void testNChoices()
+   public void multipleChoices()
    {
-      final RandomSupplier.Builder<Integer> b = new RandomSupplier.Builder<Integer>();
-      b.withChoice(1, 33);
-      b.withChoice(2, Suppliers.of(33.5));
-      b.withChoice(3, Suppliers.of(33));
-      b.withRandom(new Random());
-      final Supplier<Integer> p = b.build();
+      final Supplier<Integer> s = new RandomSupplier.Builder<Integer>()
+            .withChoice(1, 33)
+            .withChoice(2, Suppliers.of(33.5))
+            .withChoice(3, Suppliers.of(33))
+            .withRandom(new Random())
+            .build();
 
       final Map<Integer, Integer> counts = Maps.newHashMap();
       counts.put(1, 0);
@@ -89,13 +90,13 @@ public class RandomSupplierTest
 
       for (int i = 0; i < 100; i++)
       {
-         final Integer nextInt = p.get();
-         counts.put(nextInt, counts.get(nextInt) + 1);
+         final int value = s.get();
+         counts.put(value, counts.get(value) + 1);
       }
 
       for (final int count : counts.values())
       {
-         Assert.assertTrue(count > 0);
+         assertThat(count, greaterThan(0));
       }
    }
 }
