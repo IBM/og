@@ -19,114 +19,102 @@
 
 package com.cleversafe.og.http;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.util.Operation;
+import com.tngtech.java.junit.dataprovider.DataProvider;
+import com.tngtech.java.junit.dataprovider.DataProviderRunner;
+import com.tngtech.java.junit.dataprovider.UseDataProvider;
 
+@RunWith(DataProviderRunner.class)
 public class HttpUtilTest
 {
    @Test(expected = UnsupportedOperationException.class)
-   public void testModifyStatusCodes()
+   public void modifyStatusCodes()
    {
       HttpUtil.SUCCESS_STATUS_CODES.add(500);
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullMethod()
+   public void nullMethod()
    {
       HttpUtil.toOperation(null);
    }
 
-   @Test
-   public void testPutMethod()
+   @DataProvider
+   public static Object[][] provideToOperation()
    {
-      Assert.assertEquals(Operation.WRITE, HttpUtil.toOperation(Method.PUT));
+      return new Object[][]{
+            {Method.PUT, Operation.WRITE},
+            {Method.POST, Operation.WRITE},
+            {Method.GET, Operation.READ},
+            {Method.HEAD, Operation.READ},
+            {Method.DELETE, Operation.DELETE}
+      };
    }
 
    @Test
-   public void testPostMethod()
+   @UseDataProvider("provideToOperation")
+   public void toOperation(final Method method, final Operation operation)
    {
-      Assert.assertEquals(Operation.WRITE, HttpUtil.toOperation(Method.POST));
-   }
-
-   @Test
-   public void testGetMethod()
-   {
-      Assert.assertEquals(Operation.READ, HttpUtil.toOperation(Method.GET));
-   }
-
-   @Test
-   public void testHeadMethod()
-   {
-      Assert.assertEquals(Operation.READ, HttpUtil.toOperation(Method.HEAD));
-   }
-
-   @Test
-   public void testDeleteMethod()
-   {
-      Assert.assertEquals(Operation.DELETE, HttpUtil.toOperation(Method.DELETE));
+      assertThat(HttpUtil.toOperation(method), is(operation));
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullUri()
+   public void nullUri()
    {
       HttpUtil.getObjectName(null);
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullScheme() throws URISyntaxException
+   public void nullScheme() throws URISyntaxException
    {
       HttpUtil.getObjectName(new URI("192.168.8.1/container"));
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testUnrecognizedScheme() throws URISyntaxException
+   public void invalidScheme() throws URISyntaxException
    {
       HttpUtil.getObjectName(new URI("ftp://192.168.8.1/container"));
    }
 
    @Test
-   public void testRootUriNoObject() throws URISyntaxException
+   public void rootUriNoObject() throws URISyntaxException
    {
-      Assert.assertTrue(!HttpUtil.getObjectName(new URI("http://192.168.8.1/container")).isPresent());
+      assertThat(HttpUtil.getObjectName(new URI("http://192.168.8.1/container")).isPresent(),
+            is(false));
    }
 
    @Test
-   public void testRootUriObject() throws URISyntaxException
+   public void noObject() throws URISyntaxException
    {
-      Assert.assertEquals("object",
-            HttpUtil.getObjectName(new URI("https://192.168.8.1/container/object")).get());
+      assertThat(HttpUtil.getObjectName(new URI("http://192.168.8.1/soh/container")).isPresent(),
+            is(false));
+   }
+
+   @DataProvider
+   public static Object[][] provideGetObjectName()
+   {
+      return new Object[][]{
+            {"https://192.168.8.1/container/object"},
+            {"http://192.168.8.1/container/object/"},
+            {"https://192.168.8.1/soh/container/object"},
+            {"http://192.168.8.1/soh/container/object/"}
+      };
    }
 
    @Test
-   public void testRootUriObjectSlash() throws URISyntaxException
+   @UseDataProvider("provideGetObjectName")
+   public void getObjectName(final String uri) throws URISyntaxException
    {
-      Assert.assertEquals("object",
-            HttpUtil.getObjectName(new URI("http://192.168.8.1/container/object/")).get());
-   }
-
-   @Test
-   public void testNoObject() throws URISyntaxException
-   {
-      Assert.assertTrue(!HttpUtil.getObjectName(new URI("http://192.168.8.1/soh/container")).isPresent());
-   }
-
-   @Test
-   public void testObject() throws URISyntaxException
-   {
-      Assert.assertEquals("object",
-            HttpUtil.getObjectName(new URI("https://192.168.8.1/soh/container/object")).get());
-   }
-
-   @Test
-   public void testObjectSlash() throws URISyntaxException
-   {
-      Assert.assertEquals("object",
-            HttpUtil.getObjectName(new URI("http://192.168.8.1/soh/container/object/")).get());
+      assertThat(HttpUtil.getObjectName(new URI(uri)).get(), is("object"));
    }
 }

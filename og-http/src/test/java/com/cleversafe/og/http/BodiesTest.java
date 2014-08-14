@@ -19,60 +19,49 @@
 
 package com.cleversafe.og.http;
 
-import org.junit.Assert;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+
 import org.junit.Test;
 
 import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.Data;
-import com.cleversafe.og.http.Bodies;
 
 public class BodiesTest
 {
    @Test
-   public void testNone()
+   public void none()
    {
-      final Body e = Bodies.none();
-      Assert.assertEquals(Data.NONE, e.getData());
-      Assert.assertEquals(0, e.getSize());
+      final Body body = Bodies.none();
+      assertThat(body.getData(), is(Data.NONE));
+      assertThat(body.getSize(), is(0L));
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testRandomNegativeSize()
+   public void randomNegativeSize()
    {
       Bodies.random(-1);
    }
 
+   @Test
+   public void random()
+   {
+      final Body body = Bodies.random(1);
+      assertThat(body.getData(), is(Data.RANDOM));
+      assertThat(body.getSize(), is(1L));
+   }
+
    @Test(expected = IllegalArgumentException.class)
-   public void testZeroesNegativeSize()
+   public void zeroesNegativeSize()
    {
       Bodies.zeroes(-1);
    }
 
    @Test
-   public void testRandomZeroSize()
+   public void zeroes()
    {
-      Bodies.random(0);
-   }
-
-   @Test
-   public void testZeroesZeroSize()
-   {
-      Bodies.zeroes(0);
-   }
-
-   @Test
-   public void testRandomPositiveSize()
-   {
-      final Body e = Bodies.random(1);
-      Assert.assertEquals(Data.RANDOM, e.getData());
-      Assert.assertEquals(1, e.getSize());
-   }
-
-   @Test
-   public void testZeroesPositiveSize()
-   {
-      final Body e = Bodies.zeroes(1);
-      Assert.assertEquals(Data.ZEROES, e.getData());
-      Assert.assertEquals(1, e.getSize());
+      final Body body = Bodies.zeroes(1);
+      assertThat(body.getData(), is(Data.ZEROES));
+      assertThat(body.getSize(), is(1L));
    }
 }
