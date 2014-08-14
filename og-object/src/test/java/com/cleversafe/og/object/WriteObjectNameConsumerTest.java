@@ -22,174 +22,60 @@ package com.cleversafe.og.object;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Collections;
 import java.util.List;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import com.cleversafe.og.api.Metadata;
 import com.cleversafe.og.api.Method;
-import com.cleversafe.og.api.Request;
-import com.cleversafe.og.api.Response;
-import com.cleversafe.og.http.HttpUtil;
-import com.cleversafe.og.util.Pair;
-import com.google.common.collect.Lists;
 
-public class WriteObjectNameConsumerTest
+public class WriteObjectNameConsumerTest extends AbstractObjectNameConsumerTest
 {
-   private ObjectManager mockObjectManager;
-   private List<Integer> statusCodes;
-   private Request mockRequest;
-   private Response mockResponse;
-
-   @Before
-   public void before() throws URISyntaxException
+   @Override
+   public ObjectNameConsumer create(
+         final ObjectManager objectManager,
+         final List<Integer> statusCodes)
    {
-      this.mockObjectManager = mock(ObjectManager.class);
-      this.statusCodes = HttpUtil.SUCCESS_STATUS_CODES;
-      this.mockRequest = mock(Request.class);
-      when(this.mockRequest.getUri()).thenReturn(
-            new URI("http://192.168.8.1/soh/container/5c18be1057404792923dc487ca40f2370000"));
-      this.mockResponse = mock(Response.class);
-      when(this.mockResponse.getMetadata(Metadata.REQUEST_ID)).thenReturn("1");
+      return new WriteObjectNameConsumer(objectManager, statusCodes);
    }
 
-   @Test(expected = NullPointerException.class)
-   public void testNullObjectManager()
+   @Override
+   public Method method()
    {
-      new WriteObjectNameConsumer(null, this.statusCodes);
+      return Method.PUT;
    }
 
-   @Test(expected = NullPointerException.class)
-   public void testNullStatusCodes()
+   @Override
+   public void doVerify()
    {
-      new WriteObjectNameConsumer(this.mockObjectManager, null);
+      verify(this.objectManager).writeNameComplete(isA(ObjectName.class));
    }
 
-   @Test(expected = IllegalArgumentException.class)
-   public void testEmptyStatusCodes()
+   @Override
+   public void doVerifyNever()
    {
-      new WriteObjectNameConsumer(this.mockObjectManager, Collections.<Integer> emptyList());
+      verify(this.objectManager, never()).writeNameComplete(isA(ObjectName.class));
    }
 
-   @Test(expected = NullPointerException.class)
-   public void testStatusCodesNullElement()
+   @Override
+   public void doThrowIt()
    {
-      final List<Integer> sc = Lists.newArrayList();
-      sc.add(null);
-      new WriteObjectNameConsumer(this.mockObjectManager, sc);
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testSmallStatusCode()
-   {
-      final List<Integer> sc = Lists.newArrayList();
-      sc.add(99);
-      new WriteObjectNameConsumer(this.mockObjectManager, sc);
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testLargeStatusCode()
-   {
-      final List<Integer> sc = Lists.newArrayList();
-      sc.add(600);
-      new WriteObjectNameConsumer(this.mockObjectManager, sc);
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void testNullResponse()
-   {
-      new WriteObjectNameConsumer(this.mockObjectManager, this.statusCodes).consume(null);
-   }
-
-   @Test
-   public void testSuccessfulWrite()
-   {
-      when(this.mockRequest.getMethod()).thenReturn(Method.PUT);
-      when(this.mockRequest.getMetadata(Metadata.OBJECT_NAME)).thenReturn(
-            "5c18be1057404792923dc487ca40f2370000");
-      when(this.mockResponse.getStatusCode()).thenReturn(201);
-
-      final ObjectNameConsumer c =
-            new WriteObjectNameConsumer(this.mockObjectManager, this.statusCodes);
-
-      c.consume(Pair.of(this.mockRequest, this.mockResponse));
-      verify(this.mockObjectManager).writeNameComplete(isA(ObjectName.class));
-   }
-
-   @Test
-   public void testSuccessfulWriteSOH()
-   {
-      when(this.mockRequest.getMethod()).thenReturn(Method.PUT);
-      when(this.mockResponse.getStatusCode()).thenReturn(201);
-      // for SOH, the metadata gets set on response rather than request
-      when(this.mockResponse.getMetadata(Metadata.OBJECT_NAME)).thenReturn(
-            "5c18be1057404792923dc487ca40f2370000");
-
-      final ObjectNameConsumer c =
-            new WriteObjectNameConsumer(this.mockObjectManager, this.statusCodes);
-
-      c.consume(Pair.of(this.mockRequest, this.mockResponse));
-      verify(this.mockObjectManager).writeNameComplete(isA(ObjectName.class));
-   }
-
-   @Test
-   public void testUnsuccessfulWrite()
-   {
-      when(this.mockRequest.getMethod()).thenReturn(Method.PUT);
-      when(this.mockResponse.getStatusCode()).thenReturn(500);
-
-      final ObjectNameConsumer c =
-            new WriteObjectNameConsumer(this.mockObjectManager, this.statusCodes);
-
-      c.consume(Pair.of(this.mockRequest, this.mockResponse));
-      verify(this.mockObjectManager, never()).writeNameComplete(isA(ObjectName.class));
-   }
-
-   @Test
-   public void testOperationDoesNotMatchMethod()
-   {
-      when(this.mockRequest.getMethod()).thenReturn(Method.GET);
-
-      final ObjectNameConsumer c =
-            new WriteObjectNameConsumer(this.mockObjectManager, this.statusCodes);
-
-      c.consume(Pair.of(this.mockRequest, this.mockResponse));
-      verify(this.mockObjectManager, never()).writeNameComplete((isA(ObjectName.class)));
-   }
-
-   @Test(expected = ObjectManagerException.class)
-   public void testObjectManagerException()
-   {
-      when(this.mockRequest.getMethod()).thenReturn(Method.PUT);
-      when(this.mockRequest.getMetadata(Metadata.OBJECT_NAME)).thenReturn(
-            "52f7ee3599723d3d9ead2cc492c8209f0010");
-      when(this.mockResponse.getStatusCode()).thenReturn(201);
-      doThrow(new ObjectManagerException()).when(this.mockObjectManager).writeNameComplete(
+      doThrow(new ObjectManagerException()).when(this.objectManager).writeNameComplete(
             any(ObjectName.class));
-
-      final ObjectNameConsumer c =
-            new WriteObjectNameConsumer(this.mockObjectManager, this.statusCodes);
-
-      c.consume(Pair.of(this.mockRequest, this.mockResponse));
    }
 
-   @Test(expected = IllegalStateException.class)
-   public void testNoObject() throws URISyntaxException
+   @Test
+   public void successfulSOH()
    {
-      when(this.mockRequest.getUri()).thenReturn(new URI("http://192.168.8.1/container"));
-      when(this.mockRequest.getMethod()).thenReturn(Method.PUT);
-      when(this.mockResponse.getStatusCode()).thenReturn(201);
+      // for SOH, the metadata gets set on response rather than request
+      when(this.request.getMetadata(Metadata.OBJECT_NAME)).thenReturn(null);
+      when(this.response.getMetadata(Metadata.OBJECT_NAME)).thenReturn(this.object);
 
-      new WriteObjectNameConsumer(this.mockObjectManager, this.statusCodes)
-            .consume(Pair.of(this.mockRequest, this.mockResponse));
+      this.objectNameConsumer.consume(this.operation);
+      doVerify();
    }
 }
