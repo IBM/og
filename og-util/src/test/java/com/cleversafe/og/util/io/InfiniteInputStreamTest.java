@@ -19,8 +19,8 @@
 
 package com.cleversafe.og.util.io;
 
-import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 
 import org.junit.Before;
 import org.junit.Rule;
