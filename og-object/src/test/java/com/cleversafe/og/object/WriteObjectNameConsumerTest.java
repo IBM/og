@@ -30,8 +30,8 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.cleversafe.og.api.Metadata;
 import com.cleversafe.og.api.Method;
+import com.cleversafe.og.http.Headers;
 import com.google.common.collect.ImmutableMap;
 
 public class WriteObjectNameConsumerTest extends AbstractObjectNameConsumerTest
@@ -75,7 +75,7 @@ public class WriteObjectNameConsumerTest extends AbstractObjectNameConsumerTest
       // for SOH, the metadata gets set on response rather than request
       when(this.request.metadata()).thenReturn(ImmutableMap.<String, String> of());
       when(this.response.metadata()).thenReturn(
-            ImmutableMap.of(Metadata.OBJECT_NAME.toString(), this.object));
+            ImmutableMap.of(Headers.OBJECT_NAME.toString(), this.object));
 
       this.objectNameConsumer.consume(this.operation);
       doVerify();

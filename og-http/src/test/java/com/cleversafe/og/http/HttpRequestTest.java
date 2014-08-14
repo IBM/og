@@ -30,7 +30,6 @@ import org.junit.Test;
 
 import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.Data;
-import com.cleversafe.og.api.Metadata;
 import com.cleversafe.og.api.Method;
 
 public class HttpRequestTest
@@ -78,7 +77,7 @@ public class HttpRequestTest
    @Test(expected = NullPointerException.class)
    public void testMetadataNullKey()
    {
-      new HttpRequest.Builder(this.method, this.uri).withMetadata((Metadata) null, "value").build();
+      new HttpRequest.Builder(this.method, this.uri).withMetadata((Headers) null, "value").build();
    }
 
    @Test(expected = NullPointerException.class)
@@ -90,7 +89,7 @@ public class HttpRequestTest
    @Test(expected = NullPointerException.class)
    public void testMetadataNullValue()
    {
-      new HttpRequest.Builder(this.method, this.uri).withMetadata(Metadata.ABORTED, null).build();
+      new HttpRequest.Builder(this.method, this.uri).withMetadata(Headers.ABORTED, null).build();
    }
 
    @Test(expected = NullPointerException.class)
@@ -211,7 +210,7 @@ public class HttpRequestTest
    public void testMissingMetadata()
    {
       final HttpRequest r = new HttpRequest.Builder(this.method, this.uri).build();
-      Assert.assertNull(r.metadata().get(Metadata.ABORTED));
+      Assert.assertNull(r.metadata().get(Headers.ABORTED));
    }
 
    @Test
@@ -225,8 +224,8 @@ public class HttpRequestTest
    public void testMetadataEntry()
    {
       final HttpRequest r =
-            new HttpRequest.Builder(this.method, this.uri).withMetadata(Metadata.ABORTED, "1").build();
-      Assert.assertEquals("1", r.metadata().get(Metadata.ABORTED.toString()));
+            new HttpRequest.Builder(this.method, this.uri).withMetadata(Headers.ABORTED, "1").build();
+      Assert.assertEquals("1", r.metadata().get(Headers.ABORTED.toString()));
    }
 
    @Test
@@ -266,7 +265,7 @@ public class HttpRequestTest
       {
          b.withMetadata("key" + i, "value" + i);
       }
-      b.withMetadata(Metadata.ABORTED, "1");
+      b.withMetadata(Headers.ABORTED, "1");
       final HttpRequest r = b.build();
       final Iterator<Entry<String, String>> it = r.metadata().entrySet().iterator();
       Assert.assertTrue(it.hasNext());

@@ -17,14 +17,14 @@
 // Date: Jun 13, 2014
 // ---------------------
 
-package com.cleversafe.og.api;
+package com.cleversafe.og.http;
 
 /**
- * An enumeration of well known metadata keys
+ * An enumeration of well known header keys
  * 
  * @since 1.0
  */
-public enum Metadata
+public enum Headers
 {
    REQUEST_ID,
    OBJECT_NAME,

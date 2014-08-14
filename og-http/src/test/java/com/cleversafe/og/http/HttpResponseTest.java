@@ -28,7 +28,6 @@ import org.junit.Test;
 
 import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.Data;
-import com.cleversafe.og.api.Metadata;
 
 public class HttpResponseTest
 {
@@ -97,7 +96,7 @@ public class HttpResponseTest
    @Test(expected = NullPointerException.class)
    public void testMetadataNullKey()
    {
-      new HttpResponse.Builder().withStatusCode(this.statusCode).withMetadata((Metadata) null,
+      new HttpResponse.Builder().withStatusCode(this.statusCode).withMetadata((Headers) null,
             "value").build();
    }
 
@@ -111,7 +110,7 @@ public class HttpResponseTest
    @Test(expected = NullPointerException.class)
    public void testMetadataNullValue()
    {
-      new HttpResponse.Builder().withStatusCode(this.statusCode).withMetadata(Metadata.ABORTED,
+      new HttpResponse.Builder().withStatusCode(this.statusCode).withMetadata(Headers.ABORTED,
             null).build();
    }
 
@@ -217,7 +216,7 @@ public class HttpResponseTest
    public void testMissingMetadata()
    {
       final HttpResponse r = new HttpResponse.Builder().withStatusCode(this.statusCode).build();
-      Assert.assertNull(r.metadata().get(Metadata.ABORTED));
+      Assert.assertNull(r.metadata().get(Headers.ABORTED));
    }
 
    @Test
@@ -232,8 +231,8 @@ public class HttpResponseTest
    {
       final HttpResponse r =
             new HttpResponse.Builder().withStatusCode(this.statusCode).withMetadata(
-                  Metadata.ABORTED, "1").build();
-      Assert.assertEquals("1", r.metadata().get(Metadata.ABORTED.toString()));
+                  Headers.ABORTED, "1").build();
+      Assert.assertEquals("1", r.metadata().get(Headers.ABORTED.toString()));
    }
 
    @Test
@@ -273,7 +272,7 @@ public class HttpResponseTest
       {
          b.withMetadata("key" + i, "value" + i);
       }
-      b.withMetadata(Metadata.ABORTED, "1");
+      b.withMetadata(Headers.ABORTED, "1");
       final HttpResponse r = b.build();
       final Iterator<Entry<String, String>> it = r.metadata().entrySet().iterator();
       Assert.assertTrue(it.hasNext());

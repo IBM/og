@@ -27,9 +27,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
-import com.cleversafe.og.api.Metadata;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
+import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpUtil;
 import com.cleversafe.og.util.Operation;
 import com.cleversafe.og.util.Pair;
@@ -91,7 +91,7 @@ public class Statistics
       final Operation operation = HttpUtil.toOperation(request.getMethod());
       updateCounter(operation, Counter.OPERATIONS, 1);
       updateCounter(Operation.ALL, Counter.OPERATIONS, 1);
-      if (response.metadata().get(Metadata.ABORTED.toString()) != null)
+      if (response.metadata().get(Headers.ABORTED.toString()) != null)
       {
          updateCounter(operation, Counter.ABORTS, 1);
          updateCounter(Operation.ALL, Counter.ABORTS, 1);

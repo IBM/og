@@ -34,11 +34,11 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 
-import com.cleversafe.og.api.Metadata;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
 import com.cleversafe.og.http.Bodies;
+import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.util.Operation;
 import com.cleversafe.og.util.Pair;
 import com.google.common.collect.ImmutableMap;
@@ -94,7 +94,7 @@ public class StatisticsTest
    @Test
    public void updateAbort()
    {
-      when(this.response.metadata()).thenReturn(ImmutableMap.of(Metadata.ABORTED.toString(), ""));
+      when(this.response.metadata()).thenReturn(ImmutableMap.of(Headers.ABORTED.toString(), ""));
       this.stats.update(this.operation);
       assertAll(Operation.WRITE, 1, 0, 1, 201, 0);
    }
@@ -102,7 +102,7 @@ public class StatisticsTest
    @Test
    public void updateAbortMultiple()
    {
-      when(this.response.metadata()).thenReturn(ImmutableMap.of(Metadata.ABORTED.toString(), ""));
+      when(this.response.metadata()).thenReturn(ImmutableMap.of(Headers.ABORTED.toString(), ""));
       this.stats.update(this.operation);
       this.stats.update(this.operation);
       assertAll(Operation.WRITE, 2, 0, 2, 201, 0);

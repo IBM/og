@@ -29,8 +29,8 @@ import java.util.SortedMap;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
-import com.cleversafe.og.api.Metadata;
 import com.cleversafe.og.api.Request;
+import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpAuth;
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
@@ -86,8 +86,8 @@ public class AWSAuthV2 implements HttpAuth
    @Override
    public String nextAuthorizationHeader(final Request request)
    {
-      final String awsAccessKeyId = request.metadata().get(Metadata.USERNAME.toString());
-      final String awsSecretAccessKey = request.metadata().get(Metadata.PASSWORD.toString());
+      final String awsAccessKeyId = request.metadata().get(Headers.USERNAME.toString());
+      final String awsSecretAccessKey = request.metadata().get(Headers.PASSWORD.toString());
       return authenticate(request, awsAccessKeyId, awsSecretAccessKey);
    }
 

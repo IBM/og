@@ -25,7 +25,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Map;
 
 import com.cleversafe.og.api.Body;
-import com.cleversafe.og.api.Metadata;
 import com.cleversafe.og.api.Response;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -140,7 +139,7 @@ public class HttpResponse implements Response
        *           a metadata value
        * @return this builder
        */
-      public Builder withMetadata(final Metadata key, final String value)
+      public Builder withMetadata(final Headers key, final String value)
       {
          return withMetadata(key.toString(), value);
       }

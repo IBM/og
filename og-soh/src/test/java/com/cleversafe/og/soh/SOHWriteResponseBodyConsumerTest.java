@@ -31,7 +31,7 @@ import java.util.Map.Entry;
 
 import org.junit.Test;
 
-import com.cleversafe.og.api.Metadata;
+import com.cleversafe.og.http.Headers;
 import com.google.common.base.Charsets;
 
 public class SOHWriteResponseBodyConsumerTest
@@ -67,7 +67,7 @@ public class SOHWriteResponseBodyConsumerTest
 
       final Entry<String, String> e = it.next();
 
-      assertThat(e.getKey(), is(Metadata.OBJECT_NAME.toString()));
+      assertThat(e.getKey(), is(Headers.OBJECT_NAME.toString()));
       assertThat(e.getValue(), is("objectName0"));
       assertThat(it.hasNext(), is(false));
       assertThat(in.available(), is(0));

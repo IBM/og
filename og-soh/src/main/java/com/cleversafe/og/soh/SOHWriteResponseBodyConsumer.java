@@ -31,7 +31,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import com.cleversafe.og.api.Metadata;
+import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.ResponseBodyConsumer;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
@@ -59,7 +59,7 @@ public class SOHWriteResponseBodyConsumer implements ResponseBodyConsumer
             new BufferedReader(new InputStreamReader(response, Charsets.UTF_8));
 
       final Map<String, String> metadata = new HashMap<String, String>(1);
-      metadata.put(Metadata.OBJECT_NAME.toString(), reader.readLine());
+      metadata.put(Headers.OBJECT_NAME.toString(), reader.readLine());
       while ((reader.readLine()) != null)
       {
          // consume the stream, for SOH writes there should never be anything else

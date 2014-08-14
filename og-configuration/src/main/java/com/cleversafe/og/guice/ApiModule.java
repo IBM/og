@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import com.cleversafe.og.api.Body;
-import com.cleversafe.og.api.Metadata;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.guice.annotation.Container;
@@ -53,12 +52,13 @@ import com.cleversafe.og.guice.annotation.WriteObjectName;
 import com.cleversafe.og.guice.annotation.WriteUri;
 import com.cleversafe.og.http.Api;
 import com.cleversafe.og.http.Bodies;
+import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.ResponseBodyConsumer;
 import com.cleversafe.og.http.Scheme;
 import com.cleversafe.og.soh.SOHWriteResponseBodyConsumer;
 import com.cleversafe.og.supplier.CachingSupplier;
-import com.cleversafe.og.supplier.Suppliers;
 import com.cleversafe.og.supplier.RequestSupplier;
+import com.cleversafe.og.supplier.Suppliers;
 import com.cleversafe.og.supplier.UriSupplier;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
@@ -115,7 +115,7 @@ public class ApiModule extends AbstractModule
       final Map<Supplier<String>, Supplier<String>> metadata = createMetadata(id);
       // SOH needs to use a special response procesor to extract the returned object id
       if (Api.SOH == api)
-         metadata.put(Suppliers.of(Metadata.RESPONSE_BODY_CONSUMER.toString()),
+         metadata.put(Suppliers.of(Headers.RESPONSE_BODY_CONSUMER.toString()),
                Suppliers.of(SOH_PUT_OBJECT));
       return metadata;
    }
@@ -196,7 +196,7 @@ public class ApiModule extends AbstractModule
    public Map<Supplier<String>, Supplier<String>> createMetadata(final Supplier<String> id)
    {
       final Map<Supplier<String>, Supplier<String>> metadata = Maps.newHashMap();
-      metadata.put(Suppliers.of(Metadata.REQUEST_ID.toString()), id);
+      metadata.put(Suppliers.of(Headers.REQUEST_ID.toString()), id);
       return metadata;
    }
 
@@ -213,7 +213,7 @@ public class ApiModule extends AbstractModule
       final RequestSupplier.Builder b = new RequestSupplier.Builder(Suppliers.of(method), uri);
 
       if (object.isPresent())
-         b.withMetadata(Suppliers.of(Metadata.OBJECT_NAME.toString()), new Supplier<String>()
+         b.withMetadata(Suppliers.of(Headers.OBJECT_NAME.toString()), new Supplier<String>()
          {
             @Override
             public String get()
@@ -236,8 +236,8 @@ public class ApiModule extends AbstractModule
 
       if (username.isPresent() && password.isPresent())
       {
-         b.withMetadata(Suppliers.of(Metadata.USERNAME.toString()), username.get());
-         b.withMetadata(Suppliers.of(Metadata.PASSWORD.toString()), password.get());
+         b.withMetadata(Suppliers.of(Headers.USERNAME.toString()), username.get());
+         b.withMetadata(Suppliers.of(Headers.PASSWORD.toString()), password.get());
       }
 
       return b.build();

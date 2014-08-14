@@ -34,11 +34,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.api.Client;
-import com.cleversafe.og.api.Metadata;
 import com.cleversafe.og.api.OperationManager;
 import com.cleversafe.og.api.OperationManagerException;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
+import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpResponse;
 import com.cleversafe.og.scheduling.Scheduler;
 import com.cleversafe.og.util.Pair;
@@ -89,7 +89,7 @@ public class LoadTest implements Callable<Boolean>
             final Request request = this.operationManager.next();
             final ListenableFuture<Response> future = this.client.execute(request);
             // TODO better key than request_id? make Request hashable?
-            this.activeOperations.put(request.metadata().get(Metadata.REQUEST_ID.toString()),
+            this.activeOperations.put(request.metadata().get(Headers.REQUEST_ID.toString()),
                   future);
             addCallback(request, future);
             this.scheduler.waitForNext();
@@ -142,7 +142,7 @@ public class LoadTest implements Callable<Boolean>
             LoadTest.this.running = false;
             final HttpResponse response = new HttpResponse.Builder()
                   .withStatusCode(499)
-                  .withMetadata(Metadata.ABORTED, "")
+                  .withMetadata(Headers.ABORTED, "")
                   .build();
             postOperation(response);
          }
@@ -150,7 +150,7 @@ public class LoadTest implements Callable<Boolean>
          private void removeActiveOperation()
          {
             LoadTest.this.activeOperations.remove(request.metadata().get(
-                  Metadata.REQUEST_ID.toString()));
+                  Headers.REQUEST_ID.toString()));
             if (!LoadTest.this.running && LoadTest.this.activeOperations.isEmpty())
                LoadTest.this.completed.countDown();
          }

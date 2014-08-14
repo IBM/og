@@ -32,10 +32,10 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 
-import com.cleversafe.og.api.Metadata;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
+import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpUtil;
 import com.cleversafe.og.util.Pair;
 import com.google.common.collect.ImmutableList;
@@ -69,12 +69,12 @@ public abstract class AbstractObjectNameConsumerTest
       when(this.request.getMethod()).thenReturn(method());
       when(this.request.getUri()).thenReturn(new URI("/container/" + this.object));
       when(this.request.metadata()).thenReturn(
-            ImmutableMap.of(Metadata.OBJECT_NAME.toString(), this.object));
+            ImmutableMap.of(Headers.OBJECT_NAME.toString(), this.object));
 
       this.response = mock(Response.class);
       when(this.response.getStatusCode()).thenReturn(200);
       when(this.response.metadata()).thenReturn(
-            ImmutableMap.of(Metadata.REQUEST_ID.toString(), "1"));
+            ImmutableMap.of(Headers.REQUEST_ID.toString(), "1"));
 
       this.operation = Pair.of(this.request, this.response);
       this.objectNameConsumer = create(this.objectManager, this.statusCodes);

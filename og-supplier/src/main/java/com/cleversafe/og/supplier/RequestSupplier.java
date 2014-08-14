@@ -26,9 +26,9 @@ import java.util.List;
 import java.util.Locale;
 
 import com.cleversafe.og.api.Body;
-import com.cleversafe.og.api.Metadata;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
+import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpRequest;
 import com.cleversafe.og.util.Pair;
 import com.google.common.base.Supplier;
@@ -185,7 +185,7 @@ public class RequestSupplier implements Supplier<Request>
        *           a metadata value
        * @return this builder
        */
-      public Builder withMetadata(final Metadata key, final String value)
+      public Builder withMetadata(final Headers key, final String value)
       {
          return withMetadata(key.toString(), value);
       }

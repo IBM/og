@@ -30,7 +30,6 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 import com.cleversafe.og.api.Body;
-import com.cleversafe.og.api.Metadata;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
 import com.google.common.collect.ImmutableMap;
@@ -160,7 +159,7 @@ public class HttpRequest implements Request
        *           a metadata value
        * @return this builder
        */
-      public Builder withMetadata(final Metadata key, final String value)
+      public Builder withMetadata(final Headers key, final String value)
       {
          return withMetadata(key.toString(), value);
       }

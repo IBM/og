@@ -53,10 +53,10 @@ import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.api.Client;
 import com.cleversafe.og.api.Data;
-import com.cleversafe.og.api.Metadata;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
 import com.cleversafe.og.http.Bodies;
+import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpAuth;
 import com.cleversafe.og.http.HttpResponse;
 import com.cleversafe.og.http.ResponseBodyConsumer;
@@ -333,9 +333,9 @@ public class ApacheClient implements Client
       {
          final long timestampStart = System.currentTimeMillis();
          final HttpResponse.Builder responseBuilder = new HttpResponse.Builder();
-         final String requestId = this.request.metadata().get(Metadata.REQUEST_ID.toString());
+         final String requestId = this.request.metadata().get(Headers.REQUEST_ID.toString());
          if (requestId != null)
-            responseBuilder.withMetadata(Metadata.REQUEST_ID, requestId);
+            responseBuilder.withMetadata(Headers.REQUEST_ID, requestId);
          final Response response;
          try
          {
@@ -344,7 +344,7 @@ public class ApacheClient implements Client
          catch (final Exception e)
          {
             _logger.error("Exception executing request", e);
-            responseBuilder.withStatusCode(499).withMetadata(Metadata.ABORTED, "");
+            responseBuilder.withStatusCode(499).withMetadata(Headers.ABORTED, "");
          }
          response = responseBuilder.build();
          final long timestampFinish = System.currentTimeMillis();
@@ -409,7 +409,7 @@ public class ApacheClient implements Client
             // TODO clean this up, should always try to set response entity to response size;
             // will InstrumentedInputStream help with this?
             final String consumerId =
-                  this.request.metadata().get(Metadata.RESPONSE_BODY_CONSUMER.toString());
+                  this.request.metadata().get(Headers.RESPONSE_BODY_CONSUMER.toString());
             final ResponseBodyConsumer consumer =
                   ApacheClient.this.responseBodyConsumers.get(consumerId);
             if (consumer != null)
@@ -698,7 +698,7 @@ public class ApacheClient implements Client
        * @param consumer
        *           a response body consumer
        * @return this builder
-       * @see Metadata#RESPONSE_BODY_CONSUMER
+       * @see Headers#RESPONSE_BODY_CONSUMER
        */
       public Builder withResponseBodyConsumer(
             final String consumerId,

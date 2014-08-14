@@ -33,10 +33,10 @@ import org.junit.Test;
 
 import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.Data;
-import com.cleversafe.og.api.Metadata;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.http.Bodies;
+import com.cleversafe.og.http.Headers;
 import com.google.common.base.Supplier;
 
 public class RequestSupplierTest
@@ -122,7 +122,7 @@ public class RequestSupplierTest
    @Test(expected = NullPointerException.class)
    public void metadataNullKeyEnum()
    {
-      new RequestSupplier.Builder(this.method, this.uri).withMetadata((Metadata) null, "value");
+      new RequestSupplier.Builder(this.method, this.uri).withMetadata((Headers) null, "value");
    }
 
    @Test(expected = NullPointerException.class)
@@ -141,7 +141,7 @@ public class RequestSupplierTest
    @Test(expected = NullPointerException.class)
    public void metadataNullValue2()
    {
-      new RequestSupplier.Builder(this.method, this.uri).withMetadata(Metadata.ABORTED, null);
+      new RequestSupplier.Builder(this.method, this.uri).withMetadata(Headers.ABORTED, null);
    }
 
    @Test(expected = NullPointerException.class)
@@ -253,7 +253,7 @@ public class RequestSupplierTest
    {
       final Request request = new RequestSupplier.Builder(this.method, this.uri)
             .withMetadata("key3", "value3")
-            .withMetadata(Metadata.ABORTED, "value2")
+            .withMetadata(Headers.ABORTED, "value2")
             .withMetadata(Suppliers.of("key1"), Suppliers.of("value1"))
             .build()
             .get();

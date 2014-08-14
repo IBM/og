@@ -38,12 +38,12 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 
 import com.cleversafe.og.api.Client;
-import com.cleversafe.og.api.Metadata;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.OperationManager;
 import com.cleversafe.og.api.OperationManagerException;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
+import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpRequest;
 import com.cleversafe.og.http.HttpResponse;
 import com.cleversafe.og.scheduling.ConcurrentRequestScheduler;
@@ -80,10 +80,10 @@ public class LoadTestTest
    public void before() throws OperationManagerException, URISyntaxException
    {
       this.request = new HttpRequest.Builder(Method.PUT, new URI("http://127.0.0.1"))
-            .withMetadata(Metadata.REQUEST_ID, "1")
+            .withMetadata(Headers.REQUEST_ID, "1")
             .build();
       this.response = new HttpResponse.Builder().withStatusCode(200)
-            .withMetadata(Metadata.REQUEST_ID, "1")
+            .withMetadata(Headers.REQUEST_ID, "1")
             .build();
 
       this.operationManager = mock(OperationManager.class);

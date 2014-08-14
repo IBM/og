@@ -54,12 +54,12 @@ import org.junit.Test;
 import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.Client;
 import com.cleversafe.og.api.Data;
-import com.cleversafe.og.api.Metadata;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
 import com.cleversafe.og.http.BasicAuth;
 import com.cleversafe.og.http.Bodies;
+import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpRequest;
 import com.cleversafe.og.http.ResponseBodyConsumer;
 import com.cleversafe.og.util.SizeUnit;
@@ -395,8 +395,8 @@ public class ApacheClientTest
             .withAuthentication(new BasicAuth())
             .build();
       final Request request = new HttpRequest.Builder(Method.GET, this.objectUri)
-            .withMetadata(Metadata.USERNAME, "test")
-            .withMetadata(Metadata.PASSWORD, "test")
+            .withMetadata(Headers.USERNAME, "test")
+            .withMetadata(Headers.PASSWORD, "test")
             .build();
       client.execute(request).get();
       verify(getRequestedFor(urlEqualTo(this.objectUri.getPath()))
@@ -443,17 +443,17 @@ public class ApacheClientTest
             new HttpRequest.Builder(Method.GET, this.delayedUri).build();
       final Response response = client.execute(request).get();
       Assert.assertEquals(499, response.getStatusCode());
-      Assert.assertNotNull(response.metadata().get(Metadata.ABORTED.toString()));
+      Assert.assertNotNull(response.metadata().get(Headers.ABORTED.toString()));
    }
 
    @Test
    public void testRequestIdMetadata() throws InterruptedException, ExecutionException
    {
       final Request request = new HttpRequest.Builder(Method.GET, this.objectUri)
-            .withMetadata(Metadata.REQUEST_ID, "objectName")
+            .withMetadata(Headers.REQUEST_ID, "objectName")
             .build();
       final Response response = this.client.execute(request).get();
-      Assert.assertEquals("objectName", response.metadata().get(Metadata.REQUEST_ID.toString()));
+      Assert.assertEquals("objectName", response.metadata().get(Headers.REQUEST_ID.toString()));
    }
 
    @Test
@@ -648,7 +648,7 @@ public class ApacheClientTest
    public void testResponseBodyConsumer() throws InterruptedException, ExecutionException
    {
       final Request request = new HttpRequest.Builder(Method.GET, this.objectUri)
-            .withMetadata(Metadata.RESPONSE_BODY_CONSUMER, "myConsumer").build();
+            .withMetadata(Headers.RESPONSE_BODY_CONSUMER, "myConsumer").build();
 
       final Client client = new ApacheClient.Builder()
             .withResponseBodyConsumer("myConsumer", new ResponseBodyConsumer()

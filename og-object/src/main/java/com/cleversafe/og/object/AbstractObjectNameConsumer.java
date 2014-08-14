@@ -24,9 +24,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.List;
 
-import com.cleversafe.og.api.Metadata;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
+import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpUtil;
 import com.cleversafe.og.util.Operation;
 import com.cleversafe.og.util.Pair;
@@ -106,10 +106,10 @@ public abstract class AbstractObjectNameConsumer
 
    protected String getObjectString(final Request request, final Response response)
    {
-      String objectString = request.metadata().get(Metadata.OBJECT_NAME.toString());
+      String objectString = request.metadata().get(Headers.OBJECT_NAME.toString());
       // SOH writes
       if (objectString == null)
-         objectString = response.metadata().get(Metadata.OBJECT_NAME.toString());
+         objectString = response.metadata().get(Headers.OBJECT_NAME.toString());
 
       return objectString;
    }
