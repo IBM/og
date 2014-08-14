@@ -87,7 +87,7 @@ public class RequestLogEntry
       // FIXME reliably get localaddress? Name should be clientName? Do we even need this field?
       this.serverName = null;
       this.remoteAddress = uri.getHost();
-      this.user = request.getMetadata(Metadata.USERNAME);
+      this.user = request.metadata().get(Metadata.USERNAME);
       this.timestampStart = timestampStart;
       this.timestampFinish = timestampFinish;
       this.timeStart = RequestLogEntry.FORMATTER.print(this.timestampStart);
@@ -96,10 +96,10 @@ public class RequestLogEntry
 
       this.requestUri = uri.getPath() + (uri.getQuery() != null ? uri.getQuery() : "");
 
-      String objectName = request.getMetadata(Metadata.OBJECT_NAME);
+      String objectName = request.metadata().get(Metadata.OBJECT_NAME);
       // SOH writes
       if (objectName == null)
-         objectName = response.getMetadata(Metadata.OBJECT_NAME);
+         objectName = response.metadata().get(Metadata.OBJECT_NAME);
       this.objectId = objectName;
 
       long objectSize = 0;
@@ -111,13 +111,13 @@ public class RequestLogEntry
       this.requestLength = objectSize;
       // TODO is this correct?
       this.responseLength = response.getBody().getSize();
-      this.userAgent = request.getHeader(HttpHeaders.USER_AGENT);
+      this.userAgent = request.headers().get(HttpHeaders.USER_AGENT);
       // TODO ask: dsnet access.log uses System.currentTimeMillis() - request.getTimeStamp();
       this.requestLatency = this.timestampFinish - this.timestampStart;
 
       // custom
-      this.clientRequestId = request.getMetadata(Metadata.REQUEST_ID);
-      this.requestId = response.getHeader(X_CLV_REQUEST_ID);
+      this.clientRequestId = request.metadata().get(Metadata.REQUEST_ID);
+      this.requestId = response.headers().get(X_CLV_REQUEST_ID);
       this.stat = null;
       this.objectLength = objectSize;
    }

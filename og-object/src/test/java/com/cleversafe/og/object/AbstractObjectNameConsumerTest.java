@@ -39,6 +39,7 @@ import com.cleversafe.og.api.Response;
 import com.cleversafe.og.http.HttpUtil;
 import com.cleversafe.og.util.Pair;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.tngtech.java.junit.dataprovider.DataProvider;
 import com.tngtech.java.junit.dataprovider.DataProviderRunner;
@@ -67,17 +68,21 @@ public abstract class AbstractObjectNameConsumerTest
       this.request = mock(Request.class);
       when(this.request.getMethod()).thenReturn(method());
       when(this.request.getUri()).thenReturn(new URI("/container/" + this.object));
-      when(this.request.getMetadata(Metadata.OBJECT_NAME)).thenReturn(this.object);
+      when(this.request.metadata()).thenReturn(
+            ImmutableMap.of(Metadata.OBJECT_NAME.toString(), this.object));
 
       this.response = mock(Response.class);
       when(this.response.getStatusCode()).thenReturn(200);
-      when(this.response.getMetadata(Metadata.REQUEST_ID)).thenReturn("1");
+      when(this.response.metadata()).thenReturn(
+            ImmutableMap.of(Metadata.REQUEST_ID.toString(), "1"));
 
       this.operation = Pair.of(this.request, this.response);
       this.objectNameConsumer = create(this.objectManager, this.statusCodes);
    }
 
-   public abstract AbstractObjectNameConsumer create(ObjectManager objectManager, List<Integer> statusCodes);
+   public abstract AbstractObjectNameConsumer create(
+         ObjectManager objectManager,
+         List<Integer> statusCodes);
 
    public abstract Method method();
 
@@ -155,7 +160,7 @@ public abstract class AbstractObjectNameConsumerTest
    @Test(expected = IllegalStateException.class)
    public void noObject()
    {
-      when(this.request.getMetadata(Metadata.OBJECT_NAME)).thenReturn(null);
+      when(this.request.metadata()).thenReturn(ImmutableMap.<String, String> of());
       this.objectNameConsumer.consume(this.operation);
    }
 }

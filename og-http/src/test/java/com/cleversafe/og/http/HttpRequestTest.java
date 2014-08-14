@@ -118,7 +118,7 @@ public class HttpRequestTest
    public void testMissingHeader()
    {
       final HttpRequest r = new HttpRequest.Builder(this.method, this.uri).build();
-      Assert.assertNull(r.getHeader("key"));
+      Assert.assertNull(r.headers().get("key"));
    }
 
    @Test
@@ -126,14 +126,14 @@ public class HttpRequestTest
    {
       final HttpRequest r =
             new HttpRequest.Builder(this.method, this.uri).withHeader("key", "value").build();
-      Assert.assertEquals("value", r.getHeader("key"));
+      Assert.assertEquals("value", r.headers().get("key"));
    }
 
    @Test
    public void testNoHeaders()
    {
       final HttpRequest r = new HttpRequest.Builder(this.method, this.uri).build();
-      final Iterator<Entry<String, String>> it = r.headers();
+      final Iterator<Entry<String, String>> it = r.headers().entrySet().iterator();
       Assert.assertTrue(it.hasNext());
       // Skip Date header which is automatically added
       it.next();
@@ -145,7 +145,7 @@ public class HttpRequestTest
    {
       final HttpRequest r =
             new HttpRequest.Builder(this.method, this.uri).withHeader("key", "value").build();
-      final Iterator<Entry<String, String>> it = r.headers();
+      final Iterator<Entry<String, String>> it = r.headers().entrySet().iterator();
       Assert.assertTrue(it.hasNext());
       // Skip Date header which is automatically added
       it.next();
@@ -166,7 +166,7 @@ public class HttpRequestTest
          b.withHeader("key" + (100 - i), "value" + i);
       }
       final HttpRequest r = b.build();
-      final Iterator<Entry<String, String>> it = r.headers();
+      final Iterator<Entry<String, String>> it = r.headers().entrySet().iterator();
       Assert.assertTrue(it.hasNext());
       // Skip Date header which is automatically added
       it.next();
@@ -185,7 +185,7 @@ public class HttpRequestTest
    {
       final HttpRequest r =
             new HttpRequest.Builder(this.method, this.uri).withHeader("key", "value").build();
-      final Iterator<Entry<String, String>> it = r.headers();
+      final Iterator<Entry<String, String>> it = r.headers().entrySet().iterator();
       it.next();
       it.remove();
    }
@@ -211,14 +211,14 @@ public class HttpRequestTest
    public void testMissingMetadata()
    {
       final HttpRequest r = new HttpRequest.Builder(this.method, this.uri).build();
-      Assert.assertNull(r.getMetadata(Metadata.ABORTED));
+      Assert.assertNull(r.metadata().get(Metadata.ABORTED));
    }
 
    @Test
    public void testMissingMetadata2()
    {
       final HttpRequest r = new HttpRequest.Builder(this.method, this.uri).build();
-      Assert.assertNull(r.getMetadata("aborted"));
+      Assert.assertNull(r.metadata().get("aborted"));
    }
 
    @Test
@@ -226,7 +226,7 @@ public class HttpRequestTest
    {
       final HttpRequest r =
             new HttpRequest.Builder(this.method, this.uri).withMetadata(Metadata.ABORTED, "1").build();
-      Assert.assertEquals("1", r.getMetadata(Metadata.ABORTED));
+      Assert.assertEquals("1", r.metadata().get(Metadata.ABORTED.toString()));
    }
 
    @Test
@@ -234,14 +234,14 @@ public class HttpRequestTest
    {
       final HttpRequest r =
             new HttpRequest.Builder(this.method, this.uri).withMetadata("key", "value").build();
-      Assert.assertEquals("value", r.getMetadata("key"));
+      Assert.assertEquals("value", r.metadata().get("key"));
    }
 
    @Test
    public void testMetadata()
    {
       final HttpRequest r = new HttpRequest.Builder(this.method, this.uri).build();
-      final Iterator<Entry<String, String>> it = r.metadata();
+      final Iterator<Entry<String, String>> it = r.metadata().entrySet().iterator();
       Assert.assertFalse(it.hasNext());
    }
 
@@ -250,7 +250,7 @@ public class HttpRequestTest
    {
       final HttpRequest r =
             new HttpRequest.Builder(this.method, this.uri).withMetadata("key", "value").build();
-      final Iterator<Entry<String, String>> it = r.metadata();
+      final Iterator<Entry<String, String>> it = r.metadata().entrySet().iterator();
       Assert.assertTrue(it.hasNext());
       final Entry<String, String> e = it.next();
       Assert.assertEquals("key", e.getKey());
@@ -268,7 +268,7 @@ public class HttpRequestTest
       }
       b.withMetadata(Metadata.ABORTED, "1");
       final HttpRequest r = b.build();
-      final Iterator<Entry<String, String>> it = r.metadata();
+      final Iterator<Entry<String, String>> it = r.metadata().entrySet().iterator();
       Assert.assertTrue(it.hasNext());
       for (int i = 0; i < 10; i++)
       {
@@ -288,7 +288,7 @@ public class HttpRequestTest
    {
       final HttpRequest r =
             new HttpRequest.Builder(this.method, this.uri).withMetadata("key", "value").build();
-      final Iterator<Entry<String, String>> it = r.metadata();
+      final Iterator<Entry<String, String>> it = r.metadata().entrySet().iterator();
       it.next();
       it.remove();
    }
@@ -300,8 +300,8 @@ public class HttpRequestTest
             new HttpRequest.Builder(this.method, this.uri).withHeader("key1", "value1");
       final HttpRequest r = b.build();
       b.withHeader("key2", "value2");
-      Assert.assertEquals("value1", r.getHeader("key1"));
-      Assert.assertNull(r.getHeader("key2"));
+      Assert.assertEquals("value1", r.headers().get("key1"));
+      Assert.assertNull(r.headers().get("key2"));
    }
 
    @Test
@@ -311,7 +311,7 @@ public class HttpRequestTest
             new HttpRequest.Builder(this.method, this.uri).withMetadata("key1", "value1");
       final HttpRequest r = b.build();
       b.withMetadata("key2", "value2");
-      Assert.assertEquals("value1", r.getMetadata("key1"));
-      Assert.assertNull(r.getMetadata("key2"));
+      Assert.assertEquals("value1", r.metadata().get("key1"));
+      Assert.assertNull(r.metadata().get("key2"));
    }
 }

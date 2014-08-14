@@ -39,7 +39,6 @@ import static org.mockito.Mockito.mock;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.AbstractMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
@@ -67,7 +66,7 @@ import com.cleversafe.og.util.SizeUnit;
 import com.github.tomakehurst.wiremock.client.RequestPatternBuilder;
 import com.github.tomakehurst.wiremock.http.RequestMethod;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 public class ApacheClientTest
@@ -444,7 +443,7 @@ public class ApacheClientTest
             new HttpRequest.Builder(Method.GET, this.delayedUri).build();
       final Response response = client.execute(request).get();
       Assert.assertEquals(499, response.getStatusCode());
-      Assert.assertNotNull(response.getMetadata(Metadata.ABORTED));
+      Assert.assertNotNull(response.metadata().get(Metadata.ABORTED.toString()));
    }
 
    @Test
@@ -454,7 +453,7 @@ public class ApacheClientTest
             .withMetadata(Metadata.REQUEST_ID, "objectName")
             .build();
       final Response response = this.client.execute(request).get();
-      Assert.assertEquals("objectName", response.getMetadata(Metadata.REQUEST_ID));
+      Assert.assertEquals("objectName", response.metadata().get(Metadata.REQUEST_ID.toString()));
    }
 
    @Test
@@ -659,13 +658,11 @@ public class ApacheClientTest
                      final int statusCode,
                      final InputStream response)
                {
-                  final Entry<String, String> entry =
-                        new AbstractMap.SimpleEntry<String, String>("myKey", "myValue");
-                  return ImmutableSet.of(entry).iterator();
+                  return ImmutableMap.of("myKey", "myValue").entrySet().iterator();
                }
             }).build();
 
       final Response response = client.execute(request).get();
-      Assert.assertEquals("myValue", response.getMetadata("myKey"));
+      Assert.assertEquals("myValue", response.metadata().get("myKey"));
    }
 }

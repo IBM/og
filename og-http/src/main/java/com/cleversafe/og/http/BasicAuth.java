@@ -38,8 +38,8 @@ public class BasicAuth implements HttpAuth
    @Override
    public String nextAuthorizationHeader(final Request request)
    {
-      final String username = request.getMetadata(Metadata.USERNAME);
-      final String password = request.getMetadata(Metadata.PASSWORD);
+      final String username = request.metadata().get(Metadata.USERNAME);
+      final String password = request.metadata().get(Metadata.PASSWORD);
       final String credentials = username + ":" + password;
       final String b64 = BaseEncoding.base64().encode(credentials.getBytes(Charsets.UTF_8));
       return "Basic " + b64;

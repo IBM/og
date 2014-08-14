@@ -19,8 +19,7 @@
 
 package com.cleversafe.og.api;
 
-import java.util.Iterator;
-import java.util.Map.Entry;
+import java.util.Map;
 
 /**
  * An object that describes an http message
@@ -29,21 +28,7 @@ import java.util.Map.Entry;
  */
 public interface Message
 {
-   /**
-    * Gets the value of the message header with the specified key
-    * 
-    * @param key
-    *           the key of the header
-    * @return the value for the header with the specified key, or null if no such mapping exists
-    */
-   String getHeader(String key);
-
-   /**
-    * Returns an iterator over the message headers for this message
-    * 
-    * @return a message header iterator
-    */
-   Iterator<Entry<String, String>> headers();
+   Map<String, String> headers();
 
    /**
     * Gets the description of the body for this message
@@ -52,30 +37,5 @@ public interface Message
     */
    Body getBody();
 
-   /**
-    * Gets the value of the message metadata entry with the specified key
-    * 
-    * @param key
-    *           the key of the metadata entry
-    * @return the value for the metadata entry with the specified key, or null if no such mapping
-    *         exists
-    */
-   String getMetadata(Metadata key);
-
-   /**
-    * Gets the value of the message metadata entry with the specified key
-    * 
-    * @param key
-    *           the key of the metadata entry
-    * @return the value for the metadata entry with the specified key, or null if no such mapping
-    *         exists
-    */
-   String getMetadata(String key);
-
-   /**
-    * Returns an iterator over the message metadata for this message
-    * 
-    * @return a message metadata iterator
-    */
-   Iterator<Entry<String, String>> metadata();
+   Map<String, String> metadata();
 }

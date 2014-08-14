@@ -41,6 +41,7 @@ import com.cleversafe.og.api.Response;
 import com.cleversafe.og.http.Bodies;
 import com.cleversafe.og.util.Operation;
 import com.cleversafe.og.util.Pair;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.tngtech.java.junit.dataprovider.DataProvider;
 import com.tngtech.java.junit.dataprovider.DataProviderRunner;
@@ -93,7 +94,7 @@ public class StatisticsTest
    @Test
    public void updateAbort()
    {
-      when(this.response.getMetadata(Metadata.ABORTED)).thenReturn("");
+      when(this.response.metadata()).thenReturn(ImmutableMap.of(Metadata.ABORTED.toString(), ""));
       this.stats.update(this.operation);
       assertAll(Operation.WRITE, 1, 0, 1, 201, 0);
    }
@@ -101,7 +102,7 @@ public class StatisticsTest
    @Test
    public void updateAbortMultiple()
    {
-      when(this.response.getMetadata(Metadata.ABORTED)).thenReturn("");
+      when(this.response.metadata()).thenReturn(ImmutableMap.of(Metadata.ABORTED.toString(), ""));
       this.stats.update(this.operation);
       this.stats.update(this.operation);
       assertAll(Operation.WRITE, 2, 0, 2, 201, 0);

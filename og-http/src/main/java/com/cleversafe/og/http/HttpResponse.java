@@ -22,9 +22,7 @@ package com.cleversafe.og.http;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.Metadata;
@@ -61,15 +59,9 @@ public class HttpResponse implements Response
    }
 
    @Override
-   public String getHeader(final String key)
+   public Map<String, String> headers()
    {
-      return this.headers.get(key);
-   }
-
-   @Override
-   public Iterator<Entry<String, String>> headers()
-   {
-      return this.headers.entrySet().iterator();
+      return this.headers;
    }
 
    @Override
@@ -79,21 +71,9 @@ public class HttpResponse implements Response
    }
 
    @Override
-   public String getMetadata(final Metadata key)
+   public Map<String, String> metadata()
    {
-      return this.metadata.get(key.toString());
-   }
-
-   @Override
-   public String getMetadata(final String key)
-   {
-      return this.metadata.get(key);
-   }
-
-   @Override
-   public Iterator<Entry<String, String>> metadata()
-   {
-      return this.metadata.entrySet().iterator();
+      return this.metadata;
    }
 
    /**

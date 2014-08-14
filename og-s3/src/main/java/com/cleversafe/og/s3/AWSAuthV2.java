@@ -86,8 +86,8 @@ public class AWSAuthV2 implements HttpAuth
    @Override
    public String nextAuthorizationHeader(final Request request)
    {
-      final String awsAccessKeyId = request.getMetadata(Metadata.USERNAME);
-      final String awsSecretAccessKey = request.getMetadata(Metadata.PASSWORD);
+      final String awsAccessKeyId = request.metadata().get(Metadata.USERNAME.toString());
+      final String awsSecretAccessKey = request.metadata().get(Metadata.PASSWORD.toString());
       return authenticate(request, awsAccessKeyId, awsSecretAccessKey);
    }
 
@@ -151,11 +151,11 @@ public class AWSAuthV2 implements HttpAuth
          final String key,
          final String defaultValue)
    {
-      String value = request.getHeader(key);
+      String value = request.headers().get(key);
       if (value != null)
          return value;
 
-      value = request.getHeader(key.toLowerCase(Locale.US));
+      value = request.headers().get(key.toLowerCase(Locale.US));
       if (value != null)
          return value;
 
@@ -166,10 +166,8 @@ public class AWSAuthV2 implements HttpAuth
    {
       // create canonicalHeaders lazily, usually no x-amz- headers will be present
       SortedMap<String, String> canonicalHeaders = null;
-      final Iterator<Entry<String, String>> headers = request.headers();
-      while (headers.hasNext())
+      for (final Entry<String, String> header : request.headers().entrySet())
       {
-         final Entry<String, String> header = headers.next();
          final String keyLower = header.getKey().trim().toLowerCase(Locale.US);
          // ignoring x-amz-date, is this correct?
          if (keyLower.startsWith("x-amz-") && !"x-amz-date".equals(keyLower))

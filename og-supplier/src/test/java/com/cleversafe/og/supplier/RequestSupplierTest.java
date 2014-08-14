@@ -189,7 +189,7 @@ public class RequestSupplierTest
             .withHeader(Suppliers.of("key1"), Suppliers.of("value1"))
             .build()
             .get();
-      final Iterator<Entry<String, String>> it = request.headers();
+      final Iterator<Entry<String, String>> it = request.headers().entrySet().iterator();
       // Skip Date header which is automatically added
       it.next();
       assertThat(it.hasNext(), is(true));
@@ -214,8 +214,8 @@ public class RequestSupplierTest
       b.withHeader("key2", "value2");
       final Request request = s.get();
 
-      assertThat(request.getHeader("key1"), is("value1"));
-      assertThat(request.getHeader("key2"), nullValue());
+      assertThat(request.headers().get("key1"), is("value1"));
+      assertThat(request.headers().get("key2"), nullValue());
    }
 
    @Test
@@ -257,7 +257,7 @@ public class RequestSupplierTest
             .withMetadata(Suppliers.of("key1"), Suppliers.of("value1"))
             .build()
             .get();
-      final Iterator<Entry<String, String>> it = request.metadata();
+      final Iterator<Entry<String, String>> it = request.metadata().entrySet().iterator();
 
       assertThat(it.hasNext(), is(true));
       Entry<String, String> e = it.next();
@@ -284,7 +284,7 @@ public class RequestSupplierTest
       b.withMetadata("key2", "value2");
       final Request request = s.get();
 
-      assertThat(request.getMetadata("key1"), is("value1"));
-      assertThat(request.getMetadata("key2"), nullValue());
+      assertThat(request.metadata().get("key1"), is("value1"));
+      assertThat(request.metadata().get("key2"), nullValue());
    }
 }

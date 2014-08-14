@@ -90,7 +90,7 @@ public class AWSAuthV2Test
          final Map<String, String> headers,
          final String canonicalizedAmzHeaders)
    {
-      when(this.request.headers()).thenReturn(headers.entrySet().iterator());
+      when(this.request.headers()).thenReturn(headers);
       assertThat(this.auth.canonicalizedAmzHeaders(this.request), is(canonicalizedAmzHeaders));
    }
 

@@ -91,7 +91,7 @@ public class Statistics
       final Operation operation = HttpUtil.toOperation(request.getMethod());
       updateCounter(operation, Counter.OPERATIONS, 1);
       updateCounter(Operation.ALL, Counter.OPERATIONS, 1);
-      if (response.getMetadata(Metadata.ABORTED) != null)
+      if (response.metadata().get(Metadata.ABORTED.toString()) != null)
       {
          updateCounter(operation, Counter.ABORTS, 1);
          updateCounter(Operation.ALL, Counter.ABORTS, 1);

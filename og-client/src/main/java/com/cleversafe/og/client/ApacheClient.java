@@ -205,10 +205,8 @@ public class ApacheClient implements Client
       if (this.authentication != null)
          builder.addHeader("Authorization", this.authentication.nextAuthorizationHeader(request));
 
-      final Iterator<Entry<String, String>> headers = request.headers();
-      while (headers.hasNext())
+      for (final Entry<String, String> header : request.headers().entrySet())
       {
-         final Entry<String, String> header = headers.next();
          builder.addHeader(header.getKey(), header.getValue());
       }
 
@@ -335,7 +333,7 @@ public class ApacheClient implements Client
       {
          final long timestampStart = System.currentTimeMillis();
          final HttpResponse.Builder responseBuilder = new HttpResponse.Builder();
-         final String requestId = this.request.getMetadata(Metadata.REQUEST_ID);
+         final String requestId = this.request.metadata().get(Metadata.REQUEST_ID.toString());
          if (requestId != null)
             responseBuilder.withMetadata(Metadata.REQUEST_ID, requestId);
          final Response response;
@@ -410,7 +408,8 @@ public class ApacheClient implements Client
 
             // TODO clean this up, should always try to set response entity to response size;
             // will InstrumentedInputStream help with this?
-            final String consumerId = this.request.getMetadata(Metadata.RESPONSE_BODY_CONSUMER);
+            final String consumerId =
+                  this.request.metadata().get(Metadata.RESPONSE_BODY_CONSUMER.toString());
             final ResponseBodyConsumer consumer =
                   ApacheClient.this.responseBodyConsumers.get(consumerId);
             if (consumer != null)

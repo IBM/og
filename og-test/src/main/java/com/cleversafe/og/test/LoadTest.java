@@ -89,7 +89,8 @@ public class LoadTest implements Callable<Boolean>
             final Request request = this.operationManager.next();
             final ListenableFuture<Response> future = this.client.execute(request);
             // TODO better key than request_id? make Request hashable?
-            this.activeOperations.put(request.getMetadata(Metadata.REQUEST_ID), future);
+            this.activeOperations.put(request.metadata().get(Metadata.REQUEST_ID.toString()),
+                  future);
             addCallback(request, future);
             this.scheduler.waitForNext();
          }
@@ -148,7 +149,8 @@ public class LoadTest implements Callable<Boolean>
 
          private void removeActiveOperation()
          {
-            LoadTest.this.activeOperations.remove(request.getMetadata(Metadata.REQUEST_ID));
+            LoadTest.this.activeOperations.remove(request.metadata().get(
+                  Metadata.REQUEST_ID.toString()));
             if (!LoadTest.this.running && LoadTest.this.activeOperations.isEmpty())
                LoadTest.this.completed.countDown();
          }

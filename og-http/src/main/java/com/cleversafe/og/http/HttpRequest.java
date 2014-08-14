@@ -22,10 +22,8 @@ package com.cleversafe.og.http;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URI;
-import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -75,15 +73,9 @@ public class HttpRequest implements Request
    }
 
    @Override
-   public String getHeader(final String key)
+   public Map<String, String> headers()
    {
-      return this.headers.get(key);
-   }
-
-   @Override
-   public Iterator<Entry<String, String>> headers()
-   {
-      return this.headers.entrySet().iterator();
+      return this.headers;
    }
 
    @Override
@@ -93,21 +85,9 @@ public class HttpRequest implements Request
    }
 
    @Override
-   public String getMetadata(final Metadata key)
+   public Map<String, String> metadata()
    {
-      return this.metadata.get(key.toString());
-   }
-
-   @Override
-   public String getMetadata(final String key)
-   {
-      return this.metadata.get(key);
-   }
-
-   @Override
-   public Iterator<Entry<String, String>> metadata()
-   {
-      return this.metadata.entrySet().iterator();
+      return this.metadata;
    }
 
    /**
