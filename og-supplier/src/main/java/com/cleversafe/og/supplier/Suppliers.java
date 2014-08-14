@@ -19,9 +19,15 @@
 
 package com.cleversafe.og.supplier;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import java.util.Iterator;
 import java.util.List;
 
 import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterators;
 
 /**
  * A utility class for creating supplier instances
@@ -42,7 +48,21 @@ public class Suppliers
     */
    public static <T> Supplier<T> of(final T value)
    {
-      return new ConstantSupplier<T>(value);
+      checkNotNull(value);
+      return new Supplier<T>()
+      {
+         @Override
+         public T get()
+         {
+            return value;
+         }
+
+         @Override
+         public String toString()
+         {
+            return value.toString();
+         }
+      };
    }
 
    /**
@@ -54,7 +74,23 @@ public class Suppliers
     */
    public static <T> Supplier<T> cycle(final List<T> values)
    {
-      return new CycleSupplier<T>(values);
+      final List<T> copy = ImmutableList.copyOf(values);
+      checkArgument(!copy.isEmpty(), "values must not be empty");
+      final Iterator<T> it = Iterators.cycle(copy);
+      return new Supplier<T>()
+      {
+         @Override
+         public T get()
+         {
+            return it.next();
+         }
+
+         @Override
+         public String toString()
+         {
+            return String.format("cycle %s", copy);
+         }
+      };
    }
 
    /**

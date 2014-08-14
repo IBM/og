@@ -21,9 +21,10 @@ package com.cleversafe.og.supplier;
 
 import java.util.List;
 
+import org.junit.Assert;
 import org.junit.Test;
 
-import com.cleversafe.og.supplier.Suppliers;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -38,7 +39,11 @@ public class SuppliersTest
    @Test
    public void testOf()
    {
-      Suppliers.of(1);
+      final Supplier<Integer> p = Suppliers.of(1);
+      for (int i = 0; i < 10; i++)
+      {
+         Assert.assertEquals(Integer.valueOf(1), p.get());
+      }
    }
 
    @Test(expected = NullPointerException.class)
@@ -67,5 +72,48 @@ public class SuppliersTest
       final List<Integer> list = Lists.newArrayList();
       list.add(1);
       Suppliers.cycle(list);
+   }
+
+   @Test
+   public void testOneElement()
+   {
+      final List<Integer> list = Lists.newArrayList();
+      list.add(1);
+      final Supplier<Integer> p = Suppliers.cycle(list);
+      for (int i = 0; i < 10; i++)
+      {
+         Assert.assertEquals(Integer.valueOf(1), p.get());
+      }
+   }
+
+   @Test
+   public void testNElements()
+   {
+      final List<Integer> list = Lists.newArrayList();
+      list.add(1);
+      list.add(2);
+      list.add(3);
+      final Supplier<Integer> p = Suppliers.cycle(list);
+      for (int i = 0; i < 10; i++)
+      {
+         Assert.assertEquals(Integer.valueOf(1), p.get());
+         Assert.assertEquals(Integer.valueOf(2), p.get());
+         Assert.assertEquals(Integer.valueOf(3), p.get());
+      }
+   }
+
+   @Test
+   public void testListModification()
+   {
+      final List<Integer> list = Lists.newArrayList();
+      list.add(1);
+      list.add(2);
+      final Supplier<Integer> p = Suppliers.cycle(list);
+      list.add(3);
+      for (int i = 0; i < 10; i++)
+      {
+         Assert.assertEquals(Integer.valueOf(1), p.get());
+         Assert.assertEquals(Integer.valueOf(2), p.get());
+      }
    }
 }
