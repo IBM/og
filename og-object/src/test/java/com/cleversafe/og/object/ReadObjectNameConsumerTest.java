@@ -32,7 +32,7 @@ import com.cleversafe.og.api.Method;
 public class ReadObjectNameConsumerTest extends AbstractObjectNameConsumerTest
 {
    @Override
-   public ObjectNameConsumer create(
+   public AbstractObjectNameConsumer create(
          final ObjectManager objectManager,
          final List<Integer> statusCodes)
    {

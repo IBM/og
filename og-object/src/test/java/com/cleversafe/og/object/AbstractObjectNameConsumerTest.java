@@ -55,7 +55,7 @@ public abstract class AbstractObjectNameConsumerTest
    protected Request request;
    protected Response response;
    protected Pair<Request, Response> operation;
-   protected ObjectNameConsumer objectNameConsumer;
+   protected AbstractObjectNameConsumer objectNameConsumer;
 
    @Before
    public void before() throws URISyntaxException
@@ -77,7 +77,7 @@ public abstract class AbstractObjectNameConsumerTest
       this.objectNameConsumer = create(this.objectManager, this.statusCodes);
    }
 
-   public abstract ObjectNameConsumer create(ObjectManager objectManager, List<Integer> statusCodes);
+   public abstract AbstractObjectNameConsumer create(ObjectManager objectManager, List<Integer> statusCodes);
 
    public abstract Method method();
 

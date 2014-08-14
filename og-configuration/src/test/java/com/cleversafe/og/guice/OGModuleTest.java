@@ -30,7 +30,7 @@ import org.junit.Test;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.http.Api;
 import com.cleversafe.og.object.ObjectManager;
-import com.cleversafe.og.object.ObjectNameConsumer;
+import com.cleversafe.og.object.AbstractObjectNameConsumer;
 import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.supplier.CachingSupplier;
 import com.google.common.base.Optional;
@@ -182,7 +182,7 @@ public class OGModuleTest
    @Test
    public void testProvideObjectNameConsumers()
    {
-      final List<ObjectNameConsumer> c =
+      final List<AbstractObjectNameConsumer> c =
             this.module.provideObjectNameConsumers(this.objectManager, this.eventBus);
 
       Assert.assertNotNull(c);

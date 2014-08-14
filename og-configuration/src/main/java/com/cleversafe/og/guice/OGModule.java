@@ -44,7 +44,7 @@ import com.cleversafe.og.http.Api;
 import com.cleversafe.og.http.HttpUtil;
 import com.cleversafe.og.json.StoppingConditionsConfig;
 import com.cleversafe.og.object.ObjectManager;
-import com.cleversafe.og.object.ObjectNameConsumer;
+import com.cleversafe.og.object.AbstractObjectNameConsumer;
 import com.cleversafe.og.object.RandomObjectPopulator;
 import com.cleversafe.og.object.ReadObjectNameConsumer;
 import com.cleversafe.og.object.WriteObjectNameConsumer;
@@ -215,16 +215,16 @@ public class OGModule extends AbstractModule
 
    @Provides
    @Singleton
-   public List<ObjectNameConsumer> provideObjectNameConsumers(
+   public List<AbstractObjectNameConsumer> provideObjectNameConsumers(
          final ObjectManager objectManager,
          final EventBus eventBus)
    {
       final List<Integer> sc = HttpUtil.SUCCESS_STATUS_CODES;
-      final List<ObjectNameConsumer> consumers = Lists.newArrayList();
+      final List<AbstractObjectNameConsumer> consumers = Lists.newArrayList();
       consumers.add(new WriteObjectNameConsumer(objectManager, sc));
       consumers.add(new ReadObjectNameConsumer(objectManager, sc));
 
-      for (final ObjectNameConsumer consumer : consumers)
+      for (final AbstractObjectNameConsumer consumer : consumers)
       {
          eventBus.register(consumer);
       }

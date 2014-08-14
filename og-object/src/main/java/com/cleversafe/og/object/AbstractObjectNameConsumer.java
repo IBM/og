@@ -39,7 +39,7 @@ import com.google.common.io.BaseEncoding;
  * 
  * @since 1.0
  */
-public abstract class ObjectNameConsumer
+public abstract class AbstractObjectNameConsumer
 {
    protected final ObjectManager objectManager;
    private final Operation operation;
@@ -57,7 +57,7 @@ public abstract class ObjectNameConsumer
     * @throws IllegalArgumentException
     *            if any status code in status codes is invalid
     */
-   public ObjectNameConsumer(
+   public AbstractObjectNameConsumer(
          final ObjectManager objectManager,
          final Operation operation,
          final List<Integer> statusCodes)

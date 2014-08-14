@@ -28,7 +28,7 @@ import com.cleversafe.og.util.Operation;
  * 
  * @since 1.0
  */
-public class WriteObjectNameConsumer extends ObjectNameConsumer
+public class WriteObjectNameConsumer extends AbstractObjectNameConsumer
 {
    /**
     * Constructs an instance
