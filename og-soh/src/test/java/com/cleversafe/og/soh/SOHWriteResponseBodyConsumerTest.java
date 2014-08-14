@@ -19,6 +19,8 @@
 
 package com.cleversafe.og.soh;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.mock;
 
 import java.io.ByteArrayInputStream;
@@ -27,7 +29,6 @@ import java.io.InputStream;
 import java.util.Iterator;
 import java.util.Map.Entry;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import com.cleversafe.og.api.Metadata;
@@ -36,22 +37,22 @@ import com.google.common.base.Charsets;
 public class SOHWriteResponseBodyConsumerTest
 {
    @Test(expected = NullPointerException.class)
-   public void testNullInputStream() throws IOException
+   public void nullInputStream() throws IOException
    {
       new SOHWriteResponseBodyConsumer().consume(201, null);
    }
 
    @Test
-   public void testInvalidStatusCode() throws IOException
+   public void invalidStatusCode() throws IOException
    {
-      final SOHWriteResponseBodyConsumer c = new SOHWriteResponseBodyConsumer();
+      final SOHWriteResponseBodyConsumer consumer = new SOHWriteResponseBodyConsumer();
       final InputStream in = mock(InputStream.class);
-      final Iterator<Entry<String, String>> it = c.consume(500, in);
-      Assert.assertFalse(it.hasNext());
+      final Iterator<Entry<String, String>> it = consumer.consume(500, in);
+      assertThat(it.hasNext(), is(false));
    }
 
    @Test
-   public void testConsume() throws IOException
+   public void consume() throws IOException
    {
       final SOHWriteResponseBodyConsumer consumer = new SOHWriteResponseBodyConsumer();
       final StringBuilder s = new StringBuilder();
@@ -61,11 +62,14 @@ public class SOHWriteResponseBodyConsumerTest
       }
       final InputStream in = new ByteArrayInputStream(s.toString().getBytes(Charsets.UTF_8));
       final Iterator<Entry<String, String>> it = consumer.consume(201, in);
-      Assert.assertTrue(it.hasNext());
+
+      assertThat(it.hasNext(), is(true));
+
       final Entry<String, String> e = it.next();
-      Assert.assertEquals(Metadata.OBJECT_NAME.toString(), e.getKey());
-      Assert.assertEquals("objectName0", e.getValue());
-      Assert.assertFalse(it.hasNext());
-      Assert.assertEquals(0, in.available());
+
+      assertThat(e.getKey(), is(Metadata.OBJECT_NAME.toString()));
+      assertThat(e.getValue(), is("objectName0"));
+      assertThat(it.hasNext(), is(false));
+      assertThat(in.available(), is(0));
    }
 }

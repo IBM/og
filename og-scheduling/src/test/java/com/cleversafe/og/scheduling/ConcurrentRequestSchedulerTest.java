@@ -19,11 +19,13 @@
 
 package com.cleversafe.og.scheduling;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.lessThan;
 import static org.mockito.Mockito.mock;
 
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import com.cleversafe.og.api.Request;
@@ -34,68 +36,56 @@ import com.google.common.util.concurrent.Uninterruptibles;
 public class ConcurrentRequestSchedulerTest
 {
    @Test(expected = IllegalArgumentException.class)
-   public void testNegativeConcurrentRequests()
+   public void negativeConcurrentRequests()
    {
       new ConcurrentRequestScheduler(-1);
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testZeroConcurrentRequests()
+   public void zeroConcurrentRequests()
    {
       new ConcurrentRequestScheduler(0);
    }
 
    @Test
-   public void testPositiveConcurrentRequests()
+   public void oneConcurrentRequest()
    {
-      new ConcurrentRequestScheduler(1);
+      concurrentRequestScheduler(1);
    }
 
    @Test
-   public void testOneConcurrentRequest()
+   public void multipleConcurrentRequests()
    {
-      testConcurrentRequestScheduler(1);
+      concurrentRequestScheduler(10);
    }
 
-   @Test
-   public void testManyConcurrentRequests()
+   private void concurrentRequestScheduler(final int concurrentRequests)
    {
-      testConcurrentRequestScheduler(10);
-   }
-
-   private void testConcurrentRequestScheduler(final int concurrentRequests)
-   {
-      final ConcurrentRequestScheduler s = new ConcurrentRequestScheduler(concurrentRequests);
+      final ConcurrentRequestScheduler scheduler =
+            new ConcurrentRequestScheduler(concurrentRequests);
       int count = 0;
-      final int threadWait = 100;
-      getRequestThread(s, threadWait).start();
-
-      final long timestampStart = System.nanoTime();
-      while (TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - timestampStart) < threadWait / 2)
-      {
-         count++;
-         s.waitForNext();
-      }
-      Assert.assertEquals(concurrentRequests, count);
-   }
-
-   private Thread getRequestThread(final ConcurrentRequestScheduler s, final int threadWait)
-   {
-      return new Thread(new Runnable()
+      final int threadWait = 50;
+      new Thread(new Runnable()
       {
          @Override
          public void run()
          {
             Uninterruptibles.sleepUninterruptibly(threadWait, TimeUnit.MILLISECONDS);
-            final Request request = mock(Request.class);
-            final Response response = mock(Response.class);
-            s.complete(Pair.of(request, response));
+            scheduler.complete(Pair.of(mock(Request.class), mock(Response.class)));
          }
-      });
+      }).start();
+
+      final long timestampStart = System.nanoTime();
+      while (TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - timestampStart) < threadWait / 2)
+      {
+         count++;
+         scheduler.waitForNext();
+      }
+      assertThat(count, is(concurrentRequests));
    }
 
    @Test
-   public void testInterruptedSchedulerThread()
+   public void interruptedSchedulerThread()
    {
       final ConcurrentRequestScheduler s = new ConcurrentRequestScheduler(1);
       final Thread t = new Thread(new Runnable()
@@ -111,6 +101,6 @@ public class ConcurrentRequestSchedulerTest
       final long timestampStart = System.nanoTime();
       Uninterruptibles.joinUninterruptibly(t);
       final long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - timestampStart);
-      Assert.assertTrue(duration < 1000);
+      assertThat(duration, lessThan(1000L));
    }
 }

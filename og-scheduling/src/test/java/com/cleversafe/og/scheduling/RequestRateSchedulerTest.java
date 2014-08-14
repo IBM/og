@@ -19,12 +19,15 @@
 
 package com.cleversafe.og.scheduling;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.both;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.lessThan;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -43,42 +46,43 @@ public class RequestRateSchedulerTest
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullDistribution()
+   public void nullDistribution()
    {
       new RequestRateScheduler(null, TimeUnit.MILLISECONDS);
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullTimeUnit()
+   public void nullTimeUnit()
    {
       new RequestRateScheduler(this.mockDistribution, null);
    }
 
    @Test
-   public void testRequestRateScheduler()
+   public void requestRateScheduler()
    {
-      final RequestRateScheduler s =
+      final RequestRateScheduler scheduler =
             new RequestRateScheduler(this.mockDistribution, TimeUnit.SECONDS);
-      for (int i = 0; i < 10; i++)
+      for (int i = 0; i < 5; i++)
       {
          final long timestampStart = System.nanoTime();
-         s.waitForNext();
+         scheduler.waitForNext();
          final long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - timestampStart);
          // 10 per second -> 1 per 100 millis
-         Assert.assertTrue(duration > 50 && duration < 150);
+         assertThat(duration, both(greaterThan(50L)).and(lessThan(150L)));
       }
    }
 
    @Test
-   public void testInterruptedSchedulerThread()
+   public void interruptedSchedulerThread()
    {
-      final RequestRateScheduler s = new RequestRateScheduler(this.mockDistribution, TimeUnit.DAYS);
+      final RequestRateScheduler scheduler =
+            new RequestRateScheduler(this.mockDistribution, TimeUnit.DAYS);
       final Thread t = new Thread(new Runnable()
       {
          @Override
          public void run()
          {
-            s.waitForNext();
+            scheduler.waitForNext();
          }
       });
       t.start();
@@ -86,6 +90,6 @@ public class RequestRateSchedulerTest
       final long timestampStart = System.nanoTime();
       Uninterruptibles.joinUninterruptibly(t);
       final long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - timestampStart);
-      Assert.assertTrue(duration < 1000);
+      assertThat(duration, lessThan(1000L));
    }
 }
