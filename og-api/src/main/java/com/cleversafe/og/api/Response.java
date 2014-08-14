@@ -19,15 +19,12 @@
 
 package com.cleversafe.og.api;
 
-import java.util.Iterator;
-import java.util.Map.Entry;
-
 /**
  * An object that describes an http response
  * 
  * @since 1.0
  */
-public interface Response
+public interface Response extends Message
 {
    /**
     * Gets the status code for this response
@@ -35,54 +32,4 @@ public interface Response
     * @return the status code for this response
     */
    int getStatusCode();
-
-   /**
-    * Gets the value of the response header with the specified key
-    * 
-    * @param key
-    *           the key of the header
-    * @return the value for the header with the specified key, or null if no such mapping exists
-    */
-   String getHeader(String key);
-
-   /**
-    * Returns an iterator over the request headers for this request
-    * 
-    * @return a request header iterator
-    */
-   Iterator<Entry<String, String>> headers();
-
-   /**
-    * Gets the description of the body for this response
-    * 
-    * @return the description of the body for this response
-    */
-   Body getBody();
-
-   /**
-    * Gets the value of the response metadata entry with the specified key
-    * 
-    * @param key
-    *           the key of the metadata entry
-    * @return the value for the metadata entry with the specified key, or null if no such mapping
-    *         exists
-    */
-   String getMetadata(Metadata key);
-
-   /**
-    * Gets the value of the response metadata entry with the specified key
-    * 
-    * @param key
-    *           the key of the metadata entry
-    * @return the value for the metadata entry with the specified key, or null if no such mapping
-    *         exists
-    */
-   String getMetadata(String key);
-
-   /**
-    * Returns an iterator over the request metadata for this request
-    * 
-    * @return a request metadata iterator
-    */
-   Iterator<Entry<String, String>> metadata();
 }

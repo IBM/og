@@ -20,15 +20,13 @@
 package com.cleversafe.og.api;
 
 import java.net.URI;
-import java.util.Iterator;
-import java.util.Map.Entry;
 
 /**
  * An object that describes an http request
  * 
  * @since 1.0
  */
-public interface Request
+public interface Request extends Message
 {
    /**
     * Gets the http method for this request
@@ -44,54 +42,4 @@ public interface Request
     * @return the uri for this request
     */
    URI getUri();
-
-   /**
-    * Gets the value of the request header with the specified key
-    * 
-    * @param key
-    *           the key of the header
-    * @return the value for the header with the specified key, or null if no such mapping exists
-    */
-   String getHeader(String key);
-
-   /**
-    * Returns an iterator over the request headers for this request
-    * 
-    * @return a request header iterator
-    */
-   Iterator<Entry<String, String>> headers();
-
-   /**
-    * Gets the description of the body for this request
-    * 
-    * @return the description of the body for this request
-    */
-   Body getBody();
-
-   /**
-    * Gets the value of the request metadata entry with the specified key
-    * 
-    * @param key
-    *           the key of the metadata entry
-    * @return the value for the metadata entry with the specified key, or null if no such mapping
-    *         exists
-    */
-   String getMetadata(Metadata key);
-
-   /**
-    * Gets the value of the request metadata entry with the specified key
-    * 
-    * @param key
-    *           the key of the metadata entry
-    * @return the value for the metadata entry with the specified key, or null if no such mapping
-    *         exists
-    */
-   String getMetadata(String key);
-
-   /**
-    * Returns an iterator over the request metadata for this request
-    * 
-    * @return a request metadata iterator
-    */
-   Iterator<Entry<String, String>> metadata();
 }
