@@ -19,6 +19,8 @@
 
 package com.cleversafe.og.statistic;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -26,9 +28,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 
-import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
 
 import com.cleversafe.og.api.Metadata;
 import com.cleversafe.og.api.Method;
@@ -38,9 +42,15 @@ import com.cleversafe.og.http.Bodies;
 import com.cleversafe.og.util.Operation;
 import com.cleversafe.og.util.Pair;
 import com.google.common.collect.Lists;
+import com.tngtech.java.junit.dataprovider.DataProvider;
+import com.tngtech.java.junit.dataprovider.DataProviderRunner;
+import com.tngtech.java.junit.dataprovider.UseDataProvider;
 
+@RunWith(DataProviderRunner.class)
 public class StatisticsTest
 {
+   @Rule
+   public ExpectedException thrown = ExpectedException.none();
    private Statistics stats;
    private Request request;
    private Response response;
@@ -60,20 +70,20 @@ public class StatisticsTest
    }
 
    @Test(expected = NullPointerException.class)
-   public void testUpdateNullOperation()
+   public void updateNullOperation()
    {
       this.stats.update(null);
    }
 
    @Test
-   public void testUpdate()
+   public void update()
    {
       this.stats.update(this.operation);
       assertAll(Operation.WRITE, 1, 1024, 0, 201, 1);
    }
 
    @Test
-   public void testUpdateMultiple()
+   public void updateMultiple()
    {
       this.stats.update(this.operation);
       this.stats.update(this.operation);
@@ -81,7 +91,7 @@ public class StatisticsTest
    }
 
    @Test
-   public void testUpdateAbort()
+   public void updateAbort()
    {
       when(this.response.getMetadata(Metadata.ABORTED)).thenReturn("");
       this.stats.update(this.operation);
@@ -89,7 +99,7 @@ public class StatisticsTest
    }
 
    @Test
-   public void testUpdateAbortMultiple()
+   public void updateAbortMultiple()
    {
       when(this.response.getMetadata(Metadata.ABORTED)).thenReturn("");
       this.stats.update(this.operation);
@@ -98,7 +108,7 @@ public class StatisticsTest
    }
 
    @Test
-   public void testUpdateReadBytes()
+   public void updateReadBytes()
    {
       when(this.request.getMethod()).thenReturn(Method.GET);
       when(this.request.getBody()).thenReturn(Bodies.none());
@@ -108,7 +118,7 @@ public class StatisticsTest
    }
 
    @Test
-   public void testDeleteReadBytes()
+   public void updateDeleteBytes()
    {
       when(this.request.getMethod()).thenReturn(Method.DELETE);
       when(this.request.getBody()).thenReturn(Bodies.none());
@@ -116,80 +126,44 @@ public class StatisticsTest
       assertAll(Operation.DELETE, 1, 0, 0, 201, 1);
    }
 
-   @Test
-   public void testInitialGetValue()
-   {
-      for (final Operation o : Operation.values())
-      {
-         for (final Counter c : Counter.values())
-         {
-            Assert.assertEquals(0, this.stats.get(o, c));
-         }
-      }
-   }
-
    @Test(expected = NullPointerException.class)
-   public void testGetNullOperation()
+   public void getNullOperation()
    {
       this.stats.get(null, Counter.OPERATIONS);
    }
 
    @Test(expected = NullPointerException.class)
-   public void testGetNullCounter()
+   public void getNullCounter()
    {
       this.stats.get(Operation.WRITE, null);
    }
 
-   @Test
-   public void testInitialGetStatusCodeValues()
+   @DataProvider
+   public static Object[][] provideInvalidStatusCode()
    {
-      for (final Operation o : Operation.values())
-      {
-         for (int i = 100; i < 600; i++)
-         {
-            Assert.assertEquals(0, this.stats.getStatusCode(o, i));
-         }
-      }
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void testGetStatusCodeNullOperation()
-   {
-      this.stats.getStatusCode(null, 201);
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testGetStatusCodeNegativeSC()
-   {
-      this.stats.getStatusCode(Operation.WRITE, -1);
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testGetStatusCodeZeroSC()
-   {
-      this.stats.getStatusCode(Operation.WRITE, 0);
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testGetStatusCodeSmallSC()
-   {
-      this.stats.getStatusCode(Operation.WRITE, 99);
+      final Operation operation = Operation.WRITE;
+      return new Object[][]{
+            {null, 201, NullPointerException.class},
+            {operation, -1, IllegalArgumentException.class},
+            {operation, 0, IllegalArgumentException.class},
+            {operation, 99, IllegalArgumentException.class},
+            {operation, 600, IllegalArgumentException.class},
+      };
    }
 
    @Test
-   public void testGetStatusCodeMediumSC()
+   @UseDataProvider("provideInvalidStatusCode")
+   public void invalidStatusCode(
+         final Operation operation,
+         final int statusCode,
+         final Class<Exception> expectedException)
    {
-      this.stats.getStatusCode(Operation.WRITE, 200);
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testGetStatusCodeLargeSC()
-   {
-      this.stats.getStatusCode(Operation.WRITE, 600);
+      this.thrown.expect(expectedException);
+      this.stats.getStatusCode(operation, statusCode);
    }
 
    @Test
-   public void testConcurrency() throws InterruptedException
+   public void concurrency() throws InterruptedException
    {
       final int threadCount = 10;
       final int operationCount = 1000;
@@ -225,22 +199,22 @@ public class StatisticsTest
 
    private void assertAll(
          final Operation operation,
-         final int opCount,
-         final int byteCount,
-         final int abortCount,
+         final long opCount,
+         final long byteCount,
+         final long abortCount,
          final int statusCode,
-         final int scCount)
+         final long statusCodeCount)
    {
-      Assert.assertEquals(opCount, this.stats.get(operation, Counter.OPERATIONS));
-      Assert.assertEquals(byteCount, this.stats.get(operation, Counter.BYTES));
-      Assert.assertEquals(abortCount, this.stats.get(operation, Counter.ABORTS));
-      Assert.assertEquals(scCount, this.stats.getStatusCode(operation, statusCode));
+      assertThat(this.stats.get(operation, Counter.OPERATIONS), is(opCount));
+      assertThat(this.stats.get(operation, Counter.BYTES), is(byteCount));
+      assertThat(this.stats.get(operation, Counter.ABORTS), is(abortCount));
+      assertThat(this.stats.getStatusCode(operation, statusCode), is(statusCodeCount));
       final Iterator<Entry<Integer, Long>> it = this.stats.statusCodeIterator(operation);
       while (it.hasNext())
       {
          final Entry<Integer, Long> e = it.next();
          if (e.getKey() == statusCode)
-            Assert.assertEquals(Long.valueOf(scCount), e.getValue());
+            assertThat(e.getValue(), is(statusCodeCount));
       }
    }
 }
