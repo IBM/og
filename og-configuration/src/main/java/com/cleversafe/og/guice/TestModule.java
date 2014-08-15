@@ -424,8 +424,8 @@ public class TestModule extends AbstractModule
 
    private Supplier<Body> createBodySupplier(final Supplier<Distribution> distributionSupplier)
    {
-      final Data source = checkNotNull(this.config.getSource());
-      checkArgument(Data.NONE != source, "Unacceptable source [%s]", source);
+      final Data data = checkNotNull(this.config.getData());
+      checkArgument(Data.NONE != data, "Unacceptable data [%s]", data);
 
       return new Supplier<Body>()
       {
@@ -434,7 +434,7 @@ public class TestModule extends AbstractModule
          {
             final long sample = (long) distributionSupplier.get().nextSample();
 
-            switch (source)
+            switch (data)
             {
                case ZEROES :
                   return Bodies.zeroes(sample);

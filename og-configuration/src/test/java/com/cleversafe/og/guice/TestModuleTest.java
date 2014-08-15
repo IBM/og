@@ -799,7 +799,7 @@ public class TestModuleTest
       when(this.config.getFilesizeSelection()).thenReturn(CollectionAlgorithmType.ROUNDROBIN);
       final List<FilesizeConfig> filesize = Lists.newArrayList();
       filesize.add(new FilesizeConfig(10.0));
-      when(this.config.getSource()).thenReturn(null);
+      when(this.config.getData()).thenReturn(null);
       when(this.config.getFilesize()).thenReturn(filesize);
       this.module.provideBody();
    }
@@ -810,7 +810,7 @@ public class TestModuleTest
       when(this.config.getFilesizeSelection()).thenReturn(CollectionAlgorithmType.ROUNDROBIN);
       final List<FilesizeConfig> filesize = Lists.newArrayList();
       filesize.add(new FilesizeConfig(10.0));
-      when(this.config.getSource()).thenReturn(Data.NONE);
+      when(this.config.getData()).thenReturn(Data.NONE);
       when(this.config.getFilesize()).thenReturn(filesize);
       this.module.provideBody();
    }
@@ -821,7 +821,7 @@ public class TestModuleTest
       when(this.config.getFilesizeSelection()).thenReturn(CollectionAlgorithmType.ROUNDROBIN);
       final List<FilesizeConfig> filesize = Lists.newArrayList();
       filesize.add(new FilesizeConfig(10.0));
-      when(this.config.getSource()).thenReturn(Data.ZEROES);
+      when(this.config.getData()).thenReturn(Data.ZEROES);
       when(this.config.getFilesize()).thenReturn(filesize);
       final Supplier<Body> p = this.module.provideBody();
 
@@ -837,7 +837,7 @@ public class TestModuleTest
       when(this.config.getFilesizeSelection()).thenReturn(CollectionAlgorithmType.ROUNDROBIN);
       final List<FilesizeConfig> filesize = Lists.newArrayList();
       filesize.add(new FilesizeConfig(10.0));
-      when(this.config.getSource()).thenReturn(Data.RANDOM);
+      when(this.config.getData()).thenReturn(Data.RANDOM);
       when(this.config.getFilesize()).thenReturn(filesize);
       final Supplier<Body> p = this.module.provideBody();
 
@@ -854,7 +854,7 @@ public class TestModuleTest
       final List<FilesizeConfig> filesize = Lists.newArrayList();
       filesize.add(new FilesizeConfig(10.0));
       filesize.add(new FilesizeConfig(25.0));
-      when(this.config.getSource()).thenReturn(Data.RANDOM);
+      when(this.config.getData()).thenReturn(Data.RANDOM);
       when(this.config.getFilesize()).thenReturn(filesize);
       final Supplier<Body> p = this.module.provideBody();
 
@@ -873,7 +873,7 @@ public class TestModuleTest
       final List<FilesizeConfig> filesize = Lists.newArrayList();
       filesize.add(new FilesizeConfig(10.0));
       filesize.add(new FilesizeConfig(25.0));
-      when(this.config.getSource()).thenReturn(Data.RANDOM);
+      when(this.config.getData()).thenReturn(Data.RANDOM);
       when(this.config.getFilesize()).thenReturn(filesize);
       final Supplier<Body> p = this.module.provideBody();
 

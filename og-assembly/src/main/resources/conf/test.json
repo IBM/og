@@ -142,9 +142,9 @@
 // },
 
 
-// The generated source data to use for writes. One of ("random", "zeroes")
+// The generated data to use for writes. One of ("random", "zeroes")
 
-// "source": "random",
+// "data": "random",
 
 
 // The type of concurrency to use. One of ("iops", "threads").

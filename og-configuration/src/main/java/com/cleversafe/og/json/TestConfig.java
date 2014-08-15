@@ -43,7 +43,7 @@ public class TestConfig
    OperationConfig delete;
    CollectionAlgorithmType filesizeSelection;
    List<FilesizeConfig> filesize;
-   Data source;
+   Data data;
    ConcurrencyConfig concurrency;
    AuthenticationConfig authentication;
    StoppingConditionsConfig stoppingConditions;
@@ -65,7 +65,7 @@ public class TestConfig
       this.filesizeSelection = CollectionAlgorithmType.RANDOM;
       this.filesize = Lists.newArrayList();
       this.filesize.add(new FilesizeConfig());
-      this.source = Data.RANDOM;
+      this.data = Data.RANDOM;
       this.concurrency = new ConcurrencyConfig();
       this.authentication = new AuthenticationConfig();
       this.stoppingConditions = new StoppingConditionsConfig();
@@ -137,9 +137,9 @@ public class TestConfig
       return this.filesize;
    }
 
-   public Data getSource()
+   public Data getData()
    {
-      return this.source;
+      return this.data;
    }
 
    public ConcurrencyConfig getConcurrency()
