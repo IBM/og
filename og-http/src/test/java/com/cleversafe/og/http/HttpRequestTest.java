@@ -19,12 +19,14 @@
 
 package com.cleversafe.og.http;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Iterator;
-import java.util.Map.Entry;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -41,155 +43,123 @@ public class HttpRequestTest
    public void before() throws URISyntaxException
    {
       this.method = Method.PUT;
-      this.uri = new URI("http://192.168.8.1/container/object");
+      this.uri = new URI("/container/object");
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullMethod()
+   public void nullMethod()
    {
       new HttpRequest.Builder(null, this.uri).build();
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullUri()
+   public void nullUri()
    {
       new HttpRequest.Builder(this.method, null).build();
    }
 
    @Test(expected = NullPointerException.class)
-   public void testHeaderNullKey()
+   public void nullKey()
    {
       new HttpRequest.Builder(this.method, this.uri).withHeader(null, "value").build();
    }
 
    @Test(expected = NullPointerException.class)
-   public void testHeaderNullValue()
+   public void nullValue()
    {
       new HttpRequest.Builder(this.method, this.uri).withHeader("key", null).build();
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullBody()
+   public void nullBody()
    {
       new HttpRequest.Builder(this.method, this.uri).withBody(null).build();
    }
 
    @Test
-   public void testMethod()
+   public void method()
    {
-      final HttpRequest r = new HttpRequest.Builder(Method.HEAD, this.uri).build();
-      Assert.assertEquals(Method.HEAD, r.getMethod());
+      final Method method = new HttpRequest.Builder(Method.HEAD, this.uri).build().getMethod();
+      assertThat(method, is(Method.HEAD));
    }
 
    @Test
-   public void testUri() throws URISyntaxException
+   public void uri()
    {
-      final URI aUri = new URI("https://10.1.1.1/container/object");
-      final HttpRequest r = new HttpRequest.Builder(this.method, aUri).build();
-      Assert.assertEquals(aUri, r.getUri());
+      final URI uri = new HttpRequest.Builder(this.method, this.uri).build().getUri();
+      assertThat(uri, is(this.uri));
    }
 
    @Test
-   public void testMissingHeader()
+   public void noHeaders()
    {
-      final HttpRequest r = new HttpRequest.Builder(this.method, this.uri).build();
-      Assert.assertNull(r.headers().get("key"));
+      final HttpRequest request = new HttpRequest.Builder(this.method, this.uri).build();
+      // auto-generated Date header
+      assertThat(request.headers().size(), is(1));
    }
 
    @Test
-   public void testHeader()
+   public void oneHeader()
    {
-      final HttpRequest r =
+      final HttpRequest request =
             new HttpRequest.Builder(this.method, this.uri).withHeader("key", "value").build();
-      Assert.assertEquals("value", r.headers().get("key"));
+      assertThat(request.headers().size(), is(2));
+      assertThat(request.headers(), hasEntry("key", "value"));
    }
 
    @Test
-   public void testNoHeaders()
-   {
-      final HttpRequest r = new HttpRequest.Builder(this.method, this.uri).build();
-      final Iterator<Entry<String, String>> it = r.headers().entrySet().iterator();
-      Assert.assertTrue(it.hasNext());
-      // Skip Date header which is automatically added
-      it.next();
-      Assert.assertFalse(it.hasNext());
-   }
-
-   @Test
-   public void testHeaders()
-   {
-      final HttpRequest r =
-            new HttpRequest.Builder(this.method, this.uri).withHeader("key", "value").build();
-      final Iterator<Entry<String, String>> it = r.headers().entrySet().iterator();
-      Assert.assertTrue(it.hasNext());
-      // Skip Date header which is automatically added
-      it.next();
-      Assert.assertTrue(it.hasNext());
-      final Entry<String, String> e = it.next();
-      Assert.assertEquals("key", e.getKey());
-      Assert.assertEquals("value", e.getValue());
-      Assert.assertFalse(it.hasNext());
-   }
-
-   @Test
-   public void testHeaders2()
+   public void multipleHeaders()
    {
       final HttpRequest.Builder b = new HttpRequest.Builder(this.method, this.uri);
       for (int i = 0; i < 10; i++)
       {
-         // (100 - i) exposes sorted vs insertion order
-         b.withHeader("key" + (100 - i), "value" + i);
+         // (10 - i) exposes sorted vs insertion order
+         b.withHeader("key" + (10 - i), "value");
       }
-      final HttpRequest r = b.build();
-      final Iterator<Entry<String, String>> it = r.headers().entrySet().iterator();
-      Assert.assertTrue(it.hasNext());
-      // Skip Date header which is automatically added
-      it.next();
+      final HttpRequest request = b.build();
+      assertThat(request.headers().size(), is(11));
+
       for (int i = 0; i < 10; i++)
       {
-         Assert.assertTrue(it.hasNext());
-         final Entry<String, String> e = it.next();
-         Assert.assertEquals("key" + (100 - i), e.getKey());
-         Assert.assertEquals("value" + i, e.getValue());
+         assertThat(request.headers(), hasEntry("key" + (10 - i), "value"));
       }
-      Assert.assertFalse(it.hasNext());
-   }
-
-   @Test(expected = UnsupportedOperationException.class)
-   public void testHeaderIteratorRemove()
-   {
-      final HttpRequest r =
-            new HttpRequest.Builder(this.method, this.uri).withHeader("key", "value").build();
-      final Iterator<Entry<String, String>> it = r.headers().entrySet().iterator();
-      it.next();
-      it.remove();
    }
 
    @Test
-   public void testDefaultBody()
-   {
-      final HttpRequest r = new HttpRequest.Builder(this.method, this.uri).build();
-      Assert.assertEquals(Data.NONE, r.getBody().getData());
-      Assert.assertEquals(0, r.getBody().getSize());
-   }
-
-   @Test
-   public void testBody()
-   {
-      final Body e = Bodies.zeroes(12345);
-      final HttpRequest r = new HttpRequest.Builder(this.method, this.uri).withBody(e).build();
-      Assert.assertEquals(Data.ZEROES, r.getBody().getData());
-      Assert.assertEquals(12345, r.getBody().getSize());
-   }
-
-   @Test
-   public void testHeaderModification()
+   public void headerModification()
    {
       final HttpRequest.Builder b =
             new HttpRequest.Builder(this.method, this.uri).withHeader("key1", "value1");
-      final HttpRequest r = b.build();
+      final HttpRequest request = b.build();
       b.withHeader("key2", "value2");
-      Assert.assertEquals("value1", r.headers().get("key1"));
-      Assert.assertNull(r.headers().get("key2"));
+      assertThat(request.headers(), hasEntry("key1", "value1"));
+      assertThat(request.headers(), not(hasEntry("key2", "value2")));
+   }
+
+   @Test(expected = UnsupportedOperationException.class)
+   public void headerRemove()
+   {
+      new HttpRequest.Builder(this.method, this.uri)
+            .withHeader("key", "value")
+            .build()
+            .headers()
+            .remove("key");
+   }
+
+   @Test
+   public void defaultBody()
+   {
+      final Body body = new HttpRequest.Builder(this.method, this.uri).build().getBody();
+      assertThat(body.getData(), is(Data.NONE));
+      assertThat(body.getSize(), is(0L));
+   }
+
+   @Test
+   public void body()
+   {
+      final Body body =
+            new HttpRequest.Builder(this.method, this.uri).withBody(Bodies.zeroes(12345)).build().getBody();
+      assertThat(body.getData(), is(Data.ZEROES));
+      assertThat(body.getSize(), is(12345L));
    }
 }

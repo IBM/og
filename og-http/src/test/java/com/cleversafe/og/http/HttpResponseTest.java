@@ -19,18 +19,28 @@
 
 package com.cleversafe.og.http;
 
-import java.util.Iterator;
-import java.util.Map.Entry;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 
-import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
 
 import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.Data;
+import com.tngtech.java.junit.dataprovider.DataProvider;
+import com.tngtech.java.junit.dataprovider.DataProviderRunner;
+import com.tngtech.java.junit.dataprovider.UseDataProvider;
 
+@RunWith(DataProviderRunner.class)
 public class HttpResponseTest
 {
+   @Rule
+   public ExpectedException thrown = ExpectedException.none();
    private int statusCode;
 
    @Before
@@ -40,159 +50,120 @@ public class HttpResponseTest
    }
 
    @Test(expected = IllegalArgumentException.class)
-   public void testNoStatusCode()
+   public void noStatusCode()
    {
       new HttpResponse.Builder().build();
    }
 
-   @Test(expected = IllegalArgumentException.class)
-   public void testNegativeStatusCode()
+   @DataProvider
+   public static Object[][] provideInvalidStatusCode()
    {
-      new HttpResponse.Builder().withStatusCode(-1).build();
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testZeroStatusCode()
-   {
-      new HttpResponse.Builder().withStatusCode(0).build();
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testSmallStatusCode()
-   {
-      new HttpResponse.Builder().withStatusCode(99).build();
+      return new Object[][]{{-1}, {0}, {99}, {600}};
    }
 
    @Test
-   public void testMediumStatusCode()
+   @UseDataProvider("provideInvalidStatusCode")
+   public void negativeStatusCode(final int statusCode)
    {
-      new HttpResponse.Builder().withStatusCode(100).build();
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testLargeStatusCode()
-   {
-      new HttpResponse.Builder().withStatusCode(600).build();
+      this.thrown.expect(IllegalArgumentException.class);
+      new HttpResponse.Builder().withStatusCode(statusCode).build();
    }
 
    @Test(expected = NullPointerException.class)
-   public void testHeaderNullKey()
+   public void nullKey()
    {
       new HttpResponse.Builder().withStatusCode(this.statusCode).withHeader(null, "value").build();
    }
 
    @Test(expected = NullPointerException.class)
-   public void testHeaderNullValue()
+   public void nullValue()
    {
       new HttpResponse.Builder().withStatusCode(this.statusCode).withHeader("key", null).build();
    }
 
    @Test(expected = NullPointerException.class)
-   public void testNullBody()
+   public void nullBody()
    {
       new HttpResponse.Builder().withStatusCode(this.statusCode).withBody(null).build();
    }
 
    @Test
-   public void testStatusCode()
+   public void statusCode()
    {
-      final HttpResponse r = new HttpResponse.Builder().withStatusCode(404).build();
-      Assert.assertEquals(404, r.getStatusCode());
+      final HttpResponse response = new HttpResponse.Builder().withStatusCode(404).build();
+      assertThat(response.getStatusCode(), is(404));
    }
 
    @Test
-   public void testMissingHeader()
+   public void noHeaders()
    {
-      final HttpResponse r = new HttpResponse.Builder().withStatusCode(this.statusCode).build();
-      Assert.assertNull(r.headers().get("key"));
+      final HttpResponse response =
+            new HttpResponse.Builder().withStatusCode(this.statusCode).build();
+      assertThat(response.headers().size(), is(0));
    }
 
    @Test
-   public void testHeader()
+   public void oneHeader()
    {
-      final HttpResponse r =
+      final HttpResponse response =
             new HttpResponse.Builder().withStatusCode(this.statusCode).withHeader("key", "value").build();
-      Assert.assertEquals("value", r.headers().get("key"));
+      assertThat(response.headers().size(), is(1));
+      assertThat(response.headers(), hasEntry("key", "value"));
    }
 
    @Test
-   public void testNoHeaders()
-   {
-      final HttpResponse r = new HttpResponse.Builder().withStatusCode(this.statusCode).build();
-      final Iterator<Entry<String, String>> it = r.headers().entrySet().iterator();
-      Assert.assertFalse(it.hasNext());
-   }
-
-   @Test
-   public void testHeaders()
-   {
-      final HttpResponse r =
-            new HttpResponse.Builder().withStatusCode(this.statusCode).withHeader("key", "value").build();
-      final Iterator<Entry<String, String>> it = r.headers().entrySet().iterator();
-      Assert.assertTrue(it.hasNext());
-      final Entry<String, String> e = it.next();
-      Assert.assertEquals("key", e.getKey());
-      Assert.assertEquals("value", e.getValue());
-      Assert.assertFalse(it.hasNext());
-   }
-
-   @Test
-   public void testHeaders2()
+   public void multipleHeaders()
    {
       final HttpResponse.Builder b = new HttpResponse.Builder().withStatusCode(this.statusCode);
       for (int i = 0; i < 10; i++)
       {
-         // (100 - i) exposes sorted vs insertion order
-         b.withHeader("key" + (100 - i), "value" + i);
+         // (10 - i) exposes sorted vs insertion order
+         b.withHeader("key" + (10 - i), "value");
       }
-      final HttpResponse r = b.build();
-      final Iterator<Entry<String, String>> it = r.headers().entrySet().iterator();
+      final HttpResponse response = b.build();
+      assertThat(response.headers().size(), is(10));
       for (int i = 0; i < 10; i++)
       {
-         Assert.assertTrue(it.hasNext());
-         final Entry<String, String> e = it.next();
-         Assert.assertEquals("key" + (100 - i), e.getKey());
-         Assert.assertEquals("value" + i, e.getValue());
+         assertThat(response.headers(), hasEntry("key" + (10 - i), "value"));
       }
-      Assert.assertFalse(it.hasNext());
+   }
+
+   @Test
+   public void headerModification()
+   {
+      final HttpResponse.Builder b =
+            new HttpResponse.Builder().withStatusCode(this.statusCode).withHeader("key1", "value1");
+      final HttpResponse response = b.build();
+      b.withHeader("key2", "value2");
+      assertThat(response.headers(), hasEntry("key1", "value1"));
+      assertThat(response.headers(), not(hasEntry("key2", "value2")));
    }
 
    @Test(expected = UnsupportedOperationException.class)
    public void testHeaderIteratorRemove()
    {
-      final HttpResponse r =
-            new HttpResponse.Builder().withStatusCode(200).withHeader("key", "value").build();
-      final Iterator<Entry<String, String>> it = r.headers().entrySet().iterator();
-      it.next();
-      it.remove();
+      new HttpResponse.Builder().withStatusCode(this.statusCode)
+            .withHeader("key", "value")
+            .build()
+            .headers()
+            .remove("key");
    }
 
    @Test
-   public void testDefaultBody()
+   public void defaultBody()
    {
-      final HttpResponse r = new HttpResponse.Builder().withStatusCode(this.statusCode).build();
-      Assert.assertEquals(Data.NONE, r.getBody().getData());
-      Assert.assertEquals(0, r.getBody().getSize());
+      final Body body =
+            new HttpResponse.Builder().withStatusCode(this.statusCode).build().getBody();
+      assertThat(body.getData(), is(Data.NONE));
+      assertThat(body.getSize(), is(0L));
    }
 
    @Test
-   public void testBody()
+   public void body()
    {
-      final Body e = Bodies.zeroes(12345);
-      final HttpResponse r =
-            new HttpResponse.Builder().withStatusCode(this.statusCode).withBody(e).build();
-      Assert.assertEquals(Data.ZEROES, r.getBody().getData());
-      Assert.assertEquals(12345, r.getBody().getSize());
-   }
-
-   @Test
-   public void testHeaderModification()
-   {
-      final HttpResponse.Builder b =
-            new HttpResponse.Builder().withStatusCode(200).withHeader("key1", "value1");
-      final HttpResponse r = b.build();
-      b.withHeader("key2", "value2");
-      Assert.assertEquals("value1", r.headers().get("key1"));
-      Assert.assertNull(r.headers().get("key2"));
+      final Body body = new HttpResponse.Builder().withStatusCode(this.statusCode)
+            .withBody(Bodies.zeroes(12345)).build().getBody();
+      assertThat(body.getData(), is(Data.ZEROES));
+      assertThat(body.getSize(), is(12345L));
    }
 }
