@@ -395,8 +395,8 @@ public class ApacheClientTest
             .withAuthentication(new BasicAuth())
             .build();
       final Request request = new HttpRequest.Builder(Method.GET, this.objectUri)
-            .withMetadata(Headers.USERNAME, "test")
-            .withMetadata(Headers.PASSWORD, "test")
+            .withMetadata(Headers.X_OG_USERNAME, "test")
+            .withMetadata(Headers.X_OG_PASSWORD, "test")
             .build();
       client.execute(request).get();
       verify(getRequestedFor(urlEqualTo(this.objectUri.getPath()))
@@ -443,17 +443,17 @@ public class ApacheClientTest
             new HttpRequest.Builder(Method.GET, this.delayedUri).build();
       final Response response = client.execute(request).get();
       Assert.assertEquals(499, response.getStatusCode());
-      Assert.assertNotNull(response.metadata().get(Headers.ABORTED.toString()));
+      Assert.assertNotNull(response.metadata().get(Headers.X_OG_ABORTED));
    }
 
    @Test
    public void testRequestIdMetadata() throws InterruptedException, ExecutionException
    {
       final Request request = new HttpRequest.Builder(Method.GET, this.objectUri)
-            .withMetadata(Headers.REQUEST_ID, "objectName")
+            .withMetadata(Headers.X_OG_REQUEST_ID, "objectName")
             .build();
       final Response response = this.client.execute(request).get();
-      Assert.assertEquals("objectName", response.metadata().get(Headers.REQUEST_ID.toString()));
+      Assert.assertEquals("objectName", response.metadata().get(Headers.X_OG_REQUEST_ID));
    }
 
    @Test
@@ -648,7 +648,7 @@ public class ApacheClientTest
    public void testResponseBodyConsumer() throws InterruptedException, ExecutionException
    {
       final Request request = new HttpRequest.Builder(Method.GET, this.objectUri)
-            .withMetadata(Headers.RESPONSE_BODY_CONSUMER, "myConsumer").build();
+            .withMetadata(Headers.X_OG_RESPONSE_BODY_CONSUMER, "myConsumer").build();
 
       final Client client = new ApacheClient.Builder()
             .withResponseBodyConsumer("myConsumer", new ResponseBodyConsumer()

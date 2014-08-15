@@ -89,8 +89,7 @@ public class LoadTest implements Callable<Boolean>
             final Request request = this.operationManager.next();
             final ListenableFuture<Response> future = this.client.execute(request);
             // TODO better key than request_id? make Request hashable?
-            this.activeOperations.put(request.metadata().get(Headers.REQUEST_ID.toString()),
-                  future);
+            this.activeOperations.put(request.metadata().get(Headers.X_OG_REQUEST_ID), future);
             addCallback(request, future);
             this.scheduler.waitForNext();
          }
@@ -142,15 +141,14 @@ public class LoadTest implements Callable<Boolean>
             LoadTest.this.running = false;
             final HttpResponse response = new HttpResponse.Builder()
                   .withStatusCode(499)
-                  .withMetadata(Headers.ABORTED, "")
+                  .withMetadata(Headers.X_OG_ABORTED, "")
                   .build();
             postOperation(response);
          }
 
          private void removeActiveOperation()
          {
-            LoadTest.this.activeOperations.remove(request.metadata().get(
-                  Headers.REQUEST_ID.toString()));
+            LoadTest.this.activeOperations.remove(request.metadata().get(Headers.X_OG_REQUEST_ID));
             if (!LoadTest.this.running && LoadTest.this.activeOperations.isEmpty())
                LoadTest.this.completed.countDown();
          }

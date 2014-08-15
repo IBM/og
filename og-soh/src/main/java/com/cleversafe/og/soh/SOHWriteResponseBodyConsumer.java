@@ -59,7 +59,7 @@ public class SOHWriteResponseBodyConsumer implements ResponseBodyConsumer
             new BufferedReader(new InputStreamReader(response, Charsets.UTF_8));
 
       final Map<String, String> metadata = new HashMap<String, String>(1);
-      metadata.put(Headers.OBJECT_NAME.toString(), reader.readLine());
+      metadata.put(Headers.X_OG_OBJECT_NAME, reader.readLine());
       while ((reader.readLine()) != null)
       {
          // consume the stream, for SOH writes there should never be anything else

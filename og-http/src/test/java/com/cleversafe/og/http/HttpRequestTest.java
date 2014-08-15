@@ -89,7 +89,7 @@ public class HttpRequestTest
    @Test(expected = NullPointerException.class)
    public void testMetadataNullValue()
    {
-      new HttpRequest.Builder(this.method, this.uri).withMetadata(Headers.ABORTED, null).build();
+      new HttpRequest.Builder(this.method, this.uri).withMetadata(Headers.X_OG_ABORTED, null).build();
    }
 
    @Test(expected = NullPointerException.class)
@@ -210,7 +210,7 @@ public class HttpRequestTest
    public void testMissingMetadata()
    {
       final HttpRequest r = new HttpRequest.Builder(this.method, this.uri).build();
-      Assert.assertNull(r.metadata().get(Headers.ABORTED));
+      Assert.assertNull(r.metadata().get(Headers.X_OG_ABORTED));
    }
 
    @Test
@@ -224,8 +224,8 @@ public class HttpRequestTest
    public void testMetadataEntry()
    {
       final HttpRequest r =
-            new HttpRequest.Builder(this.method, this.uri).withMetadata(Headers.ABORTED, "1").build();
-      Assert.assertEquals("1", r.metadata().get(Headers.ABORTED.toString()));
+            new HttpRequest.Builder(this.method, this.uri).withMetadata(Headers.X_OG_ABORTED, "1").build();
+      Assert.assertEquals("1", r.metadata().get(Headers.X_OG_ABORTED));
    }
 
    @Test
@@ -265,7 +265,7 @@ public class HttpRequestTest
       {
          b.withMetadata("key" + i, "value" + i);
       }
-      b.withMetadata(Headers.ABORTED, "1");
+      b.withMetadata(Headers.X_OG_ABORTED, "1");
       final HttpRequest r = b.build();
       final Iterator<Entry<String, String>> it = r.metadata().entrySet().iterator();
       Assert.assertTrue(it.hasNext());
@@ -277,7 +277,7 @@ public class HttpRequestTest
       }
       Assert.assertTrue(it.hasNext());
       final Entry<String, String> e = it.next();
-      Assert.assertEquals("ABORTED", e.getKey());
+      Assert.assertEquals(Headers.X_OG_ABORTED, e.getKey());
       Assert.assertEquals("1", e.getValue());
       Assert.assertFalse(it.hasNext());
    }

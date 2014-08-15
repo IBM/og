@@ -94,7 +94,7 @@ public class StatisticsTest
    @Test
    public void updateAbort()
    {
-      when(this.response.metadata()).thenReturn(ImmutableMap.of(Headers.ABORTED.toString(), ""));
+      when(this.response.metadata()).thenReturn(ImmutableMap.of(Headers.X_OG_ABORTED, ""));
       this.stats.update(this.operation);
       assertAll(Operation.WRITE, 1, 0, 1, 201, 0);
    }
@@ -102,7 +102,7 @@ public class StatisticsTest
    @Test
    public void updateAbortMultiple()
    {
-      when(this.response.metadata()).thenReturn(ImmutableMap.of(Headers.ABORTED.toString(), ""));
+      when(this.response.metadata()).thenReturn(ImmutableMap.of(Headers.X_OG_ABORTED, ""));
       this.stats.update(this.operation);
       this.stats.update(this.operation);
       assertAll(Operation.WRITE, 2, 0, 2, 201, 0);

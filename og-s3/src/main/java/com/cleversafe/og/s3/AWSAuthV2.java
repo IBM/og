@@ -86,8 +86,8 @@ public class AWSAuthV2 implements HttpAuth
    @Override
    public String nextAuthorizationHeader(final Request request)
    {
-      final String awsAccessKeyId = request.metadata().get(Headers.USERNAME.toString());
-      final String awsSecretAccessKey = request.metadata().get(Headers.PASSWORD.toString());
+      final String awsAccessKeyId = request.metadata().get(Headers.X_OG_USERNAME);
+      final String awsSecretAccessKey = request.metadata().get(Headers.X_OG_PASSWORD);
       return authenticate(request, awsAccessKeyId, awsSecretAccessKey);
    }
 

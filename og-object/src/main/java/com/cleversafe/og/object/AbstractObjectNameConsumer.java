@@ -106,10 +106,10 @@ public abstract class AbstractObjectNameConsumer
 
    protected String getObjectString(final Request request, final Response response)
    {
-      String objectString = request.metadata().get(Headers.OBJECT_NAME.toString());
+      String objectString = request.metadata().get(Headers.X_OG_OBJECT_NAME);
       // SOH writes
       if (objectString == null)
-         objectString = response.metadata().get(Headers.OBJECT_NAME.toString());
+         objectString = response.metadata().get(Headers.X_OG_OBJECT_NAME);
 
       return objectString;
    }

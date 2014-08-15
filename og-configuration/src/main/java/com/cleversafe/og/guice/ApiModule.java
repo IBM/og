@@ -115,7 +115,7 @@ public class ApiModule extends AbstractModule
       final Map<Supplier<String>, Supplier<String>> metadata = createMetadata(id);
       // SOH needs to use a special response procesor to extract the returned object id
       if (Api.SOH == api)
-         metadata.put(Suppliers.of(Headers.RESPONSE_BODY_CONSUMER.toString()),
+         metadata.put(Suppliers.of(Headers.X_OG_RESPONSE_BODY_CONSUMER),
                Suppliers.of(SOH_PUT_OBJECT));
       return metadata;
    }
@@ -196,7 +196,7 @@ public class ApiModule extends AbstractModule
    public Map<Supplier<String>, Supplier<String>> createMetadata(final Supplier<String> id)
    {
       final Map<Supplier<String>, Supplier<String>> metadata = Maps.newHashMap();
-      metadata.put(Suppliers.of(Headers.REQUEST_ID.toString()), id);
+      metadata.put(Suppliers.of(Headers.X_OG_REQUEST_ID), id);
       return metadata;
    }
 
@@ -213,7 +213,7 @@ public class ApiModule extends AbstractModule
       final RequestSupplier.Builder b = new RequestSupplier.Builder(Suppliers.of(method), uri);
 
       if (object.isPresent())
-         b.withMetadata(Suppliers.of(Headers.OBJECT_NAME.toString()), new Supplier<String>()
+         b.withMetadata(Suppliers.of(Headers.X_OG_OBJECT_NAME), new Supplier<String>()
          {
             @Override
             public String get()
@@ -236,8 +236,8 @@ public class ApiModule extends AbstractModule
 
       if (username.isPresent() && password.isPresent())
       {
-         b.withMetadata(Suppliers.of(Headers.USERNAME.toString()), username.get());
-         b.withMetadata(Suppliers.of(Headers.PASSWORD.toString()), password.get());
+         b.withMetadata(Suppliers.of(Headers.X_OG_USERNAME), username.get());
+         b.withMetadata(Suppliers.of(Headers.X_OG_PASSWORD), password.get());
       }
 
       return b.build();

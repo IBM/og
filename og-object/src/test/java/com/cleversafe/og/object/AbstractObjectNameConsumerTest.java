@@ -69,12 +69,12 @@ public abstract class AbstractObjectNameConsumerTest
       when(this.request.getMethod()).thenReturn(method());
       when(this.request.getUri()).thenReturn(new URI("/container/" + this.object));
       when(this.request.metadata()).thenReturn(
-            ImmutableMap.of(Headers.OBJECT_NAME.toString(), this.object));
+            ImmutableMap.of(Headers.X_OG_OBJECT_NAME, this.object));
 
       this.response = mock(Response.class);
       when(this.response.getStatusCode()).thenReturn(200);
       when(this.response.metadata()).thenReturn(
-            ImmutableMap.of(Headers.REQUEST_ID.toString(), "1"));
+            ImmutableMap.of(Headers.X_OG_REQUEST_ID, "1"));
 
       this.operation = Pair.of(this.request, this.response);
       this.objectNameConsumer = create(this.objectManager, this.statusCodes);

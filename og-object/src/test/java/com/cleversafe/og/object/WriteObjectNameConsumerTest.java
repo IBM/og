@@ -75,7 +75,7 @@ public class WriteObjectNameConsumerTest extends AbstractObjectNameConsumerTest
       // for SOH, the metadata gets set on response rather than request
       when(this.request.metadata()).thenReturn(ImmutableMap.<String, String> of());
       when(this.response.metadata()).thenReturn(
-            ImmutableMap.of(Headers.OBJECT_NAME.toString(), this.object));
+            ImmutableMap.of(Headers.X_OG_OBJECT_NAME, this.object));
 
       this.objectNameConsumer.consume(this.operation);
       doVerify();

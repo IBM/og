@@ -87,7 +87,7 @@ public class RequestLogEntry
       // FIXME reliably get localaddress? Name should be clientName? Do we even need this field?
       this.serverName = null;
       this.remoteAddress = uri.getHost();
-      this.user = request.metadata().get(Headers.USERNAME);
+      this.user = request.metadata().get(Headers.X_OG_USERNAME);
       this.timestampStart = timestampStart;
       this.timestampFinish = timestampFinish;
       this.timeStart = RequestLogEntry.FORMATTER.print(this.timestampStart);
@@ -96,10 +96,10 @@ public class RequestLogEntry
 
       this.requestUri = uri.getPath() + (uri.getQuery() != null ? uri.getQuery() : "");
 
-      String objectName = request.metadata().get(Headers.OBJECT_NAME);
+      String objectName = request.metadata().get(Headers.X_OG_OBJECT_NAME);
       // SOH writes
       if (objectName == null)
-         objectName = response.metadata().get(Headers.OBJECT_NAME);
+         objectName = response.metadata().get(Headers.X_OG_OBJECT_NAME);
       this.objectId = objectName;
 
       long objectSize = 0;
@@ -116,7 +116,7 @@ public class RequestLogEntry
       this.requestLatency = this.timestampFinish - this.timestampStart;
 
       // custom
-      this.clientRequestId = request.metadata().get(Headers.REQUEST_ID);
+      this.clientRequestId = request.metadata().get(Headers.X_OG_REQUEST_ID);
       this.requestId = response.headers().get(X_CLV_REQUEST_ID);
       this.stat = null;
       this.objectLength = objectSize;

@@ -185,8 +185,8 @@ public class AWSAuthV2Test
       final Request request =
             new HttpRequest.Builder(Method.GET, new URI("/johnsmith/photos/puppy.jpg"))
                   .withHeader("Date", "Tue, 27 Mar 2007 19:36:42 +0000")
-                  .withMetadata(Headers.USERNAME, AWS_ACCESS_KEY_ID)
-                  .withMetadata(Headers.PASSWORD, AWS_SECRET_ACCESS_KEY)
+                  .withMetadata(Headers.X_OG_USERNAME, AWS_ACCESS_KEY_ID)
+                  .withMetadata(Headers.X_OG_PASSWORD, AWS_SECRET_ACCESS_KEY)
                   .build();
       final String toSign = "GET\n\n\nTue, 27 Mar 2007 19:36:42 +0000\n/johnsmith/photos/puppy.jpg";
       final String header = "AWS AKIAIOSFODNN7EXAMPLE:bWq2s1WEIj+Ydj0vQ697zp+IXMU=";
@@ -200,8 +200,8 @@ public class AWSAuthV2Test
                   .withHeader("Content-Type", "image/jpeg")
                   .withHeader("Content-Length", "94328")
                   .withHeader("Date", "Tue, 27 Mar 2007 21:15:45 +0000")
-                  .withMetadata(Headers.USERNAME, AWS_ACCESS_KEY_ID)
-                  .withMetadata(Headers.PASSWORD, AWS_SECRET_ACCESS_KEY)
+                  .withMetadata(Headers.X_OG_USERNAME, AWS_ACCESS_KEY_ID)
+                  .withMetadata(Headers.X_OG_PASSWORD, AWS_SECRET_ACCESS_KEY)
                   .build();
       final String toSign =
             "PUT\n\nimage/jpeg\nTue, 27 Mar 2007 21:15:45 +0000\n/johnsmith/photos/puppy.jpg";
@@ -216,8 +216,8 @@ public class AWSAuthV2Test
                   "/johnsmith/?prefix=photos&max-keys=50&marker=puppy"))
                   .withHeader("User-Agent", "Mozilla/5.0")
                   .withHeader("Date", "Tue, 27 Mar 2007 19:42:41 +0000")
-                  .withMetadata(Headers.USERNAME, AWS_ACCESS_KEY_ID)
-                  .withMetadata(Headers.PASSWORD, AWS_SECRET_ACCESS_KEY)
+                  .withMetadata(Headers.X_OG_USERNAME, AWS_ACCESS_KEY_ID)
+                  .withMetadata(Headers.X_OG_PASSWORD, AWS_SECRET_ACCESS_KEY)
                   .build();
       final String toSign = "GET\n\n\nTue, 27 Mar 2007 19:42:41 +0000\n/johnsmith/";
       final String header = "AWS AKIAIOSFODNN7EXAMPLE:htDYFYduRNen8P9ZfE/s9SuKy0U=";
@@ -232,8 +232,8 @@ public class AWSAuthV2Test
                   .withHeader("Host", "s3.amazonaws.com")
                   .withHeader("Date", "Tue, 27 Mar 2007 21:20:27 +0000")
                   .withHeader("x-amz-date", "Tue, 27 Mar 2007 21:20:26 +0000")
-                  .withMetadata(Headers.USERNAME, AWS_ACCESS_KEY_ID)
-                  .withMetadata(Headers.PASSWORD, AWS_SECRET_ACCESS_KEY)
+                  .withMetadata(Headers.X_OG_USERNAME, AWS_ACCESS_KEY_ID)
+                  .withMetadata(Headers.X_OG_PASSWORD, AWS_SECRET_ACCESS_KEY)
                   .build();
       final String toSign =
             "DELETE\n\n\nTue, 27 Mar 2007 21:20:26 +0000\n/johnsmith/photos/puppy.jpg";

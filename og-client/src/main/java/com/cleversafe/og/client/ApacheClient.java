@@ -333,9 +333,9 @@ public class ApacheClient implements Client
       {
          final long timestampStart = System.currentTimeMillis();
          final HttpResponse.Builder responseBuilder = new HttpResponse.Builder();
-         final String requestId = this.request.metadata().get(Headers.REQUEST_ID.toString());
+         final String requestId = this.request.metadata().get(Headers.X_OG_REQUEST_ID);
          if (requestId != null)
-            responseBuilder.withMetadata(Headers.REQUEST_ID, requestId);
+            responseBuilder.withMetadata(Headers.X_OG_REQUEST_ID, requestId);
          final Response response;
          try
          {
@@ -344,7 +344,7 @@ public class ApacheClient implements Client
          catch (final Exception e)
          {
             _logger.error("Exception executing request", e);
-            responseBuilder.withStatusCode(499).withMetadata(Headers.ABORTED, "");
+            responseBuilder.withStatusCode(499).withMetadata(Headers.X_OG_ABORTED, "");
          }
          response = responseBuilder.build();
          final long timestampFinish = System.currentTimeMillis();
@@ -409,7 +409,7 @@ public class ApacheClient implements Client
             // TODO clean this up, should always try to set response entity to response size;
             // will InstrumentedInputStream help with this?
             final String consumerId =
-                  this.request.metadata().get(Headers.RESPONSE_BODY_CONSUMER.toString());
+                  this.request.metadata().get(Headers.X_OG_RESPONSE_BODY_CONSUMER);
             final ResponseBodyConsumer consumer =
                   ApacheClient.this.responseBodyConsumers.get(consumerId);
             if (consumer != null)
@@ -698,7 +698,7 @@ public class ApacheClient implements Client
        * @param consumer
        *           a response body consumer
        * @return this builder
-       * @see Headers#RESPONSE_BODY_CONSUMER
+       * @see Headers#X_OG_RESPONSE_BODY_CONSUMER
        */
       public Builder withResponseBodyConsumer(
             final String consumerId,

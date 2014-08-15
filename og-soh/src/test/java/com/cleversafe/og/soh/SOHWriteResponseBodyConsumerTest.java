@@ -67,7 +67,7 @@ public class SOHWriteResponseBodyConsumerTest
 
       final Entry<String, String> e = it.next();
 
-      assertThat(e.getKey(), is(Headers.OBJECT_NAME.toString()));
+      assertThat(e.getKey(), is(Headers.X_OG_OBJECT_NAME));
       assertThat(e.getValue(), is("objectName0"));
       assertThat(it.hasNext(), is(false));
       assertThat(in.available(), is(0));

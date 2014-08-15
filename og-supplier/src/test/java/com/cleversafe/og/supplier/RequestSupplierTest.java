@@ -141,7 +141,7 @@ public class RequestSupplierTest
    @Test(expected = NullPointerException.class)
    public void metadataNullValue2()
    {
-      new RequestSupplier.Builder(this.method, this.uri).withMetadata(Headers.ABORTED, null);
+      new RequestSupplier.Builder(this.method, this.uri).withMetadata(Headers.X_OG_ABORTED, null);
    }
 
    @Test(expected = NullPointerException.class)
@@ -253,7 +253,7 @@ public class RequestSupplierTest
    {
       final Request request = new RequestSupplier.Builder(this.method, this.uri)
             .withMetadata("key3", "value3")
-            .withMetadata(Headers.ABORTED, "value2")
+            .withMetadata(Headers.X_OG_ABORTED, "value2")
             .withMetadata(Suppliers.of("key1"), Suppliers.of("value1"))
             .build()
             .get();
@@ -266,7 +266,7 @@ public class RequestSupplierTest
       assertThat(it.hasNext(), is(true));
 
       e = it.next();
-      assertThat(e.getKey(), is("ABORTED"));
+      assertThat(e.getKey(), is(Headers.X_OG_ABORTED));
       assertThat(e.getValue(), is("value2"));
 
       e = it.next();
