@@ -19,6 +19,8 @@
 
 package com.cleversafe.og.s3;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -86,8 +88,8 @@ public class AWSAuthV2 implements HttpAuth
    @Override
    public String nextAuthorizationHeader(final Request request)
    {
-      final String awsAccessKeyId = request.headers().get(Headers.X_OG_USERNAME);
-      final String awsSecretAccessKey = request.headers().get(Headers.X_OG_PASSWORD);
+      final String awsAccessKeyId = checkNotNull(request.headers().get(Headers.X_OG_USERNAME));
+      final String awsSecretAccessKey = checkNotNull(request.headers().get(Headers.X_OG_PASSWORD));
       return authenticate(request, awsAccessKeyId, awsSecretAccessKey);
    }
 

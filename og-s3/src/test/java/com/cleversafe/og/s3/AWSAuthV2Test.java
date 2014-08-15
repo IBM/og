@@ -248,4 +248,18 @@ public class AWSAuthV2Test
       assertThat(this.auth.stringToSign(request), is(toSign));
       assertThat(this.auth.nextAuthorizationHeader(request), is(header));
    }
+
+   @Test(expected = NullPointerException.class)
+   public void nullUsername()
+   {
+      when(this.request.headers()).thenReturn(ImmutableMap.of(Headers.X_OG_PASSWORD, "password"));
+      this.auth.nextAuthorizationHeader(this.request);
+   }
+
+   @Test(expected = NullPointerException.class)
+   public void nullPassword()
+   {
+      when(this.request.headers()).thenReturn(ImmutableMap.of(Headers.X_OG_USERNAME, "username"));
+      this.auth.nextAuthorizationHeader(this.request);
+   }
 }

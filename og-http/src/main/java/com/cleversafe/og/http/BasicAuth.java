@@ -19,6 +19,8 @@
 
 package com.cleversafe.og.http;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.cleversafe.og.api.Request;
 import com.google.common.base.Charsets;
 import com.google.common.io.BaseEncoding;
@@ -37,10 +39,9 @@ public class BasicAuth implements HttpAuth
    @Override
    public String nextAuthorizationHeader(final Request request)
    {
-      final String username = request.headers().get(Headers.X_OG_USERNAME);
-      final String password = request.headers().get(Headers.X_OG_PASSWORD);
+      final String username = checkNotNull(request.headers().get(Headers.X_OG_USERNAME));
+      final String password = checkNotNull(request.headers().get(Headers.X_OG_PASSWORD));
       final String credentials = username + ":" + password;
-      final String b64 = BaseEncoding.base64().encode(credentials.getBytes(Charsets.UTF_8));
-      return "Basic " + b64;
+      return "Basic " + BaseEncoding.base64().encode(credentials.getBytes(Charsets.UTF_8));
    }
 }
