@@ -30,6 +30,7 @@ import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpUtil;
 import com.cleversafe.og.util.Operation;
 import com.cleversafe.og.util.Pair;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.io.BaseEncoding;
@@ -64,14 +65,13 @@ public abstract class AbstractObjectNameConsumer
    {
       this.objectManager = checkNotNull(objectManager);
       this.operation = checkNotNull(operation);
-      checkNotNull(statusCodes);
-      checkArgument(!statusCodes.isEmpty(), "statusCodes must not be empty");
-      for (final int statusCode : statusCodes)
+      this.statusCodes = ImmutableList.copyOf(statusCodes);
+      checkArgument(!this.statusCodes.isEmpty(), "statusCodes must not be empty");
+      for (final int statusCode : this.statusCodes)
       {
          checkArgument(HttpUtil.VALID_STATUS_CODES.contains(statusCode),
                "all statusCodes in list must be valid status codes [%s]", statusCode);
       }
-      this.statusCodes = statusCodes;
    }
 
    /**

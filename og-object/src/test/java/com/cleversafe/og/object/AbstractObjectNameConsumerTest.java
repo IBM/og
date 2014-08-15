@@ -150,6 +150,17 @@ public abstract class AbstractObjectNameConsumerTest
       doVerifyNever();
    }
 
+   @Test
+   public void statusCodeModification()
+   {
+      final List<Integer> mutable = Lists.newArrayList();
+      mutable.add(200);
+      final AbstractObjectNameConsumer consumer = create(this.objectManager, mutable);
+      mutable.clear();
+      consumer.consume(this.operation);
+      doVerify();
+   }
+
    @Test(expected = ObjectManagerException.class)
    public void objectManagerException()
    {
