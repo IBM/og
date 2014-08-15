@@ -46,7 +46,6 @@ public class HttpRequest implements Request
    private final URI uri;
    private final Map<String, String> headers;
    private final Body body;
-   private final Map<String, String> metadata;
    private static final DateTimeFormatter RFC1123 =
          DateTimeFormat.forPattern("EEE, dd MMM yyyy HH:mm:ss zzz").withLocale(Locale.US);
 
@@ -56,7 +55,6 @@ public class HttpRequest implements Request
       this.uri = checkNotNull(builder.uri);
       this.headers = ImmutableMap.copyOf(builder.headers);
       this.body = checkNotNull(builder.body);
-      this.metadata = ImmutableMap.copyOf(builder.metadata);
    }
 
    @Override
@@ -83,12 +81,6 @@ public class HttpRequest implements Request
       return this.body;
    }
 
-   @Override
-   public Map<String, String> metadata()
-   {
-      return this.metadata;
-   }
-
    /**
     * An http request builder
     */
@@ -98,7 +90,6 @@ public class HttpRequest implements Request
       private final URI uri;
       private final Map<String, String> headers;
       private Body body;
-      private final Map<String, String> metadata;
 
       /**
        * Constructs a builder
@@ -118,7 +109,6 @@ public class HttpRequest implements Request
          this.headers = Maps.newLinkedHashMap();
          this.headers.put("Date", RFC1123.print(new DateTime()));
          this.body = Bodies.none();
-         this.metadata = Maps.newLinkedHashMap();
       }
 
       /**
@@ -150,41 +140,11 @@ public class HttpRequest implements Request
       }
 
       /**
-       * Configures an additional piece of metadata to include with this request, using a
-       * {@code Metadata} entry as the key
-       * 
-       * @param key
-       *           a metadata key
-       * @param value
-       *           a metadata value
-       * @return this builder
-       */
-      public Builder withMetadata(final Headers key, final String value)
-      {
-         return withMetadata(key.toString(), value);
-      }
-
-      /**
-       * Configures an additional piece of metadata to include with this request
-       * 
-       * @param key
-       *           a metadata key
-       * @param value
-       *           a metadata value
-       * @return this builder
-       */
-      public Builder withMetadata(final String key, final String value)
-      {
-         this.metadata.put(key, value);
-         return this;
-      }
-
-      /**
        * Constructs an http request instance
        * 
        * @return an http request instance
        * @throws NullPointerException
-       *            if any null header or metadata keys or values were added to this builder
+       *            if any null header keys or values were added to this builder
        */
       public HttpRequest build()
       {

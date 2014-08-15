@@ -80,10 +80,10 @@ public class LoadTestTest
    public void before() throws OperationManagerException, URISyntaxException
    {
       this.request = new HttpRequest.Builder(Method.PUT, new URI("http://127.0.0.1"))
-            .withMetadata(Headers.X_OG_REQUEST_ID, "1")
+            .withHeader(Headers.X_OG_REQUEST_ID, "1")
             .build();
       this.response = new HttpResponse.Builder().withStatusCode(200)
-            .withMetadata(Headers.X_OG_REQUEST_ID, "1")
+            .withHeader(Headers.X_OG_REQUEST_ID, "1")
             .build();
 
       this.operationManager = mock(OperationManager.class);

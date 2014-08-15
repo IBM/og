@@ -71,12 +71,14 @@ public class TestModuleTest
    private static final double ERR = Math.pow(0.1, 6);
    private TestConfig config;
    private TestModule module;
+   private Supplier<String> id;
 
    @Before
    public void before()
    {
       this.config = mock(TestConfig.class);
       this.module = new TestModule(this.config);
+      this.id = Suppliers.of("1");
    }
 
    @Test(expected = NullPointerException.class)
@@ -562,16 +564,16 @@ public class TestModuleTest
    public void testProvideHeadersNullHeaders()
    {
       when(this.config.getHeaders()).thenReturn(null);
-      this.module.provideHeaders();
+      this.module.provideHeaders(this.id);
    }
 
    @Test
    public void testProvideHeadersEmptyHeaders()
    {
       when(this.config.getHeaders()).thenReturn(new LinkedHashMap<String, String>());
-      final Map<Supplier<String>, Supplier<String>> m = this.module.provideHeaders();
+      final Map<Supplier<String>, Supplier<String>> m = this.module.provideHeaders(this.id);
       Assert.assertNotNull(m);
-      Assert.assertTrue(m.isEmpty());
+      Assert.assertEquals(1, m.size());
    }
 
    @Test
@@ -583,11 +585,10 @@ public class TestModuleTest
          inMap.put(String.valueOf(10 - i), String.valueOf(10 - i));
       }
       when(this.config.getHeaders()).thenReturn(inMap);
-      final Map<Supplier<String>, Supplier<String>> m = this.module.provideHeaders();
+      final Map<Supplier<String>, Supplier<String>> m = this.module.provideHeaders(this.id);
       Assert.assertNotNull(m);
       final Iterator<Entry<Supplier<String>, Supplier<String>>> it = m.entrySet().iterator();
-      int i = 0;
-      while (it.hasNext())
+      for (int i = 0; i < 10; i++)
       {
          final Entry<Supplier<String>, Supplier<String>> e = it.next();
          final String key = e.getKey().get();
@@ -595,7 +596,6 @@ public class TestModuleTest
          final String iKey = String.valueOf(10 - i);
          Assert.assertEquals(iKey, key);
          Assert.assertEquals(inMap.get(iKey), value);
-         i++;
       }
    }
 
@@ -604,14 +604,14 @@ public class TestModuleTest
    {
       when(this.config.getWrite()).thenReturn(null);
       final Map<Supplier<String>, Supplier<String>> testHeaders = ImmutableMap.of();
-      this.module.provideWriteHeaders(testHeaders);
+      this.module.provideWriteHeaders(this.id, testHeaders);
    }
 
    @Test(expected = NullPointerException.class)
    public void testProvideWriteHeadersNullTestHeaders()
    {
       when(this.config.getWrite()).thenReturn(new OperationConfig());
-      this.module.provideWriteHeaders(null);
+      this.module.provideWriteHeaders(this.id, null);
    }
 
    @Test
@@ -622,7 +622,7 @@ public class TestModuleTest
       testHeaders.put(Suppliers.of("key"), Suppliers.of("value"));
 
       final Map<Supplier<String>, Supplier<String>> p =
-            this.module.provideWriteHeaders(testHeaders);
+            this.module.provideWriteHeaders(this.id, testHeaders);
       Assert.assertNotNull(p);
       Assert.assertEquals(1, p.size());
       final Entry<Supplier<String>, Supplier<String>> e = p.entrySet().iterator().next();
@@ -643,9 +643,9 @@ public class TestModuleTest
       testHeaders.put(Suppliers.of("key"), Suppliers.of("value"));
 
       final Map<Supplier<String>, Supplier<String>> p =
-            this.module.provideWriteHeaders(testHeaders);
+            this.module.provideWriteHeaders(this.id, testHeaders);
       Assert.assertNotNull(p);
-      Assert.assertEquals(1, p.size());
+      Assert.assertEquals(2, p.size());
       final Entry<Supplier<String>, Supplier<String>> e = p.entrySet().iterator().next();
       Assert.assertEquals("opKey", e.getKey().get());
       Assert.assertEquals("opValue", e.getValue().get());
@@ -656,14 +656,14 @@ public class TestModuleTest
    {
       when(this.config.getRead()).thenReturn(null);
       final Map<Supplier<String>, Supplier<String>> testHeaders = ImmutableMap.of();
-      this.module.provideReadHeaders(testHeaders);
+      this.module.provideReadHeaders(this.id, testHeaders);
    }
 
    @Test(expected = NullPointerException.class)
    public void testProvideReadHeadersNullTestHeaders()
    {
       when(this.config.getRead()).thenReturn(new OperationConfig());
-      this.module.provideReadHeaders(null);
+      this.module.provideReadHeaders(this.id, null);
    }
 
    @Test
@@ -673,7 +673,8 @@ public class TestModuleTest
       final Map<Supplier<String>, Supplier<String>> testHeaders = Maps.newLinkedHashMap();
       testHeaders.put(Suppliers.of("key"), Suppliers.of("value"));
 
-      final Map<Supplier<String>, Supplier<String>> p = this.module.provideReadHeaders(testHeaders);
+      final Map<Supplier<String>, Supplier<String>> p =
+            this.module.provideReadHeaders(this.id, testHeaders);
       Assert.assertNotNull(p);
       Assert.assertEquals(1, p.size());
       final Entry<Supplier<String>, Supplier<String>> e = p.entrySet().iterator().next();
@@ -693,9 +694,10 @@ public class TestModuleTest
       final Map<Supplier<String>, Supplier<String>> testHeaders = Maps.newLinkedHashMap();
       testHeaders.put(Suppliers.of("key"), Suppliers.of("value"));
 
-      final Map<Supplier<String>, Supplier<String>> p = this.module.provideReadHeaders(testHeaders);
+      final Map<Supplier<String>, Supplier<String>> p =
+            this.module.provideReadHeaders(this.id, testHeaders);
       Assert.assertNotNull(p);
-      Assert.assertEquals(1, p.size());
+      Assert.assertEquals(2, p.size());
       final Entry<Supplier<String>, Supplier<String>> e = p.entrySet().iterator().next();
       Assert.assertEquals("opKey", e.getKey().get());
       Assert.assertEquals("opValue", e.getValue().get());
@@ -706,14 +708,14 @@ public class TestModuleTest
    {
       when(this.config.getDelete()).thenReturn(null);
       final Map<Supplier<String>, Supplier<String>> testHeaders = ImmutableMap.of();
-      this.module.provideDeleteHeaders(testHeaders);
+      this.module.provideDeleteHeaders(this.id, testHeaders);
    }
 
    @Test(expected = NullPointerException.class)
    public void testProvideDeleteHeadersNullTestHeaders()
    {
       when(this.config.getDelete()).thenReturn(new OperationConfig());
-      this.module.provideDeleteHeaders(null);
+      this.module.provideDeleteHeaders(this.id, null);
    }
 
    @Test
@@ -724,7 +726,7 @@ public class TestModuleTest
       testHeaders.put(Suppliers.of("key"), Suppliers.of("value"));
 
       final Map<Supplier<String>, Supplier<String>> p =
-            this.module.provideDeleteHeaders(testHeaders);
+            this.module.provideDeleteHeaders(this.id, testHeaders);
       Assert.assertNotNull(p);
       Assert.assertEquals(1, p.size());
       final Entry<Supplier<String>, Supplier<String>> e = p.entrySet().iterator().next();
@@ -745,9 +747,9 @@ public class TestModuleTest
       testHeaders.put(Suppliers.of("key"), Suppliers.of("value"));
 
       final Map<Supplier<String>, Supplier<String>> p =
-            this.module.provideDeleteHeaders(testHeaders);
+            this.module.provideDeleteHeaders(this.id, testHeaders);
       Assert.assertNotNull(p);
-      Assert.assertEquals(1, p.size());
+      Assert.assertEquals(2, p.size());
       final Entry<Supplier<String>, Supplier<String>> e = p.entrySet().iterator().next();
       Assert.assertEquals("opKey", e.getKey().get());
       Assert.assertEquals("opValue", e.getValue().get());

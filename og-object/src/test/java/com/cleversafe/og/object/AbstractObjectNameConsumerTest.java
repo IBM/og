@@ -68,12 +68,12 @@ public abstract class AbstractObjectNameConsumerTest
       this.request = mock(Request.class);
       when(this.request.getMethod()).thenReturn(method());
       when(this.request.getUri()).thenReturn(new URI("/container/" + this.object));
-      when(this.request.metadata()).thenReturn(
+      when(this.request.headers()).thenReturn(
             ImmutableMap.of(Headers.X_OG_OBJECT_NAME, this.object));
 
       this.response = mock(Response.class);
       when(this.response.getStatusCode()).thenReturn(200);
-      when(this.response.metadata()).thenReturn(
+      when(this.response.headers()).thenReturn(
             ImmutableMap.of(Headers.X_OG_REQUEST_ID, "1"));
 
       this.operation = Pair.of(this.request, this.response);
@@ -160,7 +160,7 @@ public abstract class AbstractObjectNameConsumerTest
    @Test(expected = IllegalStateException.class)
    public void noObject()
    {
-      when(this.request.metadata()).thenReturn(ImmutableMap.<String, String> of());
+      when(this.request.headers()).thenReturn(ImmutableMap.<String, String> of());
       this.objectNameConsumer.consume(this.operation);
    }
 }

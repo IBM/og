@@ -308,40 +308,44 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @Headers
-   public Map<Supplier<String>, Supplier<String>> provideHeaders()
+   public Map<Supplier<String>, Supplier<String>> provideHeaders(@Id final Supplier<String> id)
    {
-      return createHeaders(this.config.getHeaders());
+      return createHeaders(id, this.config.getHeaders());
    }
 
    @Provides
    @Singleton
    @WriteHeaders
    public Map<Supplier<String>, Supplier<String>> provideWriteHeaders(
+         @Id final Supplier<String> id,
          @Headers final Map<Supplier<String>, Supplier<String>> headers)
    {
-      return provideHeaders(this.config.getWrite(), headers);
+      return provideHeaders(this.config.getWrite(), id, headers);
    }
 
    @Provides
    @Singleton
    @ReadHeaders
    public Map<Supplier<String>, Supplier<String>> provideReadHeaders(
+         @Id final Supplier<String> id,
          @Headers final Map<Supplier<String>, Supplier<String>> headers)
    {
-      return provideHeaders(this.config.getRead(), headers);
+      return provideHeaders(this.config.getRead(), id, headers);
    }
 
    @Provides
    @Singleton
    @DeleteHeaders
    public Map<Supplier<String>, Supplier<String>> provideDeleteHeaders(
+         @Id final Supplier<String> id,
          @Headers final Map<Supplier<String>, Supplier<String>> headers)
    {
-      return provideHeaders(this.config.getDelete(), headers);
+      return provideHeaders(this.config.getDelete(), id, headers);
    }
 
    private Map<Supplier<String>, Supplier<String>> provideHeaders(
          final OperationConfig operationConfig,
+         @Id final Supplier<String> id,
          final Map<Supplier<String>, Supplier<String>> testHeaders)
    {
       checkNotNull(operationConfig);
@@ -349,18 +353,21 @@ public class TestModule extends AbstractModule
 
       final Map<String, String> operationHeaders = operationConfig.getHeaders();
       if (operationHeaders != null && !operationHeaders.isEmpty())
-         return createHeaders(operationHeaders);
+         return createHeaders(id, operationHeaders);
 
       return testHeaders;
    }
 
-   private Map<Supplier<String>, Supplier<String>> createHeaders(final Map<String, String> headers)
+   private Map<Supplier<String>, Supplier<String>> createHeaders(
+         final Supplier<String> id,
+         final Map<String, String> headers)
    {
       final Map<Supplier<String>, Supplier<String>> h = Maps.newLinkedHashMap();
       for (final Entry<String, String> header : checkNotNull(headers.entrySet()))
       {
          h.put(Suppliers.of(header.getKey()), Suppliers.of(header.getValue()));
       }
+      h.put(Suppliers.of(com.cleversafe.og.http.Headers.X_OG_REQUEST_ID), id);
       return h;
    }
 

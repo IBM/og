@@ -31,15 +31,12 @@ import com.cleversafe.og.guice.annotation.Container;
 import com.cleversafe.og.guice.annotation.Delete;
 import com.cleversafe.og.guice.annotation.DeleteHeaders;
 import com.cleversafe.og.guice.annotation.DeleteHost;
-import com.cleversafe.og.guice.annotation.DeleteMetadata;
 import com.cleversafe.og.guice.annotation.DeleteObjectName;
 import com.cleversafe.og.guice.annotation.DeleteUri;
-import com.cleversafe.og.guice.annotation.Id;
 import com.cleversafe.og.guice.annotation.Password;
 import com.cleversafe.og.guice.annotation.Read;
 import com.cleversafe.og.guice.annotation.ReadHeaders;
 import com.cleversafe.og.guice.annotation.ReadHost;
-import com.cleversafe.og.guice.annotation.ReadMetadata;
 import com.cleversafe.og.guice.annotation.ReadObjectName;
 import com.cleversafe.og.guice.annotation.ReadUri;
 import com.cleversafe.og.guice.annotation.UriRoot;
@@ -47,7 +44,6 @@ import com.cleversafe.og.guice.annotation.Username;
 import com.cleversafe.og.guice.annotation.Write;
 import com.cleversafe.og.guice.annotation.WriteHeaders;
 import com.cleversafe.og.guice.annotation.WriteHost;
-import com.cleversafe.og.guice.annotation.WriteMetadata;
 import com.cleversafe.og.guice.annotation.WriteObjectName;
 import com.cleversafe.og.guice.annotation.WriteUri;
 import com.cleversafe.og.http.Api;
@@ -80,16 +76,20 @@ public class ApiModule extends AbstractModule
    @Singleton
    @Write
    public Supplier<Request> provideWrite(
+         final Api api,
          @WriteUri final Supplier<URI> uri,
          @WriteObjectName final Optional<CachingSupplier<String>> object,
          @WriteHeaders final Map<Supplier<String>, Supplier<String>> headers,
          final Supplier<Body> body,
-         @WriteMetadata final Map<Supplier<String>, Supplier<String>> metadata,
          @Username final Optional<Supplier<String>> username,
          @Password final Optional<Supplier<String>> password)
    {
-      return createRequestSupplier(Method.PUT, uri, object, headers, body, metadata, username,
-            password);
+      // SOH needs to use a special response consumer to extract the returned object id
+      if (Api.SOH == api)
+         headers.put(Suppliers.of(Headers.X_OG_RESPONSE_BODY_CONSUMER),
+               Suppliers.of(SOH_PUT_OBJECT));
+
+      return createRequestSupplier(Method.PUT, uri, object, headers, body, username, password);
    }
 
    @Provides
@@ -107,32 +107,17 @@ public class ApiModule extends AbstractModule
    }
 
    @Provides
-   @WriteMetadata
-   public Map<Supplier<String>, Supplier<String>> provideWriteMetadata(
-         final Api api,
-         @Id final Supplier<String> id)
-   {
-      final Map<Supplier<String>, Supplier<String>> metadata = createMetadata(id);
-      // SOH needs to use a special response procesor to extract the returned object id
-      if (Api.SOH == api)
-         metadata.put(Suppliers.of(Headers.X_OG_RESPONSE_BODY_CONSUMER),
-               Suppliers.of(SOH_PUT_OBJECT));
-      return metadata;
-   }
-
-   @Provides
    @Singleton
    @Read
    public Supplier<Request> provideRead(
          @ReadUri final Supplier<URI> uri,
          @ReadObjectName final CachingSupplier<String> object,
          @ReadHeaders final Map<Supplier<String>, Supplier<String>> headers,
-         @ReadMetadata final Map<Supplier<String>, Supplier<String>> metadata,
          @Username final Optional<Supplier<String>> username,
          @Password final Optional<Supplier<String>> password)
    {
       return createRequestSupplier(Method.GET, uri, Optional.of(object), headers,
-            Suppliers.of(Bodies.none()), metadata, username, password);
+            Suppliers.of(Bodies.none()), username, password);
    }
 
    @Provides
@@ -150,25 +135,17 @@ public class ApiModule extends AbstractModule
    }
 
    @Provides
-   @ReadMetadata
-   public Map<Supplier<String>, Supplier<String>> provideReadMetadata(@Id final Supplier<String> id)
-   {
-      return createMetadata(id);
-   }
-
-   @Provides
    @Singleton
    @Delete
    public Supplier<Request> provideDelete(
          @DeleteUri final Supplier<URI> uri,
          @DeleteObjectName final CachingSupplier<String> object,
          @DeleteHeaders final Map<Supplier<String>, Supplier<String>> headers,
-         @DeleteMetadata final Map<Supplier<String>, Supplier<String>> metadata,
          @Username final Optional<Supplier<String>> username,
          @Password final Optional<Supplier<String>> password)
    {
       return createRequestSupplier(Method.DELETE, uri, Optional.of(object), headers,
-            Suppliers.of(Bodies.none()), metadata, username, password);
+            Suppliers.of(Bodies.none()), username, password);
    }
 
    @Provides
@@ -185,35 +162,19 @@ public class ApiModule extends AbstractModule
       return createUri(scheme, host, port, uriRoot, container, Optional.of(object));
    }
 
-   @Provides
-   @DeleteMetadata
-   public Map<Supplier<String>, Supplier<String>> provideDeleteMetadata(
-         @Id final Supplier<String> id)
-   {
-      return createMetadata(id);
-   }
-
-   public Map<Supplier<String>, Supplier<String>> createMetadata(final Supplier<String> id)
-   {
-      final Map<Supplier<String>, Supplier<String>> metadata = Maps.newHashMap();
-      metadata.put(Suppliers.of(Headers.X_OG_REQUEST_ID), id);
-      return metadata;
-   }
-
    private Supplier<Request> createRequestSupplier(
          final Method method,
          final Supplier<URI> uri,
          final Optional<CachingSupplier<String>> object,
          final Map<Supplier<String>, Supplier<String>> headers,
          final Supplier<Body> body,
-         final Map<Supplier<String>, Supplier<String>> metadata,
          final Optional<Supplier<String>> username,
          final Optional<Supplier<String>> password)
    {
       final RequestSupplier.Builder b = new RequestSupplier.Builder(Suppliers.of(method), uri);
 
       if (object.isPresent())
-         b.withMetadata(Suppliers.of(Headers.X_OG_OBJECT_NAME), new Supplier<String>()
+         b.withHeader(Suppliers.of(Headers.X_OG_OBJECT_NAME), new Supplier<String>()
          {
             @Override
             public String get()
@@ -229,15 +190,10 @@ public class ApiModule extends AbstractModule
 
       b.withBody(body);
 
-      for (final Entry<Supplier<String>, Supplier<String>> m : metadata.entrySet())
-      {
-         b.withMetadata(m.getKey(), m.getValue());
-      }
-
       if (username.isPresent() && password.isPresent())
       {
-         b.withMetadata(Suppliers.of(Headers.X_OG_USERNAME), username.get());
-         b.withMetadata(Suppliers.of(Headers.X_OG_PASSWORD), password.get());
+         b.withHeader(Suppliers.of(Headers.X_OG_USERNAME), username.get());
+         b.withHeader(Suppliers.of(Headers.X_OG_PASSWORD), password.get());
       }
 
       return b.build();

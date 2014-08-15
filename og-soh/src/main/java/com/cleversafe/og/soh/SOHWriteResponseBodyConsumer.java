@@ -25,15 +25,14 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
 import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.ResponseBodyConsumer;
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 /**
@@ -58,12 +57,11 @@ public class SOHWriteResponseBodyConsumer implements ResponseBodyConsumer
       final BufferedReader reader =
             new BufferedReader(new InputStreamReader(response, Charsets.UTF_8));
 
-      final Map<String, String> metadata = new HashMap<String, String>(1);
-      metadata.put(Headers.X_OG_OBJECT_NAME, reader.readLine());
+      final String objectName = reader.readLine();
       while ((reader.readLine()) != null)
       {
          // consume the stream, for SOH writes there should never be anything else
       }
-      return metadata.entrySet().iterator();
+      return ImmutableMap.of(Headers.X_OG_OBJECT_NAME, objectName).entrySet().iterator();
    }
 }

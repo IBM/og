@@ -36,7 +36,6 @@ import com.cleversafe.og.api.Data;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.http.Bodies;
-import com.cleversafe.og.http.Headers;
 import com.google.common.base.Supplier;
 
 public class RequestSupplierTest
@@ -111,44 +110,6 @@ public class RequestSupplierTest
    public void nullBodySupplier()
    {
       new RequestSupplier.Builder(this.method, this.uri).withBody((Supplier<Body>) null);
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void metadataNullKey()
-   {
-      new RequestSupplier.Builder(this.method, this.uri).withMetadata((String) null, "value");
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void metadataNullKeyEnum()
-   {
-      new RequestSupplier.Builder(this.method, this.uri).withMetadata((Headers) null, "value");
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void metadataNullKeySupplier()
-   {
-      new RequestSupplier.Builder(this.method, this.uri)
-            .withMetadata((Supplier<String>) null, Suppliers.of("value")).build();
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void metadataNullValue()
-   {
-      new RequestSupplier.Builder(this.method, this.uri).withMetadata("aborted", null);
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void metadataNullValue2()
-   {
-      new RequestSupplier.Builder(this.method, this.uri).withMetadata(Headers.X_OG_ABORTED, null);
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void metadataNullValueSupplier()
-   {
-      new RequestSupplier.Builder(this.method, this.uri)
-            .withMetadata(Suppliers.of("aborted"), (Supplier<String>) null).build();
    }
 
    @Test
@@ -246,45 +207,5 @@ public class RequestSupplierTest
             .get();
       assertThat(request.getBody().getData(), is(Data.ZEROES));
       assertThat(request.getBody().getSize(), is(12345L));
-   }
-
-   @Test
-   public void metadata()
-   {
-      final Request request = new RequestSupplier.Builder(this.method, this.uri)
-            .withMetadata("key3", "value3")
-            .withMetadata(Headers.X_OG_ABORTED, "value2")
-            .withMetadata(Suppliers.of("key1"), Suppliers.of("value1"))
-            .build()
-            .get();
-      final Iterator<Entry<String, String>> it = request.metadata().entrySet().iterator();
-
-      assertThat(it.hasNext(), is(true));
-      Entry<String, String> e = it.next();
-      assertThat(e.getKey(), is("key3"));
-      assertThat(e.getValue(), is("value3"));
-      assertThat(it.hasNext(), is(true));
-
-      e = it.next();
-      assertThat(e.getKey(), is(Headers.X_OG_ABORTED));
-      assertThat(e.getValue(), is("value2"));
-
-      e = it.next();
-      assertThat(e.getKey(), is("key1"));
-      assertThat(e.getValue(), is("value1"));
-      assertThat(it.hasNext(), is(false));
-   }
-
-   @Test
-   public void metadataModification()
-   {
-      final RequestSupplier.Builder b =
-            new RequestSupplier.Builder(this.method, this.uri).withMetadata("key1", "value1");
-      final RequestSupplier s = b.build();
-      b.withMetadata("key2", "value2");
-      final Request request = s.get();
-
-      assertThat(request.metadata().get("key1"), is("value1"));
-      assertThat(request.metadata().get("key2"), nullValue());
    }
 }

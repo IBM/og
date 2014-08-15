@@ -39,7 +39,6 @@ public class HttpResponse implements Response
    private final int statusCode;
    private final Map<String, String> headers;
    private final Body body;
-   private final Map<String, String> metadata;
 
    private HttpResponse(final Builder builder)
    {
@@ -48,7 +47,7 @@ public class HttpResponse implements Response
             "statusCode must be a valid status code [%s]", this.statusCode);
       this.headers = ImmutableMap.copyOf(builder.headers);
       this.body = checkNotNull(builder.body);
-      this.metadata = ImmutableMap.copyOf(builder.metadata);
+
    }
 
    @Override
@@ -69,12 +68,6 @@ public class HttpResponse implements Response
       return this.body;
    }
 
-   @Override
-   public Map<String, String> metadata()
-   {
-      return this.metadata;
-   }
-
    /**
     * An http response builder
     */
@@ -83,7 +76,6 @@ public class HttpResponse implements Response
       private int statusCode;
       private final Map<String, String> headers;
       private Body body;
-      private final Map<String, String> metadata;
 
       /**
        * Constructs a builder
@@ -92,7 +84,6 @@ public class HttpResponse implements Response
       {
          this.headers = Maps.newLinkedHashMap();
          this.body = Bodies.none();
-         this.metadata = Maps.newLinkedHashMap();
       }
 
       public Builder withStatusCode(final int statusCode)
@@ -130,43 +121,13 @@ public class HttpResponse implements Response
       }
 
       /**
-       * Configures an additional piece of metadata to include with this response, using a
-       * {@code Metadata} entry as the key
-       * 
-       * @param key
-       *           a metadata key
-       * @param value
-       *           a metadata value
-       * @return this builder
-       */
-      public Builder withMetadata(final Headers key, final String value)
-      {
-         return withMetadata(key.toString(), value);
-      }
-
-      /**
-       * Configures an additional piece of metadata to include with this response
-       * 
-       * @param key
-       *           a metadata key
-       * @param value
-       *           a metadata value
-       * @return this builder
-       */
-      public Builder withMetadata(final String key, final String value)
-      {
-         this.metadata.put(key, value);
-         return this;
-      }
-
-      /**
        * Constructs an http response instance
        * 
        * @return an http response instance
        * @throws IllegalArgumentException
        *            if an invalid status code was configured with this builder
        * @throws NullPointerException
-       *            if any null header or metadata keys or values were added to this builder
+       *            if any null header keys or values were added to this builder
        */
       public HttpResponse build()
       {

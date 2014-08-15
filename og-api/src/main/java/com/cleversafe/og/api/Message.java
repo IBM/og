@@ -36,6 +36,4 @@ public interface Message
     * @return the description of the body for this message
     */
    Body getBody();
-
-   Map<String, String> metadata();
 }

@@ -28,7 +28,6 @@ import java.util.Locale;
 import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
-import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpRequest;
 import com.cleversafe.og.util.Pair;
 import com.google.common.base.Supplier;
@@ -46,7 +45,6 @@ public class RequestSupplier implements Supplier<Request>
    private final Supplier<URI> uri;
    private final List<Pair<Supplier<String>, Supplier<String>>> headers;
    private final Supplier<Body> body;
-   private final List<Pair<Supplier<String>, Supplier<String>>> metadata;
 
    private RequestSupplier(final Builder builder)
    {
@@ -54,7 +52,6 @@ public class RequestSupplier implements Supplier<Request>
       this.uri = checkNotNull(builder.uri);
       this.headers = ImmutableList.copyOf(builder.headers);
       this.body = builder.body;
-      this.metadata = ImmutableList.copyOf(builder.metadata);
    }
 
    @Override
@@ -71,11 +68,6 @@ public class RequestSupplier implements Supplier<Request>
       if (this.body != null)
          context.withBody(this.body.get());
 
-      for (final Pair<Supplier<String>, Supplier<String>> m : this.metadata)
-      {
-         context.withMetadata(m.getKey().get(), m.getValue().get());
-      }
-
       return context.build();
    }
 
@@ -88,7 +80,6 @@ public class RequestSupplier implements Supplier<Request>
       private final Supplier<URI> uri;
       private final List<Pair<Supplier<String>, Supplier<String>>> headers;
       private Supplier<Body> body;
-      private final List<Pair<Supplier<String>, Supplier<String>>> metadata;
 
       /**
        * Constructs a builder instance using the provided method and uri
@@ -116,7 +107,6 @@ public class RequestSupplier implements Supplier<Request>
          this.method = method;
          this.uri = uri;
          this.headers = Lists.newArrayList();
-         this.metadata = Lists.newArrayList();
       }
 
       /**
@@ -176,56 +166,11 @@ public class RequestSupplier implements Supplier<Request>
       }
 
       /**
-       * Configures an additional piece of metadata to include with this request supplier, using a
-       * {@code Metadata} entry as the key
-       * 
-       * @param key
-       *           a metadata key
-       * @param value
-       *           a metadata value
-       * @return this builder
-       */
-      public Builder withMetadata(final Headers key, final String value)
-      {
-         return withMetadata(key.toString(), value);
-      }
-
-      /**
-       * Configures an additional piece of metadata to include with this request supplier
-       * 
-       * @param key
-       *           a metadata key
-       * @param value
-       *           a metadata value
-       * @return this builder
-       */
-      public Builder withMetadata(final String key, final String value)
-      {
-         return withMetadata(Suppliers.of(key), Suppliers.of(value));
-      }
-
-      /**
-       * Configures an additional piece of metadata to include with this request supplier, using
-       * suppliers for the key and value
-       * 
-       * @param key
-       *           a metadata key
-       * @param value
-       *           a metadata value
-       * @return this builder
-       */
-      public Builder withMetadata(final Supplier<String> key, final Supplier<String> value)
-      {
-         this.metadata.add(Pair.of(key, value));
-         return this;
-      }
-
-      /**
        * Constructs a request supplier instance
        * 
        * @return a request supplier instance
        * @throws NullPointerException
-       *            if any null header or metadata keys or values were added to this builder
+       *            if any null header keys or values were added to this builder
        */
       public RequestSupplier build()
       {
@@ -237,11 +182,10 @@ public class RequestSupplier implements Supplier<Request>
    public String toString()
    {
       return String.format(Locale.US,
-            "RequestSupplier [%nmethod=%s,%nuri=%s,%nheaders=%s,%nbody=%s,%nmetadata=%s%n]",
+            "RequestSupplier [%nmethod=%s,%nuri=%s,%nheaders=%s,%nbody=%s%n]",
             this.method,
             this.uri,
             this.headers,
-            this.body,
-            this.metadata);
+            this.body);
    }
 }
