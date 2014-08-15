@@ -33,12 +33,12 @@ import com.cleversafe.og.object.ObjectName;
 
 public class ReadObjectNameSupplierTest
 {
-   private ObjectManager mockObjectManager;
+   private ObjectManager objectManager;
 
    @Before
    public void before()
    {
-      this.mockObjectManager = mock(ObjectManager.class);
+      this.objectManager = mock(ObjectManager.class);
    }
 
    @Test(expected = NullPointerException.class)
@@ -51,17 +51,17 @@ public class ReadObjectNameSupplierTest
    public void readObjectNameSupplier()
    {
       final String object = "objectName";
-      final ObjectName mockObjectName = mock(ObjectName.class);
-      when(mockObjectName.toString()).thenReturn(object);
-      when(this.mockObjectManager.acquireNameForRead()).thenReturn(mockObjectName);
+      final ObjectName objectName = mock(ObjectName.class);
+      when(objectName.toString()).thenReturn(object);
+      when(this.objectManager.acquireNameForRead()).thenReturn(objectName);
 
-      assertThat(new ReadObjectNameSupplier(this.mockObjectManager).get(), is(object));
+      assertThat(new ReadObjectNameSupplier(this.objectManager).get(), is(object));
    }
 
    @Test(expected = ObjectManagerException.class)
    public void supplierException()
    {
-      when(this.mockObjectManager.acquireNameForRead()).thenThrow(new ObjectManagerException());
-      new ReadObjectNameSupplier(this.mockObjectManager).get();
+      when(this.objectManager.acquireNameForRead()).thenThrow(new ObjectManagerException());
+      new ReadObjectNameSupplier(this.objectManager).get();
    }
 }

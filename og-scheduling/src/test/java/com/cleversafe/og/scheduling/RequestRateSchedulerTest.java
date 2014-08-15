@@ -36,13 +36,13 @@ import com.google.common.util.concurrent.Uninterruptibles;
 
 public class RequestRateSchedulerTest
 {
-   private Distribution mockDistribution;
+   private Distribution distribution;
 
    @Before
    public void before()
    {
-      this.mockDistribution = mock(Distribution.class);
-      when(this.mockDistribution.nextSample()).thenReturn(10.0);
+      this.distribution = mock(Distribution.class);
+      when(this.distribution.nextSample()).thenReturn(10.0);
    }
 
    @Test(expected = NullPointerException.class)
@@ -54,14 +54,14 @@ public class RequestRateSchedulerTest
    @Test(expected = NullPointerException.class)
    public void nullTimeUnit()
    {
-      new RequestRateScheduler(this.mockDistribution, null);
+      new RequestRateScheduler(this.distribution, null);
    }
 
    @Test
    public void requestRateScheduler()
    {
       final RequestRateScheduler scheduler =
-            new RequestRateScheduler(this.mockDistribution, TimeUnit.SECONDS);
+            new RequestRateScheduler(this.distribution, TimeUnit.SECONDS);
       for (int i = 0; i < 5; i++)
       {
          final long timestampStart = System.nanoTime();
@@ -76,7 +76,7 @@ public class RequestRateSchedulerTest
    public void interruptedSchedulerThread()
    {
       final RequestRateScheduler scheduler =
-            new RequestRateScheduler(this.mockDistribution, TimeUnit.DAYS);
+            new RequestRateScheduler(this.distribution, TimeUnit.DAYS);
       final Thread t = new Thread(new Runnable()
       {
          @Override

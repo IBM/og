@@ -33,12 +33,12 @@ import com.cleversafe.og.object.ObjectName;
 
 public class DeleteObjectNameSupplierTest
 {
-   private ObjectManager mockObjectManager;
+   private ObjectManager objectManager;
 
    @Before
    public void before()
    {
-      this.mockObjectManager = mock(ObjectManager.class);
+      this.objectManager = mock(ObjectManager.class);
    }
 
    @Test(expected = NullPointerException.class)
@@ -51,17 +51,17 @@ public class DeleteObjectNameSupplierTest
    public void deleteObjectNameSupplier()
    {
       final String object = "objectName";
-      final ObjectName mockObjectName = mock(ObjectName.class);
-      when(mockObjectName.toString()).thenReturn(object);
-      when(this.mockObjectManager.getNameForDelete()).thenReturn(mockObjectName);
+      final ObjectName objectName = mock(ObjectName.class);
+      when(objectName.toString()).thenReturn(object);
+      when(this.objectManager.getNameForDelete()).thenReturn(objectName);
 
-      assertThat(new DeleteObjectNameSupplier(this.mockObjectManager).get(), is(object));
+      assertThat(new DeleteObjectNameSupplier(this.objectManager).get(), is(object));
    }
 
    @Test(expected = ObjectManagerException.class)
    public void supplierException()
    {
-      when(this.mockObjectManager.getNameForDelete()).thenThrow(new ObjectManagerException());
-      new DeleteObjectNameSupplier(this.mockObjectManager).get();
+      when(this.objectManager.getNameForDelete()).thenThrow(new ObjectManagerException());
+      new DeleteObjectNameSupplier(this.objectManager).get();
    }
 }
