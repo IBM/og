@@ -19,7 +19,7 @@
 
 package com.cleversafe.og.json;
 
-public enum CollectionAlgorithmType
+public enum SelectionType
 {
    RANDOM,
    ROUNDROBIN;

@@ -28,7 +28,7 @@ import com.google.common.collect.Maps;
 public class OperationConfig
 {
    double weight;
-   CollectionAlgorithmType hostSelection;
+   SelectionType hostSelection;
    List<HostConfig> host;
    Map<String, String> headers;
 
@@ -41,7 +41,7 @@ public class OperationConfig
    public OperationConfig()
    {
       this.weight = 0.0;
-      this.hostSelection = CollectionAlgorithmType.ROUNDROBIN;
+      this.hostSelection = SelectionType.ROUNDROBIN;
       this.host = Lists.newArrayList();
       this.headers = Maps.newLinkedHashMap();
    }
@@ -51,7 +51,7 @@ public class OperationConfig
       return this.weight;
    }
 
-   public CollectionAlgorithmType getHostSelection()
+   public SelectionType getHostSelection()
    {
       return this.hostSelection;
    }

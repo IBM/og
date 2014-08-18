@@ -56,7 +56,6 @@ import com.cleversafe.og.http.Bodies;
 import com.cleversafe.og.http.HttpAuth;
 import com.cleversafe.og.http.Scheme;
 import com.cleversafe.og.json.AuthType;
-import com.cleversafe.og.json.CollectionAlgorithmType;
 import com.cleversafe.og.json.ConcurrencyConfig;
 import com.cleversafe.og.json.ConcurrencyType;
 import com.cleversafe.og.json.DistributionType;
@@ -64,6 +63,7 @@ import com.cleversafe.og.json.FilesizeConfig;
 import com.cleversafe.og.json.HostConfig;
 import com.cleversafe.og.json.ObjectManagerConfig;
 import com.cleversafe.og.json.OperationConfig;
+import com.cleversafe.og.json.SelectionType;
 import com.cleversafe.og.json.StoppingConditionsConfig;
 import com.cleversafe.og.json.TestConfig;
 import com.cleversafe.og.s3.AWSAuthV2;
@@ -176,7 +176,7 @@ public class TestModule extends AbstractModule
    }
 
    private Supplier<String> createHost(
-         final CollectionAlgorithmType hostSelection,
+         final SelectionType hostSelection,
          final List<HostConfig> host)
    {
       checkNotNull(hostSelection);
@@ -189,7 +189,7 @@ public class TestModule extends AbstractModule
          checkArgument(h.getHost().length() > 0, "host length must be > 0");
       }
 
-      if (CollectionAlgorithmType.ROUNDROBIN == hostSelection)
+      if (SelectionType.ROUNDROBIN == hostSelection)
       {
          final List<String> hostList = Lists.newArrayList();
          for (final HostConfig h : host)
@@ -375,12 +375,11 @@ public class TestModule extends AbstractModule
    @Singleton
    public Supplier<Body> provideBody()
    {
-      final CollectionAlgorithmType filesizeSelection =
-            checkNotNull(this.config.getFilesizeSelection());
+      final SelectionType filesizeSelection = checkNotNull(this.config.getFilesizeSelection());
       final List<FilesizeConfig> filesizes = checkNotNull(this.config.getFilesize());
       checkArgument(!filesizes.isEmpty(), "filesize must not be empty");
 
-      if (CollectionAlgorithmType.ROUNDROBIN == filesizeSelection)
+      if (SelectionType.ROUNDROBIN == filesizeSelection)
       {
          final List<Distribution> distributions = Lists.newArrayList();
          for (final FilesizeConfig f : filesizes)
@@ -484,12 +483,10 @@ public class TestModule extends AbstractModule
 
    @Provides
    @WriteWeight
-   public double provideWriteWeight()
+   public double provideWriteWeight(@ReadWeight final double read, @DeleteWeight final double delete)
    {
       final double write = this.config.getWrite().getWeight();
       checkArgument(PERCENTAGE.contains(write), "write must be in range [0.0, 100.0] [%s]", write);
-      final double read = this.config.getRead().getWeight();
-      final double delete = this.config.getDelete().getWeight();
       if (allEqual(0.0, write, read, delete))
          return 100.0;
       return write;

@@ -31,7 +31,7 @@ import com.google.common.collect.Maps;
 public class TestConfig
 {
    Scheme scheme;
-   CollectionAlgorithmType hostSelection;
+   SelectionType hostSelection;
    List<HostConfig> host;
    Integer port;
    Api api;
@@ -41,7 +41,7 @@ public class TestConfig
    OperationConfig write;
    OperationConfig read;
    OperationConfig delete;
-   CollectionAlgorithmType filesizeSelection;
+   SelectionType filesizeSelection;
    List<FilesizeConfig> filesize;
    Data data;
    ConcurrencyConfig concurrency;
@@ -52,7 +52,7 @@ public class TestConfig
    public TestConfig()
    {
       this.scheme = Scheme.HTTP;
-      this.hostSelection = CollectionAlgorithmType.ROUNDROBIN;
+      this.hostSelection = SelectionType.ROUNDROBIN;
       this.host = Lists.newArrayList();
       this.port = null;
       this.api = Api.SOH;
@@ -62,7 +62,7 @@ public class TestConfig
       this.write = new OperationConfig();
       this.read = new OperationConfig();
       this.delete = new OperationConfig();
-      this.filesizeSelection = CollectionAlgorithmType.RANDOM;
+      this.filesizeSelection = SelectionType.RANDOM;
       this.filesize = Lists.newArrayList();
       this.filesize.add(new FilesizeConfig());
       this.data = Data.RANDOM;
@@ -77,7 +77,7 @@ public class TestConfig
       return this.scheme;
    }
 
-   public CollectionAlgorithmType getHostSelection()
+   public SelectionType getHostSelection()
    {
       return this.hostSelection;
    }
@@ -127,7 +127,7 @@ public class TestConfig
       return this.delete;
    }
 
-   public CollectionAlgorithmType getFilesizeSelection()
+   public SelectionType getFilesizeSelection()
    {
       return this.filesizeSelection;
    }
