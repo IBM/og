@@ -104,4 +104,17 @@ public class SuppliersTest
          assertThat(p.get(), is(2));
       }
    }
+
+   @Test(expected = NullPointerException.class)
+   public void chainNullSupplier()
+   {
+      Suppliers.chain(null);
+   }
+
+   @Test
+   public void chain()
+   {
+      final Supplier<Integer> s = Suppliers.chain(Suppliers.of(Suppliers.of(1)));
+      assertThat(s.get(), is(1));
+   }
 }

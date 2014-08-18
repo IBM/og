@@ -102,4 +102,32 @@ public class Suppliers
    {
       return new RandomSupplier.Builder<T>();
    }
+
+   /**
+    * Creates a supplier that returns values as if by:
+    * <p>
+    * {@code supplier.get().get()}
+    * 
+    * @param supplier
+    *           the source supplier to retrieve values from
+    * @return a chain supplier
+    */
+   public static <T> Supplier<T> chain(final Supplier<Supplier<T>> supplier)
+   {
+      checkNotNull(supplier);
+      return new Supplier<T>()
+      {
+         @Override
+         public T get()
+         {
+            return supplier.get().get();
+         }
+
+         @Override
+         public String toString()
+         {
+            return String.format("chain [%s]", supplier);
+         }
+      };
+   }
 }
