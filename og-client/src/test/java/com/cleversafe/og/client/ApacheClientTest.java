@@ -399,7 +399,7 @@ public class ApacheClientTest
       final Request request = new HttpRequest.Builder(Method.GET, this.delayUri).build();
       final Response response = client.execute(request).get();
 
-      assertThat(response.getStatusCode(), is(499));
+      assertThat(response.getStatusCode(), is(599));
    }
 
    @Test

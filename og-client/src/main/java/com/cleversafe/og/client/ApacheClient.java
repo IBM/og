@@ -344,7 +344,7 @@ public class ApacheClient implements Client
          catch (final Exception e)
          {
             _logger.error("Exception executing request", e);
-            responseBuilder.withStatusCode(499);
+            responseBuilder.withStatusCode(599);
          }
          response = responseBuilder.build();
          final long timestampFinish = System.currentTimeMillis();
