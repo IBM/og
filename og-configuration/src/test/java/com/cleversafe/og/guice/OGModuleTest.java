@@ -19,13 +19,20 @@
 
 package com.cleversafe.og.guice;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.Mockito.mock;
 
 import java.util.List;
 
-import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
 
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.http.Api;
@@ -36,156 +43,167 @@ import com.cleversafe.og.supplier.CachingSupplier;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.eventbus.EventBus;
+import com.tngtech.java.junit.dataprovider.DataProvider;
+import com.tngtech.java.junit.dataprovider.DataProviderRunner;
+import com.tngtech.java.junit.dataprovider.UseDataProvider;
 
+@RunWith(DataProviderRunner.class)
 public class OGModuleTest
 {
+   @Rule
+   public ExpectedException thrown = ExpectedException.none();
    private OGModule module;
    private ObjectManager objectManager;
    private EventBus eventBus;
-   private Supplier<Request> request;
 
    @Before
-   @SuppressWarnings("unchecked")
    public void before()
    {
       this.module = new OGModule();
       this.objectManager = mock(ObjectManager.class);
       this.eventBus = new EventBus();
-      this.request = mock(Supplier.class);
    }
 
    @Test(expected = NullPointerException.class)
-   public void testProvideStatisticsNullEventBus()
+   public void provideStatisticsNullEventBus()
    {
       this.module.provideStatistics(null);
    }
 
    @Test
-   public void testProvideStatistics()
+   public void provideStatistics()
    {
       final Statistics stats = this.module.provideStatistics(this.eventBus);
-      Assert.assertNotNull(stats);
+      assertThat(stats, notNullValue());
    }
 
-   @Test(expected = NullPointerException.class)
-   public void testProvideRequestSupplierNullWrite()
+   @DataProvider
+   public static Object[][] provideInvalidProvideRequestSupplier()
    {
-      this.module.provideRequestSupplier(null, this.request, this.request, 100, 0, 0);
-   }
+      @SuppressWarnings("unchecked")
+      final Supplier<Request> supplier = mock(Supplier.class);
 
-   @Test(expected = NullPointerException.class)
-   public void testProvideRequestSupplierNullRead()
-   {
-      this.module.provideRequestSupplier(this.request, null, this.request, 100, 0, 0);
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void testProvideRequestSupplierNullDelete()
-   {
-      this.module.provideRequestSupplier(this.request, this.request, null, 100, 0, 0);
-   }
-
-   @Test(expected = IllegalArgumentException.class)
-   public void testProvideRequestSupplierWeightsNotEqual100()
-   {
-      this.module.provideRequestSupplier(this.request, this.request, this.request, 101, 0, 0);
+      return new Object[][]{
+            {null, supplier, supplier, 100, 0, 0, NullPointerException.class},
+            {supplier, null, supplier, 100, 0, 0, NullPointerException.class},
+            {supplier, supplier, null, 100, 0, 0, NullPointerException.class},
+            {supplier, supplier, supplier, 99, 0, 0, IllegalArgumentException.class},
+            {supplier, supplier, supplier, 101, 0, 0, IllegalArgumentException.class},
+            {supplier, supplier, supplier, 50, 50, 50, IllegalArgumentException.class},
+      };
    }
 
    @Test
-   public void testProvideRequestSupplier()
+   @UseDataProvider("provideInvalidProvideRequestSupplier")
+   public void provideRequestSupplier(
+         final Supplier<Request> write,
+         final Supplier<Request> read,
+         final Supplier<Request> delete,
+         final double writeWeight,
+         final double readWeight,
+         final double deleteWeight,
+         final Class<Exception> expectedException)
    {
-      final Supplier<Request> p =
-            this.module.provideRequestSupplier(this.request, this.request, this.request, 100, 0, 0);
-      Assert.assertNotNull(p);
+      this.thrown.expect(expectedException);
+      this.module.provideRequestSupplier(write, read, delete, writeWeight, readWeight, deleteWeight);
+   }
+
+   @Test
+   public void provideRequestSupplier()
+   {
+      @SuppressWarnings("unchecked")
+      final Supplier<Request> supplier = mock(Supplier.class);
+      final Supplier<Request> s =
+            this.module.provideRequestSupplier(supplier, supplier, supplier, 100, 0, 0);
+
+      assertThat(s, notNullValue());
    }
 
    @Test(expected = NullPointerException.class)
    public void provideObjectManagerNullObjectFileLocation()
    {
-      this.module.provideObjectManager(null, "objectFileName");
+      this.module.provideObjectManager(null, "name");
    }
 
    @Test
    public void provideObjectManagerNullObjectFileName()
    {
-      final ObjectManager objectManager =
-            this.module.provideObjectManager("objectFileLocation/", null);
-      Assert.assertNotNull(objectManager);
+      final ObjectManager objectManager = this.module.provideObjectManager("location/", null);
+      assertThat(objectManager, notNullValue());
    }
 
    @Test
    public void provideObjectManager()
    {
-      final ObjectManager objectManager =
-            this.module.provideObjectManager("objectFileLocation/", "objectFileName");
-      Assert.assertNotNull(objectManager);
+      final ObjectManager objectManager = this.module.provideObjectManager("location/", "name");
+      assertThat(objectManager, notNullValue());
    }
 
    @Test(expected = NullPointerException.class)
-   public void testProvideWriteObjectNameNullApi()
+   public void provideWriteObjectNameNullApi()
    {
       this.module.provideWriteObjectName(null);
    }
 
    @Test
-   public void testProvideWriteObjectNameSOH()
+   public void provideWriteObjectNameSOH()
    {
-      final Optional<CachingSupplier<String>> p = this.module.provideWriteObjectName(Api.SOH);
-      Assert.assertTrue(!p.isPresent());
+      final Optional<CachingSupplier<String>> s = this.module.provideWriteObjectName(Api.SOH);
+      assertThat(s.isPresent(), is(false));
    }
 
    @Test
-   public void testProvideWriteObjectNameS3()
+   public void provideWriteObjectNameS3()
    {
-      final Optional<CachingSupplier<String>> p = this.module.provideWriteObjectName(Api.S3);
-      Assert.assertTrue(p.isPresent());
+      final Optional<CachingSupplier<String>> s = this.module.provideWriteObjectName(Api.S3);
+      assertThat(s.isPresent(), is(true));
    }
 
    @Test(expected = NullPointerException.class)
-   public void testProvideReadObjectNameNullObjectManager()
+   public void provideReadObjectNameNullObjectManager()
    {
       this.module.provideReadObjectName(null);
    }
 
    @Test
-   public void testProvideReadObjectName()
+   public void provideReadObjectName()
    {
-      final CachingSupplier<String> p = this.module.provideReadObjectName(this.objectManager);
-      Assert.assertNotNull(p);
+      final CachingSupplier<String> s = this.module.provideReadObjectName(this.objectManager);
+      assertThat(s, notNullValue());
    }
 
    @Test(expected = NullPointerException.class)
-   public void testProvideDeleteObjectNameNullObjectManager()
+   public void provideDeleteObjectNameNullObjectManager()
    {
       this.module.provideDeleteObjectName(null);
    }
 
    @Test
-   public void testProvideDeleteObjectName()
+   public void provideDeleteObjectName()
    {
-      final CachingSupplier<String> p = this.module.provideDeleteObjectName(this.objectManager);
-      Assert.assertNotNull(p);
+      final CachingSupplier<String> s = this.module.provideDeleteObjectName(this.objectManager);
+      assertThat(s, notNullValue());
    }
 
    @Test(expected = NullPointerException.class)
-   public void testProvideObjectNameConsumersNullObjectManager()
+   public void provideObjectNameConsumersNullObjectManager()
    {
       this.module.provideObjectNameConsumers(null, this.eventBus);
    }
 
    @Test(expected = NullPointerException.class)
-   public void testProvideObjectNameConsumersNullEventBus()
+   public void provideObjectNameConsumersNullEventBus()
    {
       this.module.provideObjectNameConsumers(this.objectManager, null);
    }
 
    @Test
-   public void testProvideObjectNameConsumers()
+   public void provideObjectNameConsumers()
    {
       final List<AbstractObjectNameConsumer> c =
             this.module.provideObjectNameConsumers(this.objectManager, this.eventBus);
 
-      Assert.assertNotNull(c);
-      Assert.assertTrue(!c.isEmpty());
+      assertThat(c, notNullValue());
+      assertThat(c, not(empty()));
    }
 }
