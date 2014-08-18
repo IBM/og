@@ -29,7 +29,6 @@ import java.util.TreeMap;
 
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
-import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpUtil;
 import com.cleversafe.og.util.Operation;
 import com.cleversafe.og.util.Pair;
@@ -42,7 +41,6 @@ import com.google.common.util.concurrent.AtomicLongMap;
  * <ul>
  * <li>operations</li>
  * <li>bytes</li>
- * <li>aborts</li>
  * <li>status codes</li>
  * </ul>
  * <p>
@@ -91,19 +89,12 @@ public class Statistics
       final Operation operation = HttpUtil.toOperation(request.getMethod());
       updateCounter(operation, Counter.OPERATIONS, 1);
       updateCounter(Operation.ALL, Counter.OPERATIONS, 1);
-      if (response.headers().get(Headers.X_OG_ABORTED) != null)
-      {
-         updateCounter(operation, Counter.ABORTS, 1);
-         updateCounter(Operation.ALL, Counter.ABORTS, 1);
-      }
-      else
-      {
-         final long bytes = getBytes(operation, request, response);
-         updateCounter(operation, Counter.BYTES, bytes);
-         updateCounter(Operation.ALL, Counter.BYTES, bytes);
-         updateStatusCode(operation, response.getStatusCode());
-         updateStatusCode(Operation.ALL, response.getStatusCode());
-      }
+
+      final long bytes = getBytes(operation, request, response);
+      updateCounter(operation, Counter.BYTES, bytes);
+      updateCounter(Operation.ALL, Counter.BYTES, bytes);
+      updateStatusCode(operation, response.getStatusCode());
+      updateStatusCode(Operation.ALL, response.getStatusCode());
    }
 
    private long getBytes(final Operation operation, final Request request, final Response response)

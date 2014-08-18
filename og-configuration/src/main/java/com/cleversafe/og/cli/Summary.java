@@ -63,7 +63,6 @@ public class Summary
       private final long timestampFinish;
       private final double runtime;
       private long operations;
-      private long aborts;
       private final OperationStats write = new OperationStats();
       private final OperationStats read = new OperationStats();
       private final OperationStats delete = new OperationStats();
@@ -84,7 +83,6 @@ public class Summary
       private long operations = 0;
       private long bytes = 0;
       private final Map<Integer, Long> statusCodes = Maps.newTreeMap();
-      private long aborts = 0;
    }
 
    @Override
@@ -92,13 +90,12 @@ public class Summary
    {
       retrieveStats();
       final String format =
-            "Start: %s%nEnd: %s%nRuntime: %.2f Seconds%nOperations: %s%nAborts: %s%n%n[Write]%n%s[Read]%n%s[Delete]%n%s";
+            "Start: %s%nEnd: %s%nRuntime: %.2f Seconds%nOperations: %s%n%n[Write]%n%s[Read]%n%s[Delete]%n%s";
       return String.format(Locale.US, format,
             FORMATTER.print(this.summary.timestampStart),
             FORMATTER.print(this.summary.timestampFinish),
             this.summary.runtime,
             this.summary.operations,
-            this.summary.aborts,
             getOperation(this.summary.write),
             getOperation(this.summary.read),
             getOperation(this.summary.delete));
@@ -106,13 +103,12 @@ public class Summary
 
    private String getOperation(final OperationStats opStats)
    {
-      final String format = "Operations: %s%nBytes: %s%nAborts: %s%nStatus Codes:%n%s%n";
+      final String format = "Operations: %s%nBytes: %s%nStatus Codes:%n%s%n";
       String statusCodes = getStatusCodes(opStats);
       if (statusCodes.length() == 0)
          statusCodes = String.format("N/A%n");
 
-      return String.format(Locale.US, format, opStats.operations, opStats.bytes, opStats.aborts,
-            statusCodes);
+      return String.format(Locale.US, format, opStats.operations, opStats.bytes, statusCodes);
    }
 
    private String getStatusCodes(final OperationStats opStats)
@@ -146,7 +142,6 @@ public class Summary
       final OperationStats all = new OperationStats();
       retrieveStats(all, Operation.ALL);
       this.summary.operations = all.operations;
-      this.summary.aborts = all.aborts;
    }
 
    private void retrieveStats(final OperationStats opStats, final Operation operation)
@@ -159,6 +154,5 @@ public class Summary
          final Entry<Integer, Long> sc = it.next();
          opStats.statusCodes.put(sc.getKey(), sc.getValue());
       }
-      opStats.aborts = this.stats.get(operation, Counter.ABORTS);
    }
 }

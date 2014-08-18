@@ -30,7 +30,6 @@ public class StoppingConditionsConfig
    double runtime;
    TimeUnit runtimeUnit;
    Map<Integer, Integer> statusCodes;
-   long aborts;
 
    public StoppingConditionsConfig()
    {
@@ -38,7 +37,6 @@ public class StoppingConditionsConfig
       this.runtime = 0.0;
       this.runtimeUnit = TimeUnit.SECONDS;
       this.statusCodes = Maps.newHashMap();
-      this.aborts = 0;
    }
 
    public long getOperations()
@@ -59,10 +57,5 @@ public class StoppingConditionsConfig
    public Map<Integer, Integer> getStatusCodes()
    {
       return this.statusCodes;
-   }
-
-   public long getAborts()
-   {
-      return this.aborts;
    }
 }

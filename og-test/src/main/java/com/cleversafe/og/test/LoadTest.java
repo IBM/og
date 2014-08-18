@@ -137,10 +137,7 @@ public class LoadTest implements Callable<Boolean>
             removeActiveOperation();
             _logger.error("Exception while processing operation", t);
             LoadTest.this.running = false;
-            final HttpResponse response = new HttpResponse.Builder()
-                  .withStatusCode(499)
-                  .withHeader(Headers.X_OG_ABORTED, "")
-                  .build();
+            final HttpResponse response = new HttpResponse.Builder().withStatusCode(499).build();
             postOperation(response);
          }
 

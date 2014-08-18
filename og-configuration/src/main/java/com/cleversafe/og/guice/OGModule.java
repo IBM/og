@@ -124,10 +124,6 @@ public class OGModule extends AbstractModule
          conditions.add(new CounterCondition(Operation.ALL, Counter.OPERATIONS,
                config.getOperations(), test, stats));
 
-      if (config.getAborts() > 0)
-         conditions.add(new CounterCondition(Operation.ALL, Counter.ABORTS, config.getAborts(),
-               test, stats));
-
       final Map<Integer, Integer> scMap = config.getStatusCodes();
       for (final Entry<Integer, Integer> sc : scMap.entrySet())
       {

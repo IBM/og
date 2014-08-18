@@ -38,10 +38,8 @@ import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
 import com.cleversafe.og.http.Bodies;
-import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.util.Operation;
 import com.cleversafe.og.util.Pair;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.tngtech.java.junit.dataprovider.DataProvider;
 import com.tngtech.java.junit.dataprovider.DataProviderRunner;
@@ -80,7 +78,7 @@ public class StatisticsTest
    public void update()
    {
       this.stats.update(this.operation);
-      assertAll(Operation.WRITE, 1, 1024, 0, 201, 1);
+      assertAll(Operation.WRITE, 1, 1024, 201, 1);
    }
 
    @Test
@@ -88,24 +86,7 @@ public class StatisticsTest
    {
       this.stats.update(this.operation);
       this.stats.update(this.operation);
-      assertAll(Operation.WRITE, 2, 2048, 0, 201, 2);
-   }
-
-   @Test
-   public void updateAbort()
-   {
-      when(this.response.headers()).thenReturn(ImmutableMap.of(Headers.X_OG_ABORTED, ""));
-      this.stats.update(this.operation);
-      assertAll(Operation.WRITE, 1, 0, 1, 201, 0);
-   }
-
-   @Test
-   public void updateAbortMultiple()
-   {
-      when(this.response.headers()).thenReturn(ImmutableMap.of(Headers.X_OG_ABORTED, ""));
-      this.stats.update(this.operation);
-      this.stats.update(this.operation);
-      assertAll(Operation.WRITE, 2, 0, 2, 201, 0);
+      assertAll(Operation.WRITE, 2, 2048, 201, 2);
    }
 
    @Test
@@ -115,7 +96,7 @@ public class StatisticsTest
       when(this.request.getBody()).thenReturn(Bodies.none());
       when(this.response.getBody()).thenReturn(Bodies.zeroes(1024));
       this.stats.update(this.operation);
-      assertAll(Operation.READ, 1, 1024, 0, 201, 1);
+      assertAll(Operation.READ, 1, 1024, 201, 1);
    }
 
    @Test
@@ -124,7 +105,7 @@ public class StatisticsTest
       when(this.request.getMethod()).thenReturn(Method.DELETE);
       when(this.request.getBody()).thenReturn(Bodies.none());
       this.stats.update(this.operation);
-      assertAll(Operation.DELETE, 1, 0, 0, 201, 1);
+      assertAll(Operation.DELETE, 1, 0, 201, 1);
    }
 
    @Test(expected = NullPointerException.class)
@@ -195,20 +176,18 @@ public class StatisticsTest
       {
          t.join();
       }
-      assertAll(Operation.WRITE, 1000, 1024 * operationCount, 0, 201, 1000);
+      assertAll(Operation.WRITE, 1000, 1024 * operationCount, 201, 1000);
    }
 
    private void assertAll(
          final Operation operation,
          final long opCount,
          final long byteCount,
-         final long abortCount,
          final int statusCode,
          final long statusCodeCount)
    {
       assertThat(this.stats.get(operation, Counter.OPERATIONS), is(opCount));
       assertThat(this.stats.get(operation, Counter.BYTES), is(byteCount));
-      assertThat(this.stats.get(operation, Counter.ABORTS), is(abortCount));
       assertThat(this.stats.getStatusCode(operation, statusCode), is(statusCodeCount));
       final Iterator<Entry<Integer, Long>> it = this.stats.statusCodeIterator(operation);
       while (it.hasNext())

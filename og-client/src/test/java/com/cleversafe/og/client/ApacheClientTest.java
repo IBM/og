@@ -33,7 +33,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasEntry;
-import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThan;
 import static org.mockito.Mockito.mock;
@@ -401,7 +400,6 @@ public class ApacheClientTest
       final Response response = client.execute(request).get();
 
       assertThat(response.getStatusCode(), is(499));
-      assertThat(response.headers(), hasKey(Headers.X_OG_ABORTED));
    }
 
    @Test

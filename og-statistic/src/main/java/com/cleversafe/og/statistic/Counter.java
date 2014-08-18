@@ -22,6 +22,5 @@ package com.cleversafe.og.statistic;
 public enum Counter
 {
    OPERATIONS,
-   BYTES,
-   ABORTS;
+   BYTES;
 }
