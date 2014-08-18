@@ -39,8 +39,6 @@ import org.junit.runner.RunWith;
 
 import com.cleversafe.og.api.Client;
 import com.cleversafe.og.api.Method;
-import com.cleversafe.og.api.OperationManager;
-import com.cleversafe.og.api.OperationManagerException;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
 import com.cleversafe.og.http.Headers;
@@ -54,6 +52,7 @@ import com.cleversafe.og.test.condition.CounterCondition;
 import com.cleversafe.og.test.condition.TestCondition;
 import com.cleversafe.og.util.Operation;
 import com.cleversafe.og.util.Pair;
+import com.google.common.base.Supplier;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.SettableFuture;
@@ -68,7 +67,7 @@ public class LoadTestTest
    public ExpectedException thrown = ExpectedException.none();
    private Request request;
    private Response response;
-   private OperationManager operationManager;
+   private Supplier<Request> requestSupplier;
    private Client client;
    private Scheduler scheduler;
    private LoadTestSubscriberExceptionHandler handler;
@@ -77,7 +76,8 @@ public class LoadTestTest
    private LoadTest test;
 
    @Before
-   public void before() throws OperationManagerException, URISyntaxException
+   @SuppressWarnings("unchecked")
+   public void before() throws URISyntaxException
    {
       this.request = new HttpRequest.Builder(Method.PUT, new URI("http://127.0.0.1"))
             .withHeader(Headers.X_OG_REQUEST_ID, "1")
@@ -86,8 +86,8 @@ public class LoadTestTest
             .withHeader(Headers.X_OG_REQUEST_ID, "1")
             .build();
 
-      this.operationManager = mock(OperationManager.class);
-      when(this.operationManager.next()).thenReturn(this.request);
+      this.requestSupplier = mock(Supplier.class);
+      when(this.requestSupplier.get()).thenReturn(this.request);
 
       this.client = mock(Client.class);
       final SettableFuture<Response> future = SettableFuture.create();
@@ -99,7 +99,7 @@ public class LoadTestTest
       this.eventBus = new EventBus(this.handler);
       this.stats = new Statistics();
       this.test =
-            new LoadTest(this.operationManager, this.client, this.scheduler, this.eventBus,
+            new LoadTest(this.requestSupplier, this.client, this.scheduler, this.eventBus,
                   this.handler);
 
       final TestCondition condition =
@@ -113,7 +113,8 @@ public class LoadTestTest
    @DataProvider
    public static Object[][] provideInvalidLoadTest()
    {
-      final OperationManager operationManager = mock(OperationManager.class);
+      @SuppressWarnings("unchecked")
+      final Supplier<Request> requestSupplier = mock(Supplier.class);
       final Client client = mock(Client.class);
       final Scheduler scheduler = mock(Scheduler.class);
       final EventBus eventBus = mock(EventBus.class);
@@ -121,30 +122,30 @@ public class LoadTestTest
             mock(LoadTestSubscriberExceptionHandler.class);
       return new Object[][]{
             {null, client, scheduler, eventBus, handler},
-            {operationManager, null, scheduler, eventBus, handler},
-            {operationManager, client, null, eventBus, handler},
-            {operationManager, client, scheduler, null, handler},
-            {operationManager, client, scheduler, eventBus, null}
+            {requestSupplier, null, scheduler, eventBus, handler},
+            {requestSupplier, client, null, eventBus, handler},
+            {requestSupplier, client, scheduler, null, handler},
+            {requestSupplier, client, scheduler, eventBus, null}
       };
    }
 
    @Test
    @UseDataProvider("provideInvalidLoadTest")
    public void invalidLoadTest(
-         final OperationManager operationManager,
+         final Supplier<Request> requestSupplier,
          final Client client,
          final Scheduler scheduler,
          final EventBus eventBus,
          final LoadTestSubscriberExceptionHandler handler)
    {
       this.thrown.expect(NullPointerException.class);
-      new LoadTest(operationManager, client, scheduler, eventBus, handler);
+      new LoadTest(requestSupplier, client, scheduler, eventBus, handler);
    }
 
    @Test
-   public void operationManagerException() throws OperationManagerException
+   public void requestSupplierException()
    {
-      when(this.operationManager.next()).thenThrow(new OperationManagerException());
+      when(this.requestSupplier.get()).thenThrow(new IllegalStateException());
       assertThat(this.test.call(), is(false));
       verify(this.client, never()).shutdown(true);
    }

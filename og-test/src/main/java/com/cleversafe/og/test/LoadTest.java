@@ -21,7 +21,6 @@ package com.cleversafe.og.test;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Callable;
@@ -34,14 +33,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.api.Client;
-import com.cleversafe.og.api.OperationManager;
-import com.cleversafe.og.api.OperationManagerException;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
 import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpResponse;
 import com.cleversafe.og.scheduling.Scheduler;
 import com.cleversafe.og.util.Pair;
+import com.google.common.base.Supplier;
 import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -51,7 +49,7 @@ import com.google.common.util.concurrent.Uninterruptibles;
 public class LoadTest implements Callable<Boolean>
 {
    private static final Logger _logger = LoggerFactory.getLogger(LoadTest.class);
-   private final OperationManager operationManager;
+   private final Supplier<Request> requestSupplier;
    private final Client client;
    private final Scheduler scheduler;
    private final EventBus eventBus;
@@ -62,13 +60,13 @@ public class LoadTest implements Callable<Boolean>
 
    @Inject
    public LoadTest(
-         final OperationManager operationManager,
+         final Supplier<Request> requestSupplier,
          final Client client,
          final Scheduler scheduler,
          final EventBus eventBus,
          final LoadTestSubscriberExceptionHandler handler)
    {
-      this.operationManager = checkNotNull(operationManager);
+      this.requestSupplier = checkNotNull(requestSupplier);
       this.client = checkNotNull(client);
       this.scheduler = checkNotNull(scheduler);
       this.eventBus = checkNotNull(eventBus);
@@ -86,7 +84,7 @@ public class LoadTest implements Callable<Boolean>
       {
          while (this.running)
          {
-            final Request request = this.operationManager.next();
+            final Request request = this.requestSupplier.get();
             final ListenableFuture<Response> future = this.client.execute(request);
             // TODO better key than request_id? make Request hashable?
             this.activeOperations.put(request.headers().get(Headers.X_OG_REQUEST_ID), future);
@@ -94,7 +92,7 @@ public class LoadTest implements Callable<Boolean>
             this.scheduler.waitForNext();
          }
       }
-      catch (final OperationManagerException e)
+      catch (final Exception e)
       {
          this.success = false;
          this.running = false;
@@ -163,9 +161,8 @@ public class LoadTest implements Callable<Boolean>
    @Override
    public String toString()
    {
-      return String.format(Locale.US,
-            "LoadTest [%noperationManager=%s,%n%nscheduler=%s,%n%nclient=%s%n]",
-            this.operationManager,
+      return String.format("LoadTest [%nrequestSupplier=%s,%n%nscheduler=%s,%n%nclient=%s%n]",
+            this.requestSupplier,
             this.scheduler,
             this.client);
    }

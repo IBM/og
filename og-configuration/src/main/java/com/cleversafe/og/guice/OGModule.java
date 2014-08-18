@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
 
-import com.cleversafe.og.api.OperationManager;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.guice.annotation.Delete;
 import com.cleversafe.og.guice.annotation.DeleteObjectName;
@@ -43,8 +42,8 @@ import com.cleversafe.og.guice.annotation.WriteWeight;
 import com.cleversafe.og.http.Api;
 import com.cleversafe.og.http.HttpUtil;
 import com.cleversafe.og.json.StoppingConditionsConfig;
-import com.cleversafe.og.object.ObjectManager;
 import com.cleversafe.og.object.AbstractObjectNameConsumer;
+import com.cleversafe.og.object.ObjectManager;
 import com.cleversafe.og.object.RandomObjectPopulator;
 import com.cleversafe.og.object.ReadObjectNameConsumer;
 import com.cleversafe.og.object.WriteObjectNameConsumer;
@@ -58,7 +57,6 @@ import com.cleversafe.og.supplier.Suppliers;
 import com.cleversafe.og.supplier.UUIDObjectNameSupplier;
 import com.cleversafe.og.test.LoadTest;
 import com.cleversafe.og.test.LoadTestSubscriberExceptionHandler;
-import com.cleversafe.og.test.SimpleOperationManager;
 import com.cleversafe.og.test.condition.CounterCondition;
 import com.cleversafe.og.test.condition.RuntimeCondition;
 import com.cleversafe.og.test.condition.StatusCodeCondition;
@@ -80,7 +78,6 @@ public class OGModule extends AbstractModule
    @Override
    protected void configure()
    {
-      bind(OperationManager.class).to(SimpleOperationManager.class).in(Singleton.class);
       bind(LoadTest.class).in(Singleton.class);
    }
 
@@ -152,7 +149,7 @@ public class OGModule extends AbstractModule
 
    @Provides
    @Singleton
-   public Supplier<Supplier<Request>> provideRequestSupplier(
+   public Supplier<Request> provideRequestSupplier(
          @Write final Supplier<Request> write,
          @Read final Supplier<Request> read,
          @Delete final Supplier<Request> delete,
@@ -175,7 +172,7 @@ public class OGModule extends AbstractModule
       if (deleteWeight > 0.0)
          wrc.withChoice(delete, deleteWeight);
 
-      return wrc.build();
+      return Suppliers.chain(wrc.build());
    }
 
    @Provides

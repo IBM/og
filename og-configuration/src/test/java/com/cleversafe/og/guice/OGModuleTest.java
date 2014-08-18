@@ -29,8 +29,8 @@ import org.junit.Test;
 
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.http.Api;
-import com.cleversafe.og.object.ObjectManager;
 import com.cleversafe.og.object.AbstractObjectNameConsumer;
+import com.cleversafe.og.object.ObjectManager;
 import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.supplier.CachingSupplier;
 import com.google.common.base.Optional;
@@ -94,7 +94,7 @@ public class OGModuleTest
    @Test
    public void testProvideRequestSupplier()
    {
-      final Supplier<Supplier<Request>> p =
+      final Supplier<Request> p =
             this.module.provideRequestSupplier(this.request, this.request, this.request, 100, 0, 0);
       Assert.assertNotNull(p);
    }
