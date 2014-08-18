@@ -19,22 +19,20 @@
 
 package com.cleversafe.og.json.type;
 
-import java.util.concurrent.TimeUnit;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.cleversafe.og.json.ConcurrencyConfig;
-import com.cleversafe.og.json.ConcurrencyType;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
 public class ConcurrencyConfigTypeAdapterFactoryTest
 {
-   private static final double ERR = Math.pow(0.1, 6);
-
    private ConcurrencyConfigTypeAdapterFactory typeAdapterFactory;
    private Gson gson;
 
@@ -46,52 +44,34 @@ public class ConcurrencyConfigTypeAdapterFactoryTest
    }
 
    @Test
-   public void testNonConcurrencyConfig()
+   public void nonConcurrencyConfig()
    {
-      Assert.assertNull(this.typeAdapterFactory.create(this.gson, TypeToken.get(String.class)));
+      assertThat(this.typeAdapterFactory.create(this.gson, TypeToken.get(String.class)),
+            nullValue());
    }
 
    @Test
-   public void testConcurrencyConfig()
-   {
-      Assert.assertNotNull(this.typeAdapterFactory.create(this.gson,
-            TypeToken.get(ConcurrencyConfig.class)));
-   }
-
-   @Test
-   public void testFullConcurrencyConfig()
+   public void fullConcurrencyConfig()
    {
       final String json = "{\"count\": 5.0}";
       final ConcurrencyConfig config = this.gson.fromJson(json, ConcurrencyConfig.class);
 
-      Assert.assertEquals(ConcurrencyType.THREADS, config.getType());
-      Assert.assertEquals(5.0, config.getCount(), ERR);
-      Assert.assertEquals(TimeUnit.SECONDS, config.getUnit());
-      Assert.assertEquals(0.0, config.getRamp(), ERR);
-      Assert.assertEquals(TimeUnit.SECONDS, config.getRampUnit());
+      assertThat(config.getCount(), is(5.0));
    }
 
    @Test
-   public void testStringFilesizeConfig()
+   public void stringFilesizeConfig()
    {
       final String json = "10.0";
       final ConcurrencyConfig config = this.gson.fromJson(json, ConcurrencyConfig.class);
 
-      Assert.assertEquals(ConcurrencyType.THREADS, config.getType());
-      Assert.assertEquals(10.0, config.getCount(), ERR);
-      Assert.assertEquals(TimeUnit.SECONDS, config.getUnit());
-      Assert.assertEquals(0.0, config.getRamp(), ERR);
-      Assert.assertEquals(TimeUnit.SECONDS, config.getRampUnit());
+      assertThat(config.getCount(), is(10.0));
    }
 
    @Test
-   public void testSerialization()
+   public void serialization()
    {
       final ConcurrencyConfig config = new ConcurrencyConfig(15.0);
-
-      final String typeAdapterSerialization = this.gson.toJson(config);
-      final String defaultSerialization = new GsonBuilder().create().toJson(config);
-
-      Assert.assertEquals(defaultSerialization, typeAdapterSerialization);
+      assertThat(this.gson.toJson(config), is(new GsonBuilder().create().toJson(config)));
    }
 }

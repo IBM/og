@@ -19,9 +19,13 @@
 
 package com.cleversafe.og.json.type;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
+
 import java.util.List;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -33,8 +37,6 @@ import com.google.gson.reflect.TypeToken;
 
 public class FilesizeConfigListTypeAdapterFactoryTest
 {
-   private static final double ERR = Math.pow(0.1, 6);
-
    private FilesizeConfigTypeAdapterFactory filesizeTypeAdapterFactory;
    private FilesizeConfigListTypeAdapterFactory filesizeListTypeAdapterFactory;
    private TypeToken<List<FilesizeConfig>> typeToken;
@@ -54,66 +56,62 @@ public class FilesizeConfigListTypeAdapterFactoryTest
    }
 
    @Test
-   public void testNonFilesizeConfigList()
+   public void nonFilesizeConfigList()
    {
-      Assert.assertNull(this.filesizeListTypeAdapterFactory.create(this.gson,
-            TypeToken.get(String.class)));
+      assertThat(
+            this.filesizeListTypeAdapterFactory.create(this.gson, TypeToken.get(String.class)),
+            nullValue());
    }
 
    @Test
-   public void testHostConfigList()
-   {
-      Assert.assertNotNull(this.filesizeListTypeAdapterFactory.create(this.gson, this.typeToken));
-   }
-
-   @Test
-   public void testFullFilesizeConfigList()
+   public void fullFilesizeConfigList()
    {
       final String json = "[{\"average\": 15.0, \"weight\": 3.5}, 25.0]";
       final List<FilesizeConfig> config = this.gson.fromJson(json, this.typeToken.getType());
 
-      Assert.assertEquals(2, config.size());
+      assertThat(config, hasSize(2));
+
       final FilesizeConfig f1 = config.get(0);
-      Assert.assertEquals(15.0, f1.getAverage(), ERR);
-      Assert.assertEquals(3.5, f1.getWeight(), ERR);
+      assertThat(f1.getAverage(), is(15.0));
+      assertThat(f1.getWeight(), is(3.5));
+
       final FilesizeConfig f2 = config.get(1);
-      Assert.assertEquals(25.0, f2.getAverage(), ERR);
-      Assert.assertEquals(1.0, f2.getWeight(), ERR);
+      assertThat(f2.getAverage(), is(25.0));
+      assertThat(f2.getWeight(), is(1.0));
    }
 
    @Test
-   public void testObjectFilesizeConfig()
+   public void objectFilesizeConfig()
    {
       final String json = "{\"average\": 65.0}";
       final List<FilesizeConfig> config = this.gson.fromJson(json, this.typeToken.getType());
 
-      Assert.assertEquals(1, config.size());
+      assertThat(config, hasSize(1));
+
       final FilesizeConfig f1 = config.get(0);
-      Assert.assertEquals(65.0, f1.getAverage(), ERR);
-      Assert.assertEquals(1.0, f1.getWeight(), ERR);
+      assertThat(f1.getAverage(), is(65.0));
+      assertThat(f1.getWeight(), is(1.0));
    }
 
    @Test
-   public void testDecimalFilesizeConfig()
+   public void decimalFilesizeConfig()
    {
       final String json = "45.0";
       final List<FilesizeConfig> config = this.gson.fromJson(json, this.typeToken.getType());
 
-      Assert.assertEquals(1, config.size());
+      assertThat(config, hasSize(1));
+
       final FilesizeConfig f1 = config.get(0);
-      Assert.assertEquals(45.0, f1.getAverage(), ERR);
-      Assert.assertEquals(1.0, f1.getWeight(), ERR);
+      assertThat(f1.getAverage(), is(45.0));
+      assertThat(f1.getWeight(), is(1.0));
    }
 
    @Test
-   public void testSerialization()
+   public void serialization()
    {
       final List<FilesizeConfig> config = Lists.newArrayList();
       config.add(new FilesizeConfig(100.0));
 
-      final String typeAdapterSerialization = this.gson.toJson(config);
-      final String defaultSerialization = new GsonBuilder().create().toJson(config);
-
-      Assert.assertEquals(defaultSerialization, typeAdapterSerialization);
+      assertThat(this.gson.toJson(config), is(new GsonBuilder().create().toJson(config)));
    }
 }

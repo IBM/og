@@ -19,11 +19,13 @@
 
 package com.cleversafe.og.json.type;
 
-import org.junit.Assert;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
+
 import org.junit.Before;
 import org.junit.Test;
 
-import com.cleversafe.og.json.CollectionAlgorithmType;
 import com.cleversafe.og.json.OperationConfig;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -31,8 +33,6 @@ import com.google.gson.reflect.TypeToken;
 
 public class OperationConfigTypeAdapterFactoryTest
 {
-   private static final double ERR = Math.pow(0.1, 6);
-
    private OperationConfigTypeAdapterFactory typeAdapterFactory;
    private Gson gson;
 
@@ -44,50 +44,35 @@ public class OperationConfigTypeAdapterFactoryTest
    }
 
    @Test
-   public void testNonOperationConfig()
+   public void nonOperationConfig()
    {
-      Assert.assertNull(this.typeAdapterFactory.create(this.gson, TypeToken.get(String.class)));
+      assertThat(this.typeAdapterFactory.create(this.gson, TypeToken.get(String.class)),
+            nullValue());
    }
 
    @Test
-   public void testOperationConfig()
-   {
-      Assert.assertNotNull(this.typeAdapterFactory.create(this.gson,
-            TypeToken.get(OperationConfig.class)));
-   }
-
-   @Test
-   public void testFullOperationConfig()
+   public void fullOperationConfig()
    {
       final String json = "{\"weight\": 35.0}";
       final OperationConfig config = this.gson.fromJson(json, OperationConfig.class);
 
-      Assert.assertEquals(35.0, config.getWeight(), ERR);
-      Assert.assertEquals(CollectionAlgorithmType.ROUNDROBIN, config.getHostSelection());
-      Assert.assertNotNull(config.getHost());
-      Assert.assertNotNull(config.getHeaders());
+      assertThat(config.getWeight(), is(35.0));
    }
 
    @Test
-   public void testNumberOperationConfig()
+   public void numberOperationConfig()
    {
       final String json = "45.0";
       final OperationConfig config = this.gson.fromJson(json, OperationConfig.class);
 
-      Assert.assertEquals(45.0, config.getWeight(), ERR);
-      Assert.assertEquals(CollectionAlgorithmType.ROUNDROBIN, config.getHostSelection());
-      Assert.assertNotNull(config.getHost());
-      Assert.assertNotNull(config.getHeaders());
+      assertThat(config.getWeight(), is(45.0));
    }
 
    @Test
-   public void testSerialization()
+   public void serialization()
    {
       final OperationConfig config = new OperationConfig(75.0);
 
-      final String typeAdapterSerialization = this.gson.toJson(config);
-      final String defaultSerialization = new GsonBuilder().create().toJson(config);
-
-      Assert.assertEquals(defaultSerialization, typeAdapterSerialization);
+      assertThat(this.gson.toJson(config), is(new GsonBuilder().create().toJson(config)));
    }
 }

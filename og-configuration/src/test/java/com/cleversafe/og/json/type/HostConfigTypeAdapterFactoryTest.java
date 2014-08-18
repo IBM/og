@@ -19,7 +19,10 @@
 
 package com.cleversafe.og.json.type;
 
-import org.junit.Assert;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -30,8 +33,6 @@ import com.google.gson.reflect.TypeToken;
 
 public class HostConfigTypeAdapterFactoryTest
 {
-   private static final double ERR = Math.pow(0.1, 6);
-
    private HostConfigTypeAdapterFactory typeAdapterFactory;
    private Gson gson;
 
@@ -43,46 +44,37 @@ public class HostConfigTypeAdapterFactoryTest
    }
 
    @Test
-   public void testNonHostConfig()
+   public void nonHostConfig()
    {
-      Assert.assertNull(this.typeAdapterFactory.create(this.gson, TypeToken.get(String.class)));
+      assertThat(this.typeAdapterFactory.create(this.gson, TypeToken.get(String.class)),
+            nullValue());
    }
 
    @Test
-   public void testHostConfig()
-   {
-      Assert.assertNotNull(this.typeAdapterFactory.create(this.gson,
-            TypeToken.get(HostConfig.class)));
-   }
-
-   @Test
-   public void testFullHostConfig()
+   public void fullHostConfig()
    {
       final String json = "{\"host\": \"127.0.0.1\", \"weight\": 3.5}";
       final HostConfig config = this.gson.fromJson(json, HostConfig.class);
 
-      Assert.assertEquals("127.0.0.1", config.getHost());
-      Assert.assertEquals(3.5, config.getWeight(), ERR);
+      assertThat(config.getHost(), is("127.0.0.1"));
+      assertThat(config.getWeight(), is(3.5));
    }
 
    @Test
-   public void testStringHostConfig()
+   public void stringHostConfig()
    {
       final String json = "192.168.8.1";
       final HostConfig config = this.gson.fromJson(json, HostConfig.class);
 
-      Assert.assertEquals("192.168.8.1", config.getHost());
-      Assert.assertEquals(1.0, config.getWeight(), ERR);
+      assertThat(config.getHost(), is("192.168.8.1"));
+      assertThat(config.getWeight(), is(1.0));
    }
 
    @Test
-   public void testSerialization()
+   public void serialization()
    {
       final HostConfig config = new HostConfig("127.0.0.1");
 
-      final String typeAdapterSerialization = this.gson.toJson(config);
-      final String defaultSerialization = new GsonBuilder().create().toJson(config);
-
-      Assert.assertEquals(defaultSerialization, typeAdapterSerialization);
+      assertThat(this.gson.toJson(config), is(new GsonBuilder().create().toJson(config)));
    }
 }

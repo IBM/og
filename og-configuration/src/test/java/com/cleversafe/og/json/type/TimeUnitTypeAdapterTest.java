@@ -19,6 +19,8 @@
 
 package com.cleversafe.og.json.type;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -26,7 +28,6 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -44,7 +45,7 @@ public class TimeUnitTypeAdapterTest
    }
 
    @Test
-   public void testWrite() throws IOException
+   public void write() throws IOException
    {
       final JsonWriter writer = mock(JsonWriter.class);
       this.typeAdapter.write(writer, TimeUnit.SECONDS);
@@ -52,10 +53,10 @@ public class TimeUnitTypeAdapterTest
    }
 
    @Test
-   public void testRead() throws IOException
+   public void read() throws IOException
    {
       final JsonReader reader = mock(JsonReader.class);
       when(reader.nextString()).thenReturn("s");
-      Assert.assertEquals(TimeUnit.SECONDS, this.typeAdapter.read(reader));
+      assertThat(this.typeAdapter.read(reader), is(TimeUnit.SECONDS));
    }
 }

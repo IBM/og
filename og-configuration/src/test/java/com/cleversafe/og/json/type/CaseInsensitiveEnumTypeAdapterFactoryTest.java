@@ -19,19 +19,20 @@
 
 package com.cleversafe.og.json.type;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.cleversafe.og.json.DistributionType;
-import com.cleversafe.og.util.SizeUnit;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
@@ -57,63 +58,34 @@ public class CaseInsensitiveEnumTypeAdapterFactoryTest
    }
 
    @Test
-   public void testNonEnum()
+   public void nonEnumCreate()
    {
-      Assert.assertNull(this.typeAdapterFactory.create(this.gson, TypeToken.get(String.class)));
+      assertThat(this.typeAdapterFactory.create(this.gson, TypeToken.get(String.class)),
+            nullValue());
    }
 
    @Test
-   public void testEnum() throws IOException
+   public void isEnum() throws IOException
    {
       final TypeAdapter<DistributionType> typeAdapter =
             this.typeAdapterFactory.create(this.gson, TypeToken.get(DistributionType.class));
 
-      Assert.assertNotNull(typeAdapter);
+      assertThat(typeAdapter, notNullValue());
 
       typeAdapter.write(this.writer, DistributionType.NORMAL);
       verify(this.writer).value("normal");
 
       when(this.reader.nextString()).thenReturn("NormAL");
-      Assert.assertEquals(DistributionType.NORMAL, typeAdapter.read(this.reader));
+      assertThat(typeAdapter.read(this.reader), is(DistributionType.NORMAL));
    }
 
    @Test(expected = JsonSyntaxException.class)
-   public void testEnumReadFailure() throws IOException
+   public void nonEnumRead() throws IOException
    {
       final TypeAdapter<DistributionType> typeAdapter =
             this.typeAdapterFactory.create(this.gson, TypeToken.get(DistributionType.class));
 
       when(this.reader.nextString()).thenReturn("fakeDistribution");
       typeAdapter.read(this.reader);
-   }
-
-   @Test
-   public void testSizeUnit() throws IOException
-   {
-      final TypeAdapter<SizeUnit> typeAdapter =
-            this.typeAdapterFactory.create(this.gson, TypeToken.get(SizeUnit.class));
-
-      Assert.assertNotNull(typeAdapter);
-
-      typeAdapter.write(this.writer, SizeUnit.BYTES);
-      verify(this.writer).value("bytes");
-
-      when(this.reader.nextString()).thenReturn("ByteS");
-      Assert.assertEquals(SizeUnit.BYTES, typeAdapter.read(this.reader));
-   }
-
-   @Test
-   public void testTimeUnit() throws IOException
-   {
-      final TypeAdapter<TimeUnit> typeAdapter =
-            this.typeAdapterFactory.create(this.gson, TypeToken.get(TimeUnit.class));
-
-      Assert.assertNotNull(typeAdapter);
-
-      typeAdapter.write(this.writer, TimeUnit.DAYS);
-      verify(this.writer).value("days");
-
-      when(this.reader.nextString()).thenReturn("DayS");
-      Assert.assertEquals(TimeUnit.DAYS, typeAdapter.read(this.reader));
    }
 }
