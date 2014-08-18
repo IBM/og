@@ -19,11 +19,11 @@
 
 package com.cleversafe.og.cli;
 
-import org.apache.logging.log4j.core.lookup.StrLookup;
-import org.junit.Assert;
-import org.junit.Test;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 
-import com.cleversafe.og.cli.OGDatetimeLookup;
+import org.apache.logging.log4j.core.lookup.StrLookup;
+import org.junit.Test;
 
 public class OGDatetimeLookupTest
 {
@@ -34,7 +34,8 @@ public class OGDatetimeLookupTest
       final String s1 = lookup.lookup(null);
       final String s2 = lookup.lookup(null);
       final String s3 = lookup.lookup(null, null);
-      Assert.assertEquals(s1, s2);
-      Assert.assertEquals(s2, s3);
+
+      assertThat(s1, is(s2));
+      assertThat(s2, is(s3));
    }
 }
