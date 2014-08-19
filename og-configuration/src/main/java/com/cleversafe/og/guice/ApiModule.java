@@ -214,6 +214,10 @@ public class ApiModule extends AbstractModule
          final Supplier<String> container,
          final CachingSupplier<String> object)
    {
+      checkNotNull(scheme);
+      checkNotNull(host);
+      checkNotNull(container);
+
       final List<Supplier<String>> path = Lists.newArrayList();
       if (uriRoot != null)
          path.add(uriRoot);
