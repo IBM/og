@@ -30,7 +30,6 @@ import com.cleversafe.og.http.HttpAuth;
 import com.cleversafe.og.http.ResponseBodyConsumer;
 import com.cleversafe.og.json.ClientConfig;
 import com.cleversafe.og.util.Version;
-import com.google.common.base.Optional;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -51,7 +50,7 @@ public class ClientModule extends AbstractModule
    @Provides
    @Singleton
    public Client provideClient(
-         final Optional<HttpAuth> authentication,
+         final HttpAuth authentication,
          final Map<String, ResponseBodyConsumer> responseBodyConsumers)
    {
       final ApacheClient.Builder b = new ApacheClient.Builder()
@@ -64,7 +63,7 @@ public class ClientModule extends AbstractModule
             .usingChunkedEncoding(this.config.isChunkedEncoding())
             .usingExpectContinue(this.config.isExpectContinue())
             .withWaitForContinue(this.config.getWaitForContinue())
-            .withAuthentication(authentication.orNull())
+            .withAuthentication(authentication)
             .withUserAgent(Version.displayVersion())
             .withWriteThroughput(this.config.getWriteThroughput())
             .withReadThroughput(this.config.getReadThroughput());

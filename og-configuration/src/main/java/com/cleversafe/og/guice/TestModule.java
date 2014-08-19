@@ -79,7 +79,6 @@ import com.cleversafe.og.util.distribution.NormalDistribution;
 import com.cleversafe.og.util.distribution.PoissonDistribution;
 import com.cleversafe.og.util.distribution.UniformDistribution;
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -209,11 +208,11 @@ public class TestModule extends AbstractModule
 
    @Provides
    @Singleton
-   public Optional<Supplier<Integer>> providePort()
+   public Supplier<Integer> providePort()
    {
       if (this.config.getPort() != null)
-         return Optional.of(Suppliers.of(this.config.getPort()));
-      return Optional.absent();
+         return Suppliers.of(this.config.getPort());
+      return null;
    }
 
    @Provides
@@ -225,18 +224,18 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @UriRoot
-   public Optional<Supplier<String>> provideUriRoot()
+   public Supplier<String> provideUriRoot()
    {
       final String uriRoot = this.config.getUriRoot();
       if (uriRoot != null)
       {
          final String root = CharMatcher.is('/').trimFrom(uriRoot);
          if (root.length() > 0)
-            return Optional.of(Suppliers.of(root));
-         return Optional.absent();
+            return Suppliers.of(root);
+         return null;
       }
 
-      return Optional.of(Suppliers.of(this.config.getApi().toString().toLowerCase()));
+      return Suppliers.of(this.config.getApi().toString().toLowerCase());
    }
 
    @Provides
@@ -252,49 +251,48 @@ public class TestModule extends AbstractModule
    @Provides
    @Singleton
    @Username
-   public Optional<Supplier<String>> provideUsername()
+   public Supplier<String> provideUsername()
    {
       final String username = this.config.getAuthentication().getUsername();
       if (username != null)
       {
          checkArgument(username.length() > 0, "username must not be empty string");
-         return Optional.of(Suppliers.of(username));
+         return Suppliers.of(username);
       }
-      return Optional.absent();
+      return null;
    }
 
    @Provides
    @Singleton
    @Password
-   public Optional<Supplier<String>> providePassword()
+   public Supplier<String> providePassword()
    {
       final String password = this.config.getAuthentication().getPassword();
       if (password != null)
       {
          checkArgument(password.length() > 0, "password must not be empty string");
-         return Optional.of(Suppliers.of(password));
+         return Suppliers.of(password);
       }
-      return Optional.absent();
+      return null;
    }
 
    @Provides
    @Singleton
-   public Optional<HttpAuth> provideAuthentication(
-         @Username final Optional<Supplier<String>> username,
-         @Password final Optional<Supplier<String>> password)
+   public HttpAuth provideAuthentication(
+         @Username final Supplier<String> username,
+         @Password final Supplier<String> password)
    {
       final AuthType type = checkNotNull(this.config.getAuthentication().getType());
 
-      if (username.isPresent() && password.isPresent())
+      if (username != null && password != null)
       {
-         // have to cast to HttpAuth to satisfy generics
          if (AuthType.AWSV2 == type)
-            return Optional.of((HttpAuth) new AWSAuthV2());
+            return new AWSAuthV2();
          else
-            return Optional.of((HttpAuth) new BasicAuth());
+            return new BasicAuth();
       }
-      else if (!username.isPresent() && !password.isPresent())
-         return Optional.absent();
+      else if (username == null && password == null)
+         return null;
 
       throw new IllegalArgumentException("If username is not null password must also be not null");
    }

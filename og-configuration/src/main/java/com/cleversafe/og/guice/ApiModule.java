@@ -19,6 +19,8 @@
 
 package com.cleversafe.og.guice;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +58,6 @@ import com.cleversafe.og.supplier.CachingSupplier;
 import com.cleversafe.og.supplier.RequestSupplier;
 import com.cleversafe.og.supplier.Suppliers;
 import com.cleversafe.og.supplier.UriSupplier;
-import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -78,12 +79,13 @@ public class ApiModule extends AbstractModule
    public Supplier<Request> provideWrite(
          final Api api,
          @WriteUri final Supplier<URI> uri,
-         @WriteObjectName final Optional<CachingSupplier<String>> object,
+         @WriteObjectName final CachingSupplier<String> object,
          @WriteHeaders final Map<Supplier<String>, Supplier<String>> headers,
          final Supplier<Body> body,
-         @Username final Optional<Supplier<String>> username,
-         @Password final Optional<Supplier<String>> password)
+         @Username final Supplier<String> username,
+         @Password final Supplier<String> password)
    {
+      checkNotNull(api);
       // SOH needs to use a special response consumer to extract the returned object id
       if (Api.SOH == api)
          headers.put(Suppliers.of(Headers.X_OG_RESPONSE_BODY_CONSUMER),
@@ -94,44 +96,16 @@ public class ApiModule extends AbstractModule
 
    @Provides
    @Singleton
-   @WriteUri
-   public Supplier<URI> providWriteUri(
-         final Supplier<Scheme> scheme,
-         @WriteHost final Supplier<String> host,
-         final Optional<Supplier<Integer>> port,
-         @UriRoot final Optional<Supplier<String>> uriRoot,
-         @Container final Supplier<String> container,
-         @WriteObjectName final Optional<CachingSupplier<String>> object)
-   {
-      return createUri(scheme, host, port, uriRoot, container, object);
-   }
-
-   @Provides
-   @Singleton
    @Read
    public Supplier<Request> provideRead(
          @ReadUri final Supplier<URI> uri,
          @ReadObjectName final CachingSupplier<String> object,
          @ReadHeaders final Map<Supplier<String>, Supplier<String>> headers,
-         @Username final Optional<Supplier<String>> username,
-         @Password final Optional<Supplier<String>> password)
+         @Username final Supplier<String> username,
+         @Password final Supplier<String> password)
    {
-      return createRequestSupplier(Method.GET, uri, Optional.of(object), headers,
-            Suppliers.of(Bodies.none()), username, password);
-   }
-
-   @Provides
-   @Singleton
-   @ReadUri
-   public Supplier<URI> providReadUri(
-         final Supplier<Scheme> scheme,
-         @ReadHost final Supplier<String> host,
-         final Optional<Supplier<Integer>> port,
-         @UriRoot final Optional<Supplier<String>> uriRoot,
-         @Container final Supplier<String> container,
-         @ReadObjectName final CachingSupplier<String> object)
-   {
-      return createUri(scheme, host, port, uriRoot, container, Optional.of(object));
+      return createRequestSupplier(Method.GET, uri, object, headers, Suppliers.of(Bodies.none()),
+            username, password);
    }
 
    @Provides
@@ -141,45 +115,36 @@ public class ApiModule extends AbstractModule
          @DeleteUri final Supplier<URI> uri,
          @DeleteObjectName final CachingSupplier<String> object,
          @DeleteHeaders final Map<Supplier<String>, Supplier<String>> headers,
-         @Username final Optional<Supplier<String>> username,
-         @Password final Optional<Supplier<String>> password)
+         @Username final Supplier<String> username,
+         @Password final Supplier<String> password)
    {
-      return createRequestSupplier(Method.DELETE, uri, Optional.of(object), headers,
+      return createRequestSupplier(Method.DELETE, uri, object, headers,
             Suppliers.of(Bodies.none()), username, password);
-   }
-
-   @Provides
-   @Singleton
-   @DeleteUri
-   public Supplier<URI> providDeleteUri(
-         final Supplier<Scheme> scheme,
-         @DeleteHost final Supplier<String> host,
-         final Optional<Supplier<Integer>> port,
-         @UriRoot final Optional<Supplier<String>> uriRoot,
-         @Container final Supplier<String> container,
-         @DeleteObjectName final CachingSupplier<String> object)
-   {
-      return createUri(scheme, host, port, uriRoot, container, Optional.of(object));
    }
 
    private Supplier<Request> createRequestSupplier(
          final Method method,
          final Supplier<URI> uri,
-         final Optional<CachingSupplier<String>> object,
+         final CachingSupplier<String> object,
          final Map<Supplier<String>, Supplier<String>> headers,
          final Supplier<Body> body,
-         final Optional<Supplier<String>> username,
-         final Optional<Supplier<String>> password)
+         final Supplier<String> username,
+         final Supplier<String> password)
    {
+      checkNotNull(method);
+      checkNotNull(uri);
+      checkNotNull(headers);
+      checkNotNull(body);
+
       final RequestSupplier.Builder b = new RequestSupplier.Builder(Suppliers.of(method), uri);
 
-      if (object.isPresent())
+      if (object != null)
          b.withHeader(Suppliers.of(Headers.X_OG_OBJECT_NAME), new Supplier<String>()
          {
             @Override
             public String get()
             {
-               return object.get().getCachedValue();
+               return object.getCachedValue();
             }
          });
 
@@ -190,33 +155,75 @@ public class ApiModule extends AbstractModule
 
       b.withBody(body);
 
-      if (username.isPresent() && password.isPresent())
+      if (username != null && password != null)
       {
-         b.withHeader(Suppliers.of(Headers.X_OG_USERNAME), username.get());
-         b.withHeader(Suppliers.of(Headers.X_OG_PASSWORD), password.get());
+         b.withHeader(Suppliers.of(Headers.X_OG_USERNAME), username);
+         b.withHeader(Suppliers.of(Headers.X_OG_PASSWORD), password);
       }
 
       return b.build();
    }
 
+   @Provides
+   @Singleton
+   @WriteUri
+   public Supplier<URI> providWriteUri(
+         final Supplier<Scheme> scheme,
+         @WriteHost final Supplier<String> host,
+         final Supplier<Integer> port,
+         @UriRoot final Supplier<String> uriRoot,
+         @Container final Supplier<String> container,
+         @WriteObjectName final CachingSupplier<String> object)
+   {
+      return createUri(scheme, host, port, uriRoot, container, object);
+   }
+
+   @Provides
+   @Singleton
+   @ReadUri
+   public Supplier<URI> providReadUri(
+         final Supplier<Scheme> scheme,
+         @ReadHost final Supplier<String> host,
+         final Supplier<Integer> port,
+         @UriRoot final Supplier<String> uriRoot,
+         @Container final Supplier<String> container,
+         @ReadObjectName final CachingSupplier<String> object)
+   {
+      return createUri(scheme, host, port, uriRoot, container, object);
+   }
+
+   @Provides
+   @Singleton
+   @DeleteUri
+   public Supplier<URI> providDeleteUri(
+         final Supplier<Scheme> scheme,
+         @DeleteHost final Supplier<String> host,
+         final Supplier<Integer> port,
+         @UriRoot final Supplier<String> uriRoot,
+         @Container final Supplier<String> container,
+         @DeleteObjectName final CachingSupplier<String> object)
+   {
+      return createUri(scheme, host, port, uriRoot, container, object);
+   }
+
    private Supplier<URI> createUri(
          final Supplier<Scheme> scheme,
          final Supplier<String> host,
-         final Optional<Supplier<Integer>> port,
-         final Optional<Supplier<String>> uriRoot,
+         final Supplier<Integer> port,
+         final Supplier<String> uriRoot,
          final Supplier<String> container,
-         final Optional<CachingSupplier<String>> object)
+         final CachingSupplier<String> object)
    {
       final List<Supplier<String>> path = Lists.newArrayList();
-      if (uriRoot.isPresent())
-         path.add(uriRoot.get());
+      if (uriRoot != null)
+         path.add(uriRoot);
       path.add(container);
-      if (object.isPresent())
-         path.add(object.get());
+      if (object != null)
+         path.add(object);
 
       final UriSupplier.Builder b = new UriSupplier.Builder(host, path).withScheme(scheme);
 
-      if (port.isPresent())
+      if (port != null)
          b.onPort(port.get());
 
       return b.build();

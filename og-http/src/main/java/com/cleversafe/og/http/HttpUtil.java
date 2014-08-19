@@ -27,7 +27,6 @@ import java.util.Locale;
 
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.util.Operation;
-import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Range;
@@ -76,9 +75,9 @@ public class HttpUtil
     * 
     * @param uri
     *           the uri to extract an object name from
-    * @return an optional that may contain an object name, if it exists
+    * @return an object name, if it exists
     */
-   public static Optional<String> getObjectName(final URI uri)
+   public static String getObjectName(final URI uri)
    {
       checkNotNull(uri);
       checkNotNull(uri.getScheme());
@@ -87,7 +86,7 @@ public class HttpUtil
       final List<String> parts = URI_SPLITTER.splitToList(uri.getPath());
 
       if (parts.size() == 3)
-         return Optional.of(parts.get(2));
+         return parts.get(2);
 
       if (parts.size() == 2)
       {
@@ -95,13 +94,13 @@ public class HttpUtil
          {
             // if 2 parts and first part is an api, must be soh write
             Api.valueOf(parts.get(0).toUpperCase(Locale.US));
-            return Optional.absent();
+            return null;
          }
          catch (final IllegalArgumentException e)
          {
-            return Optional.of(parts.get(1));
+            return parts.get(1);
          }
       }
-      return Optional.absent();
+      return null;
    }
 }

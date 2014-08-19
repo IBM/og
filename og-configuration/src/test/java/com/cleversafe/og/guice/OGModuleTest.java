@@ -21,9 +21,9 @@ package com.cleversafe.og.guice;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.Mockito.mock;
 
 import java.util.List;
@@ -40,7 +40,6 @@ import com.cleversafe.og.object.AbstractObjectNameConsumer;
 import com.cleversafe.og.object.ObjectManager;
 import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.supplier.CachingSupplier;
-import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.eventbus.EventBus;
 import com.tngtech.java.junit.dataprovider.DataProvider;
@@ -148,15 +147,13 @@ public class OGModuleTest
    @Test
    public void provideWriteObjectNameSOH()
    {
-      final Optional<CachingSupplier<String>> s = this.module.provideWriteObjectName(Api.SOH);
-      assertThat(s.isPresent(), is(false));
+      assertThat(this.module.provideWriteObjectName(Api.SOH), nullValue());
    }
 
    @Test
    public void provideWriteObjectNameS3()
    {
-      final Optional<CachingSupplier<String>> s = this.module.provideWriteObjectName(Api.S3);
-      assertThat(s.isPresent(), is(true));
+      assertThat(this.module.provideWriteObjectName(Api.S3), notNullValue());
    }
 
    @Test(expected = NullPointerException.class)

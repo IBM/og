@@ -22,6 +22,7 @@ package com.cleversafe.og.guice;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -62,7 +63,6 @@ import com.cleversafe.og.scheduling.RequestRateScheduler;
 import com.cleversafe.og.scheduling.Scheduler;
 import com.cleversafe.og.supplier.Suppliers;
 import com.cleversafe.og.util.SizeUnit;
-import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -307,17 +307,17 @@ public class TestModuleTest
    }
 
    @Test
-   public void providePortAbsentPort()
+   public void providePortNullPort()
    {
       when(this.config.getPort()).thenReturn(null);
-      assertThat(this.module.providePort().isPresent(), is(false));
+      assertThat(this.module.providePort(), nullValue());
    }
 
    @Test
    public void providePort()
    {
       when(this.config.getPort()).thenReturn(80);
-      assertThat(this.module.providePort().get().get(), is(80));
+      assertThat(this.module.providePort().get(), is(80));
    }
 
    @Test(expected = NullPointerException.class)
@@ -356,7 +356,7 @@ public class TestModuleTest
    {
       when(this.config.getUriRoot()).thenReturn(uriRoot);
       when(this.config.getApi()).thenReturn(api);
-      assertThat(this.module.provideUriRoot().get().get(), is(path));
+      assertThat(this.module.provideUriRoot().get(), is(path));
    }
 
    @Test
@@ -364,7 +364,7 @@ public class TestModuleTest
    {
       when(this.config.getUriRoot()).thenReturn("/");
       when(this.config.getApi()).thenReturn(Api.S3);
-      assertThat(this.module.provideUriRoot().isPresent(), is(false));
+      assertThat(this.module.provideUriRoot(), nullValue());
    }
 
    @Test(expected = NullPointerException.class)
@@ -392,7 +392,7 @@ public class TestModuleTest
    public void provideUsernameNullUsername()
    {
       when(this.config.getAuthentication()).thenReturn(new AuthenticationConfig());
-      assertThat(this.module.provideUsername().isPresent(), is(false));
+      assertThat(this.module.provideUsername(), nullValue());
    }
 
    @Test(expected = IllegalArgumentException.class)
@@ -410,14 +410,14 @@ public class TestModuleTest
       final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
       when(authConfig.getUsername()).thenReturn("user");
       when(this.config.getAuthentication()).thenReturn(authConfig);
-      assertThat(this.module.provideUsername().get().get(), is("user"));
+      assertThat(this.module.provideUsername().get(), is("user"));
    }
 
    @Test
    public void providePasswordNullPassword()
    {
       when(this.config.getAuthentication()).thenReturn(new AuthenticationConfig());
-      assertThat(this.module.providePassword().isPresent(), is(false));
+      assertThat(this.module.providePassword(), nullValue());
    }
 
    @Test(expected = IllegalArgumentException.class)
@@ -435,19 +435,19 @@ public class TestModuleTest
       final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
       when(authConfig.getPassword()).thenReturn("password");
       when(this.config.getAuthentication()).thenReturn(authConfig);
-      assertThat(this.module.providePassword().get().get(), is("password"));
+      assertThat(this.module.providePassword().get(), is("password"));
    }
 
    @DataProvider
    public static Object[][] provideInvalidAuthentication()
    {
-      final Optional<Supplier<String>> username = Optional.of(Suppliers.of("username"));
-      final Optional<Supplier<String>> password = Optional.of(Suppliers.of("password"));
+      final Supplier<String> username = Suppliers.of("username");
+      final Supplier<String> password = Suppliers.of("password");
 
       return new Object[][]{
             {null, username, password, NullPointerException.class},
-            {AuthType.BASIC, Optional.absent(), password, IllegalArgumentException.class},
-            {AuthType.BASIC, username, Optional.absent(), IllegalArgumentException.class},
+            {AuthType.BASIC, null, password, IllegalArgumentException.class},
+            {AuthType.BASIC, username, null, IllegalArgumentException.class},
       };
    }
 
@@ -455,8 +455,8 @@ public class TestModuleTest
    @UseDataProvider("provideInvalidAuthentication")
    public void invalidProvideAuthentication(
          final AuthType authType,
-         final Optional<Supplier<String>> username,
-         final Optional<Supplier<String>> password,
+         final Supplier<String> username,
+         final Supplier<String> password,
          final Class<Exception> expectedException)
    {
       final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
@@ -468,13 +468,12 @@ public class TestModuleTest
    }
 
    @Test
-   public void provideAuthenticationAbsentBoth()
+   public void provideAuthenticationNullBoth()
    {
       final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
       when(authConfig.getType()).thenReturn(AuthType.BASIC);
       when(this.config.getAuthentication()).thenReturn(authConfig);
-      final Optional<Supplier<String>> absent = Optional.absent();
-      assertThat(this.module.provideAuthentication(absent, absent).isPresent(), is(false));
+      assertThat(this.module.provideAuthentication(null, null), nullValue());
    }
 
    @DataProvider
@@ -496,11 +495,10 @@ public class TestModuleTest
       when(authConfig.getType()).thenReturn(authType);
       when(this.config.getAuthentication()).thenReturn(authConfig);
 
-      final Optional<HttpAuth> auth = this.module.provideAuthentication(
-            Optional.of(Suppliers.of("username")),
-            Optional.of(Suppliers.of("password")));
+      final HttpAuth auth =
+            this.module.provideAuthentication(Suppliers.of("username"), Suppliers.of("password"));
 
-      assertThat(authClass.isInstance(auth.get()), is(true));
+      assertThat(authClass.isInstance(auth), is(true));
    }
 
    @Test(expected = NullPointerException.class)

@@ -21,6 +21,7 @@ package com.cleversafe.og.http;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -89,15 +90,13 @@ public class HttpUtilTest
    @Test
    public void rootUriNoObject() throws URISyntaxException
    {
-      assertThat(HttpUtil.getObjectName(new URI("http://192.168.8.1/container")).isPresent(),
-            is(false));
+      assertThat(HttpUtil.getObjectName(new URI("http://192.168.8.1/container")), nullValue());
    }
 
    @Test
    public void noObject() throws URISyntaxException
    {
-      assertThat(HttpUtil.getObjectName(new URI("http://192.168.8.1/soh/container")).isPresent(),
-            is(false));
+      assertThat(HttpUtil.getObjectName(new URI("http://192.168.8.1/soh/container")), nullValue());
    }
 
    @DataProvider
@@ -115,6 +114,6 @@ public class HttpUtilTest
    @UseDataProvider("provideGetObjectName")
    public void getObjectName(final String uri) throws URISyntaxException
    {
-      assertThat(HttpUtil.getObjectName(new URI(uri)).get(), is("object"));
+      assertThat(HttpUtil.getObjectName(new URI(uri)), is("object"));
    }
 }
