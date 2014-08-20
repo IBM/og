@@ -60,6 +60,7 @@ public class RequestLogEntry
    final String requestId;
    final String stat;
    final Long objectLength;
+   final String objectName;
 
    private static final DateTimeFormatter FORMATTER = DateTimeFormat.forPattern(
          "dd/MMM/yyyy:HH:mm:ss Z").withLocale(Locale.US);
@@ -120,5 +121,6 @@ public class RequestLogEntry
       this.requestId = response.headers().get(X_CLV_REQUEST_ID);
       this.stat = null;
       this.objectLength = objectSize;
+      this.objectName = objectName;
    }
 }
