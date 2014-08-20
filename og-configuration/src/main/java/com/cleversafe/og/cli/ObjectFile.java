@@ -34,70 +34,90 @@ import java.io.OutputStreamWriter;
 import com.google.common.base.Charsets;
 import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteStreams;
-import com.martiansoftware.jsap.JSAPResult;
 
-public class ObjectFile extends AbstractCLI
+public class ObjectFile extends CLI
 {
-   private static final String JSAP_RESOURCE_NAME = "objectfile.jsap";
    private static final BaseEncoding ENCODING = BaseEncoding.base16().lowerCase();
    private static int ID_LENGTH = 18;
+   private InputStream in;
+   private OutputStream out;
 
-   public static void main(final String[] args)
+   public ObjectFile(final String[] args)
    {
-      final JSAPResult jsapResult = processArgs(JSAP_RESOURCE_NAME, args);
+      super("object-file", "objectfile.jsap", args);
       try
       {
-         final InputStream in = getInputStream(jsapResult.getFile("input"));
-         final OutputStream out = getOutputStream(jsapResult.getFile("output"));
-         if (jsapResult.getBoolean("write"))
-            write(in, out);
-         else if (jsapResult.getBoolean("read"))
-            read(in, out);
-         else
-            identity(in, out);
+         this.in = getInputStream();
+         this.out = getOutputStream();
+      }
+      catch (final Exception e)
+      {
+         _consoleLogger.error("", e);
+         this.error = true;
+         this.exitCode = CONFIGURATION_ERROR;
+      }
+   }
 
-         if (!out.equals(System.out))
-            out.close();
+   @Override
+   public boolean start()
+   {
+      boolean success = true;
+      try
+      {
+         if (this.jsapResult.getBoolean("write"))
+            write();
+         else if (this.jsapResult.getBoolean("read"))
+            read();
+         else
+            identity();
+
+         if (!this.out.equals(System.out))
+            this.out.close();
       }
       catch (final IOException e)
       {
          _consoleLogger.error("", e);
-         System.exit(UNKNOWN_ERROR);
+         success = false;
       }
+
+      return success;
    }
 
-   public static InputStream getInputStream(final File input) throws FileNotFoundException
+   private InputStream getInputStream() throws FileNotFoundException
    {
+      final File input = this.jsapResult.getFile("input");
       if (input != null)
          return new FileInputStream(input);
       return System.in;
    }
 
-   public static OutputStream getOutputStream(final File output) throws FileNotFoundException
+   private OutputStream getOutputStream() throws FileNotFoundException
    {
+      final File output = this.jsapResult.getFile("output");
       if (output != null)
          return new FileOutputStream(output);
       return System.out;
    }
 
-   public static void write(final InputStream in, final OutputStream out) throws IOException
+   private void write() throws IOException
    {
-      final BufferedReader reader = new BufferedReader(new InputStreamReader(in, Charsets.UTF_8));
+      final BufferedReader reader =
+            new BufferedReader(new InputStreamReader(this.in, Charsets.UTF_8));
       String line;
       while ((line = reader.readLine()) != null)
       {
-         out.write(ENCODING.decode(line));
+         this.out.write(ENCODING.decode(line));
       }
    }
 
-   public static void read(final InputStream in, final OutputStream out) throws IOException
+   private void read() throws IOException
    {
       BufferedWriter writer = null;
       try
       {
-         writer = new BufferedWriter(new OutputStreamWriter(out, Charsets.UTF_8));
+         writer = new BufferedWriter(new OutputStreamWriter(this.out, Charsets.UTF_8));
          final byte[] buf = new byte[ID_LENGTH];
-         while (in.read(buf) == ID_LENGTH)
+         while (this.in.read(buf) == ID_LENGTH)
          {
             writer.write(ENCODING.encode(buf));
             writer.newLine();
@@ -110,8 +130,29 @@ public class ObjectFile extends AbstractCLI
       }
    }
 
-   public static void identity(final InputStream in, final OutputStream out) throws IOException
+   private void identity() throws IOException
    {
-      ByteStreams.copy(in, out);
+      ByteStreams.copy(this.in, this.out);
+   }
+
+   public static void main(final String[] args)
+   {
+      final ObjectFile of = new ObjectFile(args);
+      if (of.shouldStop())
+      {
+         if (of.error())
+         {
+            of.printErrors();
+            of.printUsage();
+         }
+         else if (of.help())
+            of.printUsage();
+         else if (of.version())
+            of.printVersion();
+
+         of.exit(of.exitCode());
+      }
+
+      of.start();
    }
 }
