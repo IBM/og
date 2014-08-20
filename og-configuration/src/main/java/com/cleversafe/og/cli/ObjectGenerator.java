@@ -64,9 +64,9 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 
-public class OG extends CLI
+public class ObjectGenerator extends CLI
 {
-   private static final Logger _logger = LoggerFactory.getLogger(OG.class);
+   private static final Logger _logger = LoggerFactory.getLogger(ObjectGenerator.class);
    private static final Logger _testJsonLogger = LoggerFactory.getLogger("TestJsonLogger");
    private static final Logger _clientJsonLogger = LoggerFactory.getLogger("ClientJsonLogger");
    protected static final Logger _consoleLogger = LoggerFactory.getLogger("ConsoleLogger");
@@ -78,7 +78,7 @@ public class OG extends CLI
    private ExecutorService executorService;
    private CompletionService<Boolean> completionService;
 
-   public OG(final String[] args)
+   public ObjectGenerator(final String[] args)
    {
       super("og", "og.jsap", args);
       if (this.error)
@@ -231,7 +231,7 @@ public class OG extends CLI
       logBanner();
       _consoleLogger.info("Configuring...");
 
-      final OG og = new OG(args);
+      final ObjectGenerator og = new ObjectGenerator(args);
       if (og.shouldStop())
       {
          if (og.error())
