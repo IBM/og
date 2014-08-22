@@ -19,6 +19,8 @@
 
 package com.cleversafe.og.cli;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -100,8 +102,10 @@ public class ObjectFile
 
    public static void write(final InputStream in, final OutputStream out) throws IOException
    {
-      final BufferedReader reader =
-            new BufferedReader(new InputStreamReader(in, Charsets.UTF_8));
+      checkNotNull(in);
+      checkNotNull(out);
+
+      final BufferedReader reader = new BufferedReader(new InputStreamReader(in, Charsets.UTF_8));
       String line;
       while ((line = reader.readLine()) != null)
       {
@@ -111,6 +115,9 @@ public class ObjectFile
 
    public static void read(final InputStream in, final OutputStream out) throws IOException
    {
+      checkNotNull(in);
+      checkNotNull(out);
+
       BufferedWriter writer = null;
       try
       {
