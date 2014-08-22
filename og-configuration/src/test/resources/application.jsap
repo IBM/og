@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<jsap>
+	<parameters>
+		<switch>
+			<id>version</id>
+			<shortFlag>v</shortFlag>
+			<longFlag>version</longFlag>
+			<help>Prints the og version and exits</help>
+		</switch>
+		<switch>
+			<id>help</id>
+			<shortFlag>h</shortFlag>
+			<longFlag>help</longFlag>
+			<help>Prints this help and exits</help>
+		</switch>
+	</parameters>
+</jsap>
