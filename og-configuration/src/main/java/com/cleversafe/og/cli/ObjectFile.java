@@ -31,93 +31,92 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.cleversafe.og.cli.Application.Cli;
 import com.google.common.base.Charsets;
 import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteStreams;
 
-public class ObjectFile extends CLI
+public class ObjectFile
 {
+   private static final Logger _consoleLogger = LoggerFactory.getLogger("ConsoleLogger");
    private static final BaseEncoding ENCODING = BaseEncoding.base16().lowerCase();
    private static int ID_LENGTH = 18;
-   private InputStream in;
-   private OutputStream out;
 
-   public ObjectFile(final String[] args)
+   public static void main(final String[] args)
    {
-      super("object-file", "objectfile.jsap", args);
+      final Cli cli = Application.cli("object-file", "objectfile.jsap", args);
+      if (cli.shouldStop())
+      {
+         if (cli.error())
+         {
+            cli.printErrors();
+            cli.printUsage();
+         }
+         else if (cli.help())
+            cli.printUsage();
+         else if (cli.version())
+            cli.printVersion();
+
+         Application.exit(Application.EXIT_CONFIGURATION);
+      }
+
       try
       {
-         this.in = getInputStream();
-         this.out = getOutputStream();
-      }
-      catch (final Exception e)
-      {
-         _consoleLogger.error("", e);
-         this.error = true;
-         this.exitCode = CONFIGURATION_ERROR;
-      }
-   }
-
-   @Override
-   public boolean start()
-   {
-      boolean success = true;
-      try
-      {
-         if (this.jsapResult.getBoolean("write"))
-            write();
-         else if (this.jsapResult.getBoolean("read"))
-            read();
+         final InputStream in = getInputStream(cli.flags().getFile("input"));
+         final OutputStream out = getOutputStream(cli.flags().getFile("output"));
+         if (cli.flags().getBoolean("write"))
+            write(in, out);
+         else if (cli.flags().getBoolean("read"))
+            read(in, out);
          else
-            identity();
+            ByteStreams.copy(in, out);
 
-         if (!this.out.equals(System.out))
-            this.out.close();
+         if (!out.equals(System.out))
+            out.close();
       }
       catch (final IOException e)
       {
          _consoleLogger.error("", e);
-         success = false;
       }
 
-      return success;
    }
 
-   private InputStream getInputStream() throws FileNotFoundException
+   public static InputStream getInputStream(final File input) throws FileNotFoundException
    {
-      final File input = this.jsapResult.getFile("input");
       if (input != null)
          return new FileInputStream(input);
       return System.in;
    }
 
-   private OutputStream getOutputStream() throws FileNotFoundException
+   public static OutputStream getOutputStream(final File output) throws FileNotFoundException
    {
-      final File output = this.jsapResult.getFile("output");
       if (output != null)
          return new FileOutputStream(output);
       return System.out;
    }
 
-   private void write() throws IOException
+   public static void write(final InputStream in, final OutputStream out) throws IOException
    {
       final BufferedReader reader =
-            new BufferedReader(new InputStreamReader(this.in, Charsets.UTF_8));
+            new BufferedReader(new InputStreamReader(in, Charsets.UTF_8));
       String line;
       while ((line = reader.readLine()) != null)
       {
-         this.out.write(ENCODING.decode(line));
+         out.write(ENCODING.decode(line));
       }
    }
 
-   private void read() throws IOException
+   public static void read(final InputStream in, final OutputStream out) throws IOException
    {
       BufferedWriter writer = null;
       try
       {
-         writer = new BufferedWriter(new OutputStreamWriter(this.out, Charsets.UTF_8));
+         writer = new BufferedWriter(new OutputStreamWriter(out, Charsets.UTF_8));
          final byte[] buf = new byte[ID_LENGTH];
-         while (this.in.read(buf) == ID_LENGTH)
+         while (in.read(buf) == ID_LENGTH)
          {
             writer.write(ENCODING.encode(buf));
             writer.newLine();
@@ -128,31 +127,5 @@ public class ObjectFile extends CLI
          if (writer != null)
             writer.flush();
       }
-   }
-
-   private void identity() throws IOException
-   {
-      ByteStreams.copy(this.in, this.out);
-   }
-
-   public static void main(final String[] args)
-   {
-      final ObjectFile of = new ObjectFile(args);
-      if (of.shouldStop())
-      {
-         if (of.error())
-         {
-            of.printErrors();
-            of.printUsage();
-         }
-         else if (of.help())
-            of.printUsage();
-         else if (of.version())
-            of.printVersion();
-
-         of.exit(of.exitCode());
-      }
-
-      of.start();
    }
 }
