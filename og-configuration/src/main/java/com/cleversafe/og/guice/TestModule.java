@@ -550,6 +550,7 @@ public class TestModule extends AbstractModule
             throw new IllegalArgumentException(String.format(
                   "Unacceptable scheduler distribution [%s]", distribution));
       }
-      return new RequestRateScheduler(count, concurrency.getUnit());
+      return new RequestRateScheduler(count, concurrency.getUnit(), concurrency.getRamp(),
+            concurrency.getRampUnit());
    }
 }

@@ -955,6 +955,8 @@ public class TestModuleTest
       when(concurrencyConfig.getDistribution()).thenReturn(distribution);
       when(concurrencyConfig.getCount()).thenReturn(1.0);
       when(concurrencyConfig.getUnit()).thenReturn(TimeUnit.SECONDS);
+      when(concurrencyConfig.getRamp()).thenReturn(0.0);
+      when(concurrencyConfig.getRampUnit()).thenReturn(TimeUnit.SECONDS);
       when(this.config.getConcurrency()).thenReturn(concurrencyConfig);
 
       final Scheduler scheduler = this.module.provideScheduler(new EventBus());
