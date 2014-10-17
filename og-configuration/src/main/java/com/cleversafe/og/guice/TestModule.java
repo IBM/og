@@ -532,7 +532,7 @@ public class TestModule extends AbstractModule
       {
          final Scheduler scheduler =
                new ConcurrentRequestScheduler((int) Math.round(concurrency.getCount()),
-                     concurrency.getRamp(), concurrency.getRampUnit());
+                     concurrency.getRampup(), concurrency.getRampupUnit());
          eventBus.register(scheduler);
          return scheduler;
       }
@@ -551,7 +551,7 @@ public class TestModule extends AbstractModule
             throw new IllegalArgumentException(String.format(
                   "Unacceptable scheduler distribution [%s]", distribution));
       }
-      return new RequestRateScheduler(count, concurrency.getUnit(), concurrency.getRamp(),
-            concurrency.getRampUnit());
+      return new RequestRateScheduler(count, concurrency.getUnit(), concurrency.getRampup(),
+            concurrency.getRampupUnit());
    }
 }
