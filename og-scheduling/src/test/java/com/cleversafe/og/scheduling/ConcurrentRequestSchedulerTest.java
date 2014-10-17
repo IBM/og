@@ -26,25 +26,47 @@ import static org.mockito.Mockito.mock;
 
 import java.util.concurrent.TimeUnit;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
 
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
 import com.cleversafe.og.util.Pair;
 import com.google.common.util.concurrent.Uninterruptibles;
+import com.tngtech.java.junit.dataprovider.DataProvider;
+import com.tngtech.java.junit.dataprovider.DataProviderRunner;
+import com.tngtech.java.junit.dataprovider.UseDataProvider;
 
+@RunWith(DataProviderRunner.class)
 public class ConcurrentRequestSchedulerTest
 {
-   @Test(expected = IllegalArgumentException.class)
-   public void negativeConcurrentRequests()
+   @Rule
+   public ExpectedException thrown = ExpectedException.none();
+
+   @DataProvider
+   public static Object[][] provideInvalidConcurrentRequestScheduler()
    {
-      new ConcurrentRequestScheduler(-1);
+      final TimeUnit unit = TimeUnit.SECONDS;
+      return new Object[][]{
+            {-1, 0.0, unit, IllegalArgumentException.class},
+            {0, 0.0, unit, IllegalArgumentException.class},
+            {1, -1.0, unit, IllegalArgumentException.class},
+            {1, 0.0, null, NullPointerException.class}
+      };
    }
 
-   @Test(expected = IllegalArgumentException.class)
-   public void zeroConcurrentRequests()
+   @Test
+   @UseDataProvider("provideInvalidConcurrentRequestScheduler")
+   public void invalidConcurrentRequestScheduler(
+         final int concurrentRequests,
+         final double rampup,
+         final TimeUnit rampupUnit,
+         final Class<Exception> expectedException)
    {
-      new ConcurrentRequestScheduler(0);
+      this.thrown.expect(expectedException);
+      new ConcurrentRequestScheduler(concurrentRequests, rampup, rampupUnit);
    }
 
    @Test
@@ -62,7 +84,7 @@ public class ConcurrentRequestSchedulerTest
    private void concurrentRequestScheduler(final int concurrentRequests)
    {
       final ConcurrentRequestScheduler scheduler =
-            new ConcurrentRequestScheduler(concurrentRequests);
+            new ConcurrentRequestScheduler(concurrentRequests, 0.0, TimeUnit.SECONDS);
       int count = 0;
       final int threadWait = 50;
       new Thread(new Runnable()
@@ -87,7 +109,7 @@ public class ConcurrentRequestSchedulerTest
    @Test
    public void interruptedSchedulerThread()
    {
-      final ConcurrentRequestScheduler s = new ConcurrentRequestScheduler(1);
+      final ConcurrentRequestScheduler s = new ConcurrentRequestScheduler(1, 0.0, TimeUnit.SECONDS);
       final Thread t = new Thread(new Runnable()
       {
          @Override

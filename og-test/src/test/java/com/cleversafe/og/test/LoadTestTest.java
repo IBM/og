@@ -30,6 +30,7 @@ import static org.mockito.Mockito.when;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -94,7 +95,7 @@ public class LoadTestTest
       future.set(this.response);
       when(this.client.execute(this.request)).thenReturn(future);
 
-      this.scheduler = new ConcurrentRequestScheduler(1);
+      this.scheduler = new ConcurrentRequestScheduler(1, 0.0, TimeUnit.SECONDS);
       this.handler = new LoadTestSubscriberExceptionHandler();
       this.eventBus = new EventBus(this.handler);
       this.stats = new Statistics();

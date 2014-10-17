@@ -531,7 +531,8 @@ public class TestModule extends AbstractModule
       if (ConcurrencyType.THREADS == type)
       {
          final Scheduler scheduler =
-               new ConcurrentRequestScheduler((int) Math.round(concurrency.getCount()));
+               new ConcurrentRequestScheduler((int) Math.round(concurrency.getCount()),
+                     concurrency.getRamp(), concurrency.getRampUnit());
          eventBus.register(scheduler);
          return scheduler;
       }

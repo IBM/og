@@ -20,8 +20,11 @@
 package com.cleversafe.og.scheduling;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +33,7 @@ import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
 import com.cleversafe.og.util.Pair;
 import com.google.common.eventbus.Subscribe;
+import com.google.common.util.concurrent.Uninterruptibles;
 
 /**
  * A scheduler which simulates concurrent actions
@@ -38,7 +42,9 @@ public class ConcurrentRequestScheduler implements Scheduler
 {
    private static final Logger _logger = LoggerFactory.getLogger(ConcurrentRequestScheduler.class);
    private final int concurrentRequests;
+   private final long rampDuration;
    private final Semaphore sem;
+   private final CountDownLatch started;
 
    /**
     * Constructs an instance with the provided concurrency
@@ -48,11 +54,43 @@ public class ConcurrentRequestScheduler implements Scheduler
     * @throws IllegalArgumentException
     *            if concurrentRequests is negative or zero
     */
-   public ConcurrentRequestScheduler(final int concurrentRequests)
+   public ConcurrentRequestScheduler(
+         final int concurrentRequests,
+         final double rampup,
+         final TimeUnit rampupUnit)
    {
       checkArgument(concurrentRequests > 0, "concurrentRequests must be > 0");
+      checkArgument(rampup >= 0.0, "rampup must be >= 0.0 [%s]", rampup);
+      checkNotNull(rampupUnit);
       this.concurrentRequests = concurrentRequests;
-      this.sem = new Semaphore(concurrentRequests - 1);
+      this.rampDuration = (long) (rampup * rampupUnit.toNanos(1));
+      this.started = new CountDownLatch(1);
+
+      if (this.rampDuration == 0.0)
+         this.sem = new Semaphore(concurrentRequests - 1);
+      else
+      {
+         this.sem = new Semaphore(0);
+         final Thread rampupThread = new Thread(new Runnable()
+         {
+            @Override
+            public void run()
+            {
+               final CountDownLatch started = ConcurrentRequestScheduler.this.started;
+               final int interval = ConcurrentRequestScheduler.this.concurrentRequests - 1;
+               final long sleepDuration = ConcurrentRequestScheduler.this.rampDuration / interval;
+
+               Uninterruptibles.awaitUninterruptibly(started);
+               for (int i = 0; i < interval; i++)
+               {
+                  Uninterruptibles.sleepUninterruptibly(sleepDuration, TimeUnit.NANOSECONDS);
+                  ConcurrentRequestScheduler.this.sem.release();
+               }
+            }
+         });
+         rampupThread.setDaemon(true);
+         rampupThread.start();
+      }
    }
 
    /**
@@ -63,6 +101,7 @@ public class ConcurrentRequestScheduler implements Scheduler
    @Override
    public void waitForNext()
    {
+      this.started.countDown();
       try
       {
          this.sem.acquire();
