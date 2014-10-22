@@ -60,6 +60,7 @@ public class ClientModule extends AbstractModule
             .withSoLinger(this.config.getSoLinger())
             .usingSoKeepAlive(this.config.isSoKeepAlive())
             .usingTcpNoDelay(this.config.isTcpNoDelay())
+            .usingPersistentConnections(this.config.isPersistentConnections())
             .usingChunkedEncoding(this.config.isChunkedEncoding())
             .usingExpectContinue(this.config.isExpectContinue())
             .withWaitForContinue(this.config.getWaitForContinue())

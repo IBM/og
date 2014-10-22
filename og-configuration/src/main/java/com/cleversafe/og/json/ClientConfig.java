@@ -27,6 +27,7 @@ public class ClientConfig
    int soLinger;
    boolean soKeepAlive;
    boolean tcpNoDelay;
+   boolean persistentConnections;
    boolean chunkedEncoding;
    boolean expectContinue;
    int waitForContinue;
@@ -41,6 +42,7 @@ public class ClientConfig
       this.soLinger = -1;
       this.soKeepAlive = true;
       this.tcpNoDelay = true;
+      this.persistentConnections = true;
       this.chunkedEncoding = false;
       this.expectContinue = false;
       this.waitForContinue = 3000;
@@ -76,6 +78,11 @@ public class ClientConfig
    public boolean isTcpNoDelay()
    {
       return this.tcpNoDelay;
+   }
+
+   public boolean isPersistentConnections()
+   {
+      return this.persistentConnections;
    }
 
    public boolean isChunkedEncoding()

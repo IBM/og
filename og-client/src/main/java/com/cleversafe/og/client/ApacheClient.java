@@ -33,6 +33,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.http.ConnectionReuseStrategy;
 import org.apache.http.Header;
 import org.apache.http.HeaderIterator;
 import org.apache.http.HttpEntity;
@@ -43,6 +44,7 @@ import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.config.SocketConfig;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.DefaultConnectionReuseStrategy;
+import org.apache.http.impl.NoConnectionReuseStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultConnectionKeepAliveStrategy;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -90,6 +92,7 @@ public class ApacheClient implements Client
    private final int soLinger;
    private final boolean soKeepAlive;
    private final boolean tcpNoDelay;
+   private final boolean persistentConnections;
    private final boolean chunkedEncoding;
    private final boolean expectContinue;
    private final int waitForContinue;
@@ -110,6 +113,7 @@ public class ApacheClient implements Client
       this.soLinger = builder.soLinger;
       this.soKeepAlive = builder.soKeepAlive;
       this.tcpNoDelay = builder.tcpNoDelay;
+      this.persistentConnections = builder.persistentConnections;
       this.chunkedEncoding = builder.chunkedEncoding;
       this.expectContinue = builder.expectContinue;
       this.waitForContinue = builder.waitForContinue;
@@ -141,6 +145,11 @@ public class ApacheClient implements Client
       if (this.userAgent != null)
          clientBuilder.setUserAgent(this.userAgent);
 
+      final ConnectionReuseStrategy connectionReuseStrategy =
+            this.persistentConnections
+                  ? DefaultConnectionReuseStrategy.INSTANCE
+                  : NoConnectionReuseStrategy.INSTANCE;
+
       this.client = clientBuilder
             // TODO HTTPS: setHostnameVerifier, setSslcontext, and SetSSLSocketFactory methods
             // TODO investigate ConnectionConfig, particularly bufferSize and fragmentSizeHint
@@ -155,7 +164,7 @@ public class ApacheClient implements Client
                   .setSoKeepAlive(this.soKeepAlive)
                   .setTcpNoDelay(this.tcpNoDelay)
                   .build())
-            .setConnectionReuseStrategy(DefaultConnectionReuseStrategy.INSTANCE)
+            .setConnectionReuseStrategy(connectionReuseStrategy)
             .setKeepAliveStrategy(DefaultConnectionKeepAliveStrategy.INSTANCE)
             .disableConnectionState()
             .disableCookieManagement()
@@ -455,6 +464,7 @@ public class ApacheClient implements Client
             + "soLinger=%s,%n"
             + "soKeepAlive=%s,%n"
             + "tcpNoDelay=%s,%n"
+            + "persistentConnections=%s,%n"
             + "chunkedEncoding=%s,%n"
             + "expectContinue=%s,%n"
             + "waitForContinue=%s,%n"
@@ -468,6 +478,7 @@ public class ApacheClient implements Client
             this.soLinger,
             this.soKeepAlive,
             this.tcpNoDelay,
+            this.persistentConnections,
             this.chunkedEncoding,
             this.expectContinue,
             this.waitForContinue,
@@ -488,6 +499,7 @@ public class ApacheClient implements Client
       private int soLinger;
       private boolean soKeepAlive;
       private boolean tcpNoDelay;
+      private boolean persistentConnections;
       private boolean chunkedEncoding;
       private boolean expectContinue;
       private int waitForContinue;
@@ -508,6 +520,7 @@ public class ApacheClient implements Client
          this.soLinger = -1;
          this.soKeepAlive = true;
          this.tcpNoDelay = true;
+         this.persistentConnections = true;
          this.chunkedEncoding = false;
          this.expectContinue = false;
          this.waitForContinue = 3000;
@@ -594,6 +607,19 @@ public class ApacheClient implements Client
       public Builder usingTcpNoDelay(final boolean tcpNoDelay)
       {
          this.tcpNoDelay = tcpNoDelay;
+         return this;
+      }
+
+      /**
+       * Configures the use of persistent tcp connections
+       * 
+       * @param persistentConnections
+       *           persistent connections flag
+       * @return this builder
+       */
+      public Builder usingPersistentConnections(final boolean persistentConnections)
+      {
+         this.persistentConnections = persistentConnections;
          return this;
       }
 
