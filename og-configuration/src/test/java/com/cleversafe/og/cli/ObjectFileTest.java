@@ -36,6 +36,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 
 import com.cleversafe.og.object.LegacyObjectName;
@@ -48,14 +49,18 @@ public class ObjectFileTest
 {
    @Rule
    public ExpectedException thrown = ExpectedException.none();
+
+   @Rule
+   public TemporaryFolder folder = new TemporaryFolder();
+
    private File nonExistent;
    private File exists;
 
    @Before
-   public void before()
+   public void before() throws IOException
    {
       this.nonExistent = new File("/nonexistent");
-      this.exists = new File(Application.getResource("objectfile.jsap"));
+      this.exists = this.folder.newFile();
    }
 
    @Test
