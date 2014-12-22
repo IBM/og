@@ -45,106 +45,91 @@ import com.tngtech.java.junit.dataprovider.DataProviderRunner;
 import com.tngtech.java.junit.dataprovider.UseDataProvider;
 
 @RunWith(DataProviderRunner.class)
-public class ObjectFileTest
-{
-   @Rule
-   public ExpectedException thrown = ExpectedException.none();
+public class ObjectFileTest {
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
-   @Rule
-   public TemporaryFolder folder = new TemporaryFolder();
+  @Rule
+  public TemporaryFolder folder = new TemporaryFolder();
 
-   private File nonExistent;
-   private File exists;
+  private File nonExistent;
+  private File exists;
 
-   @Before
-   public void before() throws IOException
-   {
-      this.nonExistent = new File("/nonexistent");
-      this.exists = this.folder.newFile();
-   }
+  @Before
+  public void before() throws IOException {
+    this.nonExistent = new File("/nonexistent");
+    this.exists = this.folder.newFile();
+  }
 
-   @Test
-   public void getInputStreamNullInput() throws FileNotFoundException
-   {
-      final InputStream in = ObjectFile.getInputStream(null);
-      assertThat(in, is(System.in));
-   }
+  @Test
+  public void getInputStreamNullInput() throws FileNotFoundException {
+    final InputStream in = ObjectFile.getInputStream(null);
+    assertThat(in, is(System.in));
+  }
 
-   @Test(expected = FileNotFoundException.class)
-   public void getInputStreamMissingInput() throws FileNotFoundException
-   {
-      ObjectFile.getInputStream(this.nonExistent);
-   }
+  @Test(expected = FileNotFoundException.class)
+  public void getInputStreamMissingInput() throws FileNotFoundException {
+    ObjectFile.getInputStream(this.nonExistent);
+  }
 
-   @Test
-   public void getInputStream() throws FileNotFoundException
-   {
-      final InputStream in = ObjectFile.getInputStream(this.exists);
-      assertThat(in, is(not(System.in)));
-   }
+  @Test
+  public void getInputStream() throws FileNotFoundException {
+    final InputStream in = ObjectFile.getInputStream(this.exists);
+    assertThat(in, is(not(System.in)));
+  }
 
-   @Test
-   public void getOutputStreamNullOutput() throws FileNotFoundException
-   {
-      final OutputStream out = ObjectFile.getOutputStream(null);
-      assertThat(out, is((OutputStream) System.out));
-   }
+  @Test
+  public void getOutputStreamNullOutput() throws FileNotFoundException {
+    final OutputStream out = ObjectFile.getOutputStream(null);
+    assertThat(out, is((OutputStream) System.out));
+  }
 
-   @Test(expected = FileNotFoundException.class)
-   public void getOutputStreamMissingOutput() throws FileNotFoundException
-   {
-      ObjectFile.getOutputStream(this.nonExistent);
-   }
+  @Test(expected = FileNotFoundException.class)
+  public void getOutputStreamMissingOutput() throws FileNotFoundException {
+    ObjectFile.getOutputStream(this.nonExistent);
+  }
 
-   @Test
-   public void getOutputStream() throws FileNotFoundException
-   {
-      final OutputStream out = ObjectFile.getOutputStream(this.exists);
-      assertThat(out, is(not((OutputStream) System.out)));
-   }
+  @Test
+  public void getOutputStream() throws FileNotFoundException {
+    final OutputStream out = ObjectFile.getOutputStream(this.exists);
+    assertThat(out, is(not((OutputStream) System.out)));
+  }
 
-   @DataProvider
-   public static Object[][] provideInvalidStreams()
-   {
-      return new Object[][]{
-            {null, new ByteArrayOutputStream()},
-            {new ByteArrayInputStream(new byte[]{}), null}
-      };
-   }
+  @DataProvider
+  public static Object[][] provideInvalidStreams() {
+    return new Object[][] { {null, new ByteArrayOutputStream()},
+        {new ByteArrayInputStream(new byte[] {}), null}};
+  }
 
-   @Test
-   @UseDataProvider("provideInvalidStreams")
-   public void invalidWrite(final InputStream in, final OutputStream out) throws IOException
-   {
-      this.thrown.expect(NullPointerException.class);
-      ObjectFile.write(in, out);
-   }
+  @Test
+  @UseDataProvider("provideInvalidStreams")
+  public void invalidWrite(final InputStream in, final OutputStream out) throws IOException {
+    this.thrown.expect(NullPointerException.class);
+    ObjectFile.write(in, out);
+  }
 
-   @Test
-   public void write() throws IOException
-   {
-      final String objectName = LegacyObjectName.forUUID(UUID.randomUUID()).toString();
-      final InputStream in = new ByteArrayInputStream(objectName.getBytes());
-      final ByteArrayOutputStream out = new ByteArrayOutputStream(18);
-      ObjectFile.write(in, out);
-      assertThat(objectName, is(LegacyObjectName.forBytes(out.toByteArray()).toString()));
-   }
+  @Test
+  public void write() throws IOException {
+    final String objectName = LegacyObjectName.forUUID(UUID.randomUUID()).toString();
+    final InputStream in = new ByteArrayInputStream(objectName.getBytes());
+    final ByteArrayOutputStream out = new ByteArrayOutputStream(18);
+    ObjectFile.write(in, out);
+    assertThat(objectName, is(LegacyObjectName.forBytes(out.toByteArray()).toString()));
+  }
 
-   @Test
-   @UseDataProvider("provideInvalidStreams")
-   public void invalidRead(final InputStream in, final OutputStream out) throws IOException
-   {
-      this.thrown.expect(NullPointerException.class);
-      ObjectFile.read(in, out);
-   }
+  @Test
+  @UseDataProvider("provideInvalidStreams")
+  public void invalidRead(final InputStream in, final OutputStream out) throws IOException {
+    this.thrown.expect(NullPointerException.class);
+    ObjectFile.read(in, out);
+  }
 
-   @Test
-   public void read() throws IOException
-   {
-      final LegacyObjectName object = LegacyObjectName.forUUID(UUID.randomUUID());
-      final InputStream in = new ByteArrayInputStream(object.toBytes());
-      final ByteArrayOutputStream out = new ByteArrayOutputStream();
-      ObjectFile.read(in, out);
-      assertThat(new String(out.toByteArray()), is(object.toString() + "\n"));
-   }
+  @Test
+  public void read() throws IOException {
+    final LegacyObjectName object = LegacyObjectName.forUUID(UUID.randomUUID());
+    final InputStream in = new ByteArrayInputStream(object.toBytes());
+    final ByteArrayOutputStream out = new ByteArrayOutputStream();
+    ObjectFile.read(in, out);
+    assertThat(new String(out.toByteArray()), is(object.toString() + "\n"));
+  }
 }

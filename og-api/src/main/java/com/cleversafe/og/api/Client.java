@@ -26,25 +26,23 @@ import com.google.common.util.concurrent.ListenableFuture;
  * 
  * @since 1.0
  */
-public interface Client
-{
-   /**
-    * Executes a request asynchronously
-    * 
-    * @param request
-    *           the request to execute
-    * @return A future representing the eventual completion of this request
-    */
-   ListenableFuture<Response> execute(Request request);
+public interface Client {
+  /**
+   * Executes a request asynchronously
+   * 
+   * @param request the request to execute
+   * @return A future representing the eventual completion of this request
+   */
+  ListenableFuture<Response> execute(Request request);
 
-   /**
-    * Shuts down this client
-    * 
-    * @param immediate
-    *           if true, shuts down this client immediately, else shuts down this client gracefully
-    * @return a future representing the eventual shutdown of this client. When the future has
-    *         completed, a value of true indicates a successful shutdown, while a value of false
-    *         indicates some error in the shutdown process
-    */
-   ListenableFuture<Boolean> shutdown(boolean immediate);
+  /**
+   * Shuts down this client
+   * 
+   * @param immediate if true, shuts down this client immediately, else shuts down this client
+   *        gracefully
+   * @return a future representing the eventual shutdown of this client. When the future has
+   *         completed, a value of true indicates a successful shutdown, while a value of false
+   *         indicates some error in the shutdown process
+   */
+  ListenableFuture<Boolean> shutdown(boolean immediate);
 }

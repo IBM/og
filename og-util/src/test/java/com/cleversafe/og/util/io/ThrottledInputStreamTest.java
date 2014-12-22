@@ -42,72 +42,59 @@ import com.tngtech.java.junit.dataprovider.UseDataProvider;
 
 @SuppressWarnings("resource")
 @RunWith(DataProviderRunner.class)
-public class ThrottledInputStreamTest
-{
-   @Rule
-   public ExpectedException thrown = ExpectedException.none();
-   private Body body;
+public class ThrottledInputStreamTest {
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
+  private Body body;
 
-   @Before
-   public void before()
-   {
-      this.body = mock(Body.class);
-      when(this.body.getData()).thenReturn(Data.ZEROES);
-      when(this.body.getSize()).thenReturn(10000L);
-   }
+  @Before
+  public void before() {
+    this.body = mock(Body.class);
+    when(this.body.getData()).thenReturn(Data.ZEROES);
+    when(this.body.getSize()).thenReturn(10000L);
+  }
 
-   @DataProvider
-   public static Object[][] provideInvalidThrottleInputStream()
-   {
-      final InputStream in = mock(InputStream.class);
-      return new Object[][]{
-            {null, 1, NullPointerException.class},
-            {in, -1, IllegalArgumentException.class},
-            {in, 0, IllegalArgumentException.class}
-      };
-   }
+  @DataProvider
+  public static Object[][] provideInvalidThrottleInputStream() {
+    final InputStream in = mock(InputStream.class);
+    return new Object[][] { {null, 1, NullPointerException.class},
+        {in, -1, IllegalArgumentException.class}, {in, 0, IllegalArgumentException.class}};
+  }
 
-   @Test
-   @UseDataProvider("provideInvalidThrottleInputStream")
-   public void invalidInputStream(
-         final InputStream in,
-         final long bytesPerSecond,
-         final Class<Exception> expectedException)
-   {
-      this.thrown.expect(expectedException);
-      Streams.throttle(in, bytesPerSecond);
-   }
+  @Test
+  @UseDataProvider("provideInvalidThrottleInputStream")
+  public void invalidInputStream(final InputStream in, final long bytesPerSecond,
+      final Class<Exception> expectedException) {
+    this.thrown.expect(expectedException);
+    Streams.throttle(in, bytesPerSecond);
+  }
 
-   @Test
-   public void positiveBytesPerSecond()
-   {
-      new ThrottledInputStream(mock(InputStream.class), 1);
-   }
+  @Test
+  public void positiveBytesPerSecond() {
+    new ThrottledInputStream(mock(InputStream.class), 1);
+  }
 
-   @Test
-   public void readOneByteAtATime() throws IOException
-   {
-      final InputStream in = new ThrottledInputStream(Streams.create(this.body), 1000);
-      final long timestampStart = System.nanoTime();
-      for (int i = 0; i < 100; i++)
-      {
-         in.read();
-      }
-      final long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - timestampStart);
-      final long delta = Math.abs(duration - 100);
-      // within 10% of expected duration (100 milliseconds)
-      assertThat(delta, lessThan(10L));
-   }
+  @Test
+  public void readOneByteAtATime() throws IOException {
+    final InputStream in = new ThrottledInputStream(Streams.create(this.body), 1000);
+    final long timestampStart = System.nanoTime();
+    for (int i = 0; i < 100; i++) {
+      in.read();
+    }
+    final long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - timestampStart);
+    final long delta = Math.abs(duration - 100);
+    // within 10% of expected duration (100 milliseconds)
+    assertThat(delta, lessThan(10L));
+  }
 
-   @Test
-   public void read() throws IOException
-   {
-      final InputStream in = new ThrottledInputStream(Streams.create(this.body), 1000);
-      final long timestampStart = System.nanoTime();
-      in.read(new byte[100]);
-      final long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - timestampStart);
-      final long delta = Math.abs(duration - 100);
-      // within 10% of expected duration (100 milliseconds)
-      assertThat(delta, lessThan(10L));
-   }
+  @Test
+  public void read() throws IOException {
+    final InputStream in = new ThrottledInputStream(Streams.create(this.body), 1000);
+    final long timestampStart = System.nanoTime();
+    in.read(new byte[100]);
+    final long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - timestampStart);
+    final long delta = Math.abs(duration - 100);
+    // within 10% of expected duration (100 milliseconds)
+    assertThat(delta, lessThan(10L));
+  }
 }

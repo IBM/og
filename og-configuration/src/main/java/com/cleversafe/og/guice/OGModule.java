@@ -70,156 +70,133 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 
-public class OGModule extends AbstractModule
-{
-   private static final double ERR = Math.pow(0.1, 6);
+public class OGModule extends AbstractModule {
+  private static final double ERR = Math.pow(0.1, 6);
 
-   @Override
-   protected void configure()
-   {
-      bind(LoadTest.class).in(Singleton.class);
-   }
+  @Override
+  protected void configure() {
+    bind(LoadTest.class).in(Singleton.class);
+  }
 
-   @Provides
-   @Singleton
-   public LoadTestSubscriberExceptionHandler provideSubscriberHandler()
-   {
-      return new LoadTestSubscriberExceptionHandler();
-   }
+  @Provides
+  @Singleton
+  public LoadTestSubscriberExceptionHandler provideSubscriberHandler() {
+    return new LoadTestSubscriberExceptionHandler();
+  }
 
-   @Provides
-   @Singleton
-   public EventBus provideEventBus(final LoadTestSubscriberExceptionHandler handler)
-   {
-      return new EventBus(handler);
-   }
+  @Provides
+  @Singleton
+  public EventBus provideEventBus(final LoadTestSubscriberExceptionHandler handler) {
+    return new EventBus(handler);
+  }
 
-   @Provides
-   @Singleton
-   public Statistics provideStatistics(final EventBus eventBus)
-   {
-      checkNotNull(eventBus);
-      final Statistics stats = new Statistics();
-      eventBus.register(stats);
-      return stats;
-   }
+  @Provides
+  @Singleton
+  public Statistics provideStatistics(final EventBus eventBus) {
+    checkNotNull(eventBus);
+    final Statistics stats = new Statistics();
+    eventBus.register(stats);
+    return stats;
+  }
 
-   @Provides
-   @Singleton
-   public List<TestCondition> provideTestConditions(
-         final LoadTest test,
-         final EventBus eventBus,
-         final Statistics stats,
-         final StoppingConditionsConfig config)
-   {
-      checkNotNull(test);
-      checkNotNull(eventBus);
-      checkNotNull(stats);
-      checkNotNull(config);
+  @Provides
+  @Singleton
+  public List<TestCondition> provideTestConditions(final LoadTest test, final EventBus eventBus,
+      final Statistics stats, final StoppingConditionsConfig config) {
+    checkNotNull(test);
+    checkNotNull(eventBus);
+    checkNotNull(stats);
+    checkNotNull(config);
 
-      final List<TestCondition> conditions = Lists.newArrayList();
+    final List<TestCondition> conditions = Lists.newArrayList();
 
-      if (config.getOperations() > 0)
-         conditions.add(new CounterCondition(Operation.ALL, Counter.OPERATIONS,
-               config.getOperations(), test, stats));
+    if (config.getOperations() > 0)
+      conditions.add(new CounterCondition(Operation.ALL, Counter.OPERATIONS,
+          config.getOperations(), test, stats));
 
-      final Map<Integer, Integer> scMap = config.getStatusCodes();
-      for (final Entry<Integer, Integer> sc : scMap.entrySet())
-      {
-         if (sc.getValue() > 0)
-            conditions.add(new StatusCodeCondition(Operation.ALL, sc.getKey(), sc.getValue(), test,
-                  stats));
-      }
+    final Map<Integer, Integer> scMap = config.getStatusCodes();
+    for (final Entry<Integer, Integer> sc : scMap.entrySet()) {
+      if (sc.getValue() > 0)
+        conditions.add(new StatusCodeCondition(Operation.ALL, sc.getKey(), sc.getValue(), test,
+            stats));
+    }
 
-      if (config.getRuntime() > 0)
-         conditions.add(new RuntimeCondition(test, config.getRuntime(), config.getRuntimeUnit()));
+    if (config.getRuntime() > 0)
+      conditions.add(new RuntimeCondition(test, config.getRuntime(), config.getRuntimeUnit()));
 
-      for (final TestCondition condition : conditions)
-      {
-         eventBus.register(condition);
-      }
+    for (final TestCondition condition : conditions) {
+      eventBus.register(condition);
+    }
 
-      return conditions;
-   }
+    return conditions;
+  }
 
-   @Provides
-   @Singleton
-   public Supplier<Request> provideRequestSupplier(
-         @Write final Supplier<Request> write,
-         @Read final Supplier<Request> read,
-         @Delete final Supplier<Request> delete,
-         @WriteWeight final double writeWeight,
-         @ReadWeight final double readWeight,
-         @DeleteWeight final double deleteWeight)
-   {
-      checkNotNull(write);
-      checkNotNull(read);
-      checkNotNull(delete);
-      final double sum = readWeight + writeWeight + deleteWeight;
-      checkArgument(DoubleMath.fuzzyEquals(sum, 100.0, ERR),
-            "Sum of percentages must be 100.0 [%s]", sum);
+  @Provides
+  @Singleton
+  public Supplier<Request> provideRequestSupplier(@Write final Supplier<Request> write,
+      @Read final Supplier<Request> read, @Delete final Supplier<Request> delete,
+      @WriteWeight final double writeWeight, @ReadWeight final double readWeight,
+      @DeleteWeight final double deleteWeight) {
+    checkNotNull(write);
+    checkNotNull(read);
+    checkNotNull(delete);
+    final double sum = readWeight + writeWeight + deleteWeight;
+    checkArgument(DoubleMath.fuzzyEquals(sum, 100.0, ERR), "Sum of percentages must be 100.0 [%s]",
+        sum);
 
-      final RandomSupplier.Builder<Supplier<Request>> wrc = Suppliers.random();
-      if (writeWeight > 0.0)
-         wrc.withChoice(write, writeWeight);
-      if (readWeight > 0.0)
-         wrc.withChoice(read, readWeight);
-      if (deleteWeight > 0.0)
-         wrc.withChoice(delete, deleteWeight);
+    final RandomSupplier.Builder<Supplier<Request>> wrc = Suppliers.random();
+    if (writeWeight > 0.0)
+      wrc.withChoice(write, writeWeight);
+    if (readWeight > 0.0)
+      wrc.withChoice(read, readWeight);
+    if (deleteWeight > 0.0)
+      wrc.withChoice(delete, deleteWeight);
 
-      return Suppliers.chain(wrc.build());
-   }
+    return Suppliers.chain(wrc.build());
+  }
 
-   @Provides
-   @Singleton
-   public ObjectManager provideObjectManager(
-         @ObjectFileLocation final String objectFileLocation,
-         @ObjectFileName final String objectFileName)
-   {
-      return new RandomObjectPopulator(UUID.randomUUID(), objectFileLocation, objectFileName);
-   }
+  @Provides
+  @Singleton
+  public ObjectManager provideObjectManager(@ObjectFileLocation final String objectFileLocation,
+      @ObjectFileName final String objectFileName) {
+    return new RandomObjectPopulator(UUID.randomUUID(), objectFileLocation, objectFileName);
+  }
 
-   @Provides
-   @Singleton
-   @WriteObjectName
-   public CachingSupplier<String> provideWriteObjectName(final Api api)
-   {
-      if (Api.SOH == checkNotNull(api))
-         return null;
-      return new CachingSupplier<String>(new UUIDObjectNameSupplier());
-   }
+  @Provides
+  @Singleton
+  @WriteObjectName
+  public CachingSupplier<String> provideWriteObjectName(final Api api) {
+    if (Api.SOH == checkNotNull(api))
+      return null;
+    return new CachingSupplier<String>(new UUIDObjectNameSupplier());
+  }
 
-   @Provides
-   @Singleton
-   @ReadObjectName
-   public CachingSupplier<String> provideReadObjectName(final ObjectManager objectManager)
-   {
-      return new CachingSupplier<String>(new ReadObjectNameSupplier(objectManager));
-   }
+  @Provides
+  @Singleton
+  @ReadObjectName
+  public CachingSupplier<String> provideReadObjectName(final ObjectManager objectManager) {
+    return new CachingSupplier<String>(new ReadObjectNameSupplier(objectManager));
+  }
 
-   @Provides
-   @Singleton
-   @DeleteObjectName
-   public CachingSupplier<String> provideDeleteObjectName(final ObjectManager objectManager)
-   {
-      return new CachingSupplier<String>(new DeleteObjectNameSupplier(objectManager));
-   }
+  @Provides
+  @Singleton
+  @DeleteObjectName
+  public CachingSupplier<String> provideDeleteObjectName(final ObjectManager objectManager) {
+    return new CachingSupplier<String>(new DeleteObjectNameSupplier(objectManager));
+  }
 
-   @Provides
-   @Singleton
-   public List<AbstractObjectNameConsumer> provideObjectNameConsumers(
-         final ObjectManager objectManager,
-         final EventBus eventBus)
-   {
-      final List<Integer> sc = HttpUtil.SUCCESS_STATUS_CODES;
-      final List<AbstractObjectNameConsumer> consumers = Lists.newArrayList();
-      consumers.add(new WriteObjectNameConsumer(objectManager, sc));
-      consumers.add(new ReadObjectNameConsumer(objectManager, sc));
+  @Provides
+  @Singleton
+  public List<AbstractObjectNameConsumer> provideObjectNameConsumers(
+      final ObjectManager objectManager, final EventBus eventBus) {
+    final List<Integer> sc = HttpUtil.SUCCESS_STATUS_CODES;
+    final List<AbstractObjectNameConsumer> consumers = Lists.newArrayList();
+    consumers.add(new WriteObjectNameConsumer(objectManager, sc));
+    consumers.add(new ReadObjectNameConsumer(objectManager, sc));
 
-      for (final AbstractObjectNameConsumer consumer : consumers)
-      {
-         eventBus.register(consumer);
-      }
-      return consumers;
-   }
+    for (final AbstractObjectNameConsumer consumer : consumers) {
+      eventBus.register(consumer);
+    }
+    return consumers;
+  }
 }

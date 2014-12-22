@@ -33,92 +33,74 @@ import com.google.common.io.ByteStreams;
  * 
  * @since 1.0
  */
-public class Streams
-{
-   // TODO performance of single random instance used by multiple threads? Need to quantify
-   private static final Random RANDOM = new Random();
-   private static final int BUF_SIZE = 1024;
-   private static final byte[] ZERO_BUF = new byte[BUF_SIZE];
-   private static final InputStream NONE_INPUTSTREAM = new InputStream()
-   {
-      @Override
-      public int read()
-      {
-         return -1;
-      }
-   };
+public class Streams {
+  // TODO performance of single random instance used by multiple threads? Need to quantify
+  private static final Random RANDOM = new Random();
+  private static final int BUF_SIZE = 1024;
+  private static final byte[] ZERO_BUF = new byte[BUF_SIZE];
+  private static final InputStream NONE_INPUTSTREAM = new InputStream() {
+    @Override
+    public int read() {
+      return -1;
+    }
+  };
 
-   private Streams()
-   {}
+  private Streams() {}
 
-   /**
-    * Creates an input stream from the provided body description. The size of this stream and its
-    * data are determined by the provided body's size and type, respectively.
-    * 
-    * @param body
-    *           the description of an body
-    * @return an input stream instance
-    */
-   public static InputStream create(final Body body)
-   {
-      checkNotNull(body);
-      switch (body.getData())
-      {
-         case NONE :
-            return NONE_INPUTSTREAM;
-         case ZEROES :
-            return create(ZERO_BUF, body.getSize());
-         default :
-            return create(createRandomBuffer(), body.getSize());
-      }
-   }
+  /**
+   * Creates an input stream from the provided body description. The size of this stream and its
+   * data are determined by the provided body's size and type, respectively.
+   * 
+   * @param body the description of an body
+   * @return an input stream instance
+   */
+  public static InputStream create(final Body body) {
+    checkNotNull(body);
+    switch (body.getData()) {
+      case NONE:
+        return NONE_INPUTSTREAM;
+      case ZEROES:
+        return create(ZERO_BUF, body.getSize());
+      default:
+        return create(createRandomBuffer(), body.getSize());
+    }
+  }
 
-   private static InputStream create(final byte[] buf, final long size)
-   {
-      final InputStream in = ByteStreams.limit(new InfiniteInputStream(buf), size);
-      // mark the stream so that reset is supported in case of http redirect
-      in.mark(Integer.MAX_VALUE);
-      return in;
-   }
+  private static InputStream create(final byte[] buf, final long size) {
+    final InputStream in = ByteStreams.limit(new InfiniteInputStream(buf), size);
+    // mark the stream so that reset is supported in case of http redirect
+    in.mark(Integer.MAX_VALUE);
+    return in;
+  }
 
-   private static byte[] createRandomBuffer()
-   {
-      final byte[] buf = new byte[BUF_SIZE];
-      RANDOM.nextBytes(buf);
-      return buf;
-   }
+  private static byte[] createRandomBuffer() {
+    final byte[] buf = new byte[BUF_SIZE];
+    RANDOM.nextBytes(buf);
+    return buf;
+  }
 
-   /**
-    * Creates an input stream which is throttled with a maximum throughput
-    * 
-    * @param in
-    *           the backing input stream to throttle
-    * @param bytesPerSecond
-    *           the maximum throughput this input stream is allowed to read at
-    * @return an instance of an input stream, throttled with a maximum rate of
-    *         {@code bytesPerSecond}
-    * @throws IllegalArgumentException
-    *            if bytesPerSecond is negative or zero
-    */
-   public static InputStream throttle(final InputStream in, final long bytesPerSecond)
-   {
-      return new ThrottledInputStream(in, bytesPerSecond);
-   }
+  /**
+   * Creates an input stream which is throttled with a maximum throughput
+   * 
+   * @param in the backing input stream to throttle
+   * @param bytesPerSecond the maximum throughput this input stream is allowed to read at
+   * @return an instance of an input stream, throttled with a maximum rate of {@code bytesPerSecond}
+   * @throws IllegalArgumentException if bytesPerSecond is negative or zero
+   */
+  public static InputStream throttle(final InputStream in, final long bytesPerSecond) {
+    return new ThrottledInputStream(in, bytesPerSecond);
+  }
 
-   /**
-    * Creates an output stream which is throttled with a maximum throughput
-    * 
-    * @param out
-    *           the backing output stream to throttle
-    * @param bytesPerSecond
-    *           the maximum throughput this input stream is allowed to write at
-    * @return an instance of an output stream, throttled with a maximum rate of
-    *         {@code bytesPerSecond}
-    * @throws IllegalArgumentException
-    *            if bytesPerSecond is negative or zero
-    */
-   public static OutputStream throttle(final OutputStream out, final long bytesPerSecond)
-   {
-      return new ThrottledOutputStream(out, bytesPerSecond);
-   }
+  /**
+   * Creates an output stream which is throttled with a maximum throughput
+   * 
+   * @param out the backing output stream to throttle
+   * @param bytesPerSecond the maximum throughput this input stream is allowed to write at
+   * @return an instance of an output stream, throttled with a maximum rate of
+   *         {@code bytesPerSecond}
+   * @throws IllegalArgumentException if bytesPerSecond is negative or zero
+   */
+  public static OutputStream throttle(final OutputStream out, final long bytesPerSecond) {
+    return new ThrottledOutputStream(out, bytesPerSecond);
+  }
 }

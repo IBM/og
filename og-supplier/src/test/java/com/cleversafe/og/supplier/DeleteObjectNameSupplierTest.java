@@ -31,37 +31,32 @@ import com.cleversafe.og.object.ObjectManager;
 import com.cleversafe.og.object.ObjectManagerException;
 import com.cleversafe.og.object.ObjectName;
 
-public class DeleteObjectNameSupplierTest
-{
-   private ObjectManager objectManager;
+public class DeleteObjectNameSupplierTest {
+  private ObjectManager objectManager;
 
-   @Before
-   public void before()
-   {
-      this.objectManager = mock(ObjectManager.class);
-   }
+  @Before
+  public void before() {
+    this.objectManager = mock(ObjectManager.class);
+  }
 
-   @Test(expected = NullPointerException.class)
-   public void nullObjectManager()
-   {
-      new DeleteObjectNameSupplier(null);
-   }
+  @Test(expected = NullPointerException.class)
+  public void nullObjectManager() {
+    new DeleteObjectNameSupplier(null);
+  }
 
-   @Test
-   public void deleteObjectNameSupplier()
-   {
-      final String object = "objectName";
-      final ObjectName objectName = mock(ObjectName.class);
-      when(objectName.toString()).thenReturn(object);
-      when(this.objectManager.getNameForDelete()).thenReturn(objectName);
+  @Test
+  public void deleteObjectNameSupplier() {
+    final String object = "objectName";
+    final ObjectName objectName = mock(ObjectName.class);
+    when(objectName.toString()).thenReturn(object);
+    when(this.objectManager.getNameForDelete()).thenReturn(objectName);
 
-      assertThat(new DeleteObjectNameSupplier(this.objectManager).get(), is(object));
-   }
+    assertThat(new DeleteObjectNameSupplier(this.objectManager).get(), is(object));
+  }
 
-   @Test(expected = ObjectManagerException.class)
-   public void supplierException()
-   {
-      when(this.objectManager.getNameForDelete()).thenThrow(new ObjectManagerException());
-      new DeleteObjectNameSupplier(this.objectManager).get();
-   }
+  @Test(expected = ObjectManagerException.class)
+  public void supplierException() {
+    when(this.objectManager.getNameForDelete()).thenThrow(new ObjectManagerException());
+    new DeleteObjectNameSupplier(this.objectManager).get();
+  }
 }

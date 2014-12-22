@@ -37,49 +37,37 @@ import com.tngtech.java.junit.dataprovider.DataProviderRunner;
 import com.tngtech.java.junit.dataprovider.UseDataProvider;
 
 @RunWith(DataProviderRunner.class)
-public class ClientModuleTest
-{
-   @Test(expected = NullPointerException.class)
-   public void nullClientConfig()
-   {
-      new ClientModule(null);
-   }
+public class ClientModuleTest {
+  @Test(expected = NullPointerException.class)
+  public void nullClientConfig() {
+    new ClientModule(null);
+  }
 
-   @Test
-   public void clientModule()
-   {
-      assertThat(new ClientModule(new ClientConfig()), notNullValue());
-   }
+  @Test
+  public void clientModule() {
+    assertThat(new ClientModule(new ClientConfig()), notNullValue());
+  }
 
-   @Test(expected = NullPointerException.class)
-   public void nullResponseBodyConsumers()
-   {
-      new ClientModule(new ClientConfig()).provideClient(null, null);
-   }
+  @Test(expected = NullPointerException.class)
+  public void nullResponseBodyConsumers() {
+    new ClientModule(new ClientConfig()).provideClient(null, null);
+  }
 
-   @DataProvider
-   public static Object[][] provideClientData()
-   {
-      final Map<String, ResponseBodyConsumer> empty = ImmutableMap.of();
-      final Map<String, ResponseBodyConsumer> nonEmpty =
-            ImmutableMap.of("1", mock(ResponseBodyConsumer.class));
-      final HttpAuth auth = mock(HttpAuth.class);
+  @DataProvider
+  public static Object[][] provideClientData() {
+    final Map<String, ResponseBodyConsumer> empty = ImmutableMap.of();
+    final Map<String, ResponseBodyConsumer> nonEmpty =
+        ImmutableMap.of("1", mock(ResponseBodyConsumer.class));
+    final HttpAuth auth = mock(HttpAuth.class);
 
-      return new Object[][]{
-            {null, empty},
-            {null, empty},
-            {auth, empty},
-            {null, nonEmpty},
-            {auth, nonEmpty}
-      };
-   }
+    return new Object[][] { {null, empty}, {null, empty}, {auth, empty}, {null, nonEmpty},
+        {auth, nonEmpty}};
+  }
 
-   @Test
-   @UseDataProvider("provideClientData")
-   public void provideClient(
-         final HttpAuth authentication,
-         final Map<String, ResponseBodyConsumer> consumers)
-   {
-      new ClientModule(new ClientConfig()).provideClient(authentication, consumers);
-   }
+  @Test
+  @UseDataProvider("provideClientData")
+  public void provideClient(final HttpAuth authentication,
+      final Map<String, ResponseBodyConsumer> consumers) {
+    new ClientModule(new ClientConfig()).provideClient(authentication, consumers);
+  }
 }

@@ -26,23 +26,18 @@ package com.cleversafe.og.object;
  * @since 1.0
  */
 @SuppressWarnings("serial")
-public class ObjectManagerException extends RuntimeException
-{
-   public ObjectManagerException()
-   {}
+public class ObjectManagerException extends RuntimeException {
+  public ObjectManagerException() {}
 
-   public ObjectManagerException(final String message)
-   {
-      super(message);
-   }
+  public ObjectManagerException(final String message) {
+    super(message);
+  }
 
-   public ObjectManagerException(final Throwable cause)
-   {
-      super(cause);
-   }
+  public ObjectManagerException(final Throwable cause) {
+    super(cause);
+  }
 
-   public ObjectManagerException(final String message, final Throwable cause)
-   {
-      super(message, cause);
-   }
+  public ObjectManagerException(final String message, final Throwable cause) {
+    super(message, cause);
+  }
 }

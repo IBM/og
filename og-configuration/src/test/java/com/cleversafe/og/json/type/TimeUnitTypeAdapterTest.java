@@ -34,29 +34,25 @@ import org.junit.Test;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
-public class TimeUnitTypeAdapterTest
-{
-   private TimeUnitTypeAdapter typeAdapter;
+public class TimeUnitTypeAdapterTest {
+  private TimeUnitTypeAdapter typeAdapter;
 
-   @Before
-   public void before()
-   {
-      this.typeAdapter = new TimeUnitTypeAdapter();
-   }
+  @Before
+  public void before() {
+    this.typeAdapter = new TimeUnitTypeAdapter();
+  }
 
-   @Test
-   public void write() throws IOException
-   {
-      final JsonWriter writer = mock(JsonWriter.class);
-      this.typeAdapter.write(writer, TimeUnit.SECONDS);
-      verify(writer).value("seconds");
-   }
+  @Test
+  public void write() throws IOException {
+    final JsonWriter writer = mock(JsonWriter.class);
+    this.typeAdapter.write(writer, TimeUnit.SECONDS);
+    verify(writer).value("seconds");
+  }
 
-   @Test
-   public void read() throws IOException
-   {
-      final JsonReader reader = mock(JsonReader.class);
-      when(reader.nextString()).thenReturn("s");
-      assertThat(this.typeAdapter.read(reader), is(TimeUnit.SECONDS));
-   }
+  @Test
+  public void read() throws IOException {
+    final JsonReader reader = mock(JsonReader.class);
+    when(reader.nextString()).thenReturn("s");
+    assertThat(this.typeAdapter.read(reader), is(TimeUnit.SECONDS));
+  }
 }

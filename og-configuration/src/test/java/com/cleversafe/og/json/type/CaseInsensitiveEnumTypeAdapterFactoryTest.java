@@ -41,51 +41,45 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
-public class CaseInsensitiveEnumTypeAdapterFactoryTest
-{
-   private CaseInsensitiveEnumTypeAdapterFactory typeAdapterFactory;
-   private Gson gson;
-   private JsonWriter writer;
-   private JsonReader reader;
+public class CaseInsensitiveEnumTypeAdapterFactoryTest {
+  private CaseInsensitiveEnumTypeAdapterFactory typeAdapterFactory;
+  private Gson gson;
+  private JsonWriter writer;
+  private JsonReader reader;
 
-   @Before
-   public void before()
-   {
-      this.typeAdapterFactory = new CaseInsensitiveEnumTypeAdapterFactory();
-      this.gson = new GsonBuilder().create();
-      this.writer = mock(JsonWriter.class);
-      this.reader = mock(JsonReader.class);
-   }
+  @Before
+  public void before() {
+    this.typeAdapterFactory = new CaseInsensitiveEnumTypeAdapterFactory();
+    this.gson = new GsonBuilder().create();
+    this.writer = mock(JsonWriter.class);
+    this.reader = mock(JsonReader.class);
+  }
 
-   @Test
-   public void nonEnumCreate()
-   {
-      assertThat(this.typeAdapterFactory.create(this.gson, TypeToken.get(String.class)),
-            nullValue());
-   }
+  @Test
+  public void nonEnumCreate() {
+    assertThat(this.typeAdapterFactory.create(this.gson, TypeToken.get(String.class)), nullValue());
+  }
 
-   @Test
-   public void isEnum() throws IOException
-   {
-      final TypeAdapter<DistributionType> typeAdapter =
-            this.typeAdapterFactory.create(this.gson, TypeToken.get(DistributionType.class));
+  @Test
+  public void isEnum() throws IOException {
+    final TypeAdapter<DistributionType> typeAdapter =
+        this.typeAdapterFactory.create(this.gson, TypeToken.get(DistributionType.class));
 
-      assertThat(typeAdapter, notNullValue());
+    assertThat(typeAdapter, notNullValue());
 
-      typeAdapter.write(this.writer, DistributionType.NORMAL);
-      verify(this.writer).value("normal");
+    typeAdapter.write(this.writer, DistributionType.NORMAL);
+    verify(this.writer).value("normal");
 
-      when(this.reader.nextString()).thenReturn("NormAL");
-      assertThat(typeAdapter.read(this.reader), is(DistributionType.NORMAL));
-   }
+    when(this.reader.nextString()).thenReturn("NormAL");
+    assertThat(typeAdapter.read(this.reader), is(DistributionType.NORMAL));
+  }
 
-   @Test(expected = JsonSyntaxException.class)
-   public void nonEnumRead() throws IOException
-   {
-      final TypeAdapter<DistributionType> typeAdapter =
-            this.typeAdapterFactory.create(this.gson, TypeToken.get(DistributionType.class));
+  @Test(expected = JsonSyntaxException.class)
+  public void nonEnumRead() throws IOException {
+    final TypeAdapter<DistributionType> typeAdapter =
+        this.typeAdapterFactory.create(this.gson, TypeToken.get(DistributionType.class));
 
-      when(this.reader.nextString()).thenReturn("fakeDistribution");
-      typeAdapter.read(this.reader);
-   }
+    when(this.reader.nextString()).thenReturn("fakeDistribution");
+    typeAdapter.read(this.reader);
+  }
 }

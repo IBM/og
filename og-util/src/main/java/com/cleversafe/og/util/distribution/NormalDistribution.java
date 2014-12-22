@@ -28,47 +28,39 @@ import java.util.Random;
  * 
  * @since 1.0
  */
-public class NormalDistribution extends AbstractDistribution
-{
-   /**
-    * Constructs a normal distribution instance, using the provided random instance for random seed
-    * data
-    * 
-    * @param average
-    *           the average value of this distribution
-    * @param spread
-    *           the spread of this distribution. Spread is defined as the first standard deviation.
-    * @throws IllegalArgumentException
-    *            if average is negative
-    * @throws IllegalArgumentException
-    *            if spread is negative
-    */
-   public NormalDistribution(final double average, final double spread, final Random random)
-   {
-      super(average, spread, random);
-      final double min = average - (3 * spread);
-      checkArgument(min >= 0.0, "three standard deviations must be >= 0.0 [%s]", min);
-   }
+public class NormalDistribution extends AbstractDistribution {
+  /**
+   * Constructs a normal distribution instance, using the provided random instance for random seed
+   * data
+   * 
+   * @param average the average value of this distribution
+   * @param spread the spread of this distribution. Spread is defined as the first standard
+   *        deviation.
+   * @throws IllegalArgumentException if average is negative
+   * @throws IllegalArgumentException if spread is negative
+   */
+  public NormalDistribution(final double average, final double spread, final Random random) {
+    super(average, spread, random);
+    final double min = average - (3 * spread);
+    checkArgument(min >= 0.0, "three standard deviations must be >= 0.0 [%s]", min);
+  }
 
-   /**
-    * {@inheritDoc}
-    * 
-    * This implementation will always return a non-negative sample.
-    */
-   @Override
-   public double nextSample()
-   {
-      double result;
-      do
-      {
-         result = this.average + (this.spread * this.random.nextGaussian());
-      } while (result < 0.0);
-      return result;
-   }
+  /**
+   * {@inheritDoc}
+   * 
+   * This implementation will always return a non-negative sample.
+   */
+  @Override
+  public double nextSample() {
+    double result;
+    do {
+      result = this.average + (this.spread * this.random.nextGaussian());
+    } while (result < 0.0);
+    return result;
+  }
 
-   @Override
-   public String toString()
-   {
-      return "NormalDistribution [average=" + this.average + ", spread=" + this.spread + "]";
-   }
+  @Override
+  public String toString() {
+    return "NormalDistribution [average=" + this.average + ", spread=" + this.spread + "]";
+  }
 }

@@ -24,24 +24,20 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.cleversafe.og.object.ObjectManager;
 import com.google.common.base.Supplier;
 
-public class DeleteObjectNameSupplier implements Supplier<String>
-{
-   private final ObjectManager objectManager;
+public class DeleteObjectNameSupplier implements Supplier<String> {
+  private final ObjectManager objectManager;
 
-   public DeleteObjectNameSupplier(final ObjectManager objectManager)
-   {
-      this.objectManager = checkNotNull(objectManager);
-   }
+  public DeleteObjectNameSupplier(final ObjectManager objectManager) {
+    this.objectManager = checkNotNull(objectManager);
+  }
 
-   @Override
-   public String get()
-   {
-      return this.objectManager.getNameForDelete().toString();
-   }
+  @Override
+  public String get() {
+    return this.objectManager.getNameForDelete().toString();
+  }
 
-   @Override
-   public String toString()
-   {
-      return "DeleteObjectNameSupplier []";
-   }
+  @Override
+  public String toString() {
+    return "DeleteObjectNameSupplier []";
+  }
 }

@@ -24,11 +24,6 @@ package com.cleversafe.og.api;
  * 
  * @since 1.0
  */
-public enum Method
-{
-   GET,
-   HEAD,
-   POST,
-   PUT,
-   DELETE;
+public enum Method {
+  GET, HEAD, POST, PUT, DELETE;
 }

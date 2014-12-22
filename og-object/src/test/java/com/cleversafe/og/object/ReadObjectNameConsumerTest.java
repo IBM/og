@@ -29,38 +29,31 @@ import java.util.List;
 
 import com.cleversafe.og.api.Method;
 
-public class ReadObjectNameConsumerTest extends AbstractObjectNameConsumerTest
-{
-   @Override
-   public AbstractObjectNameConsumer create(
-         final ObjectManager objectManager,
-         final List<Integer> statusCodes)
-   {
-      return new ReadObjectNameConsumer(objectManager, statusCodes);
-   }
+public class ReadObjectNameConsumerTest extends AbstractObjectNameConsumerTest {
+  @Override
+  public AbstractObjectNameConsumer create(final ObjectManager objectManager,
+      final List<Integer> statusCodes) {
+    return new ReadObjectNameConsumer(objectManager, statusCodes);
+  }
 
-   @Override
-   public Method method()
-   {
-      return Method.GET;
-   }
+  @Override
+  public Method method() {
+    return Method.GET;
+  }
 
-   @Override
-   public void doVerify()
-   {
-      verify(this.objectManager).releaseNameFromRead(isA(ObjectName.class));
-   }
+  @Override
+  public void doVerify() {
+    verify(this.objectManager).releaseNameFromRead(isA(ObjectName.class));
+  }
 
-   @Override
-   public void doVerifyNever()
-   {
-      verify(this.objectManager, never()).releaseNameFromRead(isA(ObjectName.class));
-   }
+  @Override
+  public void doVerifyNever() {
+    verify(this.objectManager, never()).releaseNameFromRead(isA(ObjectName.class));
+  }
 
-   @Override
-   public void doThrowIt()
-   {
-      doThrow(new ObjectManagerException()).when(this.objectManager).releaseNameFromRead(
-            any(ObjectName.class));
-   }
+  @Override
+  public void doThrowIt() {
+    doThrow(new ObjectManagerException()).when(this.objectManager).releaseNameFromRead(
+        any(ObjectName.class));
+  }
 }

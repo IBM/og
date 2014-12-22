@@ -19,8 +19,6 @@
 
 package com.cleversafe.og.json;
 
-public enum SelectionType
-{
-   RANDOM,
-   ROUNDROBIN;
+public enum SelectionType {
+  RANDOM, ROUNDROBIN;
 }

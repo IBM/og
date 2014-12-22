@@ -26,20 +26,19 @@ import java.net.URI;
  * 
  * @since 1.0
  */
-public interface Request extends Message
-{
-   /**
-    * Gets the http method for this request
-    * 
-    * @return the http method for this request
-    * @see Method
-    */
-   Method getMethod();
+public interface Request extends Message {
+  /**
+   * Gets the http method for this request
+   * 
+   * @return the http method for this request
+   * @see Method
+   */
+  Method getMethod();
 
-   /**
-    * Gets the uri for this request
-    * 
-    * @return the uri for this request
-    */
-   URI getUri();
+  /**
+   * Gets the uri for this request
+   * 
+   * @return the uri for this request
+   */
+  URI getUri();
 }

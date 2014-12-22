@@ -20,7 +20,6 @@
 package com.cleversafe.og.test.condition;
 
 
-public interface TestCondition
-{
-   boolean isTriggered();
+public interface TestCondition {
+  boolean isTriggered();
 }

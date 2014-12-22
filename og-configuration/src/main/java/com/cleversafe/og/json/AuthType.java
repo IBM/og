@@ -19,8 +19,6 @@
 
 package com.cleversafe.og.json;
 
-public enum AuthType
-{
-   BASIC,
-   AWSV2;
+public enum AuthType {
+  BASIC, AWSV2;
 }

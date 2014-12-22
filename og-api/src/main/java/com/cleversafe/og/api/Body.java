@@ -24,20 +24,19 @@ package com.cleversafe.og.api;
  * 
  * @since 1.0
  */
-public interface Body
-{
-   /**
-    * Gets the data type of this body
-    * 
-    * @return the type of data for this body
-    * @see Data
-    */
-   Data getData();
+public interface Body {
+  /**
+   * Gets the data type of this body
+   * 
+   * @return the type of data for this body
+   * @see Data
+   */
+  Data getData();
 
-   /**
-    * Gets the size of this body
-    * 
-    * @return the size of this body
-    */
-   long getSize();
+  /**
+   * Gets the size of this body
+   * 
+   * @return the size of this body
+   */
+  long getSize();
 }

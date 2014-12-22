@@ -28,17 +28,14 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
-public class SizeUnitTypeAdapter extends TypeAdapter<SizeUnit>
-{
-   @Override
-   public void write(final JsonWriter out, final SizeUnit value) throws IOException
-   {
-      out.value(value.toString().toLowerCase(Locale.US));
-   }
+public class SizeUnitTypeAdapter extends TypeAdapter<SizeUnit> {
+  @Override
+  public void write(final JsonWriter out, final SizeUnit value) throws IOException {
+    out.value(value.toString().toLowerCase(Locale.US));
+  }
 
-   @Override
-   public SizeUnit read(final JsonReader in) throws IOException
-   {
-      return Units.size(in.nextString());
-   }
+  @Override
+  public SizeUnit read(final JsonReader in) throws IOException {
+    return Units.size(in.nextString());
+  }
 }

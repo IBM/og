@@ -46,132 +46,114 @@ import com.tngtech.java.junit.dataprovider.DataProviderRunner;
 import com.tngtech.java.junit.dataprovider.UseDataProvider;
 
 @RunWith(DataProviderRunner.class)
-public abstract class AbstractObjectNameConsumerTest
-{
-   @Rule
-   public ExpectedException thrown = ExpectedException.none();
-   protected ObjectManager objectManager;
-   protected List<Integer> statusCodes;
-   protected String object;
-   protected Request request;
-   protected Response response;
-   protected Pair<Request, Response> operation;
-   protected AbstractObjectNameConsumer objectNameConsumer;
+public abstract class AbstractObjectNameConsumerTest {
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
+  protected ObjectManager objectManager;
+  protected List<Integer> statusCodes;
+  protected String object;
+  protected Request request;
+  protected Response response;
+  protected Pair<Request, Response> operation;
+  protected AbstractObjectNameConsumer objectNameConsumer;
 
-   @Before
-   public void before() throws URISyntaxException
-   {
-      this.objectManager = mock(ObjectManager.class);
-      this.statusCodes = HttpUtil.SUCCESS_STATUS_CODES;
-      this.object = "5c18be1057404792923dc487ca40f2370000";
+  @Before
+  public void before() throws URISyntaxException {
+    this.objectManager = mock(ObjectManager.class);
+    this.statusCodes = HttpUtil.SUCCESS_STATUS_CODES;
+    this.object = "5c18be1057404792923dc487ca40f2370000";
 
-      this.request = mock(Request.class);
-      when(this.request.getMethod()).thenReturn(method());
-      when(this.request.getUri()).thenReturn(new URI("/container/" + this.object));
-      when(this.request.headers()).thenReturn(
-            ImmutableMap.of(Headers.X_OG_OBJECT_NAME, this.object));
+    this.request = mock(Request.class);
+    when(this.request.getMethod()).thenReturn(method());
+    when(this.request.getUri()).thenReturn(new URI("/container/" + this.object));
+    when(this.request.headers()).thenReturn(ImmutableMap.of(Headers.X_OG_OBJECT_NAME, this.object));
 
-      this.response = mock(Response.class);
-      when(this.response.getStatusCode()).thenReturn(200);
-      when(this.response.headers()).thenReturn(
-            ImmutableMap.of(Headers.X_OG_REQUEST_ID, "1"));
+    this.response = mock(Response.class);
+    when(this.response.getStatusCode()).thenReturn(200);
+    when(this.response.headers()).thenReturn(ImmutableMap.of(Headers.X_OG_REQUEST_ID, "1"));
 
-      this.operation = Pair.of(this.request, this.response);
-      this.objectNameConsumer = create(this.objectManager, this.statusCodes);
-   }
+    this.operation = Pair.of(this.request, this.response);
+    this.objectNameConsumer = create(this.objectManager, this.statusCodes);
+  }
 
-   public abstract AbstractObjectNameConsumer create(
-         ObjectManager objectManager,
-         List<Integer> statusCodes);
+  public abstract AbstractObjectNameConsumer create(ObjectManager objectManager,
+      List<Integer> statusCodes);
 
-   public abstract Method method();
+  public abstract Method method();
 
-   public abstract void doVerify();
+  public abstract void doVerify();
 
-   public abstract void doVerifyNever();
+  public abstract void doVerifyNever();
 
-   public abstract void doThrowIt();
+  public abstract void doThrowIt();
 
-   @DataProvider
-   public static Object[][] provideInvalidObjectNameConsumer()
-   {
-      final ObjectManager objectManager = mock(ObjectManager.class);
-      final List<Integer> statusCodes = HttpUtil.SUCCESS_STATUS_CODES;
-      final List<Integer> nullElement = Lists.newArrayList();
-      nullElement.add(null);
+  @DataProvider
+  public static Object[][] provideInvalidObjectNameConsumer() {
+    final ObjectManager objectManager = mock(ObjectManager.class);
+    final List<Integer> statusCodes = HttpUtil.SUCCESS_STATUS_CODES;
+    final List<Integer> nullElement = Lists.newArrayList();
+    nullElement.add(null);
 
-      return new Object[][]{
-            {null, statusCodes, NullPointerException.class},
-            {objectManager, null, NullPointerException.class},
-            {objectManager, ImmutableList.of(), IllegalArgumentException.class},
-            {objectManager, nullElement, NullPointerException.class},
-            {objectManager, ImmutableList.of(99), IllegalArgumentException.class},
-            {objectManager, ImmutableList.of(600), IllegalArgumentException.class}
-      };
-   }
+    return new Object[][] { {null, statusCodes, NullPointerException.class},
+        {objectManager, null, NullPointerException.class},
+        {objectManager, ImmutableList.of(), IllegalArgumentException.class},
+        {objectManager, nullElement, NullPointerException.class},
+        {objectManager, ImmutableList.of(99), IllegalArgumentException.class},
+        {objectManager, ImmutableList.of(600), IllegalArgumentException.class}};
+  }
 
-   @Test
-   @UseDataProvider("provideInvalidObjectNameConsumer")
-   public void invalidObjectNameConsumer(
-         final ObjectManager objectManager,
-         final List<Integer> statusCodes,
-         final Class<Exception> expectedException)
-   {
-      this.thrown.expect(expectedException);
-      create(objectManager, statusCodes);
-   }
+  @Test
+  @UseDataProvider("provideInvalidObjectNameConsumer")
+  public void invalidObjectNameConsumer(final ObjectManager objectManager,
+      final List<Integer> statusCodes, final Class<Exception> expectedException) {
+    this.thrown.expect(expectedException);
+    create(objectManager, statusCodes);
+  }
 
-   @Test(expected = NullPointerException.class)
-   public void nullOperation()
-   {
-      this.objectNameConsumer.consume(null);
-   }
+  @Test(expected = NullPointerException.class)
+  public void nullOperation() {
+    this.objectNameConsumer.consume(null);
+  }
 
-   @Test
-   public void successful()
-   {
-      this.objectNameConsumer.consume(this.operation);
-      doVerify();
-   }
+  @Test
+  public void successful() {
+    this.objectNameConsumer.consume(this.operation);
+    doVerify();
+  }
 
-   @Test
-   public void unsuccessful()
-   {
-      when(this.response.getStatusCode()).thenReturn(500);
-      this.objectNameConsumer.consume(this.operation);
-      doVerifyNever();
-   }
+  @Test
+  public void unsuccessful() {
+    when(this.response.getStatusCode()).thenReturn(500);
+    this.objectNameConsumer.consume(this.operation);
+    doVerifyNever();
+  }
 
-   @Test
-   public void operationDoesNotMatchMethod()
-   {
-      when(this.request.getMethod()).thenReturn(Method.DELETE);
-      this.objectNameConsumer.consume(this.operation);
-      doVerifyNever();
-   }
+  @Test
+  public void operationDoesNotMatchMethod() {
+    when(this.request.getMethod()).thenReturn(Method.DELETE);
+    this.objectNameConsumer.consume(this.operation);
+    doVerifyNever();
+  }
 
-   @Test
-   public void statusCodeModification()
-   {
-      final List<Integer> mutable = Lists.newArrayList();
-      mutable.add(200);
-      final AbstractObjectNameConsumer consumer = create(this.objectManager, mutable);
-      mutable.clear();
-      consumer.consume(this.operation);
-      doVerify();
-   }
+  @Test
+  public void statusCodeModification() {
+    final List<Integer> mutable = Lists.newArrayList();
+    mutable.add(200);
+    final AbstractObjectNameConsumer consumer = create(this.objectManager, mutable);
+    mutable.clear();
+    consumer.consume(this.operation);
+    doVerify();
+  }
 
-   @Test(expected = ObjectManagerException.class)
-   public void objectManagerException()
-   {
-      doThrowIt();
-      this.objectNameConsumer.consume(this.operation);
-   }
+  @Test(expected = ObjectManagerException.class)
+  public void objectManagerException() {
+    doThrowIt();
+    this.objectNameConsumer.consume(this.operation);
+  }
 
-   @Test(expected = IllegalStateException.class)
-   public void noObject()
-   {
-      when(this.request.headers()).thenReturn(ImmutableMap.<String, String> of());
-      this.objectNameConsumer.consume(this.operation);
-   }
+  @Test(expected = IllegalStateException.class)
+  public void noObject() {
+    when(this.request.headers()).thenReturn(ImmutableMap.<String, String>of());
+    this.objectNameConsumer.consume(this.operation);
+  }
 }

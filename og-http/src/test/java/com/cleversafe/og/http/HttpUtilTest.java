@@ -36,84 +36,65 @@ import com.tngtech.java.junit.dataprovider.DataProviderRunner;
 import com.tngtech.java.junit.dataprovider.UseDataProvider;
 
 @RunWith(DataProviderRunner.class)
-public class HttpUtilTest
-{
-   @Test(expected = UnsupportedOperationException.class)
-   public void modifyStatusCodes()
-   {
-      HttpUtil.SUCCESS_STATUS_CODES.add(500);
-   }
+public class HttpUtilTest {
+  @Test(expected = UnsupportedOperationException.class)
+  public void modifyStatusCodes() {
+    HttpUtil.SUCCESS_STATUS_CODES.add(500);
+  }
 
-   @Test(expected = NullPointerException.class)
-   public void nullMethod()
-   {
-      HttpUtil.toOperation(null);
-   }
+  @Test(expected = NullPointerException.class)
+  public void nullMethod() {
+    HttpUtil.toOperation(null);
+  }
 
-   @DataProvider
-   public static Object[][] provideToOperation()
-   {
-      return new Object[][]{
-            {Method.PUT, Operation.WRITE},
-            {Method.POST, Operation.WRITE},
-            {Method.GET, Operation.READ},
-            {Method.HEAD, Operation.READ},
-            {Method.DELETE, Operation.DELETE}
-      };
-   }
+  @DataProvider
+  public static Object[][] provideToOperation() {
+    return new Object[][] { {Method.PUT, Operation.WRITE}, {Method.POST, Operation.WRITE},
+        {Method.GET, Operation.READ}, {Method.HEAD, Operation.READ},
+        {Method.DELETE, Operation.DELETE}};
+  }
 
-   @Test
-   @UseDataProvider("provideToOperation")
-   public void toOperation(final Method method, final Operation operation)
-   {
-      assertThat(HttpUtil.toOperation(method), is(operation));
-   }
+  @Test
+  @UseDataProvider("provideToOperation")
+  public void toOperation(final Method method, final Operation operation) {
+    assertThat(HttpUtil.toOperation(method), is(operation));
+  }
 
-   @Test(expected = NullPointerException.class)
-   public void nullUri()
-   {
-      HttpUtil.getObjectName(null);
-   }
+  @Test(expected = NullPointerException.class)
+  public void nullUri() {
+    HttpUtil.getObjectName(null);
+  }
 
-   @Test(expected = NullPointerException.class)
-   public void nullScheme() throws URISyntaxException
-   {
-      HttpUtil.getObjectName(new URI("192.168.8.1/container"));
-   }
+  @Test(expected = NullPointerException.class)
+  public void nullScheme() throws URISyntaxException {
+    HttpUtil.getObjectName(new URI("192.168.8.1/container"));
+  }
 
-   @Test(expected = IllegalArgumentException.class)
-   public void invalidScheme() throws URISyntaxException
-   {
-      HttpUtil.getObjectName(new URI("ftp://192.168.8.1/container"));
-   }
+  @Test(expected = IllegalArgumentException.class)
+  public void invalidScheme() throws URISyntaxException {
+    HttpUtil.getObjectName(new URI("ftp://192.168.8.1/container"));
+  }
 
-   @Test
-   public void rootUriNoObject() throws URISyntaxException
-   {
-      assertThat(HttpUtil.getObjectName(new URI("http://192.168.8.1/container")), nullValue());
-   }
+  @Test
+  public void rootUriNoObject() throws URISyntaxException {
+    assertThat(HttpUtil.getObjectName(new URI("http://192.168.8.1/container")), nullValue());
+  }
 
-   @Test
-   public void noObject() throws URISyntaxException
-   {
-      assertThat(HttpUtil.getObjectName(new URI("http://192.168.8.1/soh/container")), nullValue());
-   }
+  @Test
+  public void noObject() throws URISyntaxException {
+    assertThat(HttpUtil.getObjectName(new URI("http://192.168.8.1/soh/container")), nullValue());
+  }
 
-   @DataProvider
-   public static Object[][] provideGetObjectName()
-   {
-      return new Object[][]{
-            {"https://192.168.8.1/container/object"},
-            {"http://192.168.8.1/container/object/"},
-            {"https://192.168.8.1/soh/container/object"},
-            {"http://192.168.8.1/soh/container/object/"}
-      };
-   }
+  @DataProvider
+  public static Object[][] provideGetObjectName() {
+    return new Object[][] { {"https://192.168.8.1/container/object"},
+        {"http://192.168.8.1/container/object/"}, {"https://192.168.8.1/soh/container/object"},
+        {"http://192.168.8.1/soh/container/object/"}};
+  }
 
-   @Test
-   @UseDataProvider("provideGetObjectName")
-   public void getObjectName(final String uri) throws URISyntaxException
-   {
-      assertThat(HttpUtil.getObjectName(new URI(uri)), is("object"));
-   }
+  @Test
+  @UseDataProvider("provideGetObjectName")
+  public void getObjectName(final String uri) throws URISyntaxException {
+    assertThat(HttpUtil.getObjectName(new URI(uri)), is("object"));
+  }
 }

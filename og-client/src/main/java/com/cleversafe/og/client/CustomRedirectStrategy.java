@@ -40,54 +40,36 @@ import org.apache.http.protocol.HttpContext;
  * 
  * @since 1.0
  */
-public class CustomRedirectStrategy extends DefaultRedirectStrategy
-{
-   private static final String[] REDIRECT_METHODS = new String[]{
-         HttpGet.METHOD_NAME,
-         HttpHead.METHOD_NAME,
-         HttpPost.METHOD_NAME,
-         HttpPut.METHOD_NAME,
-         HttpDelete.METHOD_NAME
-   };
+public class CustomRedirectStrategy extends DefaultRedirectStrategy {
+  private static final String[] REDIRECT_METHODS = new String[] {HttpGet.METHOD_NAME,
+      HttpHead.METHOD_NAME, HttpPost.METHOD_NAME, HttpPut.METHOD_NAME, HttpDelete.METHOD_NAME};
 
-   @Override
-   protected boolean isRedirectable(final String method)
-   {
-      for (final String m : REDIRECT_METHODS)
-      {
-         if (m.equalsIgnoreCase(method))
-         {
-            return true;
-         }
+  @Override
+  protected boolean isRedirectable(final String method) {
+    for (final String m : REDIRECT_METHODS) {
+      if (m.equalsIgnoreCase(method)) {
+        return true;
       }
-      return false;
-   }
+    }
+    return false;
+  }
 
-   @Override
-   public HttpUriRequest getRedirect(
-         final HttpRequest request,
-         final HttpResponse response,
-         final HttpContext context) throws ProtocolException
-   {
-      final URI uri = getLocationURI(request, response, context);
-      final RequestBuilder builder = RequestBuilder.copy(request)
-            .setUri(uri)
-            // must remove any applied content headers as they will be re-applied
-            .removeHeaders("Content-Length")
-            .removeHeaders("Transfer-Encoding");
+  @Override
+  public HttpUriRequest getRedirect(final HttpRequest request, final HttpResponse response,
+      final HttpContext context) throws ProtocolException {
+    final URI uri = getLocationURI(request, response, context);
+    final RequestBuilder builder = RequestBuilder.copy(request).setUri(uri)
+    // must remove any applied content headers as they will be re-applied
+        .removeHeaders("Content-Length").removeHeaders("Transfer-Encoding");
 
-      if (request instanceof HttpEntityEnclosingRequest)
-      {
-         try
-         {
-            // reset InputStream so it can be reused for redirected request
-            ((HttpEntityEnclosingRequest) request).getEntity().getContent().reset();
-         }
-         catch (final Exception e)
-         {
-            throw new ProtocolException("Unable to reset InputStream for redirected request", e);
-         }
+    if (request instanceof HttpEntityEnclosingRequest) {
+      try {
+        // reset InputStream so it can be reused for redirected request
+        ((HttpEntityEnclosingRequest) request).getEntity().getContent().reset();
+      } catch (final Exception e) {
+        throw new ProtocolException("Unable to reset InputStream for redirected request", e);
       }
-      return builder.build();
-   }
+    }
+    return builder.build();
+  }
 }

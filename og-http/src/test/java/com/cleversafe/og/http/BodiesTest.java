@@ -27,41 +27,35 @@ import org.junit.Test;
 import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.Data;
 
-public class BodiesTest
-{
-   @Test
-   public void none()
-   {
-      final Body body = Bodies.none();
-      assertThat(body.getData(), is(Data.NONE));
-      assertThat(body.getSize(), is(0L));
-   }
+public class BodiesTest {
+  @Test
+  public void none() {
+    final Body body = Bodies.none();
+    assertThat(body.getData(), is(Data.NONE));
+    assertThat(body.getSize(), is(0L));
+  }
 
-   @Test(expected = IllegalArgumentException.class)
-   public void randomNegativeSize()
-   {
-      Bodies.random(-1);
-   }
+  @Test(expected = IllegalArgumentException.class)
+  public void randomNegativeSize() {
+    Bodies.random(-1);
+  }
 
-   @Test
-   public void random()
-   {
-      final Body body = Bodies.random(1);
-      assertThat(body.getData(), is(Data.RANDOM));
-      assertThat(body.getSize(), is(1L));
-   }
+  @Test
+  public void random() {
+    final Body body = Bodies.random(1);
+    assertThat(body.getData(), is(Data.RANDOM));
+    assertThat(body.getSize(), is(1L));
+  }
 
-   @Test(expected = IllegalArgumentException.class)
-   public void zeroesNegativeSize()
-   {
-      Bodies.zeroes(-1);
-   }
+  @Test(expected = IllegalArgumentException.class)
+  public void zeroesNegativeSize() {
+    Bodies.zeroes(-1);
+  }
 
-   @Test
-   public void zeroes()
-   {
-      final Body body = Bodies.zeroes(1);
-      assertThat(body.getData(), is(Data.ZEROES));
-      assertThat(body.getSize(), is(1L));
-   }
+  @Test
+  public void zeroes() {
+    final Body body = Bodies.zeroes(1);
+    assertThat(body.getData(), is(Data.ZEROES));
+    assertThat(body.getSize(), is(1L));
+  }
 }

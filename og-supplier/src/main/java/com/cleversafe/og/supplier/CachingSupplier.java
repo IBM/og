@@ -26,46 +26,39 @@ import com.google.common.base.Supplier;
 /**
  * A supplier which remembers the last value it supplied
  * 
- * @param <T>
- *           the type of value to supply
+ * @param <T> the type of value to supply
  * @since 1.0
  */
-public class CachingSupplier<T> implements Supplier<T>
-{
-   private final Supplier<T> supplier;
-   private T cachedValue;
+public class CachingSupplier<T> implements Supplier<T> {
+  private final Supplier<T> supplier;
+  private T cachedValue;
 
-   /**
-    * Constructs a supplier using the provided base supplier
-    * 
-    * @param supplier
-    *           the base supplier to cache values for
-    */
-   public CachingSupplier(final Supplier<T> supplier)
-   {
-      this.supplier = checkNotNull(supplier);
-   }
+  /**
+   * Constructs a supplier using the provided base supplier
+   * 
+   * @param supplier the base supplier to cache values for
+   */
+  public CachingSupplier(final Supplier<T> supplier) {
+    this.supplier = checkNotNull(supplier);
+  }
 
-   @Override
-   public T get()
-   {
-      this.cachedValue = this.supplier.get();
-      return this.cachedValue;
-   }
+  @Override
+  public T get() {
+    this.cachedValue = this.supplier.get();
+    return this.cachedValue;
+  }
 
-   /**
-    * Returns the most recently supplied value
-    * 
-    * @return the most recently supplied value, or null if {@code get} has never been called
-    */
-   public T getCachedValue()
-   {
-      return this.cachedValue;
-   }
+  /**
+   * Returns the most recently supplied value
+   * 
+   * @return the most recently supplied value, or null if {@code get} has never been called
+   */
+  public T getCachedValue() {
+    return this.cachedValue;
+  }
 
-   @Override
-   public String toString()
-   {
-      return "CachingSupplier [" + this.supplier + "]";
-   }
+  @Override
+  public String toString() {
+    return "CachingSupplier [" + this.supplier + "]";
+  }
 }

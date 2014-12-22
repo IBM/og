@@ -34,50 +34,42 @@ import com.cleversafe.og.api.Method;
 import com.cleversafe.og.http.Headers;
 import com.google.common.collect.ImmutableMap;
 
-public class WriteObjectNameConsumerTest extends AbstractObjectNameConsumerTest
-{
-   @Override
-   public AbstractObjectNameConsumer create(
-         final ObjectManager objectManager,
-         final List<Integer> statusCodes)
-   {
-      return new WriteObjectNameConsumer(objectManager, statusCodes);
-   }
+public class WriteObjectNameConsumerTest extends AbstractObjectNameConsumerTest {
+  @Override
+  public AbstractObjectNameConsumer create(final ObjectManager objectManager,
+      final List<Integer> statusCodes) {
+    return new WriteObjectNameConsumer(objectManager, statusCodes);
+  }
 
-   @Override
-   public Method method()
-   {
-      return Method.PUT;
-   }
+  @Override
+  public Method method() {
+    return Method.PUT;
+  }
 
-   @Override
-   public void doVerify()
-   {
-      verify(this.objectManager).writeNameComplete(isA(ObjectName.class));
-   }
+  @Override
+  public void doVerify() {
+    verify(this.objectManager).writeNameComplete(isA(ObjectName.class));
+  }
 
-   @Override
-   public void doVerifyNever()
-   {
-      verify(this.objectManager, never()).writeNameComplete(isA(ObjectName.class));
-   }
+  @Override
+  public void doVerifyNever() {
+    verify(this.objectManager, never()).writeNameComplete(isA(ObjectName.class));
+  }
 
-   @Override
-   public void doThrowIt()
-   {
-      doThrow(new ObjectManagerException()).when(this.objectManager).writeNameComplete(
-            any(ObjectName.class));
-   }
+  @Override
+  public void doThrowIt() {
+    doThrow(new ObjectManagerException()).when(this.objectManager).writeNameComplete(
+        any(ObjectName.class));
+  }
 
-   @Test
-   public void successfulSOH()
-   {
-      // for SOH, the header gets set on response rather than request
-      when(this.request.headers()).thenReturn(ImmutableMap.<String, String> of());
-      when(this.response.headers()).thenReturn(
-            ImmutableMap.of(Headers.X_OG_OBJECT_NAME, this.object));
+  @Test
+  public void successfulSOH() {
+    // for SOH, the header gets set on response rather than request
+    when(this.request.headers()).thenReturn(ImmutableMap.<String, String>of());
+    when(this.response.headers())
+        .thenReturn(ImmutableMap.of(Headers.X_OG_OBJECT_NAME, this.object));
 
-      this.objectNameConsumer.consume(this.operation);
-      doVerify();
-   }
+    this.objectNameConsumer.consume(this.operation);
+    doVerify();
+  }
 }

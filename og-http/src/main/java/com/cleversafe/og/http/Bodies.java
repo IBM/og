@@ -30,69 +30,56 @@ import com.cleversafe.og.api.Data;
  * 
  * @since 1.0
  */
-public class Bodies
-{
-   private static final Body NONE_BODY = Bodies.create(Data.NONE, 0);
+public class Bodies {
+  private static final Body NONE_BODY = Bodies.create(Data.NONE, 0);
 
-   private Bodies()
-   {}
+  private Bodies() {}
 
-   /**
-    * Creates a body instance representing no body
-    * 
-    * @return an body instance
-    */
-   public static Body none()
-   {
-      return NONE_BODY;
-   }
+  /**
+   * Creates a body instance representing no body
+   * 
+   * @return an body instance
+   */
+  public static Body none() {
+    return NONE_BODY;
+  }
 
-   /**
-    * Creates a body instance representing a body with random data
-    * 
-    * @param size
-    *           the size of the body
-    * @return a random body instance
-    * @throws IllegalArgumentException
-    *            if size is negative
-    */
-   public static Body random(final long size)
-   {
-      return create(Data.RANDOM, size);
-   }
+  /**
+   * Creates a body instance representing a body with random data
+   * 
+   * @param size the size of the body
+   * @return a random body instance
+   * @throws IllegalArgumentException if size is negative
+   */
+  public static Body random(final long size) {
+    return create(Data.RANDOM, size);
+  }
 
-   /**
-    * Creates a body instance representing a body with zeroes for data
-    * 
-    * @param size
-    *           the size of the body
-    * @return a zero based body instance
-    * @throws IllegalArgumentException
-    *            if size is negative
-    */
-   public static Body zeroes(final long size)
-   {
-      return create(Data.ZEROES, size);
-   }
+  /**
+   * Creates a body instance representing a body with zeroes for data
+   * 
+   * @param size the size of the body
+   * @return a zero based body instance
+   * @throws IllegalArgumentException if size is negative
+   */
+  public static Body zeroes(final long size) {
+    return create(Data.ZEROES, size);
+  }
 
-   private static Body create(final Data data, final long size)
-   {
-      checkNotNull(data);
-      checkArgument(size >= 0, "size must be >= 0 [%s]", size);
+  private static Body create(final Data data, final long size) {
+    checkNotNull(data);
+    checkArgument(size >= 0, "size must be >= 0 [%s]", size);
 
-      return new Body()
-      {
-         @Override
-         public Data getData()
-         {
-            return data;
-         }
+    return new Body() {
+      @Override
+      public Data getData() {
+        return data;
+      }
 
-         @Override
-         public long getSize()
-         {
-            return size;
-         }
-      };
-   }
+      @Override
+      public long getSize() {
+        return size;
+      }
+    };
+  }
 }

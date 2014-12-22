@@ -43,64 +43,54 @@ import com.tngtech.java.junit.dataprovider.DataProviderRunner;
 import com.tngtech.java.junit.dataprovider.UseDataProvider;
 
 @RunWith(DataProviderRunner.class)
-public class CounterConditionTest
-{
-   @Rule
-   public ExpectedException thrown = ExpectedException.none();
+public class CounterConditionTest {
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
-   @DataProvider
-   public static Object[][] provideInvalidCounterCondition()
-   {
-      final LoadTest test = mock(LoadTest.class);
-      final Statistics stats = new Statistics();
-      final Operation operation = Operation.WRITE;
-      final Counter counter = Counter.BYTES;
-      return new Object[][]{
-            {null, counter, 1, test, stats, NullPointerException.class},
-            {operation, null, 1, test, stats, NullPointerException.class},
-            {operation, counter, -1, test, stats, IllegalArgumentException.class},
-            {operation, counter, 0, test, stats, IllegalArgumentException.class},
-            {operation, counter, 1, null, stats, NullPointerException.class},
-            {operation, counter, 1, test, null, NullPointerException.class},
-      };
-   }
+  @DataProvider
+  public static Object[][] provideInvalidCounterCondition() {
+    final LoadTest test = mock(LoadTest.class);
+    final Statistics stats = new Statistics();
+    final Operation operation = Operation.WRITE;
+    final Counter counter = Counter.BYTES;
+    return new Object[][] { {null, counter, 1, test, stats, NullPointerException.class},
+        {operation, null, 1, test, stats, NullPointerException.class},
+        {operation, counter, -1, test, stats, IllegalArgumentException.class},
+        {operation, counter, 0, test, stats, IllegalArgumentException.class},
+        {operation, counter, 1, null, stats, NullPointerException.class},
+        {operation, counter, 1, test, null, NullPointerException.class},};
+  }
 
-   @Test
-   @UseDataProvider("provideInvalidCounterCondition")
-   public void invalidCounterCondition(
-         final Operation operation,
-         final Counter counter,
-         final long thresholdValue,
-         final LoadTest test,
-         final Statistics stats,
-         final Class<Exception> expectedException)
-   {
-      this.thrown.expect(expectedException);
-      new CounterCondition(operation, counter, thresholdValue, test, stats);
-   }
+  @Test
+  @UseDataProvider("provideInvalidCounterCondition")
+  public void invalidCounterCondition(final Operation operation, final Counter counter,
+      final long thresholdValue, final LoadTest test, final Statistics stats,
+      final Class<Exception> expectedException) {
+    this.thrown.expect(expectedException);
+    new CounterCondition(operation, counter, thresholdValue, test, stats);
+  }
 
-   @Test
-   public void counterCondition()
-   {
-      final LoadTest test = mock(LoadTest.class);
-      final Statistics stats = new Statistics();
+  @Test
+  public void counterCondition() {
+    final LoadTest test = mock(LoadTest.class);
+    final Statistics stats = new Statistics();
 
-      final Request request = mock(Request.class);
-      when(request.getMethod()).thenReturn(Method.PUT);
-      when(request.getBody()).thenReturn(Bodies.none());
+    final Request request = mock(Request.class);
+    when(request.getMethod()).thenReturn(Method.PUT);
+    when(request.getBody()).thenReturn(Bodies.none());
 
-      final Response response = mock(Response.class);
-      when(response.getBody()).thenReturn(Bodies.none());
+    final Response response = mock(Response.class);
+    when(response.getBody()).thenReturn(Bodies.none());
 
-      final Pair<Request, Response> operation = Pair.of(request, response);
+    final Pair<Request, Response> operation = Pair.of(request, response);
 
-      final CounterCondition condition =
-            new CounterCondition(Operation.WRITE, Counter.OPERATIONS, 2, test, stats);
+    final CounterCondition condition =
+        new CounterCondition(Operation.WRITE, Counter.OPERATIONS, 2, test, stats);
 
-      assertThat(condition.isTriggered(), is(false));
-      stats.update(operation);
-      assertThat(condition.isTriggered(), is(false));
-      stats.update(operation);
-      assertThat(condition.isTriggered(), is(true));
-   }
+    assertThat(condition.isTriggered(), is(false));
+    stats.update(operation);
+    assertThat(condition.isTriggered(), is(false));
+    stats.update(operation);
+    assertThat(condition.isTriggered(), is(true));
+  }
 }

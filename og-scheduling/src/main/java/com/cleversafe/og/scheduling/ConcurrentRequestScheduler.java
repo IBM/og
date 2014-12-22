@@ -38,97 +38,80 @@ import com.google.common.util.concurrent.Uninterruptibles;
 /**
  * A scheduler which simulates concurrent actions
  */
-public class ConcurrentRequestScheduler implements Scheduler
-{
-   private static final Logger _logger = LoggerFactory.getLogger(ConcurrentRequestScheduler.class);
-   private final int concurrentRequests;
-   private final long rampDuration;
-   private final Semaphore sem;
-   private final CountDownLatch started;
+public class ConcurrentRequestScheduler implements Scheduler {
+  private static final Logger _logger = LoggerFactory.getLogger(ConcurrentRequestScheduler.class);
+  private final int concurrentRequests;
+  private final long rampDuration;
+  private final Semaphore sem;
+  private final CountDownLatch started;
 
-   /**
-    * Constructs an instance with the provided concurrency
-    * 
-    * @param concurrentRequests
-    *           the number of concurrent requests allowed
-    * @throws IllegalArgumentException
-    *            if concurrentRequests is negative or zero
-    */
-   public ConcurrentRequestScheduler(
-         final int concurrentRequests,
-         final double rampup,
-         final TimeUnit rampupUnit)
-   {
-      checkArgument(concurrentRequests > 0, "concurrentRequests must be > 0");
-      checkArgument(rampup >= 0.0, "rampup must be >= 0.0 [%s]", rampup);
-      checkNotNull(rampupUnit);
-      this.concurrentRequests = concurrentRequests;
-      this.rampDuration = (long) (rampup * rampupUnit.toNanos(1));
-      this.started = new CountDownLatch(1);
+  /**
+   * Constructs an instance with the provided concurrency
+   * 
+   * @param concurrentRequests the number of concurrent requests allowed
+   * @throws IllegalArgumentException if concurrentRequests is negative or zero
+   */
+  public ConcurrentRequestScheduler(final int concurrentRequests, final double rampup,
+      final TimeUnit rampupUnit) {
+    checkArgument(concurrentRequests > 0, "concurrentRequests must be > 0");
+    checkArgument(rampup >= 0.0, "rampup must be >= 0.0 [%s]", rampup);
+    checkNotNull(rampupUnit);
+    this.concurrentRequests = concurrentRequests;
+    this.rampDuration = (long) (rampup * rampupUnit.toNanos(1));
+    this.started = new CountDownLatch(1);
 
-      if (this.rampDuration == 0.0)
-         this.sem = new Semaphore(concurrentRequests - 1);
-      else
-      {
-         this.sem = new Semaphore(0);
-         final Thread rampupThread = new Thread(new Runnable()
-         {
-            @Override
-            public void run()
-            {
-               final CountDownLatch started = ConcurrentRequestScheduler.this.started;
-               final int interval = ConcurrentRequestScheduler.this.concurrentRequests - 1;
-               final long sleepDuration = ConcurrentRequestScheduler.this.rampDuration / interval;
+    if (this.rampDuration == 0.0)
+      this.sem = new Semaphore(concurrentRequests - 1);
+    else {
+      this.sem = new Semaphore(0);
+      final Thread rampupThread = new Thread(new Runnable() {
+        @Override
+        public void run() {
+          final CountDownLatch started = ConcurrentRequestScheduler.this.started;
+          final int interval = ConcurrentRequestScheduler.this.concurrentRequests - 1;
+          final long sleepDuration = ConcurrentRequestScheduler.this.rampDuration / interval;
 
-               Uninterruptibles.awaitUninterruptibly(started);
-               for (int i = 0; i < interval; i++)
-               {
-                  Uninterruptibles.sleepUninterruptibly(sleepDuration, TimeUnit.NANOSECONDS);
-                  ConcurrentRequestScheduler.this.sem.release();
-               }
-            }
-         });
-         rampupThread.setDaemon(true);
-         rampupThread.start();
-      }
-   }
+          Uninterruptibles.awaitUninterruptibly(started);
+          for (int i = 0; i < interval; i++) {
+            Uninterruptibles.sleepUninterruptibly(sleepDuration, TimeUnit.NANOSECONDS);
+            ConcurrentRequestScheduler.this.sem.release();
+          }
+        }
+      });
+      rampupThread.setDaemon(true);
+      rampupThread.start();
+    }
+  }
 
-   /**
-    * {@inheritDoc}
-    * 
-    * This implementation blocks until a previously scheduled request has completed
-    */
-   @Override
-   public void waitForNext()
-   {
-      this.started.countDown();
-      try
-      {
-         this.sem.acquire();
-      }
-      catch (final InterruptedException e)
-      {
-         _logger.info("Interrupted while waiting to schedule next request", e);
-         return;
-      }
-   }
+  /**
+   * {@inheritDoc}
+   * 
+   * This implementation blocks until a previously scheduled request has completed
+   */
+  @Override
+  public void waitForNext() {
+    this.started.countDown();
+    try {
+      this.sem.acquire();
+    } catch (final InterruptedException e) {
+      _logger.info("Interrupted while waiting to schedule next request", e);
+      return;
+    }
+  }
 
-   /**
-    * Informs this scheduler that it should allow the calling thread on {@link #waitForNext} to
-    * proceed
-    * 
-    * @param operation
-    *           the operation for the completed request
-    */
-   @Subscribe
-   public void complete(final Pair<Request, Response> operation)
-   {
-      this.sem.release();
-   }
+  /**
+   * Informs this scheduler that it should allow the calling thread on {@link #waitForNext} to
+   * proceed
+   * 
+   * @param operation the operation for the completed request
+   */
+  @Subscribe
+  public void complete(final Pair<Request, Response> operation) {
+    this.sem.release();
+  }
 
-   @Override
-   public String toString()
-   {
-      return "ConcurrentRequestScheduler [concurrentRequests=" + this.concurrentRequests + "]";
-   }
+  @Override
+  public String toString() {
+    return "ConcurrentRequestScheduler [concurrentRequests=" + this.concurrentRequests + "]";
+  }
 }

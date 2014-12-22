@@ -27,23 +27,19 @@ import org.apache.logging.log4j.core.lookup.StrLookup;
 import org.joda.time.format.DateTimeFormat;
 
 @Plugin(name = "og", category = "Lookup")
-public class OGDatetimeLookup implements StrLookup
-{
-   private static final String DATETIME = DateTimeFormat.forPattern("yyyy-MM-dd_HH.mm.ss")
-         .withLocale(Locale.US).print(System.currentTimeMillis());
+public class OGDatetimeLookup implements StrLookup {
+  private static final String DATETIME = DateTimeFormat.forPattern("yyyy-MM-dd_HH.mm.ss")
+      .withLocale(Locale.US).print(System.currentTimeMillis());
 
-   public OGDatetimeLookup()
-   {}
+  public OGDatetimeLookup() {}
 
-   @Override
-   public String lookup(final String key)
-   {
-      return DATETIME;
-   }
+  @Override
+  public String lookup(final String key) {
+    return DATETIME;
+  }
 
-   @Override
-   public String lookup(final LogEvent event, final String key)
-   {
-      return DATETIME;
-   }
+  @Override
+  public String lookup(final LogEvent event, final String key) {
+    return DATETIME;
+  }
 }

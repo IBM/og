@@ -46,92 +46,79 @@ import java.io.InputStream;
  * 
  * @since 1.0
  */
-public class InfiniteInputStream extends InputStream
-{
-   private final byte[] buf;
-   private int cursor;
-   private int mark;
+public class InfiniteInputStream extends InputStream {
+  private final byte[] buf;
+  private int cursor;
+  private int mark;
 
-   /**
-    * Constructs an infinite input stream, using the provided byte array as its source of data.
-    * <p>
-    * Note: this class does not perform a defensive copy of the provided byte array, so callers must
-    * take care not to modify the byte array after construction of this input stream.
-    * 
-    * @param buf
-    *           the byte array to use as a data source for this input stream
-    * @throws IllegalArgumentException
-    *            if buf length is zero
-    */
-   public InfiniteInputStream(final byte[] buf)
-   {
-      this.buf = checkNotNull(buf);
-      checkArgument(buf.length > 0, "buf length must be > 0 [%s]", buf.length);
-      this.cursor = 0;
-      this.mark = 0;
-   }
+  /**
+   * Constructs an infinite input stream, using the provided byte array as its source of data.
+   * <p>
+   * Note: this class does not perform a defensive copy of the provided byte array, so callers must
+   * take care not to modify the byte array after construction of this input stream.
+   * 
+   * @param buf the byte array to use as a data source for this input stream
+   * @throws IllegalArgumentException if buf length is zero
+   */
+  public InfiniteInputStream(final byte[] buf) {
+    this.buf = checkNotNull(buf);
+    checkArgument(buf.length > 0, "buf length must be > 0 [%s]", buf.length);
+    this.cursor = 0;
+    this.mark = 0;
+  }
 
-   @Override
-   public int read()
-   {
-      return this.buf[updateCursor(1)];
-   }
+  @Override
+  public int read() {
+    return this.buf[updateCursor(1)];
+  }
 
-   @Override
-   public int read(final byte[] b)
-   {
-      return this.read(b, 0, b.length);
-   }
+  @Override
+  public int read(final byte[] b) {
+    return this.read(b, 0, b.length);
+  }
 
-   @Override
-   public int read(final byte[] b, final int off, final int len)
-   {
-      checkNotNull(b);
-      if (off < 0 || len < 0 || len > b.length - off)
-         throw new IndexOutOfBoundsException();
-      else if (len == 0)
-         return 0;
+  @Override
+  public int read(final byte[] b, final int off, final int len) {
+    checkNotNull(b);
+    if (off < 0 || len < 0 || len > b.length - off)
+      throw new IndexOutOfBoundsException();
+    else if (len == 0)
+      return 0;
 
-      int copied = 0;
-      while (copied < len)
-      {
-         final int toCopy = Math.min(this.buf.length - this.cursor, len - copied);
-         System.arraycopy(this.buf, this.cursor, b, off + copied, toCopy);
-         updateCursor(toCopy);
-         copied += toCopy;
-      }
+    int copied = 0;
+    while (copied < len) {
+      final int toCopy = Math.min(this.buf.length - this.cursor, len - copied);
+      System.arraycopy(this.buf, this.cursor, b, off + copied, toCopy);
+      updateCursor(toCopy);
+      copied += toCopy;
+    }
 
-      return len;
-   }
+    return len;
+  }
 
-   @Override
-   public int available()
-   {
-      return Integer.MAX_VALUE;
-   }
+  @Override
+  public int available() {
+    return Integer.MAX_VALUE;
+  }
 
-   @Override
-   public void mark(final int readlimit)
-   {
-      this.mark = this.cursor;
-   }
+  @Override
+  public void mark(final int readlimit) {
+    this.mark = this.cursor;
+  }
 
-   @Override
-   public void reset()
-   {
-      this.cursor = this.mark;
-   }
+  @Override
+  public void reset() {
+    this.cursor = this.mark;
+  }
 
-   @Override
-   public boolean markSupported()
-   {
-      return true;
-   }
+  @Override
+  public boolean markSupported() {
+    return true;
+  }
 
-   private int updateCursor(final int amount)
-   {
-      final int oldCursor = this.cursor;
-      this.cursor = (this.cursor + amount) % this.buf.length;
-      return oldCursor;
-   }
+  private int updateCursor(final int amount) {
+    final int oldCursor = this.cursor;
+    this.cursor = (this.cursor + amount) % this.buf.length;
+    return oldCursor;
+  }
 }

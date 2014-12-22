@@ -25,17 +25,15 @@ import static org.hamcrest.Matchers.is;
 import org.apache.logging.log4j.core.lookup.StrLookup;
 import org.junit.Test;
 
-public class OGDatetimeLookupTest
-{
-   @Test
-   public void testOGDatetimeLookup()
-   {
-      final StrLookup lookup = new OGDatetimeLookup();
-      final String s1 = lookup.lookup(null);
-      final String s2 = lookup.lookup(null);
-      final String s3 = lookup.lookup(null, null);
+public class OGDatetimeLookupTest {
+  @Test
+  public void testOGDatetimeLookup() {
+    final StrLookup lookup = new OGDatetimeLookup();
+    final String s1 = lookup.lookup(null);
+    final String s2 = lookup.lookup(null);
+    final String s3 = lookup.lookup(null, null);
 
-      assertThat(s1, is(s2));
-      assertThat(s2, is(s3));
-   }
+    assertThat(s1, is(s2));
+    assertThat(s2, is(s3));
+  }
 }

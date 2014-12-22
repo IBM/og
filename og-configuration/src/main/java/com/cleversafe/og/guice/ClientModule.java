@@ -34,46 +34,38 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 
-public class ClientModule extends AbstractModule
-{
-   private final ClientConfig config;
+public class ClientModule extends AbstractModule {
+  private final ClientConfig config;
 
-   public ClientModule(final ClientConfig config)
-   {
-      this.config = checkNotNull(config);
-   }
+  public ClientModule(final ClientConfig config) {
+    this.config = checkNotNull(config);
+  }
 
-   @Override
-   protected void configure()
-   {}
+  @Override
+  protected void configure() {}
 
-   @Provides
-   @Singleton
-   public Client provideClient(
-         final HttpAuth authentication,
-         final Map<String, ResponseBodyConsumer> responseBodyConsumers)
-   {
-      final ApacheClient.Builder b = new ApacheClient.Builder()
-            .withConnectTimeout(this.config.getConnectTimeout())
+  @Provides
+  @Singleton
+  public Client provideClient(final HttpAuth authentication,
+      final Map<String, ResponseBodyConsumer> responseBodyConsumers) {
+    final ApacheClient.Builder b =
+        new ApacheClient.Builder().withConnectTimeout(this.config.getConnectTimeout())
             .withSoTimeout(this.config.getSoTimeout())
             .usingSoReuseAddress(this.config.isSoReuseAddress())
-            .withSoLinger(this.config.getSoLinger())
-            .usingSoKeepAlive(this.config.isSoKeepAlive())
+            .withSoLinger(this.config.getSoLinger()).usingSoKeepAlive(this.config.isSoKeepAlive())
             .usingTcpNoDelay(this.config.isTcpNoDelay())
             .usingPersistentConnections(this.config.isPersistentConnections())
             .usingChunkedEncoding(this.config.isChunkedEncoding())
             .usingExpectContinue(this.config.isExpectContinue())
             .withWaitForContinue(this.config.getWaitForContinue())
-            .withAuthentication(authentication)
-            .withUserAgent(Version.displayVersion())
+            .withAuthentication(authentication).withUserAgent(Version.displayVersion())
             .withWriteThroughput(this.config.getWriteThroughput())
             .withReadThroughput(this.config.getReadThroughput());
 
-      for (final Entry<String, ResponseBodyConsumer> consumer : responseBodyConsumers.entrySet())
-      {
-         b.withResponseBodyConsumer(consumer.getKey(), consumer.getValue());
-      }
+    for (final Entry<String, ResponseBodyConsumer> consumer : responseBodyConsumers.entrySet()) {
+      b.withResponseBodyConsumer(consumer.getKey(), consumer.getValue());
+    }
 
-      return b.build();
-   }
+    return b.build();
+  }
 }

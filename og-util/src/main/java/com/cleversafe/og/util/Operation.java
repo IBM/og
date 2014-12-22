@@ -35,10 +35,6 @@
 
 package com.cleversafe.og.util;
 
-public enum Operation
-{
-   ALL,
-   WRITE,
-   READ,
-   DELETE;
+public enum Operation {
+  ALL, WRITE, READ, DELETE;
 }

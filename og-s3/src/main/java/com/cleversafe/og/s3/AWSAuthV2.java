@@ -60,217 +60,158 @@ import com.google.common.io.BaseEncoding;
  *      target="_blank">Amazon REST Authentication</a>
  * @since 1.0
  */
-public class AWSAuthV2 implements HttpAuth
-{
-   private static final String HMAC_SHA1 = "HmacSHA1";
-   private static final Splitter QUERY_SPLITTER = Splitter.on("&");
-   private static final Splitter PARAM_SPLITTER = Splitter.on("=");
-   private static final List<String> SUBRESOURCES = ImmutableList.of(
-         "acl",
-         "lifecycle",
-         "location",
-         "logging",
-         "notification",
-         "partNumber",
-         "policy",
-         "requestPayment",
-         "torrent",
-         "uploadId",
-         "uploads",
-         "versionId",
-         "versioning",
-         "versions",
-         "website");
+public class AWSAuthV2 implements HttpAuth {
+  private static final String HMAC_SHA1 = "HmacSHA1";
+  private static final Splitter QUERY_SPLITTER = Splitter.on("&");
+  private static final Splitter PARAM_SPLITTER = Splitter.on("=");
+  private static final List<String> SUBRESOURCES = ImmutableList.of("acl", "lifecycle", "location",
+      "logging", "notification", "partNumber", "policy", "requestPayment", "torrent", "uploadId",
+      "uploads", "versionId", "versioning", "versions", "website");
 
-   public AWSAuthV2()
-   {}
+  public AWSAuthV2() {}
 
-   @Override
-   public String nextAuthorizationHeader(final Request request)
-   {
-      final String awsAccessKeyId = checkNotNull(request.headers().get(Headers.X_OG_USERNAME));
-      final String awsSecretAccessKey = checkNotNull(request.headers().get(Headers.X_OG_PASSWORD));
-      return authenticate(request, awsAccessKeyId, awsSecretAccessKey);
-   }
+  @Override
+  public String nextAuthorizationHeader(final Request request) {
+    final String awsAccessKeyId = checkNotNull(request.headers().get(Headers.X_OG_USERNAME));
+    final String awsSecretAccessKey = checkNotNull(request.headers().get(Headers.X_OG_PASSWORD));
+    return authenticate(request, awsAccessKeyId, awsSecretAccessKey);
+  }
 
-   private String authenticate(
-         final Request request,
-         final String awsAccessKeyId,
-         final String awsSecretAccessKey)
-   {
-      return new StringBuilder()
-            .append("AWS ")
-            .append(awsAccessKeyId)
-            .append(":")
-            .append(signature(request, awsSecretAccessKey))
-            .toString();
-   }
+  private String authenticate(final Request request, final String awsAccessKeyId,
+      final String awsSecretAccessKey) {
+    return new StringBuilder().append("AWS ").append(awsAccessKeyId).append(":")
+        .append(signature(request, awsSecretAccessKey)).toString();
+  }
 
-   private String signature(final Request request, final String awsSecretAccessKey)
-   {
-      return BaseEncoding.base64().encode(
-            hmacSha1(awsSecretAccessKey, stringToSign(request).getBytes(Charsets.UTF_8)));
-   }
+  private String signature(final Request request, final String awsSecretAccessKey) {
+    return BaseEncoding.base64().encode(
+        hmacSha1(awsSecretAccessKey, stringToSign(request).getBytes(Charsets.UTF_8)));
+  }
 
-   public byte[] hmacSha1(final String awsSecretAccessKey, final byte[] data)
-   {
-      final SecretKeySpec signingKey =
-            new SecretKeySpec(awsSecretAccessKey.getBytes(Charsets.UTF_8), HMAC_SHA1);
-      Mac mac;
-      try
-      {
-         mac = Mac.getInstance(HMAC_SHA1);
-         mac.init(signingKey);
-         return mac.doFinal(data);
+  public byte[] hmacSha1(final String awsSecretAccessKey, final byte[] data) {
+    final SecretKeySpec signingKey =
+        new SecretKeySpec(awsSecretAccessKey.getBytes(Charsets.UTF_8), HMAC_SHA1);
+    Mac mac;
+    try {
+      mac = Mac.getInstance(HMAC_SHA1);
+      mac.init(signingKey);
+      return mac.doFinal(data);
+    } catch (final Exception e) {
+      // Wrapping checked algorithm and signing exceptions as unchecked exception in order to
+      // fail fast without adding these exceptions to HttpAuth interface
+      throw new RuntimeException("Exception signing request (awsv2)", e);
+    }
+  }
+
+  public String stringToSign(final Request request) {
+    return new StringBuilder().append(request.getMethod()).append("\n")
+        .append(getHeader(request, "Content-MD5", "")).append("\n")
+        .append(getHeader(request, "Content-Type", "")).append("\n")
+        .append(getHeader(request, "X-Amz-Date", getHeader(request, "Date", ""))).append("\n")
+        .append(canonicalizedAmzHeaders(request)).append(canonicalizedResource(request)).toString();
+  }
+
+  // lookup by key and lower(key)
+  private String getHeader(final Request request, final String key, final String defaultValue) {
+    String value = request.headers().get(key);
+    if (value != null)
+      return value;
+
+    value = request.headers().get(key.toLowerCase(Locale.US));
+    if (value != null)
+      return value;
+
+    return defaultValue;
+  }
+
+  public String canonicalizedAmzHeaders(final Request request) {
+    // create canonicalHeaders lazily, usually no x-amz- headers will be present
+    SortedMap<String, String> canonicalHeaders = null;
+    for (final Entry<String, String> header : request.headers().entrySet()) {
+      final String keyLower = header.getKey().trim().toLowerCase(Locale.US);
+      // ignoring x-amz-date, is this correct?
+      if (keyLower.startsWith("x-amz-") && !"x-amz-date".equals(keyLower)) {
+        if (canonicalHeaders == null)
+          canonicalHeaders = Maps.newTreeMap();
+
+        canonicalHeaders.put(keyLower, header.getValue().trim());
       }
-      catch (final Exception e)
-      {
-         // Wrapping checked algorithm and signing exceptions as unchecked exception in order to
-         // fail fast without adding these exceptions to HttpAuth interface
-         throw new RuntimeException("Exception signing request (awsv2)", e);
+    }
+    final StringBuilder s = new StringBuilder();
+    if (canonicalHeaders != null) {
+      for (final Entry<String, String> header : canonicalHeaders.entrySet()) {
+        s.append(header.getKey()).append(":").append(header.getValue()).append("\n");
       }
-   }
+    }
+    return s.toString();
+  }
 
-   public String stringToSign(final Request request)
-   {
-      return new StringBuilder()
-            .append(request.getMethod())
-            .append("\n")
-            .append(getHeader(request, "Content-MD5", ""))
-            .append("\n")
-            .append(getHeader(request, "Content-Type", ""))
-            .append("\n")
-            .append(getHeader(request, "X-Amz-Date", getHeader(request, "Date", "")))
-            .append("\n")
-            .append(canonicalizedAmzHeaders(request))
-            .append(canonicalizedResource(request))
-            .toString();
-   }
+  public String canonicalizedResource(final Request request) {
+    // create subresources lazily, usually no subresources will be present
+    SortedMap<String, String> subresources = null;
 
-   // lookup by key and lower(key)
-   private String getHeader(
-         final Request request,
-         final String key,
-         final String defaultValue)
-   {
-      String value = request.headers().get(key);
-      if (value != null)
-         return value;
+    for (final Entry<String, String> q : splitQueryParameters(request.getUri().getQuery())
+        .entrySet()) {
+      if (SUBRESOURCES.contains(q.getKey())) {
+        if (subresources == null)
+          subresources = Maps.newTreeMap();
 
-      value = request.headers().get(key.toLowerCase(Locale.US));
-      if (value != null)
-         return value;
-
-      return defaultValue;
-   }
-
-   public String canonicalizedAmzHeaders(final Request request)
-   {
-      // create canonicalHeaders lazily, usually no x-amz- headers will be present
-      SortedMap<String, String> canonicalHeaders = null;
-      for (final Entry<String, String> header : request.headers().entrySet())
-      {
-         final String keyLower = header.getKey().trim().toLowerCase(Locale.US);
-         // ignoring x-amz-date, is this correct?
-         if (keyLower.startsWith("x-amz-") && !"x-amz-date".equals(keyLower))
-         {
-            if (canonicalHeaders == null)
-               canonicalHeaders = Maps.newTreeMap();
-
-            canonicalHeaders.put(keyLower, header.getValue().trim());
-         }
+        subresources.put(q.getKey(), q.getValue());
       }
-      final StringBuilder s = new StringBuilder();
-      if (canonicalHeaders != null)
-      {
-         for (final Entry<String, String> header : canonicalHeaders.entrySet())
-         {
-            s.append(header.getKey())
-                  .append(":")
-                  .append(header.getValue())
-                  .append("\n");
-         }
-      }
-      return s.toString();
-   }
+    }
 
-   public String canonicalizedResource(final Request request)
-   {
-      // create subresources lazily, usually no subresources will be present
-      SortedMap<String, String> subresources = null;
+    if (subresources != null) {
+      return new StringBuilder().append(request.getUri().getPath()).append("?")
+          .append(joinQueryParameters(subresources)).toString();
+    }
 
-      for (final Entry<String, String> q : splitQueryParameters(request.getUri().getQuery()).entrySet())
-      {
-         if (SUBRESOURCES.contains(q.getKey()))
-         {
-            if (subresources == null)
-               subresources = Maps.newTreeMap();
+    return request.getUri().getPath();
+  }
 
-            subresources.put(q.getKey(), q.getValue());
-         }
-      }
+  // Guava includes a map splitter, however it requires that all keys also have values, which is
+  // not always the case for aws signing e.g. torrent, so this method is required
+  public Map<String, String> splitQueryParameters(final String query) {
+    // short circuit common case where there are no query parameters
+    if (query == null || query.length() == 0)
+      return ImmutableMap.of();
 
-      if (subresources != null)
-      {
-         return new StringBuilder()
-               .append(request.getUri().getPath())
-               .append("?")
-               .append(joinQueryParameters(subresources))
-               .toString();
-      }
+    final Map<String, String> queryParameters = Maps.newHashMap();
 
-      return request.getUri().getPath();
-   }
+    for (final String q : QUERY_SPLITTER.split(query)) {
+      final Iterator<String> it = PARAM_SPLITTER.split(q).iterator();
+      final String key = it.next();
+      String value = null;
+      if (it.hasNext())
+        value = it.next();
 
-   // Guava includes a map splitter, however it requires that all keys also have values, which is
-   // not always the case for aws signing e.g. torrent, so this method is required
-   public Map<String, String> splitQueryParameters(final String query)
-   {
-      // short circuit common case where there are no query parameters
-      if (query == null || query.length() == 0)
-         return ImmutableMap.of();
+      queryParameters.put(key, value);
+    }
 
-      final Map<String, String> queryParameters = Maps.newHashMap();
+    return queryParameters;
+  }
 
-      for (final String q : QUERY_SPLITTER.split(query))
-      {
-         final Iterator<String> it = PARAM_SPLITTER.split(q).iterator();
-         final String key = it.next();
-         String value = null;
-         if (it.hasNext())
-            value = it.next();
+  // Guava includes a map joiner, however it requires that all keys also have values, which is
+  // not always the case for aws signing e.g. torrent, so this method is required
+  public String joinQueryParameters(final Map<String, String> queryParameters) {
+    // short circuit common case where there are no query parameters
+    if (queryParameters == null || queryParameters.size() == 0)
+      return "";
 
-         queryParameters.put(key, value);
-      }
+    final StringBuilder s = new StringBuilder();
+    final Iterator<Entry<String, String>> it = queryParameters.entrySet().iterator();
+    appendQueryParam(s, it.next());
 
-      return queryParameters;
-   }
-
-   // Guava includes a map joiner, however it requires that all keys also have values, which is
-   // not always the case for aws signing e.g. torrent, so this method is required
-   public String joinQueryParameters(final Map<String, String> queryParameters)
-   {
-      // short circuit common case where there are no query parameters
-      if (queryParameters == null || queryParameters.size() == 0)
-         return "";
-
-      final StringBuilder s = new StringBuilder();
-      final Iterator<Entry<String, String>> it = queryParameters.entrySet().iterator();
+    while (it.hasNext()) {
+      s.append("&");
       appendQueryParam(s, it.next());
+    }
 
-      while (it.hasNext())
-      {
-         s.append("&");
-         appendQueryParam(s, it.next());
-      }
+    return s.toString();
+  }
 
-      return s.toString();
-   }
-
-   private void appendQueryParam(final StringBuilder s, final Entry<String, String> queryParam)
-   {
-      s.append(queryParam.getKey());
-      if (queryParam.getValue() != null)
-         s.append("=").append(queryParam.getValue());
-   }
+  private void appendQueryParam(final StringBuilder s, final Entry<String, String> queryParam) {
+    s.append(queryParam.getKey());
+    if (queryParam.getValue() != null)
+      s.append("=").append(queryParam.getValue());
+  }
 }

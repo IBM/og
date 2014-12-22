@@ -36,71 +36,60 @@ import com.google.common.collect.Range;
  * 
  * @since 1.0
  */
-public class HttpUtil
-{
-   private static final Splitter URI_SPLITTER = Splitter.on("/").omitEmptyStrings();
-   public static final Range<Integer> VALID_STATUS_CODES = Range.closed(100, 599);
-   public static final List<Integer> SUCCESS_STATUS_CODES = ImmutableList.of(200, 201, 204);
+public class HttpUtil {
+  private static final Splitter URI_SPLITTER = Splitter.on("/").omitEmptyStrings();
+  public static final Range<Integer> VALID_STATUS_CODES = Range.closed(100, 599);
+  public static final List<Integer> SUCCESS_STATUS_CODES = ImmutableList.of(200, 201, 204);
 
-   private HttpUtil()
-   {}
+  private HttpUtil() {}
 
-   /**
-    * Translates the provided method into the corresponding operation
-    * 
-    * @param method
-    *           the method to convert
-    * @return the translated operation instance
-    */
-   public static Operation toOperation(final Method method)
-   {
-      checkNotNull(method);
-      switch (method)
-      {
-         case PUT :
-         case POST :
-            return Operation.WRITE;
-         case GET :
-         case HEAD :
-            return Operation.READ;
-         case DELETE :
-            return Operation.DELETE;
-         default :
-            throw new IllegalArgumentException(String.format("Unrecognized method [%s]", method));
+  /**
+   * Translates the provided method into the corresponding operation
+   * 
+   * @param method the method to convert
+   * @return the translated operation instance
+   */
+  public static Operation toOperation(final Method method) {
+    checkNotNull(method);
+    switch (method) {
+      case PUT:
+      case POST:
+        return Operation.WRITE;
+      case GET:
+      case HEAD:
+        return Operation.READ;
+      case DELETE:
+        return Operation.DELETE;
+      default:
+        throw new IllegalArgumentException(String.format("Unrecognized method [%s]", method));
+    }
+  }
+
+  /**
+   * Extracts an object name from the provided uri, if it exists
+   * 
+   * @param uri the uri to extract an object name from
+   * @return an object name, if it exists
+   */
+  public static String getObjectName(final URI uri) {
+    checkNotNull(uri);
+    checkNotNull(uri.getScheme());
+    // make sure this uri uses a known scheme
+    Scheme.valueOf(uri.getScheme().toUpperCase(Locale.US));
+    final List<String> parts = URI_SPLITTER.splitToList(uri.getPath());
+
+    if (parts.size() == 3)
+      return parts.get(2);
+
+    if (parts.size() == 2) {
+      try {
+        // if 2 parts and first part is an api, must be soh write
+        Api.valueOf(parts.get(0).toUpperCase(Locale.US));
+        return null;
+      } catch (final IllegalArgumentException e) {
+        return parts.get(1);
       }
-   }
-
-   /**
-    * Extracts an object name from the provided uri, if it exists
-    * 
-    * @param uri
-    *           the uri to extract an object name from
-    * @return an object name, if it exists
-    */
-   public static String getObjectName(final URI uri)
-   {
-      checkNotNull(uri);
-      checkNotNull(uri.getScheme());
-      // make sure this uri uses a known scheme
-      Scheme.valueOf(uri.getScheme().toUpperCase(Locale.US));
-      final List<String> parts = URI_SPLITTER.splitToList(uri.getPath());
-
-      if (parts.size() == 3)
-         return parts.get(2);
-
-      if (parts.size() == 2)
-      {
-         try
-         {
-            // if 2 parts and first part is an api, must be soh write
-            Api.valueOf(parts.get(0).toUpperCase(Locale.US));
-            return null;
-         }
-         catch (final IllegalArgumentException e)
-         {
-            return parts.get(1);
-         }
-      }
-      return null;
-   }
+    }
+    return null;
+  }
 }

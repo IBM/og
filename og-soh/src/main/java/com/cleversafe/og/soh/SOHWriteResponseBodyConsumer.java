@@ -41,27 +41,23 @@ import com.google.common.collect.ImmutableSet;
  * 
  * @since 1.0
  */
-public class SOHWriteResponseBodyConsumer implements ResponseBodyConsumer
-{
-   @Override
-   public Iterator<Entry<String, String>> consume(final int statusCode, final InputStream response)
-         throws IOException
-   {
-      if (statusCode != 201)
-      {
-         final Set<Entry<String, String>> emptySet = ImmutableSet.of();
-         return emptySet.iterator();
-      }
-      checkNotNull(response);
+public class SOHWriteResponseBodyConsumer implements ResponseBodyConsumer {
+  @Override
+  public Iterator<Entry<String, String>> consume(final int statusCode, final InputStream response)
+      throws IOException {
+    if (statusCode != 201) {
+      final Set<Entry<String, String>> emptySet = ImmutableSet.of();
+      return emptySet.iterator();
+    }
+    checkNotNull(response);
 
-      final BufferedReader reader =
-            new BufferedReader(new InputStreamReader(response, Charsets.UTF_8));
+    final BufferedReader reader =
+        new BufferedReader(new InputStreamReader(response, Charsets.UTF_8));
 
-      final String objectName = reader.readLine();
-      while ((reader.readLine()) != null)
-      {
-         // consume the stream, for SOH writes there should never be anything else
-      }
-      return ImmutableMap.of(Headers.X_OG_OBJECT_NAME, objectName).entrySet().iterator();
-   }
+    final String objectName = reader.readLine();
+    while ((reader.readLine()) != null) {
+      // consume the stream, for SOH writes there should never be anything else
+    }
+    return ImmutableMap.of(Headers.X_OG_OBJECT_NAME, objectName).entrySet().iterator();
+  }
 }

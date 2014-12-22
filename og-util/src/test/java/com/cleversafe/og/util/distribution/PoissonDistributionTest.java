@@ -26,32 +26,27 @@ import java.util.Random;
 
 import org.junit.Test;
 
-public class PoissonDistributionTest
-{
-   @Test(expected = IllegalArgumentException.class)
-   public void negativeAverage()
-   {
-      new PoissonDistribution(-1.0, new Random());
-   }
+public class PoissonDistributionTest {
+  @Test(expected = IllegalArgumentException.class)
+  public void negativeAverage() {
+    new PoissonDistribution(-1.0, new Random());
+  }
 
-   @Test
-   public void zeroAverage()
-   {
-      new PoissonDistribution(0.0, new Random());
-   }
+  @Test
+  public void zeroAverage() {
+    new PoissonDistribution(0.0, new Random());
+  }
 
-   @Test(expected = NullPointerException.class)
-   public void nullRandom()
-   {
-      new PoissonDistribution(10.0, null);
-   }
+  @Test(expected = NullPointerException.class)
+  public void nullRandom() {
+    new PoissonDistribution(10.0, null);
+  }
 
-   @Test
-   public void sample()
-   {
-      final PoissonDistribution d = new PoissonDistribution(10.0, new Random());
-      assertThat(d.getAverage(), is(10.0));
-      assertThat(d.getSpread(), is(0.0));
-      d.nextSample();
-   }
+  @Test
+  public void sample() {
+    final PoissonDistribution d = new PoissonDistribution(10.0, new Random());
+    assertThat(d.getAverage(), is(10.0));
+    assertThat(d.getSpread(), is(0.0));
+    d.nextSample();
+  }
 }

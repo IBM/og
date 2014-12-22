@@ -28,35 +28,28 @@ import org.slf4j.LoggerFactory;
 /**
  * A utility class for working with OG versions
  */
-public class Version
-{
-   private static final Logger _logger = LoggerFactory.getLogger(Version.class);
-   private static final String DISPLAY_VERSION;
-   static
-   {
-      String displayVersion;
-      try
-      {
-         displayVersion = ResourceBundle.getBundle("og").getString("display.version");
-      }
-      catch (final MissingResourceException e)
-      {
-         _logger.error("Unable to retrieve display version", e);
-         displayVersion = "og";
-      }
-      DISPLAY_VERSION = displayVersion;
-   }
+public class Version {
+  private static final Logger _logger = LoggerFactory.getLogger(Version.class);
+  private static final String DISPLAY_VERSION;
+  static {
+    String displayVersion;
+    try {
+      displayVersion = ResourceBundle.getBundle("og").getString("display.version");
+    } catch (final MissingResourceException e) {
+      _logger.error("Unable to retrieve display version", e);
+      displayVersion = "og";
+    }
+    DISPLAY_VERSION = displayVersion;
+  }
 
-   private Version()
-   {}
+  private Version() {}
 
-   /**
-    * Returns a version string suitable for display in logs and other output
-    * 
-    * @return a version string
-    */
-   public static String displayVersion()
-   {
-      return DISPLAY_VERSION;
-   }
+  /**
+   * Returns a version string suitable for display in logs and other output
+   * 
+   * @return a version string
+   */
+  public static String displayVersion() {
+    return DISPLAY_VERSION;
+  }
 }

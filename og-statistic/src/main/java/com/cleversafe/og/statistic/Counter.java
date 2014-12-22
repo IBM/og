@@ -19,8 +19,6 @@
 
 package com.cleversafe.og.statistic;
 
-public enum Counter
-{
-   OPERATIONS,
-   BYTES;
+public enum Counter {
+  OPERATIONS, BYTES;
 }

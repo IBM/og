@@ -19,10 +19,6 @@
 
 package com.cleversafe.og.json;
 
-public enum DistributionType
-{
-   UNIFORM,
-   NORMAL,
-   LOGNORMAL,
-   POISSON;
+public enum DistributionType {
+  UNIFORM, NORMAL, LOGNORMAL, POISSON;
 }

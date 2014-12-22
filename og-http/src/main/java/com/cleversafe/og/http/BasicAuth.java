@@ -31,17 +31,14 @@ import com.google.common.io.BaseEncoding;
  * 
  * @since 1.0
  */
-public class BasicAuth implements HttpAuth
-{
-   public BasicAuth()
-   {}
+public class BasicAuth implements HttpAuth {
+  public BasicAuth() {}
 
-   @Override
-   public String nextAuthorizationHeader(final Request request)
-   {
-      final String username = checkNotNull(request.headers().get(Headers.X_OG_USERNAME));
-      final String password = checkNotNull(request.headers().get(Headers.X_OG_PASSWORD));
-      final String credentials = username + ":" + password;
-      return "Basic " + BaseEncoding.base64().encode(credentials.getBytes(Charsets.UTF_8));
-   }
+  @Override
+  public String nextAuthorizationHeader(final Request request) {
+    final String username = checkNotNull(request.headers().get(Headers.X_OG_USERNAME));
+    final String password = checkNotNull(request.headers().get(Headers.X_OG_PASSWORD));
+    final String credentials = username + ":" + password;
+    return "Basic " + BaseEncoding.base64().encode(credentials.getBytes(Charsets.UTF_8));
+  }
 }

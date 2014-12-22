@@ -31,44 +31,36 @@ import com.cleversafe.og.util.Operation;
 import com.cleversafe.og.util.Pair;
 import com.google.common.eventbus.Subscribe;
 
-public class StatusCodeCondition implements TestCondition
-{
-   private final Operation operation;
-   private final int statusCode;
-   private final long thresholdValue;
-   private final LoadTest test;
-   private final Statistics stats;
+public class StatusCodeCondition implements TestCondition {
+  private final Operation operation;
+  private final int statusCode;
+  private final long thresholdValue;
+  private final LoadTest test;
+  private final Statistics stats;
 
-   public StatusCodeCondition(
-         final Operation operation,
-         final int statusCode,
-         final long thresholdValue,
-         final LoadTest test,
-         final Statistics stats)
-   {
-      this.operation = checkNotNull(operation);
-      checkArgument(HttpUtil.VALID_STATUS_CODES.contains(statusCode),
-            "statusCode must be a valid status code [%s]", statusCode);
-      this.statusCode = statusCode;
-      checkArgument(thresholdValue > 0, "thresholdValue must be > 0 [%s]", thresholdValue);
-      this.thresholdValue = thresholdValue;
-      this.test = checkNotNull(test);
-      this.stats = checkNotNull(stats);
-   }
+  public StatusCodeCondition(final Operation operation, final int statusCode,
+      final long thresholdValue, final LoadTest test, final Statistics stats) {
+    this.operation = checkNotNull(operation);
+    checkArgument(HttpUtil.VALID_STATUS_CODES.contains(statusCode),
+        "statusCode must be a valid status code [%s]", statusCode);
+    this.statusCode = statusCode;
+    checkArgument(thresholdValue > 0, "thresholdValue must be > 0 [%s]", thresholdValue);
+    this.thresholdValue = thresholdValue;
+    this.test = checkNotNull(test);
+    this.stats = checkNotNull(stats);
+  }
 
-   @Subscribe
-   public void update(final Pair<Request, Response> operation)
-   {
-      if (isTriggered())
-         this.test.stopTest();
-   }
+  @Subscribe
+  public void update(final Pair<Request, Response> operation) {
+    if (isTriggered())
+      this.test.stopTest();
+  }
 
-   @Override
-   public boolean isTriggered()
-   {
-      final long currentValue = this.stats.getStatusCode(this.operation, this.statusCode);
-      if (currentValue >= this.thresholdValue)
-         return true;
-      return false;
-   }
+  @Override
+  public boolean isTriggered() {
+    final long currentValue = this.stats.getStatusCode(this.operation, this.statusCode);
+    if (currentValue >= this.thresholdValue)
+      return true;
+    return false;
+  }
 }

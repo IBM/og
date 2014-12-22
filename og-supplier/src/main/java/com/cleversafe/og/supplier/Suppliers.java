@@ -34,100 +34,82 @@ import com.google.common.collect.Iterators;
  * 
  * @since 1.0
  */
-public class Suppliers
-{
-   private Suppliers()
-   {}
+public class Suppliers {
+  private Suppliers() {}
 
-   /**
-    * Creates a supplier that always returns the same value
-    * 
-    * @param value
-    *           the value to supply
-    * @return a supply which always returns the same value
-    */
-   public static <T> Supplier<T> of(final T value)
-   {
-      checkNotNull(value);
-      return new Supplier<T>()
-      {
-         @Override
-         public T get()
-         {
-            return value;
-         }
+  /**
+   * Creates a supplier that always returns the same value
+   * 
+   * @param value the value to supply
+   * @return a supply which always returns the same value
+   */
+  public static <T> Supplier<T> of(final T value) {
+    checkNotNull(value);
+    return new Supplier<T>() {
+      @Override
+      public T get() {
+        return value;
+      }
 
-         @Override
-         public String toString()
-         {
-            return value.toString();
-         }
-      };
-   }
+      @Override
+      public String toString() {
+        return value.toString();
+      }
+    };
+  }
 
-   /**
-    * Creates a supplier that returns values in a cycle
-    * 
-    * @param values
-    *           the values to supply
-    * @return a supplier which supplies values in a cycle
-    */
-   public static <T> Supplier<T> cycle(final List<T> values)
-   {
-      final List<T> copy = ImmutableList.copyOf(values);
-      checkArgument(!copy.isEmpty(), "values must not be empty");
-      final Iterator<T> it = Iterators.cycle(copy);
-      return new Supplier<T>()
-      {
-         @Override
-         public T get()
-         {
-            return it.next();
-         }
+  /**
+   * Creates a supplier that returns values in a cycle
+   * 
+   * @param values the values to supply
+   * @return a supplier which supplies values in a cycle
+   */
+  public static <T> Supplier<T> cycle(final List<T> values) {
+    final List<T> copy = ImmutableList.copyOf(values);
+    checkArgument(!copy.isEmpty(), "values must not be empty");
+    final Iterator<T> it = Iterators.cycle(copy);
+    return new Supplier<T>() {
+      @Override
+      public T get() {
+        return it.next();
+      }
 
-         @Override
-         public String toString()
-         {
-            return String.format("cycle %s", copy);
-         }
-      };
-   }
+      @Override
+      public String toString() {
+        return String.format("cycle %s", copy);
+      }
+    };
+  }
 
-   /**
-    * Creates a random supplier builder
-    * 
-    * @return a random supplier builder
-    */
-   public static <T> RandomSupplier.Builder<T> random()
-   {
-      return new RandomSupplier.Builder<T>();
-   }
+  /**
+   * Creates a random supplier builder
+   * 
+   * @return a random supplier builder
+   */
+  public static <T> RandomSupplier.Builder<T> random() {
+    return new RandomSupplier.Builder<T>();
+  }
 
-   /**
-    * Creates a supplier that returns values as if by:
-    * <p>
-    * {@code supplier.get().get()}
-    * 
-    * @param supplier
-    *           the source supplier to retrieve values from
-    * @return a chain supplier
-    */
-   public static <T> Supplier<T> chain(final Supplier<Supplier<T>> supplier)
-   {
-      checkNotNull(supplier);
-      return new Supplier<T>()
-      {
-         @Override
-         public T get()
-         {
-            return supplier.get().get();
-         }
+  /**
+   * Creates a supplier that returns values as if by:
+   * <p>
+   * {@code supplier.get().get()}
+   * 
+   * @param supplier the source supplier to retrieve values from
+   * @return a chain supplier
+   */
+  public static <T> Supplier<T> chain(final Supplier<Supplier<T>> supplier) {
+    checkNotNull(supplier);
+    return new Supplier<T>() {
+      @Override
+      public T get() {
+        return supplier.get().get();
+      }
 
-         @Override
-         public String toString()
-         {
-            return String.format("chain [%s]", supplier);
-         }
-      };
-   }
+      @Override
+      public String toString() {
+        return String.format("chain [%s]", supplier);
+      }
+    };
+  }
 }

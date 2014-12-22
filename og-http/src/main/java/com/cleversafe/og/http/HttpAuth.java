@@ -26,14 +26,12 @@ import com.cleversafe.og.api.Request;
  * 
  * @since 1.0
  */
-public interface HttpAuth
-{
-   /**
-    * Creates an http authorization header value
-    * 
-    * @param request
-    *           the request to create the authorization header value for
-    * @return the created authorization header value for the provided request
-    */
-   String nextAuthorizationHeader(final Request request);
+public interface HttpAuth {
+  /**
+   * Creates an http authorization header value
+   * 
+   * @param request the request to create the authorization header value for
+   * @return the created authorization header value for the provided request
+   */
+  String nextAuthorizationHeader(final Request request);
 }

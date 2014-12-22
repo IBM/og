@@ -40,84 +40,71 @@ import com.google.common.io.BaseEncoding;
  * 
  * @since 1.0
  */
-public abstract class AbstractObjectNameConsumer
-{
-   protected final ObjectManager objectManager;
-   private final Operation operation;
-   private final List<Integer> statusCodes;
+public abstract class AbstractObjectNameConsumer {
+  protected final ObjectManager objectManager;
+  private final Operation operation;
+  private final List<Integer> statusCodes;
 
-   /**
-    * Constructs an instance
-    * 
-    * @param objectManager
-    *           the object manager for this instance to work with
-    * @param operation
-    *           the operation type this instance should work with
-    * @param statusCodes
-    *           the status codes this instance should work with
-    * @throws IllegalArgumentException
-    *            if any status code in status codes is invalid
-    */
-   public AbstractObjectNameConsumer(
-         final ObjectManager objectManager,
-         final Operation operation,
-         final List<Integer> statusCodes)
-   {
-      this.objectManager = checkNotNull(objectManager);
-      this.operation = checkNotNull(operation);
-      this.statusCodes = ImmutableList.copyOf(statusCodes);
-      checkArgument(!this.statusCodes.isEmpty(), "statusCodes must not be empty");
-      for (final int statusCode : this.statusCodes)
-      {
-         checkArgument(HttpUtil.VALID_STATUS_CODES.contains(statusCode),
-               "all statusCodes in list must be valid status codes [%s]", statusCode);
-      }
-   }
+  /**
+   * Constructs an instance
+   * 
+   * @param objectManager the object manager for this instance to work with
+   * @param operation the operation type this instance should work with
+   * @param statusCodes the status codes this instance should work with
+   * @throws IllegalArgumentException if any status code in status codes is invalid
+   */
+  public AbstractObjectNameConsumer(final ObjectManager objectManager, final Operation operation,
+      final List<Integer> statusCodes) {
+    this.objectManager = checkNotNull(objectManager);
+    this.operation = checkNotNull(operation);
+    this.statusCodes = ImmutableList.copyOf(statusCodes);
+    checkArgument(!this.statusCodes.isEmpty(), "statusCodes must not be empty");
+    for (final int statusCode : this.statusCodes) {
+      checkArgument(HttpUtil.VALID_STATUS_CODES.contains(statusCode),
+          "all statusCodes in list must be valid status codes [%s]", statusCode);
+    }
+  }
 
-   /**
-    * Consumes operations and processes object names
-    * 
-    * @param operation
-    *           the operation to process
-    */
-   @Subscribe
-   public void consume(final Pair<Request, Response> operation)
-   {
-      checkNotNull(operation);
-      final Request request = operation.getKey();
-      final Response response = operation.getValue();
+  /**
+   * Consumes operations and processes object names
+   * 
+   * @param operation the operation to process
+   */
+  @Subscribe
+  public void consume(final Pair<Request, Response> operation) {
+    checkNotNull(operation);
+    final Request request = operation.getKey();
+    final Response response = operation.getValue();
 
-      // if this consumer is not relevant for the current response, ignore
-      if (this.operation != HttpUtil.toOperation(request.getMethod()))
-         return;
+    // if this consumer is not relevant for the current response, ignore
+    if (this.operation != HttpUtil.toOperation(request.getMethod()))
+      return;
 
-      // if the status code of this response does not match what can be consumed, ignore
-      if (!Iterables.contains(this.statusCodes, response.getStatusCode()))
-         return;
+    // if the status code of this response does not match what can be consumed, ignore
+    if (!Iterables.contains(this.statusCodes, response.getStatusCode()))
+      return;
 
-      final String objectString = getObjectString(request, response);
-      if (objectString == null)
-         throw new IllegalStateException("Unable to determine object");
+    final String objectString = getObjectString(request, response);
+    if (objectString == null)
+      throw new IllegalStateException("Unable to determine object");
 
-      final ObjectName objectName =
-            LegacyObjectName.forBytes(BaseEncoding.base16().lowerCase().decode(objectString));
-      updateManager(objectName);
-   }
+    final ObjectName objectName =
+        LegacyObjectName.forBytes(BaseEncoding.base16().lowerCase().decode(objectString));
+    updateManager(objectName);
+  }
 
-   protected String getObjectString(final Request request, final Response response)
-   {
-      String objectString = request.headers().get(Headers.X_OG_OBJECT_NAME);
-      // SOH writes
-      if (objectString == null)
-         objectString = response.headers().get(Headers.X_OG_OBJECT_NAME);
+  protected String getObjectString(final Request request, final Response response) {
+    String objectString = request.headers().get(Headers.X_OG_OBJECT_NAME);
+    // SOH writes
+    if (objectString == null)
+      objectString = response.headers().get(Headers.X_OG_OBJECT_NAME);
 
-      return objectString;
-   }
+    return objectString;
+  }
 
-   private void updateManager(final ObjectName objectName)
-   {
-      updateObjectManager(objectName);
-   }
+  private void updateManager(final ObjectName objectName) {
+    updateObjectManager(objectName);
+  }
 
-   protected abstract void updateObjectManager(ObjectName objectName);
+  protected abstract void updateObjectManager(ObjectName objectName);
 }

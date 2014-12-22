@@ -62,115 +62,100 @@ import com.tngtech.java.junit.dataprovider.DataProviderRunner;
 import com.tngtech.java.junit.dataprovider.UseDataProvider;
 
 @RunWith(DataProviderRunner.class)
-public class LoadTestTest
-{
-   @Rule
-   public ExpectedException thrown = ExpectedException.none();
-   private Request request;
-   private Response response;
-   private Supplier<Request> requestSupplier;
-   private Client client;
-   private Scheduler scheduler;
-   private LoadTestSubscriberExceptionHandler handler;
-   private EventBus eventBus;
-   private Statistics stats;
-   private LoadTest test;
+public class LoadTestTest {
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
+  private Request request;
+  private Response response;
+  private Supplier<Request> requestSupplier;
+  private Client client;
+  private Scheduler scheduler;
+  private LoadTestSubscriberExceptionHandler handler;
+  private EventBus eventBus;
+  private Statistics stats;
+  private LoadTest test;
 
-   @Before
-   @SuppressWarnings("unchecked")
-   public void before() throws URISyntaxException
-   {
-      this.request = new HttpRequest.Builder(Method.PUT, new URI("http://127.0.0.1"))
-            .withHeader(Headers.X_OG_REQUEST_ID, "1")
-            .build();
-      this.response = new HttpResponse.Builder().withStatusCode(200)
-            .withHeader(Headers.X_OG_REQUEST_ID, "1")
+  @Before
+  @SuppressWarnings("unchecked")
+  public void before() throws URISyntaxException {
+    this.request =
+        new HttpRequest.Builder(Method.PUT, new URI("http://127.0.0.1")).withHeader(
+            Headers.X_OG_REQUEST_ID, "1").build();
+    this.response =
+        new HttpResponse.Builder().withStatusCode(200).withHeader(Headers.X_OG_REQUEST_ID, "1")
             .build();
 
-      this.requestSupplier = mock(Supplier.class);
-      when(this.requestSupplier.get()).thenReturn(this.request);
+    this.requestSupplier = mock(Supplier.class);
+    when(this.requestSupplier.get()).thenReturn(this.request);
 
-      this.client = mock(Client.class);
-      final SettableFuture<Response> future = SettableFuture.create();
-      future.set(this.response);
-      when(this.client.execute(this.request)).thenReturn(future);
+    this.client = mock(Client.class);
+    final SettableFuture<Response> future = SettableFuture.create();
+    future.set(this.response);
+    when(this.client.execute(this.request)).thenReturn(future);
 
-      this.scheduler = new ConcurrentRequestScheduler(1, 0.0, TimeUnit.SECONDS);
-      this.handler = new LoadTestSubscriberExceptionHandler();
-      this.eventBus = new EventBus(this.handler);
-      this.stats = new Statistics();
-      this.test =
-            new LoadTest(this.requestSupplier, this.client, this.scheduler, this.eventBus,
-                  this.handler);
+    this.scheduler = new ConcurrentRequestScheduler(1, 0.0, TimeUnit.SECONDS);
+    this.handler = new LoadTestSubscriberExceptionHandler();
+    this.eventBus = new EventBus(this.handler);
+    this.stats = new Statistics();
+    this.test =
+        new LoadTest(this.requestSupplier, this.client, this.scheduler, this.eventBus, this.handler);
 
-      final TestCondition condition =
-            new CounterCondition(Operation.WRITE, Counter.OPERATIONS, 5, this.test, this.stats);
+    final TestCondition condition =
+        new CounterCondition(Operation.WRITE, Counter.OPERATIONS, 5, this.test, this.stats);
 
-      this.eventBus.register(this.scheduler);
-      this.eventBus.register(this.stats);
-      this.eventBus.register(condition);
-   }
+    this.eventBus.register(this.scheduler);
+    this.eventBus.register(this.stats);
+    this.eventBus.register(condition);
+  }
 
-   @DataProvider
-   public static Object[][] provideInvalidLoadTest()
-   {
-      @SuppressWarnings("unchecked")
-      final Supplier<Request> requestSupplier = mock(Supplier.class);
-      final Client client = mock(Client.class);
-      final Scheduler scheduler = mock(Scheduler.class);
-      final EventBus eventBus = mock(EventBus.class);
-      final LoadTestSubscriberExceptionHandler handler =
-            mock(LoadTestSubscriberExceptionHandler.class);
-      return new Object[][]{
-            {null, client, scheduler, eventBus, handler},
-            {requestSupplier, null, scheduler, eventBus, handler},
-            {requestSupplier, client, null, eventBus, handler},
-            {requestSupplier, client, scheduler, null, handler},
-            {requestSupplier, client, scheduler, eventBus, null}
-      };
-   }
+  @DataProvider
+  public static Object[][] provideInvalidLoadTest() {
+    @SuppressWarnings("unchecked")
+    final Supplier<Request> requestSupplier = mock(Supplier.class);
+    final Client client = mock(Client.class);
+    final Scheduler scheduler = mock(Scheduler.class);
+    final EventBus eventBus = mock(EventBus.class);
+    final LoadTestSubscriberExceptionHandler handler =
+        mock(LoadTestSubscriberExceptionHandler.class);
+    return new Object[][] { {null, client, scheduler, eventBus, handler},
+        {requestSupplier, null, scheduler, eventBus, handler},
+        {requestSupplier, client, null, eventBus, handler},
+        {requestSupplier, client, scheduler, null, handler},
+        {requestSupplier, client, scheduler, eventBus, null}};
+  }
 
-   @Test
-   @UseDataProvider("provideInvalidLoadTest")
-   public void invalidLoadTest(
-         final Supplier<Request> requestSupplier,
-         final Client client,
-         final Scheduler scheduler,
-         final EventBus eventBus,
-         final LoadTestSubscriberExceptionHandler handler)
-   {
-      this.thrown.expect(NullPointerException.class);
-      new LoadTest(requestSupplier, client, scheduler, eventBus, handler);
-   }
+  @Test
+  @UseDataProvider("provideInvalidLoadTest")
+  public void invalidLoadTest(final Supplier<Request> requestSupplier, final Client client,
+      final Scheduler scheduler, final EventBus eventBus,
+      final LoadTestSubscriberExceptionHandler handler) {
+    this.thrown.expect(NullPointerException.class);
+    new LoadTest(requestSupplier, client, scheduler, eventBus, handler);
+  }
 
-   @Test
-   public void requestSupplierException()
-   {
-      when(this.requestSupplier.get()).thenThrow(new IllegalStateException());
-      assertThat(this.test.call(), is(false));
-      verify(this.client, never()).shutdown(true);
-   }
+  @Test
+  public void requestSupplierException() {
+    when(this.requestSupplier.get()).thenThrow(new IllegalStateException());
+    assertThat(this.test.call(), is(false));
+    verify(this.client, never()).shutdown(true);
+  }
 
-   @Test
-   public void eventBusSubscriberException()
-   {
-      this.eventBus.register(new Object()
-      {
-         @Subscribe
-         public void consume(final Pair<Request, Response> operation)
-         {
-            throw new RuntimeException();
-         }
-      });
-      assertThat(this.test.call(), is(false));
-   }
+  @Test
+  public void eventBusSubscriberException() {
+    this.eventBus.register(new Object() {
+      @Subscribe
+      public void consume(final Pair<Request, Response> operation) {
+        throw new RuntimeException();
+      }
+    });
+    assertThat(this.test.call(), is(false));
+  }
 
-   @Test
-   public void loadTest()
-   {
-      assertThat(this.test.call(), is(true));
-      assertThat(this.stats.get(Operation.WRITE, Counter.OPERATIONS), greaterThanOrEqualTo(5L));
-      verify(this.client, atLeast(5)).execute(this.request);
-      verify(this.client, never()).shutdown(true);
-   }
+  @Test
+  public void loadTest() {
+    assertThat(this.test.call(), is(true));
+    assertThat(this.stats.get(Operation.WRITE, Counter.OPERATIONS), greaterThanOrEqualTo(5L));
+    verify(this.client, atLeast(5)).execute(this.request);
+    verify(this.client, never()).shutdown(true);
+  }
 }

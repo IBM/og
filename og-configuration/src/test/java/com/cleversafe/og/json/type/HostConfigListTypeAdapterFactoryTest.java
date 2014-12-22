@@ -35,70 +35,62 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
-public class HostConfigListTypeAdapterFactoryTest
-{
-   private HostConfigTypeAdapterFactory hostTypeAdapterFactory;
-   private HostConfigListTypeAdapterFactory hostListTypeAdapterFactory;
-   private TypeToken<List<HostConfig>> typeToken;
-   private Gson gson;
+public class HostConfigListTypeAdapterFactoryTest {
+  private HostConfigTypeAdapterFactory hostTypeAdapterFactory;
+  private HostConfigListTypeAdapterFactory hostListTypeAdapterFactory;
+  private TypeToken<List<HostConfig>> typeToken;
+  private Gson gson;
 
-   @Before
-   public void before()
-   {
-      this.hostTypeAdapterFactory = new HostConfigTypeAdapterFactory();
-      this.hostListTypeAdapterFactory = new HostConfigListTypeAdapterFactory();
-      this.typeToken = new TypeToken<List<HostConfig>>()
-      {};
-      this.gson = new GsonBuilder()
-            .registerTypeAdapterFactory(this.hostTypeAdapterFactory)
-            .registerTypeAdapterFactory(this.hostListTypeAdapterFactory)
-            .create();
-   }
+  @Before
+  public void before() {
+    this.hostTypeAdapterFactory = new HostConfigTypeAdapterFactory();
+    this.hostListTypeAdapterFactory = new HostConfigListTypeAdapterFactory();
+    this.typeToken = new TypeToken<List<HostConfig>>() {};
+    this.gson =
+        new GsonBuilder().registerTypeAdapterFactory(this.hostTypeAdapterFactory)
+            .registerTypeAdapterFactory(this.hostListTypeAdapterFactory).create();
+  }
 
-   @Test
-   public void nonHostConfigList()
-   {
-      assertThat(this.hostListTypeAdapterFactory.create(this.gson, TypeToken.get(String.class)),
-            nullValue());
-   }
+  @Test
+  public void nonHostConfigList() {
+    assertThat(this.hostListTypeAdapterFactory.create(this.gson, TypeToken.get(String.class)),
+        nullValue());
+  }
 
-   @Test
-   public void fullHostConfigList()
-   {
-      final String json = "[{\"host\": \"127.0.0.1\", \"weight\": 3.5}, \"192.168.8.1\"]";
-      final List<HostConfig> config = this.gson.fromJson(json, this.typeToken.getType());
+  @Test
+  public void fullHostConfigList() {
+    final String json = "[{\"host\": \"127.0.0.1\", \"weight\": 3.5}, \"192.168.8.1\"]";
+    final List<HostConfig> config = this.gson.fromJson(json, this.typeToken.getType());
 
-      assertThat(config, hasSize(2));
+    assertThat(config, hasSize(2));
 
-      final HostConfig h1 = config.get(0);
-      assertThat(h1.getHost(), is("127.0.0.1"));
-      assertThat(h1.getWeight(), is(3.5));
+    final HostConfig h1 = config.get(0);
+    assertThat(h1.getHost(), is("127.0.0.1"));
+    assertThat(h1.getWeight(), is(3.5));
 
-      final HostConfig h2 = config.get(1);
-      assertThat(h2.getHost(), is("192.168.8.1"));
-      assertThat(h2.getWeight(), is(1.0));
-   }
+    final HostConfig h2 = config.get(1);
+    assertThat(h2.getHost(), is("192.168.8.1"));
+    assertThat(h2.getWeight(), is(1.0));
+  }
 
-   @Test
-   public void stringHostConfig()
-   {
-      final String json = "10.10.1.1";
-      final List<HostConfig> config = this.gson.fromJson(json, this.typeToken.getType());
+  @Test
+  public void stringHostConfig() {
+    final String json = "10.10.1.1";
+    final List<HostConfig> config = this.gson.fromJson(json, this.typeToken.getType());
 
-      assertThat(config, hasSize(1));
+    assertThat(config, hasSize(1));
 
-      final HostConfig h1 = config.get(0);
+    final HostConfig h1 = config.get(0);
 
-      assertThat(h1.getHost(), is("10.10.1.1"));
-      assertThat(h1.getWeight(), is(1.0));
-   }
+    assertThat(h1.getHost(), is("10.10.1.1"));
+    assertThat(h1.getWeight(), is(1.0));
+  }
 
-   @Test
-   public void serialization()
-   {
-      final List<HostConfig> config = Lists.newArrayList();
-      config.add(new HostConfig("127.0.0.1"));
+  @Test
+  public void serialization() {
+    final List<HostConfig> config = Lists.newArrayList();
+    config.add(new HostConfig("127.0.0.1"));
 
-      assertThat(this.gson.toJson(config), is(new GsonBuilder().create().toJson(config)));
-   }
+    assertThat(this.gson.toJson(config), is(new GsonBuilder().create().toJson(config)));
+  }
 }

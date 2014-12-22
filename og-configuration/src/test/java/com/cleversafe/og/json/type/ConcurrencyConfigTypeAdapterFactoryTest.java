@@ -31,47 +31,40 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
-public class ConcurrencyConfigTypeAdapterFactoryTest
-{
-   private ConcurrencyConfigTypeAdapterFactory typeAdapterFactory;
-   private Gson gson;
+public class ConcurrencyConfigTypeAdapterFactoryTest {
+  private ConcurrencyConfigTypeAdapterFactory typeAdapterFactory;
+  private Gson gson;
 
-   @Before
-   public void before()
-   {
-      this.typeAdapterFactory = new ConcurrencyConfigTypeAdapterFactory();
-      this.gson = new GsonBuilder().registerTypeAdapterFactory(this.typeAdapterFactory).create();
-   }
+  @Before
+  public void before() {
+    this.typeAdapterFactory = new ConcurrencyConfigTypeAdapterFactory();
+    this.gson = new GsonBuilder().registerTypeAdapterFactory(this.typeAdapterFactory).create();
+  }
 
-   @Test
-   public void nonConcurrencyConfig()
-   {
-      assertThat(this.typeAdapterFactory.create(this.gson, TypeToken.get(String.class)),
-            nullValue());
-   }
+  @Test
+  public void nonConcurrencyConfig() {
+    assertThat(this.typeAdapterFactory.create(this.gson, TypeToken.get(String.class)), nullValue());
+  }
 
-   @Test
-   public void fullConcurrencyConfig()
-   {
-      final String json = "{\"count\": 5.0}";
-      final ConcurrencyConfig config = this.gson.fromJson(json, ConcurrencyConfig.class);
+  @Test
+  public void fullConcurrencyConfig() {
+    final String json = "{\"count\": 5.0}";
+    final ConcurrencyConfig config = this.gson.fromJson(json, ConcurrencyConfig.class);
 
-      assertThat(config.getCount(), is(5.0));
-   }
+    assertThat(config.getCount(), is(5.0));
+  }
 
-   @Test
-   public void stringFilesizeConfig()
-   {
-      final String json = "10.0";
-      final ConcurrencyConfig config = this.gson.fromJson(json, ConcurrencyConfig.class);
+  @Test
+  public void stringFilesizeConfig() {
+    final String json = "10.0";
+    final ConcurrencyConfig config = this.gson.fromJson(json, ConcurrencyConfig.class);
 
-      assertThat(config.getCount(), is(10.0));
-   }
+    assertThat(config.getCount(), is(10.0));
+  }
 
-   @Test
-   public void serialization()
-   {
-      final ConcurrencyConfig config = new ConcurrencyConfig(15.0);
-      assertThat(this.gson.toJson(config), is(new GsonBuilder().create().toJson(config)));
-   }
+  @Test
+  public void serialization() {
+    final ConcurrencyConfig config = new ConcurrencyConfig(15.0);
+    assertThat(this.gson.toJson(config), is(new GsonBuilder().create().toJson(config)));
+  }
 }

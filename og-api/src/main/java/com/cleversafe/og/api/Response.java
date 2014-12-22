@@ -24,12 +24,11 @@ package com.cleversafe.og.api;
  * 
  * @since 1.0
  */
-public interface Response extends Message
-{
-   /**
-    * Gets the status code for this response
-    * 
-    * @return the status code for this response
-    */
-   int getStatusCode();
+public interface Response extends Message {
+  /**
+   * Gets the status code for this response
+   * 
+   * @return the status code for this response
+   */
+  int getStatusCode();
 }

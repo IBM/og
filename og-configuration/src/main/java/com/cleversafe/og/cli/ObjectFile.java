@@ -41,98 +41,81 @@ import com.google.common.base.Charsets;
 import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteStreams;
 
-public class ObjectFile
-{
-   private static final Logger _consoleLogger = LoggerFactory.getLogger("ConsoleLogger");
-   private static final BaseEncoding ENCODING = BaseEncoding.base16().lowerCase();
-   private static int ID_LENGTH = 18;
+public class ObjectFile {
+  private static final Logger _consoleLogger = LoggerFactory.getLogger("ConsoleLogger");
+  private static final BaseEncoding ENCODING = BaseEncoding.base16().lowerCase();
+  private static int ID_LENGTH = 18;
 
-   public static void main(final String[] args)
-   {
-      final Cli cli = Application.cli("object-file", "objectfile.jsap", args);
-      if (cli.shouldStop())
-      {
-         if (cli.error())
-         {
-            cli.printErrors();
-            cli.printUsage();
-         }
-         else if (cli.help())
-            cli.printUsage();
-         else if (cli.version())
-            cli.printVersion();
+  public static void main(final String[] args) {
+    final Cli cli = Application.cli("object-file", "objectfile.jsap", args);
+    if (cli.shouldStop()) {
+      if (cli.error()) {
+        cli.printErrors();
+        cli.printUsage();
+      } else if (cli.help())
+        cli.printUsage();
+      else if (cli.version())
+        cli.printVersion();
 
-         Application.exit(Application.EXIT_CONFIGURATION);
+      Application.exit(Application.EXIT_CONFIGURATION);
+    }
+
+    try {
+      final InputStream in = getInputStream(cli.flags().getFile("input"));
+      final OutputStream out = getOutputStream(cli.flags().getFile("output"));
+      if (cli.flags().getBoolean("write"))
+        write(in, out);
+      else if (cli.flags().getBoolean("read"))
+        read(in, out);
+      else
+        ByteStreams.copy(in, out);
+
+      if (!out.equals(System.out))
+        out.close();
+    } catch (final IOException e) {
+      _consoleLogger.error("", e);
+    }
+
+  }
+
+  public static InputStream getInputStream(final File input) throws FileNotFoundException {
+    if (input != null)
+      return new FileInputStream(input);
+    return System.in;
+  }
+
+  public static OutputStream getOutputStream(final File output) throws FileNotFoundException {
+    if (output != null)
+      return new FileOutputStream(output);
+    return System.out;
+  }
+
+  public static void write(final InputStream in, final OutputStream out) throws IOException {
+    checkNotNull(in);
+    checkNotNull(out);
+
+    final BufferedReader reader = new BufferedReader(new InputStreamReader(in, Charsets.UTF_8));
+    String line;
+    while ((line = reader.readLine()) != null) {
+      out.write(ENCODING.decode(line));
+    }
+  }
+
+  public static void read(final InputStream in, final OutputStream out) throws IOException {
+    checkNotNull(in);
+    checkNotNull(out);
+
+    BufferedWriter writer = null;
+    try {
+      writer = new BufferedWriter(new OutputStreamWriter(out, Charsets.UTF_8));
+      final byte[] buf = new byte[ID_LENGTH];
+      while (in.read(buf) == ID_LENGTH) {
+        writer.write(ENCODING.encode(buf));
+        writer.newLine();
       }
-
-      try
-      {
-         final InputStream in = getInputStream(cli.flags().getFile("input"));
-         final OutputStream out = getOutputStream(cli.flags().getFile("output"));
-         if (cli.flags().getBoolean("write"))
-            write(in, out);
-         else if (cli.flags().getBoolean("read"))
-            read(in, out);
-         else
-            ByteStreams.copy(in, out);
-
-         if (!out.equals(System.out))
-            out.close();
-      }
-      catch (final IOException e)
-      {
-         _consoleLogger.error("", e);
-      }
-
-   }
-
-   public static InputStream getInputStream(final File input) throws FileNotFoundException
-   {
-      if (input != null)
-         return new FileInputStream(input);
-      return System.in;
-   }
-
-   public static OutputStream getOutputStream(final File output) throws FileNotFoundException
-   {
-      if (output != null)
-         return new FileOutputStream(output);
-      return System.out;
-   }
-
-   public static void write(final InputStream in, final OutputStream out) throws IOException
-   {
-      checkNotNull(in);
-      checkNotNull(out);
-
-      final BufferedReader reader = new BufferedReader(new InputStreamReader(in, Charsets.UTF_8));
-      String line;
-      while ((line = reader.readLine()) != null)
-      {
-         out.write(ENCODING.decode(line));
-      }
-   }
-
-   public static void read(final InputStream in, final OutputStream out) throws IOException
-   {
-      checkNotNull(in);
-      checkNotNull(out);
-
-      BufferedWriter writer = null;
-      try
-      {
-         writer = new BufferedWriter(new OutputStreamWriter(out, Charsets.UTF_8));
-         final byte[] buf = new byte[ID_LENGTH];
-         while (in.read(buf) == ID_LENGTH)
-         {
-            writer.write(ENCODING.encode(buf));
-            writer.newLine();
-         }
-      }
-      finally
-      {
-         if (writer != null)
-            writer.flush();
-      }
-   }
+    } finally {
+      if (writer != null)
+        writer.flush();
+    }
+  }
 }

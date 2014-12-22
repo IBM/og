@@ -24,9 +24,6 @@ package com.cleversafe.og.api;
  * 
  * @since 1.0
  */
-public enum Data
-{
-   NONE,
-   RANDOM,
-   ZEROES;
+public enum Data {
+  NONE, RANDOM, ZEROES;
 }

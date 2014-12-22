@@ -31,37 +31,32 @@ import com.cleversafe.og.object.ObjectManager;
 import com.cleversafe.og.object.ObjectManagerException;
 import com.cleversafe.og.object.ObjectName;
 
-public class ReadObjectNameSupplierTest
-{
-   private ObjectManager objectManager;
+public class ReadObjectNameSupplierTest {
+  private ObjectManager objectManager;
 
-   @Before
-   public void before()
-   {
-      this.objectManager = mock(ObjectManager.class);
-   }
+  @Before
+  public void before() {
+    this.objectManager = mock(ObjectManager.class);
+  }
 
-   @Test(expected = NullPointerException.class)
-   public void nullObjectManager()
-   {
-      new ReadObjectNameSupplier(null);
-   }
+  @Test(expected = NullPointerException.class)
+  public void nullObjectManager() {
+    new ReadObjectNameSupplier(null);
+  }
 
-   @Test
-   public void readObjectNameSupplier()
-   {
-      final String object = "objectName";
-      final ObjectName objectName = mock(ObjectName.class);
-      when(objectName.toString()).thenReturn(object);
-      when(this.objectManager.acquireNameForRead()).thenReturn(objectName);
+  @Test
+  public void readObjectNameSupplier() {
+    final String object = "objectName";
+    final ObjectName objectName = mock(ObjectName.class);
+    when(objectName.toString()).thenReturn(object);
+    when(this.objectManager.acquireNameForRead()).thenReturn(objectName);
 
-      assertThat(new ReadObjectNameSupplier(this.objectManager).get(), is(object));
-   }
+    assertThat(new ReadObjectNameSupplier(this.objectManager).get(), is(object));
+  }
 
-   @Test(expected = ObjectManagerException.class)
-   public void supplierException()
-   {
-      when(this.objectManager.acquireNameForRead()).thenThrow(new ObjectManagerException());
-      new ReadObjectNameSupplier(this.objectManager).get();
-   }
+  @Test(expected = ObjectManagerException.class)
+  public void supplierException() {
+    when(this.objectManager.acquireNameForRead()).thenThrow(new ObjectManagerException());
+    new ReadObjectNameSupplier(this.objectManager).get();
+  }
 }

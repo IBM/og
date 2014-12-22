@@ -27,12 +27,10 @@ import org.junit.Test;
 
 import com.google.common.base.Supplier;
 
-public class UUIDObjectNameSupplierTest
-{
-   @Test
-   public void uuidObjectNameSupplier()
-   {
-      final Supplier<String> s = new UUIDObjectNameSupplier();
-      assertThat(s.get(), is(not(s.get())));
-   }
+public class UUIDObjectNameSupplierTest {
+  @Test
+  public void uuidObjectNameSupplier() {
+    final Supplier<String> s = new UUIDObjectNameSupplier();
+    assertThat(s.get(), is(not(s.get())));
+  }
 }

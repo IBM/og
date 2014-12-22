@@ -23,20 +23,15 @@ import java.util.Random;
 
 import org.junit.Test;
 
-public class UniformDistributionTest extends AbstractDistributionTest
-{
-   @Override
-   protected Distribution createDistribution(
-         final double average,
-         final double spread,
-         final Random random)
-   {
-      return new UniformDistribution(average, spread, random);
-   }
+public class UniformDistributionTest extends AbstractDistributionTest {
+  @Override
+  protected Distribution createDistribution(final double average, final double spread,
+      final Random random) {
+    return new UniformDistribution(average, spread, random);
+  }
 
-   @Test
-   public void zeroMin()
-   {
-      new UniformDistribution(5.0, 5.0, new Random());
-   }
+  @Test
+  public void zeroMin() {
+    new UniformDistribution(5.0, 5.0, new Random());
+  }
 }

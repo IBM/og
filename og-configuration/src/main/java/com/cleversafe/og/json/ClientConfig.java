@@ -19,94 +19,80 @@
 
 package com.cleversafe.og.json;
 
-public class ClientConfig
-{
-   int connectTimeout;
-   int soTimeout;
-   boolean soReuseAddress;
-   int soLinger;
-   boolean soKeepAlive;
-   boolean tcpNoDelay;
-   boolean persistentConnections;
-   boolean chunkedEncoding;
-   boolean expectContinue;
-   int waitForContinue;
-   int writeThroughput;
-   int readThroughput;
+public class ClientConfig {
+  int connectTimeout;
+  int soTimeout;
+  boolean soReuseAddress;
+  int soLinger;
+  boolean soKeepAlive;
+  boolean tcpNoDelay;
+  boolean persistentConnections;
+  boolean chunkedEncoding;
+  boolean expectContinue;
+  int waitForContinue;
+  int writeThroughput;
+  int readThroughput;
 
-   public ClientConfig()
-   {
-      this.connectTimeout = 0;
-      this.soTimeout = 0;
-      this.soReuseAddress = false;
-      this.soLinger = -1;
-      this.soKeepAlive = true;
-      this.tcpNoDelay = true;
-      this.persistentConnections = true;
-      this.chunkedEncoding = false;
-      this.expectContinue = false;
-      this.waitForContinue = 3000;
-      this.writeThroughput = 0;
-      this.readThroughput = 0;
-   }
+  public ClientConfig() {
+    this.connectTimeout = 0;
+    this.soTimeout = 0;
+    this.soReuseAddress = false;
+    this.soLinger = -1;
+    this.soKeepAlive = true;
+    this.tcpNoDelay = true;
+    this.persistentConnections = true;
+    this.chunkedEncoding = false;
+    this.expectContinue = false;
+    this.waitForContinue = 3000;
+    this.writeThroughput = 0;
+    this.readThroughput = 0;
+  }
 
-   public int getConnectTimeout()
-   {
-      return this.connectTimeout;
-   }
+  public int getConnectTimeout() {
+    return this.connectTimeout;
+  }
 
-   public int getSoTimeout()
-   {
-      return this.soTimeout;
-   }
+  public int getSoTimeout() {
+    return this.soTimeout;
+  }
 
-   public boolean isSoReuseAddress()
-   {
-      return this.soReuseAddress;
-   }
+  public boolean isSoReuseAddress() {
+    return this.soReuseAddress;
+  }
 
-   public int getSoLinger()
-   {
-      return this.soLinger;
-   }
+  public int getSoLinger() {
+    return this.soLinger;
+  }
 
-   public boolean isSoKeepAlive()
-   {
-      return this.soKeepAlive;
-   }
+  public boolean isSoKeepAlive() {
+    return this.soKeepAlive;
+  }
 
-   public boolean isTcpNoDelay()
-   {
-      return this.tcpNoDelay;
-   }
+  public boolean isTcpNoDelay() {
+    return this.tcpNoDelay;
+  }
 
-   public boolean isPersistentConnections()
-   {
-      return this.persistentConnections;
-   }
+  public boolean isPersistentConnections() {
+    return this.persistentConnections;
+  }
 
-   public boolean isChunkedEncoding()
-   {
-      return this.chunkedEncoding;
-   }
+  public boolean isChunkedEncoding() {
+    return this.chunkedEncoding;
+  }
 
-   public boolean isExpectContinue()
-   {
-      return this.expectContinue;
-   }
+  public boolean isExpectContinue() {
+    return this.expectContinue;
+  }
 
-   public int getWaitForContinue()
-   {
-      return this.waitForContinue;
-   }
+  public int getWaitForContinue() {
+    return this.waitForContinue;
+  }
 
-   public int getWriteThroughput()
-   {
-      return this.writeThroughput;
-   }
+  public int getWriteThroughput() {
+    return this.writeThroughput;
+  }
 
-   public int getReadThroughput()
-   {
-      return this.readThroughput;
-   }
+  public int getReadThroughput() {
+    return this.readThroughput;
+  }
 }

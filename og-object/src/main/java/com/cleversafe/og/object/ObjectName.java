@@ -25,12 +25,11 @@ package com.cleversafe.og.object;
  * 
  * @since 1.0
  */
-public interface ObjectName extends Comparable<ObjectName>
-{
-   /**
-    * Convert this instance's internal representation into bytes
-    * 
-    * @return this object name as bytes
-    */
-   byte[] toBytes();
+public interface ObjectName extends Comparable<ObjectName> {
+  /**
+   * Convert this instance's internal representation into bytes
+   * 
+   * @return this object name as bytes
+   */
+  byte[] toBytes();
 }

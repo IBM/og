@@ -42,67 +42,57 @@ import com.tngtech.java.junit.dataprovider.DataProviderRunner;
 import com.tngtech.java.junit.dataprovider.UseDataProvider;
 
 @RunWith(DataProviderRunner.class)
-public class StatusCodeConditionTest
-{
-   @Rule
-   public final ExpectedException thrown = ExpectedException.none();
+public class StatusCodeConditionTest {
+  @Rule
+  public final ExpectedException thrown = ExpectedException.none();
 
-   @DataProvider
-   public static Object[][] provideInvalidStatusCodeCondition()
-   {
-      final Operation operation = Operation.WRITE;
-      final LoadTest test = mock(LoadTest.class);
-      final Statistics stats = new Statistics();
-      return new Object[][]{
-            {null, 200, 1, test, stats, NullPointerException.class},
-            {operation, -1, 1, test, stats, IllegalArgumentException.class},
-            {operation, 0, 1, test, stats, IllegalArgumentException.class},
-            {operation, 99, 1, test, stats, IllegalArgumentException.class},
-            {operation, 600, 1, test, stats, IllegalArgumentException.class},
-            {operation, 200, -1, test, stats, IllegalArgumentException.class},
-            {operation, 200, 0, test, stats, IllegalArgumentException.class},
-            {operation, 200, 1, null, stats, NullPointerException.class},
-            {operation, 200, 1, test, null, NullPointerException.class},
-      };
-   }
+  @DataProvider
+  public static Object[][] provideInvalidStatusCodeCondition() {
+    final Operation operation = Operation.WRITE;
+    final LoadTest test = mock(LoadTest.class);
+    final Statistics stats = new Statistics();
+    return new Object[][] { {null, 200, 1, test, stats, NullPointerException.class},
+        {operation, -1, 1, test, stats, IllegalArgumentException.class},
+        {operation, 0, 1, test, stats, IllegalArgumentException.class},
+        {operation, 99, 1, test, stats, IllegalArgumentException.class},
+        {operation, 600, 1, test, stats, IllegalArgumentException.class},
+        {operation, 200, -1, test, stats, IllegalArgumentException.class},
+        {operation, 200, 0, test, stats, IllegalArgumentException.class},
+        {operation, 200, 1, null, stats, NullPointerException.class},
+        {operation, 200, 1, test, null, NullPointerException.class},};
+  }
 
-   @Test
-   @UseDataProvider("provideInvalidStatusCodeCondition")
-   public void invalidStatusCodeCondition(
-         final Operation operation,
-         final int statusCode,
-         final long thresholdValue,
-         final LoadTest test,
-         final Statistics stats,
-         final Class<Exception> expectedException)
-   {
-      this.thrown.expect(expectedException);
-      new StatusCodeCondition(operation, statusCode, thresholdValue, test, stats);
-   }
+  @Test
+  @UseDataProvider("provideInvalidStatusCodeCondition")
+  public void invalidStatusCodeCondition(final Operation operation, final int statusCode,
+      final long thresholdValue, final LoadTest test, final Statistics stats,
+      final Class<Exception> expectedException) {
+    this.thrown.expect(expectedException);
+    new StatusCodeCondition(operation, statusCode, thresholdValue, test, stats);
+  }
 
-   @Test
-   public void statusCodeCondition()
-   {
-      final LoadTest test = mock(LoadTest.class);
-      final Statistics stats = new Statistics();
+  @Test
+  public void statusCodeCondition() {
+    final LoadTest test = mock(LoadTest.class);
+    final Statistics stats = new Statistics();
 
-      final Request request = mock(Request.class);
-      when(request.getMethod()).thenReturn(Method.PUT);
-      when(request.getBody()).thenReturn(Bodies.none());
+    final Request request = mock(Request.class);
+    when(request.getMethod()).thenReturn(Method.PUT);
+    when(request.getBody()).thenReturn(Bodies.none());
 
-      final Response response = mock(Response.class);
-      when(response.getBody()).thenReturn(Bodies.none());
-      when(response.getStatusCode()).thenReturn(200);
+    final Response response = mock(Response.class);
+    when(response.getBody()).thenReturn(Bodies.none());
+    when(response.getStatusCode()).thenReturn(200);
 
-      final Pair<Request, Response> operation = Pair.of(request, response);
+    final Pair<Request, Response> operation = Pair.of(request, response);
 
-      final StatusCodeCondition condition =
-            new StatusCodeCondition(Operation.WRITE, 200, 2, test, stats);
+    final StatusCodeCondition condition =
+        new StatusCodeCondition(Operation.WRITE, 200, 2, test, stats);
 
-      assertThat(condition.isTriggered(), is(false));
-      stats.update(operation);
-      assertThat(condition.isTriggered(), is(false));
-      stats.update(operation);
-      assertThat(condition.isTriggered(), is(true));
-   }
+    assertThat(condition.isTriggered(), is(false));
+    stats.update(operation);
+    assertThat(condition.isTriggered(), is(false));
+    stats.update(operation);
+    assertThat(condition.isTriggered(), is(true));
+  }
 }

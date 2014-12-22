@@ -75,891 +75,732 @@ import com.tngtech.java.junit.dataprovider.DataProviderRunner;
 import com.tngtech.java.junit.dataprovider.UseDataProvider;
 
 @RunWith(DataProviderRunner.class)
-public class TestModuleTest
-{
-   @Rule
-   public ExpectedException thrown = ExpectedException.none();
-   private TestConfig config;
-   private TestModule module;
-   private Supplier<String> id;
+public class TestModuleTest {
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
+  private TestConfig config;
+  private TestModule module;
+  private Supplier<String> id;
 
-   @Before
-   public void before()
-   {
-      this.config = mock(TestConfig.class);
-      this.module = new TestModule(this.config);
-      this.id = Suppliers.of("1");
-   }
+  @Before
+  public void before() {
+    this.config = mock(TestConfig.class);
+    this.module = new TestModule(this.config);
+    this.id = Suppliers.of("1");
+  }
 
-   @Test(expected = NullPointerException.class)
-   public void nullTestConfig()
-   {
-      new TestModule(null);
-   }
+  @Test(expected = NullPointerException.class)
+  public void nullTestConfig() {
+    new TestModule(null);
+  }
 
-   @Test
-   public void provideIdSupplier()
-   {
-      assertThat(this.module.provideIdSupplier(), notNullValue());
-   }
+  @Test
+  public void provideIdSupplier() {
+    assertThat(this.module.provideIdSupplier(), notNullValue());
+  }
 
-   @Test(expected = NullPointerException.class)
-   public void provideSchemeNullScheme()
-   {
-      this.module.provideScheme();
-   }
+  @Test(expected = NullPointerException.class)
+  public void provideSchemeNullScheme() {
+    this.module.provideScheme();
+  }
 
-   @Test
-   public void provideScheme()
-   {
-      when(this.config.getScheme()).thenReturn(Scheme.HTTP);
-      assertThat(this.module.provideScheme().get(), is(Scheme.HTTP));
-   }
+  @Test
+  public void provideScheme() {
+    when(this.config.getScheme()).thenReturn(Scheme.HTTP);
+    assertThat(this.module.provideScheme().get(), is(Scheme.HTTP));
+  }
 
-   @DataProvider
-   public static Object[][] provideInvalidProvideHost()
-   {
-      final SelectionType selection = SelectionType.RANDOM;
-      final List<HostConfig> nullElement = Lists.newArrayList();
-      nullElement.add(null);
+  @DataProvider
+  public static Object[][] provideInvalidProvideHost() {
+    final SelectionType selection = SelectionType.RANDOM;
+    final List<HostConfig> nullElement = Lists.newArrayList();
+    nullElement.add(null);
 
-      return new Object[][]{
-            {null, ImmutableList.of(new HostConfig()), NullPointerException.class},
-            {selection, null, NullPointerException.class},
-            {selection, ImmutableList.<HostConfig> of(), IllegalArgumentException.class},
-            {selection, nullElement, NullPointerException.class},
-            {selection, ImmutableList.of(new HostConfig("")), IllegalArgumentException.class},
-      };
-   }
+    return new Object[][] { {null, ImmutableList.of(new HostConfig()), NullPointerException.class},
+        {selection, null, NullPointerException.class},
+        {selection, ImmutableList.<HostConfig>of(), IllegalArgumentException.class},
+        {selection, nullElement, NullPointerException.class},
+        {selection, ImmutableList.of(new HostConfig("")), IllegalArgumentException.class},};
+  }
 
-   @Test
-   @UseDataProvider("provideInvalidProvideHost")
-   public void invalidprovideHost(
-         final SelectionType selection,
-         final List<HostConfig> hostConfig,
-         final Class<Exception> expectedException)
-   {
-      when(this.config.getHostSelection()).thenReturn(selection);
-      when(this.config.getHost()).thenReturn(hostConfig);
+  @Test
+  @UseDataProvider("provideInvalidProvideHost")
+  public void invalidprovideHost(final SelectionType selection, final List<HostConfig> hostConfig,
+      final Class<Exception> expectedException) {
+    when(this.config.getHostSelection()).thenReturn(selection);
+    when(this.config.getHost()).thenReturn(hostConfig);
 
-      this.thrown.expect(expectedException);
-      this.module.provideHost();
-   }
+    this.thrown.expect(expectedException);
+    this.module.provideHost();
+  }
 
-   @Test
-   public void provideHostSingleHostRoundRobin()
-   {
-      when(this.config.getHostSelection()).thenReturn(SelectionType.ROUNDROBIN);
-      when(this.config.getHost()).thenReturn(ImmutableList.of(new HostConfig("192.168.8.1")));
-      final Supplier<String> s = this.module.provideHost();
-      for (int i = 0; i < 100; i++)
-      {
-         assertThat(s.get(), is("192.168.8.1"));
-      }
-   }
-
-   @Test
-   public void provideHostSingleHostRandom()
-   {
-      when(this.config.getHostSelection()).thenReturn(SelectionType.RANDOM);
-      when(this.config.getHost()).thenReturn(ImmutableList.of(new HostConfig("192.168.8.1")));
-      final Supplier<String> s = this.module.provideHost();
-      for (int i = 0; i < 100; i++)
-      {
-         assertThat(s.get(), is("192.168.8.1"));
-      }
-   }
-
-   @Test
-   public void provideHostMultipleHostRoundRobin()
-   {
-      when(this.config.getHostSelection()).thenReturn(SelectionType.ROUNDROBIN);
-      final List<HostConfig> hostConfig =
-            ImmutableList.of(new HostConfig("192.168.8.1"), new HostConfig("192.168.8.2"));
-      when(this.config.getHost()).thenReturn(hostConfig);
-      final Supplier<String> s = this.module.provideHost();
-      for (int i = 0; i < 100; i++)
-      {
-         assertThat(s.get(), is("192.168.8.1"));
-         assertThat(s.get(), is("192.168.8.2"));
-      }
-   }
-
-   @Test(expected = AssertionError.class)
-   public void provideHostMultipleHostRandom()
-   {
-      when(this.config.getHostSelection()).thenReturn(SelectionType.RANDOM);
-      final List<HostConfig> hostConfig =
-            ImmutableList.of(new HostConfig("192.168.8.1"), new HostConfig("192.168.8.2"));
-      when(this.config.getHost()).thenReturn(hostConfig);
-      final Supplier<String> s = this.module.provideHost();
-      for (int i = 0; i < 100; i++)
-      {
-         // Should not exhibit roundrobin behavior over a large sample, expect assertion error
-         assertThat(s.get(), is("192.168.8.1"));
-         assertThat(s.get(), is("192.168.8.2"));
-      }
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void provideWriteHostNullOperationConfig()
-   {
-      when(this.config.getWrite()).thenReturn(null);
-      this.module.provideWriteHost(Suppliers.of("192.168.8.1"));
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void provideWriteHostNullTestHost()
-   {
-      when(this.config.getWrite()).thenReturn(new OperationConfig());
-      this.module.provideWriteHost(null);
-   }
-
-   @Test
-   public void provideWriteHostDefault()
-   {
-      when(this.config.getWrite()).thenReturn(new OperationConfig());
-      final Supplier<String> s = this.module.provideWriteHost(Suppliers.of("192.168.8.1"));
+  @Test
+  public void provideHostSingleHostRoundRobin() {
+    when(this.config.getHostSelection()).thenReturn(SelectionType.ROUNDROBIN);
+    when(this.config.getHost()).thenReturn(ImmutableList.of(new HostConfig("192.168.8.1")));
+    final Supplier<String> s = this.module.provideHost();
+    for (int i = 0; i < 100; i++) {
       assertThat(s.get(), is("192.168.8.1"));
-   }
+    }
+  }
 
-   @Test
-   public void provideWriteHostOverride()
-   {
-      final OperationConfig operationConfig = mock(OperationConfig.class);
-      final List<HostConfig> hostConfig = ImmutableList.of(new HostConfig("10.1.1.1"));
-      when(operationConfig.getHostSelection()).thenReturn(SelectionType.RANDOM);
-      when(operationConfig.getHost()).thenReturn(hostConfig);
-      when(this.config.getWrite()).thenReturn(operationConfig);
-
-      final Supplier<String> s = this.module.provideWriteHost(Suppliers.of("192.168.8.1"));
-      assertThat(s.get(), is("10.1.1.1"));
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void provideReadHostNullOperationConfig()
-   {
-      when(this.config.getRead()).thenReturn(null);
-      this.module.provideReadHost(Suppliers.of("192.168.8.1"));
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void provideReadHostNullTestHost()
-   {
-      when(this.config.getRead()).thenReturn(new OperationConfig());
-      this.module.provideReadHost(null);
-   }
-
-   @Test
-   public void provideReadHostDefault()
-   {
-      when(this.config.getRead()).thenReturn(new OperationConfig());
-      final Supplier<String> s = this.module.provideReadHost(Suppliers.of("192.168.8.1"));
+  @Test
+  public void provideHostSingleHostRandom() {
+    when(this.config.getHostSelection()).thenReturn(SelectionType.RANDOM);
+    when(this.config.getHost()).thenReturn(ImmutableList.of(new HostConfig("192.168.8.1")));
+    final Supplier<String> s = this.module.provideHost();
+    for (int i = 0; i < 100; i++) {
       assertThat(s.get(), is("192.168.8.1"));
-   }
+    }
+  }
 
-   @Test
-   public void provideReadHostOverride()
-   {
-      final OperationConfig operationConfig = mock(OperationConfig.class);
-      final List<HostConfig> hostConfig = ImmutableList.of(new HostConfig("10.1.1.1"));
-      when(operationConfig.getHostSelection()).thenReturn(SelectionType.RANDOM);
-      when(operationConfig.getHost()).thenReturn(hostConfig);
-      when(this.config.getRead()).thenReturn(operationConfig);
-
-      final Supplier<String> s = this.module.provideReadHost(Suppliers.of("192.168.8.1"));
-      assertThat(s.get(), is("10.1.1.1"));
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void provideDeleteHostNullOperationConfig()
-   {
-      when(this.config.getDelete()).thenReturn(null);
-      this.module.provideDeleteHost(Suppliers.of("192.168.8.1"));
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void provideDeleteHostNullTestHost()
-   {
-      when(this.config.getDelete()).thenReturn(new OperationConfig());
-      this.module.provideDeleteHost(null);
-   }
-
-   @Test
-   public void provideDeleteHostDefault()
-   {
-      when(this.config.getDelete()).thenReturn(new OperationConfig());
-      final Supplier<String> s = this.module.provideDeleteHost(Suppliers.of("192.168.8.1"));
+  @Test
+  public void provideHostMultipleHostRoundRobin() {
+    when(this.config.getHostSelection()).thenReturn(SelectionType.ROUNDROBIN);
+    final List<HostConfig> hostConfig =
+        ImmutableList.of(new HostConfig("192.168.8.1"), new HostConfig("192.168.8.2"));
+    when(this.config.getHost()).thenReturn(hostConfig);
+    final Supplier<String> s = this.module.provideHost();
+    for (int i = 0; i < 100; i++) {
       assertThat(s.get(), is("192.168.8.1"));
-   }
+      assertThat(s.get(), is("192.168.8.2"));
+    }
+  }
 
-   @Test
-   public void provideDeleteHostOverride()
-   {
-      final OperationConfig operationConfig = mock(OperationConfig.class);
-      final List<HostConfig> hostConfig = ImmutableList.of(new HostConfig("10.1.1.1"));
-      when(operationConfig.getHostSelection()).thenReturn(SelectionType.RANDOM);
-      when(operationConfig.getHost()).thenReturn(hostConfig);
-      when(this.config.getDelete()).thenReturn(operationConfig);
+  @Test(expected = AssertionError.class)
+  public void provideHostMultipleHostRandom() {
+    when(this.config.getHostSelection()).thenReturn(SelectionType.RANDOM);
+    final List<HostConfig> hostConfig =
+        ImmutableList.of(new HostConfig("192.168.8.1"), new HostConfig("192.168.8.2"));
+    when(this.config.getHost()).thenReturn(hostConfig);
+    final Supplier<String> s = this.module.provideHost();
+    for (int i = 0; i < 100; i++) {
+      // Should not exhibit roundrobin behavior over a large sample, expect assertion error
+      assertThat(s.get(), is("192.168.8.1"));
+      assertThat(s.get(), is("192.168.8.2"));
+    }
+  }
 
-      final Supplier<String> s = this.module.provideDeleteHost(Suppliers.of("192.168.8.1"));
-      assertThat(s.get(), is("10.1.1.1"));
-   }
+  @Test(expected = NullPointerException.class)
+  public void provideWriteHostNullOperationConfig() {
+    when(this.config.getWrite()).thenReturn(null);
+    this.module.provideWriteHost(Suppliers.of("192.168.8.1"));
+  }
 
-   @Test
-   public void providePortNullPort()
-   {
-      when(this.config.getPort()).thenReturn(null);
-      assertThat(this.module.providePort(), nullValue());
-   }
+  @Test(expected = NullPointerException.class)
+  public void provideWriteHostNullTestHost() {
+    when(this.config.getWrite()).thenReturn(new OperationConfig());
+    this.module.provideWriteHost(null);
+  }
 
-   @Test
-   public void providePort()
-   {
-      when(this.config.getPort()).thenReturn(80);
-      assertThat(this.module.providePort().get(), is(80));
-   }
+  @Test
+  public void provideWriteHostDefault() {
+    when(this.config.getWrite()).thenReturn(new OperationConfig());
+    final Supplier<String> s = this.module.provideWriteHost(Suppliers.of("192.168.8.1"));
+    assertThat(s.get(), is("192.168.8.1"));
+  }
 
-   @Test(expected = NullPointerException.class)
-   public void provideApiNullApi()
-   {
-      when(this.config.getApi()).thenReturn(null);
-      this.module.provideApi();
-   }
+  @Test
+  public void provideWriteHostOverride() {
+    final OperationConfig operationConfig = mock(OperationConfig.class);
+    final List<HostConfig> hostConfig = ImmutableList.of(new HostConfig("10.1.1.1"));
+    when(operationConfig.getHostSelection()).thenReturn(SelectionType.RANDOM);
+    when(operationConfig.getHost()).thenReturn(hostConfig);
+    when(this.config.getWrite()).thenReturn(operationConfig);
 
-   @Test
-   public void provideApi()
-   {
-      when(this.config.getApi()).thenReturn(Api.S3);
-      assertThat(this.module.provideApi(), is(Api.S3));
-   }
+    final Supplier<String> s = this.module.provideWriteHost(Suppliers.of("192.168.8.1"));
+    assertThat(s.get(), is("10.1.1.1"));
+  }
 
-   @DataProvider
-   public static Object[][] provideUriRoot()
-   {
-      final Api api = Api.S3;
-      final String result = "foo";
+  @Test(expected = NullPointerException.class)
+  public void provideReadHostNullOperationConfig() {
+    when(this.config.getRead()).thenReturn(null);
+    this.module.provideReadHost(Suppliers.of("192.168.8.1"));
+  }
 
-      return new Object[][]{
-            {null, api, "s3"},
-            {"foo", api, result},
-            {"/foo", api, result},
-            {"foo/", api, result},
-            {"/foo/", api, result},
-            {"//foo///", api, result}
-      };
-   }
+  @Test(expected = NullPointerException.class)
+  public void provideReadHostNullTestHost() {
+    when(this.config.getRead()).thenReturn(new OperationConfig());
+    this.module.provideReadHost(null);
+  }
 
-   @Test
-   @UseDataProvider("provideUriRoot")
-   public void provideUriRootNullUriRoot(final String uriRoot, final Api api, final String path)
-   {
-      when(this.config.getUriRoot()).thenReturn(uriRoot);
-      when(this.config.getApi()).thenReturn(api);
-      assertThat(this.module.provideUriRoot().get(), is(path));
-   }
+  @Test
+  public void provideReadHostDefault() {
+    when(this.config.getRead()).thenReturn(new OperationConfig());
+    final Supplier<String> s = this.module.provideReadHost(Suppliers.of("192.168.8.1"));
+    assertThat(s.get(), is("192.168.8.1"));
+  }
 
-   @Test
-   public void provideUriRootSlash()
-   {
-      when(this.config.getUriRoot()).thenReturn("/");
-      when(this.config.getApi()).thenReturn(Api.S3);
-      assertThat(this.module.provideUriRoot(), nullValue());
-   }
+  @Test
+  public void provideReadHostOverride() {
+    final OperationConfig operationConfig = mock(OperationConfig.class);
+    final List<HostConfig> hostConfig = ImmutableList.of(new HostConfig("10.1.1.1"));
+    when(operationConfig.getHostSelection()).thenReturn(SelectionType.RANDOM);
+    when(operationConfig.getHost()).thenReturn(hostConfig);
+    when(this.config.getRead()).thenReturn(operationConfig);
 
-   @Test(expected = NullPointerException.class)
-   public void provideContainerNullContainer()
-   {
-      when(this.config.getContainer()).thenReturn(null);
-      this.module.provideContainer();
-   }
+    final Supplier<String> s = this.module.provideReadHost(Suppliers.of("192.168.8.1"));
+    assertThat(s.get(), is("10.1.1.1"));
+  }
 
-   @Test(expected = IllegalArgumentException.class)
-   public void provideContainerEmptyContainer()
-   {
-      when(this.config.getContainer()).thenReturn("");
-      this.module.provideContainer();
-   }
+  @Test(expected = NullPointerException.class)
+  public void provideDeleteHostNullOperationConfig() {
+    when(this.config.getDelete()).thenReturn(null);
+    this.module.provideDeleteHost(Suppliers.of("192.168.8.1"));
+  }
 
-   @Test
-   public void provideContainer()
-   {
-      when(this.config.getContainer()).thenReturn("container");
-      assertThat(this.module.provideContainer().get(), is("container"));
-   }
+  @Test(expected = NullPointerException.class)
+  public void provideDeleteHostNullTestHost() {
+    when(this.config.getDelete()).thenReturn(new OperationConfig());
+    this.module.provideDeleteHost(null);
+  }
 
-   @Test
-   public void provideUsernameNullUsername()
-   {
-      when(this.config.getAuthentication()).thenReturn(new AuthenticationConfig());
-      assertThat(this.module.provideUsername(), nullValue());
-   }
+  @Test
+  public void provideDeleteHostDefault() {
+    when(this.config.getDelete()).thenReturn(new OperationConfig());
+    final Supplier<String> s = this.module.provideDeleteHost(Suppliers.of("192.168.8.1"));
+    assertThat(s.get(), is("192.168.8.1"));
+  }
 
-   @Test(expected = IllegalArgumentException.class)
-   public void provideUsernameEmptyUsername()
-   {
-      final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
-      when(authConfig.getUsername()).thenReturn("");
-      when(this.config.getAuthentication()).thenReturn(authConfig);
-      this.module.provideUsername();
-   }
+  @Test
+  public void provideDeleteHostOverride() {
+    final OperationConfig operationConfig = mock(OperationConfig.class);
+    final List<HostConfig> hostConfig = ImmutableList.of(new HostConfig("10.1.1.1"));
+    when(operationConfig.getHostSelection()).thenReturn(SelectionType.RANDOM);
+    when(operationConfig.getHost()).thenReturn(hostConfig);
+    when(this.config.getDelete()).thenReturn(operationConfig);
 
-   @Test
-   public void provideUsername()
-   {
-      final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
-      when(authConfig.getUsername()).thenReturn("user");
-      when(this.config.getAuthentication()).thenReturn(authConfig);
-      assertThat(this.module.provideUsername().get(), is("user"));
-   }
+    final Supplier<String> s = this.module.provideDeleteHost(Suppliers.of("192.168.8.1"));
+    assertThat(s.get(), is("10.1.1.1"));
+  }
 
-   @Test
-   public void providePasswordNullPassword()
-   {
-      when(this.config.getAuthentication()).thenReturn(new AuthenticationConfig());
-      assertThat(this.module.providePassword(), nullValue());
-   }
+  @Test
+  public void providePortNullPort() {
+    when(this.config.getPort()).thenReturn(null);
+    assertThat(this.module.providePort(), nullValue());
+  }
 
-   @Test(expected = IllegalArgumentException.class)
-   public void providePasswordEmptyPassword()
-   {
-      final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
-      when(authConfig.getPassword()).thenReturn("");
-      when(this.config.getAuthentication()).thenReturn(authConfig);
-      this.module.providePassword();
-   }
+  @Test
+  public void providePort() {
+    when(this.config.getPort()).thenReturn(80);
+    assertThat(this.module.providePort().get(), is(80));
+  }
 
-   @Test
-   public void providePassword()
-   {
-      final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
-      when(authConfig.getPassword()).thenReturn("password");
-      when(this.config.getAuthentication()).thenReturn(authConfig);
-      assertThat(this.module.providePassword().get(), is("password"));
-   }
+  @Test(expected = NullPointerException.class)
+  public void provideApiNullApi() {
+    when(this.config.getApi()).thenReturn(null);
+    this.module.provideApi();
+  }
 
-   @DataProvider
-   public static Object[][] provideInvalidAuthentication()
-   {
-      final Supplier<String> username = Suppliers.of("username");
-      final Supplier<String> password = Suppliers.of("password");
+  @Test
+  public void provideApi() {
+    when(this.config.getApi()).thenReturn(Api.S3);
+    assertThat(this.module.provideApi(), is(Api.S3));
+  }
 
-      return new Object[][]{
-            {null, username, password, NullPointerException.class},
-            {AuthType.BASIC, null, password, IllegalArgumentException.class},
-            {AuthType.BASIC, username, null, IllegalArgumentException.class},
-      };
-   }
+  @DataProvider
+  public static Object[][] provideUriRoot() {
+    final Api api = Api.S3;
+    final String result = "foo";
 
-   @Test
-   @UseDataProvider("provideInvalidAuthentication")
-   public void invalidProvideAuthentication(
-         final AuthType authType,
-         final Supplier<String> username,
-         final Supplier<String> password,
-         final Class<Exception> expectedException)
-   {
-      final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
-      when(authConfig.getType()).thenReturn(authType);
-      when(this.config.getAuthentication()).thenReturn(authConfig);
+    return new Object[][] { {null, api, "s3"}, {"foo", api, result}, {"/foo", api, result},
+        {"foo/", api, result}, {"/foo/", api, result}, {"//foo///", api, result}};
+  }
 
+  @Test
+  @UseDataProvider("provideUriRoot")
+  public void provideUriRootNullUriRoot(final String uriRoot, final Api api, final String path) {
+    when(this.config.getUriRoot()).thenReturn(uriRoot);
+    when(this.config.getApi()).thenReturn(api);
+    assertThat(this.module.provideUriRoot().get(), is(path));
+  }
+
+  @Test
+  public void provideUriRootSlash() {
+    when(this.config.getUriRoot()).thenReturn("/");
+    when(this.config.getApi()).thenReturn(Api.S3);
+    assertThat(this.module.provideUriRoot(), nullValue());
+  }
+
+  @Test(expected = NullPointerException.class)
+  public void provideContainerNullContainer() {
+    when(this.config.getContainer()).thenReturn(null);
+    this.module.provideContainer();
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void provideContainerEmptyContainer() {
+    when(this.config.getContainer()).thenReturn("");
+    this.module.provideContainer();
+  }
+
+  @Test
+  public void provideContainer() {
+    when(this.config.getContainer()).thenReturn("container");
+    assertThat(this.module.provideContainer().get(), is("container"));
+  }
+
+  @Test
+  public void provideUsernameNullUsername() {
+    when(this.config.getAuthentication()).thenReturn(new AuthenticationConfig());
+    assertThat(this.module.provideUsername(), nullValue());
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void provideUsernameEmptyUsername() {
+    final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
+    when(authConfig.getUsername()).thenReturn("");
+    when(this.config.getAuthentication()).thenReturn(authConfig);
+    this.module.provideUsername();
+  }
+
+  @Test
+  public void provideUsername() {
+    final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
+    when(authConfig.getUsername()).thenReturn("user");
+    when(this.config.getAuthentication()).thenReturn(authConfig);
+    assertThat(this.module.provideUsername().get(), is("user"));
+  }
+
+  @Test
+  public void providePasswordNullPassword() {
+    when(this.config.getAuthentication()).thenReturn(new AuthenticationConfig());
+    assertThat(this.module.providePassword(), nullValue());
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void providePasswordEmptyPassword() {
+    final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
+    when(authConfig.getPassword()).thenReturn("");
+    when(this.config.getAuthentication()).thenReturn(authConfig);
+    this.module.providePassword();
+  }
+
+  @Test
+  public void providePassword() {
+    final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
+    when(authConfig.getPassword()).thenReturn("password");
+    when(this.config.getAuthentication()).thenReturn(authConfig);
+    assertThat(this.module.providePassword().get(), is("password"));
+  }
+
+  @DataProvider
+  public static Object[][] provideInvalidAuthentication() {
+    final Supplier<String> username = Suppliers.of("username");
+    final Supplier<String> password = Suppliers.of("password");
+
+    return new Object[][] { {null, username, password, NullPointerException.class},
+        {AuthType.BASIC, null, password, IllegalArgumentException.class},
+        {AuthType.BASIC, username, null, IllegalArgumentException.class},};
+  }
+
+  @Test
+  @UseDataProvider("provideInvalidAuthentication")
+  public void invalidProvideAuthentication(final AuthType authType,
+      final Supplier<String> username, final Supplier<String> password,
+      final Class<Exception> expectedException) {
+    final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
+    when(authConfig.getType()).thenReturn(authType);
+    when(this.config.getAuthentication()).thenReturn(authConfig);
+
+    this.thrown.expect(expectedException);
+    this.module.provideAuthentication(username, password);
+  }
+
+  @Test
+  public void provideAuthenticationNullBoth() {
+    final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
+    when(authConfig.getType()).thenReturn(AuthType.BASIC);
+    when(this.config.getAuthentication()).thenReturn(authConfig);
+    assertThat(this.module.provideAuthentication(null, null), nullValue());
+  }
+
+  @DataProvider
+  public static Object[][] provideProvideAuthentication() {
+    return new Object[][] { {AuthType.BASIC, BasicAuth.class}, {AuthType.AWSV2, AWSAuthV2.class}};
+  }
+
+  @Test
+  @UseDataProvider("provideProvideAuthentication")
+  public void provideAuthentication(final AuthType authType,
+      final Class<? extends HttpAuth> authClass) {
+    final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
+    when(authConfig.getType()).thenReturn(authType);
+    when(this.config.getAuthentication()).thenReturn(authConfig);
+
+    final HttpAuth auth =
+        this.module.provideAuthentication(Suppliers.of("username"), Suppliers.of("password"));
+
+    assertThat(authClass.isInstance(auth), is(true));
+  }
+
+  @Test(expected = NullPointerException.class)
+  public void provideHeadersNullHeaders() {
+    when(this.config.getHeaders()).thenReturn(null);
+    this.module.provideHeaders(this.id);
+  }
+
+  @Test
+  public void provideHeadersEmptyHeaders() {
+    when(this.config.getHeaders()).thenReturn(ImmutableMap.<String, String>of());
+    // single element is request id supplier
+    assertThat(this.module.provideHeaders(this.id).size(), is(1));
+  }
+
+  @Test
+  public void provideHeaders() {
+    final Map<String, String> headers = Maps.newLinkedHashMap();
+    for (int i = 0; i < 10; i++) {
+      headers.put("key" + (10 - i), "value" + (10 - i));
+    }
+    when(this.config.getHeaders()).thenReturn(headers);
+    final Map<Supplier<String>, Supplier<String>> s = this.module.provideHeaders(this.id);
+    final Iterator<Entry<Supplier<String>, Supplier<String>>> it = s.entrySet().iterator();
+    for (int i = 0; i < 10; i++) {
+      final Entry<Supplier<String>, Supplier<String>> e = it.next();
+      assertThat(e.getKey().get(), is("key" + (10 - i)));
+      assertThat(e.getValue().get(), is("value" + (10 - i)));
+    }
+  }
+
+  @Test(expected = NullPointerException.class)
+  public void provideWriteHeadersNullOperationConfig() {
+    when(this.config.getWrite()).thenReturn(null);
+    final Map<Supplier<String>, Supplier<String>> testHeaders = ImmutableMap.of();
+    this.module.provideWriteHeaders(this.id, testHeaders);
+  }
+
+  @Test(expected = NullPointerException.class)
+  public void provideWriteHeadersNullTestHeaders() {
+    when(this.config.getWrite()).thenReturn(new OperationConfig());
+    this.module.provideWriteHeaders(this.id, null);
+  }
+
+  @Test(expected = NullPointerException.class)
+  public void provideReadHeadersNullOperationConfig() {
+    when(this.config.getRead()).thenReturn(null);
+    final Map<Supplier<String>, Supplier<String>> testHeaders = ImmutableMap.of();
+    this.module.provideReadHeaders(this.id, testHeaders);
+  }
+
+  @Test(expected = NullPointerException.class)
+  public void provideReadHeadersNullTestHeaders() {
+    when(this.config.getRead()).thenReturn(new OperationConfig());
+    this.module.provideReadHeaders(this.id, null);
+  }
+
+  @Test(expected = NullPointerException.class)
+  public void provideDeleteHeadersNullOperationConfig() {
+    when(this.config.getDelete()).thenReturn(null);
+    final Map<Supplier<String>, Supplier<String>> testHeaders = ImmutableMap.of();
+    this.module.provideDeleteHeaders(this.id, testHeaders);
+  }
+
+  @Test(expected = NullPointerException.class)
+  public void provideDeleteHeadersNullTestHeaders() {
+    when(this.config.getDelete()).thenReturn(new OperationConfig());
+    this.module.provideDeleteHeaders(this.id, null);
+  }
+
+  @DataProvider
+  public static Object[][] provideHeadersData() {
+    final OperationConfig operationConfig = mock(OperationConfig.class);
+    when(operationConfig.getHeaders()).thenReturn(ImmutableMap.of("opKey", "opValue"));
+    final Map<Supplier<String>, Supplier<String>> testHeaders =
+        ImmutableMap.of(Suppliers.of("key"), Suppliers.of("value"));
+
+    return new Object[][] { {new OperationConfig(), testHeaders, 1, "key", "value"},
+        {operationConfig, testHeaders, 2, "opKey", "opValue"}};
+  }
+
+  @Test
+  @UseDataProvider("provideHeadersData")
+  public void provideWriteHeaders(final OperationConfig operationConfig,
+      final Map<Supplier<String>, Supplier<String>> testHeaders, final int size, final String key,
+      final String value) {
+    when(this.config.getWrite()).thenReturn(operationConfig);
+    final Map<Supplier<String>, Supplier<String>> s =
+        this.module.provideWriteHeaders(this.id, testHeaders);
+
+    assertThat(s.size(), is(size));
+    final Entry<Supplier<String>, Supplier<String>> e = s.entrySet().iterator().next();
+    assertThat(e.getKey().get(), is(key));
+    assertThat(e.getValue().get(), is(value));
+  }
+
+  @Test
+  @UseDataProvider("provideHeadersData")
+  public void provideReadHeaders(final OperationConfig operationConfig,
+      final Map<Supplier<String>, Supplier<String>> testHeaders, final int size, final String key,
+      final String value) {
+    when(this.config.getRead()).thenReturn(operationConfig);
+    final Map<Supplier<String>, Supplier<String>> s =
+        this.module.provideReadHeaders(this.id, testHeaders);
+
+    assertThat(s.size(), is(size));
+    final Entry<Supplier<String>, Supplier<String>> e = s.entrySet().iterator().next();
+    assertThat(e.getKey().get(), is(key));
+    assertThat(e.getValue().get(), is(value));
+  }
+
+  @Test
+  @UseDataProvider("provideHeadersData")
+  public void provideDeleteHeaders(final OperationConfig operationConfig,
+      final Map<Supplier<String>, Supplier<String>> testHeaders, final int size, final String key,
+      final String value) {
+    when(this.config.getDelete()).thenReturn(operationConfig);
+    final Map<Supplier<String>, Supplier<String>> s =
+        this.module.provideDeleteHeaders(this.id, testHeaders);
+
+    assertThat(s.size(), is(size));
+    final Entry<Supplier<String>, Supplier<String>> e = s.entrySet().iterator().next();
+    assertThat(e.getKey().get(), is(key));
+    assertThat(e.getValue().get(), is(value));
+  }
+
+  @DataProvider
+  public static Object[][] provideInvalidBody() {
+    final SelectionType selection = SelectionType.ROUNDROBIN;
+    final List<FilesizeConfig> config = ImmutableList.of(new FilesizeConfig());
+    final Data data = Data.ZEROES;
+
+    final FilesizeConfig poisson = mock(FilesizeConfig.class);
+    when(poisson.getDistribution()).thenReturn(DistributionType.POISSON);
+    when(poisson.getAverageUnit()).thenReturn(SizeUnit.MEBIBYTES);
+    when(poisson.getSpreadUnit()).thenReturn(SizeUnit.MEBIBYTES);
+    final List<FilesizeConfig> poissonConfig = ImmutableList.of(poisson);
+
+    return new Object[][] { {null, config, data, NullPointerException.class},
+        {selection, null, data, NullPointerException.class},
+        {selection, ImmutableList.of(), data, IllegalArgumentException.class},
+        {selection, config, null, NullPointerException.class},
+        {selection, config, Data.NONE, IllegalArgumentException.class},
+        {selection, poissonConfig, data, IllegalArgumentException.class}};
+  }
+
+  @Test
+  @UseDataProvider("provideInvalidBody")
+  public void invalidProvideBody(final SelectionType selection, final List<FilesizeConfig> config,
+      final Data data, final Class<Exception> expectedException) {
+    when(this.config.getFilesizeSelection()).thenReturn(selection);
+    when(this.config.getFilesize()).thenReturn(config);
+    when(this.config.getData()).thenReturn(data);
+
+    this.thrown.expect(expectedException);
+    this.module.provideBody();
+  }
+
+  @DataProvider
+  public static Object[][] provideBodyData() {
+    return new Object[][] { {SelectionType.ROUNDROBIN, Data.ZEROES, 10},
+        {SelectionType.ROUNDROBIN, Data.RANDOM, 10}};
+  }
+
+  @Test
+  @UseDataProvider("provideBodyData")
+  public void provideBody(final SelectionType selection, final Data data, final long size) {
+    when(this.config.getFilesizeSelection()).thenReturn(selection);
+    when(this.config.getFilesize()).thenReturn(ImmutableList.of(new FilesizeConfig(size)));
+    when(this.config.getData()).thenReturn(data);
+    final Body body = this.module.provideBody().get();
+
+    assertThat(body.getData(), is(data));
+    assertThat(body.getSize(), is(SizeUnit.MEBIBYTES.toBytes(size)));
+  }
+
+  @DataProvider
+  public static Object[][] provideSelection() {
+    return new Object[][] { {SelectionType.ROUNDROBIN, null},
+        {SelectionType.RANDOM, IllegalStateException.class}};
+  }
+
+  @Test
+  @UseDataProvider("provideSelection")
+  public void provideBodyMultipleFilesizeRoundRobin(final SelectionType selection,
+      final Class<Exception> expectedException) {
+    when(this.config.getFilesizeSelection()).thenReturn(selection);
+    final List<FilesizeConfig> filesize =
+        ImmutableList.of(new FilesizeConfig(10.0), new FilesizeConfig(25.0));
+    when(this.config.getData()).thenReturn(Data.RANDOM);
+    when(this.config.getFilesize()).thenReturn(filesize);
+    final Supplier<Body> s = this.module.provideBody();
+
+    // if selection is random, expect an assertion error in the below loop
+    if (expectedException != null)
       this.thrown.expect(expectedException);
-      this.module.provideAuthentication(username, password);
-   }
 
-   @Test
-   public void provideAuthenticationNullBoth()
-   {
-      final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
-      when(authConfig.getType()).thenReturn(AuthType.BASIC);
-      when(this.config.getAuthentication()).thenReturn(authConfig);
-      assertThat(this.module.provideAuthentication(null, null), nullValue());
-   }
-
-   @DataProvider
-   public static Object[][] provideProvideAuthentication()
-   {
-      return new Object[][]{
-            {AuthType.BASIC, BasicAuth.class},
-            {AuthType.AWSV2, AWSAuthV2.class}
-      };
-   }
-
-   @Test
-   @UseDataProvider("provideProvideAuthentication")
-   public void provideAuthentication(
-         final AuthType authType,
-         final Class<? extends HttpAuth> authClass)
-   {
-      final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
-      when(authConfig.getType()).thenReturn(authType);
-      when(this.config.getAuthentication()).thenReturn(authConfig);
-
-      final HttpAuth auth =
-            this.module.provideAuthentication(Suppliers.of("username"), Suppliers.of("password"));
-
-      assertThat(authClass.isInstance(auth), is(true));
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void provideHeadersNullHeaders()
-   {
-      when(this.config.getHeaders()).thenReturn(null);
-      this.module.provideHeaders(this.id);
-   }
-
-   @Test
-   public void provideHeadersEmptyHeaders()
-   {
-      when(this.config.getHeaders()).thenReturn(ImmutableMap.<String, String> of());
-      // single element is request id supplier
-      assertThat(this.module.provideHeaders(this.id).size(), is(1));
-   }
-
-   @Test
-   public void provideHeaders()
-   {
-      final Map<String, String> headers = Maps.newLinkedHashMap();
-      for (int i = 0; i < 10; i++)
-      {
-         headers.put("key" + (10 - i), "value" + (10 - i));
+    for (int i = 0; i < 100; i++) {
+      // TODO ugly hack to rethrow assertion error; defect in junit 4.11 which ignores
+      // AssertionError in ExpectedException rule, expected to be fixed in 4.12. See
+      // https://github.com/junit-team/junit/issues/687
+      try {
+        assertThat(s.get().getSize(), is(SizeUnit.MEBIBYTES.toBytes(10)));
+        assertThat(s.get().getSize(), is(SizeUnit.MEBIBYTES.toBytes(25)));
+      } catch (final AssertionError e) {
+        throw new IllegalStateException(e);
       }
-      when(this.config.getHeaders()).thenReturn(headers);
-      final Map<Supplier<String>, Supplier<String>> s = this.module.provideHeaders(this.id);
-      final Iterator<Entry<Supplier<String>, Supplier<String>>> it = s.entrySet().iterator();
-      for (int i = 0; i < 10; i++)
-      {
-         final Entry<Supplier<String>, Supplier<String>> e = it.next();
-         assertThat(e.getKey().get(), is("key" + (10 - i)));
-         assertThat(e.getValue().get(), is("value" + (10 - i)));
-      }
-   }
+    }
+  }
 
-   @Test(expected = NullPointerException.class)
-   public void provideWriteHeadersNullOperationConfig()
-   {
-      when(this.config.getWrite()).thenReturn(null);
-      final Map<Supplier<String>, Supplier<String>> testHeaders = ImmutableMap.of();
-      this.module.provideWriteHeaders(this.id, testHeaders);
-   }
+  @DataProvider
+  public static Object[][] provideInvalideProvideObjectFile() throws IOException {
+    return new Object[][] { {null, NullPointerException.class},
+        {"", IllegalArgumentException.class},
+        {File.createTempFile("existing", null).toString(), IllegalArgumentException.class},};
+  }
 
-   @Test(expected = NullPointerException.class)
-   public void provideWriteHeadersNullTestHeaders()
-   {
-      when(this.config.getWrite()).thenReturn(new OperationConfig());
-      this.module.provideWriteHeaders(this.id, null);
-   }
+  @Test
+  @UseDataProvider("provideInvalideProvideObjectFile")
+  public void invalidProvideObjectFileLocation(final String location,
+      final Class<Exception> expectedException) throws IOException {
+    final ObjectManagerConfig objectManagerConfig = mock(ObjectManagerConfig.class);
+    when(objectManagerConfig.getObjectFileLocation()).thenReturn(location);
+    when(this.config.getObjectManager()).thenReturn(objectManagerConfig);
 
-   @Test(expected = NullPointerException.class)
-   public void provideReadHeadersNullOperationConfig()
-   {
-      when(this.config.getRead()).thenReturn(null);
-      final Map<Supplier<String>, Supplier<String>> testHeaders = ImmutableMap.of();
-      this.module.provideReadHeaders(this.id, testHeaders);
-   }
+    this.thrown.expect(expectedException);
+    this.module.provideObjectFileLocation();
+  }
 
-   @Test(expected = NullPointerException.class)
-   public void provideReadHeadersNullTestHeaders()
-   {
-      when(this.config.getRead()).thenReturn(new OperationConfig());
-      this.module.provideReadHeaders(this.id, null);
-   }
+  @Test
+  public void provideObjectFileLocationNonExisting() throws IOException {
+    final ObjectManagerConfig objectManagerConfig = mock(ObjectManagerConfig.class);
+    final File existing = Files.createTempDir();
+    final File nonExisting = new File(existing, String.valueOf(System.nanoTime()));
+    when(objectManagerConfig.getObjectFileLocation()).thenReturn(nonExisting.toString());
+    when(this.config.getObjectManager()).thenReturn(objectManagerConfig);
 
-   @Test(expected = NullPointerException.class)
-   public void provideDeleteHeadersNullOperationConfig()
-   {
-      when(this.config.getDelete()).thenReturn(null);
-      final Map<Supplier<String>, Supplier<String>> testHeaders = ImmutableMap.of();
-      this.module.provideDeleteHeaders(this.id, testHeaders);
-   }
+    this.module.provideObjectFileLocation();
+  }
 
-   @Test(expected = NullPointerException.class)
-   public void provideDeleteHeadersNullTestHeaders()
-   {
-      when(this.config.getDelete()).thenReturn(new OperationConfig());
-      this.module.provideDeleteHeaders(this.id, null);
-   }
+  @Test(expected = NullPointerException.class)
+  public void provideObjectFileNameNullContainer() {
+    this.module.provideObjectFileName(null, Api.S3);
+  }
 
-   @DataProvider
-   public static Object[][] provideHeadersData()
-   {
-      final OperationConfig operationConfig = mock(OperationConfig.class);
-      when(operationConfig.getHeaders()).thenReturn(ImmutableMap.of("opKey", "opValue"));
-      final Map<Supplier<String>, Supplier<String>> testHeaders =
-            ImmutableMap.of(Suppliers.of("key"), Suppliers.of("value"));
+  @Test(expected = NullPointerException.class)
+  public void provideObjectFileNameNullApi() {
+    this.module.provideObjectFileName(Suppliers.of("container"), null);
+  }
 
-      return new Object[][]{
-            {new OperationConfig(), testHeaders, 1, "key", "value"},
-            {operationConfig, testHeaders, 2, "opKey", "opValue"}
-      };
-   }
+  @DataProvider
+  public static Object[][] provideObjectFileNameData() {
+    final Api api = Api.S3;
+    final String container = "container";
+    final String defaultName = String.format("%s-%s", container, api.toString().toLowerCase());
 
-   @Test
-   @UseDataProvider("provideHeadersData")
-   public void provideWriteHeaders(
-         final OperationConfig operationConfig,
-         final Map<Supplier<String>, Supplier<String>> testHeaders,
-         final int size,
-         final String key,
-         final String value)
-   {
-      when(this.config.getWrite()).thenReturn(operationConfig);
-      final Map<Supplier<String>, Supplier<String>> s =
-            this.module.provideWriteHeaders(this.id, testHeaders);
+    return new Object[][] { {api, container, null, defaultName}, {api, container, "", defaultName},
+        {api, container, "objectFile", "objectFile"}};
+  }
 
-      assertThat(s.size(), is(size));
-      final Entry<Supplier<String>, Supplier<String>> e = s.entrySet().iterator().next();
-      assertThat(e.getKey().get(), is(key));
-      assertThat(e.getValue().get(), is(value));
-   }
+  @Test
+  @UseDataProvider("provideObjectFileNameData")
+  public void provideObjectFileName(final Api api, final String container, final String prefix,
+      final String expected) {
+    final ObjectManagerConfig objectManagerConfig = mock(ObjectManagerConfig.class);
+    when(objectManagerConfig.getObjectFileName()).thenReturn(prefix);
+    when(this.config.getObjectManager()).thenReturn(objectManagerConfig);
+    final String name = this.module.provideObjectFileName(Suppliers.of(container), api);
 
-   @Test
-   @UseDataProvider("provideHeadersData")
-   public void provideReadHeaders(
-         final OperationConfig operationConfig,
-         final Map<Supplier<String>, Supplier<String>> testHeaders,
-         final int size,
-         final String key,
-         final String value)
-   {
-      when(this.config.getRead()).thenReturn(operationConfig);
-      final Map<Supplier<String>, Supplier<String>> s =
-            this.module.provideReadHeaders(this.id, testHeaders);
+    assertThat(name, is(expected));
+  }
 
-      assertThat(s.size(), is(size));
-      final Entry<Supplier<String>, Supplier<String>> e = s.entrySet().iterator().next();
-      assertThat(e.getKey().get(), is(key));
-      assertThat(e.getValue().get(), is(value));
-   }
+  @DataProvider
+  public static Object[][] provideWriteWeightData() {
+    return new Object[][] { {-1.0, 50.0, 50.0, -1.0, IllegalArgumentException.class},
+        {101.0, 0.0, 0.0, 101.0, IllegalArgumentException.class}, {0.0, 50.0, 50.0, 0.0, null},
+        {50.0, 25.0, 25.0, 50.0, null}, {0.0, 0.0, 0.0, 100.0, null}};
+  }
 
-   @Test
-   @UseDataProvider("provideHeadersData")
-   public void provideDeleteHeaders(
-         final OperationConfig operationConfig,
-         final Map<Supplier<String>, Supplier<String>> testHeaders,
-         final int size,
-         final String key,
-         final String value)
-   {
-      when(this.config.getDelete()).thenReturn(operationConfig);
-      final Map<Supplier<String>, Supplier<String>> s =
-            this.module.provideDeleteHeaders(this.id, testHeaders);
-
-      assertThat(s.size(), is(size));
-      final Entry<Supplier<String>, Supplier<String>> e = s.entrySet().iterator().next();
-      assertThat(e.getKey().get(), is(key));
-      assertThat(e.getValue().get(), is(value));
-   }
-
-   @DataProvider
-   public static Object[][] provideInvalidBody()
-   {
-      final SelectionType selection = SelectionType.ROUNDROBIN;
-      final List<FilesizeConfig> config = ImmutableList.of(new FilesizeConfig());
-      final Data data = Data.ZEROES;
-
-      final FilesizeConfig poisson = mock(FilesizeConfig.class);
-      when(poisson.getDistribution()).thenReturn(DistributionType.POISSON);
-      when(poisson.getAverageUnit()).thenReturn(SizeUnit.MEBIBYTES);
-      when(poisson.getSpreadUnit()).thenReturn(SizeUnit.MEBIBYTES);
-      final List<FilesizeConfig> poissonConfig = ImmutableList.of(poisson);
-
-      return new Object[][]{
-            {null, config, data, NullPointerException.class},
-            {selection, null, data, NullPointerException.class},
-            {selection, ImmutableList.of(), data, IllegalArgumentException.class},
-            {selection, config, null, NullPointerException.class},
-            {selection, config, Data.NONE, IllegalArgumentException.class},
-            {selection, poissonConfig, data, IllegalArgumentException.class}
-      };
-   }
-
-   @Test
-   @UseDataProvider("provideInvalidBody")
-   public void invalidProvideBody(
-         final SelectionType selection,
-         final List<FilesizeConfig> config,
-         final Data data,
-         final Class<Exception> expectedException)
-   {
-      when(this.config.getFilesizeSelection()).thenReturn(selection);
-      when(this.config.getFilesize()).thenReturn(config);
-      when(this.config.getData()).thenReturn(data);
-
+  @Test
+  @UseDataProvider("provideWriteWeightData")
+  public void provideWriteWeight(final double write, final double read, final double delete,
+      final double expectedWrite, final Class<Exception> expectedException) {
+    when(this.config.getWrite()).thenReturn(new OperationConfig(write));
+    if (expectedException != null)
       this.thrown.expect(expectedException);
-      this.module.provideBody();
-   }
 
-   @DataProvider
-   public static Object[][] provideBodyData()
-   {
-      return new Object[][]{
-            {SelectionType.ROUNDROBIN, Data.ZEROES, 10},
-            {SelectionType.ROUNDROBIN, Data.RANDOM, 10}
-      };
-   }
+    this.module.provideWriteWeight(read, delete);
+    assertThat(this.module.provideWriteWeight(read, delete), is(expectedWrite));
+  }
 
-   @Test
-   @UseDataProvider("provideBodyData")
-   public void provideBody(final SelectionType selection, final Data data, final long size)
-   {
-      when(this.config.getFilesizeSelection()).thenReturn(selection);
-      when(this.config.getFilesize()).thenReturn(ImmutableList.of(new FilesizeConfig(size)));
-      when(this.config.getData()).thenReturn(data);
-      final Body body = this.module.provideBody().get();
+  @DataProvider
+  public static Object[][] provideWeightData() {
+    return new Object[][] { {-1.0, IllegalArgumentException.class}, {0.0, null}, {50.0, null},
+        {101.0, IllegalArgumentException.class}};
+  }
 
-      assertThat(body.getData(), is(data));
-      assertThat(body.getSize(), is(SizeUnit.MEBIBYTES.toBytes(size)));
-   }
-
-   @DataProvider
-   public static Object[][] provideSelection()
-   {
-      return new Object[][]{
-            {SelectionType.ROUNDROBIN, null},
-            {SelectionType.RANDOM, IllegalStateException.class}
-      };
-   }
-
-   @Test
-   @UseDataProvider("provideSelection")
-   public void provideBodyMultipleFilesizeRoundRobin(
-         final SelectionType selection,
-         final Class<Exception> expectedException)
-   {
-      when(this.config.getFilesizeSelection()).thenReturn(selection);
-      final List<FilesizeConfig> filesize =
-            ImmutableList.of(new FilesizeConfig(10.0), new FilesizeConfig(25.0));
-      when(this.config.getData()).thenReturn(Data.RANDOM);
-      when(this.config.getFilesize()).thenReturn(filesize);
-      final Supplier<Body> s = this.module.provideBody();
-
-      // if selection is random, expect an assertion error in the below loop
-      if (expectedException != null)
-         this.thrown.expect(expectedException);
-
-      for (int i = 0; i < 100; i++)
-      {
-         // TODO ugly hack to rethrow assertion error; defect in junit 4.11 which ignores
-         // AssertionError in ExpectedException rule, expected to be fixed in 4.12. See
-         // https://github.com/junit-team/junit/issues/687
-         try
-         {
-            assertThat(s.get().getSize(), is(SizeUnit.MEBIBYTES.toBytes(10)));
-            assertThat(s.get().getSize(), is(SizeUnit.MEBIBYTES.toBytes(25)));
-         }
-         catch (final AssertionError e)
-         {
-            throw new IllegalStateException(e);
-         }
-      }
-   }
-
-   @DataProvider
-   public static Object[][] provideInvalideProvideObjectFile() throws IOException
-   {
-      return new Object[][]{
-            {null, NullPointerException.class},
-            {"", IllegalArgumentException.class},
-            {File.createTempFile("existing", null).toString(), IllegalArgumentException.class},
-      };
-   }
-
-   @Test
-   @UseDataProvider("provideInvalideProvideObjectFile")
-   public void invalidProvideObjectFileLocation(
-         final String location,
-         final Class<Exception> expectedException) throws IOException
-   {
-      final ObjectManagerConfig objectManagerConfig = mock(ObjectManagerConfig.class);
-      when(objectManagerConfig.getObjectFileLocation()).thenReturn(location);
-      when(this.config.getObjectManager()).thenReturn(objectManagerConfig);
-
+  @Test
+  @UseDataProvider("provideWeightData")
+  public void provideReadWeight(final double read, final Class<Exception> expectedException) {
+    when(this.config.getRead()).thenReturn(new OperationConfig(read));
+    if (expectedException != null)
       this.thrown.expect(expectedException);
-      this.module.provideObjectFileLocation();
-   }
 
-   @Test
-   public void provideObjectFileLocationNonExisting() throws IOException
-   {
-      final ObjectManagerConfig objectManagerConfig = mock(ObjectManagerConfig.class);
-      final File existing = Files.createTempDir();
-      final File nonExisting = new File(existing, String.valueOf(System.nanoTime()));
-      when(objectManagerConfig.getObjectFileLocation()).thenReturn(nonExisting.toString());
-      when(this.config.getObjectManager()).thenReturn(objectManagerConfig);
+    assertThat(this.module.provideReadWeight(), is(read));
+  }
 
-      this.module.provideObjectFileLocation();
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void provideObjectFileNameNullContainer()
-   {
-      this.module.provideObjectFileName(null, Api.S3);
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void provideObjectFileNameNullApi()
-   {
-      this.module.provideObjectFileName(Suppliers.of("container"), null);
-   }
-
-   @DataProvider
-   public static Object[][] provideObjectFileNameData()
-   {
-      final Api api = Api.S3;
-      final String container = "container";
-      final String defaultName = String.format("%s-%s", container, api.toString().toLowerCase());
-
-      return new Object[][]{
-            {api, container, null, defaultName},
-            {api, container, "", defaultName},
-            {api, container, "objectFile", "objectFile"}
-      };
-   }
-
-   @Test
-   @UseDataProvider("provideObjectFileNameData")
-   public void provideObjectFileName(
-         final Api api,
-         final String container,
-         final String prefix,
-         final String expected)
-   {
-      final ObjectManagerConfig objectManagerConfig = mock(ObjectManagerConfig.class);
-      when(objectManagerConfig.getObjectFileName()).thenReturn(prefix);
-      when(this.config.getObjectManager()).thenReturn(objectManagerConfig);
-      final String name = this.module.provideObjectFileName(Suppliers.of(container), api);
-
-      assertThat(name, is(expected));
-   }
-
-   @DataProvider
-   public static Object[][] provideWriteWeightData()
-   {
-      return new Object[][]{
-            {-1.0, 50.0, 50.0, -1.0, IllegalArgumentException.class},
-            {101.0, 0.0, 0.0, 101.0, IllegalArgumentException.class},
-            {0.0, 50.0, 50.0, 0.0, null},
-            {50.0, 25.0, 25.0, 50.0, null},
-            {0.0, 0.0, 0.0, 100.0, null}
-      };
-   }
-
-   @Test
-   @UseDataProvider("provideWriteWeightData")
-   public void provideWriteWeight(
-         final double write,
-         final double read,
-         final double delete,
-         final double expectedWrite,
-         final Class<Exception> expectedException)
-   {
-      when(this.config.getWrite()).thenReturn(new OperationConfig(write));
-      if (expectedException != null)
-         this.thrown.expect(expectedException);
-
-      this.module.provideWriteWeight(read, delete);
-      assertThat(this.module.provideWriteWeight(read, delete), is(expectedWrite));
-   }
-
-   @DataProvider
-   public static Object[][] provideWeightData()
-   {
-      return new Object[][]{
-            {-1.0, IllegalArgumentException.class},
-            {0.0, null},
-            {50.0, null},
-            {101.0, IllegalArgumentException.class}
-      };
-   }
-
-   @Test
-   @UseDataProvider("provideWeightData")
-   public void provideReadWeight(final double read, final Class<Exception> expectedException)
-   {
-      when(this.config.getRead()).thenReturn(new OperationConfig(read));
-      if (expectedException != null)
-         this.thrown.expect(expectedException);
-
-      assertThat(this.module.provideReadWeight(), is(read));
-   }
-
-   @Test
-   @UseDataProvider("provideWeightData")
-   public void provideDeleteWeight(final double delete, final Class<Exception> expectedException)
-   {
-      when(this.config.getDelete()).thenReturn(new OperationConfig(delete));
-      if (expectedException != null)
-         this.thrown.expect(expectedException);
-
-      assertThat(this.module.provideDeleteWeight(), is(delete));
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void provideSchedulerNullEventBus()
-   {
-      this.module.provideScheduler(null);
-   }
-
-   @Test(expected = NullPointerException.class)
-   public void provideSchedulerNullConcurrencyConfig()
-   {
-      when(this.config.getConcurrency()).thenReturn(null);
-      this.module.provideScheduler(new EventBus());
-   }
-
-   @DataProvider
-   public static Object[][] provideInvalidProvideScheduler()
-   {
-      return new Object[][]{
-            {null, DistributionType.UNIFORM, NullPointerException.class},
-            {ConcurrencyType.THREADS, null, NullPointerException.class},
-            {ConcurrencyType.THREADS, DistributionType.LOGNORMAL, IllegalArgumentException.class}
-      };
-   }
-
-   @Test
-   @UseDataProvider("provideInvalidProvideScheduler")
-   public void invalidProvideScheduler(
-         final ConcurrencyType type,
-         final DistributionType distribution,
-         final Class<Exception> expectedException)
-   {
-      final ConcurrencyConfig concurrencyConfig = mock(ConcurrencyConfig.class);
-      when(concurrencyConfig.getType()).thenReturn(type);
-      when(concurrencyConfig.getDistribution()).thenReturn(distribution);
-      when(this.config.getConcurrency()).thenReturn(concurrencyConfig);
-
+  @Test
+  @UseDataProvider("provideWeightData")
+  public void provideDeleteWeight(final double delete, final Class<Exception> expectedException) {
+    when(this.config.getDelete()).thenReturn(new OperationConfig(delete));
+    if (expectedException != null)
       this.thrown.expect(expectedException);
-      this.module.provideScheduler(new EventBus());
-   }
 
-   @DataProvider
-   public static Object[][] provideSchedulerData()
-   {
-      return new Object[][]{
-            {ConcurrencyType.THREADS, DistributionType.UNIFORM, ConcurrentRequestScheduler.class},
-            {ConcurrencyType.IOPS, DistributionType.UNIFORM, RequestRateScheduler.class}
-      };
-   }
+    assertThat(this.module.provideDeleteWeight(), is(delete));
+  }
 
-   @Test
-   @UseDataProvider("provideSchedulerData")
-   public void provideScheduler(
-         final ConcurrencyType type,
-         final DistributionType distribution,
-         final Class<Scheduler> expected)
-   {
-      final ConcurrencyConfig concurrencyConfig = mock(ConcurrencyConfig.class);
-      when(concurrencyConfig.getType()).thenReturn(type);
-      when(concurrencyConfig.getDistribution()).thenReturn(distribution);
-      when(concurrencyConfig.getCount()).thenReturn(1.0);
-      when(concurrencyConfig.getUnit()).thenReturn(TimeUnit.SECONDS);
-      when(concurrencyConfig.getRampup()).thenReturn(0.0);
-      when(concurrencyConfig.getRampupUnit()).thenReturn(TimeUnit.SECONDS);
-      when(this.config.getConcurrency()).thenReturn(concurrencyConfig);
+  @Test(expected = NullPointerException.class)
+  public void provideSchedulerNullEventBus() {
+    this.module.provideScheduler(null);
+  }
 
-      final Scheduler scheduler = this.module.provideScheduler(new EventBus());
-      assertThat(expected.isInstance(scheduler), is(true));
-   }
+  @Test(expected = NullPointerException.class)
+  public void provideSchedulerNullConcurrencyConfig() {
+    when(this.config.getConcurrency()).thenReturn(null);
+    this.module.provideScheduler(new EventBus());
+  }
+
+  @DataProvider
+  public static Object[][] provideInvalidProvideScheduler() {
+    return new Object[][] { {null, DistributionType.UNIFORM, NullPointerException.class},
+        {ConcurrencyType.THREADS, null, NullPointerException.class},
+        {ConcurrencyType.THREADS, DistributionType.LOGNORMAL, IllegalArgumentException.class}};
+  }
+
+  @Test
+  @UseDataProvider("provideInvalidProvideScheduler")
+  public void invalidProvideScheduler(final ConcurrencyType type,
+      final DistributionType distribution, final Class<Exception> expectedException) {
+    final ConcurrencyConfig concurrencyConfig = mock(ConcurrencyConfig.class);
+    when(concurrencyConfig.getType()).thenReturn(type);
+    when(concurrencyConfig.getDistribution()).thenReturn(distribution);
+    when(this.config.getConcurrency()).thenReturn(concurrencyConfig);
+
+    this.thrown.expect(expectedException);
+    this.module.provideScheduler(new EventBus());
+  }
+
+  @DataProvider
+  public static Object[][] provideSchedulerData() {
+    return new Object[][] {
+        {ConcurrencyType.THREADS, DistributionType.UNIFORM, ConcurrentRequestScheduler.class},
+        {ConcurrencyType.IOPS, DistributionType.UNIFORM, RequestRateScheduler.class}};
+  }
+
+  @Test
+  @UseDataProvider("provideSchedulerData")
+  public void provideScheduler(final ConcurrencyType type, final DistributionType distribution,
+      final Class<Scheduler> expected) {
+    final ConcurrencyConfig concurrencyConfig = mock(ConcurrencyConfig.class);
+    when(concurrencyConfig.getType()).thenReturn(type);
+    when(concurrencyConfig.getDistribution()).thenReturn(distribution);
+    when(concurrencyConfig.getCount()).thenReturn(1.0);
+    when(concurrencyConfig.getUnit()).thenReturn(TimeUnit.SECONDS);
+    when(concurrencyConfig.getRampup()).thenReturn(0.0);
+    when(concurrencyConfig.getRampupUnit()).thenReturn(TimeUnit.SECONDS);
+    when(this.config.getConcurrency()).thenReturn(concurrencyConfig);
+
+    final Scheduler scheduler = this.module.provideScheduler(new EventBus());
+    assertThat(expected.isInstance(scheduler), is(true));
+  }
 }

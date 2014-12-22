@@ -24,23 +24,22 @@ package com.cleversafe.og.util.distribution;
  * 
  * @since 1.0
  */
-public interface Distribution
-{
-   /**
-    * 
-    * @return the configured average
-    */
-   double getAverage();
+public interface Distribution {
+  /**
+   * 
+   * @return the configured average
+   */
+  double getAverage();
 
-   /**
-    * 
-    * @return the configured spread
-    */
-   double getSpread();
+  /**
+   * 
+   * @return the configured spread
+   */
+  double getSpread();
 
-   /**
-    * 
-    * @return the next value as determined by the configured distribution
-    */
-   double nextSample();
+  /**
+   * 
+   * @return the next value as determined by the configured distribution
+   */
+  double nextSample();
 }

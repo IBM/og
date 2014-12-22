@@ -19,24 +19,20 @@
 
 package com.cleversafe.og.json;
 
-public class ObjectManagerConfig
-{
-   String objectFileLocation;
-   String objectFileName;
+public class ObjectManagerConfig {
+  String objectFileLocation;
+  String objectFileName;
 
-   public ObjectManagerConfig()
-   {
-      this.objectFileLocation = "./object";
-      this.objectFileName = null;
-   }
+  public ObjectManagerConfig() {
+    this.objectFileLocation = "./object";
+    this.objectFileName = null;
+  }
 
-   public String getObjectFileLocation()
-   {
-      return this.objectFileLocation;
-   }
+  public String getObjectFileLocation() {
+    return this.objectFileLocation;
+  }
 
-   public String getObjectFileName()
-   {
-      return this.objectFileName;
-   }
+  public String getObjectFileName() {
+    return this.objectFileName;
+  }
 }

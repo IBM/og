@@ -19,8 +19,6 @@
 
 package com.cleversafe.og.http;
 
-public enum Scheme
-{
-   HTTP,
-   HTTPS
+public enum Scheme {
+  HTTP, HTTPS
 }

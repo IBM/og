@@ -23,17 +23,14 @@ import java.util.UUID;
 
 import com.google.common.base.Supplier;
 
-public class UUIDObjectNameSupplier implements Supplier<String>
-{
-   @Override
-   public String get()
-   {
-      return UUID.randomUUID().toString().replace("-", "") + "0000";
-   }
+public class UUIDObjectNameSupplier implements Supplier<String> {
+  @Override
+  public String get() {
+    return UUID.randomUUID().toString().replace("-", "") + "0000";
+  }
 
-   @Override
-   public String toString()
-   {
-      return "UUIDObjectNameSupplier []";
-   }
+  @Override
+  public String toString() {
+    return "UUIDObjectNameSupplier []";
+  }
 }

@@ -19,30 +19,25 @@
 
 package com.cleversafe.og.json;
 
-public class HostConfig
-{
-   String host;
-   double weight;
+public class HostConfig {
+  String host;
+  double weight;
 
-   public HostConfig(final String host)
-   {
-      this();
-      this.host = host;
-   }
+  public HostConfig(final String host) {
+    this();
+    this.host = host;
+  }
 
-   public HostConfig()
-   {
-      this.host = null;
-      this.weight = 1.0;
-   }
+  public HostConfig() {
+    this.host = null;
+    this.weight = 1.0;
+  }
 
-   public String getHost()
-   {
-      return this.host;
-   }
+  public String getHost() {
+    return this.host;
+  }
 
-   public double getWeight()
-   {
-      return this.weight;
-   }
+  public double getWeight() {
+    return this.weight;
+  }
 }

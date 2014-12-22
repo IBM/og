@@ -21,14 +21,10 @@ package com.cleversafe.og.util.distribution;
 
 import java.util.Random;
 
-public class LogNormalDistributionTest extends AbstractDistributionTest
-{
-   @Override
-   protected Distribution createDistribution(
-         final double average,
-         final double spread,
-         final Random random)
-   {
-      return new LogNormalDistribution(average, spread, random);
-   }
+public class LogNormalDistributionTest extends AbstractDistributionTest {
+  @Override
+  protected Distribution createDistribution(final double average, final double spread,
+      final Random random) {
+    return new LogNormalDistribution(average, spread, random);
+  }
 }

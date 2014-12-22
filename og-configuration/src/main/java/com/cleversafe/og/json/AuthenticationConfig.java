@@ -20,31 +20,26 @@
 package com.cleversafe.og.json;
 
 
-public class AuthenticationConfig
-{
-   AuthType type;
-   String username;
-   String password;
+public class AuthenticationConfig {
+  AuthType type;
+  String username;
+  String password;
 
-   public AuthenticationConfig()
-   {
-      this.type = AuthType.BASIC;
-      this.username = null;
-      this.password = null;
-   }
+  public AuthenticationConfig() {
+    this.type = AuthType.BASIC;
+    this.username = null;
+    this.password = null;
+  }
 
-   public AuthType getType()
-   {
-      return this.type;
-   }
+  public AuthType getType() {
+    return this.type;
+  }
 
-   public String getUsername()
-   {
-      return this.username;
-   }
+  public String getUsername() {
+    return this.username;
+  }
 
-   public String getPassword()
-   {
-      return this.password;
-   }
+  public String getPassword() {
+    return this.password;
+  }
 }

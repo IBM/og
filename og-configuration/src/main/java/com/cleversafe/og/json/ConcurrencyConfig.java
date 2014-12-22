@@ -21,58 +21,49 @@ package com.cleversafe.og.json;
 
 import java.util.concurrent.TimeUnit;
 
-public class ConcurrencyConfig
-{
-   ConcurrencyType type;
-   DistributionType distribution;
-   double count;
-   TimeUnit unit;
-   double rampup;
-   TimeUnit rampupUnit;
+public class ConcurrencyConfig {
+  ConcurrencyType type;
+  DistributionType distribution;
+  double count;
+  TimeUnit unit;
+  double rampup;
+  TimeUnit rampupUnit;
 
-   public ConcurrencyConfig(final double count)
-   {
-      this();
-      this.count = count;
-   }
+  public ConcurrencyConfig(final double count) {
+    this();
+    this.count = count;
+  }
 
-   public ConcurrencyConfig()
-   {
-      this.type = ConcurrencyType.THREADS;
-      this.distribution = DistributionType.UNIFORM;
-      this.count = 1.0;
-      this.unit = TimeUnit.SECONDS;
-      this.rampup = 0.0;
-      this.rampupUnit = TimeUnit.SECONDS;
-   }
+  public ConcurrencyConfig() {
+    this.type = ConcurrencyType.THREADS;
+    this.distribution = DistributionType.UNIFORM;
+    this.count = 1.0;
+    this.unit = TimeUnit.SECONDS;
+    this.rampup = 0.0;
+    this.rampupUnit = TimeUnit.SECONDS;
+  }
 
-   public ConcurrencyType getType()
-   {
-      return this.type;
-   }
+  public ConcurrencyType getType() {
+    return this.type;
+  }
 
-   public DistributionType getDistribution()
-   {
-      return this.distribution;
-   }
+  public DistributionType getDistribution() {
+    return this.distribution;
+  }
 
-   public double getCount()
-   {
-      return this.count;
-   }
+  public double getCount() {
+    return this.count;
+  }
 
-   public TimeUnit getUnit()
-   {
-      return this.unit;
-   }
+  public TimeUnit getUnit() {
+    return this.unit;
+  }
 
-   public double getRampup()
-   {
-      return this.rampup;
-   }
+  public double getRampup() {
+    return this.rampup;
+  }
 
-   public TimeUnit getRampupUnit()
-   {
-      return this.rampupUnit;
-   }
+  public TimeUnit getRampupUnit() {
+    return this.rampupUnit;
+  }
 }

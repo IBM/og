@@ -41,78 +41,63 @@ import com.tngtech.java.junit.dataprovider.DataProviderRunner;
 import com.tngtech.java.junit.dataprovider.UseDataProvider;
 
 @RunWith(DataProviderRunner.class)
-public class RequestRateSchedulerTest
-{
-   @Rule
-   public ExpectedException thrown = ExpectedException.none();
-   private Distribution distribution;
+public class RequestRateSchedulerTest {
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
+  private Distribution distribution;
 
-   @Before
-   public void before()
-   {
-      this.distribution = mock(Distribution.class);
-      when(this.distribution.nextSample()).thenReturn(10.0);
-   }
+  @Before
+  public void before() {
+    this.distribution = mock(Distribution.class);
+    when(this.distribution.nextSample()).thenReturn(10.0);
+  }
 
-   @DataProvider
-   public static Object[][] provideInvalidRequestRateScheduler()
-   {
-      final Distribution distribution = mock(Distribution.class);
-      final TimeUnit unit = TimeUnit.NANOSECONDS;
-      return new Object[][]{
-            {null, unit, 0.0, unit, NullPointerException.class},
-            {distribution, null, 0.0, unit, NullPointerException.class},
-            {distribution, unit, -1.0, unit, IllegalArgumentException.class},
-            {distribution, unit, 0.0, null, NullPointerException.class}
-      };
-   }
+  @DataProvider
+  public static Object[][] provideInvalidRequestRateScheduler() {
+    final Distribution distribution = mock(Distribution.class);
+    final TimeUnit unit = TimeUnit.NANOSECONDS;
+    return new Object[][] { {null, unit, 0.0, unit, NullPointerException.class},
+        {distribution, null, 0.0, unit, NullPointerException.class},
+        {distribution, unit, -1.0, unit, IllegalArgumentException.class},
+        {distribution, unit, 0.0, null, NullPointerException.class}};
+  }
 
-   @Test
-   @UseDataProvider("provideInvalidRequestRateScheduler")
-   public void invalidRequestRateScheduler(
-         final Distribution distribution,
-         final TimeUnit unit,
-         final double rampup,
-         final TimeUnit rampupUnit,
-         final Class<Exception> expectedException)
-   {
-      this.thrown.expect(expectedException);
-      new RequestRateScheduler(distribution, unit, rampup, rampupUnit);
-   }
+  @Test
+  @UseDataProvider("provideInvalidRequestRateScheduler")
+  public void invalidRequestRateScheduler(final Distribution distribution, final TimeUnit unit,
+      final double rampup, final TimeUnit rampupUnit, final Class<Exception> expectedException) {
+    this.thrown.expect(expectedException);
+    new RequestRateScheduler(distribution, unit, rampup, rampupUnit);
+  }
 
-   @Test
-   public void requestRateScheduler()
-   {
-      final RequestRateScheduler scheduler =
-            new RequestRateScheduler(this.distribution, TimeUnit.SECONDS, 0.0, TimeUnit.NANOSECONDS);
-      for (int i = 0; i < 5; i++)
-      {
-         final long timestampStart = System.nanoTime();
-         scheduler.waitForNext();
-         final long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - timestampStart);
-         // 10 per second -> 1 per 100 millis
-         assertThat(duration, both(greaterThan(50L)).and(lessThan(150L)));
-      }
-   }
-
-   @Test
-   public void interruptedSchedulerThread()
-   {
-      final RequestRateScheduler scheduler =
-            new RequestRateScheduler(this.distribution, TimeUnit.DAYS, 0.0, TimeUnit.NANOSECONDS);
-      final Thread t = new Thread(new Runnable()
-      {
-         @Override
-         public void run()
-         {
-            scheduler.waitForNext();
-         }
-      });
-      t.start();
-      t.interrupt();
+  @Test
+  public void requestRateScheduler() {
+    final RequestRateScheduler scheduler =
+        new RequestRateScheduler(this.distribution, TimeUnit.SECONDS, 0.0, TimeUnit.NANOSECONDS);
+    for (int i = 0; i < 5; i++) {
       final long timestampStart = System.nanoTime();
-      Uninterruptibles.joinUninterruptibly(t);
+      scheduler.waitForNext();
       final long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - timestampStart);
-      assertThat(duration, lessThan(1000L));
-   }
+      // 10 per second -> 1 per 100 millis
+      assertThat(duration, both(greaterThan(50L)).and(lessThan(150L)));
+    }
+  }
+
+  @Test
+  public void interruptedSchedulerThread() {
+    final RequestRateScheduler scheduler =
+        new RequestRateScheduler(this.distribution, TimeUnit.DAYS, 0.0, TimeUnit.NANOSECONDS);
+    final Thread t = new Thread(new Runnable() {
+      @Override
+      public void run() {
+        scheduler.waitForNext();
+      }
+    });
+    t.start();
+    t.interrupt();
+    final long timestampStart = System.nanoTime();
+    Uninterruptibles.joinUninterruptibly(t);
+    final long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - timestampStart);
+    assertThat(duration, lessThan(1000L));
+  }
 }

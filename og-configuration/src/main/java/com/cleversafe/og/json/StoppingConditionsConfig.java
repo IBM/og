@@ -24,38 +24,32 @@ import java.util.concurrent.TimeUnit;
 
 import com.google.common.collect.Maps;
 
-public class StoppingConditionsConfig
-{
-   long operations;
-   double runtime;
-   TimeUnit runtimeUnit;
-   Map<Integer, Integer> statusCodes;
+public class StoppingConditionsConfig {
+  long operations;
+  double runtime;
+  TimeUnit runtimeUnit;
+  Map<Integer, Integer> statusCodes;
 
-   public StoppingConditionsConfig()
-   {
-      this.operations = 0;
-      this.runtime = 0.0;
-      this.runtimeUnit = TimeUnit.SECONDS;
-      this.statusCodes = Maps.newHashMap();
-   }
+  public StoppingConditionsConfig() {
+    this.operations = 0;
+    this.runtime = 0.0;
+    this.runtimeUnit = TimeUnit.SECONDS;
+    this.statusCodes = Maps.newHashMap();
+  }
 
-   public long getOperations()
-   {
-      return this.operations;
-   }
+  public long getOperations() {
+    return this.operations;
+  }
 
-   public double getRuntime()
-   {
-      return this.runtime;
-   }
+  public double getRuntime() {
+    return this.runtime;
+  }
 
-   public TimeUnit getRuntimeUnit()
-   {
-      return this.runtimeUnit;
-   }
+  public TimeUnit getRuntimeUnit() {
+    return this.runtimeUnit;
+  }
 
-   public Map<Integer, Integer> getStatusCodes()
-   {
-      return this.statusCodes;
-   }
+  public Map<Integer, Integer> getStatusCodes() {
+    return this.statusCodes;
+  }
 }

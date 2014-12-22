@@ -19,10 +19,6 @@
 
 package com.cleversafe.og.http;
 
-public enum Api
-{
-   SOH,
-   S3,
-   OPENSTACK,
-   WEBDAV;
+public enum Api {
+  SOH, S3, OPENSTACK, WEBDAV;
 }

@@ -34,30 +34,26 @@ import com.cleversafe.og.util.SizeUnit;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
-public class SizeUnitTypeAdapterTest
-{
-   private SizeUnitTypeAdapter typeAdapter;
+public class SizeUnitTypeAdapterTest {
+  private SizeUnitTypeAdapter typeAdapter;
 
-   @Before
-   public void before()
-   {
-      this.typeAdapter = new SizeUnitTypeAdapter();
-   }
+  @Before
+  public void before() {
+    this.typeAdapter = new SizeUnitTypeAdapter();
+  }
 
-   @Test
-   public void write() throws IOException
-   {
-      final JsonWriter writer = mock(JsonWriter.class);
-      this.typeAdapter.write(writer, SizeUnit.BYTES);
-      verify(writer).value("bytes");
-   }
+  @Test
+  public void write() throws IOException {
+    final JsonWriter writer = mock(JsonWriter.class);
+    this.typeAdapter.write(writer, SizeUnit.BYTES);
+    verify(writer).value("bytes");
+  }
 
-   @Test
-   public void read() throws IOException
-   {
-      final JsonReader reader = mock(JsonReader.class);
-      when(reader.nextString()).thenReturn("b");
+  @Test
+  public void read() throws IOException {
+    final JsonReader reader = mock(JsonReader.class);
+    when(reader.nextString()).thenReturn("b");
 
-      assertThat(this.typeAdapter.read(reader), is(SizeUnit.BYTES));
-   }
+    assertThat(this.typeAdapter.read(reader), is(SizeUnit.BYTES));
+  }
 }

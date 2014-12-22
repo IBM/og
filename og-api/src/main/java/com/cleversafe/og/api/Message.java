@@ -26,14 +26,13 @@ import java.util.Map;
  * 
  * @since 1.0
  */
-public interface Message
-{
-   Map<String, String> headers();
+public interface Message {
+  Map<String, String> headers();
 
-   /**
-    * Gets the description of the body for this message
-    * 
-    * @return the description of the body for this message
-    */
-   Body getBody();
+  /**
+   * Gets the description of the body for this message
+   * 
+   * @return the description of the body for this message
+   */
+  Body getBody();
 }

@@ -28,26 +28,20 @@ import com.cleversafe.og.util.Operation;
  * 
  * @since 1.0
  */
-public class WriteObjectNameConsumer extends AbstractObjectNameConsumer
-{
-   /**
-    * Constructs an instance
-    * 
-    * @param objectManager
-    *           the object manager for this instance to work with
-    * @param statusCodes
-    *           the status codes this instance should work with
-    * @throws IllegalArgumentException
-    *            if any status code in status codes is invalid
-    */
-   public WriteObjectNameConsumer(final ObjectManager objectManager, final List<Integer> statusCodes)
-   {
-      super(objectManager, Operation.WRITE, statusCodes);
-   }
+public class WriteObjectNameConsumer extends AbstractObjectNameConsumer {
+  /**
+   * Constructs an instance
+   * 
+   * @param objectManager the object manager for this instance to work with
+   * @param statusCodes the status codes this instance should work with
+   * @throws IllegalArgumentException if any status code in status codes is invalid
+   */
+  public WriteObjectNameConsumer(final ObjectManager objectManager, final List<Integer> statusCodes) {
+    super(objectManager, Operation.WRITE, statusCodes);
+  }
 
-   @Override
-   protected void updateObjectManager(final ObjectName objectName)
-   {
-      this.objectManager.writeNameComplete(objectName);
-   }
+  @Override
+  protected void updateObjectManager(final ObjectName objectName) {
+    this.objectManager.writeNameComplete(objectName);
+  }
 }

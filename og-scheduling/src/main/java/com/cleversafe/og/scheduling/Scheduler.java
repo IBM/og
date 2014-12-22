@@ -24,10 +24,9 @@ package com.cleversafe.og.scheduling;
  * 
  * @since 1.0
  */
-public interface Scheduler
-{
-   /**
-    * Blocks until permitted to continue
-    */
-   void waitForNext();
+public interface Scheduler {
+  /**
+   * Blocks until permitted to continue
+   */
+  void waitForNext();
 }

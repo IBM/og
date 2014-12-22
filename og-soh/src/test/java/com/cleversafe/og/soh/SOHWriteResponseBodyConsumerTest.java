@@ -34,42 +34,37 @@ import org.junit.Test;
 import com.cleversafe.og.http.Headers;
 import com.google.common.base.Charsets;
 
-public class SOHWriteResponseBodyConsumerTest
-{
-   @Test(expected = NullPointerException.class)
-   public void nullInputStream() throws IOException
-   {
-      new SOHWriteResponseBodyConsumer().consume(201, null);
-   }
+public class SOHWriteResponseBodyConsumerTest {
+  @Test(expected = NullPointerException.class)
+  public void nullInputStream() throws IOException {
+    new SOHWriteResponseBodyConsumer().consume(201, null);
+  }
 
-   @Test
-   public void invalidStatusCode() throws IOException
-   {
-      final SOHWriteResponseBodyConsumer consumer = new SOHWriteResponseBodyConsumer();
-      final InputStream in = mock(InputStream.class);
-      final Iterator<Entry<String, String>> it = consumer.consume(500, in);
-      assertThat(it.hasNext(), is(false));
-   }
+  @Test
+  public void invalidStatusCode() throws IOException {
+    final SOHWriteResponseBodyConsumer consumer = new SOHWriteResponseBodyConsumer();
+    final InputStream in = mock(InputStream.class);
+    final Iterator<Entry<String, String>> it = consumer.consume(500, in);
+    assertThat(it.hasNext(), is(false));
+  }
 
-   @Test
-   public void consume() throws IOException
-   {
-      final SOHWriteResponseBodyConsumer consumer = new SOHWriteResponseBodyConsumer();
-      final StringBuilder s = new StringBuilder();
-      for (int i = 0; i < 10000; i++)
-      {
-         s.append("objectName").append(i).append("\n");
-      }
-      final InputStream in = new ByteArrayInputStream(s.toString().getBytes(Charsets.UTF_8));
-      final Iterator<Entry<String, String>> it = consumer.consume(201, in);
+  @Test
+  public void consume() throws IOException {
+    final SOHWriteResponseBodyConsumer consumer = new SOHWriteResponseBodyConsumer();
+    final StringBuilder s = new StringBuilder();
+    for (int i = 0; i < 10000; i++) {
+      s.append("objectName").append(i).append("\n");
+    }
+    final InputStream in = new ByteArrayInputStream(s.toString().getBytes(Charsets.UTF_8));
+    final Iterator<Entry<String, String>> it = consumer.consume(201, in);
 
-      assertThat(it.hasNext(), is(true));
+    assertThat(it.hasNext(), is(true));
 
-      final Entry<String, String> e = it.next();
+    final Entry<String, String> e = it.next();
 
-      assertThat(e.getKey(), is(Headers.X_OG_OBJECT_NAME));
-      assertThat(e.getValue(), is("objectName0"));
-      assertThat(it.hasNext(), is(false));
-      assertThat(in.available(), is(0));
-   }
+    assertThat(e.getKey(), is(Headers.X_OG_OBJECT_NAME));
+    assertThat(e.getValue(), is("objectName0"));
+    assertThat(it.hasNext(), is(false));
+    assertThat(in.available(), is(0));
+  }
 }

@@ -27,24 +27,20 @@ import org.slf4j.LoggerFactory;
 import com.google.common.eventbus.SubscriberExceptionContext;
 import com.google.common.eventbus.SubscriberExceptionHandler;
 
-public class LoadTestSubscriberExceptionHandler implements SubscriberExceptionHandler
-{
-   private static final Logger _logger =
-         LoggerFactory.getLogger(LoadTestSubscriberExceptionHandler.class);
-   private LoadTest test;
+public class LoadTestSubscriberExceptionHandler implements SubscriberExceptionHandler {
+  private static final Logger _logger = LoggerFactory
+      .getLogger(LoadTestSubscriberExceptionHandler.class);
+  private LoadTest test;
 
-   public LoadTestSubscriberExceptionHandler()
-   {}
+  public LoadTestSubscriberExceptionHandler() {}
 
-   @Override
-   public void handleException(final Throwable exception, final SubscriberExceptionContext context)
-   {
-      _logger.error("Exception while processing subscriber", exception);
-      this.test.abortTest();
-   }
+  @Override
+  public void handleException(final Throwable exception, final SubscriberExceptionContext context) {
+    _logger.error("Exception while processing subscriber", exception);
+    this.test.abortTest();
+  }
 
-   public void setLoadTest(final LoadTest test)
-   {
-      this.test = checkNotNull(test);
-   }
+  public void setLoadTest(final LoadTest test) {
+    this.test = checkNotNull(test);
+  }
 }

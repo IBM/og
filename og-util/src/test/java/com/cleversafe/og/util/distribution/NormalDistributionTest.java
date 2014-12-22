@@ -23,20 +23,15 @@ import java.util.Random;
 
 import org.junit.Test;
 
-public class NormalDistributionTest extends AbstractDistributionTest
-{
-   @Override
-   protected Distribution createDistribution(
-         final double average,
-         final double spread,
-         final Random random)
-   {
-      return new NormalDistribution(average, spread, random);
-   }
+public class NormalDistributionTest extends AbstractDistributionTest {
+  @Override
+  protected Distribution createDistribution(final double average, final double spread,
+      final Random random) {
+    return new NormalDistribution(average, spread, random);
+  }
 
-   @Test
-   public void zeroMin()
-   {
-      new NormalDistribution(6.0, 2.0, new Random());
-   }
+  @Test
+  public void zeroMin() {
+    new NormalDistribution(6.0, 2.0, new Random());
+  }
 }

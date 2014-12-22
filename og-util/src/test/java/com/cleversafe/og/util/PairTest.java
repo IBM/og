@@ -24,25 +24,21 @@ import static org.hamcrest.Matchers.is;
 
 import org.junit.Test;
 
-public class PairTest
-{
-   @Test(expected = NullPointerException.class)
-   public void nullKey()
-   {
-      Pair.of(null, "value");
-   }
+public class PairTest {
+  @Test(expected = NullPointerException.class)
+  public void nullKey() {
+    Pair.of(null, "value");
+  }
 
-   @Test(expected = NullPointerException.class)
-   public void nullValue()
-   {
-      Pair.of("key", null);
-   }
+  @Test(expected = NullPointerException.class)
+  public void nullValue() {
+    Pair.of("key", null);
+  }
 
-   @Test
-   public void pair()
-   {
-      final Pair<String, String> p = Pair.of("key", "value");
-      assertThat(p.getKey(), is("key"));
-      assertThat(p.getValue(), is("value"));
-   }
+  @Test
+  public void pair() {
+    final Pair<String, String> p = Pair.of("key", "value");
+    assertThat(p.getKey(), is("key"));
+    assertThat(p.getValue(), is("value"));
+  }
 }
