@@ -137,13 +137,13 @@ public class Statistics {
   }
 
   /**
-   * An iterator of status code counters for a given operation type
+   * Gets a read-only map of status code counters for a given operation type
    * 
-   * @param operation the operatio type to get status code counter values for
-   * @return an iterator of status code counters
+   * @param operation the operatino type to get status code counter values for
+   * @return a map of status code counters
    */
-  public Iterator<Entry<Integer, Long>> statusCodeIterator(final Operation operation) {
+  public Map<Integer, Long> statusCodes(final Operation operation) {
     checkNotNull(operation);
-    return new TreeMap<Integer, Long>(this.scCounters.get(operation).asMap()).entrySet().iterator();
+    return this.scCounters.get(operation).asMap();
   }
 }

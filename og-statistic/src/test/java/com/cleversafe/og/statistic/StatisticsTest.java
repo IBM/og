@@ -24,7 +24,6 @@ import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 
@@ -162,9 +161,8 @@ public class StatisticsTest {
     assertThat(this.stats.get(operation, Counter.OPERATIONS), is(opCount));
     assertThat(this.stats.get(operation, Counter.BYTES), is(byteCount));
     assertThat(this.stats.getStatusCode(operation, statusCode), is(statusCodeCount));
-    final Iterator<Entry<Integer, Long>> it = this.stats.statusCodeIterator(operation);
-    while (it.hasNext()) {
-      final Entry<Integer, Long> e = it.next();
+
+    for (Entry<Integer, Long> e : this.stats.statusCodes(operation).entrySet()) {
       if (e.getKey() == statusCode)
         assertThat(e.getValue(), is(statusCodeCount));
     }
