@@ -784,7 +784,7 @@ public class TestModuleTest {
   public static Object[][] provideSchedulerData() {
     return new Object[][] {
         {ConcurrencyType.THREADS, DistributionType.UNIFORM, ConcurrentRequestScheduler.class},
-        {ConcurrencyType.IOPS, DistributionType.UNIFORM, RequestRateScheduler.class}};
+        {ConcurrencyType.OPS, DistributionType.UNIFORM, RequestRateScheduler.class}};
   }
 
   @Test

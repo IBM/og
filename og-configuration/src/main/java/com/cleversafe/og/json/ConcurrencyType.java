@@ -20,5 +20,5 @@
 package com.cleversafe.og.json;
 
 public enum ConcurrencyType {
-  IOPS, THREADS;
+  OPS, THREADS;
 }
