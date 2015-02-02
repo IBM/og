@@ -64,7 +64,7 @@ import org.slf4j.LoggerFactory;
 
 public class RandomObjectPopulator extends Thread implements ObjectManager {
   private static final Logger _logger = LoggerFactory.getLogger(RandomObjectPopulator.class);
-  private static final int OBJECT_SIZE = 18;
+  private static final int OBJECT_SIZE = LegacyObjectName.OBJECT_SIZE;
   private static final int MAX_PERSIST_ARG = 30 * 1000 * 60;
   private static final int MAX_OBJECT_ARG = 100 * (1048576 / OBJECT_SIZE);
   private final int maxObjects;

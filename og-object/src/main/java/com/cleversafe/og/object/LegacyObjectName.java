@@ -24,7 +24,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.UUID;
 
 import com.google.common.io.BaseEncoding;
 
@@ -35,31 +34,29 @@ import com.google.common.io.BaseEncoding;
  * @since 1.0
  */
 public class LegacyObjectName implements ObjectName {
-  public static final int ID_LENGTH = 18;
+  public static final int OBJECT_NAME_SIZE = 18;
+  public static final int OBJECT_SIZE_SIZE = 8;
+  public static final int OBJECT_SIZE = OBJECT_NAME_SIZE + OBJECT_SIZE_SIZE;
+  private static final BaseEncoding ENCODING = BaseEncoding.base16().lowerCase();
   private final ByteBuffer bytes;
 
-  private LegacyObjectName(final byte[] objectName) {
-    this.bytes = ByteBuffer.allocate(ID_LENGTH).put(objectName);
-  }
-
-  private LegacyObjectName(final UUID objectName) {
-    this.bytes =
-        ByteBuffer.allocate(ID_LENGTH).putLong(objectName.getMostSignificantBits())
-            .putLong(objectName.getLeastSignificantBits()).putShort((short) 0);
+  private LegacyObjectName(ByteBuffer objectBuffer) {
+    this.bytes = objectBuffer;
   }
 
   /**
    * Configures an {@code LegacyObjectName} instance, using the provided bytes as the name
    * 
-   * @param objectName the object name, in bytes
+   * @param objectBytes the object name, in bytes
    * @return a {@code LegacyObjectName} instance
    * @throws IllegalArgumentException if the length of objectName is not 18
    */
-  public static LegacyObjectName forBytes(final byte[] objectName) {
-    checkNotNull(objectName);
-    checkArgument(objectName.length == ID_LENGTH, "objectName length must be = 0 [%s]",
-        objectName.length);
-    return new LegacyObjectName(objectName);
+  public static LegacyObjectName forBytes(final byte[] objectBytes) {
+    checkNotNull(objectBytes);
+    checkArgument(objectBytes.length == OBJECT_SIZE,
+        String.format("objectName length must be == %s", OBJECT_SIZE) + " [%s]", objectBytes.length);
+
+    return new LegacyObjectName(ByteBuffer.allocate(OBJECT_SIZE).put(objectBytes));
   }
 
   /**
@@ -70,9 +67,31 @@ public class LegacyObjectName implements ObjectName {
    * @param objectName the object name, as a UUID
    * @return a {@code LegacyObjectName} instance
    */
-  public static LegacyObjectName forUUID(final UUID objectName) {
+  public static LegacyObjectName fromMetadata(final String objectName, long objectSize) {
     checkNotNull(objectName);
-    return new LegacyObjectName(objectName);
+    // HACK; assume 1 char == 2 bytes for object name string length checking
+    int stringLength = 2 * OBJECT_NAME_SIZE;
+    checkArgument(objectName.length() == stringLength,
+        String.format("objectName length must be == %s", stringLength) + " [%s]",
+        objectName.length());
+    checkArgument(objectSize >= 0, "objectSize must be >= 0 [%s]", objectSize);
+
+    byte[] b = Arrays.copyOf(ENCODING.decode(objectName), OBJECT_SIZE);
+    ByteBuffer objectBuffer = ByteBuffer.wrap(b);
+    objectBuffer.position(OBJECT_NAME_SIZE);
+    objectBuffer.putLong(objectSize);
+    return new LegacyObjectName(objectBuffer);
+  }
+
+  @Override
+  public String getName() {
+    return ENCODING.encode(this.bytes.array(), 0, OBJECT_NAME_SIZE);
+  }
+
+  @Override
+  public long getSize() {
+    this.bytes.position(OBJECT_NAME_SIZE);
+    return this.bytes.getLong();
   }
 
   @Override
@@ -121,6 +140,6 @@ public class LegacyObjectName implements ObjectName {
 
   @Override
   public String toString() {
-    return BaseEncoding.base16().lowerCase().encode(toBytes());
+    return String.format("%s,%s", getName(), getSize());
   }
 }

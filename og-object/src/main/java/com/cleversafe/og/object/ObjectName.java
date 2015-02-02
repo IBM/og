@@ -26,6 +26,21 @@ package com.cleversafe.og.object;
  * @since 1.0
  */
 public interface ObjectName extends Comparable<ObjectName> {
+
+  /**
+   * Gets the name of this object
+   * 
+   * @return the name of this object
+   */
+  String getName();
+
+  /**
+   * Gets the size of this object
+   * 
+   * @return the size of this object
+   */
+  long getSize();
+
   /**
    * Convert this instance's internal representation into bytes
    * 

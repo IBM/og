@@ -29,56 +29,95 @@ import org.junit.Test;
 
 public class LegacyObjectNameTest {
   @Test(expected = NullPointerException.class)
-  public void nullObjectNameBytes() {
+  public void nullFromBytes() {
     LegacyObjectName.forBytes(null);
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void objectNameBytesLessThan18() {
-    LegacyObjectName.forBytes(new byte[LegacyObjectName.ID_LENGTH - 1]);
+  public void bytesLessThanObjectLength() {
+    LegacyObjectName.forBytes(new byte[LegacyObjectName.OBJECT_SIZE - 1]);
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void objectNameBytesGreaterThan18() {
-    LegacyObjectName.forBytes(new byte[LegacyObjectName.ID_LENGTH + 1]);
+  public void bytesGreaterThanObjectLength() {
+    LegacyObjectName.forBytes(new byte[LegacyObjectName.OBJECT_SIZE + 1]);
   }
 
   @Test(expected = NullPointerException.class)
-  public void nullObjectNameUUID() {
-    LegacyObjectName.forUUID(null);
+  public void fromMetadataNullObjectName() {
+    LegacyObjectName.fromMetadata(null, 0);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void fromMetadataShortObjectName() {
+    LegacyObjectName.fromMetadata("", 0);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void fromMetadataLongObjectName() {
+    String objectName = UUID.randomUUID().toString().replace("-", "") + "12345";
+    LegacyObjectName.fromMetadata(objectName, 0);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void fromMetadataNegativeObjectSize() {
+    LegacyObjectName.fromMetadata(objectString(UUID.randomUUID()), -1);
   }
 
   @Test
-  public void legacyObjectNameBytes() {
-    final UUID uuid = UUID.randomUUID();
-    final LegacyObjectName objectName = LegacyObjectName.forBytes(bytes(uuid));
-    assertThat(objectName.toString(), is(string(uuid)));
+  public void legacyObjectMetadataFromBytes() {
+    final UUID objectName = UUID.randomUUID();
+    String objectString = objectString(objectName);
+    long objectSize = Long.MAX_VALUE;
+
+    final LegacyObjectName objectMetadata =
+        LegacyObjectName.forBytes(bytes(objectName, objectSize));
+
+    assertThat(objectMetadata.toString(), is(toString(objectString, objectSize)));
   }
 
   @Test
-  public void legacyObjectNameUUID() {
-    final UUID uuid = UUID.randomUUID();
-    final LegacyObjectName objectName = LegacyObjectName.forUUID(uuid);
-    assertThat(objectName.toString(), is(string(uuid)));
+  public void legacyObjectMetadataFromMetadata() {
+    final UUID objectName = UUID.randomUUID();
+    String objectString = objectString(objectName);
+    long objectSize = 0;
+
+    final LegacyObjectName objectMetadata =
+        LegacyObjectName.fromMetadata(objectString, objectSize);
+
+    assertThat(objectMetadata.toString(), is(toString(objectString, objectSize)));
   }
 
   @Test
   public void compareEqualsNull() {
-    assertThat(LegacyObjectName.forUUID(UUID.randomUUID()).equals(null), is(false));
+    String objectString = objectString(UUID.randomUUID());
+    long objectSize = 0;
+
+    assertThat(LegacyObjectName.fromMetadata(objectString, objectSize).equals(null), is(false));
   }
 
   @Test
   public void compareEqualsNonMatchingType() {
-    final LegacyObjectName objectName = LegacyObjectName.forUUID(UUID.randomUUID());
+    String objectString = objectString(UUID.randomUUID());
+    long objectSize = 0;
+
+    final LegacyObjectName objectName =
+        LegacyObjectName.fromMetadata(objectString, objectSize);
+
     assertThat(objectName.equals("NOT_AN_OBJECT_NAME"), is(false));
   }
 
-  private byte[] bytes(final UUID uuid) {
-    return ByteBuffer.allocate(18).putLong(uuid.getMostSignificantBits())
-        .putLong(uuid.getLeastSignificantBits()).putShort((short) 0).array();
+  private byte[] bytes(final UUID objectName, long objectSize) {
+    return ByteBuffer.allocate(LegacyObjectName.OBJECT_SIZE)
+        .putLong(objectName.getMostSignificantBits()).putLong(objectName.getLeastSignificantBits())
+        .putShort((short) 0).putLong(objectSize).array();
   }
 
-  private String string(final UUID uuid) {
-    return uuid.toString().replace("-", "") + "0000";
+  private String objectString(UUID objectName) {
+    return objectName.toString().replace("-", "") + "0000";
+  }
+
+  private String toString(final String objectName, long objectSize) {
+    return String.format("%s,%s", objectName, objectSize);
   }
 }

@@ -48,7 +48,7 @@ public class DeleteObjectNameSupplierTest {
   public void deleteObjectNameSupplier() {
     final String object = "objectName";
     final ObjectName objectName = mock(ObjectName.class);
-    when(objectName.toString()).thenReturn(object);
+    when(objectName.getName()).thenReturn(object);
     when(this.objectManager.getNameForDelete()).thenReturn(objectName);
 
     assertThat(new DeleteObjectNameSupplier(this.objectManager).get(), is(object));

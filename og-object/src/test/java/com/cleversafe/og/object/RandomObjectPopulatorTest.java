@@ -39,11 +39,6 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.cleversafe.og.object.LegacyObjectName;
-import com.cleversafe.og.object.ObjectManagerException;
-import com.cleversafe.og.object.ObjectName;
-import com.cleversafe.og.object.RandomObjectPopulator;
-
 public class RandomObjectPopulatorTest {
   final String dirName = "RandomObjectPopulatorTest";
   static final String prefix = "id_";
@@ -72,7 +67,7 @@ public class RandomObjectPopulatorTest {
     }
   }
 
-  final static int OBJECT_SIZE = 18;
+  final static int OBJECT_SIZE = LegacyObjectName.OBJECT_SIZE;
   protected final static int MAX_OBJECTS = 5;
 
   final Random rand = new Random();
@@ -235,6 +230,7 @@ public class RandomObjectPopulatorTest {
       rop.writeNameComplete(generateId());
     }
     rop.testComplete();
+
     Assert.assertEquals(getIdFiles().length, 2);
     Assert.assertEquals(rop.getSavedObjectCount(), RandomObjectPopulatorTest.MAX_OBJECTS + surplus);
     // Borrow one id
@@ -301,7 +297,8 @@ public class RandomObjectPopulatorTest {
   }
 
   protected ObjectName generateId() {
-    return LegacyObjectName.forUUID(UUID.randomUUID());
+    return LegacyObjectName.fromMetadata(
+        UUID.randomUUID().toString().replace("-", "") + "0000", 0);
   }
 
   @Ignore

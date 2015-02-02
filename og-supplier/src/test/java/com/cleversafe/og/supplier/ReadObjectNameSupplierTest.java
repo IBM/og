@@ -48,7 +48,7 @@ public class ReadObjectNameSupplierTest {
   public void readObjectNameSupplier() {
     final String object = "objectName";
     final ObjectName objectName = mock(ObjectName.class);
-    when(objectName.toString()).thenReturn(object);
+    when(objectName.getName()).thenReturn(object);
     when(this.objectManager.acquireNameForRead()).thenReturn(objectName);
 
     assertThat(new ReadObjectNameSupplier(this.objectManager).get(), is(object));
