@@ -37,14 +37,15 @@ package com.cleversafe.og.object;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.util.Collections;
 import java.util.Iterator;
@@ -297,7 +298,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
   private void persistIds() throws IOException {
     this.persistLock.writeLock().lock();
     final int toSave = this.objects.size();
-    final DataOutputStream out = new DataOutputStream(new FileOutputStream(this.saveFile));
+    final OutputStream out = new BufferedOutputStream(new FileOutputStream(this.saveFile));
     if (toSave > this.maxObjects) {
       for (int size = this.objects.size(); size > this.maxObjects; size = this.objects.size()) {
         final int numFiles = getIdFiles().length;
@@ -306,7 +307,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
           // Create a new file
           surplus = createFile(numFiles);
         }
-        final DataOutputStream dos = new DataOutputStream(new FileOutputStream(surplus, true));
+        final OutputStream dos = new BufferedOutputStream(new FileOutputStream(surplus, true));
         final int remaining = getRemaining(size, surplus);
         // While writing surplus, remove them from this.objects, to keep consistent with
         // this.savefile
