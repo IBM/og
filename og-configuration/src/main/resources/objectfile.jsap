@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <jsap>
-	<parameters>
-	    <switch>
+  <parameters>
+      <switch>
             <id>write</id>
             <shortFlag>w</shortFlag>
             <longFlag>write</longFlag>
@@ -50,24 +50,24 @@
             </stringParser>
             <help>A relative or absolute path to an output file, rather than stdout</help>
         </flaggedOption>
-		<switch>
-			<id>version</id>
-			<shortFlag>v</shortFlag>
-			<longFlag>version</longFlag>
-			<help>Prints the og-reader version and exits</help>
-		</switch>
-		<switch>
-			<id>help</id>
-			<shortFlag>h</shortFlag>
-			<longFlag>help</longFlag>
-			<help>Prints this help and exits</help>
-		</switch>
-		<unflaggedOption>
+    <switch>
+      <id>version</id>
+      <shortFlag>v</shortFlag>
+      <longFlag>version</longFlag>
+      <help>Prints the og-reader version and exits</help>
+    </switch>
+    <switch>
+      <id>help</id>
+      <shortFlag>h</shortFlag>
+      <longFlag>help</longFlag>
+      <help>Prints this help and exits</help>
+    </switch>
+    <unflaggedOption>
             <id>input</id>
             <stringParser>
             <classname>FileStringParser</classname>
             </stringParser>
             <help>A relative or absolute path to an input file, rather than stdin</help>
         </unflaggedOption>
-	</parameters>
+  </parameters>
 </jsap>
