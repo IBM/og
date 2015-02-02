@@ -166,7 +166,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
       if (this.saveFile.exists()) {
         final InputStream input = new BufferedInputStream(new FileInputStream(this.saveFile));
         while (input.read(objectBytes) == OBJECT_SIZE) {
-          final ObjectMetadata id = LegacyObjectMetadata.forBytes(objectBytes);
+          final ObjectMetadata id = LegacyObjectMetadata.fromBytes(objectBytes);
           this.objects.put(id);
         }
         input.close();
@@ -337,7 +337,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
         final byte[] buf = new byte[OBJECT_SIZE];
         for (int i = 0; i < toTransfer; i++) {
           if (in.read(buf) == OBJECT_SIZE) {
-            final ObjectMetadata sid = LegacyObjectMetadata.forBytes(buf);
+            final ObjectMetadata sid = LegacyObjectMetadata.fromBytes(buf);
             this.objects.put(sid);
           }
         }

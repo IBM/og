@@ -28,8 +28,7 @@ import java.util.Arrays;
 import com.google.common.io.BaseEncoding;
 
 /**
- * An {@code ObjectName} implementation that represents an object name of a fixed length of 18
- * bytes, as is expected by the legacy bin file format.
+ * A defacto {@code ObjectMetadata} implementation.
  * 
  * @since 1.0
  */
@@ -38,20 +37,20 @@ public class LegacyObjectMetadata implements ObjectMetadata {
   public static final int OBJECT_SIZE_SIZE = 8;
   public static final int OBJECT_SIZE = OBJECT_NAME_SIZE + OBJECT_SIZE_SIZE;
   private static final BaseEncoding ENCODING = BaseEncoding.base16().lowerCase();
-  private final ByteBuffer bytes;
+  private final ByteBuffer objectBuffer;
 
   private LegacyObjectMetadata(ByteBuffer objectBuffer) {
-    this.bytes = objectBuffer;
+    this.objectBuffer = objectBuffer;
   }
 
   /**
-   * Configures an {@code LegacyObjectName} instance, using the provided bytes as the name
+   * Configures an instance using the provided metadata packed as bytes
    * 
-   * @param objectBytes the object name, in bytes
-   * @return a {@code LegacyObjectName} instance
-   * @throws IllegalArgumentException if the length of objectName is not 18
+   * @param objectBytes the object metadata as bytes
+   * @return a {@code LegacyObjectMetadata} instance
+   * @throws IllegalArgumentException if the length of objectBytes is invalid
    */
-  public static LegacyObjectMetadata forBytes(final byte[] objectBytes) {
+  public static LegacyObjectMetadata fromBytes(final byte[] objectBytes) {
     checkNotNull(objectBytes);
     checkArgument(objectBytes.length == OBJECT_SIZE,
         String.format("objectName length must be == %s", OBJECT_SIZE) + " [%s]", objectBytes.length);
@@ -60,12 +59,12 @@ public class LegacyObjectMetadata implements ObjectMetadata {
   }
 
   /**
-   * Configures an {@code ObjectName} instance, using the provided UUID as the name. The most
-   * significant and least significant bits of the UUID will represent the first 16 bytes of this
-   * instance, and the remaining 2 bytes will be zero padded
+   * Configures an instance using the provided metadata,
    * 
-   * @param objectName the object name, as a UUID
-   * @return a {@code LegacyObjectName} instance
+   * @param objectName the object name; must be base16 encoded / uuid friendly
+   * @param objectSize the size of the object
+   * @return a {@code LegacyObjectMetadata} instance
+   * @throws IllegalArgumentException if objectSize is negative
    */
   public static LegacyObjectMetadata fromMetadata(final String objectName, long objectSize) {
     checkNotNull(objectName);
@@ -85,13 +84,13 @@ public class LegacyObjectMetadata implements ObjectMetadata {
 
   @Override
   public String getName() {
-    return ENCODING.encode(this.bytes.array(), 0, OBJECT_NAME_SIZE);
+    return ENCODING.encode(this.objectBuffer.array(), 0, OBJECT_NAME_SIZE);
   }
 
   @Override
   public long getSize() {
-    this.bytes.position(OBJECT_NAME_SIZE);
-    return this.bytes.getLong();
+    this.objectBuffer.position(OBJECT_NAME_SIZE);
+    return this.objectBuffer.getLong();
   }
 
   @Override
@@ -135,7 +134,7 @@ public class LegacyObjectMetadata implements ObjectMetadata {
 
   @Override
   public byte[] toBytes() {
-    return this.bytes.array();
+    return this.objectBuffer.array();
   }
 
   @Override

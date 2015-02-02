@@ -30,17 +30,17 @@ import org.junit.Test;
 public class LegacyObjectMetadataTest {
   @Test(expected = NullPointerException.class)
   public void nullFromBytes() {
-    LegacyObjectMetadata.forBytes(null);
+    LegacyObjectMetadata.fromBytes(null);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void bytesLessThanObjectLength() {
-    LegacyObjectMetadata.forBytes(new byte[LegacyObjectMetadata.OBJECT_SIZE - 1]);
+    LegacyObjectMetadata.fromBytes(new byte[LegacyObjectMetadata.OBJECT_SIZE - 1]);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void bytesGreaterThanObjectLength() {
-    LegacyObjectMetadata.forBytes(new byte[LegacyObjectMetadata.OBJECT_SIZE + 1]);
+    LegacyObjectMetadata.fromBytes(new byte[LegacyObjectMetadata.OBJECT_SIZE + 1]);
   }
 
   @Test(expected = NullPointerException.class)
@@ -71,7 +71,7 @@ public class LegacyObjectMetadataTest {
     long objectSize = Long.MAX_VALUE;
 
     final LegacyObjectMetadata objectMetadata =
-        LegacyObjectMetadata.forBytes(bytes(objectName, objectSize));
+        LegacyObjectMetadata.fromBytes(bytes(objectName, objectSize));
 
     assertThat(objectMetadata.toString(), is(toString(objectString, objectSize)));
   }

@@ -20,8 +20,7 @@
 package com.cleversafe.og.object;
 
 /**
- * An identifying name for an object. Implementers should also override {@code toString} to provide
- * a string representation of this name.
+ * Metadata that describes a previously written object.
  * 
  * @since 1.0
  */

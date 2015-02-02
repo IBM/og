@@ -116,7 +116,7 @@ public class ObjectFile {
       writer = new BufferedWriter(new OutputStreamWriter(out, Charsets.UTF_8));
       final byte[] buf = new byte[LegacyObjectMetadata.OBJECT_SIZE];
       while (in.read(buf) == LegacyObjectMetadata.OBJECT_SIZE) {
-        ObjectMetadata objectName = LegacyObjectMetadata.forBytes(buf);
+        ObjectMetadata objectName = LegacyObjectMetadata.fromBytes(buf);
         writer.write(objectName.toString());
         writer.newLine();
       }
@@ -136,7 +136,7 @@ public class ObjectFile {
 
     final byte[] buf = new byte[LegacyObjectMetadata.OBJECT_SIZE];
     while (in.read(buf) == LegacyObjectMetadata.OBJECT_SIZE) {
-      ObjectMetadata objectName = LegacyObjectMetadata.forBytes(buf);
+      ObjectMetadata objectName = LegacyObjectMetadata.fromBytes(buf);
       if (objectName.getSize() >= minFilesize && objectName.getSize() <= maxFilesize)
         out.write(objectName.toBytes());
     }
