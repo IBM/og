@@ -43,17 +43,17 @@ public class ReadObjectNameConsumerTest extends AbstractObjectNameConsumerTest {
 
   @Override
   public void doVerify() {
-    verify(this.objectManager).releaseNameFromRead(isA(ObjectName.class));
+    verify(this.objectManager).releaseNameFromRead(isA(ObjectMetadata.class));
   }
 
   @Override
   public void doVerifyNever() {
-    verify(this.objectManager, never()).releaseNameFromRead(isA(ObjectName.class));
+    verify(this.objectManager, never()).releaseNameFromRead(isA(ObjectMetadata.class));
   }
 
   @Override
   public void doThrowIt() {
     doThrow(new ObjectManagerException()).when(this.objectManager).releaseNameFromRead(
-        any(ObjectName.class));
+        any(ObjectMetadata.class));
   }
 }

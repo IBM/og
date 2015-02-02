@@ -27,41 +27,41 @@ import java.util.UUID;
 
 import org.junit.Test;
 
-public class LegacyObjectNameTest {
+public class LegacyObjectMetadataTest {
   @Test(expected = NullPointerException.class)
   public void nullFromBytes() {
-    LegacyObjectName.forBytes(null);
+    LegacyObjectMetadata.forBytes(null);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void bytesLessThanObjectLength() {
-    LegacyObjectName.forBytes(new byte[LegacyObjectName.OBJECT_SIZE - 1]);
+    LegacyObjectMetadata.forBytes(new byte[LegacyObjectMetadata.OBJECT_SIZE - 1]);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void bytesGreaterThanObjectLength() {
-    LegacyObjectName.forBytes(new byte[LegacyObjectName.OBJECT_SIZE + 1]);
+    LegacyObjectMetadata.forBytes(new byte[LegacyObjectMetadata.OBJECT_SIZE + 1]);
   }
 
   @Test(expected = NullPointerException.class)
   public void fromMetadataNullObjectName() {
-    LegacyObjectName.fromMetadata(null, 0);
+    LegacyObjectMetadata.fromMetadata(null, 0);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void fromMetadataShortObjectName() {
-    LegacyObjectName.fromMetadata("", 0);
+    LegacyObjectMetadata.fromMetadata("", 0);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void fromMetadataLongObjectName() {
     String objectName = UUID.randomUUID().toString().replace("-", "") + "12345";
-    LegacyObjectName.fromMetadata(objectName, 0);
+    LegacyObjectMetadata.fromMetadata(objectName, 0);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void fromMetadataNegativeObjectSize() {
-    LegacyObjectName.fromMetadata(objectString(UUID.randomUUID()), -1);
+    LegacyObjectMetadata.fromMetadata(objectString(UUID.randomUUID()), -1);
   }
 
   @Test
@@ -70,8 +70,8 @@ public class LegacyObjectNameTest {
     String objectString = objectString(objectName);
     long objectSize = Long.MAX_VALUE;
 
-    final LegacyObjectName objectMetadata =
-        LegacyObjectName.forBytes(bytes(objectName, objectSize));
+    final LegacyObjectMetadata objectMetadata =
+        LegacyObjectMetadata.forBytes(bytes(objectName, objectSize));
 
     assertThat(objectMetadata.toString(), is(toString(objectString, objectSize)));
   }
@@ -82,8 +82,8 @@ public class LegacyObjectNameTest {
     String objectString = objectString(objectName);
     long objectSize = 0;
 
-    final LegacyObjectName objectMetadata =
-        LegacyObjectName.fromMetadata(objectString, objectSize);
+    final LegacyObjectMetadata objectMetadata =
+        LegacyObjectMetadata.fromMetadata(objectString, objectSize);
 
     assertThat(objectMetadata.toString(), is(toString(objectString, objectSize)));
   }
@@ -93,7 +93,7 @@ public class LegacyObjectNameTest {
     String objectString = objectString(UUID.randomUUID());
     long objectSize = 0;
 
-    assertThat(LegacyObjectName.fromMetadata(objectString, objectSize).equals(null), is(false));
+    assertThat(LegacyObjectMetadata.fromMetadata(objectString, objectSize).equals(null), is(false));
   }
 
   @Test
@@ -101,14 +101,14 @@ public class LegacyObjectNameTest {
     String objectString = objectString(UUID.randomUUID());
     long objectSize = 0;
 
-    final LegacyObjectName objectName =
-        LegacyObjectName.fromMetadata(objectString, objectSize);
+    final LegacyObjectMetadata objectName =
+        LegacyObjectMetadata.fromMetadata(objectString, objectSize);
 
     assertThat(objectName.equals("NOT_AN_OBJECT_NAME"), is(false));
   }
 
   private byte[] bytes(final UUID objectName, long objectSize) {
-    return ByteBuffer.allocate(LegacyObjectName.OBJECT_SIZE)
+    return ByteBuffer.allocate(LegacyObjectMetadata.OBJECT_SIZE)
         .putLong(objectName.getMostSignificantBits()).putLong(objectName.getLeastSignificantBits())
         .putShort((short) 0).putLong(objectSize).array();
   }

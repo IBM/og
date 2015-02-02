@@ -34,7 +34,7 @@ public interface ObjectManager {
    * 
    * @return an available object name for deletion
    */
-  ObjectName getNameForDelete();
+  ObjectMetadata getNameForDelete();
 
   /**
    * Selects an existing object name for reading. Implementations may define whether the returned
@@ -42,7 +42,7 @@ public interface ObjectManager {
    * 
    * @return an available object name for reading
    */
-  ObjectName acquireNameForRead();
+  ObjectMetadata acquireNameForRead();
 
   /**
    * Informs this object manager that the caller is done reading the provided object name.
@@ -51,7 +51,7 @@ public interface ObjectManager {
    * 
    * @param objectName the name of the object that the caller has finished reading
    */
-  void releaseNameFromRead(ObjectName objectName);
+  void releaseNameFromRead(ObjectMetadata objectName);
 
   /**
    * Informs this object manager that the caller has completed writing an object with the provided
@@ -59,7 +59,7 @@ public interface ObjectManager {
    * 
    * @param objectName the name of the object that the caller has finished writing
    */
-  void writeNameComplete(ObjectName objectName);
+  void writeNameComplete(ObjectMetadata objectName);
 
   /**
    * Informs this object manager that the test has ended and it should persist any in-memory object

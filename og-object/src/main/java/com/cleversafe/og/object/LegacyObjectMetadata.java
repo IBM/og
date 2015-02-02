@@ -33,14 +33,14 @@ import com.google.common.io.BaseEncoding;
  * 
  * @since 1.0
  */
-public class LegacyObjectName implements ObjectName {
+public class LegacyObjectMetadata implements ObjectMetadata {
   public static final int OBJECT_NAME_SIZE = 18;
   public static final int OBJECT_SIZE_SIZE = 8;
   public static final int OBJECT_SIZE = OBJECT_NAME_SIZE + OBJECT_SIZE_SIZE;
   private static final BaseEncoding ENCODING = BaseEncoding.base16().lowerCase();
   private final ByteBuffer bytes;
 
-  private LegacyObjectName(ByteBuffer objectBuffer) {
+  private LegacyObjectMetadata(ByteBuffer objectBuffer) {
     this.bytes = objectBuffer;
   }
 
@@ -51,12 +51,12 @@ public class LegacyObjectName implements ObjectName {
    * @return a {@code LegacyObjectName} instance
    * @throws IllegalArgumentException if the length of objectName is not 18
    */
-  public static LegacyObjectName forBytes(final byte[] objectBytes) {
+  public static LegacyObjectMetadata forBytes(final byte[] objectBytes) {
     checkNotNull(objectBytes);
     checkArgument(objectBytes.length == OBJECT_SIZE,
         String.format("objectName length must be == %s", OBJECT_SIZE) + " [%s]", objectBytes.length);
 
-    return new LegacyObjectName(ByteBuffer.allocate(OBJECT_SIZE).put(objectBytes));
+    return new LegacyObjectMetadata(ByteBuffer.allocate(OBJECT_SIZE).put(objectBytes));
   }
 
   /**
@@ -67,7 +67,7 @@ public class LegacyObjectName implements ObjectName {
    * @param objectName the object name, as a UUID
    * @return a {@code LegacyObjectName} instance
    */
-  public static LegacyObjectName fromMetadata(final String objectName, long objectSize) {
+  public static LegacyObjectMetadata fromMetadata(final String objectName, long objectSize) {
     checkNotNull(objectName);
     // HACK; assume 1 char == 2 bytes for object name string length checking
     int stringLength = 2 * OBJECT_NAME_SIZE;
@@ -80,7 +80,7 @@ public class LegacyObjectName implements ObjectName {
     ByteBuffer objectBuffer = ByteBuffer.wrap(b);
     objectBuffer.position(OBJECT_NAME_SIZE);
     objectBuffer.putLong(objectSize);
-    return new LegacyObjectName(objectBuffer);
+    return new LegacyObjectMetadata(objectBuffer);
   }
 
   @Override
@@ -99,10 +99,10 @@ public class LegacyObjectName implements ObjectName {
     if (obj == null)
       return false;
 
-    if (!(obj instanceof ObjectName))
+    if (!(obj instanceof ObjectMetadata))
       return false;
 
-    final ObjectName other = (ObjectName) obj;
+    final ObjectMetadata other = (ObjectMetadata) obj;
     return Arrays.equals(toBytes(), other.toBytes());
   }
 
@@ -112,7 +112,7 @@ public class LegacyObjectName implements ObjectName {
   }
 
   @Override
-  public int compareTo(final ObjectName o) {
+  public int compareTo(final ObjectMetadata o) {
     // TODO this compareTo implementation is heavily borrowed from String.toString. It is
     // ignorant of character encoding issues, but in our case we are storing hex digits so it
     // should be sufficient

@@ -25,7 +25,7 @@ package com.cleversafe.og.object;
  * 
  * @since 1.0
  */
-public interface ObjectName extends Comparable<ObjectName> {
+public interface ObjectMetadata extends Comparable<ObjectMetadata> {
 
   /**
    * Gets the name of this object

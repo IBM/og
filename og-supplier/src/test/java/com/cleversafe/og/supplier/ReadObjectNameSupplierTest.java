@@ -29,7 +29,7 @@ import org.junit.Test;
 
 import com.cleversafe.og.object.ObjectManager;
 import com.cleversafe.og.object.ObjectManagerException;
-import com.cleversafe.og.object.ObjectName;
+import com.cleversafe.og.object.ObjectMetadata;
 
 public class ReadObjectNameSupplierTest {
   private ObjectManager objectManager;
@@ -47,7 +47,7 @@ public class ReadObjectNameSupplierTest {
   @Test
   public void readObjectNameSupplier() {
     final String object = "objectName";
-    final ObjectName objectName = mock(ObjectName.class);
+    final ObjectMetadata objectName = mock(ObjectMetadata.class);
     when(objectName.getName()).thenReturn(object);
     when(this.objectManager.acquireNameForRead()).thenReturn(objectName);
 

@@ -39,8 +39,8 @@ import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 
-import com.cleversafe.og.object.LegacyObjectName;
-import com.cleversafe.og.object.ObjectName;
+import com.cleversafe.og.object.LegacyObjectMetadata;
+import com.cleversafe.og.object.ObjectMetadata;
 import com.tngtech.java.junit.dataprovider.DataProvider;
 import com.tngtech.java.junit.dataprovider.DataProviderRunner;
 import com.tngtech.java.junit.dataprovider.UseDataProvider;
@@ -113,9 +113,9 @@ public class ObjectFileTest {
   public void write() throws IOException {
     final String objectMetadata = UUID.randomUUID().toString().replace("-", "") + "0000,0";
     final InputStream in = new ByteArrayInputStream(objectMetadata.getBytes());
-    final ByteArrayOutputStream out = new ByteArrayOutputStream(LegacyObjectName.OBJECT_SIZE);
+    final ByteArrayOutputStream out = new ByteArrayOutputStream(LegacyObjectMetadata.OBJECT_SIZE);
     ObjectFile.write(in, out);
-    assertThat(objectMetadata, is(LegacyObjectName.forBytes(out.toByteArray()).toString()));
+    assertThat(objectMetadata, is(LegacyObjectMetadata.forBytes(out.toByteArray()).toString()));
   }
 
   @Test
@@ -128,7 +128,7 @@ public class ObjectFileTest {
   @Test
   public void read() throws IOException {
     String objectString = UUID.randomUUID().toString().replace("-", "") + "0000";
-    final LegacyObjectName object = LegacyObjectName.fromMetadata(objectString, 1024);
+    final LegacyObjectMetadata object = LegacyObjectMetadata.fromMetadata(objectString, 1024);
     final InputStream in = new ByteArrayInputStream(object.toBytes());
     final ByteArrayOutputStream out = new ByteArrayOutputStream();
     ObjectFile.read(in, out);
@@ -157,9 +157,9 @@ public class ObjectFileTest {
   @Test
   public void filter() throws IOException {
     String s = UUID.randomUUID().toString().replace("-", "") + "0000";
-    ObjectName o1 = LegacyObjectName.fromMetadata(s, 1);
-    ObjectName o2 = LegacyObjectName.fromMetadata(s, 2);
-    ObjectName o3 = LegacyObjectName.fromMetadata(s, 3);
+    ObjectMetadata o1 = LegacyObjectMetadata.fromMetadata(s, 1);
+    ObjectMetadata o2 = LegacyObjectMetadata.fromMetadata(s, 2);
+    ObjectMetadata o3 = LegacyObjectMetadata.fromMetadata(s, 3);
     ByteArrayOutputStream source = new ByteArrayOutputStream();
     source.write(o1.toBytes());
     source.write(o2.toBytes());
@@ -169,8 +169,8 @@ public class ObjectFileTest {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     ObjectFile.filter(in, out, 2, 2);
 
-    assertThat(out.size(), is(LegacyObjectName.OBJECT_SIZE));
-    ObjectName filtered = LegacyObjectName.forBytes(out.toByteArray());
+    assertThat(out.size(), is(LegacyObjectMetadata.OBJECT_SIZE));
+    ObjectMetadata filtered = LegacyObjectMetadata.forBytes(out.toByteArray());
     assertThat(filtered.getName(), is(s));
     assertThat(filtered.getSize(), is(2L));
   }

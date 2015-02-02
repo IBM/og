@@ -38,8 +38,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.cli.Application.Cli;
-import com.cleversafe.og.object.LegacyObjectName;
-import com.cleversafe.og.object.ObjectName;
+import com.cleversafe.og.object.LegacyObjectMetadata;
+import com.cleversafe.og.object.ObjectMetadata;
 import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
 
@@ -102,7 +102,7 @@ public class ObjectFile {
       String[] components = line.split(",", 2);
       String objectString = components[0].trim();
       long objectSize = Long.valueOf(components[1].trim());
-      ObjectName objectName = LegacyObjectName.fromMetadata(objectString, objectSize);
+      ObjectMetadata objectName = LegacyObjectMetadata.fromMetadata(objectString, objectSize);
       out.write(objectName.toBytes());
     }
   }
@@ -114,9 +114,9 @@ public class ObjectFile {
     BufferedWriter writer = null;
     try {
       writer = new BufferedWriter(new OutputStreamWriter(out, Charsets.UTF_8));
-      final byte[] buf = new byte[LegacyObjectName.OBJECT_SIZE];
-      while (in.read(buf) == LegacyObjectName.OBJECT_SIZE) {
-        ObjectName objectName = LegacyObjectName.forBytes(buf);
+      final byte[] buf = new byte[LegacyObjectMetadata.OBJECT_SIZE];
+      while (in.read(buf) == LegacyObjectMetadata.OBJECT_SIZE) {
+        ObjectMetadata objectName = LegacyObjectMetadata.forBytes(buf);
         writer.write(objectName.toString());
         writer.newLine();
       }
@@ -134,9 +134,9 @@ public class ObjectFile {
     checkArgument(minFilesize <= maxFilesize, "minFilesize must be <= maxFilesize [%s, %s]",
         minFilesize, maxFilesize);
 
-    final byte[] buf = new byte[LegacyObjectName.OBJECT_SIZE];
-    while (in.read(buf) == LegacyObjectName.OBJECT_SIZE) {
-      ObjectName objectName = LegacyObjectName.forBytes(buf);
+    final byte[] buf = new byte[LegacyObjectMetadata.OBJECT_SIZE];
+    while (in.read(buf) == LegacyObjectMetadata.OBJECT_SIZE) {
+      ObjectMetadata objectName = LegacyObjectMetadata.forBytes(buf);
       if (objectName.getSize() >= minFilesize && objectName.getSize() <= maxFilesize)
         out.write(objectName.toBytes());
     }

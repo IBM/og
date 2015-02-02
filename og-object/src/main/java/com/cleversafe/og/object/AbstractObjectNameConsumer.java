@@ -87,14 +87,14 @@ public abstract class AbstractObjectNameConsumer {
     if (objectString == null)
       throw new IllegalStateException("Unable to determine object");
 
-    final ObjectName objectName = getObjectName(request, response);
+    final ObjectMetadata objectName = getObjectName(request, response);
     updateManager(objectName);
   }
 
-  private ObjectName getObjectName(Request request, Response response) {
+  private ObjectMetadata getObjectName(Request request, Response response) {
     String objectString = getObjectString(request, response);
     long objectSize = getObjectSize(request, response);
-    return LegacyObjectName.fromMetadata(objectString, objectSize);
+    return LegacyObjectMetadata.fromMetadata(objectString, objectSize);
   }
 
   protected String getObjectString(final Request request, final Response response) {
@@ -112,9 +112,9 @@ public abstract class AbstractObjectNameConsumer {
     return response.getBody().getSize();
   }
 
-  private void updateManager(final ObjectName objectName) {
+  private void updateManager(final ObjectMetadata objectName) {
     updateObjectManager(objectName);
   }
 
-  protected abstract void updateObjectManager(ObjectName objectName);
+  protected abstract void updateObjectManager(ObjectMetadata objectName);
 }
