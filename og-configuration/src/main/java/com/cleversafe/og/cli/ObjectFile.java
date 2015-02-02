@@ -19,6 +19,7 @@
 
 package com.cleversafe.og.cli;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.BufferedReader;
@@ -37,14 +38,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.cli.Application.Cli;
+import com.cleversafe.og.object.LegacyObjectName;
+import com.cleversafe.og.object.ObjectName;
 import com.google.common.base.Charsets;
-import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteStreams;
 
 public class ObjectFile {
   private static final Logger _consoleLogger = LoggerFactory.getLogger("ConsoleLogger");
-  private static final BaseEncoding ENCODING = BaseEncoding.base16().lowerCase();
-  private static int ID_LENGTH = 18;
 
   public static void main(final String[] args) {
     final Cli cli = Application.cli("object-file", "objectfile.jsap", args);
@@ -67,6 +67,8 @@ public class ObjectFile {
         write(in, out);
       else if (cli.flags().getBoolean("read"))
         read(in, out);
+      else if (cli.flags().getBoolean("filter"))
+        filter(in, out, cli.flags().getLong("min-filesize"), cli.flags().getLong("max-filesize"));
       else
         ByteStreams.copy(in, out);
 
@@ -97,7 +99,11 @@ public class ObjectFile {
     final BufferedReader reader = new BufferedReader(new InputStreamReader(in, Charsets.UTF_8));
     String line;
     while ((line = reader.readLine()) != null) {
-      out.write(ENCODING.decode(line));
+      String[] components = line.split(",", 2);
+      String objectString = components[0].trim();
+      long objectSize = Long.valueOf(components[1].trim());
+      ObjectName objectName = LegacyObjectName.fromMetadata(objectString, objectSize);
+      out.write(objectName.toBytes());
     }
   }
 
@@ -108,14 +114,31 @@ public class ObjectFile {
     BufferedWriter writer = null;
     try {
       writer = new BufferedWriter(new OutputStreamWriter(out, Charsets.UTF_8));
-      final byte[] buf = new byte[ID_LENGTH];
-      while (in.read(buf) == ID_LENGTH) {
-        writer.write(ENCODING.encode(buf));
+      final byte[] buf = new byte[LegacyObjectName.OBJECT_SIZE];
+      while (in.read(buf) == LegacyObjectName.OBJECT_SIZE) {
+        ObjectName objectName = LegacyObjectName.forBytes(buf);
+        writer.write(objectName.toString());
         writer.newLine();
       }
     } finally {
       if (writer != null)
         writer.flush();
+    }
+  }
+
+  public static void filter(InputStream in, OutputStream out, long minFilesize, long maxFilesize)
+      throws IOException {
+    checkNotNull(in);
+    checkNotNull(out);
+    checkArgument(minFilesize >= 0, "minFilesize must be >= 0 [%s]", minFilesize);
+    checkArgument(minFilesize <= maxFilesize, "minFilesize must be <= maxFilesize [%s, %s]",
+        minFilesize, maxFilesize);
+
+    final byte[] buf = new byte[LegacyObjectName.OBJECT_SIZE];
+    while (in.read(buf) == LegacyObjectName.OBJECT_SIZE) {
+      ObjectName objectName = LegacyObjectName.forBytes(buf);
+      if (objectName.getSize() >= minFilesize && objectName.getSize() <= maxFilesize)
+        out.write(objectName.toBytes());
     }
   }
 }

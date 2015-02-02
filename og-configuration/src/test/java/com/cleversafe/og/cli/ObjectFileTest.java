@@ -40,6 +40,7 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 
 import com.cleversafe.og.object.LegacyObjectName;
+import com.cleversafe.og.object.ObjectName;
 import com.tngtech.java.junit.dataprovider.DataProvider;
 import com.tngtech.java.junit.dataprovider.DataProviderRunner;
 import com.tngtech.java.junit.dataprovider.UseDataProvider;
@@ -110,11 +111,11 @@ public class ObjectFileTest {
 
   @Test
   public void write() throws IOException {
-    final String objectName = LegacyObjectName.forUUID(UUID.randomUUID()).toString();
-    final InputStream in = new ByteArrayInputStream(objectName.getBytes());
-    final ByteArrayOutputStream out = new ByteArrayOutputStream(18);
+    final String objectMetadata = UUID.randomUUID().toString().replace("-", "") + "0000,0";
+    final InputStream in = new ByteArrayInputStream(objectMetadata.getBytes());
+    final ByteArrayOutputStream out = new ByteArrayOutputStream(LegacyObjectName.OBJECT_SIZE);
     ObjectFile.write(in, out);
-    assertThat(objectName, is(LegacyObjectName.forBytes(out.toByteArray()).toString()));
+    assertThat(objectMetadata, is(LegacyObjectName.forBytes(out.toByteArray()).toString()));
   }
 
   @Test
@@ -126,10 +127,51 @@ public class ObjectFileTest {
 
   @Test
   public void read() throws IOException {
-    final LegacyObjectName object = LegacyObjectName.forUUID(UUID.randomUUID());
+    String objectString = UUID.randomUUID().toString().replace("-", "") + "0000";
+    final LegacyObjectName object = LegacyObjectName.fromMetadata(objectString, 1024);
     final InputStream in = new ByteArrayInputStream(object.toBytes());
     final ByteArrayOutputStream out = new ByteArrayOutputStream();
     ObjectFile.read(in, out);
     assertThat(new String(out.toByteArray()), is(object.toString() + "\n"));
+  }
+
+  @DataProvider
+  public static Object[][] provideInvalidFilter() {
+    InputStream in = new ByteArrayInputStream(new byte[] {});
+    OutputStream out = new ByteArrayOutputStream();
+    return new Object[][] { {null, out, 0, 0, NullPointerException.class},
+        {in, null, 0, 0, NullPointerException.class},
+        {in, out, -1, 0, IllegalArgumentException.class},
+        {in, out, 0, -1, IllegalArgumentException.class},
+        {in, out, 10, 9, IllegalArgumentException.class}};
+  }
+
+  @Test
+  @UseDataProvider("provideInvalidFilter")
+  public void invalidFilter(final InputStream in, final OutputStream out, long minFilesize,
+      long maxFilesize, Class<Exception> expectedException) throws IOException {
+    this.thrown.expect(expectedException);
+    ObjectFile.filter(in, out, minFilesize, maxFilesize);
+  }
+
+  @Test
+  public void filter() throws IOException {
+    String s = UUID.randomUUID().toString().replace("-", "") + "0000";
+    ObjectName o1 = LegacyObjectName.fromMetadata(s, 1);
+    ObjectName o2 = LegacyObjectName.fromMetadata(s, 2);
+    ObjectName o3 = LegacyObjectName.fromMetadata(s, 3);
+    ByteArrayOutputStream source = new ByteArrayOutputStream();
+    source.write(o1.toBytes());
+    source.write(o2.toBytes());
+    source.write(o3.toBytes());
+
+    ByteArrayInputStream in = new ByteArrayInputStream(source.toByteArray());
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    ObjectFile.filter(in, out, 2, 2);
+
+    assertThat(out.size(), is(LegacyObjectName.OBJECT_SIZE));
+    ObjectName filtered = LegacyObjectName.forBytes(out.toByteArray());
+    assertThat(filtered.getName(), is(s));
+    assertThat(filtered.getSize(), is(2L));
   }
 }

@@ -13,6 +13,34 @@
             <longFlag>read</longFlag>
             <help>Read object source and output in plain text file format</help>
         </switch>
+        <switch>
+            <id>filter</id>
+            <shortFlag>f</shortFlag>
+            <longFlag>filter</longFlag>
+            <help>Filter an existing object file source and output in object file format</help>
+        </switch>
+        <flaggedOption>
+            <id>min-filesize</id>
+            <longFlag>min-filesize</longFlag>
+            <stringParser>
+            <classname>LongStringParser</classname>
+            </stringParser>
+            <defaults>
+                <string>0</string>
+            </defaults>
+            <help>Minimum file size to include an object in the output when using --filter, in bytes</help>
+        </flaggedOption>
+        <flaggedOption>
+            <id>max-filesize</id>
+            <longFlag>max-filesize</longFlag>
+            <stringParser>
+            <classname>LongStringParser</classname>
+            </stringParser>
+            <defaults>
+                <string>9223372036854775807</string>
+            </defaults>
+            <help>Maximum file size to include an object in the output when using --filter, in bytes</help>
+        </flaggedOption>
         <flaggedOption>
             <id>output</id>
             <shortFlag>o</shortFlag>
