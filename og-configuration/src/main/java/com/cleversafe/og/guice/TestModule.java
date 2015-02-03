@@ -36,7 +36,6 @@ import com.cleversafe.og.guice.annotation.Container;
 import com.cleversafe.og.guice.annotation.DeleteHeaders;
 import com.cleversafe.og.guice.annotation.DeleteHost;
 import com.cleversafe.og.guice.annotation.DeleteWeight;
-import com.cleversafe.og.guice.annotation.Headers;
 import com.cleversafe.og.guice.annotation.Host;
 import com.cleversafe.og.guice.annotation.Id;
 import com.cleversafe.og.guice.annotation.ObjectFileLocation;
@@ -271,56 +270,40 @@ public class TestModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @Headers
-  public Map<Supplier<String>, Supplier<String>> provideHeaders(@Id final Supplier<String> id) {
-    return createHeaders(id, this.config.getHeaders());
-  }
-
-  @Provides
-  @Singleton
   @WriteHeaders
-  public Map<Supplier<String>, Supplier<String>> provideWriteHeaders(@Id final Supplier<String> id,
-      @Headers final Map<Supplier<String>, Supplier<String>> headers) {
-    return provideHeaders(this.config.getWrite(), id, headers);
+  public Map<Supplier<String>, Supplier<String>> provideWriteHeaders(@Id final Supplier<String> id) {
+    return provideHeaders(this.config.getWrite().getHeaders(), id);
   }
 
   @Provides
   @Singleton
   @ReadHeaders
-  public Map<Supplier<String>, Supplier<String>> provideReadHeaders(@Id final Supplier<String> id,
-      @Headers final Map<Supplier<String>, Supplier<String>> headers) {
-    return provideHeaders(this.config.getRead(), id, headers);
+  public Map<Supplier<String>, Supplier<String>> provideReadHeaders(@Id final Supplier<String> id) {
+    return provideHeaders(this.config.getRead().getHeaders(), id);
   }
 
   @Provides
   @Singleton
   @DeleteHeaders
-  public Map<Supplier<String>, Supplier<String>> provideDeleteHeaders(
-      @Id final Supplier<String> id, @Headers final Map<Supplier<String>, Supplier<String>> headers) {
-    return provideHeaders(this.config.getDelete(), id, headers);
+  public Map<Supplier<String>, Supplier<String>> provideDeleteHeaders(@Id final Supplier<String> id) {
+    return provideHeaders(this.config.getDelete().getHeaders(), id);
   }
 
   private Map<Supplier<String>, Supplier<String>> provideHeaders(
-      final OperationConfig operationConfig, @Id final Supplier<String> id,
-      final Map<Supplier<String>, Supplier<String>> testHeaders) {
-    checkNotNull(operationConfig);
-    checkNotNull(testHeaders);
+      Map<String, String> operationHeaders, @Id final Supplier<String> id) {
+    checkNotNull(operationHeaders);
 
-    final Map<String, String> operationHeaders = operationConfig.getHeaders();
-    if (operationHeaders != null && !operationHeaders.isEmpty())
-      return createHeaders(id, operationHeaders);
+    Map<String, String> headers = Maps.newLinkedHashMap();
+    headers.putAll(this.config.getHeaders());
+    headers.putAll(operationHeaders);
 
-    return testHeaders;
-  }
+    final Map<Supplier<String>, Supplier<String>> supplierHeaders = Maps.newLinkedHashMap();
 
-  private Map<Supplier<String>, Supplier<String>> createHeaders(final Supplier<String> id,
-      final Map<String, String> headers) {
-    final Map<Supplier<String>, Supplier<String>> h = Maps.newLinkedHashMap();
-    for (final Entry<String, String> header : checkNotNull(headers.entrySet())) {
-      h.put(Suppliers.of(header.getKey()), Suppliers.of(header.getValue()));
+    for (final Entry<String, String> header : headers.entrySet()) {
+      supplierHeaders.put(Suppliers.of(header.getKey()), Suppliers.of(header.getValue()));
     }
-    h.put(Suppliers.of(com.cleversafe.og.http.Headers.X_OG_REQUEST_ID), id);
-    return h;
+    supplierHeaders.put(Suppliers.of(com.cleversafe.og.http.Headers.X_OG_REQUEST_ID), id);
+    return supplierHeaders;
   }
 
   @Provides

@@ -28,10 +28,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
@@ -65,9 +62,7 @@ import com.cleversafe.og.supplier.Suppliers;
 import com.cleversafe.og.util.SizeUnit;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.eventbus.EventBus;
 import com.google.common.io.Files;
 import com.tngtech.java.junit.dataprovider.DataProvider;
@@ -432,130 +427,6 @@ public class TestModuleTest {
         this.module.provideAuthentication(Suppliers.of("username"), Suppliers.of("password"));
 
     assertThat(authClass.isInstance(auth), is(true));
-  }
-
-  @Test(expected = NullPointerException.class)
-  public void provideHeadersNullHeaders() {
-    when(this.config.getHeaders()).thenReturn(null);
-    this.module.provideHeaders(this.id);
-  }
-
-  @Test
-  public void provideHeadersEmptyHeaders() {
-    when(this.config.getHeaders()).thenReturn(ImmutableMap.<String, String>of());
-    // single element is request id supplier
-    assertThat(this.module.provideHeaders(this.id).size(), is(1));
-  }
-
-  @Test
-  public void provideHeaders() {
-    final Map<String, String> headers = Maps.newLinkedHashMap();
-    for (int i = 0; i < 10; i++) {
-      headers.put("key" + (10 - i), "value" + (10 - i));
-    }
-    when(this.config.getHeaders()).thenReturn(headers);
-    final Map<Supplier<String>, Supplier<String>> s = this.module.provideHeaders(this.id);
-    final Iterator<Entry<Supplier<String>, Supplier<String>>> it = s.entrySet().iterator();
-    for (int i = 0; i < 10; i++) {
-      final Entry<Supplier<String>, Supplier<String>> e = it.next();
-      assertThat(e.getKey().get(), is("key" + (10 - i)));
-      assertThat(e.getValue().get(), is("value" + (10 - i)));
-    }
-  }
-
-  @Test(expected = NullPointerException.class)
-  public void provideWriteHeadersNullOperationConfig() {
-    when(this.config.getWrite()).thenReturn(null);
-    final Map<Supplier<String>, Supplier<String>> testHeaders = ImmutableMap.of();
-    this.module.provideWriteHeaders(this.id, testHeaders);
-  }
-
-  @Test(expected = NullPointerException.class)
-  public void provideWriteHeadersNullTestHeaders() {
-    when(this.config.getWrite()).thenReturn(new OperationConfig());
-    this.module.provideWriteHeaders(this.id, null);
-  }
-
-  @Test(expected = NullPointerException.class)
-  public void provideReadHeadersNullOperationConfig() {
-    when(this.config.getRead()).thenReturn(null);
-    final Map<Supplier<String>, Supplier<String>> testHeaders = ImmutableMap.of();
-    this.module.provideReadHeaders(this.id, testHeaders);
-  }
-
-  @Test(expected = NullPointerException.class)
-  public void provideReadHeadersNullTestHeaders() {
-    when(this.config.getRead()).thenReturn(new OperationConfig());
-    this.module.provideReadHeaders(this.id, null);
-  }
-
-  @Test(expected = NullPointerException.class)
-  public void provideDeleteHeadersNullOperationConfig() {
-    when(this.config.getDelete()).thenReturn(null);
-    final Map<Supplier<String>, Supplier<String>> testHeaders = ImmutableMap.of();
-    this.module.provideDeleteHeaders(this.id, testHeaders);
-  }
-
-  @Test(expected = NullPointerException.class)
-  public void provideDeleteHeadersNullTestHeaders() {
-    when(this.config.getDelete()).thenReturn(new OperationConfig());
-    this.module.provideDeleteHeaders(this.id, null);
-  }
-
-  @DataProvider
-  public static Object[][] provideHeadersData() {
-    final OperationConfig operationConfig = mock(OperationConfig.class);
-    when(operationConfig.getHeaders()).thenReturn(ImmutableMap.of("opKey", "opValue"));
-    final Map<Supplier<String>, Supplier<String>> testHeaders =
-        ImmutableMap.of(Suppliers.of("key"), Suppliers.of("value"));
-
-    return new Object[][] { {new OperationConfig(), testHeaders, 1, "key", "value"},
-        {operationConfig, testHeaders, 2, "opKey", "opValue"}};
-  }
-
-  @Test
-  @UseDataProvider("provideHeadersData")
-  public void provideWriteHeaders(final OperationConfig operationConfig,
-      final Map<Supplier<String>, Supplier<String>> testHeaders, final int size, final String key,
-      final String value) {
-    when(this.config.getWrite()).thenReturn(operationConfig);
-    final Map<Supplier<String>, Supplier<String>> s =
-        this.module.provideWriteHeaders(this.id, testHeaders);
-
-    assertThat(s.size(), is(size));
-    final Entry<Supplier<String>, Supplier<String>> e = s.entrySet().iterator().next();
-    assertThat(e.getKey().get(), is(key));
-    assertThat(e.getValue().get(), is(value));
-  }
-
-  @Test
-  @UseDataProvider("provideHeadersData")
-  public void provideReadHeaders(final OperationConfig operationConfig,
-      final Map<Supplier<String>, Supplier<String>> testHeaders, final int size, final String key,
-      final String value) {
-    when(this.config.getRead()).thenReturn(operationConfig);
-    final Map<Supplier<String>, Supplier<String>> s =
-        this.module.provideReadHeaders(this.id, testHeaders);
-
-    assertThat(s.size(), is(size));
-    final Entry<Supplier<String>, Supplier<String>> e = s.entrySet().iterator().next();
-    assertThat(e.getKey().get(), is(key));
-    assertThat(e.getValue().get(), is(value));
-  }
-
-  @Test
-  @UseDataProvider("provideHeadersData")
-  public void provideDeleteHeaders(final OperationConfig operationConfig,
-      final Map<Supplier<String>, Supplier<String>> testHeaders, final int size, final String key,
-      final String value) {
-    when(this.config.getDelete()).thenReturn(operationConfig);
-    final Map<Supplier<String>, Supplier<String>> s =
-        this.module.provideDeleteHeaders(this.id, testHeaders);
-
-    assertThat(s.size(), is(size));
-    final Entry<Supplier<String>, Supplier<String>> e = s.entrySet().iterator().next();
-    assertThat(e.getKey().get(), is(key));
-    assertThat(e.getValue().get(), is(value));
   }
 
   @DataProvider
