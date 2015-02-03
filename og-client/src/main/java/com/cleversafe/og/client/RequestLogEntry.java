@@ -30,7 +30,6 @@ import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
 import com.cleversafe.og.http.Headers;
-import com.google.common.net.HttpHeaders;
 
 /**
  * A class for assisting in the serialization of a request / response pair
@@ -73,8 +72,8 @@ public class RequestLogEntry {
    * @param timestampStart the timestamp for the start of this request, in milliseconds
    * @param timestampFinish the timestamp for the end of this request, in milliseconds
    */
-  public RequestLogEntry(final Request request, final Response response, final long timestampStart,
-      final long timestampFinish) {
+  public RequestLogEntry(final Request request, final Response response, String userAgent,
+      final long timestampStart, final long timestampFinish) {
     final URI uri = request.getUri();
     // FIXME reliably get localaddress? Name should be clientName? Do we even need this field?
     this.serverName = null;
@@ -103,7 +102,7 @@ public class RequestLogEntry {
     this.requestLength = objectSize;
     // TODO is this correct?
     this.responseLength = response.getBody().getSize();
-    this.userAgent = request.headers().get(HttpHeaders.USER_AGENT);
+    this.userAgent = userAgent;
     // TODO ask: dsnet access.log uses System.currentTimeMillis() - request.getTimeStamp();
     this.requestLatency = this.timestampFinish - this.timestampStart;
 

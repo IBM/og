@@ -181,7 +181,7 @@ public class ApacheClient implements Client {
     checkNotNull(request);
     final HttpUriRequest apacheRequest = createRequest(request);
     final ListenableFuture<Response> baseFuture =
-        this.executorService.submit(new BlockingHttpOperation(request, apacheRequest));
+        this.executorService.submit(new BlockingHttpOperation(request, apacheRequest, userAgent));
 
     return new ForwardingListenableFuture.SimpleForwardingListenableFuture<Response>(baseFuture) {
       @Override
@@ -289,11 +289,14 @@ public class ApacheClient implements Client {
   private class BlockingHttpOperation implements Callable<Response> {
     private final Request request;
     private final HttpUriRequest apacheRequest;
+    private final String userAgent;
     private final byte[] buf;
 
-    public BlockingHttpOperation(final Request request, final HttpUriRequest apacheRequest) {
+    public BlockingHttpOperation(final Request request, final HttpUriRequest apacheRequest,
+        String userAgent) {
       this.request = request;
       this.apacheRequest = apacheRequest;
+      this.userAgent = userAgent;
       // TODO inject buf size from config
       this.buf = new byte[4096];
     }
@@ -316,7 +319,7 @@ public class ApacheClient implements Client {
       final long timestampFinish = System.currentTimeMillis();
 
       final RequestLogEntry entry =
-          new RequestLogEntry(this.request, response, timestampStart, timestampFinish);
+          new RequestLogEntry(this.request, response, userAgent, timestampStart, timestampFinish);
       _requestLogger.info(ApacheClient.this.gson.toJson(entry));
 
       return response;
