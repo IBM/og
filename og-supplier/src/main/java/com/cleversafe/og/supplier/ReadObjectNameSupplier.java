@@ -33,7 +33,7 @@ public class ReadObjectNameSupplier implements Supplier<String> {
 
   @Override
   public String get() {
-    return this.objectManager.acquireNameForRead().toString();
+    return this.objectManager.acquireNameForRead().getName();
   }
 
   @Override

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <jsap>
-	<parameters>
-	    <switch>
+  <parameters>
+      <switch>
             <id>write</id>
             <shortFlag>w</shortFlag>
             <longFlag>write</longFlag>
@@ -13,6 +13,34 @@
             <longFlag>read</longFlag>
             <help>Read object source and output in plain text file format</help>
         </switch>
+        <switch>
+            <id>filter</id>
+            <shortFlag>f</shortFlag>
+            <longFlag>filter</longFlag>
+            <help>Filter an existing object file source and output in object file format</help>
+        </switch>
+        <flaggedOption>
+            <id>min-filesize</id>
+            <longFlag>min-filesize</longFlag>
+            <stringParser>
+            <classname>LongStringParser</classname>
+            </stringParser>
+            <defaults>
+                <string>0</string>
+            </defaults>
+            <help>Minimum file size to include an object in the output when using --filter, in bytes</help>
+        </flaggedOption>
+        <flaggedOption>
+            <id>max-filesize</id>
+            <longFlag>max-filesize</longFlag>
+            <stringParser>
+            <classname>LongStringParser</classname>
+            </stringParser>
+            <defaults>
+                <string>9223372036854775807</string>
+            </defaults>
+            <help>Maximum file size to include an object in the output when using --filter, in bytes</help>
+        </flaggedOption>
         <flaggedOption>
             <id>output</id>
             <shortFlag>o</shortFlag>
@@ -22,24 +50,24 @@
             </stringParser>
             <help>A relative or absolute path to an output file, rather than stdout</help>
         </flaggedOption>
-		<switch>
-			<id>version</id>
-			<shortFlag>v</shortFlag>
-			<longFlag>version</longFlag>
-			<help>Prints the og-reader version and exits</help>
-		</switch>
-		<switch>
-			<id>help</id>
-			<shortFlag>h</shortFlag>
-			<longFlag>help</longFlag>
-			<help>Prints this help and exits</help>
-		</switch>
-		<unflaggedOption>
+    <switch>
+      <id>version</id>
+      <shortFlag>v</shortFlag>
+      <longFlag>version</longFlag>
+      <help>Prints the og-reader version and exits</help>
+    </switch>
+    <switch>
+      <id>help</id>
+      <shortFlag>h</shortFlag>
+      <longFlag>help</longFlag>
+      <help>Prints this help and exits</help>
+    </switch>
+    <unflaggedOption>
             <id>input</id>
             <stringParser>
             <classname>FileStringParser</classname>
             </stringParser>
             <help>A relative or absolute path to an input file, rather than stdin</help>
         </unflaggedOption>
-	</parameters>
+  </parameters>
 </jsap>

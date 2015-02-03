@@ -65,7 +65,7 @@ import org.slf4j.LoggerFactory;
 
 public class RandomObjectPopulator extends Thread implements ObjectManager {
   private static final Logger _logger = LoggerFactory.getLogger(RandomObjectPopulator.class);
-  private static final int OBJECT_SIZE = 18;
+  private static final int OBJECT_SIZE = LegacyObjectMetadata.OBJECT_SIZE;
   private static final int MAX_PERSIST_ARG = 30 * 1000 * 60;
   private static final int MAX_OBJECT_ARG = 100 * (1048576 / OBJECT_SIZE);
   private final int maxObjects;
@@ -75,11 +75,11 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
   private final Pattern filenamePattern;
 
   // object read from a file
-  private final RandomAccessConcurrentHashSet<ObjectName> objects =
-      new RandomAccessConcurrentHashSet<ObjectName>();
+  private final RandomAccessConcurrentHashSet<ObjectMetadata> objects =
+      new RandomAccessConcurrentHashSet<ObjectMetadata>();
   private final ReadWriteLock objectsLock = new ReentrantReadWriteLock(true);
-  private final SortedMap<ObjectName, Integer> currentlyReading = Collections
-      .synchronizedSortedMap(new TreeMap<ObjectName, Integer>());
+  private final SortedMap<ObjectMetadata, Integer> currentlyReading = Collections
+      .synchronizedSortedMap(new TreeMap<ObjectMetadata, Integer>());
   private final ReadWriteLock readingLock = new ReentrantReadWriteLock(true);
   private final ReadWriteLock persistLock = new ReentrantReadWriteLock(true);
   private final File saveFile;
@@ -167,7 +167,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
       if (this.saveFile.exists()) {
         final InputStream input = new BufferedInputStream(new FileInputStream(this.saveFile));
         while (input.read(objectBytes) == OBJECT_SIZE) {
-          final ObjectName id = LegacyObjectName.forBytes(objectBytes);
+          final ObjectMetadata id = LegacyObjectMetadata.fromBytes(objectBytes);
           this.objects.put(id);
         }
         input.close();
@@ -203,10 +203,10 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
    * @see org.cleversafe.simpleobject.performance.ObjectManager#getIdForDelete()
    */
   @Override
-  public ObjectName getNameForDelete() {
+  public ObjectMetadata getNameForDelete() {
     this.persistLock.readLock().lock();
     try {
-      ObjectName id = null;
+      ObjectMetadata id = null;
       while (id == null) {
         this.objectsLock.writeLock().lock();
         id = this.objects.removeRandom();
@@ -227,7 +227,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
     }
   }
 
-  private void checkForNull(final ObjectName id) {
+  private void checkForNull(final ObjectMetadata id) {
     if (id == null) {
       throw new ObjectManagerException("No objects available.");
     }
@@ -239,12 +239,12 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
    * @see org.cleversafe.simpleobject.performance.ObjectManager#getIdForRead()
    */
   @Override
-  public ObjectName acquireNameForRead() {
+  public ObjectMetadata acquireNameForRead() {
     if (this.testEnded) {
       throw new RuntimeException("Test already ended");
     }
 
-    ObjectName id;
+    ObjectMetadata id;
 
     this.objectsLock.readLock().lock();
     id = this.objects.getRandom();
@@ -273,7 +273,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
   }
 
   @Override
-  public void releaseNameFromRead(final ObjectName id) {
+  public void releaseNameFromRead(final ObjectMetadata id) {
     this.readingLock.writeLock().lock();
     final int count = this.currentlyReading.get(id).intValue();
     if (count > 1) {
@@ -286,7 +286,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
   }
 
   @Override
-  public void writeNameComplete(final ObjectName id) {
+  public void writeNameComplete(final ObjectMetadata id) {
     this.persistLock.readLock().lock();
     try {
       this.objects.put(id);
@@ -311,9 +311,9 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
         final int remaining = getRemaining(size, surplus);
         // While writing surplus, remove them from this.objects, to keep consistent with
         // this.savefile
-        final Iterator<ObjectName> iterator = this.objects.iterator();
+        final Iterator<ObjectMetadata> iterator = this.objects.iterator();
         for (int i = 0; i < remaining; i++) {
-          final ObjectName sid = iterator.next();
+          final ObjectMetadata sid = iterator.next();
           dos.write(sid.toBytes());
           iterator.remove();
         }
@@ -338,7 +338,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
         final byte[] buf = new byte[OBJECT_SIZE];
         for (int i = 0; i < toTransfer; i++) {
           if (in.read(buf) == OBJECT_SIZE) {
-            final ObjectName sid = LegacyObjectName.forBytes(buf);
+            final ObjectMetadata sid = LegacyObjectMetadata.fromBytes(buf);
             this.objects.put(sid);
           }
         }
@@ -365,7 +365,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
     // savefile
     _logger.debug(String.format("Writing state file: %d objects into ", this.objects.size())
         + this.saveFile);
-    for (final Iterator<ObjectName> iterator = this.objects.iterator(); iterator.hasNext();) {
+    for (final Iterator<ObjectMetadata> iterator = this.objects.iterator(); iterator.hasNext();) {
       out.write(iterator.next().toBytes());
     }
     out.close();

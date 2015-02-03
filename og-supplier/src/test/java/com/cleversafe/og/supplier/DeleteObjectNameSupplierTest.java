@@ -29,7 +29,7 @@ import org.junit.Test;
 
 import com.cleversafe.og.object.ObjectManager;
 import com.cleversafe.og.object.ObjectManagerException;
-import com.cleversafe.og.object.ObjectName;
+import com.cleversafe.og.object.ObjectMetadata;
 
 public class DeleteObjectNameSupplierTest {
   private ObjectManager objectManager;
@@ -47,8 +47,8 @@ public class DeleteObjectNameSupplierTest {
   @Test
   public void deleteObjectNameSupplier() {
     final String object = "objectName";
-    final ObjectName objectName = mock(ObjectName.class);
-    when(objectName.toString()).thenReturn(object);
+    final ObjectMetadata objectName = mock(ObjectMetadata.class);
+    when(objectName.getName()).thenReturn(object);
     when(this.objectManager.getNameForDelete()).thenReturn(objectName);
 
     assertThat(new DeleteObjectNameSupplier(this.objectManager).get(), is(object));

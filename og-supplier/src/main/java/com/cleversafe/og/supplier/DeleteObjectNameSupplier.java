@@ -33,7 +33,7 @@ public class DeleteObjectNameSupplier implements Supplier<String> {
 
   @Override
   public String get() {
-    return this.objectManager.getNameForDelete().toString();
+    return this.objectManager.getNameForDelete().getName();
   }
 
   @Override

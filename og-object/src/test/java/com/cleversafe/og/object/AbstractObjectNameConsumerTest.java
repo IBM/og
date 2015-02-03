@@ -35,6 +35,7 @@ import org.junit.runner.RunWith;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
+import com.cleversafe.og.http.Bodies;
 import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpUtil;
 import com.cleversafe.og.util.Pair;
@@ -67,10 +68,12 @@ public abstract class AbstractObjectNameConsumerTest {
     when(this.request.getMethod()).thenReturn(method());
     when(this.request.getUri()).thenReturn(new URI("/container/" + this.object));
     when(this.request.headers()).thenReturn(ImmutableMap.of(Headers.X_OG_OBJECT_NAME, this.object));
+    when(this.request.getBody()).thenReturn(Bodies.zeroes(1024));
 
     this.response = mock(Response.class);
     when(this.response.getStatusCode()).thenReturn(200);
     when(this.response.headers()).thenReturn(ImmutableMap.of(Headers.X_OG_REQUEST_ID, "1"));
+    when(this.response.getBody()).thenReturn(Bodies.zeroes(1024));
 
     this.operation = Pair.of(this.request, this.response);
     this.objectNameConsumer = create(this.objectManager, this.statusCodes);

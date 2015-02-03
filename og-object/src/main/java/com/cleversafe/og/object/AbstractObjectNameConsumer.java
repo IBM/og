@@ -33,7 +33,6 @@ import com.cleversafe.og.util.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.eventbus.Subscribe;
-import com.google.common.io.BaseEncoding;
 
 /**
  * A consumer of object names
@@ -88,9 +87,14 @@ public abstract class AbstractObjectNameConsumer {
     if (objectString == null)
       throw new IllegalStateException("Unable to determine object");
 
-    final ObjectName objectName =
-        LegacyObjectName.forBytes(BaseEncoding.base16().lowerCase().decode(objectString));
+    final ObjectMetadata objectName = getObjectName(request, response);
     updateManager(objectName);
+  }
+
+  private ObjectMetadata getObjectName(Request request, Response response) {
+    String objectString = getObjectString(request, response);
+    long objectSize = getObjectSize(request, response);
+    return LegacyObjectMetadata.fromMetadata(objectString, objectSize);
   }
 
   protected String getObjectString(final Request request, final Response response) {
@@ -102,9 +106,15 @@ public abstract class AbstractObjectNameConsumer {
     return objectString;
   }
 
-  private void updateManager(final ObjectName objectName) {
+  private long getObjectSize(Request request, Response response) {
+    if (this.operation == Operation.WRITE)
+      return request.getBody().getSize();
+    return response.getBody().getSize();
+  }
+
+  private void updateManager(final ObjectMetadata objectName) {
     updateObjectManager(objectName);
   }
 
-  protected abstract void updateObjectManager(ObjectName objectName);
+  protected abstract void updateObjectManager(ObjectMetadata objectName);
 }
