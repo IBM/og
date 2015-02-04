@@ -58,6 +58,8 @@ public class ClientModule extends AbstractModule {
             .usingChunkedEncoding(this.config.isChunkedEncoding())
             .usingExpectContinue(this.config.isExpectContinue())
             .withWaitForContinue(this.config.getWaitForContinue())
+            .withRetryCount(this.config.getRetryCount())
+            .usingRequestSentRetry(this.config.isRequestSentRetry())
             .withAuthentication(authentication).withUserAgent(Version.displayVersion())
             .withWriteThroughput(this.config.getWriteThroughput())
             .withReadThroughput(this.config.getReadThroughput());

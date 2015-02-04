@@ -24,6 +24,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -46,6 +47,7 @@ import org.apache.http.impl.DefaultConnectionReuseStrategy;
 import org.apache.http.impl.NoConnectionReuseStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultConnectionKeepAliveStrategy;
+import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.protocol.HttpRequestExecutor;
@@ -94,6 +96,8 @@ public class ApacheClient implements Client {
   private final boolean chunkedEncoding;
   private final boolean expectContinue;
   private final int waitForContinue;
+  private final int retryCount;
+  private final boolean requestSentRetry;
   private final HttpAuth authentication;
   private final String userAgent;
   private final long writeThroughput;
@@ -114,6 +118,8 @@ public class ApacheClient implements Client {
     this.chunkedEncoding = builder.chunkedEncoding;
     this.expectContinue = builder.expectContinue;
     this.waitForContinue = builder.waitForContinue;
+    this.retryCount = builder.retryCount;
+    this.requestSentRetry = builder.requestSentRetry;
     this.authentication = builder.authentication;
     this.userAgent = builder.userAgent;
     this.writeThroughput = builder.writeThroughput;
@@ -125,6 +131,7 @@ public class ApacheClient implements Client {
     checkArgument(this.soLinger >= -1, "soLinger must be >= -1 [%s]", this.soLinger);
     checkArgument(this.waitForContinue > 0, "waitForContinue must be > 0 [%s]",
         this.waitForContinue);
+    checkArgument(this.retryCount >= 0, "retryCount must be >= 0 [%s]", this.retryCount);
     checkArgument(this.writeThroughput >= 0, "writeThroughput must be >= 0 [%s]",
         this.writeThroughput);
     checkArgument(this.readThroughput >= 0, "readThroughput must be >= 0 [%s]", this.readThroughput);
@@ -161,7 +168,8 @@ public class ApacheClient implements Client {
             .disableCookieManagement()
             .disableContentCompression()
             .disableAuthCaching()
-            .disableAutomaticRetries()
+            .setRetryHandler(
+                new CustomHttpRequestRetryHandler(this.retryCount, this.requestSentRetry))
             .setRedirectStrategy(new CustomRedirectStrategy())
             .setDefaultRequestConfig(
                 RequestConfig.custom()
@@ -173,6 +181,13 @@ public class ApacheClient implements Client {
                     // TODO should this be infinite? length of time allowed to request a connection
                     // from the pool
                     .setConnectionRequestTimeout(0).build()).build();
+  }
+
+  private class CustomHttpRequestRetryHandler extends DefaultHttpRequestRetryHandler {
+    public CustomHttpRequestRetryHandler(final int retryCount, final boolean requestSentRetryEnabled) {
+      super(retryCount, requestSentRetryEnabled, Collections
+          .<Class<? extends IOException>>emptyList());
+    }
   }
 
   @Override
@@ -378,11 +393,12 @@ public class ApacheClient implements Client {
     return String.format("ApacheClient [%n" + "connectTimeout=%s,%n" + "soTimeout=%s,%n"
         + "soReuseAddress=%s,%n" + "soLinger=%s,%n" + "soKeepAlive=%s,%n" + "tcpNoDelay=%s,%n"
         + "persistentConnections=%s,%n" + "chunkedEncoding=%s,%n" + "expectContinue=%s,%n"
-        + "waitForContinue=%s,%n" + "authentication=%s,%n" + "userAgent=%s,%n"
-        + "writeThroughput=%s,%n" + "readThroughput=%s%n]", this.connectTimeout, this.soTimeout,
-        this.soReuseAddress, this.soLinger, this.soKeepAlive, this.tcpNoDelay,
-        this.persistentConnections, this.chunkedEncoding, this.expectContinue,
-        this.waitForContinue, this.authentication, this.userAgent, this.writeThroughput,
+        + "waitForContinue=%s,%n" + "retryCount=%s,%n" + "requestSentRetry=%s,%n"
+        + "authentication=%s,%n" + "userAgent=%s,%n" + "writeThroughput=%s,%n"
+        + "readThroughput=%s%n]", this.connectTimeout, this.soTimeout, this.soReuseAddress,
+        this.soLinger, this.soKeepAlive, this.tcpNoDelay, this.persistentConnections,
+        this.chunkedEncoding, this.expectContinue, this.waitForContinue, this.retryCount,
+        this.requestSentRetry, this.authentication, this.userAgent, this.writeThroughput,
         this.readThroughput);
   }
 
@@ -400,6 +416,8 @@ public class ApacheClient implements Client {
     private boolean chunkedEncoding;
     private boolean expectContinue;
     private int waitForContinue;
+    private int retryCount;
+    private boolean requestSentRetry;
     private HttpAuth authentication;
     private String userAgent;
     private long writeThroughput;
@@ -420,6 +438,8 @@ public class ApacheClient implements Client {
       this.chunkedEncoding = false;
       this.expectContinue = false;
       this.waitForContinue = 3000;
+      this.retryCount = 0;
+      this.requestSentRetry = true;
       this.writeThroughput = 0;
       this.readThroughput = 0;
       this.responseBodyConsumers = Maps.newHashMap();
@@ -536,6 +556,29 @@ public class ApacheClient implements Client {
      */
     public Builder withWaitForContinue(final int waitForContinue) {
       this.waitForContinue = waitForContinue;
+      return this;
+    }
+
+    /**
+     * Configures the number of attempts to retry a request if an exception was thrown during its
+     * execution
+     * 
+     * @param retryCount the number of retry attempts
+     * @return this builder
+     */
+    public Builder withRetryCount(final int retryCount) {
+      this.retryCount = retryCount;
+      return this;
+    }
+
+    /**
+     * Configures whether or not to retry a request when it has already been sent to the host
+     * 
+     * @param requestSentRetry whether or not to retry a request which has already been sent
+     * @return this builder
+     */
+    public Builder usingRequestSentRetry(final boolean requestSentRetry) {
+      this.requestSentRetry = requestSentRetry;
       return this;
     }
 

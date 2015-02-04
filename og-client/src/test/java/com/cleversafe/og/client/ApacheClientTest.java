@@ -208,6 +208,21 @@ public class ApacheClientTest {
     new ApacheClient.Builder().withWaitForContinue(1).build();
   }
 
+  @Test(expected = IllegalArgumentException.class)
+  public void negativeRetryCount() {
+    new ApacheClient.Builder().withRetryCount(-1).build();
+  }
+
+  @Test
+  public void zeroRetryCount() {
+    new ApacheClient.Builder().withRetryCount(0).build();
+  }
+
+  @Test
+  public void positiveRetryCount() {
+    new ApacheClient.Builder().withRetryCount(1).build();
+  }
+
   @DataProvider
   public static Object[][] provideExecute() {
     final Body zeroes = Bodies.zeroes(1000);

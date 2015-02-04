@@ -30,6 +30,8 @@ public class ClientConfig {
   boolean chunkedEncoding;
   boolean expectContinue;
   int waitForContinue;
+  int retryCount;
+  boolean requestSentRetry;
   int writeThroughput;
   int readThroughput;
 
@@ -44,6 +46,8 @@ public class ClientConfig {
     this.chunkedEncoding = false;
     this.expectContinue = false;
     this.waitForContinue = 3000;
+    this.retryCount = 0;
+    this.requestSentRetry = true;
     this.writeThroughput = 0;
     this.readThroughput = 0;
   }
@@ -86,6 +90,14 @@ public class ClientConfig {
 
   public int getWaitForContinue() {
     return this.waitForContinue;
+  }
+
+  public int getRetryCount() {
+    return this.retryCount;
+  }
+
+  public boolean isRequestSentRetry() {
+    return this.requestSentRetry;
   }
 
   public int getWriteThroughput() {
