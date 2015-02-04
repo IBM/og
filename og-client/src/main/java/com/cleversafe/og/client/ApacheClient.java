@@ -24,7 +24,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -42,7 +41,7 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.config.SocketConfig;
-import org.apache.http.entity.InputStreamEntity;
+import org.apache.http.entity.AbstractHttpEntity;
 import org.apache.http.impl.DefaultConnectionReuseStrategy;
 import org.apache.http.impl.NoConnectionReuseStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -203,35 +202,16 @@ public class ApacheClient implements Client {
       builder.addHeader(header.getKey(), header.getValue());
     }
 
-    if (Data.NONE != request.getBody().getData())
-      builder.setEntity(createEntity(request));
+    if (Data.NONE != request.getBody().getData()) {
+      final AbstractHttpEntity entity =
+          new CustomHttpEntity(request.getBody(), this.writeThroughput);
+      // TODO chunk size for chunked encoding is hardcoded to 2048 bytes. Can only be overridden
+      // by implementing a custom connection factory
+      entity.setChunked(this.chunkedEncoding);
+      builder.setEntity(entity);
+    }
 
     return builder.build();
-  }
-
-  private HttpEntity createEntity(final Request request) {
-    // TODO verify httpclient consumes request entity correctly automatically
-    // TODO may need to implement a custom HttpEntity that returns false for isStreaming call,
-    // if this makes a performance difference
-    final InputStream stream = Streams.create(request.getBody());
-    final InputStreamEntity entity = new ThrottledEntity(stream, request.getBody().getSize());
-    // TODO chunk size for chunked encoding is hardcoded to 2048 bytes. Can only be overridden
-    // by implementing a custom connection factory
-    entity.setChunked(this.chunkedEncoding);
-    return entity;
-  }
-
-  class ThrottledEntity extends InputStreamEntity {
-    public ThrottledEntity(final InputStream instream, final long length) {
-      super(instream, length);
-    }
-
-    @Override
-    public void writeTo(OutputStream outstream) throws IOException {
-      if (ApacheClient.this.writeThroughput > 0)
-        outstream = Streams.throttle(outstream, ApacheClient.this.writeThroughput);
-      super.writeTo(outstream);
-    }
   }
 
   @Override
