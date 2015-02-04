@@ -57,7 +57,8 @@ public class CustomRedirectStrategy extends DefaultRedirectStrategy {
   public HttpUriRequest getRedirect(final HttpRequest request, final HttpResponse response,
       final HttpContext context) throws ProtocolException {
     final URI uri = getLocationURI(request, response, context);
-    // must remove any applied content headers as they will be re-applied
+    // must remove Content-Length and Transfer-Encoding headers from PUT/POST requests, otherwise an
+    // exception is thrown because they shouldn't yet be present on the new request after redirect
     return RequestBuilder.copy(request).setUri(uri).removeHeaders("Content-Length")
         .removeHeaders("Transfer-Encoding").build();
   }
