@@ -21,7 +21,6 @@ package com.cleversafe.og.client;
 
 import java.net.URI;
 
-import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.ProtocolException;
@@ -58,18 +57,8 @@ public class CustomRedirectStrategy extends DefaultRedirectStrategy {
   public HttpUriRequest getRedirect(final HttpRequest request, final HttpResponse response,
       final HttpContext context) throws ProtocolException {
     final URI uri = getLocationURI(request, response, context);
-    final RequestBuilder builder = RequestBuilder.copy(request).setUri(uri)
     // must remove any applied content headers as they will be re-applied
-        .removeHeaders("Content-Length").removeHeaders("Transfer-Encoding");
-
-    if (request instanceof HttpEntityEnclosingRequest) {
-      try {
-        // reset InputStream so it can be reused for redirected request
-        ((HttpEntityEnclosingRequest) request).getEntity().getContent().reset();
-      } catch (final Exception e) {
-        throw new ProtocolException("Unable to reset InputStream for redirected request", e);
-      }
-    }
-    return builder.build();
+    return RequestBuilder.copy(request).setUri(uri).removeHeaders("Content-Length")
+        .removeHeaders("Transfer-Encoding").build();
   }
 }
