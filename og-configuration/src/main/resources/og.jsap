@@ -1,33 +1,33 @@
 <?xml version="1.0"?>
 <jsap>
-	<parameters>
-		<unflaggedOption>
-			<id>test_config</id>
-			<required>false</required>
-			<stringParser>
-				<classname>FileStringParser</classname>
-			</stringParser>
-			<help>A relative or absolute path to an og test configuration file. If not specified, og will search for a config file named "test.json" on the classpath</help>
-		</unflaggedOption>
-		<unflaggedOption>
-			<id>client_config</id>
-			<required>false</required>
-			<stringParser>
-				<classname>FileStringParser</classname>
-			</stringParser>
-			<help>A relative or absolute path to an og client configuration file. If not specified, og will search for a config file named "client.json" on the classpath</help>
-		</unflaggedOption>
-		<switch>
-			<id>version</id>
-			<shortFlag>v</shortFlag>
-			<longFlag>version</longFlag>
-			<help>Prints the og version and exits</help>
-		</switch>
-		<switch>
-			<id>help</id>
-			<shortFlag>h</shortFlag>
-			<longFlag>help</longFlag>
-			<help>Prints this help and exits</help>
-		</switch>
-	</parameters>
+  <parameters>
+    <unflaggedOption>
+      <id>test_config</id>
+      <required>false</required>
+      <stringParser>
+        <classname>FileStringParser</classname>
+      </stringParser>
+      <help>A relative or absolute path to an og test configuration file. If not specified, og will search for a config file named "test.json" on the classpath</help>
+    </unflaggedOption>
+    <unflaggedOption>
+      <id>client_config</id>
+      <required>false</required>
+      <stringParser>
+        <classname>FileStringParser</classname>
+      </stringParser>
+      <help>A relative or absolute path to an og client configuration file. If not specified, og will search for a config file named "client.json" on the classpath</help>
+    </unflaggedOption>
+    <switch>
+      <id>version</id>
+      <shortFlag>v</shortFlag>
+      <longFlag>version</longFlag>
+      <help>Prints the og version and exits</help>
+    </switch>
+    <switch>
+      <id>help</id>
+      <shortFlag>h</shortFlag>
+      <longFlag>help</longFlag>
+      <help>Prints this help and exits</help>
+    </switch>
+  </parameters>
 </jsap>
