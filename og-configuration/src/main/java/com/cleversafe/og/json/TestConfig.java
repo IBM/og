@@ -45,6 +45,7 @@ public class TestConfig {
   Data data;
   ConcurrencyConfig concurrency;
   AuthenticationConfig authentication;
+  ClientConfig client;
   StoppingConditionsConfig stoppingConditions;
   ObjectManagerConfig objectManager;
 
@@ -66,6 +67,7 @@ public class TestConfig {
     this.data = Data.RANDOM;
     this.concurrency = new ConcurrencyConfig();
     this.authentication = new AuthenticationConfig();
+    this.client = new ClientConfig();
     this.stoppingConditions = new StoppingConditionsConfig();
     this.objectManager = new ObjectManagerConfig();
   }
@@ -134,6 +136,10 @@ public class TestConfig {
     return this.authentication;
   }
 
+  public ClientConfig getClient() {
+    return client;
+  }
+
   public StoppingConditionsConfig getStoppingConditions() {
     return this.stoppingConditions;
   }
@@ -141,5 +147,4 @@ public class TestConfig {
   public ObjectManagerConfig getObjectManager() {
     return this.objectManager;
   }
-
 }

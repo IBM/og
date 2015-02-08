@@ -67,7 +67,6 @@ import com.google.inject.Stage;
 public class ObjectGenerator extends CLI {
   private static final Logger _logger = LoggerFactory.getLogger(ObjectGenerator.class);
   private static final Logger _testJsonLogger = LoggerFactory.getLogger("TestJsonLogger");
-  private static final Logger _clientJsonLogger = LoggerFactory.getLogger("ClientJsonLogger");
   protected static final Logger _consoleLogger = LoggerFactory.getLogger("ConsoleLogger");
   private static final Logger _summaryJsonLogger = LoggerFactory.getLogger("SummaryJsonLogger");
   private static final String LINE_SEPARATOR =
@@ -86,11 +85,8 @@ public class ObjectGenerator extends CLI {
       this.gson = createGson();
       final TestConfig testConfig =
           fromJson(TestConfig.class, this.jsapResult.getFile("test_config"), "test.json");
-      final ClientConfig clientConfig =
-          fromJson(ClientConfig.class, this.jsapResult.getFile("client_config"), "client.json");
       _testJsonLogger.info(this.gson.toJson(testConfig));
-      _clientJsonLogger.info(this.gson.toJson(clientConfig));
-      this.injector = createInjector(testConfig, clientConfig);
+      this.injector = createInjector(testConfig);
       this.executorService = Executors.newSingleThreadExecutor();
       this.completionService = new ExecutorCompletionService<Boolean>(this.executorService);
     } catch (final Exception e) {
@@ -151,7 +147,8 @@ public class ObjectGenerator extends CLI {
     return this.gson.fromJson(reader, cls);
   }
 
-  private Injector createInjector(final TestConfig testConfig, final ClientConfig clientConfig) {
+  private Injector createInjector(final TestConfig testConfig) {
+    ClientConfig clientConfig = testConfig.getClient();
     try {
       return Guice.createInjector(Stage.PRODUCTION, new TestModule(testConfig), new ClientModule(
           clientConfig), new ApiModule(), new OGModule());

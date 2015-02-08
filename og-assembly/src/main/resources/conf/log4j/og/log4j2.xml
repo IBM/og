@@ -6,7 +6,6 @@
     <Property name="og.log">og.log</Property>
     <Property name="request.log">request.log</Property>
     <Property name="test.json">test.json</Property>
-    <Property name="client.json">client.json</Property>
     <Property name="summary.json">summary.json</Property>
   </Properties>
   <Appenders>
@@ -28,9 +27,6 @@
     <File name="TestJson" append="false" fileName="${test_path}/${test.json}">
       <PatternLayout pattern="%m%n" />
     </File>
-    <File name="ClientJson" append="false" fileName="${test_path}/${client.json}">
-      <PatternLayout pattern="%m%n" />
-    </File>
     <File name="SummaryJson" append="false" fileName="${test_path}/${summary.json}">
       <PatternLayout pattern="%m%n" />
     </File>
@@ -41,9 +37,6 @@
     </Logger>
     <Logger name="TestJsonLogger" level="info" additivity="false">
       <AppenderRef ref="TestJson" />
-    </Logger>
-    <Logger name="ClientJsonLogger" level="info" additivity="false">
-      <AppenderRef ref="ClientJson" />
     </Logger>
     <Logger name="RequestLogger" level="info" additivity="false">
       <AppenderRef ref="RequestLog" />
