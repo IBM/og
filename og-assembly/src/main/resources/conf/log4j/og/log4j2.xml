@@ -3,7 +3,7 @@
   <Properties>
     <Property name="log_path">log</Property>
     <Property name="test_path">${log_path}/${og:datetime}</Property>
-    <Property name="application.log">application.log</Property>
+    <Property name="og.log">og.log</Property>
     <Property name="request.log">request.log</Property>
     <Property name="test.json">test.json</Property>
     <Property name="client.json">client.json</Property>
@@ -13,8 +13,8 @@
     <Console name="Console" target="SYSTEM_OUT">
       <PatternLayout pattern="%m%n" />
     </Console>
-    <RollingRandomAccessFile name="ApplicationLog"
-      append="true" fileName="${log_path}/${application.log}" filePattern="${log_path}/${application.log}-%i.gz">
+    <RollingRandomAccessFile name="OGLog"
+      append="true" fileName="${log_path}/${og.log}" filePattern="${log_path}/${og.log}-%i.gz">
       <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%t] %l - %m%n" />
       <SizeBasedTriggeringPolicy size="500MB" />
       <DefaultRolloverStrategy max="25" />
@@ -55,7 +55,7 @@
     <Logger name="org.apache.http.wire" level="error" />
     <Logger name="org.apache.http.headers" level="error" />
     <Root level="info">
-      <AppenderRef ref="ApplicationLog" />
+      <AppenderRef ref="OGLog" />
     </Root>
   </Loggers>
 </Configuration>
