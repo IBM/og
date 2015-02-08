@@ -1,61 +1,61 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration monitorInterval="60" shutdownHook="disable">
-	<Properties>
-		<Property name="log_path">log</Property>
-		<Property name="test_path">${log_path}/${og:datetime}</Property>
-		<Property name="application.log">application.log</Property>
-		<Property name="request.log">request.log</Property>
-		<Property name="test.json">test.json</Property>
-		<Property name="client.json">client.json</Property>
-		<Property name="summary.json">summary.json</Property>
-	</Properties>
-	<Appenders>
-		<Console name="Console" target="SYSTEM_OUT">
-			<PatternLayout pattern="%m%n" />
-		</Console>
-		<RollingRandomAccessFile name="ApplicationLog"
-			append="true" fileName="${log_path}/${application.log}" filePattern="${log_path}/${application.log}-%i.gz">
-			<PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%t] %l - %m%n" />
-			<SizeBasedTriggeringPolicy size="500MB" />
-			<DefaultRolloverStrategy max="25" />
-		</RollingRandomAccessFile>
-		<RollingRandomAccessFile name="RequestLog"
-			append="true" fileName="${test_path}/${request.log}" filePattern="${test_path}/${request.log}-%i.gz">
-			<PatternLayout pattern="%m%n" />
-			<SizeBasedTriggeringPolicy size="100MB" />
-			<DefaultRolloverStrategy max="20" />
-		</RollingRandomAccessFile>
-		<File name="TestJson" append="false" fileName="${test_path}/${test.json}">
-			<PatternLayout pattern="%m%n" />
-		</File>
-		<File name="ClientJson" append="false" fileName="${test_path}/${client.json}">
-			<PatternLayout pattern="%m%n" />
-		</File>
-		<File name="SummaryJson" append="false" fileName="${test_path}/${summary.json}">
-			<PatternLayout pattern="%m%n" />
-		</File>
-	</Appenders>
-	<Loggers>
-		<Logger name="ConsoleLogger" level="info" additivity="false">
-			<AppenderRef ref="Console" />
-		</Logger>
-		<Logger name="TestJsonLogger" level="info" additivity="false">
-			<AppenderRef ref="TestJson" />
-		</Logger>
-		<Logger name="ClientJsonLogger" level="info" additivity="false">
-			<AppenderRef ref="ClientJson" />
-		</Logger>
-		<Logger name="RequestLogger" level="info" additivity="false">
-			<AppenderRef ref="RequestLog" />
-		</Logger>
-		<Logger name="SummaryJsonLogger" level="info" additivity="false">
-			<AppenderRef ref="SummaryJson" />
-		</Logger>
-		<Logger name="org.apache.http" level="warn" />
-		<Logger name="org.apache.http.wire" level="error" />
-		<Logger name="org.apache.http.headers" level="error" />
-		<Root level="info">
-			<AppenderRef ref="ApplicationLog" />
-		</Root>
-	</Loggers>
+  <Properties>
+    <Property name="log_path">log</Property>
+    <Property name="test_path">${log_path}/${og:datetime}</Property>
+    <Property name="application.log">application.log</Property>
+    <Property name="request.log">request.log</Property>
+    <Property name="test.json">test.json</Property>
+    <Property name="client.json">client.json</Property>
+    <Property name="summary.json">summary.json</Property>
+  </Properties>
+  <Appenders>
+    <Console name="Console" target="SYSTEM_OUT">
+      <PatternLayout pattern="%m%n" />
+    </Console>
+    <RollingRandomAccessFile name="ApplicationLog"
+      append="true" fileName="${log_path}/${application.log}" filePattern="${log_path}/${application.log}-%i.gz">
+      <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%t] %l - %m%n" />
+      <SizeBasedTriggeringPolicy size="500MB" />
+      <DefaultRolloverStrategy max="25" />
+    </RollingRandomAccessFile>
+    <RollingRandomAccessFile name="RequestLog"
+      append="true" fileName="${test_path}/${request.log}" filePattern="${test_path}/${request.log}-%i.gz">
+      <PatternLayout pattern="%m%n" />
+      <SizeBasedTriggeringPolicy size="100MB" />
+      <DefaultRolloverStrategy max="20" />
+    </RollingRandomAccessFile>
+    <File name="TestJson" append="false" fileName="${test_path}/${test.json}">
+      <PatternLayout pattern="%m%n" />
+    </File>
+    <File name="ClientJson" append="false" fileName="${test_path}/${client.json}">
+      <PatternLayout pattern="%m%n" />
+    </File>
+    <File name="SummaryJson" append="false" fileName="${test_path}/${summary.json}">
+      <PatternLayout pattern="%m%n" />
+    </File>
+  </Appenders>
+  <Loggers>
+    <Logger name="ConsoleLogger" level="info" additivity="false">
+      <AppenderRef ref="Console" />
+    </Logger>
+    <Logger name="TestJsonLogger" level="info" additivity="false">
+      <AppenderRef ref="TestJson" />
+    </Logger>
+    <Logger name="ClientJsonLogger" level="info" additivity="false">
+      <AppenderRef ref="ClientJson" />
+    </Logger>
+    <Logger name="RequestLogger" level="info" additivity="false">
+      <AppenderRef ref="RequestLog" />
+    </Logger>
+    <Logger name="SummaryJsonLogger" level="info" additivity="false">
+      <AppenderRef ref="SummaryJson" />
+    </Logger>
+    <Logger name="org.apache.http" level="warn" />
+    <Logger name="org.apache.http.wire" level="error" />
+    <Logger name="org.apache.http.headers" level="error" />
+    <Root level="info">
+      <AppenderRef ref="ApplicationLog" />
+    </Root>
+  </Loggers>
 </Configuration>
