@@ -188,28 +188,26 @@ public class ObjectGenerator extends CLI {
   }
 
   public static void main(final String[] args) {
-    logBanner();
-    _consoleLogger.info("Configuring...");
-
     final ObjectGenerator og = new ObjectGenerator(args);
     if (og.shouldStop()) {
-      if (og.error()) {
-        og.printErrors();
-        og.printUsage();
-      } else if (og.help())
+      if (og.help())
         og.printUsage();
       else if (og.version())
         og.printVersion();
-
+      else if (og.error()) {
+        og.printErrors();
+        og.printUsage();
+      }
       og.exit(og.exitCode());
     }
 
+    logBanner();
+    _consoleLogger.info("Configuring...");
     Runtime.getRuntime().addShutdownHook(new ShutdownHook(Thread.currentThread()));
-    _consoleLogger.info("Configured.");
-    _consoleLogger.info("Test Running...");
-
     final LoadTest test = og.getInjector().getInstance(LoadTest.class);
     _logger.info("{}", test);
+    _consoleLogger.info("Configured.");
+    _consoleLogger.info("Test Running...");
 
     final long timestampStart = System.currentTimeMillis();
     final boolean success = og.start();
