@@ -28,7 +28,7 @@ import com.cleversafe.og.http.Scheme;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-public class TestConfig {
+public class OGConfig {
   Scheme scheme;
   SelectionType hostSelection;
   List<HostConfig> host;
@@ -49,7 +49,7 @@ public class TestConfig {
   StoppingConditionsConfig stoppingConditions;
   ObjectManagerConfig objectManager;
 
-  public TestConfig() {
+  public OGConfig() {
     this.scheme = Scheme.HTTP;
     this.hostSelection = SelectionType.ROUNDROBIN;
     this.host = Lists.newArrayList();

@@ -2,12 +2,12 @@
 <jsap>
   <parameters>
     <unflaggedOption>
-      <id>test_config</id>
+      <id>og_config</id>
       <required>false</required>
       <stringParser>
         <classname>FileStringParser</classname>
       </stringParser>
-      <help>A relative or absolute path to an og test configuration file. If not specified, og will search for a config file named "test.json" on the classpath</help>
+      <help>A relative or absolute path to an og test configuration file. If not specified, og will search for a config file named "og.json" on the classpath</help>
     </unflaggedOption>
     <switch>
       <id>version</id>

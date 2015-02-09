@@ -39,7 +39,7 @@ import com.cleversafe.og.guice.ClientModule;
 import com.cleversafe.og.guice.OGModule;
 import com.cleversafe.og.guice.TestModule;
 import com.cleversafe.og.json.ClientConfig;
-import com.cleversafe.og.json.TestConfig;
+import com.cleversafe.og.json.OGConfig;
 import com.cleversafe.og.json.type.CaseInsensitiveEnumTypeAdapterFactory;
 import com.cleversafe.og.json.type.ConcurrencyConfigTypeAdapterFactory;
 import com.cleversafe.og.json.type.FilesizeConfigListTypeAdapterFactory;
@@ -66,7 +66,7 @@ import com.google.inject.Stage;
 
 public class ObjectGenerator extends CLI {
   private static final Logger _logger = LoggerFactory.getLogger(ObjectGenerator.class);
-  private static final Logger _testJsonLogger = LoggerFactory.getLogger("TestJsonLogger");
+  private static final Logger _ogJsonLogger = LoggerFactory.getLogger("OGJsonLogger");
   protected static final Logger _consoleLogger = LoggerFactory.getLogger("ConsoleLogger");
   private static final Logger _summaryJsonLogger = LoggerFactory.getLogger("SummaryJsonLogger");
   private static final String LINE_SEPARATOR =
@@ -83,10 +83,10 @@ public class ObjectGenerator extends CLI {
 
     try {
       this.gson = createGson();
-      final TestConfig testConfig =
-          fromJson(TestConfig.class, this.jsapResult.getFile("test_config"), "test.json");
-      _testJsonLogger.info(this.gson.toJson(testConfig));
-      this.injector = createInjector(testConfig);
+      final OGConfig ogConfig =
+          fromJson(OGConfig.class, this.jsapResult.getFile("og_config"), "og.json");
+      _ogJsonLogger.info(this.gson.toJson(ogConfig));
+      this.injector = createInjector(ogConfig);
       this.executorService = Executors.newSingleThreadExecutor();
       this.completionService = new ExecutorCompletionService<Boolean>(this.executorService);
     } catch (final Exception e) {
@@ -147,10 +147,10 @@ public class ObjectGenerator extends CLI {
     return this.gson.fromJson(reader, cls);
   }
 
-  private Injector createInjector(final TestConfig testConfig) {
-    ClientConfig clientConfig = testConfig.getClient();
+  private Injector createInjector(final OGConfig ogConfig) {
+    ClientConfig clientConfig = ogConfig.getClient();
     try {
-      return Guice.createInjector(Stage.PRODUCTION, new TestModule(testConfig), new ClientModule(
+      return Guice.createInjector(Stage.PRODUCTION, new TestModule(ogConfig), new ClientModule(
           clientConfig), new ApiModule(), new OGModule());
     } catch (final Exception e) {
       shutdownClient();

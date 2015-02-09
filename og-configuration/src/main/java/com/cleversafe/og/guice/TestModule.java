@@ -64,7 +64,7 @@ import com.cleversafe.og.json.ObjectManagerConfig;
 import com.cleversafe.og.json.OperationConfig;
 import com.cleversafe.og.json.SelectionType;
 import com.cleversafe.og.json.StoppingConditionsConfig;
-import com.cleversafe.og.json.TestConfig;
+import com.cleversafe.og.json.OGConfig;
 import com.cleversafe.og.s3.AWSAuthV2;
 import com.cleversafe.og.scheduling.ConcurrentRequestScheduler;
 import com.cleversafe.og.scheduling.RequestRateScheduler;
@@ -89,11 +89,11 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 
 public class TestModule extends AbstractModule {
-  private final TestConfig config;
+  private final OGConfig config;
   private static final double ERR = Math.pow(0.1, 6);
   private static final Range<Double> PERCENTAGE = Range.closed(0.0, 100.0);
 
-  public TestModule(final TestConfig config) {
+  public TestModule(final OGConfig config) {
     this.config = checkNotNull(config);
   }
 

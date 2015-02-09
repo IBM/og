@@ -53,7 +53,7 @@ import com.cleversafe.og.json.HostConfig;
 import com.cleversafe.og.json.ObjectManagerConfig;
 import com.cleversafe.og.json.OperationConfig;
 import com.cleversafe.og.json.SelectionType;
-import com.cleversafe.og.json.TestConfig;
+import com.cleversafe.og.json.OGConfig;
 import com.cleversafe.og.s3.AWSAuthV2;
 import com.cleversafe.og.scheduling.ConcurrentRequestScheduler;
 import com.cleversafe.og.scheduling.RequestRateScheduler;
@@ -73,13 +73,13 @@ import com.tngtech.java.junit.dataprovider.UseDataProvider;
 public class TestModuleTest {
   @Rule
   public ExpectedException thrown = ExpectedException.none();
-  private TestConfig config;
+  private OGConfig config;
   private TestModule module;
   private Supplier<String> id;
 
   @Before
   public void before() {
-    this.config = mock(TestConfig.class);
+    this.config = mock(OGConfig.class);
     this.module = new TestModule(this.config);
     this.id = Suppliers.of("1");
   }
