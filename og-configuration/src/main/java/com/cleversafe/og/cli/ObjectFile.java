@@ -117,7 +117,7 @@ public class ObjectFile {
       final byte[] buf = new byte[LegacyObjectMetadata.OBJECT_SIZE];
       while (in.read(buf) == LegacyObjectMetadata.OBJECT_SIZE) {
         ObjectMetadata objectName = LegacyObjectMetadata.fromBytes(buf);
-        writer.write(objectName.toString());
+        writer.write(String.format("%s,%s", objectName.getName(), objectName.getSize()));
         writer.newLine();
       }
     } finally {
