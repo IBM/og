@@ -63,6 +63,12 @@ public class HttpResponse implements Response {
     return this.body;
   }
 
+  @Override
+  public String toString() {
+    return String.format("HttpResponse [%n" + "statusCode=%s,%n" + "headers=%s%n" + "body=%s%n]",
+        this.statusCode, this.headers, this.body);
+  }
+
   /**
    * An http response builder
    */

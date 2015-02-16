@@ -75,6 +75,12 @@ public class HttpRequest implements Request {
     return this.body;
   }
 
+  @Override
+  public String toString() {
+    return String.format("HttpRequest [%n" + "method=%s,%n" + "uri=%s,%n" + "headers=%s%n"
+        + "body=%s%n]", this.method, this.uri, this.headers, this.body);
+  }
+
   /**
    * An http request builder
    */
