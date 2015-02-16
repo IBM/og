@@ -59,6 +59,6 @@ public class CachingSupplier<T> implements Supplier<T> {
 
   @Override
   public String toString() {
-    return "CachingSupplier [" + this.supplier + "]";
+    return String.format("CachingSupplier [%s]", this.supplier);
   }
 }

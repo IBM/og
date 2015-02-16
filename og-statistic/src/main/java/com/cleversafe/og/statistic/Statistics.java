@@ -22,10 +22,7 @@ package com.cleversafe.og.statistic;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.TreeMap;
 
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
@@ -145,5 +142,10 @@ public class Statistics {
   public Map<Integer, Long> statusCodes(final Operation operation) {
     checkNotNull(operation);
     return this.scCounters.get(operation).asMap();
+  }
+
+  @Override
+  public String toString() {
+    return "Statistics []";
   }
 }

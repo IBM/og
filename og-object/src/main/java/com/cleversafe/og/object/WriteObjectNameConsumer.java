@@ -44,4 +44,9 @@ public class WriteObjectNameConsumer extends AbstractObjectNameConsumer {
   protected void updateObjectManager(final ObjectMetadata objectName) {
     this.objectManager.writeNameComplete(objectName);
   }
+
+  @Override
+  public String toString() {
+    return "WriteObjectNameConsumer []";
+  }
 }

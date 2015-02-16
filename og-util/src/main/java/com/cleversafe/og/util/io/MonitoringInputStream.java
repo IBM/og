@@ -86,4 +86,9 @@ public class MonitoringInputStream extends FilterInputStream {
   public long getTTFB() {
     return this.ttfb;
   }
+
+  @Override
+  public String toString() {
+    return String.format("MonitoringInputStream [in=%s]", this.in);
+  }
 }

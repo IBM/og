@@ -25,7 +25,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import com.cleversafe.og.http.Scheme;
@@ -96,6 +95,13 @@ public class UriSupplier implements Supplier<URI> {
     final String queryParams = PARAM_JOINER.join(this.queryParameters);
     if (queryParams.length() > 0)
       s.append("?").append(queryParams);
+  }
+
+  @Override
+  public String toString() {
+    return String.format("UriSupplier [%n" + "scheme=%s,%n" + "host=%s,%n" + "port=%s,%n"
+        + "path=%s,%n" + "queryParameters=%s,%n" + "trailingSlash=%s%n" + "]", this.scheme,
+        this.host, this.port, this.path, this.queryParameters, this.trailingSlash);
   }
 
   /**
@@ -207,14 +213,5 @@ public class UriSupplier implements Supplier<URI> {
     public UriSupplier build() {
       return new UriSupplier(this);
     }
-  }
-
-  @Override
-  public String toString() {
-    return String
-        .format(
-            Locale.US,
-            "UriSupplier [%nscheme=%s,%nhost=%s,%nport=%s,%npath=%s,%nqueryParameters=%s,%ntrailingSlash=%s%n]",
-            this.scheme, this.host, this.port, this.path, this.queryParameters, this.trailingSlash);
   }
 }

@@ -139,7 +139,7 @@ public class LoadTest implements Callable<Boolean> {
 
   @Override
   public String toString() {
-    return String.format("LoadTest [%nrequestSupplier=%s,%n%nscheduler=%s,%n%nclient=%s%n]",
-        this.requestSupplier, this.scheduler, this.client);
+    return String.format("LoadTest [%n" + "requestSupplier=%s,%n" + "scheduler=%s,%n"
+        + "client=%s%n" + "]", this.requestSupplier, this.scheduler, this.client);
   }
 }

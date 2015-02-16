@@ -44,4 +44,9 @@ public class ReadObjectNameConsumer extends AbstractObjectNameConsumer {
   protected void updateObjectManager(final ObjectMetadata objectName) {
     this.objectManager.releaseNameFromRead(objectName);
   }
+
+  @Override
+  public String toString() {
+    return "ReadObjectNameConsumer []";
+  }
 }

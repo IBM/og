@@ -395,11 +395,11 @@ public class ApacheClient implements Client {
         + "persistentConnections=%s,%n" + "chunkedEncoding=%s,%n" + "expectContinue=%s,%n"
         + "waitForContinue=%s,%n" + "retryCount=%s,%n" + "requestSentRetry=%s,%n"
         + "authentication=%s,%n" + "userAgent=%s,%n" + "writeThroughput=%s,%n"
-        + "readThroughput=%s%n]", this.connectTimeout, this.soTimeout, this.soReuseAddress,
-        this.soLinger, this.soKeepAlive, this.tcpNoDelay, this.persistentConnections,
-        this.chunkedEncoding, this.expectContinue, this.waitForContinue, this.retryCount,
-        this.requestSentRetry, this.authentication, this.userAgent, this.writeThroughput,
-        this.readThroughput);
+        + "readThroughput=%s,%n" + "responseBodyConsumers=%s%n]", this.connectTimeout,
+        this.soTimeout, this.soReuseAddress, this.soLinger, this.soKeepAlive, this.tcpNoDelay,
+        this.persistentConnections, this.chunkedEncoding, this.expectContinue,
+        this.waitForContinue, this.retryCount, this.requestSentRetry, this.authentication,
+        this.userAgent, this.writeThroughput, this.readThroughput, this.responseBodyConsumers);
   }
 
   /**

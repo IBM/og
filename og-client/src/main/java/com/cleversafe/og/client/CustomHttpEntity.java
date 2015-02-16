@@ -79,4 +79,10 @@ public class CustomHttpEntity extends AbstractHttpEntity {
   public boolean isStreaming() {
     return false;
   }
+
+  @Override
+  public String toString() {
+    return String.format("CustomHttpEntity [body=%s, writeThroughput=%s]", this.body,
+        this.writeThroughput);
+  }
 }

@@ -214,4 +214,9 @@ public class AWSAuthV2 implements HttpAuth {
     if (queryParam.getValue() != null)
       s.append("=").append(queryParam.getValue());
   }
+
+  @Override
+  public String toString() {
+    return "AWSAuthV2 []";
+  }
 }

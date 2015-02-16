@@ -23,7 +23,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.Random;
 
 import com.google.common.base.Supplier;
@@ -159,9 +158,9 @@ public class RandomSupplier<T> implements Supplier<T> {
 
   @Override
   public String toString() {
-    final StringBuilder s = new StringBuilder("RandomChoiceSupplier [");
+    final StringBuilder s = new StringBuilder("RandomSupplier [");
     for (final Choice<T> choice : this.choices) {
-      s.append(String.format(Locale.US, "%nchoice=%s,%nweight=%s,", choice.value, choice.weight));
+      s.append(String.format("%nchoice=%s, weight=%s,", choice.value, choice.weight));
     }
     return s.append(String.format("%n]")).toString();
   }

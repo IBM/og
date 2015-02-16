@@ -121,4 +121,9 @@ public class InfiniteInputStream extends InputStream {
     this.cursor = (this.cursor + amount) % this.buf.length;
     return oldCursor;
   }
+
+  @Override
+  public String toString() {
+    return "InfiniteInputStream []";
+  }
 }

@@ -82,4 +82,10 @@ public class ThrottledInputStream extends FilterInputStream {
       this.rateLimiter.acquire();
     }
   }
+
+  @Override
+  public String toString() {
+    return String.format("ThrottledInputStream [in=%s, bytesPerSecond=%s]", this.in,
+        this.rateLimiter.getRate());
+  }
 }

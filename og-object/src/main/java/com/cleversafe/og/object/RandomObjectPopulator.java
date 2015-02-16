@@ -428,7 +428,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
 
   @Override
   public String toString() {
-    return "RandomObjectPopulator [maxObjects=" + this.maxObjects + ", directory=" + this.directory
-        + ", prefix=" + this.prefix + "]";
+    return String.format("RandomObjectPopulator [maxObjects=%s, directory=%s, prefix=%s]",
+        this.maxObjects, this.directory, this.prefix);
   }
 }

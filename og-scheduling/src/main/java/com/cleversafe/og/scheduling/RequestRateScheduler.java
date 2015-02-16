@@ -40,6 +40,8 @@ public class RequestRateScheduler implements Scheduler {
   private static final Logger _logger = LoggerFactory.getLogger(RequestRateScheduler.class);
   private final Distribution count;
   private final TimeUnit unit;
+  private final double rampup;
+  private final TimeUnit rampupUnit;
   private RateLimiter ramp;
   private final long rampDuration;
   private long firstCalledTimestamp;
@@ -58,7 +60,8 @@ public class RequestRateScheduler implements Scheduler {
     this.count = checkNotNull(count);
     this.unit = checkNotNull(unit);
     checkArgument(rampup >= 0.0, "rampup must be >= 0.0 [%s]", rampup);
-    checkNotNull(rampupUnit);
+    this.rampup = rampup;
+    this.rampupUnit = checkNotNull(rampupUnit);
     this.rampDuration = (long) (rampup * rampupUnit.toNanos(1));
     if (this.rampDuration > 0.0)
       this.ramp = RateLimiter.create(count.getAverage(), this.rampDuration, TimeUnit.NANOSECONDS);
@@ -111,6 +114,8 @@ public class RequestRateScheduler implements Scheduler {
 
   @Override
   public String toString() {
-    return "RequestRateScheduler [count=" + this.count + ", unit=" + this.unit + "]";
+    return String.format(
+        "RequestRateScheduler [count=%s, unit=%s, rampup=%s, rampupUnit=%s, rampDuration=%s]",
+        this.count, this.unit, this.rampup, this.rampupUnit, this.rampDuration);
   }
 }

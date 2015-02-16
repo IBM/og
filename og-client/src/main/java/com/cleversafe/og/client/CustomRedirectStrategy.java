@@ -62,4 +62,9 @@ public class CustomRedirectStrategy extends DefaultRedirectStrategy {
     return RequestBuilder.copy(request).setUri(uri).removeHeaders("Content-Length")
         .removeHeaders("Transfer-Encoding").build();
   }
+
+  @Override
+  public String toString() {
+    return "CustomRedirectStrategy []";
+  }
 }

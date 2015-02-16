@@ -41,6 +41,8 @@ import com.google.common.util.concurrent.Uninterruptibles;
 public class ConcurrentRequestScheduler implements Scheduler {
   private static final Logger _logger = LoggerFactory.getLogger(ConcurrentRequestScheduler.class);
   private final int concurrentRequests;
+  private final double rampup;
+  private final TimeUnit rampupUnit;
   private final long rampDuration;
   private final Semaphore sem;
   private final CountDownLatch started;
@@ -57,6 +59,8 @@ public class ConcurrentRequestScheduler implements Scheduler {
     checkArgument(rampup >= 0.0, "rampup must be >= 0.0 [%s]", rampup);
     checkNotNull(rampupUnit);
     this.concurrentRequests = concurrentRequests;
+    this.rampup = rampup;
+    this.rampupUnit = rampupUnit;
     this.rampDuration = (long) (rampup * rampupUnit.toNanos(1));
     this.started = new CountDownLatch(1);
 
@@ -112,6 +116,9 @@ public class ConcurrentRequestScheduler implements Scheduler {
 
   @Override
   public String toString() {
-    return "ConcurrentRequestScheduler [concurrentRequests=" + this.concurrentRequests + "]";
+    return String
+        .format(
+            "ConcurrentRequestScheduler [concurrentRequests=%s, rampup=%s, rampupUnit=%s, rampDuration=%s]",
+            this.concurrentRequests, this.rampup, this.rampupUnit, this.rampDuration);
   }
 }

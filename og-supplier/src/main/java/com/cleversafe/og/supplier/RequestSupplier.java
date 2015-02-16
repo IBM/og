@@ -23,7 +23,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URI;
 import java.util.List;
-import java.util.Locale;
 
 import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.Method;
@@ -64,6 +63,12 @@ public class RequestSupplier implements Supplier<Request> {
       context.withBody(this.body.get());
 
     return context.build();
+  }
+
+  @Override
+  public String toString() {
+    return String.format("RequestSupplier [%n" + "method=%s,%n" + "uri=%s,%n" + "headers=%s,%n"
+        + "body=%s%n" + "]", this.method, this.uri, this.headers, this.body);
   }
 
   /**
@@ -152,12 +157,5 @@ public class RequestSupplier implements Supplier<Request> {
     public RequestSupplier build() {
       return new RequestSupplier(this);
     }
-  }
-
-  @Override
-  public String toString() {
-    return String.format(Locale.US,
-        "RequestSupplier [%nmethod=%s,%nuri=%s,%nheaders=%s,%nbody=%s%n]", this.method, this.uri,
-        this.headers, this.body);
   }
 }

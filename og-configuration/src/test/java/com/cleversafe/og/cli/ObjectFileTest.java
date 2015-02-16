@@ -115,7 +115,8 @@ public class ObjectFileTest {
     final InputStream in = new ByteArrayInputStream(objectMetadata.getBytes());
     final ByteArrayOutputStream out = new ByteArrayOutputStream(LegacyObjectMetadata.OBJECT_SIZE);
     ObjectFile.write(in, out);
-    assertThat(objectMetadata, is(LegacyObjectMetadata.fromBytes(out.toByteArray()).toString()));
+    ObjectMetadata object = LegacyObjectMetadata.fromBytes(out.toByteArray());
+    assertThat(objectMetadata, is(String.format("%s,%s", object.getName(), object.getSize())));
   }
 
   @Test
@@ -132,7 +133,8 @@ public class ObjectFileTest {
     final InputStream in = new ByteArrayInputStream(object.toBytes());
     final ByteArrayOutputStream out = new ByteArrayOutputStream();
     ObjectFile.read(in, out);
-    assertThat(new String(out.toByteArray()), is(object.toString() + "\n"));
+    assertThat(new String(out.toByteArray()),
+        is(String.format("%s,%s%n", object.getName(), object.getSize())));
   }
 
   @DataProvider

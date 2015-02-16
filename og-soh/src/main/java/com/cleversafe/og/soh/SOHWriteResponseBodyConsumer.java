@@ -60,4 +60,9 @@ public class SOHWriteResponseBodyConsumer implements ResponseBodyConsumer {
     }
     return ImmutableMap.of(Headers.X_OG_OBJECT_NAME, objectName).entrySet().iterator();
   }
+
+  @Override
+  public String toString() {
+    return "SOHWriteResponseBodyConsumer []";
+  }
 }

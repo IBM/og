@@ -41,4 +41,9 @@ public class BasicAuth implements HttpAuth {
     final String credentials = username + ":" + password;
     return "Basic " + BaseEncoding.base64().encode(credentials.getBytes(Charsets.UTF_8));
   }
+
+  @Override
+  public String toString() {
+    return "BasicAuth []";
+  }
 }

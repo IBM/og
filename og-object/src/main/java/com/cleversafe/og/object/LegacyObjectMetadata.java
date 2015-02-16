@@ -139,6 +139,6 @@ public class LegacyObjectMetadata implements ObjectMetadata {
 
   @Override
   public String toString() {
-    return String.format("%s,%s", getName(), getSize());
+    return String.format("LegacyObjectMetadata [name=%s, size=%s]", getName(), getSize());
   }
 }

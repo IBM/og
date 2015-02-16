@@ -80,6 +80,11 @@ public class Bodies {
       public long getSize() {
         return size;
       }
+
+      @Override
+      public String toString() {
+        return String.format("Body [data=%s, size=%s]", data, size);
+      }
     };
   }
 }

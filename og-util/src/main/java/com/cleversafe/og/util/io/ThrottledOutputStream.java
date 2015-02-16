@@ -77,4 +77,10 @@ public class ThrottledOutputStream extends FilterOutputStream {
       this.rateLimiter.acquire();
     }
   }
+
+  @Override
+  public String toString() {
+    return String.format("ThrottledOutputStream [out=%s, bytesPerSecond=%s]", this.out,
+        this.rateLimiter.getRate());
+  }
 }
