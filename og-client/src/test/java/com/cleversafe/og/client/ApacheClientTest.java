@@ -91,7 +91,7 @@ public class ApacheClientTest {
 
     // 5 second delay
     stubFor(get(urlEqualTo("/delayed"))
-        .willReturn(aResponse().withStatus(200).withFixedDelay(2000)));
+        .willReturn(aResponse().withStatus(200).withFixedDelay(1000)));
 
     stubFor(any(urlEqualTo("/301")).willReturn(
         aResponse().withStatus(301).withHeader("location", "/container/")));
@@ -237,7 +237,7 @@ public class ApacheClientTest {
 
   @Test
   @UseDataProvider("provideExecute")
-  public void executoe(final Method method, final Body requestBody, final String requestData,
+  public void execute(final Method method, final Body requestBody, final String requestData,
       final Body responseBody) throws InterruptedException, ExecutionException {
     final Request request =
         new HttpRequest.Builder(method, this.objectUri).withBody(requestBody).build();
@@ -359,8 +359,8 @@ public class ApacheClientTest {
     final long start = System.nanoTime();
     this.client.shutdown(true).get();
     final long duration = TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - start);
-    // immediate shutdown takes less than 60 seconds
-    assertThat(duration, lessThan(60L));
+    // immediate shutdown takes less than 10 seconds
+    assertThat(duration, lessThan(10L));
   }
 
   @Test
@@ -371,7 +371,7 @@ public class ApacheClientTest {
     this.client.shutdown(false).get();
     final long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
     // graceful shutdown takes at least request time
-    assertThat(duration, greaterThanOrEqualTo(2000L));
+    assertThat(duration, greaterThanOrEqualTo(1000L));
   }
 
   // TODO determine a way to test PUT redirect with 100-Continue; WireMock always
@@ -465,7 +465,7 @@ public class ApacheClientTest {
   }
 
   @Test(expected = NullPointerException.class)
-  public void rResponseBodyConsumerNullConsumer() {
+  public void responseBodyConsumerNullConsumer() {
     new ApacheClient.Builder().withResponseBodyConsumer("object", null).build();
   }
 

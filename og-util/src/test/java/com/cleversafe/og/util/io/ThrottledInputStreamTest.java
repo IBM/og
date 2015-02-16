@@ -83,8 +83,8 @@ public class ThrottledInputStreamTest {
     }
     final long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - timestampStart);
     final long delta = Math.abs(duration - 100);
-    // within 10% of expected duration (100 milliseconds)
-    assertThat(delta, lessThan(10L));
+    // within 15% of expected duration (100 milliseconds)
+    assertThat(delta, lessThan(15L));
   }
 
   @Test
@@ -94,7 +94,7 @@ public class ThrottledInputStreamTest {
     in.read(new byte[100]);
     final long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - timestampStart);
     final long delta = Math.abs(duration - 100);
-    // within 10% of expected duration (100 milliseconds)
-    assertThat(delta, lessThan(10L));
+    // within 15% of expected duration (100 milliseconds)
+    assertThat(delta, lessThan(15L));
   }
 }
