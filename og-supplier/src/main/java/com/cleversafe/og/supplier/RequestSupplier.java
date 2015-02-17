@@ -22,16 +22,15 @@ package com.cleversafe.og.supplier;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URI;
-import java.util.List;
+import java.util.Map;
 
 import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.http.HttpRequest;
-import com.cleversafe.og.util.Pair;
 import com.google.common.base.Supplier;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 
 /**
  * A supplier of requests
@@ -41,13 +40,13 @@ import com.google.common.collect.Lists;
 public class RequestSupplier implements Supplier<Request> {
   private final Supplier<Method> method;
   private final Supplier<URI> uri;
-  private final List<Pair<Supplier<String>, Supplier<String>>> headers;
+  private final Map<Supplier<String>, Supplier<String>> headers;
   private final Supplier<Body> body;
 
   private RequestSupplier(final Builder builder) {
     this.method = checkNotNull(builder.method);
     this.uri = checkNotNull(builder.uri);
-    this.headers = ImmutableList.copyOf(builder.headers);
+    this.headers = ImmutableMap.copyOf(builder.headers);
     this.body = builder.body;
   }
 
@@ -55,7 +54,7 @@ public class RequestSupplier implements Supplier<Request> {
   public Request get() {
     final HttpRequest.Builder context = new HttpRequest.Builder(this.method.get(), this.uri.get());
 
-    for (final Pair<Supplier<String>, Supplier<String>> header : this.headers) {
+    for (final Map.Entry<Supplier<String>, Supplier<String>> header : this.headers.entrySet()) {
       context.withHeader(header.getKey().get(), header.getValue().get());
     }
 
@@ -77,7 +76,7 @@ public class RequestSupplier implements Supplier<Request> {
   public static class Builder {
     private final Supplier<Method> method;
     private final Supplier<URI> uri;
-    private final List<Pair<Supplier<String>, Supplier<String>>> headers;
+    private final Map<Supplier<String>, Supplier<String>> headers;
     private Supplier<Body> body;
 
     /**
@@ -99,7 +98,7 @@ public class RequestSupplier implements Supplier<Request> {
     public Builder(final Supplier<Method> method, final Supplier<URI> uri) {
       this.method = method;
       this.uri = uri;
-      this.headers = Lists.newArrayList();
+      this.headers = Maps.newLinkedHashMap();
     }
 
     /**
@@ -122,7 +121,7 @@ public class RequestSupplier implements Supplier<Request> {
      * @return this builder
      */
     public Builder withHeader(final Supplier<String> key, final Supplier<String> value) {
-      this.headers.add(Pair.of(key, value));
+      this.headers.put(key, value);
       return this;
     }
 
