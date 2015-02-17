@@ -1,21 +1,10 @@
-//
-// Copyright (C) 2005-2011 Cleversafe, Inc. All rights reserved.
-//
-// Contact Information:
-// Cleversafe, Inc.
-// 222 South Riverside Plaza
-// Suite 1700
-// Chicago, IL 60606, USA
-//
-// licensing@cleversafe.com
-//
-// END-OF-HEADER
-//
-// -----------------------
-// @author: rveitch
-//
-// Date: Mar 27, 2014
-// ---------------------
+/*
+ * Copyright (C) 2005-2015 Cleversafe, Inc. All rights reserved.
+ * 
+ * Contact Information: Cleversafe, Inc. 222 South Riverside Plaza Suite 1700 Chicago, IL 60606, USA
+ * 
+ * licensing@cleversafe.com
+ */
 
 package com.cleversafe.og.guice;
 
@@ -60,11 +49,11 @@ import com.cleversafe.og.json.ConcurrencyType;
 import com.cleversafe.og.json.DistributionType;
 import com.cleversafe.og.json.FilesizeConfig;
 import com.cleversafe.og.json.HostConfig;
+import com.cleversafe.og.json.OGConfig;
 import com.cleversafe.og.json.ObjectManagerConfig;
 import com.cleversafe.og.json.OperationConfig;
 import com.cleversafe.og.json.SelectionType;
 import com.cleversafe.og.json.StoppingConditionsConfig;
-import com.cleversafe.og.json.OGConfig;
 import com.cleversafe.og.s3.AWSAuthV2;
 import com.cleversafe.og.scheduling.ConcurrentRequestScheduler;
 import com.cleversafe.og.scheduling.RequestRateScheduler;
