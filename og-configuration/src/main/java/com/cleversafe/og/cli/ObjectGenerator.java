@@ -9,10 +9,6 @@
 package com.cleversafe.og.cli;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
@@ -23,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.api.Client;
+import com.cleversafe.og.cli.Application.Cli;
 import com.cleversafe.og.guice.ApiModule;
 import com.cleversafe.og.guice.ClientModule;
 import com.cleversafe.og.guice.OGModule;
@@ -43,7 +40,6 @@ import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.test.LoadTest;
 import com.cleversafe.og.util.SizeUnit;
 import com.cleversafe.og.util.Version;
-import com.google.common.base.Charsets;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.google.gson.FieldNamingPolicy;
@@ -53,58 +49,102 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 
-public class ObjectGenerator extends CLI {
+public class ObjectGenerator {
   private static final Logger _logger = LoggerFactory.getLogger(ObjectGenerator.class);
+  private static final Logger _consoleLogger = LoggerFactory.getLogger("ConsoleLogger");
   private static final Logger _ogJsonLogger = LoggerFactory.getLogger("OGJsonLogger");
-  protected static final Logger _consoleLogger = LoggerFactory.getLogger("ConsoleLogger");
   private static final Logger _summaryJsonLogger = LoggerFactory.getLogger("SummaryJsonLogger");
   private static final String LINE_SEPARATOR =
       "-------------------------------------------------------------------------------";
-  private Gson gson;
-  private Injector injector;
-  private ExecutorService executorService;
-  private CompletionService<Boolean> completionService;
 
-  public ObjectGenerator(final String[] args) {
-    super("og", "og.jsap", args);
-    if (this.error)
-      return;
+  private ObjectGenerator() {}
 
-    try {
-      this.gson = createGson();
-      final OGConfig ogConfig =
-          fromJson(OGConfig.class, this.jsapResult.getFile("og_config"), "og.json");
-      _ogJsonLogger.info(this.gson.toJson(ogConfig));
-      this.injector = createInjector(ogConfig);
-      this.executorService = Executors.newSingleThreadExecutor();
-      this.completionService = new ExecutorCompletionService<Boolean>(this.executorService);
-    } catch (final Exception e) {
-      _logger.error("", e);
-      this.error = true;
-      this.exitCode = CONFIGURATION_ERROR;
+  public static void main(final String[] args) {
+    final Cli cli = Application.cli("og", "og.jsap", args);
+    if (cli.shouldStop()) {
+      if (cli.help())
+        cli.printUsage();
+      else if (cli.version())
+        cli.printVersion();
+      else if (cli.error()) {
+        cli.printErrors();
+        cli.printUsage();
+      }
+      Application.exit(Application.EXIT_CONFIGURATION);
     }
-  }
 
-  @Override
-  public boolean start() {
-    final LoadTest test = getInjector().getInstance(LoadTest.class);
-    boolean success = false;
+    final Gson gson = createGson();
+    final OGConfig ogConfig;
+    final Injector injector;
+    LoadTest test = null;
+    Client client = null;
+    ObjectManager objectManager = null;
+    Statistics statistics = null;
+    boolean success = true;
+    final ExecutorService executorService = Executors.newSingleThreadExecutor();
+    final CompletionService<Boolean> completionService =
+        new ExecutorCompletionService<Boolean>(executorService);
+    long timestampStart = 0;
+    long timestampFinish = 0;
+
     try {
-      this.completionService.submit(test);
-      success = this.completionService.take().get();
-    } catch (final Exception e) {
-      _logger.error("", e);
+      File json = cli.flags().getFile("og_config");
+      File defaultJson = new File(Application.getResource("og.json"));
+      ogConfig = Application.fromJson(json, defaultJson, OGConfig.class, gson);
+      _ogJsonLogger.info(gson.toJson(ogConfig));
+
+      injector = createInjector(ogConfig);
+      test = injector.getInstance(LoadTest.class);
+      client = injector.getInstance(Client.class);
+      objectManager = injector.getInstance(ObjectManager.class);
+      statistics = injector.getInstance(Statistics.class);
+
+      logBanner();
+      _consoleLogger.info("Configuring...");
+
+      Runtime.getRuntime().addShutdownHook(new ShutdownHook(Thread.currentThread()));
+
+      _logger.info("{}", test);
+      _consoleLogger.info("Configured.");
+      _consoleLogger.info("Test Running...");
+
+      timestampStart = System.currentTimeMillis();
+      completionService.submit(test);
+      success = completionService.take().get();
+
+      timestampFinish = System.currentTimeMillis();
+
+      if (success)
+        _consoleLogger.info("Test Completed.");
+      else
+        _consoleLogger.error("Test ended abruptly. Check application log for details");
+
+    } catch (InterruptedException e) {
+      _consoleLogger.info("Test interrupted.");
+      timestampFinish = System.currentTimeMillis();
+    } catch (Exception e) {
+      success = false;
+      _logger.error("Exception while configuring and running test", e);
     } finally {
-      test.stopTest();
-      shutdownClient();
-      MoreExecutors.shutdownAndAwaitTermination(this.executorService, 1, TimeUnit.MINUTES);
-      shutdownObjectManager();
-    }
+      if (test != null)
+        test.stopTest();
+      shutdownClient(client);
+      MoreExecutors.shutdownAndAwaitTermination(executorService, 1, TimeUnit.MINUTES);
+      shutdownObjectManager(objectManager);
 
-    return success;
+      if (statistics != null) {
+        final Summary summary = new Summary(statistics, timestampStart, timestampFinish);
+        _summaryJsonLogger.info(gson.toJson(summary.getSummaryStats()));
+
+        if (success) {
+          logSummaryBanner();
+          _consoleLogger.info("{}", summary);
+        }
+      }
+    }
   }
 
-  private Gson createGson() {
+  public static Gson createGson() {
     return new GsonBuilder()
         .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
         .registerTypeAdapterFactory(new CaseInsensitiveEnumTypeAdapterFactory())
@@ -121,54 +161,15 @@ public class ObjectGenerator extends CLI {
         .create();
   }
 
-  private <T> T fromJson(final Class<T> cls, final File userConfig,
-      final String defaultConfigResource) {
-    File json = userConfig;
-    if (userConfig == null)
-      json = new File(getResource(defaultConfigResource));
-    Reader reader = null;
-    try {
-      reader = new InputStreamReader(new FileInputStream(json), Charsets.UTF_8);
-    } catch (final FileNotFoundException e) {
-      throw new IllegalStateException(e);
-    }
-
-    return this.gson.fromJson(reader, cls);
-  }
-
-  private Injector createInjector(final OGConfig ogConfig) {
+  public static Injector createInjector(final OGConfig ogConfig) {
     ClientConfig clientConfig = ogConfig.getClient();
+
+    return Guice.createInjector(Stage.PRODUCTION, new TestModule(ogConfig), new ClientModule(
+        clientConfig), new ApiModule(), new OGModule());
+  }
+
+  public static void shutdownClient(Client client) {
     try {
-      return Guice.createInjector(Stage.PRODUCTION, new TestModule(ogConfig), new ClientModule(
-          clientConfig), new ApiModule(), new OGModule());
-    } catch (final Exception e) {
-      shutdownClient();
-      shutdownObjectManager();
-      throw new IllegalStateException(e);
-    }
-  }
-
-  public Injector getInjector() {
-    return this.injector;
-  }
-
-  public Gson getGson() {
-    return this.gson;
-  }
-
-  public void shutdownObjectManager() {
-    try {
-      final ObjectManager objectManager = this.injector.getInstance(ObjectManager.class);
-      if (objectManager != null)
-        objectManager.testComplete();
-    } catch (final Exception e) {
-      _logger.error("Error shutting down object manager", e);
-    }
-  }
-
-  public void shutdownClient() {
-    try {
-      final Client client = this.injector.getInstance(Client.class);
       if (client != null)
         Uninterruptibles.getUninterruptibly(client.shutdown(true));
     } catch (final Exception e) {
@@ -176,42 +177,13 @@ public class ObjectGenerator extends CLI {
     }
   }
 
-  public static void main(final String[] args) {
-    final ObjectGenerator og = new ObjectGenerator(args);
-    if (og.shouldStop()) {
-      if (og.help())
-        og.printUsage();
-      else if (og.version())
-        og.printVersion();
-      else if (og.error()) {
-        og.printErrors();
-        og.printUsage();
-      }
-      og.exit(og.exitCode());
+  public static void shutdownObjectManager(ObjectManager objectManager) {
+    try {
+      if (objectManager != null)
+        objectManager.testComplete();
+    } catch (final Exception e) {
+      _logger.error("Error shutting down object manager", e);
     }
-
-    logBanner();
-    _consoleLogger.info("Configuring...");
-    Runtime.getRuntime().addShutdownHook(new ShutdownHook(Thread.currentThread()));
-    final LoadTest test = og.getInjector().getInstance(LoadTest.class);
-    _logger.info("{}", test);
-    _consoleLogger.info("Configured.");
-    _consoleLogger.info("Test Running...");
-
-    final long timestampStart = System.currentTimeMillis();
-    final boolean success = og.start();
-    final long timestampFinish = System.currentTimeMillis();
-
-    if (success)
-      _consoleLogger.info("Test Completed.");
-    else
-      _consoleLogger.error("Test ended abruptly. Check application log for details");
-
-    logSummaryBanner();
-    final Statistics stats = og.getInjector().getInstance(Statistics.class);
-    final Summary summary = new Summary(stats, timestampStart, timestampFinish);
-    _consoleLogger.info("{}", summary);
-    _summaryJsonLogger.info(og.getGson().toJson(summary.getSummaryStats()));
   }
 
   private static void logBanner() {
