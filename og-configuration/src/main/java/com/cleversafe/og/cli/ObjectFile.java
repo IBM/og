@@ -46,7 +46,7 @@ public class ObjectFile {
       else if (cli.version())
         cli.printVersion();
 
-      Application.exit(Application.EXIT_CONFIGURATION);
+      Application.exit(Application.TEST_ERROR);
     }
 
     try {

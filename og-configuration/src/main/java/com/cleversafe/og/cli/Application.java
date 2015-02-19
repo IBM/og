@@ -30,7 +30,7 @@ import com.martiansoftware.jsap.JSAP;
 import com.martiansoftware.jsap.JSAPResult;
 
 public class Application {
-  public static final int EXIT_CONFIGURATION = 1;
+  public static final int TEST_ERROR = 1;
 
   private Application() {}
 

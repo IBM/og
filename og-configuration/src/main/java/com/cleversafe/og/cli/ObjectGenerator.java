@@ -69,8 +69,9 @@ public class ObjectGenerator {
       else if (cli.error()) {
         cli.printErrors();
         cli.printUsage();
+        Application.exit(Application.TEST_ERROR);
       }
-      Application.exit(Application.EXIT_CONFIGURATION);
+      Application.exit(0);
     }
 
     final Gson gson = createGson();
@@ -87,7 +88,11 @@ public class ObjectGenerator {
     long timestampStart = 0;
     long timestampFinish = 0;
 
+    logBanner();
+
     try {
+      _consoleLogger.info("Configuring...");
+
       File json = cli.flags().getFile("og_config");
       File defaultJson = new File(Application.getResource("og.json"));
       ogConfig = Application.fromJson(json, defaultJson, OGConfig.class, gson);
@@ -98,10 +103,6 @@ public class ObjectGenerator {
       client = injector.getInstance(Client.class);
       objectManager = injector.getInstance(ObjectManager.class);
       statistics = injector.getInstance(Statistics.class);
-
-      logBanner();
-      _consoleLogger.info("Configuring...");
-
       Runtime.getRuntime().addShutdownHook(new ShutdownHook(Thread.currentThread()));
 
       _logger.info("{}", test);
@@ -111,20 +112,22 @@ public class ObjectGenerator {
       timestampStart = System.currentTimeMillis();
       completionService.submit(test);
       success = completionService.take().get();
-
       timestampFinish = System.currentTimeMillis();
 
       if (success)
         _consoleLogger.info("Test Completed.");
       else
-        _consoleLogger.error("Test ended abruptly. Check application log for details");
+        _consoleLogger.error("Test ended unsuccessfully. See og.log for details");
 
     } catch (InterruptedException e) {
-      _consoleLogger.info("Test interrupted.");
       timestampFinish = System.currentTimeMillis();
+      _consoleLogger.info("Test interrupted.");
     } catch (Exception e) {
+      timestampFinish = System.currentTimeMillis();
       success = false;
+
       _logger.error("Exception while configuring and running test", e);
+      _consoleLogger.error("Test Error. See og.log for details");
     } finally {
       if (test != null)
         test.stopTest();
@@ -142,6 +145,9 @@ public class ObjectGenerator {
         }
       }
     }
+
+    if (!success)
+      Application.exit(Application.TEST_ERROR);
   }
 
   public static Gson createGson() {
