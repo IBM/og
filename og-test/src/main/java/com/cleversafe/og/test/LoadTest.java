@@ -96,18 +96,17 @@ public class LoadTest implements Callable<Boolean> {
     Futures.addCallback(future, new FutureCallback<Response>() {
       @Override
       public void onSuccess(final Response response) {
-        removeActiveOperation();
         postOperation(response);
-
+        removeActiveOperation();
       }
 
       @Override
       public void onFailure(final Throwable t) {
-        removeActiveOperation();
         _logger.error("Exception while processing operation", t);
         LoadTest.this.running = false;
-        final HttpResponse response = new HttpResponse.Builder().withStatusCode(599).build();
+        final Response response = new HttpResponse.Builder().withStatusCode(599).build();
         postOperation(response);
+        removeActiveOperation();
       }
 
       private void removeActiveOperation() {
