@@ -10,10 +10,8 @@ package com.cleversafe.og.test;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.Map;
-import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 
 import javax.inject.Inject;
@@ -24,11 +22,11 @@ import org.slf4j.LoggerFactory;
 import com.cleversafe.og.api.Client;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
-import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpResponse;
 import com.cleversafe.og.scheduling.Scheduler;
 import com.cleversafe.og.util.Pair;
 import com.google.common.base.Supplier;
+import com.google.common.collect.Sets;
 import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -43,7 +41,7 @@ public class LoadTest implements Callable<Boolean> {
   private final EventBus eventBus;
   private volatile boolean running;
   private volatile boolean success;
-  private final Map<String, ListenableFuture<Response>> activeOperations;
+  private final Set<ListenableFuture<Response>> activeRequests;
   private final CountDownLatch completed;
 
   @Inject
@@ -57,7 +55,7 @@ public class LoadTest implements Callable<Boolean> {
     checkNotNull(handler).setLoadTest(this);
     this.running = true;
     this.success = true;
-    this.activeOperations = new ConcurrentHashMap<String, ListenableFuture<Response>>();
+    this.activeRequests = Sets.newConcurrentHashSet();
     this.completed = new CountDownLatch(1);
   }
 
@@ -67,8 +65,7 @@ public class LoadTest implements Callable<Boolean> {
       while (this.running) {
         final Request request = this.requestSupplier.get();
         final ListenableFuture<Response> future = this.client.execute(request);
-        // TODO better key than request_id? make Request hashable?
-        this.activeOperations.put(request.headers().get(Headers.X_OG_REQUEST_ID), future);
+        this.activeRequests.add(future);
         addCallback(request, future);
         this.scheduler.waitForNext();
       }
@@ -78,16 +75,15 @@ public class LoadTest implements Callable<Boolean> {
       _logger.error("Exception while producing request", e);
     }
 
-    if (!this.activeOperations.isEmpty())
+    if (!this.activeRequests.isEmpty())
       Uninterruptibles.awaitUninterruptibly(this.completed);
     return this.success;
   }
 
   public void stopTest() {
     this.running = false;
-    for (final Entry<String, ListenableFuture<Response>> operation : this.activeOperations
-        .entrySet()) {
-      operation.getValue().cancel(true);
+    for (ListenableFuture<Response> future : this.activeRequests) {
+      future.cancel(true);
     }
   }
 
@@ -99,9 +95,9 @@ public class LoadTest implements Callable<Boolean> {
   private void addCallback(final Request request, final ListenableFuture<Response> future) {
     Futures.addCallback(future, new FutureCallback<Response>() {
       @Override
-      public void onSuccess(final Response result) {
+      public void onSuccess(final Response response) {
         removeActiveOperation();
-        postOperation(result);
+        postOperation(response);
 
       }
 
@@ -115,8 +111,8 @@ public class LoadTest implements Callable<Boolean> {
       }
 
       private void removeActiveOperation() {
-        LoadTest.this.activeOperations.remove(request.headers().get(Headers.X_OG_REQUEST_ID));
-        if (!LoadTest.this.running && LoadTest.this.activeOperations.isEmpty())
+        LoadTest.this.activeRequests.remove(future);
+        if (!LoadTest.this.running && LoadTest.this.activeRequests.isEmpty())
           LoadTest.this.completed.countDown();
       }
 
