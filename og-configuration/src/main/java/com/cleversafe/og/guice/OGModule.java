@@ -130,7 +130,7 @@ public class OGModule extends AbstractModule {
     checkNotNull(read);
     checkNotNull(delete);
     final double sum = readWeight + writeWeight + deleteWeight;
-    checkArgument(DoubleMath.fuzzyEquals(sum, 100.0, ERR), "Sum of percentages must be 100.0 [%s]",
+    checkArgument(DoubleMath.fuzzyEquals(sum, 100.0, ERR), "sum of percentages must be 100.0 [%s]",
         sum);
 
     final RandomSupplier.Builder<Supplier<Request>> wrc = Suppliers.random();

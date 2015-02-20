@@ -152,11 +152,11 @@ public class TestModule extends AbstractModule {
   private Supplier<String> createHost(final SelectionType hostSelection, final List<HostConfig> host) {
     checkNotNull(hostSelection);
     checkNotNull(host);
-    checkArgument(!host.isEmpty(), "host must not be empty string");
+    checkArgument(!host.isEmpty(), "must specify at least one host");
     for (final HostConfig h : host) {
       checkNotNull(h);
       checkNotNull(h.getHost());
-      checkArgument(h.getHost().length() > 0, "host length must be > 0");
+      checkArgument(h.getHost().length() > 0, "host must not be empty string");
     }
 
     if (SelectionType.ROUNDROBIN == hostSelection) {
@@ -249,7 +249,7 @@ public class TestModule extends AbstractModule {
     } else if (username == null && password == null)
       return null;
 
-    throw new IllegalArgumentException("If username is not null password must also be not null");
+    throw new IllegalArgumentException("iff username is not null password must also be not null");
   }
 
   @Provides
@@ -334,7 +334,7 @@ public class TestModule extends AbstractModule {
       case UNIFORM:
         return new UniformDistribution(average, spread, random);
       default:
-        throw new IllegalArgumentException(String.format("Unacceptable filesize distribution [%s]",
+        throw new IllegalArgumentException(String.format("unacceptable filesize distribution [%s]",
             distribution));
     }
   }
@@ -369,7 +369,7 @@ public class TestModule extends AbstractModule {
     if (!f.exists()) {
       final boolean success = f.mkdirs();
       if (!success)
-        throw new RuntimeException(String.format("Failed to create object location directories",
+        throw new RuntimeException(String.format("failed to create object location directories",
             f.toString()));
     }
 
@@ -453,7 +453,7 @@ public class TestModule extends AbstractModule {
         break;
       default:
         throw new IllegalArgumentException(String.format(
-            "Unacceptable scheduler distribution [%s]", distribution));
+            "unacceptable scheduler distribution [%s]", distribution));
     }
     return new RequestRateScheduler(count, concurrency.getUnit(), concurrency.getRampup(),
         concurrency.getRampupUnit());
