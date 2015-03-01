@@ -32,7 +32,7 @@
     </File>
   </Appenders>
   <Loggers>
-    <Logger name="ConsoleLogger" level="info" additivity="false">
+    <Logger name="ConsoleLogger" level="info">
       <AppenderRef ref="Console" />
     </Logger>
     <Logger name="OGJsonLogger" level="info" additivity="false">
