@@ -41,11 +41,11 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
   private static final Logger _logger = LoggerFactory.getLogger(RandomObjectPopulator.class);
   private static final int OBJECT_SIZE = LegacyObjectMetadata.OBJECT_SIZE;
   private static final int MAX_PERSIST_ARG = 30 * 1000 * 60;
-  private static final int MAX_OBJECT_ARG = 100 * (1048576 / OBJECT_SIZE);
+  public static final int MAX_OBJECT_ARG = 100 * (1048576 / OBJECT_SIZE);
   private final int maxObjects;
   private final String directory;
   private final String prefix;
-  static final String SUFFIX = ".object";
+  public static final String SUFFIX = ".object";
   private final Pattern filenamePattern;
 
   // object read from a file

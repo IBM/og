@@ -16,9 +16,12 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 import org.junit.Before;
@@ -28,6 +31,7 @@ import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 
+import com.cleversafe.og.cli.ObjectFile.ObjectFileOutputStream;
 import com.cleversafe.og.object.LegacyObjectMetadata;
 import com.cleversafe.og.object.ObjectMetadata;
 import com.tngtech.java.junit.dataprovider.DataProvider;
@@ -76,12 +80,12 @@ public class ObjectFileTest {
 
   @Test(expected = FileNotFoundException.class)
   public void getOutputStreamMissingOutput() throws FileNotFoundException {
-    ObjectFile.getOutputStream(this.nonExistent);
+    ObjectFile.getOutputStream(this.nonExistent.toString());
   }
 
   @Test
   public void getOutputStream() throws FileNotFoundException {
-    final OutputStream out = ObjectFile.getOutputStream(this.exists);
+    final OutputStream out = ObjectFile.getOutputStream(this.exists.toString());
     assertThat(out, is(not((OutputStream) System.out)));
   }
 
@@ -164,5 +168,65 @@ public class ObjectFileTest {
     ObjectMetadata filtered = LegacyObjectMetadata.fromBytes(out.toByteArray());
     assertThat(filtered.getName(), is(s));
     assertThat(filtered.getSize(), is(2L));
+  }
+
+  @DataProvider
+  public static Object[][] provideInvalidObjectFileOutputStream() {
+    String prefix = "id";
+    String suffix = ".object";
+    return new Object[][] { {null, 1, suffix, NullPointerException.class},
+        {prefix, -1, suffix, IllegalArgumentException.class},
+        {prefix, 0, suffix, IllegalArgumentException.class},
+        {prefix, 1, null, NullPointerException.class}};
+  }
+
+  @Test
+  @SuppressWarnings("resource")
+  @UseDataProvider("provideInvalidObjectFileOutputStream")
+  public void invalidObjectFileOutputStream(String prefix, int maxObjects, String suffix,
+      Class<Exception> expectedException) throws FileNotFoundException {
+    this.thrown.expect(expectedException);
+    new ObjectFileOutputStream(prefix, maxObjects, suffix);
+  }
+
+  @DataProvider
+  public static Object[][] provideObjectFileOutputStream() {
+    return new Object[][] { {10, 5, 1}, {10, 10, 1}, {10, 15, 2}, {10, 25, 3}};
+  }
+
+  @Test
+  @UseDataProvider("provideObjectFileOutputStream")
+  public void objectFileOutputStream(int maxObjects, int numObjects, int fileCount)
+      throws IOException {
+    final String prefix = "id";
+    final String suffix = ".object";
+    final String prefixFilename = new File(this.folder.getRoot().toString(), prefix).toString();
+    final OutputStream out = new ObjectFileOutputStream(prefixFilename, maxObjects, suffix);
+    final ObjectMetadata o =
+        LegacyObjectMetadata
+            .fromMetadata(UUID.randomUUID().toString().replace("-", "") + "0000", 0);
+
+    for (int i = 0; i < numObjects; i++) {
+      out.write(o.toBytes());
+    }
+    out.close();
+
+    List<String> objectFiles = Arrays.asList(this.folder.getRoot().list(new FilenameFilter() {
+      @Override
+      public boolean accept(File dir, String name) {
+        return name.endsWith(suffix);
+      }
+    }));
+
+    assertThat(objectFiles.size(), is(fileCount));
+    int persistedObjects = 0;
+    for (int i = 0; i < fileCount; i++) {
+      String filename = String.format("%s%d%s", prefix, i, suffix);
+      assertThat(objectFiles.contains(filename), is(true));
+      persistedObjects +=
+          new File(this.folder.getRoot(), filename).length() / LegacyObjectMetadata.OBJECT_SIZE;
+    }
+
+    assertThat(persistedObjects, is(numObjects));
   }
 }

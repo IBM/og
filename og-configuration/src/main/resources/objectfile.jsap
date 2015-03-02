@@ -41,13 +41,16 @@
             </defaults>
             <help>Maximum file size to include an object in the output when using --filter, in bytes</help>
         </flaggedOption>
+        <switch>
+            <id>split</id>
+            <shortFlag>s</shortFlag>
+            <longFlag>split</longFlag>
+            <help>Split the output of a --write or --filter call into one or more object files. object file name prefix is determined by --output</help>
+        </switch>
         <flaggedOption>
             <id>output</id>
             <shortFlag>o</shortFlag>
             <longFlag>output</longFlag>
-            <stringParser>
-            <classname>FileStringParser</classname>
-            </stringParser>
             <help>A relative or absolute path to an output file, rather than stdout</help>
         </flaggedOption>
     <switch>

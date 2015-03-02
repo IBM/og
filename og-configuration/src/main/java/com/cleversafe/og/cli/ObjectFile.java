@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import com.cleversafe.og.cli.Application.Cli;
 import com.cleversafe.og.object.LegacyObjectMetadata;
 import com.cleversafe.og.object.ObjectMetadata;
+import com.cleversafe.og.object.RandomObjectPopulator;
 import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
 
@@ -49,24 +50,38 @@ public class ObjectFile {
       Application.exit(Application.TEST_ERROR);
     }
 
+    File input = cli.flags().getFile("input");
+    boolean write = cli.flags().getBoolean("write");
+    boolean read = cli.flags().getBoolean("read");
+    boolean filter = cli.flags().getBoolean("filter");
+    boolean split = cli.flags().getBoolean("split");
+    String output = cli.flags().getString("output");
+    long minFilesize = cli.flags().getLong("min-filesize");
+    long maxFilesize = cli.flags().getLong("max-filesize");
+
     try {
-      final InputStream in = getInputStream(cli.flags().getFile("input"));
-      final OutputStream out = getOutputStream(cli.flags().getFile("output"));
-      if (cli.flags().getBoolean("write"))
+      final InputStream in = getInputStream(input);
+      final OutputStream out;
+
+      if (write) {
+        out = getOutputStream(split, output);
         write(in, out);
-      else if (cli.flags().getBoolean("read"))
+      } else if (read) {
+        out = getOutputStream(output);
         read(in, out);
-      else if (cli.flags().getBoolean("filter"))
-        filter(in, out, cli.flags().getLong("min-filesize"), cli.flags().getLong("max-filesize"));
-      else
+      } else if (filter) {
+        out = getOutputStream(split, output);
+        filter(in, out, minFilesize, maxFilesize);
+      } else {
+        out = getOutputStream(output);
         ByteStreams.copy(in, out);
+      }
 
       if (!out.equals(System.out))
         out.close();
     } catch (final IOException e) {
       _consoleLogger.error("", e);
     }
-
   }
 
   public static InputStream getInputStream(final File input) throws FileNotFoundException {
@@ -75,7 +90,15 @@ public class ObjectFile {
     return System.in;
   }
 
-  public static OutputStream getOutputStream(final File output) throws FileNotFoundException {
+  public static OutputStream getOutputStream(boolean split, String output)
+      throws FileNotFoundException {
+    if (split)
+      return new ObjectFileOutputStream(output, RandomObjectPopulator.MAX_OBJECT_ARG,
+          RandomObjectPopulator.SUFFIX);
+    return getOutputStream(output);
+  }
+
+  public static OutputStream getOutputStream(String output) throws FileNotFoundException {
     if (output != null)
       return new FileOutputStream(output);
     return System.out;
@@ -128,6 +151,52 @@ public class ObjectFile {
       ObjectMetadata objectName = LegacyObjectMetadata.fromBytes(buf);
       if (objectName.getSize() >= minFilesize && objectName.getSize() <= maxFilesize)
         out.write(objectName.toBytes());
+    }
+  }
+
+  public static class ObjectFileOutputStream extends OutputStream {
+    private final String prefix;
+    private int index;
+    private int written;
+    private final int maxObjects;
+    private final String suffix;
+    private OutputStream out;
+
+    public ObjectFileOutputStream(String prefix, int maxObjects, String suffix)
+        throws FileNotFoundException {
+      this.prefix = checkNotNull(prefix);
+      this.index = 0;
+      this.written = 0;
+      checkArgument(maxObjects > 0, "maxObjects must be > 0 [%s]", maxObjects);
+      this.maxObjects = maxObjects;
+      this.suffix = checkNotNull(suffix);
+      this.out = create();
+    }
+
+    private OutputStream create() throws FileNotFoundException {
+      return new FileOutputStream(String.format("%s%d%s", this.prefix, this.index, this.suffix));
+    }
+
+    @Override
+    public void write(byte[] b) throws IOException {
+      if (this.written >= this.maxObjects) {
+        this.index++;
+        this.out = create();
+        this.written = 0;
+      }
+
+      this.out.write(b);
+      this.written++;
+    }
+
+    @Override
+    public void write(int b) throws IOException {
+      throw new IOException("ObjectFileOutputStream.write(b) should not be called");
+    }
+
+    @Override
+    public void close() throws IOException {
+      this.out.close();
     }
   }
 }
