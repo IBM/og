@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.cleversafe.og.api.Body;
@@ -60,12 +59,9 @@ import com.cleversafe.og.scheduling.RequestRateScheduler;
 import com.cleversafe.og.scheduling.Scheduler;
 import com.cleversafe.og.supplier.RandomSupplier;
 import com.cleversafe.og.supplier.Suppliers;
+import com.cleversafe.og.util.Distribution;
+import com.cleversafe.og.util.Distributions;
 import com.cleversafe.og.util.SizeUnit;
-import com.cleversafe.og.util.distribution.Distribution;
-import com.cleversafe.og.util.distribution.LogNormalDistribution;
-import com.cleversafe.og.util.distribution.NormalDistribution;
-import com.cleversafe.og.util.distribution.PoissonDistribution;
-import com.cleversafe.og.util.distribution.UniformDistribution;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
@@ -325,14 +321,13 @@ public class TestModule extends AbstractModule {
     final double average = filesize.getAverage() * averageUnit.toBytes(1);
     final double spread = filesize.getSpread() * spreadUnit.toBytes(1);
 
-    final Random random = new Random();
     switch (distribution) {
       case NORMAL:
-        return new NormalDistribution(average, spread, random);
+        return Distributions.normal(average, spread);
       case LOGNORMAL:
-        return new LogNormalDistribution(average, spread, random);
+        return Distributions.lognormal(average, spread);
       case UNIFORM:
-        return new UniformDistribution(average, spread, random);
+        return Distributions.uniform(average, spread);
       default:
         throw new IllegalArgumentException(String.format("unacceptable filesize distribution [%s]",
             distribution));
@@ -443,13 +438,12 @@ public class TestModule extends AbstractModule {
     }
 
     Distribution count;
-    final Random random = new Random();
     switch (distribution) {
       case POISSON:
-        count = new PoissonDistribution(concurrency.getCount(), random);
+        count = Distributions.poisson(concurrency.getCount());
         break;
       case UNIFORM:
-        count = new UniformDistribution(concurrency.getCount(), 0.0, random);
+        count = Distributions.uniform(concurrency.getCount(), 0.0);
         break;
       default:
         throw new IllegalArgumentException(String.format(

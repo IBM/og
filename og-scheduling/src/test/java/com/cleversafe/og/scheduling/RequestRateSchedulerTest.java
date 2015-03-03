@@ -23,7 +23,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 
-import com.cleversafe.og.util.distribution.Distribution;
+import com.cleversafe.og.util.Distribution;
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.tngtech.java.junit.dataprovider.DataProvider;
 import com.tngtech.java.junit.dataprovider.DataProviderRunner;

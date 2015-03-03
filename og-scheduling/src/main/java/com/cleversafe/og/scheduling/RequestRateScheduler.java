@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.cleversafe.og.util.distribution.Distribution;
+import com.cleversafe.og.util.Distribution;
 import com.google.common.util.concurrent.RateLimiter;
 
 /**
