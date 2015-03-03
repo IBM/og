@@ -57,7 +57,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <display.version>${project.parent.artifactId}-${project.parent.version}</display.version>
+    <display.version>${project.parent.version}</display.version>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -367,12 +367,4 @@
       </plugin>
     </plugins>
   </build>
-  <profiles>
-    <profile>
-      <id>development</id>
-      <properties>
-        <display.version>${project.parent.artifactId}-${development.version}</display.version>
-      </properties>
-    </profile>
-  </profiles>
 </project>

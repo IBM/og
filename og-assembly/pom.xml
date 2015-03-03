@@ -61,7 +61,7 @@
     </dependency>
   </dependencies>
   <build>
-    <finalName>${display.version}</finalName>
+    <finalName>og-${display.version}</finalName>
     <plugins>
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
