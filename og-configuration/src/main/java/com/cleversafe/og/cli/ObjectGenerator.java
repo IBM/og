@@ -20,11 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.api.Client;
 import com.cleversafe.og.cli.Application.Cli;
-import com.cleversafe.og.guice.ApiModule;
-import com.cleversafe.og.guice.ClientModule;
 import com.cleversafe.og.guice.OGModule;
-import com.cleversafe.og.guice.TestModule;
-import com.cleversafe.og.json.ClientConfig;
 import com.cleversafe.og.json.OGConfig;
 import com.cleversafe.og.json.type.CaseInsensitiveEnumTypeAdapterFactory;
 import com.cleversafe.og.json.type.ConcurrencyConfigTypeAdapterFactory;
@@ -168,10 +164,7 @@ public class ObjectGenerator {
   }
 
   public static Injector createInjector(final OGConfig ogConfig) {
-    ClientConfig clientConfig = ogConfig.getClient();
-
-    return Guice.createInjector(Stage.PRODUCTION, new TestModule(ogConfig), new ClientModule(
-        clientConfig), new ApiModule(), new OGModule());
+    return Guice.createInjector(Stage.PRODUCTION, new OGModule(ogConfig));
   }
 
   public static void shutdownClient(Client client) {
