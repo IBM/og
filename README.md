@@ -1,7 +1,7 @@
 # Object Generator
 
 ## Introduction
-Object Generator (OG) is an http load tool designed for load testing object
+__Object Generator (OG)__ is an http load tool designed for load testing object
 storage apis. Supported apis include:
 
 - SOH
@@ -26,5 +26,5 @@ To build with a custom display version (useful for continuous integration):
 The resulting archive can be found in _og-assembly/target/_.
 
 ## Documentation
-For more information, build the tool and view documentation.html in the
+For more information, build the tool and view _documentation.html_ in the
 resulting archive.
