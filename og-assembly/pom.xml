@@ -80,6 +80,22 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.asciidoctor</groupId>
+        <artifactId>asciidoctor-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>output-html</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>process-asciidoc</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <backend>html</backend>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 </project>
