@@ -113,32 +113,41 @@ import com.google.common.math.DoubleMath;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.matcher.Matchers;
+import com.google.inject.spi.ProvisionListener;
 
 public class OGModule extends AbstractModule {
   private final OGConfig config;
   private static final double ERR = Math.pow(0.1, 6);
   private static final Range<Double> PERCENTAGE = Range.closed(0.0, 100.0);
   private static final String SOH_PUT_OBJECT = "soh.put_object";
+  private final LoadTestSubscriberExceptionHandler handler;
+  private final EventBus eventBus;
 
   public OGModule(final OGConfig config) {
     this.config = checkNotNull(config);
+    this.handler = new LoadTestSubscriberExceptionHandler();
+    this.eventBus = new EventBus(this.handler);
   }
 
   @Override
   protected void configure() {
     bind(LoadTest.class).in(Singleton.class);
-  }
-
-  @Provides
-  @Singleton
-  public LoadTestSubscriberExceptionHandler provideSubscriberHandler() {
-    return new LoadTestSubscriberExceptionHandler();
-  }
-
-  @Provides
-  @Singleton
-  public EventBus provideEventBus(final LoadTestSubscriberExceptionHandler handler) {
-    return new EventBus(handler);
+    bind(LoadTestSubscriberExceptionHandler.class).toInstance(this.handler);
+    bind(EventBus.class).toInstance(this.eventBus);
+    bindListener(Matchers.any(), new ProvisionListener() {
+      @Override
+      public <T> void onProvision(ProvisionInvocation<T> provision) {
+        // register every non-null provisioned instance with the global event bus. EventBus treats
+        // registration of instances without an @Subscribe method as a no-op and handles duplicate
+        // registration such that a given @Subscribe annotated method will only be triggered once
+        // per event
+        T instance = provision.provision();
+        if (instance != null) {
+          OGModule.this.eventBus.register(instance);
+        }
+      }
+    });
   }
 
   @Provides
