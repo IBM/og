@@ -145,23 +145,6 @@ public class OGModuleTest {
   }
 
   @Test(expected = NullPointerException.class)
-  public void provideObjectManagerNullObjectFileLocation() {
-    this.module.provideObjectManager(null, "name");
-  }
-
-  @Test
-  public void provideObjectManagerNullObjectFileName() {
-    final ObjectManager objectManager = this.module.provideObjectManager("location/", null);
-    assertThat(objectManager, notNullValue());
-  }
-
-  @Test
-  public void provideObjectManager() {
-    final ObjectManager objectManager = this.module.provideObjectManager("location/", "name");
-    assertThat(objectManager, notNullValue());
-  }
-
-  @Test(expected = NullPointerException.class)
   public void provideWriteObjectNameNullApi() {
     this.module.provideWriteObjectName(null);
   }

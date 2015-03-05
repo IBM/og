@@ -34,9 +34,14 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.regex.Pattern;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Singleton
 public class RandomObjectPopulator extends Thread implements ObjectManager {
   private static final Logger _logger = LoggerFactory.getLogger(RandomObjectPopulator.class);
   private static final int OBJECT_SIZE = LegacyObjectMetadata.OBJECT_SIZE;
@@ -76,6 +81,12 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
 
   public RandomObjectPopulator(final UUID vaultId) {
     this(vaultId, "");
+  }
+
+  @Inject
+  public RandomObjectPopulator(@Named("objectfile.location") final String directory,
+      @Named("objectfile.name") final String prefix) {
+    this(UUID.randomUUID(), directory, prefix, MAX_OBJECT_ARG, MAX_PERSIST_ARG);
   }
 
   public RandomObjectPopulator(final UUID vaultId, final String directory, final String prefix) {

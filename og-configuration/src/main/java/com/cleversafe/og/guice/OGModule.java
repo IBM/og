@@ -17,8 +17,9 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
+
+import javax.inject.Named;
 
 import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.Client;
@@ -35,8 +36,6 @@ import com.cleversafe.og.guice.annotation.DeleteUri;
 import com.cleversafe.og.guice.annotation.DeleteWeight;
 import com.cleversafe.og.guice.annotation.Host;
 import com.cleversafe.og.guice.annotation.Id;
-import com.cleversafe.og.guice.annotation.ObjectFileLocation;
-import com.cleversafe.og.guice.annotation.ObjectFileName;
 import com.cleversafe.og.guice.annotation.Password;
 import com.cleversafe.og.guice.annotation.Read;
 import com.cleversafe.og.guice.annotation.ReadHeaders;
@@ -136,6 +135,7 @@ public class OGModule extends AbstractModule {
     bind(LoadTestSubscriberExceptionHandler.class).toInstance(this.handler);
     bind(EventBus.class).toInstance(this.eventBus);
     bind(Statistics.class).in(Singleton.class);
+    bind(ObjectManager.class).to(RandomObjectPopulator.class).in(Singleton.class);
     bindListener(Matchers.any(), new ProvisionListener() {
       @Override
       public <T> void onProvision(ProvisionInvocation<T> provision) {
@@ -205,13 +205,6 @@ public class OGModule extends AbstractModule {
       wrc.withChoice(delete, deleteWeight);
 
     return Suppliers.chain(wrc.build());
-  }
-
-  @Provides
-  @Singleton
-  public ObjectManager provideObjectManager(@ObjectFileLocation final String objectFileLocation,
-      @ObjectFileName final String objectFileName) {
-    return new RandomObjectPopulator(UUID.randomUUID(), objectFileLocation, objectFileName);
   }
 
   @Provides
@@ -522,7 +515,7 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @ObjectFileLocation
+  @Named("objectfile.location")
   public String provideObjectFileLocation() throws IOException {
     final String path = checkNotNull(this.config.getObjectManager().getObjectFileLocation());
     checkArgument(path.length() > 0, "path must not be empty string");
@@ -541,7 +534,7 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @ObjectFileName
+  @Named("objectfile.name")
   public String provideObjectFileName(@Container final Supplier<String> container, final Api api) {
     checkNotNull(container);
     checkNotNull(api);
