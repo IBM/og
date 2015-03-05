@@ -60,7 +60,6 @@ import com.cleversafe.og.s3.AWSAuthV2;
 import com.cleversafe.og.scheduling.ConcurrentRequestScheduler;
 import com.cleversafe.og.scheduling.RequestRateScheduler;
 import com.cleversafe.og.scheduling.Scheduler;
-import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.supplier.CachingSupplier;
 import com.cleversafe.og.supplier.Suppliers;
 import com.cleversafe.og.util.SizeUnit;
@@ -111,17 +110,6 @@ public class OGModuleTest {
     this.username = Suppliers.of("username");
     this.password = Suppliers.of("password");
     this.body = Suppliers.of(Bodies.zeroes(1024));
-  }
-
-  @Test(expected = NullPointerException.class)
-  public void provideStatisticsNullEventBus() {
-    this.module.provideStatistics(null);
-  }
-
-  @Test
-  public void provideStatistics() {
-    final Statistics stats = this.module.provideStatistics(this.eventBus);
-    assertThat(stats, notNullValue());
   }
 
   @DataProvider

@@ -135,6 +135,7 @@ public class OGModule extends AbstractModule {
     bind(LoadTest.class).in(Singleton.class);
     bind(LoadTestSubscriberExceptionHandler.class).toInstance(this.handler);
     bind(EventBus.class).toInstance(this.eventBus);
+    bind(Statistics.class).in(Singleton.class);
     bindListener(Matchers.any(), new ProvisionListener() {
       @Override
       public <T> void onProvision(ProvisionInvocation<T> provision) {
@@ -148,15 +149,6 @@ public class OGModule extends AbstractModule {
         }
       }
     });
-  }
-
-  @Provides
-  @Singleton
-  public Statistics provideStatistics(final EventBus eventBus) {
-    checkNotNull(eventBus);
-    final Statistics stats = new Statistics();
-    eventBus.register(stats);
-    return stats;
   }
 
   @Provides

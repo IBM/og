@@ -13,6 +13,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Map;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
 import com.cleversafe.og.http.HttpUtil;
@@ -40,6 +43,7 @@ import com.google.common.util.concurrent.AtomicLongMap;
  * 
  * @since 1.0
  */
+@Singleton
 public class Statistics {
   private final Map<Operation, AtomicLongMap<Counter>> counters;
   private final Map<Operation, AtomicLongMap<Integer>> scCounters;
@@ -47,6 +51,7 @@ public class Statistics {
   /**
    * Constructs an instance
    */
+  @Inject
   public Statistics() {
     this.counters = Maps.newHashMap();
     this.scCounters = Maps.newHashMap();
