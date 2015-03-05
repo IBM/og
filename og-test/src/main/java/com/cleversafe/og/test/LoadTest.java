@@ -15,6 +15,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +34,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.Uninterruptibles;
 
+@Singleton
 public class LoadTest implements Callable<Boolean> {
   private static final Logger _logger = LoggerFactory.getLogger(LoadTest.class);
   private final Supplier<Request> requestSupplier;
