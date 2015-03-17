@@ -18,6 +18,6 @@ CP=${BASE}/lib/*:${BASE}/conf/log4j/og/:${BASE}/conf/
 CLASS='com.cleversafe.og.cli.ObjectGenerator'
 
 # TODO analyze which jvm parameters should be set
-VMOPTS="-XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:gc.log -XX:+UseParallelOldGC -XX:+UseCompressedOops -XX:MaxGCPauseMillis=5000 -Xss256k -Xmx${MEMORY}m -Xms${MEMORY}m -XX:MaxDirectMemorySize=${MEMORY}m"
+VMOPTS="-XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:log/gc.log -XX:+UseParallelOldGC -XX:+UseCompressedOops -XX:MaxGCPauseMillis=5000 -Xss256k -Xmx${MEMORY}m -Xms${MEMORY}m -XX:MaxDirectMemorySize=${MEMORY}m"
 
 exec java -cp ${CP} ${VMOPTS} ${CLASS} "$@"
