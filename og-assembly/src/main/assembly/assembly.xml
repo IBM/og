@@ -25,8 +25,8 @@
       <directory>src/main/resources/conf</directory>
       <outputDirectory>conf</outputDirectory>
       <includes>
-        <include>log4j/**</include>
         <include>og.json</include>
+        <include>*.xml</include>
       </includes>
     </fileSet>
     <fileSet>

@@ -2,7 +2,8 @@
 
 BASE=`dirname ${0}`
 CP=${BASE}/lib/*:${BASE}/conf/log4j/object-file/:${BASE}/conf/
-CLASS='com.cleversafe.og.cli.ObjectFile'
+CLASS="com.cleversafe.og.cli.ObjectFile"
 
-VMOPTS='-Xms64M -Xmx512M'
-java -cp ${CP} ${VMOPTS} ${CLASS} "$@"
+VMOPTS="-Xms64M -Xmx512M"
+SYSTEMOPTS="-Dlog4j.configurationFile=object-file-log4j2.xml"
+java -cp ${CP} ${VMOPTS} ${SYSTEMOPTS} ${CLASS} "$@"
