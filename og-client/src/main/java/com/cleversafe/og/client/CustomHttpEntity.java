@@ -29,6 +29,8 @@ import com.google.common.io.ByteStreams;
 public class CustomHttpEntity extends AbstractHttpEntity {
   private final Body body;
   private final long writeThroughput;
+  private long requestContentStart;
+  private long requestContentFinish;
 
   public CustomHttpEntity(Body body, long writeThroughput) {
     this.body = checkNotNull(body);
@@ -49,6 +51,8 @@ public class CustomHttpEntity extends AbstractHttpEntity {
 
   @Override
   public InputStream getContent() throws IOException, IllegalStateException {
+    this.requestContentStart = 0;
+    this.requestContentFinish = 0;
     return Streams.create(this.body);
   }
 
@@ -60,13 +64,23 @@ public class CustomHttpEntity extends AbstractHttpEntity {
     if (this.writeThroughput > 0)
       out = Streams.throttle(outstream, this.writeThroughput);
 
+    this.requestContentStart = System.nanoTime();
     ByteStreams.copy(in, out);
+    this.requestContentFinish = System.nanoTime();
     in.close();
   }
 
   @Override
   public boolean isStreaming() {
     return false;
+  }
+
+  public long getRequestContentStart() {
+    return this.requestContentStart;
+  }
+
+  public long getRequestContentFinish() {
+    return this.requestContentFinish;
   }
 
   @Override

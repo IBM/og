@@ -10,6 +10,7 @@ package com.cleversafe.og.client;
 
 import java.net.URI;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -38,14 +39,14 @@ public class RequestLogEntry {
   final String requestUri;
   final String objectId;
   final int status;
-  final long requestLength;
+  final Long requestLength;
   final long responseLength;
   final String userAgent;
   final long requestLatency;
 
   final String clientRequestId;
   final String requestId;
-  final String stat;
+  final RequestStats stat;
   final Long objectLength;
   final String objectName;
 
@@ -62,14 +63,14 @@ public class RequestLogEntry {
    * @param timestampFinish the timestamp for the end of this request, in milliseconds
    */
   public RequestLogEntry(final Request request, final Response response, String userAgent,
-      final long timestampStart, final long timestampFinish) {
+      RequestTimestamps timestamps) {
     final URI uri = request.getUri();
     // FIXME reliably get localaddress? Name should be clientName? Do we even need this field?
     this.serverName = null;
     this.remoteAddress = uri.getHost();
     this.user = request.headers().get(Headers.X_OG_USERNAME);
-    this.timestampStart = timestampStart;
-    this.timestampFinish = timestampFinish;
+    this.timestampStart = timestamps.startMillis;
+    this.timestampFinish = timestamps.finishMillis;
     this.timeStart = RequestLogEntry.FORMATTER.print(this.timestampStart);
     this.timeFinish = RequestLogEntry.FORMATTER.print(this.timestampFinish);
     this.requestMethod = request.getMethod();
@@ -82,7 +83,7 @@ public class RequestLogEntry {
       objectName = response.headers().get(Headers.X_OG_OBJECT_NAME);
     this.objectId = objectName;
 
-    long objectSize = 0;
+    Long objectSize = null;
     if (Data.NONE != request.getBody().getData())
       objectSize = request.getBody().getSize();
 
@@ -98,8 +99,42 @@ public class RequestLogEntry {
     // custom
     this.clientRequestId = request.headers().get(Headers.X_OG_REQUEST_ID);
     this.requestId = response.headers().get(X_CLV_REQUEST_ID);
-    this.stat = null;
+    this.stat = new RequestStats(timestamps);
     this.objectLength = objectSize;
     this.objectName = objectName;
+  }
+
+  public static class RequestTimestamps {
+    public long startMillis;
+    public long start;
+    public long requestContentStart;
+    public long requestContentFinish;
+    public long responseContentStart;
+    public long responseContentFirstBytes;
+    public long responseContentFinish;
+    public long finish;
+    public long finishMillis;
+  }
+
+  public static class RequestStats {
+    final Double requestContent;
+    final Double closeLatency;
+    final Double ttfb;
+    final Double responseContent;
+    final Double total;
+
+    public RequestStats(RequestTimestamps t) {
+      this.requestContent = duration(t.requestContentStart, t.requestContentFinish);
+      this.closeLatency = duration(t.requestContentFinish, t.finish);
+      this.ttfb = duration(t.start, t.responseContentFirstBytes);
+      this.responseContent = duration(t.responseContentStart, t.responseContentFinish);
+      this.total = duration(t.start, t.finish);
+    }
+
+    private Double duration(long start, long finish) {
+      if (start > 0 && finish > start)
+        return ((double) finish - start) / TimeUnit.MILLISECONDS.toNanos(1);
+      return null;
+    }
   }
 }

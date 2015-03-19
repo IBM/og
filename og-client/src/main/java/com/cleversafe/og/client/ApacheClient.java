@@ -13,6 +13,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
@@ -26,6 +28,7 @@ import org.apache.http.ConnectionReuseStrategy;
 import org.apache.http.Header;
 import org.apache.http.HeaderIterator;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -47,11 +50,13 @@ import com.cleversafe.og.api.Client;
 import com.cleversafe.og.api.Data;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
+import com.cleversafe.og.client.RequestLogEntry.RequestTimestamps;
 import com.cleversafe.og.http.Bodies;
 import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpAuth;
 import com.cleversafe.og.http.HttpResponse;
 import com.cleversafe.og.http.ResponseBodyConsumer;
+import com.cleversafe.og.util.io.MonitoringInputStream;
 import com.cleversafe.og.util.io.Streams;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -65,6 +70,9 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.LongSerializationPolicy;
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
 
 /**
  * A {@code Client} implementation that uses the Apache HttpComponents HttpClient library as its
@@ -129,7 +137,19 @@ public class ApacheClient implements Client {
     this.executorService = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool(fac));
     this.gson =
         new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
-            .setLongSerializationPolicy(LongSerializationPolicy.STRING).create();
+            .setLongSerializationPolicy(LongSerializationPolicy.STRING)
+            .registerTypeAdapter(Double.class, new TypeAdapter<Double>() {
+              @Override
+              public void write(JsonWriter out, Double value) throws IOException {
+                // round decimals to 2 places
+                out.value(new BigDecimal(value).setScale(2, RoundingMode.HALF_UP).doubleValue());
+              }
+
+              @Override
+              public Double read(JsonReader in) throws IOException {
+                return in.nextDouble();
+              }
+            }.nullSafe()).create();
 
     final HttpClientBuilder clientBuilder = HttpClients.custom();
     if (this.userAgent != null)
@@ -274,6 +294,7 @@ public class ApacheClient implements Client {
     private final Request request;
     private final HttpUriRequest apacheRequest;
     private final String userAgent;
+    private final RequestTimestamps timestamps;
     private final byte[] buf;
 
     public BlockingHttpOperation(final Request request, final HttpUriRequest apacheRequest,
@@ -281,13 +302,15 @@ public class ApacheClient implements Client {
       this.request = request;
       this.apacheRequest = apacheRequest;
       this.userAgent = userAgent;
+      this.timestamps = new RequestTimestamps();
       // TODO inject buf size from config
       this.buf = new byte[4096];
     }
 
     @Override
     public Response call() {
-      final long timestampStart = System.currentTimeMillis();
+      this.timestamps.startMillis = System.currentTimeMillis();
+      this.timestamps.start = System.nanoTime();
       final HttpResponse.Builder responseBuilder = new HttpResponse.Builder();
       final String requestId = this.request.headers().get(Headers.X_OG_REQUEST_ID);
       if (requestId != null)
@@ -300,10 +323,11 @@ public class ApacheClient implements Client {
         responseBuilder.withStatusCode(599);
       }
       response = responseBuilder.build();
-      final long timestampFinish = System.currentTimeMillis();
+      this.timestamps.finish = System.nanoTime();
+      this.timestamps.finishMillis = System.currentTimeMillis();
 
       final RequestLogEntry entry =
-          new RequestLogEntry(this.request, response, userAgent, timestampStart, timestampFinish);
+          new RequestLogEntry(this.request, response, userAgent, this.timestamps);
       _requestLogger.info(ApacheClient.this.gson.toJson(entry));
 
       return response;
@@ -314,12 +338,24 @@ public class ApacheClient implements Client {
       ApacheClient.this.client.execute(apacheRequest, new ResponseHandler<Void>() {
         @Override
         public Void handleResponse(final org.apache.http.HttpResponse response) throws IOException {
+          setRequestContentTimestamps(apacheRequest);
           setResponseStatusCode(responseBuilder, response);
           setResponseHeaders(responseBuilder, response);
           receiveResponseContent(responseBuilder, response);
           return null;
         }
       });
+    }
+
+    private void setRequestContentTimestamps(HttpUriRequest apacheRequest) {
+      if (apacheRequest instanceof HttpEntityEnclosingRequest) {
+        HttpEntityEnclosingRequest request = (HttpEntityEnclosingRequest) apacheRequest;
+        if (request.getEntity() instanceof CustomHttpEntity) {
+          CustomHttpEntity entity = (CustomHttpEntity) request.getEntity();
+          this.timestamps.requestContentStart = entity.getRequestContentStart();
+          this.timestamps.requestContentFinish = entity.getRequestContentFinish();
+        }
+      }
     }
 
     private void setResponseStatusCode(final HttpResponse.Builder responseBuilder,
@@ -341,16 +377,19 @@ public class ApacheClient implements Client {
         final org.apache.http.HttpResponse response) throws IOException {
       final HttpEntity entity = response.getEntity();
       if (entity != null) {
-        InputStream in = entity.getContent();
+        InputStream entityStream = entity.getContent();
         final long readThroughput = ApacheClient.this.readThroughput;
         if (readThroughput > 0)
-          in = Streams.throttle(in, readThroughput);
+          entityStream = Streams.throttle(entityStream, readThroughput);
+
+        MonitoringInputStream in = new MonitoringInputStream(entityStream);
 
         // TODO clean this up, should always try to set response entity to response size;
         // will InstrumentedInputStream help with this?
         final String consumerId = this.request.headers().get(Headers.X_OG_RESPONSE_BODY_CONSUMER);
         final ResponseBodyConsumer consumer =
             ApacheClient.this.responseBodyConsumers.get(consumerId);
+        this.timestamps.responseContentStart = System.nanoTime();
         if (consumer != null) {
           final Iterator<Entry<String, String>> it =
               consumer.consume(response.getStatusLine().getStatusCode(), in);
@@ -361,6 +400,8 @@ public class ApacheClient implements Client {
         } else {
           consumeBytes(responseBuilder, in);
         }
+        this.timestamps.responseContentFirstBytes = in.getFirstRead();
+        this.timestamps.responseContentFinish = System.nanoTime();
       }
     }
 
