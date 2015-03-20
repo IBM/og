@@ -78,11 +78,6 @@ public class ObjectFileTest {
     assertThat(out, is((OutputStream) System.out));
   }
 
-  @Test(expected = FileNotFoundException.class)
-  public void getOutputStreamMissingOutput() throws FileNotFoundException {
-    ObjectFile.getOutputStream(this.nonExistent.toString());
-  }
-
   @Test
   public void getOutputStream() throws FileNotFoundException {
     final OutputStream out = ObjectFile.getOutputStream(this.exists.toString());
