@@ -103,6 +103,8 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.matcher.Matchers;
+import com.google.inject.multibindings.MapBinder;
+import com.google.inject.name.Names;
 import com.google.inject.spi.ProvisionListener;
 import com.google.inject.util.Providers;
 
@@ -123,7 +125,14 @@ public class OGModule extends AbstractModule {
   @Override
   protected void configure() {
     bind(Scheme.class).toInstance(this.config.getScheme());
-    bind(Integer.class).toProvider(Providers.of(this.config.getPort()));
+    bind(Integer.class).annotatedWith(Names.named("port")).toProvider(
+        Providers.of(this.config.getPort()));
+    bind(Api.class).toInstance(this.config.getApi());
+    bind(StoppingConditionsConfig.class).toInstance(this.config.getStoppingConditions());
+
+    MapBinder<String, ResponseBodyConsumer> responseBodyConsumers =
+        MapBinder.newMapBinder(binder(), String.class, ResponseBodyConsumer.class);
+    responseBodyConsumers.addBinding(SOH_PUT_OBJECT).to(SOHWriteResponseBodyConsumer.class);
 
     bind(LoadTest.class).in(Singleton.class);
     bind(LoadTestSubscriberExceptionHandler.class).toInstance(this.handler);
@@ -318,12 +327,6 @@ public class OGModule extends AbstractModule {
     return wrc.build();
   }
 
-
-  @Provides
-  public Api provideApi() {
-    return checkNotNull(this.config.getApi());
-  }
-
   @Provides
   @Singleton
   @Named("uri.root")
@@ -385,11 +388,6 @@ public class OGModule extends AbstractModule {
       return null;
 
     throw new IllegalArgumentException("iff username is not null password must also be not null");
-  }
-
-  @Provides
-  public StoppingConditionsConfig provideStoppingConditionsConfig() {
-    return this.config.getStoppingConditions();
   }
 
   @Provides
@@ -620,7 +618,7 @@ public class OGModule extends AbstractModule {
   @Write
   public Supplier<Request> provideWrite(@Named("request.id") final Supplier<String> id,
       final Api api, final Scheme scheme, @WriteHost final Supplier<String> host,
-      final Integer port, @Named("uri.root") final String uriRoot,
+      @Named("port") final Integer port, @Named("uri.root") final String uriRoot,
       @Named("container") final Supplier<String> container,
       @WriteObjectName final CachingSupplier<String> object,
       @WriteHeaders final Map<String, String> headers, final Supplier<Body> body,
@@ -639,8 +637,8 @@ public class OGModule extends AbstractModule {
   @Singleton
   @Read
   public Supplier<Request> provideRead(@Named("request.id") final Supplier<String> id,
-      final Scheme scheme, @ReadHost final Supplier<String> host, final Integer port,
-      @Named("uri.root") final String uriRoot,
+      final Scheme scheme, @ReadHost final Supplier<String> host,
+      @Named("port") final Integer port, @Named("uri.root") final String uriRoot,
       @Named("container") final Supplier<String> container,
       @ReadObjectName final CachingSupplier<String> object,
       @ReadHeaders final Map<String, String> headers,
@@ -654,8 +652,8 @@ public class OGModule extends AbstractModule {
   @Singleton
   @Delete
   public Supplier<Request> provideDelete(@Named("request.id") final Supplier<String> id,
-      final Scheme scheme, @DeleteHost final Supplier<String> host, final Integer port,
-      @Named("uri.root") final String uriRoot,
+      final Scheme scheme, @DeleteHost final Supplier<String> host,
+      @Named("port") final Integer port, @Named("uri.root") final String uriRoot,
       @Named("container") final Supplier<String> container,
       @DeleteObjectName final CachingSupplier<String> object,
       @DeleteHeaders final Map<String, String> headers,
@@ -673,14 +671,5 @@ public class OGModule extends AbstractModule {
 
     return new RequestSupplier(id, method, scheme, host, port, uriRoot, container, object,
         Collections.<String, String>emptyMap(), false, headers, username, password, body);
-  }
-
-  @Provides
-  @Singleton
-  public Map<String, ResponseBodyConsumer> provideResponseBodyConsumers() {
-    final Map<String, ResponseBodyConsumer> consumers = Maps.newHashMap();
-    consumers.put(SOH_PUT_OBJECT, new SOHWriteResponseBodyConsumer());
-
-    return consumers;
   }
 }

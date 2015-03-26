@@ -369,18 +369,6 @@ public class OGModuleTest {
     assertThat(s.get(), is("10.1.1.1"));
   }
 
-  @Test(expected = NullPointerException.class)
-  public void provideApiNullApi() {
-    when(this.config.getApi()).thenReturn(null);
-    this.module.provideApi();
-  }
-
-  @Test
-  public void provideApi() {
-    when(this.config.getApi()).thenReturn(Api.S3);
-    assertThat(this.module.provideApi(), is(Api.S3));
-  }
-
   @DataProvider
   public static Object[][] provideUriRoot() {
     final Api api = Api.S3;
@@ -782,10 +770,5 @@ public class OGModuleTest {
   public void provideClient(final HttpAuth authentication,
       final Map<String, ResponseBodyConsumer> consumers) {
     new OGModule(new OGConfig()).provideClient(authentication, consumers);
-  }
-
-  @Test
-  public void provideResponseBodyConsumers() {
-    assertThat(this.module.provideResponseBodyConsumers(), notNullValue());
   }
 }
