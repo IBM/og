@@ -681,26 +681,12 @@ public class OGModule extends AbstractModule {
     checkNotNull(headers);
     checkNotNull(body);
 
-    final List<Supplier<String>> path = Lists.newArrayList();
-    if (uriRoot != null)
-      path.add(Suppliers.of(uriRoot));
-    path.add(container);
-    if (object != null)
-      path.add(object);
-
     final RequestSupplier.Builder b =
-        new RequestSupplier.Builder(method, host, path).withScheme(scheme);
+        new RequestSupplier.Builder(method, host, container).withScheme(scheme)
+            .withUriRoot(uriRoot).withObject(object);
 
     if (port != null)
       b.onPort(port);
-
-    if (object != null)
-      b.withHeader(Suppliers.of(Headers.X_OG_OBJECT_NAME), new Supplier<String>() {
-        @Override
-        public String get() {
-          return object.getCachedValue();
-        }
-      });
 
     for (final Entry<Supplier<String>, Supplier<String>> header : headers.entrySet()) {
       b.withHeader(header.getKey(), header.getValue());

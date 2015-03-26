@@ -13,17 +13,16 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.List;
 import java.util.Map;
 
 import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
+import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpRequest;
 import com.cleversafe.og.http.Scheme;
 import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
@@ -38,7 +37,9 @@ public class RequestSupplier implements Supplier<Request> {
   private final Scheme scheme;
   private final Supplier<String> host;
   private final Integer port;
-  private final List<Supplier<String>> path;
+  private final String uriRoot;
+  private final Supplier<String> container;
+  private final CachingSupplier<String> object;
   private final Map<String, String> queryParameters;
   private final boolean trailingSlash;
   private final Map<Supplier<String>, Supplier<String>> headers;
@@ -49,7 +50,9 @@ public class RequestSupplier implements Supplier<Request> {
     this.scheme = checkNotNull(builder.scheme);
     this.host = checkNotNull(builder.host);
     this.port = builder.port;
-    this.path = ImmutableList.copyOf(builder.path);
+    this.uriRoot = builder.uriRoot;
+    this.container = checkNotNull(builder.container);
+    this.object = builder.object;
     this.queryParameters = ImmutableMap.copyOf(builder.queryParameters);
     this.trailingSlash = builder.trailingSlash;
     this.headers = ImmutableMap.copyOf(builder.headers);
@@ -63,6 +66,9 @@ public class RequestSupplier implements Supplier<Request> {
     for (final Map.Entry<Supplier<String>, Supplier<String>> header : this.headers.entrySet()) {
       context.withHeader(header.getKey().get(), header.getValue().get());
     }
+
+    if (this.object != null)
+      context.withHeader(Headers.X_OG_OBJECT_NAME, this.object.getCachedValue());
 
     if (this.body != null)
       context.withBody(this.body.get());
@@ -93,9 +99,14 @@ public class RequestSupplier implements Supplier<Request> {
   }
 
   private void appendPath(final StringBuilder s) {
-    for (final Supplier<String> part : this.path) {
-      s.append("/").append(part.get());
-    }
+    s.append("/");
+    if (this.uriRoot != null)
+      s.append(this.uriRoot).append("/");
+
+    s.append(this.container.get());
+
+    if (this.object != null)
+      s.append("/").append(this.object.get());
   }
 
   private void appendTrailingSlash(final StringBuilder s) {
@@ -112,9 +123,10 @@ public class RequestSupplier implements Supplier<Request> {
   @Override
   public String toString() {
     return String.format("RequestSupplier [%n" + "method=%s,%n" + "scheme=%s,%n" + "host=%s,%n"
-        + "port=%s,%n" + "path=%s,%n" + "queryParameters=%s,%n" + "trailingSlash=%s,%n"
-        + "headers=%s,%n" + "body=%s%n" + "]", this.method, this.scheme, this.host, this.port,
-        this.path, this.queryParameters, this.trailingSlash, this.headers, this.body);
+        + "port=%s,%n" + "uriRoot=%s,%n" + "container=%s,%n" + "object=%s,%n"
+        + "queryParameters=%s,%n" + "trailingSlash=%s,%n" + "headers=%s,%n" + "body=%s%n" + "]",
+        this.method, this.scheme, this.host, this.port, this.uriRoot, this.container, this.object,
+        this.queryParameters, this.trailingSlash, this.headers, this.body);
   }
 
   /**
@@ -125,7 +137,9 @@ public class RequestSupplier implements Supplier<Request> {
     private Scheme scheme;
     private final Supplier<String> host;
     private Integer port;
-    private final List<Supplier<String>> path;
+    private String uriRoot;
+    private final Supplier<String> container;
+    private CachingSupplier<String> object;
     private final Map<String, String> queryParameters;
     private boolean trailingSlash;
     private final Map<Supplier<String>, Supplier<String>> headers;
@@ -138,11 +152,11 @@ public class RequestSupplier implements Supplier<Request> {
      * @param uri a request uri supplier
      */
     public Builder(final Method method, final Supplier<String> host,
-        final List<Supplier<String>> path) {
+        final Supplier<String> container) {
       this.method = method;
       this.scheme = Scheme.HTTP;
       this.host = host;
-      this.path = path;
+      this.container = container;
       this.queryParameters = Maps.newLinkedHashMap();
       this.headers = Maps.newLinkedHashMap();
     }
@@ -167,6 +181,28 @@ public class RequestSupplier implements Supplier<Request> {
     public Builder onPort(final int port) {
       checkArgument(port > 0 && port < 65536, "port must be in range [1, 65535] [%s]", port);
       this.port = port;
+      return this;
+    }
+
+    /**
+     * Configures the uri root
+     * 
+     * @param uriRoot the uri root
+     * @return this builder
+     */
+    public Builder withUriRoot(final String uriRoot) {
+      this.uriRoot = uriRoot;
+      return this;
+    }
+
+    /**
+     * Configures the object name
+     * 
+     * @param object the object name
+     * @return this builder
+     */
+    public Builder withObject(final CachingSupplier<String> object) {
+      this.object = object;
       return this;
     }
 
