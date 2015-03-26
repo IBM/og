@@ -131,6 +131,9 @@ public class OGModule extends AbstractModule {
 
   @Override
   protected void configure() {
+    bind(Scheme.class).toInstance(this.config.getScheme());
+    bind(Integer.class).toInstance(this.config.getPort());
+
     bind(LoadTest.class).in(Singleton.class);
     bind(LoadTestSubscriberExceptionHandler.class).toInstance(this.handler);
     bind(EventBus.class).toInstance(this.eventBus);
@@ -261,12 +264,6 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
-  public Supplier<Scheme> provideScheme() {
-    return Suppliers.of(this.config.getScheme());
-  }
-
-  @Provides
-  @Singleton
   @Host
   public Supplier<String> provideHost() {
     return createHost(this.config.getHostSelection(), this.config.getHost());
@@ -330,13 +327,6 @@ public class OGModule extends AbstractModule {
     return wrc.build();
   }
 
-  @Provides
-  @Singleton
-  public Supplier<Integer> providePort() {
-    if (this.config.getPort() != null)
-      return Suppliers.of(this.config.getPort());
-    return null;
-  }
 
   @Provides
   public Api provideApi() {
@@ -346,16 +336,16 @@ public class OGModule extends AbstractModule {
   @Provides
   @Singleton
   @UriRoot
-  public Supplier<String> provideUriRoot() {
+  public String provideUriRoot() {
     final String uriRoot = this.config.getUriRoot();
     if (uriRoot != null) {
       final String root = CharMatcher.is('/').trimFrom(uriRoot);
       if (root.length() > 0)
-        return Suppliers.of(root);
+        return root;
       return null;
     }
 
-    return Suppliers.of(this.config.getApi().toString().toLowerCase());
+    return this.config.getApi().toString().toLowerCase();
   }
 
   @Provides
@@ -370,31 +360,29 @@ public class OGModule extends AbstractModule {
   @Provides
   @Singleton
   @Username
-  public Supplier<String> provideUsername() {
+  public String provideUsername() {
     final String username = this.config.getAuthentication().getUsername();
     if (username != null) {
       checkArgument(username.length() > 0, "username must not be empty string");
-      return Suppliers.of(username);
     }
-    return null;
+    return username;
   }
 
   @Provides
   @Singleton
   @Password
-  public Supplier<String> providePassword() {
+  public String providePassword() {
     final String password = this.config.getAuthentication().getPassword();
     if (password != null) {
       checkArgument(password.length() > 0, "password must not be empty string");
-      return Suppliers.of(password);
     }
-    return null;
+    return password;
   }
 
   @Provides
   @Singleton
-  public HttpAuth provideAuthentication(@Username final Supplier<String> username,
-      @Password final Supplier<String> password) {
+  public HttpAuth provideAuthentication(@Username final String username,
+      @Password final String password) {
     final AuthType type = checkNotNull(this.config.getAuthentication().getType());
 
     if (username != null && password != null) {
@@ -648,8 +636,7 @@ public class OGModule extends AbstractModule {
   public Supplier<Request> provideWrite(final Api api, @WriteUri final Supplier<URI> uri,
       @WriteObjectName final CachingSupplier<String> object,
       @WriteHeaders final Map<Supplier<String>, Supplier<String>> headers,
-      final Supplier<Body> body, @Username final Supplier<String> username,
-      @Password final Supplier<String> password) {
+      final Supplier<Body> body, @Username final String username, @Password final String password) {
     checkNotNull(api);
     // SOH needs to use a special response consumer to extract the returned object id
     if (Api.SOH == api)
@@ -664,7 +651,7 @@ public class OGModule extends AbstractModule {
   public Supplier<Request> provideRead(@ReadUri final Supplier<URI> uri,
       @ReadObjectName final CachingSupplier<String> object,
       @ReadHeaders final Map<Supplier<String>, Supplier<String>> headers,
-      @Username final Supplier<String> username, @Password final Supplier<String> password) {
+      @Username final String username, @Password final String password) {
     return createRequestSupplier(Method.GET, uri, object, headers, Suppliers.of(Bodies.none()),
         username, password);
   }
@@ -675,20 +662,20 @@ public class OGModule extends AbstractModule {
   public Supplier<Request> provideDelete(@DeleteUri final Supplier<URI> uri,
       @DeleteObjectName final CachingSupplier<String> object,
       @DeleteHeaders final Map<Supplier<String>, Supplier<String>> headers,
-      @Username final Supplier<String> username, @Password final Supplier<String> password) {
+      @Username final String username, @Password final String password) {
     return createRequestSupplier(Method.DELETE, uri, object, headers, Suppliers.of(Bodies.none()),
         username, password);
   }
 
   private Supplier<Request> createRequestSupplier(final Method method, final Supplier<URI> uri,
       final CachingSupplier<String> object, final Map<Supplier<String>, Supplier<String>> headers,
-      final Supplier<Body> body, final Supplier<String> username, final Supplier<String> password) {
+      final Supplier<Body> body, final String username, final String password) {
     checkNotNull(method);
     checkNotNull(uri);
     checkNotNull(headers);
     checkNotNull(body);
 
-    final RequestSupplier.Builder b = new RequestSupplier.Builder(Suppliers.of(method), uri);
+    final RequestSupplier.Builder b = new RequestSupplier.Builder(method, uri);
 
     if (object != null)
       b.withHeader(Suppliers.of(Headers.X_OG_OBJECT_NAME), new Supplier<String>() {
@@ -705,8 +692,8 @@ public class OGModule extends AbstractModule {
     b.withBody(body);
 
     if (username != null && password != null) {
-      b.withHeader(Suppliers.of(Headers.X_OG_USERNAME), username);
-      b.withHeader(Suppliers.of(Headers.X_OG_PASSWORD), password);
+      b.withHeader(Suppliers.of(Headers.X_OG_USERNAME), Suppliers.of(username));
+      b.withHeader(Suppliers.of(Headers.X_OG_PASSWORD), Suppliers.of(password));
     }
 
     return b.build();
@@ -715,9 +702,9 @@ public class OGModule extends AbstractModule {
   @Provides
   @Singleton
   @WriteUri
-  public Supplier<URI> providWriteUri(final Supplier<Scheme> scheme,
-      @WriteHost final Supplier<String> host, final Supplier<Integer> port,
-      @UriRoot final Supplier<String> uriRoot, @Container final Supplier<String> container,
+  public Supplier<URI> providWriteUri(final Scheme scheme, @WriteHost final Supplier<String> host,
+      final Integer port, @UriRoot final String uriRoot,
+      @Container final Supplier<String> container,
       @WriteObjectName final CachingSupplier<String> object) {
     return createUri(scheme, host, port, uriRoot, container, object);
   }
@@ -725,9 +712,9 @@ public class OGModule extends AbstractModule {
   @Provides
   @Singleton
   @ReadUri
-  public Supplier<URI> providReadUri(final Supplier<Scheme> scheme,
-      @ReadHost final Supplier<String> host, final Supplier<Integer> port,
-      @UriRoot final Supplier<String> uriRoot, @Container final Supplier<String> container,
+  public Supplier<URI> providReadUri(final Scheme scheme, @ReadHost final Supplier<String> host,
+      final Integer port, @UriRoot final String uriRoot,
+      @Container final Supplier<String> container,
       @ReadObjectName final CachingSupplier<String> object) {
     return createUri(scheme, host, port, uriRoot, container, object);
   }
@@ -735,23 +722,22 @@ public class OGModule extends AbstractModule {
   @Provides
   @Singleton
   @DeleteUri
-  public Supplier<URI> providDeleteUri(final Supplier<Scheme> scheme,
-      @DeleteHost final Supplier<String> host, final Supplier<Integer> port,
-      @UriRoot final Supplier<String> uriRoot, @Container final Supplier<String> container,
+  public Supplier<URI> providDeleteUri(final Scheme scheme,
+      @DeleteHost final Supplier<String> host, final Integer port, @UriRoot final String uriRoot,
+      @Container final Supplier<String> container,
       @DeleteObjectName final CachingSupplier<String> object) {
     return createUri(scheme, host, port, uriRoot, container, object);
   }
 
-  private Supplier<URI> createUri(final Supplier<Scheme> scheme, final Supplier<String> host,
-      final Supplier<Integer> port, final Supplier<String> uriRoot,
-      final Supplier<String> container, final CachingSupplier<String> object) {
+  private Supplier<URI> createUri(Scheme scheme, final Supplier<String> host, final Integer port,
+      final String uriRoot, final Supplier<String> container, final CachingSupplier<String> object) {
     checkNotNull(scheme);
     checkNotNull(host);
     checkNotNull(container);
 
     final List<Supplier<String>> path = Lists.newArrayList();
     if (uriRoot != null)
-      path.add(uriRoot);
+      path.add(Suppliers.of(uriRoot));
     path.add(container);
     if (object != null)
       path.add(object);
@@ -759,7 +745,7 @@ public class OGModule extends AbstractModule {
     final UriSupplier.Builder b = new UriSupplier.Builder(host, path).withScheme(scheme);
 
     if (port != null)
-      b.onPort(port.get());
+      b.onPort(port);
 
     return b.build();
   }

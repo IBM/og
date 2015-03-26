@@ -27,7 +27,7 @@ import com.google.common.collect.Maps;
  * @since 1.0
  */
 public class RequestSupplier implements Supplier<Request> {
-  private final Supplier<Method> method;
+  private final Method method;
   private final Supplier<URI> uri;
   private final Map<Supplier<String>, Supplier<String>> headers;
   private final Supplier<Body> body;
@@ -41,7 +41,7 @@ public class RequestSupplier implements Supplier<Request> {
 
   @Override
   public Request get() {
-    final HttpRequest.Builder context = new HttpRequest.Builder(this.method.get(), this.uri.get());
+    final HttpRequest.Builder context = new HttpRequest.Builder(this.method, this.uri.get());
 
     for (final Map.Entry<Supplier<String>, Supplier<String>> header : this.headers.entrySet()) {
       context.withHeader(header.getKey().get(), header.getValue().get());
@@ -63,20 +63,10 @@ public class RequestSupplier implements Supplier<Request> {
    * A request supplier builder
    */
   public static class Builder {
-    private final Supplier<Method> method;
+    private final Method method;
     private final Supplier<URI> uri;
     private final Map<Supplier<String>, Supplier<String>> headers;
     private Supplier<Body> body;
-
-    /**
-     * Constructs a builder instance using the provided method and uri
-     * 
-     * @param method the request method
-     * @param uri the request uri
-     */
-    public Builder(final Method method, final URI uri) {
-      this(Suppliers.of(method), Suppliers.of(uri));
-    }
 
     /**
      * Constructs a builder instance using the provided method and uri suppliers
@@ -84,7 +74,7 @@ public class RequestSupplier implements Supplier<Request> {
      * @param method a request method supplier
      * @param uri a request uri supplier
      */
-    public Builder(final Supplier<Method> method, final Supplier<URI> uri) {
+    public Builder(final Method method, final Supplier<URI> uri) {
       this.method = method;
       this.uri = uri;
       this.headers = Maps.newLinkedHashMap();

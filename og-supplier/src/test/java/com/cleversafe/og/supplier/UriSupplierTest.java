@@ -43,11 +43,6 @@ public class UriSupplierTest {
   }
 
   @Test(expected = NullPointerException.class)
-  public void nullSchemeSupplier() {
-    new UriSupplier.Builder(this.host, this.path).withScheme((Supplier<Scheme>) null).build();
-  }
-
-  @Test(expected = NullPointerException.class)
   public void nullHost() {
     new UriSupplier.Builder((String) null, this.path).build();
   }
@@ -55,12 +50,6 @@ public class UriSupplierTest {
   @Test(expected = NullPointerException.class)
   public void nullHostSupplier() {
     new UriSupplier.Builder((Supplier<String>) null, this.path).build();
-  }
-
-  @Test
-  public void nullPort() {
-    // can set port to null, it gets ignored when assembling url in get
-    new UriSupplier.Builder(this.host, this.path).onPort((Supplier<Integer>) null).build();
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -117,14 +106,6 @@ public class UriSupplierTest {
   }
 
   @Test
-  public void schemeSupplier() {
-    final URI uri =
-        new UriSupplier.Builder(this.host, this.path).withScheme(Suppliers.of(Scheme.HTTPS))
-            .build().get();
-    assertThat(Scheme.valueOf(uri.getScheme().toUpperCase(Locale.US)), is(Scheme.HTTPS));
-  }
-
-  @Test
   public void host() {
     final URI uri = new UriSupplier.Builder("10.1.1.1", this.path).build().get();
     assertThat(uri.getHost(), is("10.1.1.1"));
@@ -134,13 +115,6 @@ public class UriSupplierTest {
   public void port() {
     final URI uri = new UriSupplier.Builder(this.host, this.path).onPort(80).build().get();
     assertThat(uri.getPort(), is(80));
-  }
-
-  @Test
-  public void portSupplier() {
-    final URI uri =
-        new UriSupplier.Builder(this.host, this.path).onPort(Suppliers.of(8080)).build().get();
-    assertThat(uri.getPort(), is(8080));
   }
 
   @Test

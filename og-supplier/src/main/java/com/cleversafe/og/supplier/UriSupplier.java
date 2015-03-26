@@ -29,9 +29,9 @@ import com.google.common.collect.Maps;
  * @since 1.0
  */
 public class UriSupplier implements Supplier<URI> {
-  private final Supplier<Scheme> scheme;
+  private final Scheme scheme;
   private final Supplier<String> host;
-  private final Supplier<Integer> port;
+  private final Integer port;
   private final List<Supplier<String>> path;
   private final Map<String, String> queryParameters;
   private final boolean trailingSlash;
@@ -49,7 +49,7 @@ public class UriSupplier implements Supplier<URI> {
   @Override
   public URI get() {
     final StringBuilder s =
-        new StringBuilder().append(this.scheme.get()).append("://").append(this.host.get());
+        new StringBuilder().append(this.scheme).append("://").append(this.host.get());
     appendPort(s);
     appendPath(s);
     appendTrailingSlash(s);
@@ -66,7 +66,7 @@ public class UriSupplier implements Supplier<URI> {
 
   private void appendPort(final StringBuilder s) {
     if (this.port != null)
-      s.append(":").append(this.port.get());
+      s.append(":").append(this.port);
   }
 
   private void appendPath(final StringBuilder s) {
@@ -97,9 +97,9 @@ public class UriSupplier implements Supplier<URI> {
    * A uri supplier builder
    */
   public static class Builder {
-    private Supplier<Scheme> scheme;
+    private Scheme scheme;
     private final Supplier<String> host;
-    private Supplier<Integer> port;
+    private Integer port;
     private final List<Supplier<String>> path;
     private final Map<String, String> queryParameters;
     private boolean trailingSlash;
@@ -121,7 +121,7 @@ public class UriSupplier implements Supplier<URI> {
      * @param path the uri resource path
      */
     public Builder(final Supplier<String> host, final List<Supplier<String>> path) {
-      this.scheme = Suppliers.of(Scheme.HTTP);
+      this.scheme = Scheme.HTTP;
       this.host = host;
       this.path = path;
       this.queryParameters = Maps.newLinkedHashMap();
@@ -134,16 +134,6 @@ public class UriSupplier implements Supplier<URI> {
      * @return this builder
      */
     public Builder withScheme(final Scheme scheme) {
-      return withScheme(Suppliers.of(scheme));
-    }
-
-    /**
-     * Configures the uri scheme, using the provided supplier
-     * 
-     * @param scheme the uri scheme
-     * @return this builder
-     */
-    public Builder withScheme(final Supplier<Scheme> scheme) {
       this.scheme = scheme;
       return this;
     }
@@ -156,16 +146,6 @@ public class UriSupplier implements Supplier<URI> {
      */
     public Builder onPort(final int port) {
       checkArgument(port > 0 && port < 65536, "port must be in range [1, 65535] [%s]", port);
-      return onPort(Suppliers.of(port));
-    }
-
-    /**
-     * Configures the uri port, using the provided supplier
-     * 
-     * @param port the uri port
-     * @return this builder
-     */
-    public Builder onPort(final Supplier<Integer> port) {
       this.port = port;
       return this;
     }

@@ -29,32 +29,22 @@ import com.google.common.base.Supplier;
 
 public class RequestSupplierTest {
   private Method method;
-  private URI uri;
+  private Supplier<URI> uri;
 
   @Before
   public void before() throws URISyntaxException {
     this.method = Method.PUT;
-    this.uri = new URI("http://192.168.8.23/container/object");
+    this.uri = Suppliers.of(new URI("http://192.168.8.23/container/object"));
   }
 
   @Test(expected = NullPointerException.class)
   public void nullMethod() {
-    new RequestSupplier.Builder((Method) null, this.uri).build();
-  }
-
-  @Test(expected = NullPointerException.class)
-  public void nullMethodSupplier() {
-    new RequestSupplier.Builder((Supplier<Method>) null, Suppliers.of(this.uri)).build();
-  }
-
-  @Test(expected = NullPointerException.class)
-  public void nullUri() {
-    new RequestSupplier.Builder(this.method, (URI) null).build();
+    new RequestSupplier.Builder(null, this.uri).build();
   }
 
   @Test(expected = NullPointerException.class)
   public void nullUriSupplier() {
-    new RequestSupplier.Builder(Suppliers.of(this.method), (Supplier<URI>) null).build();
+    new RequestSupplier.Builder(this.method, null).build();
   }
 
   @Test(expected = NullPointerException.class)
@@ -63,25 +53,8 @@ public class RequestSupplierTest {
   }
 
   @Test(expected = NullPointerException.class)
-  public void headerNullKeySupplier() {
-    new RequestSupplier.Builder(this.method, this.uri).withHeader((Supplier<String>) null,
-        Suppliers.of("value")).build();
-  }
-
-  @Test(expected = NullPointerException.class)
   public void headerNullValue() {
     new RequestSupplier.Builder(this.method, this.uri).withHeader("key", null);
-  }
-
-  @Test(expected = NullPointerException.class)
-  public void headerNullValueSupplier() {
-    new RequestSupplier.Builder(this.method, this.uri).withHeader(Suppliers.of("key"),
-        (Supplier<String>) null).build();
-  }
-
-  @Test(expected = NullPointerException.class)
-  public void nullBody() {
-    new RequestSupplier.Builder(this.method, this.uri).withBody((Body) null);
   }
 
   @Test(expected = NullPointerException.class)
@@ -96,32 +69,16 @@ public class RequestSupplierTest {
   }
 
   @Test
-  public void methodSupplier() {
-    final Request request =
-        new RequestSupplier.Builder(Suppliers.of(Method.DELETE), Suppliers.of(this.uri)).build()
-            .get();
-    assertThat(request.getMethod(), is(Method.DELETE));
-  }
-
-  @Test
-  public void uri() {
-    final Request request = new RequestSupplier.Builder(this.method, this.uri).build().get();
-    assertThat(request.getUri(), is(this.uri));
-  }
-
-  @Test
   public void uriSupplier() {
-    final Request request =
-        new RequestSupplier.Builder(Suppliers.of(this.method), Suppliers.of(this.uri)).build()
-            .get();
-    assertThat(request.getUri(), is(this.uri));
+    final Request request = new RequestSupplier.Builder(this.method, this.uri).build().get();
+    assertThat(request.getUri(), is(this.uri.get()));
   }
 
   @Test
   public void headers() {
     final Request request =
         new RequestSupplier.Builder(this.method, this.uri).withHeader("key2", "value2")
-            .withHeader(Suppliers.of("key1"), Suppliers.of("value1")).build().get();
+            .withHeader("key1", "value1").build().get();
     final Iterator<Entry<String, String>> it = request.headers().entrySet().iterator();
     // Skip Date header which is automatically added
     it.next();
@@ -160,8 +117,8 @@ public class RequestSupplierTest {
   @Test
   public void body() {
     final Request request =
-        new RequestSupplier.Builder(this.method, this.uri).withBody(Bodies.zeroes(12345)).build()
-            .get();
+        new RequestSupplier.Builder(this.method, this.uri)
+            .withBody(Suppliers.of(Bodies.zeroes(12345))).build().get();
     assertThat(request.getBody().getData(), is(Data.ZEROES));
     assertThat(request.getBody().getSize(), is(12345L));
   }

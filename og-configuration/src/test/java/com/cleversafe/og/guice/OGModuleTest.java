@@ -82,15 +82,15 @@ public class OGModuleTest {
   private ObjectManager objectManager;
   private EventBus eventBus;
   private OGConfig config;
-  private Supplier<Scheme> scheme;
+  private Scheme scheme;
   private Supplier<String> host;
-  private Supplier<Integer> port;
-  private Supplier<String> uriRoot;
+  private Integer port;
+  private String uriRoot;
   private Supplier<String> container;
   private Map<Supplier<String>, Supplier<String>> headers;
   private CachingSupplier<String> object;
-  private Supplier<String> username;
-  private Supplier<String> password;
+  private String username;
+  private String password;
   private Supplier<Body> body;
 
   @Before
@@ -99,16 +99,16 @@ public class OGModuleTest {
     this.eventBus = new EventBus();
     this.config = mock(OGConfig.class);
     this.module = new OGModule(this.config);
-    this.scheme = Suppliers.of(Scheme.HTTP);
+    this.scheme = Scheme.HTTP;
     this.host = Suppliers.of("127.0.0.1");
-    this.port = Suppliers.of(80);
-    this.uriRoot = Suppliers.of("soh");
+    this.port = 80;
+    this.uriRoot = "soh";
     this.container = Suppliers.of("container");
     this.headers = Maps.newLinkedHashMap();
     this.headers.put(Suppliers.of("key"), Suppliers.of("value"));
     this.object = new CachingSupplier<String>(Suppliers.of("object"));
-    this.username = Suppliers.of("username");
-    this.password = Suppliers.of("password");
+    this.username = "username";
+    this.password = "password";
     this.body = Suppliers.of(Bodies.zeroes(1024));
   }
 
@@ -208,17 +208,6 @@ public class OGModuleTest {
   @Test
   public void provideIdSupplier() {
     assertThat(this.module.provideIdSupplier(), notNullValue());
-  }
-
-  @Test(expected = NullPointerException.class)
-  public void provideSchemeNullScheme() {
-    this.module.provideScheme();
-  }
-
-  @Test
-  public void provideScheme() {
-    when(this.config.getScheme()).thenReturn(Scheme.HTTP);
-    assertThat(this.module.provideScheme().get(), is(Scheme.HTTP));
   }
 
   @DataProvider
@@ -385,18 +374,6 @@ public class OGModuleTest {
     assertThat(s.get(), is("10.1.1.1"));
   }
 
-  @Test
-  public void providePortNullPort() {
-    when(this.config.getPort()).thenReturn(null);
-    assertThat(this.module.providePort(), nullValue());
-  }
-
-  @Test
-  public void providePort() {
-    when(this.config.getPort()).thenReturn(80);
-    assertThat(this.module.providePort().get(), is(80));
-  }
-
   @Test(expected = NullPointerException.class)
   public void provideApiNullApi() {
     when(this.config.getApi()).thenReturn(null);
@@ -423,7 +400,7 @@ public class OGModuleTest {
   public void provideUriRootNullUriRoot(final String uriRoot, final Api api, final String path) {
     when(this.config.getUriRoot()).thenReturn(uriRoot);
     when(this.config.getApi()).thenReturn(api);
-    assertThat(this.module.provideUriRoot().get(), is(path));
+    assertThat(this.module.provideUriRoot(), is(path));
   }
 
   @Test
@@ -470,7 +447,7 @@ public class OGModuleTest {
     final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
     when(authConfig.getUsername()).thenReturn("user");
     when(this.config.getAuthentication()).thenReturn(authConfig);
-    assertThat(this.module.provideUsername().get(), is("user"));
+    assertThat(this.module.provideUsername(), is("user"));
   }
 
   @Test
@@ -492,13 +469,13 @@ public class OGModuleTest {
     final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
     when(authConfig.getPassword()).thenReturn("password");
     when(this.config.getAuthentication()).thenReturn(authConfig);
-    assertThat(this.module.providePassword().get(), is("password"));
+    assertThat(this.module.providePassword(), is("password"));
   }
 
   @DataProvider
   public static Object[][] provideInvalidAuthentication() {
-    final Supplier<String> username = Suppliers.of("username");
-    final Supplier<String> password = Suppliers.of("password");
+    final String username = "username";
+    final String password = "password";
 
     return new Object[][] { {null, username, password, NullPointerException.class},
         {AuthType.BASIC, null, password, IllegalArgumentException.class},
@@ -507,9 +484,8 @@ public class OGModuleTest {
 
   @Test
   @UseDataProvider("provideInvalidAuthentication")
-  public void invalidProvideAuthentication(final AuthType authType,
-      final Supplier<String> username, final Supplier<String> password,
-      final Class<Exception> expectedException) {
+  public void invalidProvideAuthentication(final AuthType authType, final String username,
+      final String password, final Class<Exception> expectedException) {
     final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
     when(authConfig.getType()).thenReturn(authType);
     when(this.config.getAuthentication()).thenReturn(authConfig);
@@ -539,8 +515,7 @@ public class OGModuleTest {
     when(authConfig.getType()).thenReturn(authType);
     when(this.config.getAuthentication()).thenReturn(authConfig);
 
-    final HttpAuth auth =
-        this.module.provideAuthentication(Suppliers.of("username"), Suppliers.of("password"));
+    final HttpAuth auth = this.module.provideAuthentication("username", "password");
 
     assertThat(authClass.isInstance(auth), is(true));
   }
@@ -849,8 +824,8 @@ public class OGModuleTest {
   @SuppressWarnings({"rawtypes", "unchecked"})
   public static Object[][] provideRequestData() {
     final CachingSupplier<String> object = new CachingSupplier<String>(Suppliers.of("object"));
-    final Supplier<String> username = Suppliers.of("username");
-    final Supplier<String> password = Suppliers.of("password");
+    final String username = "username";
+    final String password = "password";
 
     final Matcher apiMatch = hasEntry(Headers.X_OG_RESPONSE_BODY_CONSUMER, "soh.put_object");
     final Matcher objectMatch = is("object");
@@ -866,9 +841,8 @@ public class OGModuleTest {
   @SuppressWarnings({"rawtypes", "unchecked"})
   @UseDataProvider("provideRequestData")
   public void provideWrite(final Api api, final Matcher apiMatch,
-      final CachingSupplier<String> object, final Matcher objectMatch,
-      final Supplier<String> username, final Matcher usernameMatch,
-      final Supplier<String> password, final Matcher passwordMatch) {
+      final CachingSupplier<String> object, final Matcher objectMatch, final String username,
+      final Matcher usernameMatch, final String password, final Matcher passwordMatch) {
     final Supplier<URI> uri =
         this.module.providWriteUri(this.scheme, this.host, this.port, null, this.container, object);
     final Request request =
@@ -885,9 +859,8 @@ public class OGModuleTest {
   @SuppressWarnings({"rawtypes", "unchecked"})
   @UseDataProvider("provideRequestData")
   public void provideRead(final Api api, final Matcher apiMatch,
-      final CachingSupplier<String> object, final Matcher objectMatch,
-      final Supplier<String> username, final Matcher usernameMatch,
-      final Supplier<String> password, final Matcher passwordMatch) {
+      final CachingSupplier<String> object, final Matcher objectMatch, final String username,
+      final Matcher usernameMatch, final String password, final Matcher passwordMatch) {
     final Supplier<URI> uri =
         this.module.providReadUri(this.scheme, this.host, this.port, null, this.container, object);
     final Request request =
@@ -902,9 +875,8 @@ public class OGModuleTest {
   @SuppressWarnings({"rawtypes", "unchecked"})
   @UseDataProvider("provideRequestData")
   public void provideDelete(final Api api, final Matcher apiMatch,
-      final CachingSupplier<String> object, final Matcher objectMatch,
-      final Supplier<String> username, final Matcher usernameMatch,
-      final Supplier<String> password, final Matcher passwordMatch) {
+      final CachingSupplier<String> object, final Matcher objectMatch, final String username,
+      final Matcher usernameMatch, final String password, final Matcher passwordMatch) {
     final Supplier<URI> uri =
         this.module
             .providDeleteUri(this.scheme, this.host, this.port, null, this.container, object);
@@ -921,13 +893,13 @@ public class OGModuleTest {
     @SuppressWarnings("rawtypes")
     final Supplier supplier = mock(Supplier.class);
 
-    return new Object[][] { {null, supplier, supplier}, {supplier, null, supplier},
-        {supplier, supplier, null},};
+    return new Object[][] { {null, supplier, supplier}, {Scheme.HTTP, null, supplier},
+        {Scheme.HTTP, supplier, null},};
   }
 
   @Test
   @UseDataProvider("provideInvalidProvideUri")
-  public void invalidProvideWriteUri(final Supplier<Scheme> scheme, final Supplier<String> host,
+  public void invalidProvideWriteUri(final Scheme scheme, final Supplier<String> host,
       final Supplier<String> container) {
     this.thrown.expect(NullPointerException.class);
     this.module.providWriteUri(scheme, host, this.port, this.uriRoot, container, this.object);
@@ -935,7 +907,7 @@ public class OGModuleTest {
 
   @Test
   @UseDataProvider("provideInvalidProvideUri")
-  public void invalidProvideReadUri(final Supplier<Scheme> scheme, final Supplier<String> host,
+  public void invalidProvideReadUri(final Scheme scheme, final Supplier<String> host,
       final Supplier<String> container) {
     this.thrown.expect(NullPointerException.class);
     this.module.providReadUri(scheme, host, this.port, this.uriRoot, container, this.object);
@@ -943,7 +915,7 @@ public class OGModuleTest {
 
   @Test
   @UseDataProvider("provideInvalidProvideUri")
-  public void invalidProvideDeleteUri(final Supplier<Scheme> scheme, final Supplier<String> host,
+  public void invalidProvideDeleteUri(final Scheme scheme, final Supplier<String> host,
       final Supplier<String> container) {
     this.thrown.expect(NullPointerException.class);
     this.module.providDeleteUri(scheme, host, this.port, this.uriRoot, container, this.object);
@@ -951,23 +923,21 @@ public class OGModuleTest {
 
   @DataProvider
   public static Object[][] provideUriData() {
-    final Supplier<Integer> port = Suppliers.of(8080);
-    final Supplier<String> uriRoot = Suppliers.of("soh");
+    final String uriRoot = "soh";
     final CachingSupplier<String> object = new CachingSupplier<String>(Suppliers.of("object"));
 
     return new Object[][] { {null, -1, null, null, "/container/object"},
-        {port, 8080, uriRoot, object, "/soh/container/object"},};
+        {8080, 8080, uriRoot, object, "/soh/container/object"},};
   }
 
   @Test
   @UseDataProvider("provideUriData")
-  public void provideWriteUri(final Supplier<Integer> port, final int portExpected,
-      final Supplier<String> uriRoot, final CachingSupplier<String> object,
-      final String pathExpected) {
+  public void provideWriteUri(final Integer port, final int portExpected, final String uriRoot,
+      final CachingSupplier<String> object, final String pathExpected) {
     final URI uri =
         this.module.providWriteUri(this.scheme, this.host, port, uriRoot, this.container,
             this.object).get();
-    assertThat(uri.getScheme().toUpperCase(), is(this.scheme.get().toString()));
+    assertThat(uri.getScheme().toUpperCase(), is(this.scheme.toString()));
     assertThat(uri.getHost(), is(this.host.get()));
     assertThat(uri.getPort(), is(portExpected));
     assertThat(uri.getPath(), is(pathExpected));
@@ -975,13 +945,12 @@ public class OGModuleTest {
 
   @Test
   @UseDataProvider("provideUriData")
-  public void provideReadUri(final Supplier<Integer> port, final int portExpected,
-      final Supplier<String> uriRoot, final CachingSupplier<String> object,
-      final String pathExpected) {
+  public void provideReadUri(final Integer port, final int portExpected, final String uriRoot,
+      final CachingSupplier<String> object, final String pathExpected) {
     final URI uri =
         this.module.providReadUri(this.scheme, this.host, port, uriRoot, this.container,
             this.object).get();
-    assertThat(uri.getScheme().toUpperCase(), is(this.scheme.get().toString()));
+    assertThat(uri.getScheme().toUpperCase(), is(this.scheme.toString()));
     assertThat(uri.getHost(), is(this.host.get()));
     assertThat(uri.getPort(), is(portExpected));
     assertThat(uri.getPath(), is(pathExpected));
@@ -989,13 +958,12 @@ public class OGModuleTest {
 
   @Test
   @UseDataProvider("provideUriData")
-  public void provideDeleteUri(final Supplier<Integer> port, final int portExpected,
-      final Supplier<String> uriRoot, final CachingSupplier<String> object,
-      final String pathExpected) {
+  public void provideDeleteUri(final Integer port, final int portExpected, final String uriRoot,
+      final CachingSupplier<String> object, final String pathExpected) {
     final URI uri =
         this.module.providDeleteUri(this.scheme, this.host, port, uriRoot, this.container,
             this.object).get();
-    assertThat(uri.getScheme().toUpperCase(), is(this.scheme.get().toString()));
+    assertThat(uri.getScheme().toUpperCase(), is(this.scheme.toString()));
     assertThat(uri.getHost(), is(this.host.get()));
     assertThat(uri.getPort(), is(portExpected));
     assertThat(uri.getPath(), is(pathExpected));
