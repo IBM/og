@@ -33,6 +33,7 @@ import com.google.common.collect.Maps;
  */
 public class RequestSupplier implements Supplier<Request> {
   private static final Joiner.MapJoiner PARAM_JOINER = Joiner.on('&').withKeyValueSeparator("=");
+  private final Supplier<String> id;
   private final Method method;
   private final Scheme scheme;
   private final Supplier<String> host;
@@ -48,6 +49,7 @@ public class RequestSupplier implements Supplier<Request> {
   private final Supplier<Body> body;
 
   private RequestSupplier(final Builder builder) {
+    this.id = builder.id;
     this.method = checkNotNull(builder.method);
     this.scheme = checkNotNull(builder.scheme);
     this.host = checkNotNull(builder.host);
@@ -70,6 +72,9 @@ public class RequestSupplier implements Supplier<Request> {
     for (final Map.Entry<Supplier<String>, Supplier<String>> header : this.headers.entrySet()) {
       context.withHeader(header.getKey().get(), header.getValue().get());
     }
+
+    if (this.id != null)
+      context.withHeader(Headers.X_OG_REQUEST_ID, this.id.get());
 
     if (this.object != null)
       context.withHeader(Headers.X_OG_OBJECT_NAME, this.object.getCachedValue());
@@ -142,6 +147,7 @@ public class RequestSupplier implements Supplier<Request> {
    * A request supplier builder
    */
   public static class Builder {
+    private Supplier<String> id;
     private final Method method;
     private Scheme scheme;
     private final Supplier<String> host;
@@ -170,6 +176,17 @@ public class RequestSupplier implements Supplier<Request> {
       this.container = container;
       this.queryParameters = Maps.newLinkedHashMap();
       this.headers = Maps.newLinkedHashMap();
+    }
+
+    /**
+     * Configures the request id
+     * 
+     * @param id the request id
+     * @return this builder
+     */
+    public Builder withId(final Supplier<String> id) {
+      this.id = id;
+      return this;
     }
 
     /**

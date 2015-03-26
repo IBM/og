@@ -399,26 +399,26 @@ public class OGModule extends AbstractModule {
   @Provides
   @Singleton
   @WriteHeaders
-  public Map<Supplier<String>, Supplier<String>> provideWriteHeaders(@Id final Supplier<String> id) {
-    return provideHeaders(this.config.getWrite().getHeaders(), id);
+  public Map<Supplier<String>, Supplier<String>> provideWriteHeaders() {
+    return provideHeaders(this.config.getWrite().getHeaders());
   }
 
   @Provides
   @Singleton
   @ReadHeaders
-  public Map<Supplier<String>, Supplier<String>> provideReadHeaders(@Id final Supplier<String> id) {
-    return provideHeaders(this.config.getRead().getHeaders(), id);
+  public Map<Supplier<String>, Supplier<String>> provideReadHeaders() {
+    return provideHeaders(this.config.getRead().getHeaders());
   }
 
   @Provides
   @Singleton
   @DeleteHeaders
-  public Map<Supplier<String>, Supplier<String>> provideDeleteHeaders(@Id final Supplier<String> id) {
-    return provideHeaders(this.config.getDelete().getHeaders(), id);
+  public Map<Supplier<String>, Supplier<String>> provideDeleteHeaders() {
+    return provideHeaders(this.config.getDelete().getHeaders());
   }
 
   private Map<Supplier<String>, Supplier<String>> provideHeaders(
-      Map<String, String> operationHeaders, @Id final Supplier<String> id) {
+      Map<String, String> operationHeaders) {
     checkNotNull(operationHeaders);
 
     Map<String, String> headers = Maps.newLinkedHashMap();
@@ -430,7 +430,6 @@ public class OGModule extends AbstractModule {
     for (final Entry<String, String> header : headers.entrySet()) {
       supplierHeaders.put(Suppliers.of(header.getKey()), Suppliers.of(header.getValue()));
     }
-    supplierHeaders.put(Suppliers.of(com.cleversafe.og.http.Headers.X_OG_REQUEST_ID), id);
     return supplierHeaders;
   }
 
@@ -628,9 +627,9 @@ public class OGModule extends AbstractModule {
   @Provides
   @Singleton
   @Write
-  public Supplier<Request> provideWrite(final Api api, final Scheme scheme,
-      @WriteHost final Supplier<String> host, final Integer port, @UriRoot final String uriRoot,
-      @Container final Supplier<String> container,
+  public Supplier<Request> provideWrite(@Id final Supplier<String> id, final Api api,
+      final Scheme scheme, @WriteHost final Supplier<String> host, final Integer port,
+      @UriRoot final String uriRoot, @Container final Supplier<String> container,
       @WriteObjectName final CachingSupplier<String> object,
       @WriteHeaders final Map<Supplier<String>, Supplier<String>> headers,
       final Supplier<Body> body, @Username final String username, @Password final String password) {
@@ -639,39 +638,39 @@ public class OGModule extends AbstractModule {
     if (Api.SOH == api)
       headers.put(Suppliers.of(Headers.X_OG_RESPONSE_BODY_CONSUMER), Suppliers.of(SOH_PUT_OBJECT));
 
-    return createRequestSupplier(Method.PUT, scheme, host, port, uriRoot, container, object,
+    return createRequestSupplier(id, Method.PUT, scheme, host, port, uriRoot, container, object,
         headers, body, username, password);
   }
 
   @Provides
   @Singleton
   @Read
-  public Supplier<Request> provideRead(final Scheme scheme, @ReadHost final Supplier<String> host,
-      final Integer port, @UriRoot final String uriRoot,
+  public Supplier<Request> provideRead(@Id final Supplier<String> id, final Scheme scheme,
+      @ReadHost final Supplier<String> host, final Integer port, @UriRoot final String uriRoot,
       @Container final Supplier<String> container,
       @ReadObjectName final CachingSupplier<String> object,
       @ReadHeaders final Map<Supplier<String>, Supplier<String>> headers,
       @Username final String username, @Password final String password) {
-    return createRequestSupplier(Method.GET, scheme, host, port, uriRoot, container, object,
+    return createRequestSupplier(id, Method.GET, scheme, host, port, uriRoot, container, object,
         headers, Suppliers.of(Bodies.none()), username, password);
   }
 
   @Provides
   @Singleton
   @Delete
-  public Supplier<Request> provideDelete(final Scheme scheme,
+  public Supplier<Request> provideDelete(@Id final Supplier<String> id, final Scheme scheme,
       @DeleteHost final Supplier<String> host, final Integer port, @UriRoot final String uriRoot,
       @Container final Supplier<String> container,
       @DeleteObjectName final CachingSupplier<String> object,
       @DeleteHeaders final Map<Supplier<String>, Supplier<String>> headers,
       @Username final String username, @Password final String password) {
-    return createRequestSupplier(Method.DELETE, scheme, host, port, uriRoot, container, object,
+    return createRequestSupplier(id, Method.DELETE, scheme, host, port, uriRoot, container, object,
         headers, Suppliers.of(Bodies.none()), username, password);
   }
 
-  private Supplier<Request> createRequestSupplier(final Method method, Scheme scheme,
-      final Supplier<String> host, final Integer port, final String uriRoot,
-      final Supplier<String> container, final CachingSupplier<String> object,
+  private Supplier<Request> createRequestSupplier(@Id final Supplier<String> id,
+      final Method method, Scheme scheme, final Supplier<String> host, final Integer port,
+      final String uriRoot, final Supplier<String> container, final CachingSupplier<String> object,
       final Map<Supplier<String>, Supplier<String>> headers, final Supplier<Body> body,
       final String username, final String password) {
     checkNotNull(method);
@@ -682,7 +681,7 @@ public class OGModule extends AbstractModule {
     checkNotNull(body);
 
     final RequestSupplier.Builder b =
-        new RequestSupplier.Builder(method, host, container).withScheme(scheme)
+        new RequestSupplier.Builder(method, host, container).withId(id).withScheme(scheme)
             .withUriRoot(uriRoot).withObject(object).onPort(port)
             .withCredentials(username, password);
 
