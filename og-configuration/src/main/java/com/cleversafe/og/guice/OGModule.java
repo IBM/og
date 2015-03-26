@@ -13,7 +13,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -32,7 +31,6 @@ import com.cleversafe.og.guice.annotation.Delete;
 import com.cleversafe.og.guice.annotation.DeleteHeaders;
 import com.cleversafe.og.guice.annotation.DeleteHost;
 import com.cleversafe.og.guice.annotation.DeleteObjectName;
-import com.cleversafe.og.guice.annotation.DeleteUri;
 import com.cleversafe.og.guice.annotation.DeleteWeight;
 import com.cleversafe.og.guice.annotation.Host;
 import com.cleversafe.og.guice.annotation.Id;
@@ -41,7 +39,6 @@ import com.cleversafe.og.guice.annotation.Read;
 import com.cleversafe.og.guice.annotation.ReadHeaders;
 import com.cleversafe.og.guice.annotation.ReadHost;
 import com.cleversafe.og.guice.annotation.ReadObjectName;
-import com.cleversafe.og.guice.annotation.ReadUri;
 import com.cleversafe.og.guice.annotation.ReadWeight;
 import com.cleversafe.og.guice.annotation.UriRoot;
 import com.cleversafe.og.guice.annotation.Username;
@@ -49,7 +46,6 @@ import com.cleversafe.og.guice.annotation.Write;
 import com.cleversafe.og.guice.annotation.WriteHeaders;
 import com.cleversafe.og.guice.annotation.WriteHost;
 import com.cleversafe.og.guice.annotation.WriteObjectName;
-import com.cleversafe.og.guice.annotation.WriteUri;
 import com.cleversafe.og.guice.annotation.WriteWeight;
 import com.cleversafe.og.http.Api;
 import com.cleversafe.og.http.BasicAuth;
@@ -90,7 +86,6 @@ import com.cleversafe.og.supplier.ReadObjectNameSupplier;
 import com.cleversafe.og.supplier.RequestSupplier;
 import com.cleversafe.og.supplier.Suppliers;
 import com.cleversafe.og.supplier.UUIDObjectNameSupplier;
-import com.cleversafe.og.supplier.UriSupplier;
 import com.cleversafe.og.test.LoadTest;
 import com.cleversafe.og.test.LoadTestSubscriberExceptionHandler;
 import com.cleversafe.og.test.condition.CounterCondition;
@@ -633,7 +628,9 @@ public class OGModule extends AbstractModule {
   @Provides
   @Singleton
   @Write
-  public Supplier<Request> provideWrite(final Api api, @WriteUri final Supplier<URI> uri,
+  public Supplier<Request> provideWrite(final Api api, final Scheme scheme,
+      @WriteHost final Supplier<String> host, final Integer port, @UriRoot final String uriRoot,
+      @Container final Supplier<String> container,
       @WriteObjectName final CachingSupplier<String> object,
       @WriteHeaders final Map<Supplier<String>, Supplier<String>> headers,
       final Supplier<Body> body, @Username final String username, @Password final String password) {
@@ -642,40 +639,60 @@ public class OGModule extends AbstractModule {
     if (Api.SOH == api)
       headers.put(Suppliers.of(Headers.X_OG_RESPONSE_BODY_CONSUMER), Suppliers.of(SOH_PUT_OBJECT));
 
-    return createRequestSupplier(Method.PUT, uri, object, headers, body, username, password);
+    return createRequestSupplier(Method.PUT, scheme, host, port, uriRoot, container, object,
+        headers, body, username, password);
   }
 
   @Provides
   @Singleton
   @Read
-  public Supplier<Request> provideRead(@ReadUri final Supplier<URI> uri,
+  public Supplier<Request> provideRead(final Scheme scheme, @ReadHost final Supplier<String> host,
+      final Integer port, @UriRoot final String uriRoot,
+      @Container final Supplier<String> container,
       @ReadObjectName final CachingSupplier<String> object,
       @ReadHeaders final Map<Supplier<String>, Supplier<String>> headers,
       @Username final String username, @Password final String password) {
-    return createRequestSupplier(Method.GET, uri, object, headers, Suppliers.of(Bodies.none()),
-        username, password);
+    return createRequestSupplier(Method.GET, scheme, host, port, uriRoot, container, object,
+        headers, Suppliers.of(Bodies.none()), username, password);
   }
 
   @Provides
   @Singleton
   @Delete
-  public Supplier<Request> provideDelete(@DeleteUri final Supplier<URI> uri,
+  public Supplier<Request> provideDelete(final Scheme scheme,
+      @DeleteHost final Supplier<String> host, final Integer port, @UriRoot final String uriRoot,
+      @Container final Supplier<String> container,
       @DeleteObjectName final CachingSupplier<String> object,
       @DeleteHeaders final Map<Supplier<String>, Supplier<String>> headers,
       @Username final String username, @Password final String password) {
-    return createRequestSupplier(Method.DELETE, uri, object, headers, Suppliers.of(Bodies.none()),
-        username, password);
+    return createRequestSupplier(Method.DELETE, scheme, host, port, uriRoot, container, object,
+        headers, Suppliers.of(Bodies.none()), username, password);
   }
 
-  private Supplier<Request> createRequestSupplier(final Method method, final Supplier<URI> uri,
-      final CachingSupplier<String> object, final Map<Supplier<String>, Supplier<String>> headers,
-      final Supplier<Body> body, final String username, final String password) {
+  private Supplier<Request> createRequestSupplier(final Method method, Scheme scheme,
+      final Supplier<String> host, final Integer port, final String uriRoot,
+      final Supplier<String> container, final CachingSupplier<String> object,
+      final Map<Supplier<String>, Supplier<String>> headers, final Supplier<Body> body,
+      final String username, final String password) {
     checkNotNull(method);
-    checkNotNull(uri);
+    checkNotNull(scheme);
+    checkNotNull(host);
+    checkNotNull(container);
     checkNotNull(headers);
     checkNotNull(body);
 
-    final RequestSupplier.Builder b = new RequestSupplier.Builder(method, uri);
+    final List<Supplier<String>> path = Lists.newArrayList();
+    if (uriRoot != null)
+      path.add(Suppliers.of(uriRoot));
+    path.add(container);
+    if (object != null)
+      path.add(object);
+
+    final RequestSupplier.Builder b =
+        new RequestSupplier.Builder(method, host, path).withScheme(scheme);
+
+    if (port != null)
+      b.onPort(port);
 
     if (object != null)
       b.withHeader(Suppliers.of(Headers.X_OG_OBJECT_NAME), new Supplier<String>() {
@@ -695,57 +712,6 @@ public class OGModule extends AbstractModule {
       b.withHeader(Suppliers.of(Headers.X_OG_USERNAME), Suppliers.of(username));
       b.withHeader(Suppliers.of(Headers.X_OG_PASSWORD), Suppliers.of(password));
     }
-
-    return b.build();
-  }
-
-  @Provides
-  @Singleton
-  @WriteUri
-  public Supplier<URI> providWriteUri(final Scheme scheme, @WriteHost final Supplier<String> host,
-      final Integer port, @UriRoot final String uriRoot,
-      @Container final Supplier<String> container,
-      @WriteObjectName final CachingSupplier<String> object) {
-    return createUri(scheme, host, port, uriRoot, container, object);
-  }
-
-  @Provides
-  @Singleton
-  @ReadUri
-  public Supplier<URI> providReadUri(final Scheme scheme, @ReadHost final Supplier<String> host,
-      final Integer port, @UriRoot final String uriRoot,
-      @Container final Supplier<String> container,
-      @ReadObjectName final CachingSupplier<String> object) {
-    return createUri(scheme, host, port, uriRoot, container, object);
-  }
-
-  @Provides
-  @Singleton
-  @DeleteUri
-  public Supplier<URI> providDeleteUri(final Scheme scheme,
-      @DeleteHost final Supplier<String> host, final Integer port, @UriRoot final String uriRoot,
-      @Container final Supplier<String> container,
-      @DeleteObjectName final CachingSupplier<String> object) {
-    return createUri(scheme, host, port, uriRoot, container, object);
-  }
-
-  private Supplier<URI> createUri(Scheme scheme, final Supplier<String> host, final Integer port,
-      final String uriRoot, final Supplier<String> container, final CachingSupplier<String> object) {
-    checkNotNull(scheme);
-    checkNotNull(host);
-    checkNotNull(container);
-
-    final List<Supplier<String>> path = Lists.newArrayList();
-    if (uriRoot != null)
-      path.add(Suppliers.of(uriRoot));
-    path.add(container);
-    if (object != null)
-      path.add(object);
-
-    final UriSupplier.Builder b = new UriSupplier.Builder(host, path).withScheme(scheme);
-
-    if (port != null)
-      b.onPort(port);
 
     return b.build();
   }
