@@ -67,7 +67,7 @@ public class RequestSupplier implements Supplier<Request> {
     this.headers = ImmutableMap.copyOf(headers);
     this.username = username;
     this.password = password;
-    checkArgument((username != null && password != null) || (username != null && password != null),
+    checkArgument((username != null && password != null) || (username == null && password == null),
         "username and password must both be not null or null [%s, %s]", username, password);
     if (this.username != null) {
       checkArgument(this.username.length() > 0, "username must not be empty string");
