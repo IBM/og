@@ -26,7 +26,6 @@ import com.cleversafe.og.api.Response;
 import com.cleversafe.og.http.HttpResponse;
 import com.cleversafe.og.scheduling.Scheduler;
 import com.cleversafe.og.util.Pair;
-import com.google.common.base.Supplier;
 import com.google.common.collect.Sets;
 import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.FutureCallback;
@@ -37,7 +36,7 @@ import com.google.common.util.concurrent.Uninterruptibles;
 @Singleton
 public class LoadTest implements Callable<Boolean> {
   private static final Logger _logger = LoggerFactory.getLogger(LoadTest.class);
-  private final Supplier<Request> requestSupplier;
+  private final RequestManager requestManager;
   private final Client client;
   private final Scheduler scheduler;
   private final EventBus eventBus;
@@ -47,10 +46,10 @@ public class LoadTest implements Callable<Boolean> {
   private final CountDownLatch completed;
 
   @Inject
-  public LoadTest(final Supplier<Request> requestSupplier, final Client client,
+  public LoadTest(final RequestManager requestSupplier, final Client client,
       final Scheduler scheduler, final EventBus eventBus,
       final LoadTestSubscriberExceptionHandler handler) {
-    this.requestSupplier = checkNotNull(requestSupplier);
+    this.requestManager = checkNotNull(requestSupplier);
     this.client = checkNotNull(client);
     this.scheduler = checkNotNull(scheduler);
     this.eventBus = checkNotNull(eventBus);
@@ -65,7 +64,7 @@ public class LoadTest implements Callable<Boolean> {
   public Boolean call() {
     try {
       while (this.running) {
-        final Request request = this.requestSupplier.get();
+        final Request request = this.requestManager.get();
         final ListenableFuture<Response> future = this.client.execute(request);
         this.activeRequests.add(future);
         addCallback(request, future);
@@ -126,6 +125,6 @@ public class LoadTest implements Callable<Boolean> {
   @Override
   public String toString() {
     return String.format("LoadTest [%n" + "requestSupplier=%s,%n" + "scheduler=%s,%n"
-        + "client=%s%n" + "]", this.requestSupplier, this.scheduler, this.client);
+        + "client=%s%n" + "]", this.requestManager, this.scheduler, this.client);
   }
 }

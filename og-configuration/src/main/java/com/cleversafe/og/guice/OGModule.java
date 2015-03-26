@@ -27,21 +27,15 @@ import com.cleversafe.og.api.Data;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.client.ApacheClient;
-import com.cleversafe.og.guice.annotation.Delete;
 import com.cleversafe.og.guice.annotation.DeleteHeaders;
 import com.cleversafe.og.guice.annotation.DeleteHost;
 import com.cleversafe.og.guice.annotation.DeleteObjectName;
-import com.cleversafe.og.guice.annotation.DeleteWeight;
-import com.cleversafe.og.guice.annotation.Read;
 import com.cleversafe.og.guice.annotation.ReadHeaders;
 import com.cleversafe.og.guice.annotation.ReadHost;
 import com.cleversafe.og.guice.annotation.ReadObjectName;
-import com.cleversafe.og.guice.annotation.ReadWeight;
-import com.cleversafe.og.guice.annotation.Write;
 import com.cleversafe.og.guice.annotation.WriteHeaders;
 import com.cleversafe.og.guice.annotation.WriteHost;
 import com.cleversafe.og.guice.annotation.WriteObjectName;
-import com.cleversafe.og.guice.annotation.WriteWeight;
 import com.cleversafe.og.http.Api;
 import com.cleversafe.og.http.BasicAuth;
 import com.cleversafe.og.http.Bodies;
@@ -83,6 +77,8 @@ import com.cleversafe.og.supplier.Suppliers;
 import com.cleversafe.og.supplier.UUIDObjectNameSupplier;
 import com.cleversafe.og.test.LoadTest;
 import com.cleversafe.og.test.LoadTestSubscriberExceptionHandler;
+import com.cleversafe.og.test.RequestManager;
+import com.cleversafe.og.test.SimpleRequestManager;
 import com.cleversafe.og.test.condition.CounterCondition;
 import com.cleversafe.og.test.condition.RuntimeCondition;
 import com.cleversafe.og.test.condition.StatusCodeCondition;
@@ -98,7 +94,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Range;
 import com.google.common.eventbus.EventBus;
-import com.google.common.math.DoubleMath;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -128,6 +123,11 @@ public class OGModule extends AbstractModule {
     bind(Integer.class).annotatedWith(Names.named("port")).toProvider(
         Providers.of(this.config.getPort()));
     bind(Api.class).toInstance(this.config.getApi());
+    bindConstant().annotatedWith(Names.named("write.weight"))
+        .to(this.config.getWrite().getWeight());
+    bindConstant().annotatedWith(Names.named("read.weight")).to(this.config.getRead().getWeight());
+    bindConstant().annotatedWith(Names.named("delete.weight")).to(
+        this.config.getDelete().getWeight());
     bind(String.class).annotatedWith(Names.named("authentication.username")).toProvider(
         Providers.of(this.config.getAuthentication().getUsername()));
     bind(String.class).annotatedWith(Names.named("authentication.password")).toProvider(
@@ -138,6 +138,7 @@ public class OGModule extends AbstractModule {
         MapBinder.newMapBinder(binder(), String.class, ResponseBodyConsumer.class);
     responseBodyConsumers.addBinding(SOH_PUT_OBJECT).to(SOHWriteResponseBodyConsumer.class);
 
+    bind(RequestManager.class).to(SimpleRequestManager.class);
     bind(LoadTest.class).in(Singleton.class);
     bind(LoadTestSubscriberExceptionHandler.class).toInstance(this.handler);
     bind(EventBus.class).toInstance(this.eventBus);
@@ -188,30 +189,6 @@ public class OGModule extends AbstractModule {
     }
 
     return conditions;
-  }
-
-  @Provides
-  @Singleton
-  public Supplier<Request> provideRequestSupplier(@Write final Supplier<Request> write,
-      @Read final Supplier<Request> read, @Delete final Supplier<Request> delete,
-      @WriteWeight final double writeWeight, @ReadWeight final double readWeight,
-      @DeleteWeight final double deleteWeight) {
-    checkNotNull(write);
-    checkNotNull(read);
-    checkNotNull(delete);
-    final double sum = readWeight + writeWeight + deleteWeight;
-    checkArgument(DoubleMath.fuzzyEquals(sum, 100.0, ERR), "sum of percentages must be 100.0 [%s]",
-        sum);
-
-    final RandomSupplier.Builder<Supplier<Request>> wrc = Suppliers.random();
-    if (writeWeight > 0.0)
-      wrc.withChoice(write, writeWeight);
-    if (readWeight > 0.0)
-      wrc.withChoice(read, readWeight);
-    if (deleteWeight > 0.0)
-      wrc.withChoice(delete, deleteWeight);
-
-    return Suppliers.chain(wrc.build());
   }
 
   @Provides
@@ -501,40 +478,6 @@ public class OGModule extends AbstractModule {
   }
 
   @Provides
-  @WriteWeight
-  public double provideWriteWeight(@ReadWeight final double read, @DeleteWeight final double delete) {
-    final double write = this.config.getWrite().getWeight();
-    checkArgument(PERCENTAGE.contains(write), "write must be in range [0.0, 100.0] [%s]", write);
-    if (allEqual(0.0, write, read, delete))
-      return 100.0;
-    return write;
-  }
-
-  @Provides
-  @ReadWeight
-  public double provideReadWeight() {
-    final double read = this.config.getRead().getWeight();
-    checkArgument(PERCENTAGE.contains(read), "read must be in range [0.0, 100.0] [%s]", read);
-    return read;
-  }
-
-  @Provides
-  @DeleteWeight
-  public double provideDeleteWeight() {
-    final double delete = this.config.getDelete().getWeight();
-    checkArgument(PERCENTAGE.contains(delete), "delete must be in range [0.0, 100.0] [%s]", delete);
-    return delete;
-  }
-
-  private boolean allEqual(final double compare, final double... values) {
-    for (final double v : values) {
-      if (!DoubleMath.fuzzyEquals(v, compare, ERR))
-        return false;
-    }
-    return true;
-  }
-
-  @Provides
   @Singleton
   public Scheduler provideScheduler(final EventBus eventBus) {
     checkNotNull(eventBus);
@@ -597,7 +540,7 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @Write
+  @Named("write")
   public Supplier<Request> provideWrite(@Named("request.id") final Supplier<String> id,
       final Api api, final Scheme scheme, @WriteHost final Supplier<String> host,
       @Named("port") final Integer port, @Named("uri.root") final String uriRoot,
@@ -617,7 +560,7 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @Read
+  @Named("read")
   public Supplier<Request> provideRead(@Named("request.id") final Supplier<String> id,
       final Scheme scheme, @ReadHost final Supplier<String> host,
       @Named("port") final Integer port, @Named("uri.root") final String uriRoot,
@@ -632,7 +575,7 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @Delete
+  @Named("delete")
   public Supplier<Request> provideDelete(@Named("request.id") final Supplier<String> id,
       final Scheme scheme, @DeleteHost final Supplier<String> host,
       @Named("port") final Integer port, @Named("uri.root") final String uriRoot,

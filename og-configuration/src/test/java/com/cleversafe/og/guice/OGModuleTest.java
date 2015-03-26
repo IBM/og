@@ -31,7 +31,6 @@ import org.junit.runner.RunWith;
 
 import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.Data;
-import com.cleversafe.og.api.Request;
 import com.cleversafe.og.http.Api;
 import com.cleversafe.og.http.BasicAuth;
 import com.cleversafe.og.http.Bodies;
@@ -105,38 +104,6 @@ public class OGModuleTest {
     this.username = "username";
     this.password = "password";
     this.body = Suppliers.of(Bodies.zeroes(1024));
-  }
-
-  @DataProvider
-  public static Object[][] provideInvalidProvideRequestSupplier() {
-    @SuppressWarnings("unchecked")
-    final Supplier<Request> supplier = mock(Supplier.class);
-
-    return new Object[][] { {null, supplier, supplier, 100, 0, 0, NullPointerException.class},
-        {supplier, null, supplier, 100, 0, 0, NullPointerException.class},
-        {supplier, supplier, null, 100, 0, 0, NullPointerException.class},
-        {supplier, supplier, supplier, 99, 0, 0, IllegalArgumentException.class},
-        {supplier, supplier, supplier, 101, 0, 0, IllegalArgumentException.class},
-        {supplier, supplier, supplier, 50, 50, 50, IllegalArgumentException.class},};
-  }
-
-  @Test
-  @UseDataProvider("provideInvalidProvideRequestSupplier")
-  public void provideRequestSupplier(final Supplier<Request> write, final Supplier<Request> read,
-      final Supplier<Request> delete, final double writeWeight, final double readWeight,
-      final double deleteWeight, final Class<Exception> expectedException) {
-    this.thrown.expect(expectedException);
-    this.module.provideRequestSupplier(write, read, delete, writeWeight, readWeight, deleteWeight);
-  }
-
-  @Test
-  public void provideRequestSupplier() {
-    @SuppressWarnings("unchecked")
-    final Supplier<Request> supplier = mock(Supplier.class);
-    final Supplier<Request> s =
-        this.module.provideRequestSupplier(supplier, supplier, supplier, 100, 0, 0);
-
-    assertThat(s, notNullValue());
   }
 
   @Test(expected = NullPointerException.class)
@@ -411,50 +378,6 @@ public class OGModuleTest {
     assertThat(this.module.provideContainer().get(), is("container"));
   }
 
-  @Test
-  public void provideUsernameNullUsername() {
-    when(this.config.getAuthentication()).thenReturn(new AuthenticationConfig());
-    assertThat(this.module.provideUsername(), nullValue());
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void provideUsernameEmptyUsername() {
-    final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
-    when(authConfig.getUsername()).thenReturn("");
-    when(this.config.getAuthentication()).thenReturn(authConfig);
-    this.module.provideUsername();
-  }
-
-  @Test
-  public void provideUsername() {
-    final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
-    when(authConfig.getUsername()).thenReturn("user");
-    when(this.config.getAuthentication()).thenReturn(authConfig);
-    assertThat(this.module.provideUsername(), is("user"));
-  }
-
-  @Test
-  public void providePasswordNullPassword() {
-    when(this.config.getAuthentication()).thenReturn(new AuthenticationConfig());
-    assertThat(this.module.providePassword(), nullValue());
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void providePasswordEmptyPassword() {
-    final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
-    when(authConfig.getPassword()).thenReturn("");
-    when(this.config.getAuthentication()).thenReturn(authConfig);
-    this.module.providePassword();
-  }
-
-  @Test
-  public void providePassword() {
-    final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
-    when(authConfig.getPassword()).thenReturn("password");
-    when(this.config.getAuthentication()).thenReturn(authConfig);
-    assertThat(this.module.providePassword(), is("password"));
-  }
-
   @DataProvider
   public static Object[][] provideInvalidAuthentication() {
     final String username = "username";
@@ -656,42 +579,10 @@ public class OGModuleTest {
         {50.0, 25.0, 25.0, 50.0, null}, {0.0, 0.0, 0.0, 100.0, null}};
   }
 
-  @Test
-  @UseDataProvider("provideWriteWeightData")
-  public void provideWriteWeight(final double write, final double read, final double delete,
-      final double expectedWrite, final Class<Exception> expectedException) {
-    when(this.config.getWrite()).thenReturn(new OperationConfig(write));
-    if (expectedException != null)
-      this.thrown.expect(expectedException);
-
-    this.module.provideWriteWeight(read, delete);
-    assertThat(this.module.provideWriteWeight(read, delete), is(expectedWrite));
-  }
-
   @DataProvider
   public static Object[][] provideWeightData() {
     return new Object[][] { {-1.0, IllegalArgumentException.class}, {0.0, null}, {50.0, null},
         {101.0, IllegalArgumentException.class}};
-  }
-
-  @Test
-  @UseDataProvider("provideWeightData")
-  public void provideReadWeight(final double read, final Class<Exception> expectedException) {
-    when(this.config.getRead()).thenReturn(new OperationConfig(read));
-    if (expectedException != null)
-      this.thrown.expect(expectedException);
-
-    assertThat(this.module.provideReadWeight(), is(read));
-  }
-
-  @Test
-  @UseDataProvider("provideWeightData")
-  public void provideDeleteWeight(final double delete, final Class<Exception> expectedException) {
-    when(this.config.getDelete()).thenReturn(new OperationConfig(delete));
-    if (expectedException != null)
-      this.thrown.expect(expectedException);
-
-    assertThat(this.module.provideDeleteWeight(), is(delete));
   }
 
   @Test(expected = NullPointerException.class)

@@ -42,7 +42,6 @@ import com.cleversafe.og.test.condition.CounterCondition;
 import com.cleversafe.og.test.condition.TestCondition;
 import com.cleversafe.og.util.Operation;
 import com.cleversafe.og.util.Pair;
-import com.google.common.base.Supplier;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.SettableFuture;
@@ -56,7 +55,7 @@ public class LoadTestTest {
   public ExpectedException thrown = ExpectedException.none();
   private Request request;
   private Response response;
-  private Supplier<Request> requestSupplier;
+  private RequestManager requestManager;
   private Client client;
   private Scheduler scheduler;
   private LoadTestSubscriberExceptionHandler handler;
@@ -65,7 +64,6 @@ public class LoadTestTest {
   private LoadTest test;
 
   @Before
-  @SuppressWarnings("unchecked")
   public void before() throws URISyntaxException {
     this.request =
         new HttpRequest.Builder(Method.PUT, new URI("http://127.0.0.1")).withHeader(
@@ -74,8 +72,8 @@ public class LoadTestTest {
         new HttpResponse.Builder().withStatusCode(200).withHeader(Headers.X_OG_REQUEST_ID, "1")
             .build();
 
-    this.requestSupplier = mock(Supplier.class);
-    when(this.requestSupplier.get()).thenReturn(this.request);
+    this.requestManager = mock(RequestManager.class);
+    when(this.requestManager.get()).thenReturn(this.request);
 
     this.client = mock(Client.class);
     final SettableFuture<Response> future = SettableFuture.create();
@@ -87,7 +85,7 @@ public class LoadTestTest {
     this.eventBus = new EventBus(this.handler);
     this.stats = new Statistics();
     this.test =
-        new LoadTest(this.requestSupplier, this.client, this.scheduler, this.eventBus, this.handler);
+        new LoadTest(this.requestManager, this.client, this.scheduler, this.eventBus, this.handler);
 
     final TestCondition condition =
         new CounterCondition(Operation.WRITE, Counter.OPERATIONS, 5, this.test, this.stats);
@@ -99,8 +97,7 @@ public class LoadTestTest {
 
   @DataProvider
   public static Object[][] provideInvalidLoadTest() {
-    @SuppressWarnings("unchecked")
-    final Supplier<Request> requestSupplier = mock(Supplier.class);
+    final RequestManager requestSupplier = mock(RequestManager.class);
     final Client client = mock(Client.class);
     final Scheduler scheduler = mock(Scheduler.class);
     final EventBus eventBus = mock(EventBus.class);
@@ -115,16 +112,16 @@ public class LoadTestTest {
 
   @Test
   @UseDataProvider("provideInvalidLoadTest")
-  public void invalidLoadTest(final Supplier<Request> requestSupplier, final Client client,
+  public void invalidLoadTest(final RequestManager requestManager, final Client client,
       final Scheduler scheduler, final EventBus eventBus,
       final LoadTestSubscriberExceptionHandler handler) {
     this.thrown.expect(NullPointerException.class);
-    new LoadTest(requestSupplier, client, scheduler, eventBus, handler);
+    new LoadTest(requestManager, client, scheduler, eventBus, handler);
   }
 
   @Test
   public void requestSupplierException() {
-    when(this.requestSupplier.get()).thenThrow(new IllegalStateException());
+    when(this.requestManager.get()).thenThrow(new IllegalStateException());
     assertThat(this.test.call(), is(false));
     verify(this.client, never()).shutdown(true);
   }
