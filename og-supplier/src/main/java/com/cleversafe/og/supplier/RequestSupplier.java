@@ -8,7 +8,6 @@
 
 package com.cleversafe.og.supplier;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URI;
@@ -24,7 +23,6 @@ import com.cleversafe.og.http.Scheme;
 import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 
 /**
  * A supplier of requests
@@ -48,21 +46,27 @@ public class RequestSupplier implements Supplier<Request> {
   private final String password;
   private final Supplier<Body> body;
 
-  private RequestSupplier(final Builder builder) {
-    this.id = builder.id;
-    this.method = checkNotNull(builder.method);
-    this.scheme = checkNotNull(builder.scheme);
-    this.host = checkNotNull(builder.host);
-    this.port = builder.port;
-    this.uriRoot = builder.uriRoot;
-    this.container = checkNotNull(builder.container);
-    this.object = builder.object;
-    this.queryParameters = ImmutableMap.copyOf(builder.queryParameters);
-    this.trailingSlash = builder.trailingSlash;
-    this.headers = ImmutableMap.copyOf(builder.headers);
-    this.username = builder.username;
-    this.password = builder.password;
-    this.body = builder.body;
+  public RequestSupplier(final Supplier<String> id, final Method method, final Scheme scheme,
+      final Supplier<String> host, final Integer port, final String uriRoot,
+      final Supplier<String> container, final CachingSupplier<String> object,
+      final Map<String, String> queryParameters, final boolean trailingSlash,
+      final Map<String, String> headers, final String username, final String password,
+      final Supplier<Body> body) {
+
+    this.id = id;
+    this.method = checkNotNull(method);
+    this.scheme = checkNotNull(scheme);
+    this.host = checkNotNull(host);
+    this.port = port;
+    this.uriRoot = uriRoot;
+    this.container = checkNotNull(container);
+    this.object = object;
+    this.queryParameters = ImmutableMap.copyOf(queryParameters);
+    this.trailingSlash = trailingSlash;
+    this.headers = ImmutableMap.copyOf(headers);
+    this.username = username;
+    this.password = password;
+    this.body = body;
   }
 
   @Override
@@ -141,176 +145,5 @@ public class RequestSupplier implements Supplier<Request> {
         + "queryParameters=%s,%n" + "trailingSlash=%s,%n" + "headers=%s,%n" + "body=%s%n" + "]",
         this.method, this.scheme, this.host, this.port, this.uriRoot, this.container, this.object,
         this.queryParameters, this.trailingSlash, this.headers, this.body);
-  }
-
-  /**
-   * A request supplier builder
-   */
-  public static class Builder {
-    private Supplier<String> id;
-    private final Method method;
-    private Scheme scheme;
-    private final Supplier<String> host;
-    private Integer port;
-    private String uriRoot;
-    private final Supplier<String> container;
-    private CachingSupplier<String> object;
-    private final Map<String, String> queryParameters;
-    private boolean trailingSlash;
-    private final Map<String, String> headers;
-    private String username;
-    private String password;
-    private Supplier<Body> body;
-
-    /**
-     * Constructs a builder instance using the provided method and uri suppliers
-     * 
-     * @param method a request method supplier
-     * @param uri a request uri supplier
-     */
-    public Builder(final Method method, final Supplier<String> host,
-        final Supplier<String> container) {
-      this.method = method;
-      this.scheme = Scheme.HTTP;
-      this.host = host;
-      this.container = container;
-      this.queryParameters = Maps.newLinkedHashMap();
-      this.headers = Maps.newLinkedHashMap();
-    }
-
-    /**
-     * Configures the request id
-     * 
-     * @param id the request id
-     * @return this builder
-     */
-    public Builder withId(final Supplier<String> id) {
-      this.id = id;
-      return this;
-    }
-
-    /**
-     * Configures the uri scheme
-     * 
-     * @param scheme the uri scheme
-     * @return this builder
-     */
-    public Builder withScheme(final Scheme scheme) {
-      this.scheme = scheme;
-      return this;
-    }
-
-    /**
-     * Configures the uri port
-     * 
-     * @param port the uri port
-     * @return this builder
-     */
-    public Builder onPort(final int port) {
-      checkArgument(port > 0 && port < 65536, "port must be in range [1, 65535] [%s]", port);
-      this.port = port;
-      return this;
-    }
-
-    /**
-     * Configures the uri root
-     * 
-     * @param uriRoot the uri root
-     * @return this builder
-     */
-    public Builder withUriRoot(final String uriRoot) {
-      this.uriRoot = uriRoot;
-      return this;
-    }
-
-    /**
-     * Configures the object name
-     * 
-     * @param object the object name
-     * @return this builder
-     */
-    public Builder withObject(final CachingSupplier<String> object) {
-      this.object = object;
-      return this;
-    }
-
-    /**
-     * Configures a uri query parameter
-     * 
-     * @param key the query parameter key
-     * @param value the query paremeter value
-     * @return this builder
-     */
-    public Builder withQueryParameter(final String key, final String value) {
-      this.queryParameters.put(key, value);
-      return this;
-    }
-
-    /**
-     * Configures a trailing slash at the end of the supplied uri
-     * 
-     * @return this builder
-     */
-    public Builder withTrailingSlash() {
-      this.trailingSlash = true;
-      return this;
-    }
-
-    /**
-     * Configures a request header to include with this request suppliers
-     * 
-     * @param key a header key
-     * @param value a header value
-     * @return this builder
-     */
-    public Builder withHeader(final String key, final String value) {
-      this.headers.put(key, value);
-      return this;
-    }
-
-    /**
-     * Configures a request to use credentials
-     * 
-     * @param username a username
-     * @param password a password
-     * @return this builder
-     */
-    public Builder withCredentials(final String username, final String password) {
-      this.username = username;
-      this.password = password;
-      return this;
-    }
-
-    /**
-     * Configures a request body to include with this request supplier
-     * 
-     * @param body an body
-     * @return this builder
-     */
-    public Builder withBody(final Body body) {
-      return withBody(Suppliers.of(body));
-    }
-
-    /**
-     * Configures a request body to include with this request supplier, using a supplier for the
-     * body
-     * 
-     * @param body an body
-     * @return this builder
-     */
-    public Builder withBody(final Supplier<Body> body) {
-      this.body = checkNotNull(body);
-      return this;
-    }
-
-    /**
-     * Constructs a request supplier instance
-     * 
-     * @return a request supplier instance
-     * @throws NullPointerException if any null header keys or values were added to this builder
-     */
-    public RequestSupplier build() {
-      return new RequestSupplier(this);
-    }
   }
 }

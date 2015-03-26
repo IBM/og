@@ -13,6 +13,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -667,23 +668,9 @@ public class OGModule extends AbstractModule {
       final String uriRoot, final Supplier<String> container, final CachingSupplier<String> object,
       final Map<String, String> headers, final Supplier<Body> body, final String username,
       final String password) {
-    checkNotNull(method);
-    checkNotNull(scheme);
-    checkNotNull(host);
-    checkNotNull(container);
-    checkNotNull(headers);
-    checkNotNull(body);
 
-    final RequestSupplier.Builder b =
-        new RequestSupplier.Builder(method, host, container).withId(id).withScheme(scheme)
-            .withUriRoot(uriRoot).withObject(object).onPort(port)
-            .withCredentials(username, password);
-
-    for (final Entry<String, String> header : headers.entrySet()) {
-      b.withHeader(header.getKey(), header.getValue());
-    }
-
-    return b.withBody(body).build();
+    return new RequestSupplier(id, method, scheme, host, port, uriRoot, container, object,
+        Collections.<String, String>emptyMap(), false, headers, username, password, body);
   }
 
   @Provides
