@@ -43,6 +43,8 @@ public class RequestSupplier implements Supplier<Request> {
   private final Map<String, String> queryParameters;
   private final boolean trailingSlash;
   private final Map<Supplier<String>, Supplier<String>> headers;
+  private final String username;
+  private final String password;
   private final Supplier<Body> body;
 
   private RequestSupplier(final Builder builder) {
@@ -56,6 +58,8 @@ public class RequestSupplier implements Supplier<Request> {
     this.queryParameters = ImmutableMap.copyOf(builder.queryParameters);
     this.trailingSlash = builder.trailingSlash;
     this.headers = ImmutableMap.copyOf(builder.headers);
+    this.username = builder.username;
+    this.password = builder.password;
     this.body = builder.body;
   }
 
@@ -69,6 +73,11 @@ public class RequestSupplier implements Supplier<Request> {
 
     if (this.object != null)
       context.withHeader(Headers.X_OG_OBJECT_NAME, this.object.getCachedValue());
+
+    if (this.username != null && this.password != null) {
+      context.withHeader(Headers.X_OG_USERNAME, username);
+      context.withHeader(Headers.X_OG_PASSWORD, password);
+    }
 
     if (this.body != null)
       context.withBody(this.body.get());
@@ -143,6 +152,8 @@ public class RequestSupplier implements Supplier<Request> {
     private final Map<String, String> queryParameters;
     private boolean trailingSlash;
     private final Map<Supplier<String>, Supplier<String>> headers;
+    private String username;
+    private String password;
     private Supplier<Body> body;
 
     /**
@@ -249,6 +260,19 @@ public class RequestSupplier implements Supplier<Request> {
      */
     public Builder withHeader(final Supplier<String> key, final Supplier<String> value) {
       this.headers.put(key, value);
+      return this;
+    }
+
+    /**
+     * Configures a request to use credentials
+     * 
+     * @param username a username
+     * @param password a password
+     * @return this builder
+     */
+    public Builder withCredentials(final String username, final String password) {
+      this.username = username;
+      this.password = password;
       return this;
     }
 

@@ -683,23 +683,14 @@ public class OGModule extends AbstractModule {
 
     final RequestSupplier.Builder b =
         new RequestSupplier.Builder(method, host, container).withScheme(scheme)
-            .withUriRoot(uriRoot).withObject(object);
-
-    if (port != null)
-      b.onPort(port);
+            .withUriRoot(uriRoot).withObject(object).onPort(port)
+            .withCredentials(username, password);
 
     for (final Entry<Supplier<String>, Supplier<String>> header : headers.entrySet()) {
       b.withHeader(header.getKey(), header.getValue());
     }
 
-    b.withBody(body);
-
-    if (username != null && password != null) {
-      b.withHeader(Suppliers.of(Headers.X_OG_USERNAME), Suppliers.of(username));
-      b.withHeader(Suppliers.of(Headers.X_OG_PASSWORD), Suppliers.of(password));
-    }
-
-    return b.build();
+    return b.withBody(body).build();
   }
 
   @Provides
