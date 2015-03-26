@@ -104,6 +104,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.spi.ProvisionListener;
+import com.google.inject.util.Providers;
 
 public class OGModule extends AbstractModule {
   private final OGConfig config;
@@ -122,7 +123,7 @@ public class OGModule extends AbstractModule {
   @Override
   protected void configure() {
     bind(Scheme.class).toInstance(this.config.getScheme());
-    bind(Integer.class).toInstance(this.config.getPort());
+    bind(Integer.class).toProvider(Providers.of(this.config.getPort()));
 
     bind(LoadTest.class).in(Singleton.class);
     bind(LoadTestSubscriberExceptionHandler.class).toInstance(this.handler);
