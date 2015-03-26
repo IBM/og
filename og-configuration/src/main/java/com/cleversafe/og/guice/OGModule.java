@@ -27,22 +27,16 @@ import com.cleversafe.og.api.Data;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.client.ApacheClient;
-import com.cleversafe.og.guice.annotation.Container;
 import com.cleversafe.og.guice.annotation.Delete;
 import com.cleversafe.og.guice.annotation.DeleteHeaders;
 import com.cleversafe.og.guice.annotation.DeleteHost;
 import com.cleversafe.og.guice.annotation.DeleteObjectName;
 import com.cleversafe.og.guice.annotation.DeleteWeight;
-import com.cleversafe.og.guice.annotation.Host;
-import com.cleversafe.og.guice.annotation.Id;
-import com.cleversafe.og.guice.annotation.Password;
 import com.cleversafe.og.guice.annotation.Read;
 import com.cleversafe.og.guice.annotation.ReadHeaders;
 import com.cleversafe.og.guice.annotation.ReadHost;
 import com.cleversafe.og.guice.annotation.ReadObjectName;
 import com.cleversafe.og.guice.annotation.ReadWeight;
-import com.cleversafe.og.guice.annotation.UriRoot;
-import com.cleversafe.og.guice.annotation.Username;
 import com.cleversafe.og.guice.annotation.Write;
 import com.cleversafe.og.guice.annotation.WriteHeaders;
 import com.cleversafe.og.guice.annotation.WriteHost;
@@ -246,7 +240,7 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @Id
+  @Named("request.id")
   public Supplier<String> provideIdSupplier() {
     return new Supplier<String>() {
       private final AtomicLong id = new AtomicLong();
@@ -260,7 +254,7 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @Host
+  @Named("host")
   public Supplier<String> provideHost() {
     return createHost(this.config.getHostSelection(), this.config.getHost());
   }
@@ -268,21 +262,21 @@ public class OGModule extends AbstractModule {
   @Provides
   @Singleton
   @WriteHost
-  public Supplier<String> provideWriteHost(@Host final Supplier<String> host) {
+  public Supplier<String> provideWriteHost(@Named("host") final Supplier<String> host) {
     return provideHost(this.config.getWrite(), host);
   }
 
   @Provides
   @Singleton
   @ReadHost
-  public Supplier<String> provideReadHost(@Host final Supplier<String> host) {
+  public Supplier<String> provideReadHost(@Named("host") final Supplier<String> host) {
     return provideHost(this.config.getRead(), host);
   }
 
   @Provides
   @Singleton
   @DeleteHost
-  public Supplier<String> provideDeleteHost(@Host final Supplier<String> host) {
+  public Supplier<String> provideDeleteHost(@Named("host") final Supplier<String> host) {
     return provideHost(this.config.getDelete(), host);
   }
 
@@ -331,7 +325,7 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @UriRoot
+  @Named("uri.root")
   public String provideUriRoot() {
     final String uriRoot = this.config.getUriRoot();
     if (uriRoot != null) {
@@ -346,7 +340,7 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @Container
+  @Named("container")
   public Supplier<String> provideContainer() {
     final String container = checkNotNull(this.config.getContainer());
     checkArgument(container.length() > 0, "container must not be empty string");
@@ -355,7 +349,7 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @Username
+  @Named("authentication.username")
   public String provideUsername() {
     final String username = this.config.getAuthentication().getUsername();
     if (username != null) {
@@ -366,7 +360,7 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @Password
+  @Named("authentication.password")
   public String providePassword() {
     final String password = this.config.getAuthentication().getPassword();
     if (password != null) {
@@ -377,8 +371,8 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
-  public HttpAuth provideAuthentication(@Username final String username,
-      @Password final String password) {
+  public HttpAuth provideAuthentication(@Named("authentication.username") final String username,
+      @Named("authentication.password") final String password) {
     final AuthType type = checkNotNull(this.config.getAuthentication().getType());
 
     if (username != null && password != null) {
@@ -512,7 +506,8 @@ public class OGModule extends AbstractModule {
   @Provides
   @Singleton
   @Named("objectfile.name")
-  public String provideObjectFileName(@Container final Supplier<String> container, final Api api) {
+  public String provideObjectFileName(@Named("container") final Supplier<String> container,
+      final Api api) {
     checkNotNull(container);
     checkNotNull(api);
     final ObjectManagerConfig objectManagerConfig = checkNotNull(this.config.getObjectManager());
@@ -622,12 +617,14 @@ public class OGModule extends AbstractModule {
   @Provides
   @Singleton
   @Write
-  public Supplier<Request> provideWrite(@Id final Supplier<String> id, final Api api,
-      final Scheme scheme, @WriteHost final Supplier<String> host, final Integer port,
-      @UriRoot final String uriRoot, @Container final Supplier<String> container,
+  public Supplier<Request> provideWrite(@Named("request.id") final Supplier<String> id,
+      final Api api, final Scheme scheme, @WriteHost final Supplier<String> host,
+      final Integer port, @Named("uri.root") final String uriRoot,
+      @Named("container") final Supplier<String> container,
       @WriteObjectName final CachingSupplier<String> object,
       @WriteHeaders final Map<String, String> headers, final Supplier<Body> body,
-      @Username final String username, @Password final String password) {
+      @Named("authentication.username") final String username,
+      @Named("authentication.password") final String password) {
     checkNotNull(api);
     // SOH needs to use a special response consumer to extract the returned object id
     if (Api.SOH == api)
@@ -640,12 +637,14 @@ public class OGModule extends AbstractModule {
   @Provides
   @Singleton
   @Read
-  public Supplier<Request> provideRead(@Id final Supplier<String> id, final Scheme scheme,
-      @ReadHost final Supplier<String> host, final Integer port, @UriRoot final String uriRoot,
-      @Container final Supplier<String> container,
+  public Supplier<Request> provideRead(@Named("request.id") final Supplier<String> id,
+      final Scheme scheme, @ReadHost final Supplier<String> host, final Integer port,
+      @Named("uri.root") final String uriRoot,
+      @Named("container") final Supplier<String> container,
       @ReadObjectName final CachingSupplier<String> object,
-      @ReadHeaders final Map<String, String> headers, @Username final String username,
-      @Password final String password) {
+      @ReadHeaders final Map<String, String> headers,
+      @Named("authentication.username") final String username,
+      @Named("authentication.password") final String password) {
     return createRequestSupplier(id, Method.GET, scheme, host, port, uriRoot, container, object,
         headers, Suppliers.of(Bodies.none()), username, password);
   }
@@ -653,17 +652,19 @@ public class OGModule extends AbstractModule {
   @Provides
   @Singleton
   @Delete
-  public Supplier<Request> provideDelete(@Id final Supplier<String> id, final Scheme scheme,
-      @DeleteHost final Supplier<String> host, final Integer port, @UriRoot final String uriRoot,
-      @Container final Supplier<String> container,
+  public Supplier<Request> provideDelete(@Named("request.id") final Supplier<String> id,
+      final Scheme scheme, @DeleteHost final Supplier<String> host, final Integer port,
+      @Named("uri.root") final String uriRoot,
+      @Named("container") final Supplier<String> container,
       @DeleteObjectName final CachingSupplier<String> object,
-      @DeleteHeaders final Map<String, String> headers, @Username final String username,
-      @Password final String password) {
+      @DeleteHeaders final Map<String, String> headers,
+      @Named("authentication.username") final String username,
+      @Named("authentication.password") final String password) {
     return createRequestSupplier(id, Method.DELETE, scheme, host, port, uriRoot, container, object,
         headers, Suppliers.of(Bodies.none()), username, password);
   }
 
-  private Supplier<Request> createRequestSupplier(@Id final Supplier<String> id,
+  private Supplier<Request> createRequestSupplier(@Named("request.id") final Supplier<String> id,
       final Method method, Scheme scheme, final Supplier<String> host, final Integer port,
       final String uriRoot, final Supplier<String> container, final CachingSupplier<String> object,
       final Map<String, String> headers, final Supplier<Body> body, final String username,
