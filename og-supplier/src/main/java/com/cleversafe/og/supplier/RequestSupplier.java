@@ -43,7 +43,7 @@ public class RequestSupplier implements Supplier<Request> {
   private final CachingSupplier<String> object;
   private final Map<String, String> queryParameters;
   private final boolean trailingSlash;
-  private final Map<Supplier<String>, Supplier<String>> headers;
+  private final Map<String, String> headers;
   private final String username;
   private final String password;
   private final Supplier<Body> body;
@@ -69,8 +69,8 @@ public class RequestSupplier implements Supplier<Request> {
   public Request get() {
     final HttpRequest.Builder context = new HttpRequest.Builder(this.method, getUrl());
 
-    for (final Map.Entry<Supplier<String>, Supplier<String>> header : this.headers.entrySet()) {
-      context.withHeader(header.getKey().get(), header.getValue().get());
+    for (final Map.Entry<String, String> header : this.headers.entrySet()) {
+      context.withHeader(header.getKey(), header.getValue());
     }
 
     if (this.id != null)
@@ -157,7 +157,7 @@ public class RequestSupplier implements Supplier<Request> {
     private CachingSupplier<String> object;
     private final Map<String, String> queryParameters;
     private boolean trailingSlash;
-    private final Map<Supplier<String>, Supplier<String>> headers;
+    private final Map<String, String> headers;
     private String username;
     private String password;
     private Supplier<Body> body;
@@ -264,18 +264,6 @@ public class RequestSupplier implements Supplier<Request> {
      * @return this builder
      */
     public Builder withHeader(final String key, final String value) {
-      return withHeader(Suppliers.of(key), Suppliers.of(value));
-    }
-
-    /**
-     * Configures a request header to include with this request supplier, using suppliers for the
-     * key and value
-     * 
-     * @param key a header key
-     * @param value a header value
-     * @return this builder
-     */
-    public Builder withHeader(final Supplier<String> key, final Supplier<String> value) {
       this.headers.put(key, value);
       return this;
     }

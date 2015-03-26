@@ -399,38 +399,32 @@ public class OGModule extends AbstractModule {
   @Provides
   @Singleton
   @WriteHeaders
-  public Map<Supplier<String>, Supplier<String>> provideWriteHeaders() {
+  public Map<String, String> provideWriteHeaders() {
     return provideHeaders(this.config.getWrite().getHeaders());
   }
 
   @Provides
   @Singleton
   @ReadHeaders
-  public Map<Supplier<String>, Supplier<String>> provideReadHeaders() {
+  public Map<String, String> provideReadHeaders() {
     return provideHeaders(this.config.getRead().getHeaders());
   }
 
   @Provides
   @Singleton
   @DeleteHeaders
-  public Map<Supplier<String>, Supplier<String>> provideDeleteHeaders() {
+  public Map<String, String> provideDeleteHeaders() {
     return provideHeaders(this.config.getDelete().getHeaders());
   }
 
-  private Map<Supplier<String>, Supplier<String>> provideHeaders(
-      Map<String, String> operationHeaders) {
+  private Map<String, String> provideHeaders(Map<String, String> operationHeaders) {
     checkNotNull(operationHeaders);
 
     Map<String, String> headers = Maps.newLinkedHashMap();
     headers.putAll(this.config.getHeaders());
     headers.putAll(operationHeaders);
 
-    final Map<Supplier<String>, Supplier<String>> supplierHeaders = Maps.newLinkedHashMap();
-
-    for (final Entry<String, String> header : headers.entrySet()) {
-      supplierHeaders.put(Suppliers.of(header.getKey()), Suppliers.of(header.getValue()));
-    }
-    return supplierHeaders;
+    return headers;
   }
 
   @Provides
@@ -631,12 +625,12 @@ public class OGModule extends AbstractModule {
       final Scheme scheme, @WriteHost final Supplier<String> host, final Integer port,
       @UriRoot final String uriRoot, @Container final Supplier<String> container,
       @WriteObjectName final CachingSupplier<String> object,
-      @WriteHeaders final Map<Supplier<String>, Supplier<String>> headers,
-      final Supplier<Body> body, @Username final String username, @Password final String password) {
+      @WriteHeaders final Map<String, String> headers, final Supplier<Body> body,
+      @Username final String username, @Password final String password) {
     checkNotNull(api);
     // SOH needs to use a special response consumer to extract the returned object id
     if (Api.SOH == api)
-      headers.put(Suppliers.of(Headers.X_OG_RESPONSE_BODY_CONSUMER), Suppliers.of(SOH_PUT_OBJECT));
+      headers.put(Headers.X_OG_RESPONSE_BODY_CONSUMER, SOH_PUT_OBJECT);
 
     return createRequestSupplier(id, Method.PUT, scheme, host, port, uriRoot, container, object,
         headers, body, username, password);
@@ -649,8 +643,8 @@ public class OGModule extends AbstractModule {
       @ReadHost final Supplier<String> host, final Integer port, @UriRoot final String uriRoot,
       @Container final Supplier<String> container,
       @ReadObjectName final CachingSupplier<String> object,
-      @ReadHeaders final Map<Supplier<String>, Supplier<String>> headers,
-      @Username final String username, @Password final String password) {
+      @ReadHeaders final Map<String, String> headers, @Username final String username,
+      @Password final String password) {
     return createRequestSupplier(id, Method.GET, scheme, host, port, uriRoot, container, object,
         headers, Suppliers.of(Bodies.none()), username, password);
   }
@@ -662,8 +656,8 @@ public class OGModule extends AbstractModule {
       @DeleteHost final Supplier<String> host, final Integer port, @UriRoot final String uriRoot,
       @Container final Supplier<String> container,
       @DeleteObjectName final CachingSupplier<String> object,
-      @DeleteHeaders final Map<Supplier<String>, Supplier<String>> headers,
-      @Username final String username, @Password final String password) {
+      @DeleteHeaders final Map<String, String> headers, @Username final String username,
+      @Password final String password) {
     return createRequestSupplier(id, Method.DELETE, scheme, host, port, uriRoot, container, object,
         headers, Suppliers.of(Bodies.none()), username, password);
   }
@@ -671,8 +665,8 @@ public class OGModule extends AbstractModule {
   private Supplier<Request> createRequestSupplier(@Id final Supplier<String> id,
       final Method method, Scheme scheme, final Supplier<String> host, final Integer port,
       final String uriRoot, final Supplier<String> container, final CachingSupplier<String> object,
-      final Map<Supplier<String>, Supplier<String>> headers, final Supplier<Body> body,
-      final String username, final String password) {
+      final Map<String, String> headers, final Supplier<Body> body, final String username,
+      final String password) {
     checkNotNull(method);
     checkNotNull(scheme);
     checkNotNull(host);
@@ -685,7 +679,7 @@ public class OGModule extends AbstractModule {
             .withUriRoot(uriRoot).withObject(object).onPort(port)
             .withCredentials(username, password);
 
-    for (final Entry<Supplier<String>, Supplier<String>> header : headers.entrySet()) {
+    for (final Entry<String, String> header : headers.entrySet()) {
       b.withHeader(header.getKey(), header.getValue());
     }
 
