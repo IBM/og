@@ -128,6 +128,10 @@ public class OGModule extends AbstractModule {
     bind(Integer.class).annotatedWith(Names.named("port")).toProvider(
         Providers.of(this.config.getPort()));
     bind(Api.class).toInstance(this.config.getApi());
+    bind(String.class).annotatedWith(Names.named("authentication.username")).toProvider(
+        Providers.of(this.config.getAuthentication().getUsername()));
+    bind(String.class).annotatedWith(Names.named("authentication.password")).toProvider(
+        Providers.of(this.config.getAuthentication().getPassword()));
     bind(StoppingConditionsConfig.class).toInstance(this.config.getStoppingConditions());
 
     MapBinder<String, ResponseBodyConsumer> responseBodyConsumers =
@@ -349,28 +353,6 @@ public class OGModule extends AbstractModule {
     final String container = checkNotNull(this.config.getContainer());
     checkArgument(container.length() > 0, "container must not be empty string");
     return Suppliers.of(this.config.getContainer());
-  }
-
-  @Provides
-  @Singleton
-  @Named("authentication.username")
-  public String provideUsername() {
-    final String username = this.config.getAuthentication().getUsername();
-    if (username != null) {
-      checkArgument(username.length() > 0, "username must not be empty string");
-    }
-    return username;
-  }
-
-  @Provides
-  @Singleton
-  @Named("authentication.password")
-  public String providePassword() {
-    final String password = this.config.getAuthentication().getPassword();
-    if (password != null) {
-      checkArgument(password.length() > 0, "password must not be empty string");
-    }
-    return password;
   }
 
   @Provides

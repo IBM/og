@@ -8,6 +8,7 @@
 
 package com.cleversafe.og.supplier;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URI;
@@ -66,6 +67,14 @@ public class RequestSupplier implements Supplier<Request> {
     this.headers = ImmutableMap.copyOf(headers);
     this.username = username;
     this.password = password;
+    checkArgument((username != null && password != null) || (username != null && password != null),
+        "username and password must both be not null or null [%s, %s]", username, password);
+    if (this.username != null) {
+      checkArgument(this.username.length() > 0, "username must not be empty string");
+    }
+    if (password != null) {
+      checkArgument(password.length() > 0, "password must not be empty string");
+    }
     this.body = body;
   }
 
