@@ -51,6 +51,7 @@ import com.cleversafe.og.api.Data;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
 import com.cleversafe.og.client.RequestLogEntry.RequestTimestamps;
+import com.cleversafe.og.http.BasicAuth;
 import com.cleversafe.og.http.Bodies;
 import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpAuth;
@@ -117,7 +118,7 @@ public class ApacheClient implements Client {
     this.waitForContinue = builder.waitForContinue;
     this.retryCount = builder.retryCount;
     this.requestSentRetry = builder.requestSentRetry;
-    this.authentication = builder.authentication;
+    this.authentication = checkNotNull(builder.authentication);
     this.userAgent = builder.userAgent;
     this.writeThroughput = builder.writeThroughput;
     this.readThroughput = builder.readThroughput;
@@ -471,6 +472,7 @@ public class ApacheClient implements Client {
       this.waitForContinue = 3000;
       this.retryCount = 0;
       this.requestSentRetry = true;
+      this.authentication = new BasicAuth();
       this.writeThroughput = 0;
       this.readThroughput = 0;
       this.responseBodyConsumers = Maps.newHashMap();

@@ -212,6 +212,11 @@ public class ApacheClientTest {
     new ApacheClient.Builder().withRetryCount(1).build();
   }
 
+  @Test(expected = NullPointerException.class)
+  public void nullAuthentication() {
+    new ApacheClient.Builder().withAuthentication(null).build();
+  }
+
   @DataProvider
   public static Object[][] provideExecute() {
     final Body zeroes = Bodies.zeroes(1000);
