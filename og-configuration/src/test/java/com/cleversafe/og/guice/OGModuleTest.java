@@ -32,13 +32,11 @@ import org.junit.runner.RunWith;
 import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.Data;
 import com.cleversafe.og.http.Api;
-import com.cleversafe.og.http.BasicAuth;
 import com.cleversafe.og.http.Bodies;
 import com.cleversafe.og.http.HttpAuth;
 import com.cleversafe.og.http.ResponseBodyConsumer;
 import com.cleversafe.og.http.Scheme;
 import com.cleversafe.og.json.AuthType;
-import com.cleversafe.og.json.AuthenticationConfig;
 import com.cleversafe.og.json.ConcurrencyConfig;
 import com.cleversafe.og.json.ConcurrencyType;
 import com.cleversafe.og.json.DistributionType;
@@ -50,7 +48,6 @@ import com.cleversafe.og.json.OperationConfig;
 import com.cleversafe.og.json.SelectionType;
 import com.cleversafe.og.object.AbstractObjectNameConsumer;
 import com.cleversafe.og.object.ObjectManager;
-import com.cleversafe.og.s3.AWSAuthV2;
 import com.cleversafe.og.scheduling.ConcurrentRequestScheduler;
 import com.cleversafe.og.scheduling.RequestRateScheduler;
 import com.cleversafe.og.scheduling.Scheduler;
@@ -388,44 +385,6 @@ public class OGModuleTest {
         {AuthType.BASIC, username, null, IllegalArgumentException.class},};
   }
 
-  @Test
-  @UseDataProvider("provideInvalidAuthentication")
-  public void invalidProvideAuthentication(final AuthType authType, final String username,
-      final String password, final Class<Exception> expectedException) {
-    final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
-    when(authConfig.getType()).thenReturn(authType);
-    when(this.config.getAuthentication()).thenReturn(authConfig);
-
-    this.thrown.expect(expectedException);
-    this.module.provideAuthentication(username, password);
-  }
-
-  @Test
-  public void provideAuthenticationNullBoth() {
-    final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
-    when(authConfig.getType()).thenReturn(AuthType.BASIC);
-    when(this.config.getAuthentication()).thenReturn(authConfig);
-    assertThat(this.module.provideAuthentication(null, null), nullValue());
-  }
-
-  @DataProvider
-  public static Object[][] provideProvideAuthentication() {
-    return new Object[][] { {AuthType.BASIC, BasicAuth.class}, {AuthType.AWSV2, AWSAuthV2.class}};
-  }
-
-  @Test
-  @UseDataProvider("provideProvideAuthentication")
-  public void provideAuthentication(final AuthType authType,
-      final Class<? extends HttpAuth> authClass) {
-    final AuthenticationConfig authConfig = mock(AuthenticationConfig.class);
-    when(authConfig.getType()).thenReturn(authType);
-    when(this.config.getAuthentication()).thenReturn(authConfig);
-
-    final HttpAuth auth = this.module.provideAuthentication("username", "password");
-
-    assertThat(authClass.isInstance(auth), is(true));
-  }
-
   @DataProvider
   public static Object[][] provideInvalidBody() {
     final SelectionType selection = SelectionType.ROUNDROBIN;
@@ -642,7 +601,7 @@ public class OGModuleTest {
 
   @Test(expected = NullPointerException.class)
   public void nullResponseBodyConsumers() {
-    this.module.provideClient(null, null);
+    this.module.provideClient(null, null, null);
   }
 
   @DataProvider
@@ -650,16 +609,15 @@ public class OGModuleTest {
     final Map<String, ResponseBodyConsumer> empty = ImmutableMap.of();
     final Map<String, ResponseBodyConsumer> nonEmpty =
         ImmutableMap.of("1", mock(ResponseBodyConsumer.class));
-    final HttpAuth auth = mock(HttpAuth.class);
+    final Map<AuthType, HttpAuth> auth = ImmutableMap.of(AuthType.BASIC, mock(HttpAuth.class));
 
-    return new Object[][] { {null, empty}, {null, empty}, {auth, empty}, {null, nonEmpty},
-        {auth, nonEmpty}};
+    return new Object[][] { {auth, empty}, {auth, nonEmpty}};
   }
 
   @Test
   @UseDataProvider("provideClientData")
-  public void provideClient(final HttpAuth authentication,
+  public void provideClient(final Map<AuthType, HttpAuth> authentication,
       final Map<String, ResponseBodyConsumer> consumers) {
-    new OGModule(new OGConfig()).provideClient(authentication, consumers);
+    new OGModule(new OGConfig()).provideClient(AuthType.BASIC, authentication, consumers);
   }
 }

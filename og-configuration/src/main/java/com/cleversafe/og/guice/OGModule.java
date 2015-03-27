@@ -128,11 +128,17 @@ public class OGModule extends AbstractModule {
     bindConstant().annotatedWith(Names.named("read.weight")).to(this.config.getRead().getWeight());
     bindConstant().annotatedWith(Names.named("delete.weight")).to(
         this.config.getDelete().getWeight());
+    bind(AuthType.class).toInstance(this.config.getAuthentication().getType());
     bind(String.class).annotatedWith(Names.named("authentication.username")).toProvider(
         Providers.of(this.config.getAuthentication().getUsername()));
     bind(String.class).annotatedWith(Names.named("authentication.password")).toProvider(
         Providers.of(this.config.getAuthentication().getPassword()));
     bind(StoppingConditionsConfig.class).toInstance(this.config.getStoppingConditions());
+
+    MapBinder<AuthType, HttpAuth> httpAuthBinder =
+        MapBinder.newMapBinder(binder(), AuthType.class, HttpAuth.class);
+    httpAuthBinder.addBinding(AuthType.AWSV2).to(AWSAuthV2.class);
+    httpAuthBinder.addBinding(AuthType.BASIC).to(BasicAuth.class);
 
     MapBinder<String, ResponseBodyConsumer> responseBodyConsumers =
         MapBinder.newMapBinder(binder(), String.class, ResponseBodyConsumer.class);
@@ -334,23 +340,6 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
-  public HttpAuth provideAuthentication(@Named("authentication.username") final String username,
-      @Named("authentication.password") final String password) {
-    final AuthType type = checkNotNull(this.config.getAuthentication().getType());
-
-    if (username != null && password != null) {
-      if (AuthType.AWSV2 == type)
-        return new AWSAuthV2();
-      else
-        return new BasicAuth();
-    } else if (username == null && password == null)
-      return null;
-
-    throw new IllegalArgumentException("iff username is not null password must also be not null");
-  }
-
-  @Provides
-  @Singleton
   @WriteHeaders
   public Map<String, String> provideWriteHeaders() {
     return provideHeaders(this.config.getWrite().getHeaders());
@@ -511,7 +500,8 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
-  public Client provideClient(final HttpAuth authentication,
+  public Client provideClient(final AuthType authType,
+      final Map<AuthType, HttpAuth> authentication,
       final Map<String, ResponseBodyConsumer> responseBodyConsumers) {
     ClientConfig clientConfig = this.config.getClient();
     final ApacheClient.Builder b =
@@ -527,7 +517,8 @@ public class OGModule extends AbstractModule {
             .withWaitForContinue(clientConfig.getWaitForContinue())
             .withRetryCount(clientConfig.getRetryCount())
             .usingRequestSentRetry(clientConfig.isRequestSentRetry())
-            .withAuthentication(authentication).withUserAgent(Version.displayVersion())
+            .withAuthentication(authentication.get(authType))
+            .withUserAgent(Version.displayVersion())
             .withWriteThroughput(clientConfig.getWriteThroughput())
             .withReadThroughput(clientConfig.getReadThroughput());
 
