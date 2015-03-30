@@ -13,12 +13,16 @@ import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.Map;
+
 import org.junit.Before;
 import org.junit.Test;
 
+import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.object.ObjectManager;
 import com.cleversafe.og.object.ObjectManagerException;
 import com.cleversafe.og.object.ObjectMetadata;
+import com.google.common.collect.Maps;
 
 public class ReadObjectNameSupplierTest {
   private ObjectManager objectManager;
@@ -40,12 +44,14 @@ public class ReadObjectNameSupplierTest {
     when(objectName.getName()).thenReturn(object);
     when(this.objectManager.acquireNameForRead()).thenReturn(objectName);
 
-    assertThat(new ReadObjectNameSupplier(this.objectManager).get(), is(object));
+    Map<String, String> context = Maps.newHashMap();
+    assertThat(new ReadObjectNameSupplier(this.objectManager).apply(context), is(object));
+    assertThat(context.get(Headers.X_OG_OBJECT_NAME), is(object));
   }
 
   @Test(expected = ObjectManagerException.class)
   public void supplierException() {
     when(this.objectManager.acquireNameForRead()).thenThrow(new ObjectManagerException());
-    new ReadObjectNameSupplier(this.objectManager).get();
+    new ReadObjectNameSupplier(this.objectManager).apply(Maps.<String, String>newHashMap());
   }
 }

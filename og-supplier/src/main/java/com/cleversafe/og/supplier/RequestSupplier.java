@@ -21,9 +21,11 @@ import com.cleversafe.og.api.Request;
 import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpRequest;
 import com.cleversafe.og.http.Scheme;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 
 /**
  * A supplier of requests
@@ -38,8 +40,8 @@ public class RequestSupplier implements Supplier<Request> {
   private final Supplier<String> host;
   private final Integer port;
   private final String uriRoot;
-  private final Supplier<String> container;
-  private final CachingSupplier<String> object;
+  private final Function<Map<String, String>, String> container;
+  private final Function<Map<String, String>, String> object;
   private final Map<String, String> queryParameters;
   private final boolean trailingSlash;
   private final Map<String, String> headers;
@@ -49,7 +51,8 @@ public class RequestSupplier implements Supplier<Request> {
 
   public RequestSupplier(final Supplier<String> id, final Method method, final Scheme scheme,
       final Supplier<String> host, final Integer port, final String uriRoot,
-      final Supplier<String> container, final CachingSupplier<String> object,
+      final Function<Map<String, String>, String> container,
+      final Function<Map<String, String>, String> object,
       final Map<String, String> queryParameters, final boolean trailingSlash,
       final Map<String, String> headers, final String username, final String password,
       final Supplier<Body> body) {
@@ -80,34 +83,36 @@ public class RequestSupplier implements Supplier<Request> {
 
   @Override
   public Request get() {
-    final HttpRequest.Builder context = new HttpRequest.Builder(this.method, getUrl());
+    final Map<String, String> context = Maps.newHashMap();
+    final HttpRequest.Builder builder = new HttpRequest.Builder(this.method, getUrl(context));
 
     for (final Map.Entry<String, String> header : this.headers.entrySet()) {
-      context.withHeader(header.getKey(), header.getValue());
+      builder.withHeader(header.getKey(), header.getValue());
     }
 
     if (this.id != null)
-      context.withHeader(Headers.X_OG_REQUEST_ID, this.id.get());
-
-    if (this.object != null)
-      context.withHeader(Headers.X_OG_OBJECT_NAME, this.object.getCachedValue());
+      builder.withHeader(Headers.X_OG_REQUEST_ID, this.id.get());
 
     if (this.username != null && this.password != null) {
-      context.withHeader(Headers.X_OG_USERNAME, username);
-      context.withHeader(Headers.X_OG_PASSWORD, password);
+      builder.withHeader(Headers.X_OG_USERNAME, username);
+      builder.withHeader(Headers.X_OG_PASSWORD, password);
+    }
+
+    for (Map.Entry<String, String> entry : context.entrySet()) {
+      builder.withHeader(entry.getKey(), entry.getValue());
     }
 
     if (this.body != null)
-      context.withBody(this.body.get());
+      builder.withBody(this.body.get());
 
-    return context.build();
+    return builder.build();
   }
 
-  private URI getUrl() {
+  private URI getUrl(final Map<String, String> context) {
     final StringBuilder s =
         new StringBuilder().append(this.scheme).append("://").append(this.host.get());
     appendPort(s);
-    appendPath(s);
+    appendPath(s, context);
     appendTrailingSlash(s);
     appendQueryParams(s);
 
@@ -125,15 +130,22 @@ public class RequestSupplier implements Supplier<Request> {
       s.append(":").append(this.port);
   }
 
-  private void appendPath(final StringBuilder s) {
+  private void appendPath(final StringBuilder s, Map<String, String> context) {
+    String objectName = null;
+    if (this.object != null) {
+      // FIXME must apply object first prior to container to populate context from object manager
+      // for multi container (container suffix, object name)
+      objectName = this.object.apply(context);
+    }
+
     s.append("/");
     if (this.uriRoot != null)
       s.append(this.uriRoot).append("/");
 
-    s.append(this.container.get());
+    s.append(this.container.apply(context));
 
-    if (this.object != null)
-      s.append("/").append(this.object.get());
+    if (objectName != null)
+      s.append("/").append(objectName);
   }
 
   private void appendTrailingSlash(final StringBuilder s) {

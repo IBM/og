@@ -68,7 +68,6 @@ import com.cleversafe.og.scheduling.Scheduler;
 import com.cleversafe.og.soh.SOHWriteResponseBodyConsumer;
 import com.cleversafe.og.statistic.Counter;
 import com.cleversafe.og.statistic.Statistics;
-import com.cleversafe.og.supplier.CachingSupplier;
 import com.cleversafe.og.supplier.DeleteObjectNameSupplier;
 import com.cleversafe.og.supplier.RandomSupplier;
 import com.cleversafe.og.supplier.ReadObjectNameSupplier;
@@ -89,6 +88,7 @@ import com.cleversafe.og.util.Operation;
 import com.cleversafe.og.util.SizeUnit;
 import com.cleversafe.og.util.Version;
 import com.google.common.base.CharMatcher;
+import com.google.common.base.Function;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -200,24 +200,26 @@ public class OGModule extends AbstractModule {
   @Provides
   @Singleton
   @WriteObjectName
-  public CachingSupplier<String> provideWriteObjectName(final Api api) {
+  public Function<Map<String, String>, String> provideWriteObjectName(final Api api) {
     if (Api.SOH == checkNotNull(api))
       return null;
-    return new CachingSupplier<String>(new UUIDObjectNameSupplier());
+    return new UUIDObjectNameSupplier();
   }
 
   @Provides
   @Singleton
   @ReadObjectName
-  public CachingSupplier<String> provideReadObjectName(final ObjectManager objectManager) {
-    return new CachingSupplier<String>(new ReadObjectNameSupplier(objectManager));
+  public Function<Map<String, String>, String> provideReadObjectName(
+      final ObjectManager objectManager) {
+    return new ReadObjectNameSupplier(objectManager);
   }
 
   @Provides
   @Singleton
   @DeleteObjectName
-  public CachingSupplier<String> provideDeleteObjectName(final ObjectManager objectManager) {
-    return new CachingSupplier<String>(new DeleteObjectNameSupplier(objectManager));
+  public Function<Map<String, String>, String> provideDeleteObjectName(
+      final ObjectManager objectManager) {
+    return new DeleteObjectNameSupplier(objectManager);
   }
 
   @Provides
@@ -332,10 +334,18 @@ public class OGModule extends AbstractModule {
   @Provides
   @Singleton
   @Named("container")
-  public Supplier<String> provideContainer() {
+  public Function<Map<String, String>, String> provideContainer() {
     final String container = checkNotNull(this.config.getContainer());
     checkArgument(container.length() > 0, "container must not be empty string");
-    return Suppliers.of(this.config.getContainer());
+    // FIXME may need to extract a real Function implementation, especially for multi container
+    final Supplier<String> objectSupplier = Suppliers.of(this.config.getContainer());
+    return new Function<Map<String, String>, String>() {
+
+      @Override
+      public String apply(Map<String, String> input) {
+        return objectSupplier.get();
+      }
+    };
   }
 
   @Provides
@@ -453,8 +463,8 @@ public class OGModule extends AbstractModule {
   @Provides
   @Singleton
   @Named("objectfile.name")
-  public String provideObjectFileName(@Named("container") final Supplier<String> container,
-      final Api api) {
+  public String provideObjectFileName(
+      @Named("container") final Function<Map<String, String>, String> container, final Api api) {
     checkNotNull(container);
     checkNotNull(api);
     final ObjectManagerConfig objectManagerConfig = checkNotNull(this.config.getObjectManager());
@@ -463,7 +473,8 @@ public class OGModule extends AbstractModule {
     if (objectFileName != null && !objectFileName.isEmpty())
       return objectFileName;
     // FIXME this naming scheme will break unless @TestContainer is a constant supplier
-    return container.get() + "-" + api.toString().toLowerCase();
+    Map<String, String> context = Maps.newHashMap();
+    return container.apply(context) + "-" + api.toString().toLowerCase();
   }
 
   @Provides
@@ -535,8 +546,8 @@ public class OGModule extends AbstractModule {
   public Supplier<Request> provideWrite(@Named("request.id") final Supplier<String> id,
       final Api api, final Scheme scheme, @WriteHost final Supplier<String> host,
       @Named("port") final Integer port, @Named("uri.root") final String uriRoot,
-      @Named("container") final Supplier<String> container,
-      @WriteObjectName final CachingSupplier<String> object,
+      @Named("container") final Function<Map<String, String>, String> container,
+      @WriteObjectName final Function<Map<String, String>, String> object,
       @WriteHeaders final Map<String, String> headers, final Supplier<Body> body,
       @Named("authentication.username") final String username,
       @Named("authentication.password") final String password) {
@@ -555,8 +566,8 @@ public class OGModule extends AbstractModule {
   public Supplier<Request> provideRead(@Named("request.id") final Supplier<String> id,
       final Scheme scheme, @ReadHost final Supplier<String> host,
       @Named("port") final Integer port, @Named("uri.root") final String uriRoot,
-      @Named("container") final Supplier<String> container,
-      @ReadObjectName final CachingSupplier<String> object,
+      @Named("container") final Function<Map<String, String>, String> container,
+      @ReadObjectName final Function<Map<String, String>, String> object,
       @ReadHeaders final Map<String, String> headers,
       @Named("authentication.username") final String username,
       @Named("authentication.password") final String password) {
@@ -570,8 +581,8 @@ public class OGModule extends AbstractModule {
   public Supplier<Request> provideDelete(@Named("request.id") final Supplier<String> id,
       final Scheme scheme, @DeleteHost final Supplier<String> host,
       @Named("port") final Integer port, @Named("uri.root") final String uriRoot,
-      @Named("container") final Supplier<String> container,
-      @DeleteObjectName final CachingSupplier<String> object,
+      @Named("container") final Function<Map<String, String>, String> container,
+      @DeleteObjectName final Function<Map<String, String>, String> object,
       @DeleteHeaders final Map<String, String> headers,
       @Named("authentication.username") final String username,
       @Named("authentication.password") final String password) {
@@ -581,9 +592,9 @@ public class OGModule extends AbstractModule {
 
   private Supplier<Request> createRequestSupplier(@Named("request.id") final Supplier<String> id,
       final Method method, Scheme scheme, final Supplier<String> host, final Integer port,
-      final String uriRoot, final Supplier<String> container, final CachingSupplier<String> object,
-      final Map<String, String> headers, final Supplier<Body> body, final String username,
-      final String password) {
+      final String uriRoot, final Function<Map<String, String>, String> container,
+      final Function<Map<String, String>, String> object, final Map<String, String> headers,
+      final Supplier<Body> body, final String username, final String password) {
 
     return new RequestSupplier(id, method, scheme, host, port, uriRoot, container, object,
         Collections.<String, String>emptyMap(), false, headers, username, password, body);

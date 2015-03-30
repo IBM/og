@@ -10,10 +10,14 @@ package com.cleversafe.og.supplier;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.cleversafe.og.object.ObjectManager;
-import com.google.common.base.Supplier;
+import java.util.Map;
 
-public class DeleteObjectNameSupplier implements Supplier<String> {
+import com.cleversafe.og.http.Headers;
+import com.cleversafe.og.object.ObjectManager;
+import com.cleversafe.og.object.ObjectMetadata;
+import com.google.common.base.Function;
+
+public class DeleteObjectNameSupplier implements Function<Map<String, String>, String> {
   private final ObjectManager objectManager;
 
   public DeleteObjectNameSupplier(final ObjectManager objectManager) {
@@ -21,8 +25,11 @@ public class DeleteObjectNameSupplier implements Supplier<String> {
   }
 
   @Override
-  public String get() {
-    return this.objectManager.getNameForDelete().getName();
+  public String apply(Map<String, String> context) {
+    ObjectMetadata objectMetadata = this.objectManager.getNameForDelete();
+    context.put(Headers.X_OG_OBJECT_NAME, objectMetadata.getName());
+
+    return objectMetadata.getName();
   }
 
   @Override

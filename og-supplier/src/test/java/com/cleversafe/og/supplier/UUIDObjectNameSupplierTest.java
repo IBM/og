@@ -12,14 +12,18 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 
+import java.util.Map;
+
 import org.junit.Test;
 
-import com.google.common.base.Supplier;
+import com.google.common.base.Function;
+import com.google.common.collect.Maps;
 
 public class UUIDObjectNameSupplierTest {
   @Test
   public void uuidObjectNameSupplier() {
-    final Supplier<String> s = new UUIDObjectNameSupplier();
-    assertThat(s.get(), is(not(s.get())));
+    final Function<Map<String, String>, String> s = new UUIDObjectNameSupplier();
+    Map<String, String> context = Maps.newHashMap();
+    assertThat(s.apply(context), is(not(s.apply(context))));
   }
 }
