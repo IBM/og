@@ -94,6 +94,9 @@
         </executions>
         <configuration>
           <backend>html</backend>
+          <attributes>
+            <display-version>${display.version}</display-version>
+          </attributes>
         </configuration>
       </plugin>
     </plugins>

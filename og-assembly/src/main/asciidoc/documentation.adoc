@@ -1,3 +1,398 @@
 = Object Generator
+v{display-version}, April 6th, 2015
+:toc: right
+:sectlinks:
+:sectanchors:
+:numbered:
 
-Load Tool Documentation
+== Introduction
+Object Generator (OG) is an HTTP object storage performance test tool.
+
+== Installation
+
+=== Minimum Requirements
+|===
+|Component|Configuration
+
+|CPU
+|Dual Core
+
+|Memory
+|4GB system; 2GB available
+
+|Free space
+|10GB
+
+|Operating System
+|Modern Linux OS*
+
+|Java Version
+|Java 7
+|===
+
+NOTE: OG has been tested on Ubuntu 14.04, but any modern linux OS should work.
+
+=== Distribution
+OG is distributed as a _tar.gz_ archive. To install, simply unpack the archive
+in a directory of your choosing.
+
+[source, bash, subs="attributes"]
+----
+~$ tar -zxf og-{display-version}.tar.gz
+----
+
+== Project Layout
+== Configuration
+
+== Appendix
+
+=== Configuration Reference
+
+==== General Configuration
+|===
+|Parameter|Type|Default
+
+|scheme
+|Enum ("http", "https")
+|"http"
+
+|host_selection
+|Enum ("random", "roundrobin")
+|"roundrobin"
+
+|host
+|String or [HostConfig]
+|None; see <<Host Configuration>>
+
+|port
+|Integer
+|None
+
+|api
+|Enum ("soh", "s3", "openstack", "webdav")
+|"soh"
+
+|uri_root
+|String
+|"/<api>/"
+
+|container
+|String
+|None
+
+|headers
+|Object
+|{}
+
+|write
+|Decimal or OperationConfig
+|100.0; see <<Operation Configuration>>
+
+|read
+|Decimal or OperationConfig
+|0.0; see <<Operation Configuration>>
+
+|delete
+|Decimal or OperationConfig
+|0.0; see <<Operation Configuration>>
+
+|filesize_selection
+|Enum ("random", "roundrobin")
+|"random"
+
+|filesize
+|Decimal or FilesizeConfig or [FilesizeConfig]
+|see <<Filesize Configuration>>
+
+|data
+|Enum ("random", "zeroes")
+|"random"
+
+|concurrency
+|Integer or ConcurrencyConfig
+|see <<Concurrency Configuration>>
+
+|authentication
+|AuthenticationConfig
+|see <<Authentication Configuration>>
+
+|client
+|ClientConfig
+|see <<Client Configuration>>
+
+|stopping_conditions
+|StoppingConditionsConfig
+|see <<Stopping Conditions Configuration>>
+
+|object_manager
+|ObjectManagerConfig
+|see <<Object Manager Configuration>>
+|===
+
+==== Host Configuration
+|===
+|Parameter|Type|Default
+
+|host
+|String
+|None
+
+|weight
+|Decimal
+|1.0
+|===
+
+==== Operation Configuration
+|===
+|Parameter|Type|Default
+
+|host_selection
+|Enum ("random", "roundrobin")
+|"roundrobin"
+
+|host
+|String or [HostConfig]
+|None
+
+|headers
+|Object
+|{}
+
+|weight
+|Decimal
+|1.0
+|===
+
+==== Filesize Configuration
+|===
+|Parameter|Type|Default
+
+|distribution
+|Enum ("uniform", "normal", "lognormal")
+|"uniform"
+
+|average
+|Decimal
+|5.0
+
+|average_unit
+|Enum (see <<Filesize Units>>)
+|"mebibytes"
+
+|spread
+|Decimal
+|0.0
+
+|spread_unit
+|Enum (see <<Filesize Units>>)
+|"mebibytes"
+
+|weight
+|Decimal
+1.0
+|===
+
+==== Concurrency Configuration
+|===
+|Parameter|Type|Default
+
+|type
+|Enum ("threads", "ops")
+|"threads"
+
+|distribution
+|Enum ("uniform", "poisson")
+|"uniform"
+
+|count
+|Decimal
+|1.0
+
+|unit
+|Enum (see <<Time Units>>)
+|"seconds"
+
+|rampup
+|Decimal
+|0.0
+
+|rampup_unit
+|Enum (see <<Time Units>>)
+|"seconds"
+|===
+
+==== Authentication Configuration
+|===
+|Parameter|Type|Default
+
+|type
+|Enum ("basic", "awsv2")
+|"basic"
+
+|username
+|String
+|None
+
+|password
+|String
+|None
+|===
+
+==== Client Configuration
+|===
+|Parameter|Type|Default
+
+|connect_timeout
+|Integer
+|0
+
+|so_timeout
+|Integer
+|0
+
+|so_reuse_address
+|Boolean
+|false
+
+|so_linger
+|Integer
+|-1
+
+|so_keep_alive
+|Boolean
+|true
+
+|tcp_no_delay
+|Boolean
+|true
+
+|persistent_connections
+|Boolean
+|true
+
+|chunked_encoding
+|Boolean
+|false
+
+|expect_continue
+|Boolean
+|false
+
+|wait_for_continue
+|Integer
+|3000
+
+|retry_count
+|Integer
+|0
+
+|request_sent_retry
+|Boolean
+|true
+
+|write_throughput
+|Integer
+|0
+
+|read_throughput
+|Integer
+|0
+|===
+
+==== Stopping Conditions Configuration
+|===
+|Parameter|Type|Default
+
+|operations
+|Integer
+|0
+
+|runtime
+|Decimal
+|0.0
+
+|runtime_unit
+|Enum (see <<Time Units>>)
+|"seconds"
+
+|status_codes
+|Object
+|{}
+|===
+
+==== Object Manager Configuration
+|===
+|Parameter|Type|Default
+
+|object_file_location
+|String
+|"./object"
+
+|object_file_name
+|String
+|"<container>-<api>"
+|===
+
+=== Filesize Units
+|===
+|Input|Unit
+
+|"b", "byte", "bytes"
+|bytes
+
+|"kb", "kilobyte", "kilobytes"
+|kilobytes
+
+|"kib", "kibibyte", "kibibytes"
+|kibibytes
+
+|"mb", "megabyte", "megabytes"
+|megabytes
+
+|"mib", "mebibyte", "mebibytes"
+|mebibytes
+
+|"gb", "gigabyte", "gigabytes"
+|gigabytes
+
+|"gib", "gibibyte", "gibibytes"
+|gibibytes
+
+|"tb", "terabyte", "terabytes"
+|terabytes
+
+|"tib", "tebibyte", "tebibytes"
+|tebibytes
+
+|"pb", "petabyte", "petabytes"
+|petabytes
+
+|"pib", "pebibyte", "pebibytes"
+|pebibytes
+|===
+
+=== Time Units
+|===
+|Input|Unit
+
+|"ns", "nano", "nanosec", "nanosecs", "nanosecond", "nanoseconds"
+|nanoseconds
+
+|"micro", "micros", "microsec", "microsecs", "microsecond", "microseconds"
+|microseconds
+
+|"ms", "milli", "millis", "millisec", "millisecs", "millisecond", "milliseconds"
+|milliseconds
+
+|"s", "sec", "secs", "second", "seconds"
+|seconds
+
+|"m", "min", "mins", "minute", "minutes"
+|minutes
+
+|"h", "hr", "hrs", "hour", "hours"
+|hours
+
+|"d", "day", "days"
+|days
+|===
