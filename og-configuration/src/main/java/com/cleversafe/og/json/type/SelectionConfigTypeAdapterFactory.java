@@ -9,7 +9,9 @@
 package com.cleversafe.og.json.type;
 
 import java.io.IOException;
+import java.util.List;
 
+import com.cleversafe.og.json.ChoiceConfig;
 import com.cleversafe.og.json.SelectionConfig;
 import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
@@ -35,6 +37,7 @@ public class SelectionConfigTypeAdapterFactory implements TypeAdapterFactory {
       }
 
       @Override
+      @SuppressWarnings("rawtypes")
       public T read(final JsonReader in) throws IOException {
         switch (in.peek()) {
           case BOOLEAN:
@@ -43,6 +46,11 @@ public class SelectionConfigTypeAdapterFactory implements TypeAdapterFactory {
             return (T) new SelectionConfig<Double>(in.nextDouble());
           case STRING:
             return (T) new SelectionConfig<String>(in.nextString());
+          case BEGIN_ARRAY: {
+            SelectionConfig config = new SelectionConfig();
+            config.choices = gson.getAdapter(new TypeToken<List<ChoiceConfig>>() {}).read(in);
+            return (T) config;
+          }
           default:
             return delegate.read(in);
         }
