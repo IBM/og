@@ -13,11 +13,11 @@ import java.util.List;
 import com.google.common.collect.Lists;
 
 public class SelectionConfig<T> {
-  public SelectionType type;
+  public SelectionType selection;
   public List<ChoiceConfig<T>> choices;
 
   public SelectionConfig() {
-    this.type = SelectionType.RANDOM;
+    this.selection = SelectionType.RANDOM;
     this.choices = Lists.newArrayList();
   }
 

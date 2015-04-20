@@ -390,7 +390,7 @@ public class OGModule extends AbstractModule {
   private Supplier<String> createHeaderSuppliers(SelectionConfig<String> selectionConfig) {
     // FIXME create generalized process for creating random or roundrobin suppliers regardless
     // of config type
-    if (SelectionType.ROUNDROBIN == selectionConfig.type) {
+    if (SelectionType.ROUNDROBIN == selectionConfig.selection) {
       final List<String> choiceList = Lists.newArrayList();
       for (final ChoiceConfig<String> choice : selectionConfig.choices) {
         choiceList.add(choice.choice);
