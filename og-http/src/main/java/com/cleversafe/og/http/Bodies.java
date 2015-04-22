@@ -12,7 +12,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.cleversafe.og.api.Body;
-import com.cleversafe.og.api.Data;
+import com.cleversafe.og.api.DataType;
 
 /**
  * A utility class for creating body instances
@@ -20,7 +20,7 @@ import com.cleversafe.og.api.Data;
  * @since 1.0
  */
 public class Bodies {
-  private static final Body NONE_BODY = Bodies.create(Data.NONE, 0);
+  private static final Body NONE_BODY = Bodies.create(DataType.NONE, 0);
 
   private Bodies() {}
 
@@ -41,7 +41,7 @@ public class Bodies {
    * @throws IllegalArgumentException if size is negative
    */
   public static Body random(final long size) {
-    return create(Data.RANDOM, size);
+    return create(DataType.RANDOM, size);
   }
 
   /**
@@ -52,16 +52,16 @@ public class Bodies {
    * @throws IllegalArgumentException if size is negative
    */
   public static Body zeroes(final long size) {
-    return create(Data.ZEROES, size);
+    return create(DataType.ZEROES, size);
   }
 
-  private static Body create(final Data data, final long size) {
+  private static Body create(final DataType data, final long size) {
     checkNotNull(data);
     checkArgument(size >= 0, "size must be >= 0 [%s]", size);
 
     return new Body() {
       @Override
-      public Data getData() {
+      public DataType getDataType() {
         return data;
       }
 

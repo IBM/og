@@ -45,7 +45,7 @@ public class Streams {
    */
   public static InputStream create(final Body body) {
     checkNotNull(body);
-    switch (body.getData()) {
+    switch (body.getDataType()) {
       case NONE:
         return NONE_INPUTSTREAM;
       case ZEROES:

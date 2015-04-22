@@ -20,7 +20,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.cleversafe.og.api.Body;
-import com.cleversafe.og.api.Data;
+import com.cleversafe.og.api.DataType;
 import com.cleversafe.og.api.Method;
 
 public class HttpRequestTest {
@@ -119,7 +119,7 @@ public class HttpRequestTest {
   @Test
   public void defaultBody() {
     final Body body = new HttpRequest.Builder(this.method, this.uri).build().getBody();
-    assertThat(body.getData(), is(Data.NONE));
+    assertThat(body.getDataType(), is(DataType.NONE));
     assertThat(body.getSize(), is(0L));
   }
 
@@ -128,7 +128,7 @@ public class HttpRequestTest {
     final Body body =
         new HttpRequest.Builder(this.method, this.uri).withBody(Bodies.zeroes(12345)).build()
             .getBody();
-    assertThat(body.getData(), is(Data.ZEROES));
+    assertThat(body.getDataType(), is(DataType.ZEROES));
     assertThat(body.getSize(), is(12345L));
   }
 }

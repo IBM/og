@@ -24,7 +24,7 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 
 import com.cleversafe.og.api.Body;
-import com.cleversafe.og.api.Data;
+import com.cleversafe.og.api.DataType;
 import com.tngtech.java.junit.dataprovider.DataProvider;
 import com.tngtech.java.junit.dataprovider.DataProviderRunner;
 import com.tngtech.java.junit.dataprovider.UseDataProvider;
@@ -39,7 +39,7 @@ public class ThrottledInputStreamTest {
   @Before
   public void before() {
     this.body = mock(Body.class);
-    when(this.body.getData()).thenReturn(Data.ZEROES);
+    when(this.body.getDataType()).thenReturn(DataType.ZEROES);
     when(this.body.getSize()).thenReturn(10000L);
   }
 

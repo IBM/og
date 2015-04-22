@@ -47,7 +47,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.api.Client;
-import com.cleversafe.og.api.Data;
+import com.cleversafe.og.api.DataType;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
 import com.cleversafe.og.client.RequestLogEntry.RequestTimestamps;
@@ -228,7 +228,7 @@ public class ApacheClient implements Client {
       builder.addHeader(header.getKey(), header.getValue());
     }
 
-    if (Data.NONE != request.getBody().getData()) {
+    if (DataType.NONE != request.getBody().getDataType()) {
       final AbstractHttpEntity entity =
           new CustomHttpEntity(request.getBody(), this.writeThroughput);
       // TODO chunk size for chunked encoding is hardcoded to 2048 bytes. Can only be overridden

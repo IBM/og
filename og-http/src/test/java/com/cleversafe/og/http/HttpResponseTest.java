@@ -20,7 +20,7 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 
 import com.cleversafe.og.api.Body;
-import com.cleversafe.og.api.Data;
+import com.cleversafe.og.api.DataType;
 import com.tngtech.java.junit.dataprovider.DataProvider;
 import com.tngtech.java.junit.dataprovider.DataProviderRunner;
 import com.tngtech.java.junit.dataprovider.UseDataProvider;
@@ -123,7 +123,7 @@ public class HttpResponseTest {
   @Test
   public void defaultBody() {
     final Body body = new HttpResponse.Builder().withStatusCode(this.statusCode).build().getBody();
-    assertThat(body.getData(), is(Data.NONE));
+    assertThat(body.getDataType(), is(DataType.NONE));
     assertThat(body.getSize(), is(0L));
   }
 
@@ -132,7 +132,7 @@ public class HttpResponseTest {
     final Body body =
         new HttpResponse.Builder().withStatusCode(this.statusCode).withBody(Bodies.zeroes(12345))
             .build().getBody();
-    assertThat(body.getData(), is(Data.ZEROES));
+    assertThat(body.getDataType(), is(DataType.ZEROES));
     assertThat(body.getSize(), is(12345L));
   }
 }

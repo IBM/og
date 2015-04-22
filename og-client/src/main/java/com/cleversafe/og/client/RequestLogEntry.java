@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
-import com.cleversafe.og.api.Data;
+import com.cleversafe.og.api.DataType;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
@@ -84,7 +84,7 @@ public class RequestLogEntry {
     this.objectId = objectName;
 
     Long objectSize = null;
-    if (Data.NONE != request.getBody().getData())
+    if (DataType.NONE != request.getBody().getDataType())
       objectSize = request.getBody().getSize();
 
     this.status = response.getStatusCode();

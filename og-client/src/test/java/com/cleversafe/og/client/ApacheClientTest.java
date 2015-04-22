@@ -238,7 +238,7 @@ public class ApacheClientTest {
     final Response response = this.client.execute(request).get();
 
     assertThat(response.getStatusCode(), is(200));
-    assertThat(response.getBody().getData(), is(responseBody.getData()));
+    assertThat(response.getBody().getDataType(), is(responseBody.getDataType()));
     assertThat(response.getBody().getSize(), is(responseBody.getSize()));
 
     verify(requestedFor(method, this.objectUri.getPath()).withRequestBody(equalTo(requestData)));
@@ -417,7 +417,7 @@ public class ApacheClientTest {
     final Request request = new HttpRequest.Builder(method, uri).withBody(requestBody).build();
     final Response response = client.execute(request).get();
     assertThat(response.getStatusCode(), is(200));
-    assertThat(response.getBody().getData(), is(responseBody.getData()));
+    assertThat(response.getBody().getDataType(), is(responseBody.getDataType()));
     assertThat(response.getBody().getSize(), is(responseBody.getSize()));
 
     verify(requestedFor(method, uri.getPath()).withRequestBody(equalTo(requestData)));

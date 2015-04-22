@@ -23,7 +23,7 @@ import javax.inject.Named;
 
 import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.Client;
-import com.cleversafe.og.api.Data;
+import com.cleversafe.og.api.DataType;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.client.ApacheClient;
@@ -451,8 +451,8 @@ public class OGModule extends AbstractModule {
   }
 
   private Supplier<Body> createBodySupplier(final Supplier<Distribution> distributionSupplier) {
-    final Data data = checkNotNull(this.config.getData());
-    checkArgument(Data.NONE != data, "Unacceptable data [%s]", data);
+    final DataType data = checkNotNull(this.config.getData());
+    checkArgument(DataType.NONE != data, "Unacceptable data [%s]", data);
 
     return new Supplier<Body>() {
       @Override

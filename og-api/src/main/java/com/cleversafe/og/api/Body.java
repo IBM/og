@@ -18,9 +18,9 @@ public interface Body {
    * Gets the data type of this body
    * 
    * @return the type of data for this body
-   * @see Data
+   * @see DataType
    */
-  Data getData();
+  DataType getDataType();
 
   /**
    * Gets the size of this body

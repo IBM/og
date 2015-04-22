@@ -13,6 +13,6 @@ package com.cleversafe.og.api;
  * 
  * @since 1.0
  */
-public enum Data {
+public enum DataType {
   NONE, RANDOM, ZEROES;
 }

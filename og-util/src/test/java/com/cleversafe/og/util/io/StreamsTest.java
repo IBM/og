@@ -21,7 +21,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.cleversafe.og.api.Body;
-import com.cleversafe.og.api.Data;
+import com.cleversafe.og.api.DataType;
 
 public class StreamsTest {
   private Body body;
@@ -38,14 +38,14 @@ public class StreamsTest {
 
   @Test
   public void createNone() throws IOException {
-    when(this.body.getData()).thenReturn(Data.NONE);
+    when(this.body.getDataType()).thenReturn(DataType.NONE);
     when(this.body.getSize()).thenReturn(0L);
     assertThat(Streams.create(this.body).read(), is(-1));
   }
 
   @Test
   public void createRandom() throws IOException {
-    when(this.body.getData()).thenReturn(Data.RANDOM);
+    when(this.body.getDataType()).thenReturn(DataType.RANDOM);
     when(this.body.getSize()).thenReturn(1024L);
     final InputStream in = Streams.create(this.body);
     final byte[] buf = new byte[1024];
@@ -61,7 +61,7 @@ public class StreamsTest {
 
   @Test
   public void createZeroes() throws IOException {
-    when(this.body.getData()).thenReturn(Data.ZEROES);
+    when(this.body.getDataType()).thenReturn(DataType.ZEROES);
     when(this.body.getSize()).thenReturn(1024L);
     final InputStream in = Streams.create(this.body);
     final byte[] buf = new byte[1024];
