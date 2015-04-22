@@ -8,6 +8,9 @@
 
 package com.cleversafe.og.http;
 
+import java.io.InputStream;
+import java.util.Map;
+
 import com.cleversafe.og.api.Request;
 
 /**
@@ -17,10 +20,28 @@ import com.cleversafe.og.api.Request;
  */
 public interface HttpAuth {
   /**
-   * Creates an http authorization header value
+   * Creates the necessary headers to be added for authorization
    * 
    * @param request the request to create the authorization header value for
-   * @return the created authorization header value for the provided request
+   * @return A map of required authorization headers for the provided request
    */
-  String nextAuthorizationHeader(final Request request);
+  Map<String, String> getAuthorizationHeaders(final Request request);
+
+  /**
+   * Decorates the provided input stream to add the necessary authorization info to the stream. For
+   * example, AWS sig4 has a chunked mode where hashes of the chunks of the data stream must be
+   * included in between each chunk.
+   * 
+   * @param InputStream containing the request's data.
+   * @return Decorated stream containing the data along with any necessary authorization
+   *         information.
+   */
+  InputStream wrapStream(final InputStream stream);
+
+  /**
+   * @return value to use in the Content-Length header field. May be different from the actual
+   *         data's length if this {@code HttpAuth} is decorating the input stream with chunk
+   *         signatures.
+   */
+  long getContentLength(final Request request);
 }

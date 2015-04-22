@@ -23,10 +23,8 @@ import com.google.common.io.ByteStreams;
  * @since 1.0
  */
 public class Streams {
-  // TODO performance of single random instance used by multiple threads? Need to quantify
-  private static final Random RANDOM = new Random();
-  private static final int BUF_SIZE = 1024;
-  private static final byte[] ZERO_BUF = new byte[BUF_SIZE];
+  public static final int REPEAT_LENGTH = 1024;
+  private static final byte[] ZERO_BUF = new byte[REPEAT_LENGTH];
   private static final InputStream NONE_INPUTSTREAM = new InputStream() {
     @Override
     public int read() {
@@ -51,7 +49,7 @@ public class Streams {
       case ZEROES:
         return create(ZERO_BUF, body.getSize());
       default:
-        return create(createRandomBuffer(), body.getSize());
+        return create(createRandomBuffer(body.getRandomSeed()), body.getSize());
     }
   }
 
@@ -59,9 +57,9 @@ public class Streams {
     return ByteStreams.limit(new InfiniteInputStream(buf), size);
   }
 
-  private static byte[] createRandomBuffer() {
-    final byte[] buf = new byte[BUF_SIZE];
-    RANDOM.nextBytes(buf);
+  private static byte[] createRandomBuffer(long seed) {
+    final byte[] buf = new byte[REPEAT_LENGTH];
+    new Random(seed).nextBytes(buf);
     return buf;
   }
 

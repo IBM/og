@@ -8,6 +8,10 @@
 
 package com.cleversafe.og.s3;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import java.io.InputStream;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -19,12 +23,15 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 import com.cleversafe.og.api.Request;
+import com.cleversafe.og.http.Headers;
+import com.cleversafe.og.http.HttpAuth;
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.io.BaseEncoding;
+import com.google.common.net.HttpHeaders;
 
 /**
  * An http auth implementation that creates authorization header values using the awsv2 auth
@@ -45,7 +52,7 @@ import com.google.common.io.BaseEncoding;
  *      target="_blank">Amazon REST Authentication</a>
  * @since 1.0
  */
-public class AWSAuthV2 extends AWSAuthBase {
+public class AWSAuthV2 implements HttpAuth {
   private static final String HMAC_SHA1 = "HmacSHA1";
   private static final Splitter QUERY_SPLITTER = Splitter.on("&");
   private static final Splitter PARAM_SPLITTER = Splitter.on("=");
@@ -194,5 +201,23 @@ public class AWSAuthV2 extends AWSAuthBase {
   @Override
   public String toString() {
     return "AWSAuthV2 []";
+  }
+
+  @Override
+  public Map<String, String> getAuthorizationHeaders(Request request) {
+    final String awsAccessKeyId = checkNotNull(request.headers().get(Headers.X_OG_USERNAME));
+    final String awsSecretAccessKey = checkNotNull(request.headers().get(Headers.X_OG_PASSWORD));
+    return Collections.singletonMap(HttpHeaders.AUTHORIZATION,
+        authenticate(request, awsAccessKeyId, awsSecretAccessKey));
+  }
+
+  @Override
+  public InputStream wrapStream(InputStream stream) {
+    return stream;
+  }
+
+  @Override
+  public long getContentLength(final Request request) {
+    return request.getBody().getSize();
   }
 }

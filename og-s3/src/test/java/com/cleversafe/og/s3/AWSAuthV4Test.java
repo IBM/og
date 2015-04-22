@@ -110,7 +110,7 @@ public class AWSAuthV4Test {
     // Assert.assertEquals(this.creq, this.authV4.getCanonicalRequest());
     // Assert.assertEquals(this.sts, this.authV4.getStringToSign());
     // Assert.assertEquals(this.sreq,
-    this.authV4.nextAuthorizationHeader(httpRequest);
+    this.authV4.getAuthorizationHeaders(httpRequest);
 
     // System.out.println("authz: " + this.authz);
   }

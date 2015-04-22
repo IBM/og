@@ -60,6 +60,8 @@ public class Bodies {
     checkArgument(size >= 0, "size must be >= 0 [%s]", size);
 
     return new Body() {
+      final long seed = System.nanoTime();
+
       @Override
       public DataType getDataType() {
         return data;
@@ -73,6 +75,11 @@ public class Bodies {
       @Override
       public String toString() {
         return String.format("Body [data=%s, size=%s]", data, size);
+      }
+
+      @Override
+      public long getRandomSeed() {
+        return seed;
       }
     };
   }

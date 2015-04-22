@@ -23,6 +23,13 @@ public interface Body {
   DataType getDataType();
 
   /**
+   * @return the seed that will be used to generate the random data for this body. Note that we use
+   *         Infinite Streams which only generate Streams.REPEAT_LENGTH random bytes and then repeat
+   *         those over and over until we have {@link #getSize()}.
+   */
+  long getRandomSeed();
+
+  /**
    * Gets the size of this body
    * 
    * @return the size of this body

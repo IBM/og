@@ -221,8 +221,12 @@ public class ApacheClient implements Client {
         RequestBuilder.create(request.getMethod().toString()).setUri(request.getUri());
 
     if (request.headers().get(Headers.X_OG_USERNAME) != null
-        && request.headers().get(Headers.X_OG_PASSWORD) != null)
-      builder.addHeader("Authorization", this.authentication.nextAuthorizationHeader(request));
+        && request.headers().get(Headers.X_OG_PASSWORD) != null) {
+      Map<String, String> authHeaders = this.authentication.getAuthorizationHeaders(request);
+      for (Entry<String, String> e : authHeaders.entrySet()) {
+        builder.addHeader(e.getKey(), e.getValue());
+      }
+    }
 
     for (final Entry<String, String> header : request.headers().entrySet()) {
       builder.addHeader(header.getKey(), header.getValue());

@@ -10,9 +10,14 @@ package com.cleversafe.og.http;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.io.InputStream;
+import java.util.Collections;
+import java.util.Map;
+
 import com.cleversafe.og.api.Request;
 import com.google.common.base.Charsets;
 import com.google.common.io.BaseEncoding;
+import com.google.common.net.HttpHeaders;
 
 /**
  * An http auth implementation that creates authorization header values using the basic auth
@@ -24,11 +29,23 @@ public class BasicAuth implements HttpAuth {
   public BasicAuth() {}
 
   @Override
-  public String nextAuthorizationHeader(final Request request) {
+  public Map<String, String> getAuthorizationHeaders(Request request) {
     final String username = checkNotNull(request.headers().get(Headers.X_OG_USERNAME));
     final String password = checkNotNull(request.headers().get(Headers.X_OG_PASSWORD));
     final String credentials = username + ":" + password;
-    return "Basic " + BaseEncoding.base64().encode(credentials.getBytes(Charsets.UTF_8));
+
+    return Collections.singletonMap(HttpHeaders.AUTHORIZATION, "Basic "
+        + BaseEncoding.base64().encode(credentials.getBytes(Charsets.UTF_8)));
+  }
+
+  @Override
+  public InputStream wrapStream(InputStream stream) {
+    return stream;
+  }
+
+  @Override
+  public long getContentLength(final Request request) {
+    return request.getBody().getSize();
   }
 
   @Override

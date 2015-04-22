@@ -30,6 +30,7 @@ import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpRequest;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.google.common.net.HttpHeaders;
 import com.tngtech.java.junit.dataprovider.DataProvider;
 import com.tngtech.java.junit.dataprovider.DataProviderRunner;
 import com.tngtech.java.junit.dataprovider.UseDataProvider;
@@ -193,18 +194,19 @@ public class AWSAuthV2Test {
   @UseDataProvider("provideExamples")
   public void testSigning(final Request request, final String toSign, final String header) {
     assertThat(this.auth.stringToSign(request), is(toSign));
-    assertThat(this.auth.nextAuthorizationHeader(request), is(header));
+    assertThat(this.auth.getAuthorizationHeaders(request).get(HttpHeaders.AUTHORIZATION),
+        is(header));
   }
 
   @Test(expected = NullPointerException.class)
   public void nullUsername() {
     when(this.request.headers()).thenReturn(ImmutableMap.of(Headers.X_OG_PASSWORD, "password"));
-    this.auth.nextAuthorizationHeader(this.request);
+    this.auth.getAuthorizationHeaders(request);
   }
 
   @Test(expected = NullPointerException.class)
   public void nullPassword() {
     when(this.request.headers()).thenReturn(ImmutableMap.of(Headers.X_OG_USERNAME, "username"));
-    this.auth.nextAuthorizationHeader(this.request);
+    this.auth.getAuthorizationHeaders(request);
   }
 }

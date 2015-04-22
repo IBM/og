@@ -8,13 +8,16 @@
 
 package com.cleversafe.og.s3;
 
-import com.cleversafe.og.api.Request;
+import java.io.InputStream;
+import java.util.Map;
 
-public class AWSAuthV4 extends AWSAuthBase {
+import com.cleversafe.og.api.Request;
+import com.cleversafe.og.http.HttpAuth;
+
+public class AWSAuthV4 implements HttpAuth {
 
   private static final String AWS_SIG_ALG = "AWS4-HMAC-SHA256";
 
-  @Override
   protected String authenticate(Request request, String awsAccessKeyId, String awsSecretAccessKey) {
     final StringBuilder authString = new StringBuilder(AWS_SIG_ALG);
     authString.append(" Credential=").append(scope(request, awsSecretAccessKey));
@@ -36,5 +39,23 @@ public class AWSAuthV4 extends AWSAuthBase {
   private Object scope(Request request, String awsSecretAccessKey) {
     // TODO Auto-generated method stub
     return null;
+  }
+
+  @Override
+  public Map<String, String> getAuthorizationHeaders(Request request) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public InputStream wrapStream(InputStream stream) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public long getContentLength(Request request) {
+    // TODO Auto-generated method stub
+    return 0;
   }
 }
