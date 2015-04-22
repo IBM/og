@@ -8,6 +8,8 @@
 
 package com.cleversafe.og.api;
 
+import java.security.InvalidParameterException;
+
 /**
  * An enumeration of supported http methods
  * 
@@ -15,4 +17,19 @@ package com.cleversafe.og.api;
  */
 public enum Method {
   GET, HEAD, POST, PUT, DELETE;
+
+  public static Method fromString(final String method) {
+    if (method.equals("GET"))
+      return GET;
+    else if (method.equals("HEAD"))
+      return HEAD;
+    else if (method.equals("POST"))
+      return POST;
+    else if (method.equals("PUT"))
+      return PUT;
+    else if (method.equals("DELETE"))
+      return DELETE;
+    else
+      throw new InvalidParameterException("Attempted to use unsupported method " + method);
+  }
 }

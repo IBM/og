@@ -8,8 +8,6 @@
 
 package com.cleversafe.og.s3;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -21,8 +19,6 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 import com.cleversafe.og.api.Request;
-import com.cleversafe.og.http.Headers;
-import com.cleversafe.og.http.HttpAuth;
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -49,7 +45,7 @@ import com.google.common.io.BaseEncoding;
  *      target="_blank">Amazon REST Authentication</a>
  * @since 1.0
  */
-public class AWSAuthV2 implements HttpAuth {
+public class AWSAuthV2 extends AWSAuthBase {
   private static final String HMAC_SHA1 = "HmacSHA1";
   private static final Splitter QUERY_SPLITTER = Splitter.on("&");
   private static final Splitter PARAM_SPLITTER = Splitter.on("=");
@@ -57,16 +53,7 @@ public class AWSAuthV2 implements HttpAuth {
       "logging", "notification", "partNumber", "policy", "requestPayment", "torrent", "uploadId",
       "uploads", "versionId", "versioning", "versions", "website");
 
-  public AWSAuthV2() {}
-
-  @Override
-  public String nextAuthorizationHeader(final Request request) {
-    final String awsAccessKeyId = checkNotNull(request.headers().get(Headers.X_OG_USERNAME));
-    final String awsSecretAccessKey = checkNotNull(request.headers().get(Headers.X_OG_PASSWORD));
-    return authenticate(request, awsAccessKeyId, awsSecretAccessKey);
-  }
-
-  private String authenticate(final Request request, final String awsAccessKeyId,
+  protected String authenticate(final Request request, final String awsAccessKeyId,
       final String awsSecretAccessKey) {
     return new StringBuilder().append("AWS ").append(awsAccessKeyId).append(":")
         .append(signature(request, awsSecretAccessKey)).toString();
