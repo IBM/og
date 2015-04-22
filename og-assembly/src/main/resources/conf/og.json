@@ -14,18 +14,12 @@
 // "scheme": "http",
 
 
-// the selection policy to use when determining which host to use for the next
-// request. One of ("random", "roundrobin"). Ignored if only one host is
-// specified.
-
-// "host_selection": "roundrobin",
-
-
 // A list of hosts to use.
 //
 // Example1 "host": "192.168.8.10"
 // Example2 "host": ["dc-a2100-3838.cleversafelabs.com", "10.10.1.56"]
 // Example3 "host": [{"host": "dc-a2100-3838.cleversafelabs.com", "weight": 5.0}, "10.10.1.56"]
+// Example4 "host": {"selection": "roundrobin", "choices": ["dc-a2100-3838.cleversafelabs.com", "10.10.1.56"]}
 
 "host": "",
 

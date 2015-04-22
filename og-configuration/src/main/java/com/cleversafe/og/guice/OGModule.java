@@ -51,7 +51,6 @@ import com.cleversafe.og.json.ConcurrencyConfig;
 import com.cleversafe.og.json.ConcurrencyType;
 import com.cleversafe.og.json.DistributionType;
 import com.cleversafe.og.json.FilesizeConfig;
-import com.cleversafe.og.json.HostConfig;
 import com.cleversafe.og.json.OGConfig;
 import com.cleversafe.og.json.ObjectManagerConfig;
 import com.cleversafe.og.json.OperationConfig;
@@ -257,7 +256,7 @@ public class OGModule extends AbstractModule {
   @Singleton
   @Named("host")
   public Supplier<String> provideHost() {
-    return createHost(this.config.getHostSelection(), this.config.getHost());
+    return createHost(this.config.getHost());
   }
 
   @Provides
@@ -286,34 +285,35 @@ public class OGModule extends AbstractModule {
     checkNotNull(operationConfig);
     checkNotNull(testHost);
 
-    final List<HostConfig> operationHost = operationConfig.getHost();
-    if (operationHost != null && !operationHost.isEmpty())
-      return createHost(operationConfig.getHostSelection(), operationHost);
+    final SelectionConfig<String> operationHost = operationConfig.getHost();
+    if (operationHost != null && !operationHost.choices.isEmpty())
+      return createHost(operationConfig.getHost());
 
     return testHost;
   }
 
-  private Supplier<String> createHost(final SelectionType hostSelection, final List<HostConfig> host) {
-    checkNotNull(hostSelection);
+  private Supplier<String> createHost(SelectionConfig<String> host) {
     checkNotNull(host);
-    checkArgument(!host.isEmpty(), "must specify at least one host");
-    for (final HostConfig h : host) {
-      checkNotNull(h);
-      checkNotNull(h.getHost());
-      checkArgument(h.getHost().length() > 0, "host must not be empty string");
+    checkNotNull(host.selection);
+    checkNotNull(host.choices);
+    checkArgument(!host.choices.isEmpty(), "must specify at least one host");
+    for (final ChoiceConfig<String> choice : host.choices) {
+      checkNotNull(choice);
+      checkNotNull(choice.choice);
+      checkArgument(choice.choice.length() > 0, "host must not be empty string");
     }
 
-    if (SelectionType.ROUNDROBIN == hostSelection) {
+    if (SelectionType.ROUNDROBIN == host.selection) {
       final List<String> hostList = Lists.newArrayList();
-      for (final HostConfig h : host) {
-        hostList.add(h.getHost());
+      for (final ChoiceConfig<String> choice : host.choices) {
+        hostList.add(choice.choice);
       }
       return Suppliers.cycle(hostList);
     }
 
     final RandomSupplier.Builder<String> wrc = Suppliers.random();
-    for (final HostConfig h : host) {
-      wrc.withChoice(h.getHost(), h.getWeight());
+    for (final ChoiceConfig<String> choice : host.choices) {
+      wrc.withChoice(choice.choice, choice.weight);
     }
     return wrc.build();
   }

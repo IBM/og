@@ -19,8 +19,7 @@ import com.google.common.collect.Maps;
 
 public class OGConfig {
   Scheme scheme;
-  SelectionType hostSelection;
-  List<HostConfig> host;
+  SelectionConfig<String> host;
   Integer port;
   Api api;
   String uriRoot;
@@ -40,8 +39,7 @@ public class OGConfig {
 
   public OGConfig() {
     this.scheme = Scheme.HTTP;
-    this.hostSelection = SelectionType.ROUNDROBIN;
-    this.host = Lists.newArrayList();
+    this.host = null;
     this.port = null;
     this.api = Api.SOH;
     this.uriRoot = null;
@@ -65,11 +63,7 @@ public class OGConfig {
     return this.scheme;
   }
 
-  public SelectionType getHostSelection() {
-    return this.hostSelection;
-  }
-
-  public List<HostConfig> getHost() {
+  public SelectionConfig<String> getHost() {
     return this.host;
   }
 

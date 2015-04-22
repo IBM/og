@@ -27,8 +27,6 @@ import com.cleversafe.og.json.type.ChoiceConfigTypeAdapterFactory;
 import com.cleversafe.og.json.type.ConcurrencyConfigTypeAdapterFactory;
 import com.cleversafe.og.json.type.FilesizeConfigListTypeAdapterFactory;
 import com.cleversafe.og.json.type.FilesizeConfigTypeAdapterFactory;
-import com.cleversafe.og.json.type.HostConfigListTypeAdapterFactory;
-import com.cleversafe.og.json.type.HostConfigTypeAdapterFactory;
 import com.cleversafe.og.json.type.OperationConfigTypeAdapterFactory;
 import com.cleversafe.og.json.type.SelectionConfigTypeAdapterFactory;
 import com.cleversafe.og.json.type.SizeUnitTypeAdapter;
@@ -157,8 +155,6 @@ public class ObjectGenerator {
         .registerTypeHierarchyAdapter(SizeUnit.class, new SizeUnitTypeAdapter().nullSafe())
         .registerTypeHierarchyAdapter(TimeUnit.class, new TimeUnitTypeAdapter().nullSafe())
         .registerTypeAdapterFactory(new OperationConfigTypeAdapterFactory())
-        .registerTypeAdapterFactory(new HostConfigTypeAdapterFactory())
-        .registerTypeAdapterFactory(new HostConfigListTypeAdapterFactory())
         .registerTypeAdapterFactory(new SelectionConfigTypeAdapterFactory())
         .registerTypeAdapterFactory(new ChoiceConfigTypeAdapterFactory())
         .registerTypeAdapterFactory(new FilesizeConfigTypeAdapterFactory())

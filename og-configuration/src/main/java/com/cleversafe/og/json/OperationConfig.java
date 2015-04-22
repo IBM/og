@@ -8,16 +8,13 @@
 
 package com.cleversafe.og.json;
 
-import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 public class OperationConfig {
   double weight;
-  SelectionType hostSelection;
-  List<HostConfig> host;
+  SelectionConfig<String> host;
   Map<String, SelectionConfig<String>> headers;
 
   public OperationConfig(final double weight) {
@@ -27,8 +24,7 @@ public class OperationConfig {
 
   public OperationConfig() {
     this.weight = 0.0;
-    this.hostSelection = SelectionType.ROUNDROBIN;
-    this.host = Lists.newArrayList();
+    this.host = null;
     this.headers = Maps.newLinkedHashMap();
   }
 
@@ -36,11 +32,7 @@ public class OperationConfig {
     return this.weight;
   }
 
-  public SelectionType getHostSelection() {
-    return this.hostSelection;
-  }
-
-  public List<HostConfig> getHost() {
+  public SelectionConfig<String> getHost() {
     return this.host;
   }
 
