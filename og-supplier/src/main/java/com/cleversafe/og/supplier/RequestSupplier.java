@@ -44,7 +44,7 @@ public class RequestSupplier implements Supplier<Request> {
   private final Function<Map<String, String>, String> object;
   private final Map<String, String> queryParameters;
   private final boolean trailingSlash;
-  private final Map<String, String> headers;
+  private final Map<String, Supplier<String>> headers;
   private final String username;
   private final String password;
   private final Supplier<Body> body;
@@ -54,7 +54,7 @@ public class RequestSupplier implements Supplier<Request> {
       final Function<Map<String, String>, String> container,
       final Function<Map<String, String>, String> object,
       final Map<String, String> queryParameters, final boolean trailingSlash,
-      final Map<String, String> headers, final String username, final String password,
+      final Map<String, Supplier<String>> headers, final String username, final String password,
       final Supplier<Body> body) {
 
     this.id = id;
@@ -86,8 +86,8 @@ public class RequestSupplier implements Supplier<Request> {
     final Map<String, String> context = Maps.newHashMap();
     final HttpRequest.Builder builder = new HttpRequest.Builder(this.method, getUrl(context));
 
-    for (final Map.Entry<String, String> header : this.headers.entrySet()) {
-      builder.withHeader(header.getKey(), header.getValue());
+    for (final Map.Entry<String, Supplier<String>> header : this.headers.entrySet()) {
+      builder.withHeader(header.getKey(), header.getValue().get());
     }
 
     if (this.id != null)

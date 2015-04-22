@@ -45,6 +45,7 @@ import com.cleversafe.og.http.HttpUtil;
 import com.cleversafe.og.http.ResponseBodyConsumer;
 import com.cleversafe.og.http.Scheme;
 import com.cleversafe.og.json.AuthType;
+import com.cleversafe.og.json.ChoiceConfig;
 import com.cleversafe.og.json.ClientConfig;
 import com.cleversafe.og.json.ConcurrencyConfig;
 import com.cleversafe.og.json.ConcurrencyType;
@@ -54,6 +55,7 @@ import com.cleversafe.og.json.HostConfig;
 import com.cleversafe.og.json.OGConfig;
 import com.cleversafe.og.json.ObjectManagerConfig;
 import com.cleversafe.og.json.OperationConfig;
+import com.cleversafe.og.json.SelectionConfig;
 import com.cleversafe.og.json.SelectionType;
 import com.cleversafe.og.json.StoppingConditionsConfig;
 import com.cleversafe.og.object.AbstractObjectNameConsumer;
@@ -351,32 +353,56 @@ public class OGModule extends AbstractModule {
   @Provides
   @Singleton
   @WriteHeaders
-  public Map<String, String> provideWriteHeaders() {
+  public Map<String, Supplier<String>> provideWriteHeaders() {
     return provideHeaders(this.config.getWrite().getHeaders());
   }
 
   @Provides
   @Singleton
   @ReadHeaders
-  public Map<String, String> provideReadHeaders() {
+  public Map<String, Supplier<String>> provideReadHeaders() {
     return provideHeaders(this.config.getRead().getHeaders());
   }
 
   @Provides
   @Singleton
   @DeleteHeaders
-  public Map<String, String> provideDeleteHeaders() {
+  public Map<String, Supplier<String>> provideDeleteHeaders() {
     return provideHeaders(this.config.getDelete().getHeaders());
   }
 
-  private Map<String, String> provideHeaders(Map<String, String> operationHeaders) {
+  private Map<String, Supplier<String>> provideHeaders(
+      Map<String, SelectionConfig<String>> operationHeaders) {
     checkNotNull(operationHeaders);
+    Map<String, SelectionConfig<String>> configHeaders = this.config.getHeaders();
+    if (operationHeaders.size() > 0) {
+      configHeaders = operationHeaders;
+    }
 
-    Map<String, String> headers = Maps.newLinkedHashMap();
-    headers.putAll(this.config.getHeaders());
-    headers.putAll(operationHeaders);
+    Map<String, Supplier<String>> headers = Maps.newLinkedHashMap();
+    for (Map.Entry<String, SelectionConfig<String>> e : configHeaders.entrySet()) {
+      headers.put(e.getKey(), createHeaderSuppliers(e.getValue()));
+    }
 
     return headers;
+  }
+
+  private Supplier<String> createHeaderSuppliers(SelectionConfig<String> selectionConfig) {
+    // FIXME create generalized process for creating random or roundrobin suppliers regardless
+    // of config type
+    if (SelectionType.ROUNDROBIN == selectionConfig.selection) {
+      final List<String> choiceList = Lists.newArrayList();
+      for (final ChoiceConfig<String> choice : selectionConfig.choices) {
+        choiceList.add(choice.choice);
+      }
+      return Suppliers.cycle(choiceList);
+    }
+
+    final RandomSupplier.Builder<String> wrc = Suppliers.random();
+    for (final ChoiceConfig<String> choice : selectionConfig.choices) {
+      wrc.withChoice(choice.choice, choice.weight);
+    }
+    return wrc.build();
   }
 
   @Provides
@@ -548,13 +574,13 @@ public class OGModule extends AbstractModule {
       @Named("port") final Integer port, @Named("uri.root") final String uriRoot,
       @Named("container") final Function<Map<String, String>, String> container,
       @WriteObjectName final Function<Map<String, String>, String> object,
-      @WriteHeaders final Map<String, String> headers, final Supplier<Body> body,
+      @WriteHeaders final Map<String, Supplier<String>> headers, final Supplier<Body> body,
       @Named("authentication.username") final String username,
       @Named("authentication.password") final String password) {
     checkNotNull(api);
     // SOH needs to use a special response consumer to extract the returned object id
     if (Api.SOH == api)
-      headers.put(Headers.X_OG_RESPONSE_BODY_CONSUMER, SOH_PUT_OBJECT);
+      headers.put(Headers.X_OG_RESPONSE_BODY_CONSUMER, Suppliers.of(SOH_PUT_OBJECT));
 
     return createRequestSupplier(id, Method.PUT, scheme, host, port, uriRoot, container, object,
         headers, body, username, password);
@@ -568,7 +594,7 @@ public class OGModule extends AbstractModule {
       @Named("port") final Integer port, @Named("uri.root") final String uriRoot,
       @Named("container") final Function<Map<String, String>, String> container,
       @ReadObjectName final Function<Map<String, String>, String> object,
-      @ReadHeaders final Map<String, String> headers,
+      @ReadHeaders final Map<String, Supplier<String>> headers,
       @Named("authentication.username") final String username,
       @Named("authentication.password") final String password) {
     return createRequestSupplier(id, Method.GET, scheme, host, port, uriRoot, container, object,
@@ -583,7 +609,7 @@ public class OGModule extends AbstractModule {
       @Named("port") final Integer port, @Named("uri.root") final String uriRoot,
       @Named("container") final Function<Map<String, String>, String> container,
       @DeleteObjectName final Function<Map<String, String>, String> object,
-      @DeleteHeaders final Map<String, String> headers,
+      @DeleteHeaders final Map<String, Supplier<String>> headers,
       @Named("authentication.username") final String username,
       @Named("authentication.password") final String password) {
     return createRequestSupplier(id, Method.DELETE, scheme, host, port, uriRoot, container, object,
@@ -593,8 +619,9 @@ public class OGModule extends AbstractModule {
   private Supplier<Request> createRequestSupplier(@Named("request.id") final Supplier<String> id,
       final Method method, Scheme scheme, final Supplier<String> host, final Integer port,
       final String uriRoot, final Function<Map<String, String>, String> container,
-      final Function<Map<String, String>, String> object, final Map<String, String> headers,
-      final Supplier<Body> body, final String username, final String password) {
+      final Function<Map<String, String>, String> object,
+      final Map<String, Supplier<String>> headers, final Supplier<Body> body,
+      final String username, final String password) {
 
     return new RequestSupplier(id, method, scheme, host, port, uriRoot, container, object,
         Collections.<String, String>emptyMap(), false, headers, username, password, body);

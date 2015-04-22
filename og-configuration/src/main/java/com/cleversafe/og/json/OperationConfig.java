@@ -18,7 +18,7 @@ public class OperationConfig {
   double weight;
   SelectionType hostSelection;
   List<HostConfig> host;
-  Map<String, String> headers;
+  Map<String, SelectionConfig<String>> headers;
 
   public OperationConfig(final double weight) {
     this();
@@ -44,7 +44,7 @@ public class OperationConfig {
     return this.host;
   }
 
-  public Map<String, String> getHeaders() {
+  public Map<String, SelectionConfig<String>> getHeaders() {
     return this.headers;
   }
 }

@@ -25,7 +25,7 @@ public class OGConfig {
   Api api;
   String uriRoot;
   String container;
-  Map<String, String> headers;
+  Map<String, SelectionConfig<String>> headers;
   OperationConfig write;
   OperationConfig read;
   OperationConfig delete;
@@ -89,7 +89,7 @@ public class OGConfig {
     return this.container;
   }
 
-  public Map<String, String> getHeaders() {
+  public Map<String, SelectionConfig<String>> getHeaders() {
     return this.headers;
   }
 
