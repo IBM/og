@@ -159,7 +159,7 @@
 // The credentials to use for the test. If username is set, password must
 // also be set.
 //
-// "type" is one of ("basic", "awsv2").
+// "type" is one of ("basic", "awsv2", "awsv4").
 
 // "authentication": {
 // "type": "basic",

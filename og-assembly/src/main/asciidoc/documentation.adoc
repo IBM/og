@@ -226,7 +226,7 @@ in a directory of your choosing.
 |Parameter|Type|Default
 
 |type
-|Enum ("basic", "awsv2")
+|Enum ("basic", "awsv2", "awsv4")
 |"basic"
 
 |username
