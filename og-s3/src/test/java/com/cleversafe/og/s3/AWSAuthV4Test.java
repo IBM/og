@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -33,6 +34,7 @@ import com.cleversafe.og.s3.v4.AWSAuthV4AuthHeader;
 import com.google.common.net.HttpHeaders;
 
 
+@Ignore
 @RunWith(Parameterized.class)
 public class AWSAuthV4Test {
 

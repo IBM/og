@@ -22,7 +22,7 @@ import javax.crypto.spec.SecretKeySpec;
 /**
  * Common methods and properties for all AWS4 signer variants
  */
-public abstract class AWS4SignerBase {
+public class AWS4SignerBase {
 
   /** SHA256 hash of an empty request body **/
   public static final String EMPTY_BODY_SHA256 =

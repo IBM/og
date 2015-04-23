@@ -16,14 +16,13 @@ import java.util.Collections;
 import java.util.Map;
 
 import com.cleversafe.og.api.Request;
-import com.cleversafe.og.http.HttpAuth;
 
-public class AWSAuthV4Chunked implements HttpAuth {
+public class AWSAuthV4Chunked extends AWSAuthV4Base {
 
-  private final String REGION_NAME = "us-east-1";
-  private final String SERVICE_NAME = "s3";
 
-  public AWSAuthV4Chunked() {}
+  public AWSAuthV4Chunked() {
+    super("dsnet", "s3", null);
+  }
 
   @Override
   public Map<String, String> getAuthorizationHeaders(Request request) {
@@ -35,9 +34,9 @@ public class AWSAuthV4Chunked implements HttpAuth {
           + ") to  URL:" + e.getMessage());
     }
 
+    @SuppressWarnings("unused")
     final AWS4SignerBase signer =
-        new AWS4SignerForChunkedUpload(url, request.getMethod().toString(), SERVICE_NAME,
-            REGION_NAME);
+        new AWS4SignerForChunkedUpload(url, request.getMethod().toString(), serviceName, regionName);
     return Collections.emptyMap();
   }
 
