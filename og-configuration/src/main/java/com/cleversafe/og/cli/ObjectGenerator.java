@@ -8,8 +8,11 @@
 
 package com.cleversafe.og.cli;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.io.File;
 import java.util.concurrent.CompletionService;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -82,6 +85,7 @@ public class ObjectGenerator {
         new ExecutorCompletionService<Boolean>(executorService);
     long timestampStart = 0;
     long timestampFinish = 0;
+    CountDownLatch shutdownLatch = new CountDownLatch(1);
 
     logBanner();
 
@@ -98,7 +102,7 @@ public class ObjectGenerator {
       client = injector.getInstance(Client.class);
       objectManager = injector.getInstance(ObjectManager.class);
       statistics = injector.getInstance(Statistics.class);
-      Runtime.getRuntime().addShutdownHook(new ShutdownHook(Thread.currentThread()));
+      Runtime.getRuntime().addShutdownHook(new ShutdownHook(Thread.currentThread(), shutdownLatch));
 
       _logger.info("{}", test);
       _consoleLogger.info("Configured.");
@@ -140,6 +144,8 @@ public class ObjectGenerator {
         }
       }
     }
+
+    shutdownLatch.countDown();
 
     if (!success)
       Application.exit(Application.TEST_ERROR);
@@ -198,15 +204,17 @@ public class ObjectGenerator {
 
   private static class ShutdownHook extends Thread {
     private final Thread mainThread;
+    private final CountDownLatch shutdownLatch;
 
-    public ShutdownHook(final Thread mainThread) {
-      this.mainThread = mainThread;
+    public ShutdownHook(final Thread mainThread, final CountDownLatch shutdownLatch) {
+      this.mainThread = checkNotNull(mainThread);
+      this.shutdownLatch = checkNotNull(shutdownLatch);
     }
 
     @Override
     public void run() {
       this.mainThread.interrupt();
-      Uninterruptibles.joinUninterruptibly(this.mainThread, 1, TimeUnit.MINUTES);
+      Uninterruptibles.awaitUninterruptibly(this.shutdownLatch, 1, TimeUnit.MINUTES);
     }
   }
 }
