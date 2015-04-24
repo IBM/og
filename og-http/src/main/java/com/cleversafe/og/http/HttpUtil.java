@@ -13,11 +13,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.net.URI;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.util.Operation;
 import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ContiguousSet;
+import com.google.common.collect.DiscreteDomain;
 import com.google.common.collect.Range;
 
 /**
@@ -27,8 +29,10 @@ import com.google.common.collect.Range;
  */
 public class HttpUtil {
   private static final Splitter URI_SPLITTER = Splitter.on("/").omitEmptyStrings();
-  public static final Range<Integer> VALID_STATUS_CODES = Range.closed(100, 599);
-  public static final List<Integer> SUCCESS_STATUS_CODES = ImmutableList.of(200, 201, 204);
+  public static final Set<Integer> VALID_STATUS_CODES = ContiguousSet.create(
+      Range.closed(100, 599), DiscreteDomain.integers());
+  public static final Set<Integer> SUCCESS_STATUS_CODES = ContiguousSet.create(
+      Range.closed(200, 299), DiscreteDomain.integers());
 
   private HttpUtil() {}
 

@@ -15,7 +15,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.List;
+import java.util.Set;
 
 import org.junit.Test;
 
@@ -26,7 +26,7 @@ import com.google.common.collect.ImmutableMap;
 public class WriteObjectNameConsumerTest extends AbstractObjectNameConsumerTest {
   @Override
   public AbstractObjectNameConsumer create(final ObjectManager objectManager,
-      final List<Integer> statusCodes) {
+      final Set<Integer> statusCodes) {
     return new WriteObjectNameConsumer(objectManager, statusCodes);
   }
 

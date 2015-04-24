@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.inject.Named;
@@ -227,7 +228,7 @@ public class OGModule extends AbstractModule {
   @Singleton
   public List<AbstractObjectNameConsumer> provideObjectNameConsumers(
       final ObjectManager objectManager, final EventBus eventBus) {
-    final List<Integer> sc = HttpUtil.SUCCESS_STATUS_CODES;
+    final Set<Integer> sc = HttpUtil.SUCCESS_STATUS_CODES;
     final List<AbstractObjectNameConsumer> consumers = Lists.newArrayList();
     consumers.add(new WriteObjectNameConsumer(objectManager, sc));
     consumers.add(new ReadObjectNameConsumer(objectManager, sc));

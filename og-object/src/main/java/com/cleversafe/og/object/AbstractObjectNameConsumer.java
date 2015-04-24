@@ -11,7 +11,7 @@ package com.cleversafe.og.object;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.List;
+import java.util.Set;
 
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
@@ -19,8 +19,7 @@ import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpUtil;
 import com.cleversafe.og.util.Operation;
 import com.cleversafe.og.util.Pair;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.Subscribe;
 
 /**
@@ -31,7 +30,7 @@ import com.google.common.eventbus.Subscribe;
 public abstract class AbstractObjectNameConsumer {
   protected final ObjectManager objectManager;
   private final Operation operation;
-  private final List<Integer> statusCodes;
+  private final Set<Integer> statusCodes;
 
   /**
    * Constructs an instance
@@ -42,10 +41,10 @@ public abstract class AbstractObjectNameConsumer {
    * @throws IllegalArgumentException if any status code in status codes is invalid
    */
   public AbstractObjectNameConsumer(final ObjectManager objectManager, final Operation operation,
-      final List<Integer> statusCodes) {
+      final Set<Integer> statusCodes) {
     this.objectManager = checkNotNull(objectManager);
     this.operation = checkNotNull(operation);
-    this.statusCodes = ImmutableList.copyOf(statusCodes);
+    this.statusCodes = ImmutableSet.copyOf(statusCodes);
     checkArgument(!this.statusCodes.isEmpty(), "statusCodes must not be empty");
     for (final int statusCode : this.statusCodes) {
       checkArgument(HttpUtil.VALID_STATUS_CODES.contains(statusCode),
@@ -69,7 +68,7 @@ public abstract class AbstractObjectNameConsumer {
       return;
 
     // if the status code of this response does not match what can be consumed, ignore
-    if (!Iterables.contains(this.statusCodes, response.getStatusCode()))
+    if (!statusCodes.contains(response.getStatusCode()))
       return;
 
     final String objectString = getObjectString(request, response);
