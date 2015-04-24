@@ -96,14 +96,6 @@ public class HttpRequest implements Request {
       this.body = Bodies.none();
     }
 
-    public Builder(final Method method, final URI uri, final String date) {
-      this.method = method;
-      this.uri = uri;
-      this.headers = Maps.newLinkedHashMap();
-      this.headers.put("Date", date);
-      this.body = Bodies.none();
-    }
-
     /**
      * Configures a request header to include with this request
      * 

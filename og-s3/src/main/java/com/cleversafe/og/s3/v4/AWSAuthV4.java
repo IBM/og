@@ -28,14 +28,14 @@ import com.cleversafe.og.http.HttpAuth;
 import com.cleversafe.og.util.io.Streams;
 import com.google.common.net.HttpHeaders;
 
-public class AWSAuthV4AuthHeader extends AWSAuthV4Base implements HttpAuth {
-  private static Logger _logger = LoggerFactory.getLogger(AWSAuthV4AuthHeader.class);
+public class AWSAuthV4 extends AWSAuthV4Base implements HttpAuth {
+  private static Logger _logger = LoggerFactory.getLogger(AWSAuthV4.class);
 
-  public AWSAuthV4AuthHeader() {
+  public AWSAuthV4() {
     super("us-east-1", "s3", null);
   }
 
-  public AWSAuthV4AuthHeader(String regionName, String serviceName, Long forcedDate) {
+  public AWSAuthV4(String regionName, String serviceName, Long forcedDate) {
     super(regionName, serviceName, forcedDate);
   }
 

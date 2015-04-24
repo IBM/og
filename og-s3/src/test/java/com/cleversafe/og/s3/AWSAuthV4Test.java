@@ -30,7 +30,7 @@ import org.junit.runners.Parameterized;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpRequest;
-import com.cleversafe.og.s3.v4.AWSAuthV4AuthHeader;
+import com.cleversafe.og.s3.v4.AWSAuthV4;
 import com.google.common.net.HttpHeaders;
 
 
@@ -51,7 +51,7 @@ public class AWSAuthV4Test {
   private final String authz;
   @SuppressWarnings("unused")
   private final String sreq;
-  private final AWSAuthV4AuthHeader authV4;
+  private final AWSAuthV4 authV4;
 
   /**
    * 
@@ -94,7 +94,7 @@ public class AWSAuthV4Test {
 
     // Hardcode the fields to match the aws test data.
     // 1315611360000 Mon, 09 Sep 2011 23:36:00 GMT
-    this.authV4 = new AWSAuthV4AuthHeader("us-east-1", "host", 1315611360000l);
+    this.authV4 = new AWSAuthV4("us-east-1", "host", 1315611360000l);
   }
 
   @Test
@@ -106,8 +106,8 @@ public class AWSAuthV4Test {
     final URI uri = new URI(uriSplit[0]);
     // final String queryParameters = uriSplit.length > 1 ? uriSplit[1] : "";
 
-    HttpRequest.Builder builder =
-        new HttpRequest.Builder(Method.fromString(method), uri, AWS_TEST_DATE);
+    HttpRequest.Builder builder = new HttpRequest.Builder(Method.fromString(method), uri);
+    builder.withHeader("Date", AWS_TEST_DATE);
 
     final String[] headers = this.req.split("\n");
     // Skip the first line since that doesn't have headers

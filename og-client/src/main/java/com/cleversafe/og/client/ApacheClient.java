@@ -231,14 +231,17 @@ public class ApacheClient implements Client {
 
     for (final Entry<String, String> header : request.headers().entrySet()) {
       String key = header.getKey();
+      // Filter out OG config headers, and give precedence to auth headers since their versions are
+      // likely signed
       if (key.startsWith("x-og") || authHeaders.containsKey(key))
         continue;
-      builder.addHeader(key, header.getValue());
+      else
+        builder.addHeader(key, header.getValue());
     }
 
     if (DataType.NONE != request.getBody().getDataType()) {
       final AbstractHttpEntity entity =
-          new CustomHttpEntity(request.getBody(), this.writeThroughput);
+          new CustomHttpEntity(request, this.authentication, this.writeThroughput);
       // TODO chunk size for chunked encoding is hardcoded to 2048 bytes. Can only be overridden
       // by implementing a custom connection factory
       entity.setChunked(this.chunkedEncoding);

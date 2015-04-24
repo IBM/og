@@ -17,7 +17,8 @@ import java.io.OutputStream;
 
 import org.apache.http.entity.AbstractHttpEntity;
 
-import com.cleversafe.og.api.Body;
+import com.cleversafe.og.api.Request;
+import com.cleversafe.og.http.HttpAuth;
 import com.cleversafe.og.util.io.Streams;
 import com.google.common.io.ByteStreams;
 
@@ -27,13 +28,15 @@ import com.google.common.io.ByteStreams;
  * @since 1.0
  */
 public class CustomHttpEntity extends AbstractHttpEntity {
-  private final Body body;
+  private final Request request;
+  private final HttpAuth auth;
   private final long writeThroughput;
   private long requestContentStart;
   private long requestContentFinish;
 
-  public CustomHttpEntity(Body body, long writeThroughput) {
-    this.body = checkNotNull(body);
+  public CustomHttpEntity(Request request, HttpAuth auth, long writeThroughput) {
+    this.request = checkNotNull(request);
+    this.auth = checkNotNull(auth);
     checkArgument(this.writeThroughput >= 0, "writeThroughput must be >= 0 [%s]",
         this.writeThroughput);
     this.writeThroughput = writeThroughput;
@@ -46,14 +49,14 @@ public class CustomHttpEntity extends AbstractHttpEntity {
 
   @Override
   public long getContentLength() {
-    return this.body.getSize();
+    return this.auth.getContentLength(request);
   }
 
   @Override
   public InputStream getContent() throws IOException, IllegalStateException {
     this.requestContentStart = 0;
     this.requestContentFinish = 0;
-    return Streams.create(this.body);
+    return auth.wrapStream(Streams.create(this.request.getBody()));
   }
 
   @Override
@@ -85,7 +88,7 @@ public class CustomHttpEntity extends AbstractHttpEntity {
 
   @Override
   public String toString() {
-    return String.format("CustomHttpEntity [body=%s, writeThroughput=%s]", this.body,
+    return String.format("CustomHttpEntity [body=%s, writeThroughput=%s]", this.request.getBody(),
         this.writeThroughput);
   }
 }
