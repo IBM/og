@@ -76,9 +76,11 @@ public class Statistics {
     updateCounter(operation, Counter.OPERATIONS, 1);
     updateCounter(Operation.ALL, Counter.OPERATIONS, 1);
 
-    final long bytes = getBytes(operation, request, response);
-    updateCounter(operation, Counter.BYTES, bytes);
-    updateCounter(Operation.ALL, Counter.BYTES, bytes);
+    if (HttpUtil.SUCCESS_STATUS_CODES.contains(response.getStatusCode())) {
+      final long bytes = getBytes(operation, request, response);
+      updateCounter(operation, Counter.BYTES, bytes);
+      updateCounter(Operation.ALL, Counter.BYTES, bytes);
+    }
     updateStatusCode(operation, response.getStatusCode());
     updateStatusCode(Operation.ALL, response.getStatusCode());
   }

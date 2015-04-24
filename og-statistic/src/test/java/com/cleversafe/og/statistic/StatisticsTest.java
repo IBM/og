@@ -73,12 +73,32 @@ public class StatisticsTest {
   }
 
   @Test
+  public void updateUnsuccessfulStatusCode() {
+    this.stats.update(this.operation);
+    when(this.response.getStatusCode()).thenReturn(500);
+    this.stats.update(this.operation);
+    assertAll(Operation.WRITE, 2, 1024, 201, 1);
+  }
+
+  @Test
   public void updateReadBytes() {
     when(this.request.getMethod()).thenReturn(Method.GET);
     when(this.request.getBody()).thenReturn(Bodies.none());
     when(this.response.getBody()).thenReturn(Bodies.zeroes(1024));
     this.stats.update(this.operation);
     assertAll(Operation.READ, 1, 1024, 201, 1);
+  }
+
+  @Test
+  public void updateReadUnsuccessfulStatusCode() {
+    when(this.request.getMethod()).thenReturn(Method.GET);
+    when(this.request.getBody()).thenReturn(Bodies.none());
+    when(this.response.getBody()).thenReturn(Bodies.random(1024));
+
+    this.stats.update(this.operation);
+    when(this.response.getStatusCode()).thenReturn(500);
+    this.stats.update(this.operation);
+    assertAll(Operation.READ, 2, 1024, 201, 1);
   }
 
   @Test
