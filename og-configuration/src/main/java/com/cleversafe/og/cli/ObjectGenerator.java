@@ -11,6 +11,8 @@ package com.cleversafe.og.cli;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.File;
+import java.util.Collection;
+import java.util.Set;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorCompletionService;
@@ -38,14 +40,18 @@ import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.test.LoadTest;
 import com.cleversafe.og.util.SizeUnit;
 import com.cleversafe.og.util.Version;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.inject.CreationException;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.ProvisionException;
 import com.google.inject.Stage;
+import com.google.inject.spi.Message;
 
 public class ObjectGenerator {
   private static final Logger _logger = LoggerFactory.getLogger(ObjectGenerator.class);
@@ -127,6 +133,7 @@ public class ObjectGenerator {
 
       _logger.error("Exception while configuring and running test", e);
       _consoleLogger.error("Test Error. See og.log for details");
+      logConsoleException(e);
     } finally {
       if (test != null)
         test.stopTest();
@@ -149,6 +156,26 @@ public class ObjectGenerator {
 
     if (!success)
       Application.exit(Application.TEST_ERROR);
+  }
+
+  public static void logConsoleException(Exception e) {
+    if (e instanceof ProvisionException)
+      logConsoleGuiceMessages(((ProvisionException) e).getErrorMessages());
+    else if (e instanceof CreationException)
+      logConsoleGuiceMessages(((CreationException) e).getErrorMessages());
+    else
+      _consoleLogger.error(e.getMessage());
+  }
+
+  public static void logConsoleGuiceMessages(Collection<Message> messages) {
+    // guice exceptions contain many duplicate messages with slightly differing causes; we only want
+    // unique messages logged to console so filter them here
+    Set<String> uniqueMessages = Sets.newHashSet();
+    for (Message message : messages) {
+      if (!uniqueMessages.contains(message.getMessage()))
+        _consoleLogger.error(message.getMessage());
+      uniqueMessages.add(message.getMessage());
+    }
   }
 
   public static Gson createGson() {
