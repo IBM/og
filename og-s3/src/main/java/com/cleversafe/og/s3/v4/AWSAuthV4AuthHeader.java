@@ -12,7 +12,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.InputStream;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.security.InvalidParameterException;
 import java.security.MessageDigest;
 import java.util.Collections;
@@ -46,9 +45,9 @@ public class AWSAuthV4AuthHeader extends AWSAuthV4Base implements HttpAuth {
     final String secretKey = checkNotNull(request.headers().get(Headers.X_OG_PASSWORD));
 
     try {
-      final URL url = new URL("http", request.getUri().getHost(), request.getUri().toString());
       final AWS4SignerBase signer =
-          new AWS4SignerBase(url, request.getMethod().toString(), serviceName, regionName);
+          new AWS4SignerBase(request.getUri().toURL(), request.getMethod().toString(), serviceName,
+              regionName);
 
       final Date date = forcedDate == null ? new Date() : new Date(forcedDate);
       return getAuthHeaders(signer, request.headers(), Collections.<String, String>emptyMap(),
