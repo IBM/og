@@ -148,7 +148,6 @@ public class OGModule extends AbstractModule {
 
     bind(RequestManager.class).to(SimpleRequestManager.class);
     bind(LoadTest.class).in(Singleton.class);
-    bind(LoadTestSubscriberExceptionHandler.class).toInstance(this.handler);
     bind(EventBus.class).toInstance(this.eventBus);
     bind(Statistics.class).in(Singleton.class);
     bind(ObjectManager.class).to(RandomObjectPopulator.class).in(Singleton.class);
@@ -162,6 +161,10 @@ public class OGModule extends AbstractModule {
         T instance = provision.provision();
         if (instance != null) {
           OGModule.this.eventBus.register(instance);
+        }
+        if (instance instanceof LoadTest) {
+          // register LoadTest with the event bus' exception handler
+          OGModule.this.handler.setLoadTest((LoadTest) instance);
         }
       }
     });

@@ -47,13 +47,11 @@ public class LoadTest implements Callable<Boolean> {
 
   @Inject
   public LoadTest(final RequestManager requestSupplier, final Client client,
-      final Scheduler scheduler, final EventBus eventBus,
-      final LoadTestSubscriberExceptionHandler handler) {
+      final Scheduler scheduler, final EventBus eventBus) {
     this.requestManager = checkNotNull(requestSupplier);
     this.client = checkNotNull(client);
     this.scheduler = checkNotNull(scheduler);
     this.eventBus = checkNotNull(eventBus);
-    checkNotNull(handler).setLoadTest(this);
     this.running = true;
     this.success = true;
     this.activeRequests = Sets.newConcurrentHashSet();
