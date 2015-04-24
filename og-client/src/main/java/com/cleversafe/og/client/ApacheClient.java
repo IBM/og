@@ -220,16 +220,20 @@ public class ApacheClient implements Client {
     final RequestBuilder builder =
         RequestBuilder.create(request.getMethod().toString()).setUri(request.getUri());
 
+    final Map<String, String> authHeaders = Maps.newHashMap();
     if (request.headers().get(Headers.X_OG_USERNAME) != null
         && request.headers().get(Headers.X_OG_PASSWORD) != null) {
-      Map<String, String> authHeaders = this.authentication.getAuthorizationHeaders(request);
+      authHeaders.putAll(this.authentication.getAuthorizationHeaders(request));
       for (Entry<String, String> e : authHeaders.entrySet()) {
         builder.addHeader(e.getKey(), e.getValue());
       }
     }
 
     for (final Entry<String, String> header : request.headers().entrySet()) {
-      builder.addHeader(header.getKey(), header.getValue());
+      String key = header.getKey();
+      if (key.startsWith("x-og") || authHeaders.containsKey(key))
+        continue;
+      builder.addHeader(key, header.getValue());
     }
 
     if (DataType.NONE != request.getBody().getDataType()) {

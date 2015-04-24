@@ -8,7 +8,11 @@
 
 package com.cleversafe.og.s3.v4;
 
+import java.util.Map;
+import java.util.Map.Entry;
+
 import com.cleversafe.og.http.HttpAuth;
+import com.google.common.collect.Maps;
 
 public abstract class AWSAuthV4Base implements HttpAuth {
   protected final String regionName;
@@ -26,5 +30,15 @@ public abstract class AWSAuthV4Base implements HttpAuth {
     this.regionName = regionName;
     this.serviceName = serviceName;
     this.forcedDate = forcedDate;
+  }
+
+  protected Map<String, String> filterOutOgHeaders(Map<String, String> headers) {
+    final Map<String, String> filtered = Maps.newHashMap();
+    for (Entry<String, String> header : headers.entrySet()) {
+      if (!header.getKey().startsWith("x-og")) {
+        filtered.put(header.getKey(), header.getValue());
+      }
+    }
+    return filtered;
   }
 }

@@ -27,14 +27,13 @@ import com.cleversafe.og.api.Request;
 import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpAuth;
 import com.cleversafe.og.util.io.Streams;
-import com.google.common.collect.Maps;
 import com.google.common.net.HttpHeaders;
 
 public class AWSAuthV4AuthHeader extends AWSAuthV4Base implements HttpAuth {
   private static Logger _logger = LoggerFactory.getLogger(AWSAuthV4AuthHeader.class);
 
   public AWSAuthV4AuthHeader() {
-    super("dsnet", "s3", null);
+    super("us-east-1", "s3", null);
   }
 
   public AWSAuthV4AuthHeader(String regionName, String serviceName, Long forcedDate) {
@@ -46,21 +45,19 @@ public class AWSAuthV4AuthHeader extends AWSAuthV4Base implements HttpAuth {
     final String keyId = checkNotNull(request.headers().get(Headers.X_OG_USERNAME));
     final String secretKey = checkNotNull(request.headers().get(Headers.X_OG_PASSWORD));
 
-    final URL url;
     try {
-      final String host = AWS4SignerBase.findHostHeader(request.headers());
-      url = new URL("http", host, request.getUri().toString());
+      final URL url = new URL("http", request.getUri().getHost(), request.getUri().toString());
+      final AWS4SignerBase signer =
+          new AWS4SignerBase(url, request.getMethod().toString(), serviceName, regionName);
+
+      final Date date = forcedDate == null ? new Date() : new Date(forcedDate);
+      return getAuthHeaders(signer, request.headers(), Collections.<String, String>emptyMap(),
+          calculateFullBodyHash(request.getBody()), keyId, secretKey, date);
+
     } catch (MalformedURLException e) {
       throw new InvalidParameterException("Can't convert to request.URI(" + request.getUri()
           + ") to  URL:" + e.getMessage());
     }
-
-    final AWS4SignerBase signer =
-        new AWS4SignerBase(url, request.getMethod().toString(), serviceName, regionName);
-
-    final Date date = forcedDate == null ? new Date() : new Date(forcedDate);
-    return getAuthHeaders(signer, request.headers(), Collections.<String, String>emptyMap(),
-        calculateFullBodyHash(request.getBody()), keyId, secretKey, date);
   }
 
   private String calculateFullBodyHash(final Body body) {
@@ -109,17 +106,21 @@ public class AWSAuthV4AuthHeader extends AWSAuthV4Base implements HttpAuth {
   public Map<String, String> getAuthHeaders(AWS4SignerBase signer, Map<String, String> headers,
       Map<String, String> queryParameters, String bodyHash, String awsAccessKey,
       String awsSecretKey, Date date) {
-    final Map<String, String> authHeaders = Maps.newHashMap();
+
+    // Don't sign the og headers
+    final Map<String, String> authHeaders = filterOutOgHeaders(headers);
+
+    authHeaders.put("x-amz-content-sha256", bodyHash);
 
     // first get the date and time for the subsequent request, and convert
     // to ISO 8601 format for use in signature generation
-    String dateTimeStamp = signer.dateTimeFormat.format(date);
+    final String dateTimeStamp = signer.dateTimeFormat.format(date);
 
     // update the headers with required 'x-amz-date' and 'host' values
     authHeaders.put("x-amz-date", dateTimeStamp);
 
-    String hostHeader = signer.endpointUrl.getHost();
-    int port = signer.endpointUrl.getPort();
+    final String hostHeader = signer.endpointUrl.getHost();
+    final int port = signer.endpointUrl.getPort();
     if (port > -1) {
       hostHeader.concat(":" + Integer.toString(port));
     }
@@ -127,15 +128,15 @@ public class AWSAuthV4AuthHeader extends AWSAuthV4Base implements HttpAuth {
 
     // canonicalize the headers; we need the set of header names as well as the
     // names and values to go into the signature process
-    String canonicalizedHeaderNames = AWS4SignerBase.getCanonicalizeHeaderNames(headers);
-    String canonicalizedHeaders = AWS4SignerBase.getCanonicalizedHeaderString(headers);
+    final String canonicalizedHeaderNames = AWS4SignerBase.getCanonicalizeHeaderNames(authHeaders);
+    final String canonicalizedHeaders = AWS4SignerBase.getCanonicalizedHeaderString(authHeaders);
 
     // if any query string parameters have been supplied, canonicalize them
-    String canonicalizedQueryParameters =
+    final String canonicalizedQueryParameters =
         AWS4SignerBase.getCanonicalizedQueryString(queryParameters);
 
     // canonicalize the various components of the request
-    String canonicalRequest =
+    final String canonicalRequest =
         AWS4SignerBase.getCanonicalRequest(signer.endpointUrl, signer.httpMethod,
             canonicalizedQueryParameters, canonicalizedHeaderNames, canonicalizedHeaders, bodyHash);
     _logger.debug("--------- Canonical request --------");
@@ -143,10 +144,10 @@ public class AWSAuthV4AuthHeader extends AWSAuthV4Base implements HttpAuth {
     _logger.debug("------------------------------------");
 
     // construct the string to be signed
-    String dateStamp = signer.dateStampFormat.format(date);
-    String scope =
+    final String dateStamp = signer.dateStampFormat.format(date);
+    final String scope =
         dateStamp + "/" + regionName + "/" + serviceName + "/" + AWS4SignerBase.TERMINATOR;
-    String stringToSign =
+    final String stringToSign =
         AWS4SignerBase.getStringToSign(AWS4SignerBase.SCHEME, AWS4SignerBase.ALGORITHM,
             dateTimeStamp, scope, canonicalRequest);
     _logger.debug("--------- String to sign -----------");
@@ -154,18 +155,18 @@ public class AWSAuthV4AuthHeader extends AWSAuthV4Base implements HttpAuth {
     _logger.debug("------------------------------------");
 
     // compute the signing key
-    byte[] kSecret = (AWS4SignerBase.SCHEME + awsSecretKey).getBytes();
-    byte[] kDate = AWS4SignerBase.sign(dateStamp, kSecret, "HmacSHA256");
-    byte[] kRegion = AWS4SignerBase.sign(regionName, kDate, "HmacSHA256");
-    byte[] kService = AWS4SignerBase.sign(serviceName, kRegion, "HmacSHA256");
-    byte[] kSigning = AWS4SignerBase.sign(AWS4SignerBase.TERMINATOR, kService, "HmacSHA256");
-    byte[] signature = AWS4SignerBase.sign(stringToSign, kSigning, "HmacSHA256");
+    final byte[] kSecret = (AWS4SignerBase.SCHEME + awsSecretKey).getBytes();
+    final byte[] kDate = AWS4SignerBase.sign(dateStamp, kSecret, "HmacSHA256");
+    final byte[] kRegion = AWS4SignerBase.sign(regionName, kDate, "HmacSHA256");
+    final byte[] kService = AWS4SignerBase.sign(serviceName, kRegion, "HmacSHA256");
+    final byte[] kSigning = AWS4SignerBase.sign(AWS4SignerBase.TERMINATOR, kService, "HmacSHA256");
+    final byte[] signature = AWS4SignerBase.sign(stringToSign, kSigning, "HmacSHA256");
 
-    String credentialsAuthorizationHeader = "Credential=" + awsAccessKey + "/" + scope;
-    String signedHeadersAuthorizationHeader = "SignedHeaders=" + canonicalizedHeaderNames;
-    String signatureAuthorizationHeader = "Signature=" + BinaryUtils.toHex(signature);
+    final String credentialsAuthorizationHeader = "Credential=" + awsAccessKey + "/" + scope;
+    final String signedHeadersAuthorizationHeader = "SignedHeaders=" + canonicalizedHeaderNames;
+    final String signatureAuthorizationHeader = "Signature=" + BinaryUtils.toHex(signature);
 
-    String authorizationHeader =
+    final String authorizationHeader =
         AWS4SignerBase.SCHEME + "-" + AWS4SignerBase.ALGORITHM + " "
             + credentialsAuthorizationHeader + ", " + signedHeadersAuthorizationHeader + ", "
             + signatureAuthorizationHeader;

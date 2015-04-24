@@ -10,7 +10,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.SimpleTimeZone;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -248,14 +247,5 @@ public class AWS4SignerBase {
     } catch (Exception e) {
       throw new RuntimeException("Unable to calculate a request signature: " + e.getMessage(), e);
     }
-  }
-
-  public static String findHostHeader(Map<String, String> headers) {
-    for (Entry<String, String> entry : headers.entrySet()) {
-      if (entry.getKey().equalsIgnoreCase("host")) {
-        return entry.getValue();
-      }
-    }
-    throw new NullPointerException("No Host header found in map of headers");
   }
 }
