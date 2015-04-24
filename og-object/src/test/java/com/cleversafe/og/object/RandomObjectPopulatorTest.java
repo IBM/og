@@ -103,12 +103,12 @@ public class RandomObjectPopulatorTest {
   public void writeSingleIdTest() throws ObjectManagerException {
     final ObjectMetadata sid = generateId();
     RandomObjectPopulator rop = new RandomObjectPopulator(this.vaultId);
-    rop.writeNameComplete(sid);
-    Assert.assertEquals(sid, rop.acquireNameForRead());
-    rop.testComplete();
+    rop.add(sid);
+    Assert.assertEquals(sid, rop.get());
+    rop.shutdown();
     rop = new RandomObjectPopulator(this.vaultId);
-    Assert.assertEquals(sid.toString(), rop.getNameForDelete().toString());
-    rop.testComplete();
+    Assert.assertEquals(sid.toString(), rop.remove().toString());
+    rop.shutdown();
   }
 
   @Test
@@ -119,17 +119,17 @@ public class RandomObjectPopulatorTest {
       secondId = generateId();
     }
     RandomObjectPopulator rop = new RandomObjectPopulator(this.vaultId);
-    rop.writeNameComplete(firstId);
-    rop.writeNameComplete(secondId);
-    final ObjectMetadata readId = rop.acquireNameForRead();
-    final ObjectMetadata deleteId = rop.getNameForDelete();
+    rop.add(firstId);
+    rop.add(secondId);
+    final ObjectMetadata readId = rop.get();
+    final ObjectMetadata deleteId = rop.remove();
     Assert.assertTrue((readId.equals(firstId) || readId.equals(secondId)));
     Assert.assertTrue((deleteId.equals(firstId) || deleteId.equals(secondId)));
     Assert.assertFalse(readId.equals(deleteId));
-    rop.testComplete();
+    rop.shutdown();
     rop = new RandomObjectPopulator(this.vaultId);
-    Assert.assertFalse(deleteId.toString().equals(rop.acquireNameForRead().toString()));
-    rop.testComplete();
+    Assert.assertFalse(deleteId.toString().equals(rop.get().toString()));
+    rop.shutdown();
   }
 
   @Test
@@ -137,10 +137,10 @@ public class RandomObjectPopulatorTest {
       ExecutionException {
     final ObjectMetadata sid = generateId();
     final RandomObjectPopulator rop = new RandomObjectPopulator(this.vaultId);
-    rop.writeNameComplete(sid);
-    Assert.assertEquals(sid, rop.acquireNameForRead());
+    rop.add(sid);
+    Assert.assertEquals(sid, rop.get());
     // Try again for simultaneous reads
-    Assert.assertEquals(sid, rop.acquireNameForRead());
+    Assert.assertEquals(sid, rop.get());
     final boolean[] released = {false};
     class DeleteLoop implements Callable<Void> {
       final boolean[] released;
@@ -151,20 +151,20 @@ public class RandomObjectPopulatorTest {
 
       @Override
       public Void call() throws Exception {
-        rop.getNameForDelete();
+        rop.remove();
         Assert.assertTrue(this.released[0]);
         return null;
       }
     }
     final Future<Void> future =
         Executors.newSingleThreadExecutor().submit(new DeleteLoop(released));
-    rop.releaseNameFromRead(sid);
+    rop.getComplete(sid);
     released[0] = true;
     // And again for the other read
-    rop.releaseNameFromRead(sid);
+    rop.getComplete(sid);
     // The DeleteLoop should now complete
     future.get();
-    rop.testComplete();
+    rop.shutdown();
   }
 
   @Test
@@ -172,13 +172,13 @@ public class RandomObjectPopulatorTest {
     RandomObjectPopulator rop =
         new RandomObjectPopulator(this.vaultId, RandomObjectPopulatorTest.MAX_OBJECTS);
     for (int i = 0; i < RandomObjectPopulatorTest.MAX_OBJECTS; i++) {
-      rop.writeNameComplete(generateId());
+      rop.add(generateId());
     }
-    rop.testComplete();
+    rop.shutdown();
     Assert.assertEquals(getIdFiles().length, 1);
     rop = new RandomObjectPopulator(this.vaultId, RandomObjectPopulatorTest.MAX_OBJECTS);
-    rop.writeNameComplete(generateId());
-    rop.testComplete();
+    rop.add(generateId());
+    rop.shutdown();
     Assert.assertEquals(getIdFiles().length, 2);
     Assert.assertEquals(new File(prefix + 0 + suffix).length(),
         RandomObjectPopulatorTest.MAX_OBJECTS * OBJECT_SIZE);
@@ -190,15 +190,15 @@ public class RandomObjectPopulatorTest {
     RandomObjectPopulator rop =
         new RandomObjectPopulator(this.vaultId, RandomObjectPopulatorTest.MAX_OBJECTS);
     for (int i = 0; i < RandomObjectPopulatorTest.MAX_OBJECTS; i++) {
-      rop.writeNameComplete(generateId());
+      rop.add(generateId());
     }
-    rop.testComplete();
+    rop.shutdown();
     Assert.assertEquals(getIdFiles().length, 1);
     rop = new RandomObjectPopulator(this.vaultId, RandomObjectPopulatorTest.MAX_OBJECTS);
     for (int i = 0; i < 1 + RandomObjectPopulatorTest.MAX_OBJECTS * 3; i++) {
-      rop.writeNameComplete(generateId());
+      rop.add(generateId());
     }
-    rop.testComplete();
+    rop.shutdown();
     Assert.assertEquals(getIdFiles().length, 5);
     for (int i = 0; i < 4; i++) {
       Assert.assertEquals(new File(prefix + i + suffix).length(),
@@ -212,27 +212,27 @@ public class RandomObjectPopulatorTest {
     RandomObjectPopulator rop =
         new RandomObjectPopulator(this.vaultId, RandomObjectPopulatorTest.MAX_OBJECTS);
     for (int i = 0; i < RandomObjectPopulatorTest.MAX_OBJECTS; i++) {
-      rop.writeNameComplete(generateId());
+      rop.add(generateId());
     }
     // We write to objects to test borrowing one, and then two
     final int surplus = 2;
     for (int i = 0; i < surplus; i++) {
-      rop.writeNameComplete(generateId());
+      rop.add(generateId());
     }
-    rop.testComplete();
+    rop.shutdown();
 
     Assert.assertEquals(getIdFiles().length, 2);
     Assert.assertEquals(rop.getSavedObjectCount(), RandomObjectPopulatorTest.MAX_OBJECTS + surplus);
     // Borrow one id
     rop = new RandomObjectPopulator(this.vaultId, RandomObjectPopulatorTest.MAX_OBJECTS);
-    rop.getNameForDelete();
-    rop.testComplete();
+    rop.remove();
+    rop.shutdown();
     Assert.assertEquals(getIdFiles().length, 2);
     Assert.assertEquals(new File(prefix + 1 + suffix).length(), OBJECT_SIZE);
     // Borrow last id from surplus file, causing that file to be deleted
     rop = new RandomObjectPopulator(this.vaultId, RandomObjectPopulatorTest.MAX_OBJECTS);
-    rop.getNameForDelete();
-    rop.testComplete();
+    rop.remove();
+    rop.shutdown();
     Assert.assertEquals(getIdFiles().length, 1);
     Assert.assertEquals(new File(prefix + 0 + suffix).length(),
         RandomObjectPopulatorTest.MAX_OBJECTS * OBJECT_SIZE);
@@ -243,14 +243,14 @@ public class RandomObjectPopulatorTest {
     RandomObjectPopulator rop =
         new RandomObjectPopulator(this.vaultId, RandomObjectPopulatorTest.MAX_OBJECTS);
     for (int i = 0; i < RandomObjectPopulatorTest.MAX_OBJECTS * 4; i++) {
-      rop.writeNameComplete(generateId());
+      rop.add(generateId());
     }
-    rop.writeNameComplete(generateId());
-    rop.testComplete();
+    rop.add(generateId());
+    rop.shutdown();
     Assert.assertEquals(getIdFiles().length, 5);
     rop = new RandomObjectPopulator(this.vaultId, RandomObjectPopulatorTest.MAX_OBJECTS);
-    rop.getNameForDelete();
-    rop.testComplete();
+    rop.remove();
+    rop.shutdown();
     Assert.assertEquals(getIdFiles().length, 4);
     Assert.assertEquals(new File(prefix + 0 + suffix).length(),
         RandomObjectPopulatorTest.MAX_OBJECTS * OBJECT_SIZE);
@@ -264,16 +264,16 @@ public class RandomObjectPopulatorTest {
     for (int i = 0; i < RandomObjectPopulatorTest.MAX_OBJECTS; i++) {
       final ObjectMetadata sid = generateId();
       savedIds[i] = sid;
-      rop.writeNameComplete(sid);
+      rop.add(sid);
     }
 
-    rop.testComplete();
+    rop.shutdown();
     Assert.assertEquals(getIdFiles().length, 1);
     rop = new RandomObjectPopulator(this.vaultId, RandomObjectPopulatorTest.MAX_OBJECTS);
     final ObjectMetadata[] retrievedIds = new ObjectMetadata[RandomObjectPopulatorTest.MAX_OBJECTS];
 
     for (int i = 0; i < RandomObjectPopulatorTest.MAX_OBJECTS; i++) {
-      final ObjectMetadata idForDelete = rop.getNameForDelete();
+      final ObjectMetadata idForDelete = rop.remove();
       retrievedIds[i] = idForDelete;
     }
 
@@ -281,7 +281,7 @@ public class RandomObjectPopulatorTest {
     Arrays.sort(retrievedIds);
     Assert.assertArrayEquals(savedIds, retrievedIds);
 
-    rop.testComplete();
+    rop.shutdown();
     Assert.assertEquals(getIdFiles().length, 1);
     Assert.assertEquals(new File(prefix + 0 + suffix).length(), 0);
   }
@@ -303,7 +303,7 @@ public class RandomObjectPopulatorTest {
     for (int i = 0; i < 10000; i++) {
       final ObjectMetadata id = generateId();
       ids.put(id, id);
-      rop.writeNameComplete(id);
+      rop.add(id);
     }
     final AtomicBoolean running = new AtomicBoolean(true);
 
@@ -319,7 +319,7 @@ public class RandomObjectPopulatorTest {
           while (running.get()) {
             final ObjectMetadata id = generateId();
             ids.put(id, id);
-            rop.writeNameComplete(id);
+            rop.add(id);
           }
           return null;
         }
@@ -334,9 +334,9 @@ public class RandomObjectPopulatorTest {
         public Void call() throws Exception {
           while (running.get()) {
             try {
-              final ObjectMetadata id = rop.acquireNameForRead();
+              final ObjectMetadata id = rop.get();
               Assert.assertEquals(id, ids.get(id));
-              rop.releaseNameFromRead(id);
+              rop.getComplete(id);
             } catch (final ObjectManagerException e) {
               e.printStackTrace();
               System.exit(-1);
@@ -355,7 +355,7 @@ public class RandomObjectPopulatorTest {
         public Void call() throws Exception {
           while (running.get()) {
             try {
-              final ObjectMetadata id = rop.getNameForDelete();
+              final ObjectMetadata id = rop.remove();
               Assert.assertNotNull(ids.remove(id));
             } catch (final ObjectManagerException e) {
               e.printStackTrace();
@@ -373,7 +373,7 @@ public class RandomObjectPopulatorTest {
     for (final Future<Void> future : runningThreads) {
       future.get();
     }
-    rop.testComplete();
+    rop.shutdown();
 
     RandomObjectPopulator verify;
     do {
@@ -382,13 +382,13 @@ public class RandomObjectPopulatorTest {
       Assert.assertEquals(ids.size(), objectCount);
       while (true) {
         try {
-          final ObjectMetadata id = verify.getNameForDelete();
+          final ObjectMetadata id = verify.remove();
           Assert.assertEquals(id, ids.remove(id));
         } catch (final ObjectManagerException e) {
           break;
         }
       }
-      verify.testComplete();
+      verify.shutdown();
     } while (verify.getSavedObjectCount() > 0);
     Assert.assertEquals(0, ids.size());
   }

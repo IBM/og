@@ -37,17 +37,17 @@ public class WriteObjectNameConsumerTest extends AbstractObjectNameConsumerTest 
 
   @Override
   public void doVerify() {
-    verify(this.objectManager).writeNameComplete(isA(ObjectMetadata.class));
+    verify(this.objectManager).add(isA(ObjectMetadata.class));
   }
 
   @Override
   public void doVerifyNever() {
-    verify(this.objectManager, never()).writeNameComplete(isA(ObjectMetadata.class));
+    verify(this.objectManager, never()).add(isA(ObjectMetadata.class));
   }
 
   @Override
   public void doThrowIt() {
-    doThrow(new ObjectManagerException()).when(this.objectManager).writeNameComplete(
+    doThrow(new ObjectManagerException()).when(this.objectManager).add(
         any(ObjectMetadata.class));
   }
 

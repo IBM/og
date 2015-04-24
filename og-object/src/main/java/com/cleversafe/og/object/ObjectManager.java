@@ -10,58 +10,42 @@ package com.cleversafe.og.object;
 
 
 /**
- * A collection of objects, and the requisite services for persisting object names to disk.
- * Implementations of this interface may provide varying policies for how and when objects are
- * stored on disk. Caching and retrieval policies may also differ.
+ * A collection of objects and their corresponding metadata
  * 
  * @since 1.0
  */
 public interface ObjectManager {
   /**
-   * Selects an existing object name for deletion. Implementations may define whether the returned
-   * object name remains available for concurrent reading or not.
+   * Adds an object under management
    * 
-   * @return an available object name for deletion
+   * @param objectMetadata the associated metadata for this object
    */
-  ObjectMetadata getNameForDelete();
+  void add(ObjectMetadata objectMetadata);
 
   /**
-   * Selects an existing object name for reading. Implementations may define whether the returned
-   * object name remains available for concurrent reading or not.
+   * Selects an existing object name under management. Callers must call {@code getComplete } when
+   * finished with the object returned by this method
    * 
    * @return an available object name for reading
    */
-  ObjectMetadata acquireNameForRead();
+  ObjectMetadata get();
 
   /**
-   * Informs this object manager that the caller is done reading the provided object name.
-   * Implementations may use this method as an indication that an object is safe to overwrite,
-   * delete, read, etc.
+   * Informs this object manager that the caller is done reading this object
    * 
-   * @param objectName the name of the object that the caller has finished reading
+   * @param objectMetadata the object that the caller has finished using
    */
-  void releaseNameFromRead(ObjectMetadata objectName);
+  void getComplete(ObjectMetadata objectMetadata);
 
   /**
-   * Informs this object manager that the caller has completed writing an object with the provided
-   * object name.
+   * Removes an existing object name from management
    * 
-   * @param objectName the name of the object that the caller has finished writing
+   * @return an object currently under management
    */
-  void writeNameComplete(ObjectMetadata objectName);
+  ObjectMetadata remove();
 
   /**
-   * Informs this object manager that the test has ended and it should persist any in-memory object
-   * names and clean up any important resources.
-   * 
+   * Shuts down this object manager
    */
-  void testComplete();
-
-  /**
-   * Calculates the value of the current number of objects that are persisted to disk. This method
-   * does not include the count of in-memory only objects.
-   * 
-   * @return the current number of persisted objects.
-   */
-  long getSavedObjectCount();
+  void shutdown();
 }

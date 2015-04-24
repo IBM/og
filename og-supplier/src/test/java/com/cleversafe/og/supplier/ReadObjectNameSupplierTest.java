@@ -42,7 +42,7 @@ public class ReadObjectNameSupplierTest {
     final String object = "objectName";
     final ObjectMetadata objectName = mock(ObjectMetadata.class);
     when(objectName.getName()).thenReturn(object);
-    when(this.objectManager.acquireNameForRead()).thenReturn(objectName);
+    when(this.objectManager.get()).thenReturn(objectName);
 
     Map<String, String> context = Maps.newHashMap();
     assertThat(new ReadObjectNameSupplier(this.objectManager).apply(context), is(object));
@@ -51,7 +51,7 @@ public class ReadObjectNameSupplierTest {
 
   @Test(expected = ObjectManagerException.class)
   public void supplierException() {
-    when(this.objectManager.acquireNameForRead()).thenThrow(new ObjectManagerException());
+    when(this.objectManager.get()).thenThrow(new ObjectManagerException());
     new ReadObjectNameSupplier(this.objectManager).apply(Maps.<String, String>newHashMap());
   }
 }

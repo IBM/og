@@ -26,7 +26,7 @@ public class ReadObjectNameSupplier implements Function<Map<String, String>, Str
 
   @Override
   public String apply(Map<String, String> context) {
-    ObjectMetadata objectMetadata = this.objectManager.acquireNameForRead();
+    ObjectMetadata objectMetadata = this.objectManager.get();
     context.put(Headers.X_OG_OBJECT_NAME, objectMetadata.getName());
 
     return objectMetadata.getName();

@@ -31,7 +31,7 @@ public class ReadObjectNameConsumer extends AbstractObjectNameConsumer {
 
   @Override
   protected void updateObjectManager(final ObjectMetadata objectName) {
-    this.objectManager.releaseNameFromRead(objectName);
+    this.objectManager.getComplete(objectName);
   }
 
   @Override

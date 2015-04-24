@@ -210,7 +210,7 @@ public class ObjectGenerator {
   public static void shutdownObjectManager(ObjectManager objectManager) {
     try {
       if (objectManager != null)
-        objectManager.testComplete();
+        objectManager.shutdown();
     } catch (final Exception e) {
       _logger.error("Error shutting down object manager", e);
     }

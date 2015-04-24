@@ -26,7 +26,7 @@ public class DeleteObjectNameSupplier implements Function<Map<String, String>, S
 
   @Override
   public String apply(Map<String, String> context) {
-    ObjectMetadata objectMetadata = this.objectManager.getNameForDelete();
+    ObjectMetadata objectMetadata = this.objectManager.remove();
     context.put(Headers.X_OG_OBJECT_NAME, objectMetadata.getName());
 
     return objectMetadata.getName();

@@ -168,7 +168,6 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
     return dir.listFiles(new IdFilter());
   }
 
-  @Override
   public long getSavedObjectCount() {
     long count = 0;
     final File[] idFiles = getIdFiles();
@@ -188,7 +187,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
    * @see org.cleversafe.simpleobject.performance.ObjectManager#getIdForDelete()
    */
   @Override
-  public ObjectMetadata getNameForDelete() {
+  public ObjectMetadata remove() {
     this.persistLock.readLock().lock();
     try {
       ObjectMetadata id = null;
@@ -224,7 +223,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
    * @see org.cleversafe.simpleobject.performance.ObjectManager#getIdForRead()
    */
   @Override
-  public ObjectMetadata acquireNameForRead() {
+  public ObjectMetadata get() {
     if (this.testEnded) {
       throw new RuntimeException("Test already ended");
     }
@@ -258,7 +257,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
   }
 
   @Override
-  public void releaseNameFromRead(final ObjectMetadata id) {
+  public void getComplete(final ObjectMetadata id) {
     this.readingLock.writeLock().lock();
     final int count = this.currentlyReading.get(id).intValue();
     if (count > 1) {
@@ -271,7 +270,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
   }
 
   @Override
-  public void writeNameComplete(final ObjectMetadata id) {
+  public void add(final ObjectMetadata id) {
     this.persistLock.readLock().lock();
     try {
       this.objects.put(id);
@@ -379,7 +378,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
    * @see org.cleversafe.simpleobject.performance.ObjectManager#testComplete()
    */
   @Override
-  public void testComplete() {
+  public void shutdown() {
     this.testEnded = true;
     shutdownSaverThread();
     try {
