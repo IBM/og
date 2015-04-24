@@ -61,20 +61,24 @@ public class AWSAuthV4AuthHeader extends AWSAuthV4Base implements HttpAuth {
 
   private String calculateFullBodyHash(final Body body) {
     // TODO store a cash for body hashes here if performance is not adequate.
-    try {
-      InputStream s = Streams.create(body);
+    if (body.getSize() == 0) {
+      return AWS4SignerBase.EMPTY_BODY_SHA256;
+    } else {
+      try {
+        InputStream s = Streams.create(body);
 
-      MessageDigest md = MessageDigest.getInstance("SHA-256");
-      byte[] buff = new byte[8192];
-      int read = s.read(buff);
-      while (read != -1) {
-        md.update(buff, 0, read);
-        read = s.read(buff);
+        MessageDigest md = MessageDigest.getInstance("SHA-256");
+        byte[] buff = new byte[8192];
+        int read = s.read(buff);
+        while (read != -1) {
+          md.update(buff, 0, read);
+          read = s.read(buff);
+        }
+        return BinaryUtils.toHex(md.digest());
+      } catch (Exception e) {
+        throw new RuntimeException("Unable to compute hash while signing request: "
+            + e.getMessage(), e);
       }
-      return BinaryUtils.toHex(md.digest());
-    } catch (Exception e) {
-      throw new RuntimeException("Unable to compute hash while signing request: " + e.getMessage(),
-          e);
     }
   }
 
