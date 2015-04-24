@@ -181,12 +181,9 @@ public class ApacheClient implements Client {
                 new CustomHttpRequestRetryHandler(this.retryCount, this.requestSentRetry))
             .setRedirectStrategy(new CustomRedirectStrategy())
             .setDefaultRequestConfig(
-                RequestConfig.custom()
-                    .setExpectContinueEnabled(this.expectContinue)
-                    // TODO investigate performance impact of stale check (30ms reported)
-                    .setStaleConnectionCheckEnabled(true).setRedirectsEnabled(true)
-                    .setRelativeRedirectsAllowed(true).setConnectTimeout(this.connectTimeout)
-                    .setSocketTimeout(this.soTimeout)
+                RequestConfig.custom().setExpectContinueEnabled(this.expectContinue)
+                    .setRedirectsEnabled(true).setRelativeRedirectsAllowed(true)
+                    .setConnectTimeout(this.connectTimeout).setSocketTimeout(this.soTimeout)
                     // TODO should this be infinite? length of time allowed to request a connection
                     // from the pool
                     .setConnectionRequestTimeout(0).build()).build();
