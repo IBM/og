@@ -52,6 +52,15 @@ public class SelectionConfigTypeAdapterFactoryTest {
   }
 
   @Test
+  public void listPrimitiveSelectionConfig() {
+    final String json = "[75.0]";
+    final SelectionConfig<Double> config =
+        this.gson.fromJson(json, new TypeToken<SelectionConfig<Double>>() {}.getType());
+
+    assertThat(config.choices.get(0).choice, is(75.0));
+  }
+
+  @Test
   public void compactPrimitiveSelectionConfig() {
     final String json = "75.0";
     final SelectionConfig<Double> config =
@@ -63,6 +72,15 @@ public class SelectionConfigTypeAdapterFactoryTest {
   @Test
   public void fullObjectSelectionConfig() {
     final String json = "{\"selection\": \"roundrobin\", \"choices\": [{\"enabled\": \"true\"}]}";
+    final SelectionConfig<MyConfig> config =
+        this.gson.fromJson(json, new TypeToken<SelectionConfig<MyConfig>>() {}.getType());
+
+    assertThat(config.choices.get(0).choice.enabled, is(true));
+  }
+
+  @Test
+  public void listObjectSelectionConfig() {
+    final String json = "[{\"enabled\": \"true\"}]";
     final SelectionConfig<MyConfig> config =
         this.gson.fromJson(json, new TypeToken<SelectionConfig<MyConfig>>() {}.getType());
 
