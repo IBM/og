@@ -8,13 +8,11 @@
 
 package com.cleversafe.og.json;
 
-import java.util.List;
 import java.util.Map;
 
 import com.cleversafe.og.api.Data;
 import com.cleversafe.og.http.Api;
 import com.cleversafe.og.http.Scheme;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 public class OGConfig {
@@ -28,8 +26,7 @@ public class OGConfig {
   OperationConfig write;
   OperationConfig read;
   OperationConfig delete;
-  SelectionType filesizeSelection;
-  List<FilesizeConfig> filesize;
+  SelectionConfig<FilesizeConfig> filesize;
   Data data;
   ConcurrencyConfig concurrency;
   AuthenticationConfig authentication;
@@ -48,9 +45,8 @@ public class OGConfig {
     this.write = new OperationConfig();
     this.read = new OperationConfig();
     this.delete = new OperationConfig();
-    this.filesizeSelection = SelectionType.RANDOM;
-    this.filesize = Lists.newArrayList();
-    this.filesize.add(new FilesizeConfig());
+    this.filesize = new SelectionConfig<FilesizeConfig>();
+    this.filesize.choices.add(new ChoiceConfig<FilesizeConfig>(new FilesizeConfig()));
     this.data = Data.RANDOM;
     this.concurrency = new ConcurrencyConfig();
     this.authentication = new AuthenticationConfig();
@@ -99,11 +95,7 @@ public class OGConfig {
     return this.delete;
   }
 
-  public SelectionType getFilesizeSelection() {
-    return this.filesizeSelection;
-  }
-
-  public List<FilesizeConfig> getFilesize() {
+  public SelectionConfig<FilesizeConfig> getFilesize() {
     return this.filesize;
   }
 

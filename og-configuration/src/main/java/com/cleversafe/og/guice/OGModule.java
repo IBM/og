@@ -408,21 +408,22 @@ public class OGModule extends AbstractModule {
   @Provides
   @Singleton
   public Supplier<Body> provideBody() {
-    final SelectionType filesizeSelection = checkNotNull(this.config.getFilesizeSelection());
-    final List<FilesizeConfig> filesizes = checkNotNull(this.config.getFilesize());
+    SelectionConfig<FilesizeConfig> filesizeConfig = this.config.getFilesize();
+    final SelectionType filesizeSelection = checkNotNull(filesizeConfig.selection);
+    final List<ChoiceConfig<FilesizeConfig>> filesizes = checkNotNull(filesizeConfig.choices);
     checkArgument(!filesizes.isEmpty(), "filesize must not be empty");
 
     if (SelectionType.ROUNDROBIN == filesizeSelection) {
       final List<Distribution> distributions = Lists.newArrayList();
-      for (final FilesizeConfig f : filesizes) {
-        distributions.add(createSizeDistribution(f));
+      for (final ChoiceConfig<FilesizeConfig> choice : filesizes) {
+        distributions.add(createSizeDistribution(choice.choice));
       }
       return createBodySupplier(Suppliers.cycle(distributions));
     }
 
     final RandomSupplier.Builder<Distribution> wrc = Suppliers.random();
-    for (final FilesizeConfig f : filesizes) {
-      wrc.withChoice(createSizeDistribution(f), f.getWeight());
+    for (final ChoiceConfig<FilesizeConfig> f : filesizes) {
+      wrc.withChoice(createSizeDistribution(f.choice), f.weight);
     }
     return createBodySupplier(wrc.build());
   }
