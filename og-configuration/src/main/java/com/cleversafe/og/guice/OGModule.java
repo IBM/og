@@ -121,21 +121,19 @@ public class OGModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    bind(Scheme.class).toInstance(this.config.getScheme());
+    bind(Scheme.class).toInstance(this.config.scheme);
     bind(Integer.class).annotatedWith(Names.named("port")).toProvider(
-        Providers.of(this.config.getPort()));
-    bind(Api.class).toInstance(this.config.getApi());
-    bindConstant().annotatedWith(Names.named("write.weight"))
-        .to(this.config.getWrite().getWeight());
-    bindConstant().annotatedWith(Names.named("read.weight")).to(this.config.getRead().getWeight());
-    bindConstant().annotatedWith(Names.named("delete.weight")).to(
-        this.config.getDelete().getWeight());
-    bind(AuthType.class).toInstance(this.config.getAuthentication().getType());
+        Providers.of(this.config.port));
+    bind(Api.class).toInstance(this.config.api);
+    bindConstant().annotatedWith(Names.named("write.weight")).to(this.config.write.weight);
+    bindConstant().annotatedWith(Names.named("read.weight")).to(this.config.read.weight);
+    bindConstant().annotatedWith(Names.named("delete.weight")).to(this.config.delete.weight);
+    bind(AuthType.class).toInstance(this.config.authentication.type);
     bind(String.class).annotatedWith(Names.named("authentication.username")).toProvider(
-        Providers.of(this.config.getAuthentication().getUsername()));
+        Providers.of(this.config.authentication.username));
     bind(String.class).annotatedWith(Names.named("authentication.password")).toProvider(
-        Providers.of(this.config.getAuthentication().getPassword()));
-    bind(StoppingConditionsConfig.class).toInstance(this.config.getStoppingConditions());
+        Providers.of(this.config.authentication.password));
+    bind(StoppingConditionsConfig.class).toInstance(this.config.stoppingConditions);
 
     MapBinder<AuthType, HttpAuth> httpAuthBinder =
         MapBinder.newMapBinder(binder(), AuthType.class, HttpAuth.class);
@@ -181,19 +179,19 @@ public class OGModule extends AbstractModule {
 
     final List<TestCondition> conditions = Lists.newArrayList();
 
-    if (config.getOperations() > 0)
-      conditions.add(new CounterCondition(Operation.ALL, Counter.OPERATIONS,
-          config.getOperations(), test, stats));
+    if (config.operations > 0)
+      conditions.add(new CounterCondition(Operation.ALL, Counter.OPERATIONS, config.operations,
+          test, stats));
 
-    final Map<Integer, Integer> scMap = config.getStatusCodes();
+    final Map<Integer, Integer> scMap = config.statusCodes;
     for (final Entry<Integer, Integer> sc : scMap.entrySet()) {
       if (sc.getValue() > 0)
         conditions.add(new StatusCodeCondition(Operation.ALL, sc.getKey(), sc.getValue(), test,
             stats));
     }
 
-    if (config.getRuntime() > 0)
-      conditions.add(new RuntimeCondition(test, config.getRuntime(), config.getRuntimeUnit()));
+    if (config.runtime > 0)
+      conditions.add(new RuntimeCondition(test, config.runtime, config.runtimeUnit));
 
     for (final TestCondition condition : conditions) {
       eventBus.register(condition);
@@ -260,28 +258,28 @@ public class OGModule extends AbstractModule {
   @Singleton
   @Named("host")
   public Supplier<String> provideHost() {
-    return createHost(this.config.getHost());
+    return createHost(this.config.host);
   }
 
   @Provides
   @Singleton
   @WriteHost
   public Supplier<String> provideWriteHost(@Named("host") final Supplier<String> host) {
-    return provideHost(this.config.getWrite(), host);
+    return provideHost(this.config.write, host);
   }
 
   @Provides
   @Singleton
   @ReadHost
   public Supplier<String> provideReadHost(@Named("host") final Supplier<String> host) {
-    return provideHost(this.config.getRead(), host);
+    return provideHost(this.config.read, host);
   }
 
   @Provides
   @Singleton
   @DeleteHost
   public Supplier<String> provideDeleteHost(@Named("host") final Supplier<String> host) {
-    return provideHost(this.config.getDelete(), host);
+    return provideHost(this.config.delete, host);
   }
 
   private Supplier<String> provideHost(final OperationConfig operationConfig,
@@ -289,9 +287,9 @@ public class OGModule extends AbstractModule {
     checkNotNull(operationConfig);
     checkNotNull(testHost);
 
-    final SelectionConfig<String> operationHost = operationConfig.getHost();
+    final SelectionConfig<String> operationHost = operationConfig.host;
     if (operationHost != null && !operationHost.choices.isEmpty())
-      return createHost(operationConfig.getHost());
+      return createHost(operationConfig.host);
 
     return testHost;
   }
@@ -326,7 +324,7 @@ public class OGModule extends AbstractModule {
   @Singleton
   @Named("uri.root")
   public String provideUriRoot() {
-    final String uriRoot = this.config.getUriRoot();
+    final String uriRoot = this.config.uriRoot;
     if (uriRoot != null) {
       final String root = CharMatcher.is('/').trimFrom(uriRoot);
       if (root.length() > 0)
@@ -334,17 +332,17 @@ public class OGModule extends AbstractModule {
       return null;
     }
 
-    return this.config.getApi().toString().toLowerCase();
+    return this.config.api.toString().toLowerCase();
   }
 
   @Provides
   @Singleton
   @Named("container")
   public Function<Map<String, String>, String> provideContainer() {
-    final String container = checkNotNull(this.config.getContainer());
+    final String container = checkNotNull(this.config.container);
     checkArgument(container.length() > 0, "container must not be empty string");
     // FIXME may need to extract a real Function implementation, especially for multi container
-    final Supplier<String> objectSupplier = Suppliers.of(this.config.getContainer());
+    final Supplier<String> objectSupplier = Suppliers.of(this.config.container);
     return new Function<Map<String, String>, String>() {
 
       @Override
@@ -358,27 +356,27 @@ public class OGModule extends AbstractModule {
   @Singleton
   @WriteHeaders
   public Map<String, Supplier<String>> provideWriteHeaders() {
-    return provideHeaders(this.config.getWrite().getHeaders());
+    return provideHeaders(this.config.write.headers);
   }
 
   @Provides
   @Singleton
   @ReadHeaders
   public Map<String, Supplier<String>> provideReadHeaders() {
-    return provideHeaders(this.config.getRead().getHeaders());
+    return provideHeaders(this.config.read.headers);
   }
 
   @Provides
   @Singleton
   @DeleteHeaders
   public Map<String, Supplier<String>> provideDeleteHeaders() {
-    return provideHeaders(this.config.getDelete().getHeaders());
+    return provideHeaders(this.config.delete.headers);
   }
 
   private Map<String, Supplier<String>> provideHeaders(
       Map<String, SelectionConfig<String>> operationHeaders) {
     checkNotNull(operationHeaders);
-    Map<String, SelectionConfig<String>> configHeaders = this.config.getHeaders();
+    Map<String, SelectionConfig<String>> configHeaders = this.config.headers;
     if (operationHeaders.size() > 0) {
       configHeaders = operationHeaders;
     }
@@ -412,7 +410,7 @@ public class OGModule extends AbstractModule {
   @Provides
   @Singleton
   public Supplier<Body> provideBody() {
-    SelectionConfig<FilesizeConfig> filesizeConfig = this.config.getFilesize();
+    SelectionConfig<FilesizeConfig> filesizeConfig = this.config.filesize;
     final SelectionType filesizeSelection = checkNotNull(filesizeConfig.selection);
     final List<ChoiceConfig<FilesizeConfig>> filesizes = checkNotNull(filesizeConfig.choices);
     checkArgument(!filesizes.isEmpty(), "filesize must not be empty");
@@ -433,12 +431,12 @@ public class OGModule extends AbstractModule {
   }
 
   private static Distribution createSizeDistribution(final FilesizeConfig filesize) {
-    final SizeUnit averageUnit = checkNotNull(filesize.getAverageUnit());
-    final SizeUnit spreadUnit = checkNotNull(filesize.getSpreadUnit());
-    final DistributionType distribution = checkNotNull(filesize.getDistribution());
+    final SizeUnit averageUnit = checkNotNull(filesize.averageUnit);
+    final SizeUnit spreadUnit = checkNotNull(filesize.spreadUnit);
+    final DistributionType distribution = checkNotNull(filesize.distribution);
 
-    final double average = filesize.getAverage() * averageUnit.toBytes(1);
-    final double spread = filesize.getSpread() * spreadUnit.toBytes(1);
+    final double average = filesize.average * averageUnit.toBytes(1);
+    final double spread = filesize.spread * spreadUnit.toBytes(1);
 
     switch (distribution) {
       case NORMAL:
@@ -454,7 +452,7 @@ public class OGModule extends AbstractModule {
   }
 
   private Supplier<Body> createBodySupplier(final Supplier<Distribution> distributionSupplier) {
-    final Data data = checkNotNull(this.config.getData());
+    final Data data = checkNotNull(this.config.data);
     checkArgument(Data.NONE != data, "Unacceptable data [%s]", data);
 
     return new Supplier<Body>() {
@@ -476,7 +474,7 @@ public class OGModule extends AbstractModule {
   @Singleton
   @Named("objectfile.location")
   public String provideObjectFileLocation() throws IOException {
-    final String path = checkNotNull(this.config.getObjectManager().getObjectFileLocation());
+    final String path = checkNotNull(this.config.objectManager.objectFileLocation);
     checkArgument(path.length() > 0, "path must not be empty string");
 
     final File f = new File(path).getCanonicalFile();
@@ -498,8 +496,8 @@ public class OGModule extends AbstractModule {
       @Named("container") final Function<Map<String, String>, String> container, final Api api) {
     checkNotNull(container);
     checkNotNull(api);
-    final ObjectManagerConfig objectManagerConfig = checkNotNull(this.config.getObjectManager());
-    final String objectFileName = objectManagerConfig.getObjectFileName();
+    final ObjectManagerConfig objectManagerConfig = checkNotNull(this.config.objectManager);
+    final String objectFileName = objectManagerConfig.objectFileName;
 
     if (objectFileName != null && !objectFileName.isEmpty())
       return objectFileName;
@@ -512,14 +510,14 @@ public class OGModule extends AbstractModule {
   @Singleton
   public Scheduler provideScheduler(final EventBus eventBus) {
     checkNotNull(eventBus);
-    final ConcurrencyConfig concurrency = checkNotNull(this.config.getConcurrency());
-    final ConcurrencyType type = checkNotNull(concurrency.getType());
-    final DistributionType distribution = checkNotNull(concurrency.getDistribution());
+    final ConcurrencyConfig concurrency = checkNotNull(this.config.concurrency);
+    final ConcurrencyType type = checkNotNull(concurrency.type);
+    final DistributionType distribution = checkNotNull(concurrency.distribution);
 
     if (ConcurrencyType.THREADS == type) {
       final Scheduler scheduler =
-          new ConcurrentRequestScheduler((int) Math.round(concurrency.getCount()),
-              concurrency.getRampup(), concurrency.getRampupUnit());
+          new ConcurrentRequestScheduler((int) Math.round(concurrency.count), concurrency.rampup,
+              concurrency.rampupUnit);
       eventBus.register(scheduler);
       return scheduler;
     }
@@ -527,17 +525,17 @@ public class OGModule extends AbstractModule {
     Distribution count;
     switch (distribution) {
       case POISSON:
-        count = Distributions.poisson(concurrency.getCount());
+        count = Distributions.poisson(concurrency.count);
         break;
       case UNIFORM:
-        count = Distributions.uniform(concurrency.getCount(), 0.0);
+        count = Distributions.uniform(concurrency.count, 0.0);
         break;
       default:
         throw new IllegalArgumentException(String.format(
             "unacceptable scheduler distribution [%s]", distribution));
     }
-    return new RequestRateScheduler(count, concurrency.getUnit(), concurrency.getRampup(),
-        concurrency.getRampupUnit());
+    return new RequestRateScheduler(count, concurrency.unit, concurrency.rampup,
+        concurrency.rampupUnit);
   }
 
   @Provides
@@ -545,24 +543,22 @@ public class OGModule extends AbstractModule {
   public Client provideClient(final AuthType authType,
       final Map<AuthType, HttpAuth> authentication,
       final Map<String, ResponseBodyConsumer> responseBodyConsumers) {
-    ClientConfig clientConfig = this.config.getClient();
+    ClientConfig clientConfig = this.config.client;
     final ApacheClient.Builder b =
-        new ApacheClient.Builder().withConnectTimeout(clientConfig.getConnectTimeout())
-            .withSoTimeout(clientConfig.getSoTimeout())
-            .usingSoReuseAddress(clientConfig.isSoReuseAddress())
-            .withSoLinger(clientConfig.getSoLinger())
-            .usingSoKeepAlive(clientConfig.isSoKeepAlive())
-            .usingTcpNoDelay(clientConfig.isTcpNoDelay())
-            .usingPersistentConnections(clientConfig.isPersistentConnections())
-            .usingChunkedEncoding(clientConfig.isChunkedEncoding())
-            .usingExpectContinue(clientConfig.isExpectContinue())
-            .withWaitForContinue(clientConfig.getWaitForContinue())
-            .withRetryCount(clientConfig.getRetryCount())
-            .usingRequestSentRetry(clientConfig.isRequestSentRetry())
+        new ApacheClient.Builder().withConnectTimeout(clientConfig.connectTimeout)
+            .withSoTimeout(clientConfig.soTimeout).usingSoReuseAddress(clientConfig.soReuseAddress)
+            .withSoLinger(clientConfig.soLinger).usingSoKeepAlive(clientConfig.soKeepAlive)
+            .usingTcpNoDelay(clientConfig.tcpNoDelay)
+            .usingPersistentConnections(clientConfig.persistentConnections)
+            .usingChunkedEncoding(clientConfig.chunkedEncoding)
+            .usingExpectContinue(clientConfig.expectContinue)
+            .withWaitForContinue(clientConfig.waitForContinue)
+            .withRetryCount(clientConfig.retryCount)
+            .usingRequestSentRetry(clientConfig.requestSentRetry)
             .withAuthentication(authentication.get(authType))
             .withUserAgent(Version.displayVersion())
-            .withWriteThroughput(clientConfig.getWriteThroughput())
-            .withReadThroughput(clientConfig.getReadThroughput());
+            .withWriteThroughput(clientConfig.writeThroughput)
+            .withReadThroughput(clientConfig.readThroughput);
 
     for (final Entry<String, ResponseBodyConsumer> consumer : responseBodyConsumers.entrySet()) {
       b.withResponseBodyConsumer(consumer.getKey(), consumer.getValue());

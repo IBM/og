@@ -16,23 +16,23 @@ import com.cleversafe.og.http.Scheme;
 import com.google.common.collect.Maps;
 
 public class OGConfig {
-  Scheme scheme;
-  SelectionConfig<String> host;
-  Integer port;
-  Api api;
-  String uriRoot;
-  String container;
-  Map<String, SelectionConfig<String>> headers;
-  OperationConfig write;
-  OperationConfig read;
-  OperationConfig delete;
-  SelectionConfig<FilesizeConfig> filesize;
-  Data data;
-  ConcurrencyConfig concurrency;
-  AuthenticationConfig authentication;
-  ClientConfig client;
-  StoppingConditionsConfig stoppingConditions;
-  ObjectManagerConfig objectManager;
+  public Scheme scheme;
+  public SelectionConfig<String> host;
+  public Integer port;
+  public Api api;
+  public String uriRoot;
+  public String container;
+  public Map<String, SelectionConfig<String>> headers;
+  public OperationConfig write;
+  public OperationConfig read;
+  public OperationConfig delete;
+  public SelectionConfig<FilesizeConfig> filesize;
+  public Data data;
+  public ConcurrencyConfig concurrency;
+  public AuthenticationConfig authentication;
+  public ClientConfig client;
+  public StoppingConditionsConfig stoppingConditions;
+  public ObjectManagerConfig objectManager;
 
   public OGConfig() {
     this.scheme = Scheme.HTTP;
@@ -53,73 +53,5 @@ public class OGConfig {
     this.client = new ClientConfig();
     this.stoppingConditions = new StoppingConditionsConfig();
     this.objectManager = new ObjectManagerConfig();
-  }
-
-  public Scheme getScheme() {
-    return this.scheme;
-  }
-
-  public SelectionConfig<String> getHost() {
-    return this.host;
-  }
-
-  public Integer getPort() {
-    return this.port;
-  }
-
-  public Api getApi() {
-    return this.api;
-  }
-
-  public String getUriRoot() {
-    return this.uriRoot;
-  }
-
-  public String getContainer() {
-    return this.container;
-  }
-
-  public Map<String, SelectionConfig<String>> getHeaders() {
-    return this.headers;
-  }
-
-  public OperationConfig getWrite() {
-    return this.write;
-  }
-
-  public OperationConfig getRead() {
-    return this.read;
-  }
-
-  public OperationConfig getDelete() {
-    return this.delete;
-  }
-
-  public SelectionConfig<FilesizeConfig> getFilesize() {
-    return this.filesize;
-  }
-
-  public Data getData() {
-    return this.data;
-  }
-
-  public ConcurrencyConfig getConcurrency() {
-    return this.concurrency;
-  }
-
-  public AuthenticationConfig getAuthentication() {
-    return this.authentication;
-  }
-
-  public ClientConfig getClient() {
-    return client;
-  }
-
-  public StoppingConditionsConfig getStoppingConditions() {
-    return this.stoppingConditions;
-  }
-
-  public ObjectManagerConfig getObjectManager() {
-    return this.objectManager;
   }
 }

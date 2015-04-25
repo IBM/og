@@ -40,7 +40,7 @@ public class OperationConfigTypeAdapterFactoryTest {
     final String json = "{\"weight\": 35.0}";
     final OperationConfig config = this.gson.fromJson(json, OperationConfig.class);
 
-    assertThat(config.getWeight(), is(35.0));
+    assertThat(config.weight, is(35.0));
   }
 
   @Test
@@ -48,7 +48,7 @@ public class OperationConfigTypeAdapterFactoryTest {
     final String json = "45.0";
     final OperationConfig config = this.gson.fromJson(json, OperationConfig.class);
 
-    assertThat(config.getWeight(), is(45.0));
+    assertThat(config.weight, is(45.0));
   }
 
   @Test
