@@ -233,6 +233,12 @@
         <artifactId>guice-multibindings</artifactId>
         <version>4.0-beta5</version>
       </dependency>
+      <dependency>
+        <groupId>com.lmax</groupId>
+        <artifactId>disruptor</artifactId>
+        <version>3.3.2</version>
+        <scope>runtime</scope>
+      </dependency>
     </dependencies>
   </dependencyManagement>
   <dependencies>
@@ -286,7 +292,12 @@
         <groupId>org.slf4j</groupId>
         <artifactId>jcl-over-slf4j</artifactId>
         <scope>runtime</scope>
-      </dependency>
+    </dependency>
+    <dependency>
+      <groupId>com.lmax</groupId>
+      <artifactId>disruptor</artifactId>
+      <scope>runtime</scope>
+    </dependency>
   </dependencies>
   <repositories>
     <repository>
