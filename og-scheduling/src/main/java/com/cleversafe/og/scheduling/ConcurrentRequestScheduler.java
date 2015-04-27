@@ -27,6 +27,8 @@ import com.google.common.util.concurrent.Uninterruptibles;
 
 /**
  * A scheduler which simulates concurrent actions
+ * 
+ * @since 1.0
  */
 public class ConcurrentRequestScheduler implements Scheduler {
   private static final Logger _logger = LoggerFactory.getLogger(ConcurrentRequestScheduler.class);

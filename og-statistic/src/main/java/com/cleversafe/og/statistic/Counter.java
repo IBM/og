@@ -8,6 +8,11 @@
 
 package com.cleversafe.og.statistic;
 
+/**
+ * A query-able type of counter
+ * 
+ * @since 1.0
+ */
 public enum Counter {
   OPERATIONS, BYTES;
 }
