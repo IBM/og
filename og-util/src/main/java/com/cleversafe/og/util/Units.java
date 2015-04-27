@@ -18,6 +18,8 @@ import com.google.common.collect.ImmutableMap;
 
 /**
  * A utility class for working with units
+ * 
+ * @since 1.0
  */
 public class Units {
   private static final Map<String, TimeUnit> TIME_UNITS;

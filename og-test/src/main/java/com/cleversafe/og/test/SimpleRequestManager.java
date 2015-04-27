@@ -25,12 +25,31 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.Range;
 import com.google.common.math.DoubleMath;
 
+/**
+ * A request manager which provides basic write/read/delete capability
+ * 
+ * @since 1.0
+ */
 public class SimpleRequestManager implements RequestManager {
   private static Logger _logger = LoggerFactory.getLogger(SimpleRequestManager.class);
   private static final Range<Double> PERCENTAGE = Range.closed(0.0, 100.0);
   private static final double ERR = Math.pow(0.1, 6);
   private Supplier<Supplier<Request>> requestSupplier;
 
+  /**
+   * Creates an instance. This manager determines which type of request to generate based on the
+   * provided weights for each request type.
+   * 
+   * @param write a supplier of write requests
+   * @param writeWeight percentage of the time that a write request should be generated
+   * @param read a supplier of read requests
+   * @param readWeight percentage of the time that a read request should be generated
+   * @param delete a supplier of delete requests
+   * @param deleteWeight percentage of the time that a delete request should be generated
+   * @throws NullPointerException if write, read, or delete are null
+   * @throws IllegalArgumentException if writeWeight, readWeight, or deleteWeight are not in the
+   *         range [0.0, 100.0], or if the sum of the individual weights is not 100.0
+   */
   @Inject
   @Singleton
   public SimpleRequestManager(@Named("write") final Supplier<Request> write,
@@ -74,5 +93,11 @@ public class SimpleRequestManager implements RequestManager {
   @Override
   public Request get() {
     return this.requestSupplier.get().get();
+  }
+
+  @Override
+  public String toString() {
+    return String.format("SimpleRequestManagert [%n" + "requestSupplier=%s%n" + "]",
+        this.requestSupplier);
   }
 }

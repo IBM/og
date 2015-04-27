@@ -16,14 +16,30 @@ import java.util.concurrent.TimeUnit;
 import com.cleversafe.og.test.LoadTest;
 import com.google.common.util.concurrent.Uninterruptibles;
 
+/**
+ * A test condition which is triggered when a period of time has elapsed
+ * 
+ * @since 1.0
+ */
 public class RuntimeCondition implements TestCondition {
   private final LoadTest test;
   private final long runtime;
+  private final TimeUnit unit;
   private final long timestampStart;
 
+  /**
+   * Creates an instance
+   * 
+   * @param test the load test to stop when this condition is triggered
+   * @param runtime the duration of time prior to the triggering of this condition
+   * @param unit the duration unit
+   * @throws NullPointerException if test or unit is null
+   * @throws IllegalArgumentException if runtime is zero or negative
+   */
   public RuntimeCondition(final LoadTest test, final double runtime, final TimeUnit unit) {
     this.test = checkNotNull(test);
     checkArgument(runtime > 0.0, "duration must be > 0.0 [%s]", runtime);
+    this.unit = checkNotNull(unit);
     this.runtime = (long) (runtime * unit.toNanos(1));
     this.timestampStart = System.nanoTime();
 
@@ -45,5 +61,11 @@ public class RuntimeCondition implements TestCondition {
     if (currentRuntime >= this.runtime)
       return true;
     return false;
+  }
+
+  @Override
+  public String toString() {
+    return String.format("RuntimeCondition [%n" + "runtime=%s,%n" + "unit=%s,%n" + "]",
+        this.runtime, this.unit);
   }
 }

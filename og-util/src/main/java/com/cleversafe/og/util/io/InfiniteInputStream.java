@@ -32,6 +32,7 @@ public class InfiniteInputStream extends InputStream {
    * take care not to modify the byte array after construction of this input stream.
    * 
    * @param buf the byte array to use as a data source for this input stream
+   * @throws NullPointerException if buf is null
    * @throws IllegalArgumentException if buf length is zero
    */
   public InfiniteInputStream(final byte[] buf) {

@@ -16,6 +16,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * A utility class for working with OG versions
+ * 
+ * @since 1.0
  */
 public class Version {
   private static final Logger _logger = LoggerFactory.getLogger(Version.class);

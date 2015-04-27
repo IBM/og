@@ -8,6 +8,12 @@
 
 package com.cleversafe.og.util;
 
+
+/**
+ * An enum for describing an operation type
+ * 
+ * @since 1.0
+ */
 public enum Operation {
   ALL, WRITE, READ, DELETE;
 }

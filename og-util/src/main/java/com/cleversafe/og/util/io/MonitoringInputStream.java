@@ -8,12 +8,16 @@
 
 package com.cleversafe.og.util.io;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
 /**
  * An <code>InputStream</code> implementation that tracks time to first byte.
+ * 
+ * @since 1.0
  */
 public class MonitoringInputStream extends FilterInputStream {
   private long firstRead;
@@ -22,9 +26,10 @@ public class MonitoringInputStream extends FilterInputStream {
    * Constructs a <code>MonitoringInputStream</code> instance using the provided stream
    * 
    * @param in the stream to wrap
+   * @throws NullPointerException if in is null
    */
   public MonitoringInputStream(final InputStream in) {
-    super(in);
+    super(checkNotNull(in));
   }
 
   @Override
@@ -51,6 +56,8 @@ public class MonitoringInputStream extends FilterInputStream {
   }
 
   /**
+   * Gets the timestamp for when the first {@code read} call was issued
+   * 
    * @return first read timestamp, in nanoseconds
    */
   public long getFirstRead() {
