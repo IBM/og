@@ -32,7 +32,7 @@ public class CustomHttpEntity extends AbstractHttpEntity {
   private long requestContentStart;
   private long requestContentFinish;
 
-  public CustomHttpEntity(Body body, long writeThroughput) {
+  public CustomHttpEntity(final Body body, final long writeThroughput) {
     this.body = checkNotNull(body);
     checkArgument(this.writeThroughput >= 0, "writeThroughput must be >= 0 [%s]",
         this.writeThroughput);
@@ -57,12 +57,13 @@ public class CustomHttpEntity extends AbstractHttpEntity {
   }
 
   @Override
-  public void writeTo(OutputStream outstream) throws IOException {
-    InputStream in = getContent();
+  public void writeTo(final OutputStream outstream) throws IOException {
+    final InputStream in = getContent();
     OutputStream out = outstream;
 
-    if (this.writeThroughput > 0)
+    if (this.writeThroughput > 0) {
       out = Streams.throttle(outstream, this.writeThroughput);
+    }
 
     this.requestContentStart = System.nanoTime();
     ByteStreams.copy(in, out);

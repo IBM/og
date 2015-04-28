@@ -122,7 +122,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
     if (files != null && files.length > 1) {
       this.idFileIndex = this.rand.nextInt(files.length - 1);
       _logger.debug("Initial object files list");
-      for (File f : files) {
+      for (final File f : files) {
         _logger.debug("{}", f);
       }
     } else {
@@ -349,8 +349,9 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
             truncater = new RandomAccessFile(surplus, "rwd");
             truncater.setLength(skip);
           } finally {
-            if (truncater != null)
+            if (truncater != null) {
               truncater.close();
+            }
           }
         }
       }
@@ -370,7 +371,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
   private int getRemaining(final int size, final File surplus) {
     final int objectsAvailable = size - this.maxObjects;
     final int spaceAvailable = this.maxObjects - ((int) (surplus.length() / OBJECT_SIZE));
-    int remaining = Math.min(objectsAvailable, spaceAvailable);
+    final int remaining = Math.min(objectsAvailable, spaceAvailable);
     _logger.debug("remaining objects {}", remaining);
     return remaining;
   }
@@ -378,7 +379,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
   private int getTransferrable(final int size, final File surplus) {
     final int slotsAvailable = this.maxObjects - size;
     final int surplusAvailable = (int) (surplus.length() / OBJECT_SIZE);
-    int transferrable = Math.min(slotsAvailable, surplusAvailable);
+    final int transferrable = Math.min(slotsAvailable, surplusAvailable);
     _logger.debug("transferrable objects {}", transferrable);
     return transferrable;
   }

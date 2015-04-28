@@ -46,8 +46,8 @@ public class DeleteObjectNameSupplier implements Function<Map<String, String>, S
    * @param context a request creation context for storing metadata to be used by other functions
    */
   @Override
-  public String apply(Map<String, String> context) {
-    ObjectMetadata objectMetadata = this.objectManager.remove();
+  public String apply(final Map<String, String> context) {
+    final ObjectMetadata objectMetadata = this.objectManager.remove();
     context.put(Headers.X_OG_OBJECT_NAME, objectMetadata.getName());
 
     return objectMetadata.getName();

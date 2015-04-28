@@ -71,8 +71,9 @@ public class HttpUtil {
     Scheme.valueOf(uri.getScheme().toUpperCase(Locale.US));
     final List<String> parts = URI_SPLITTER.splitToList(uri.getPath());
 
-    if (parts.size() == 3)
+    if (parts.size() == 3) {
       return parts.get(2);
+    }
 
     if (parts.size() == 2) {
       try {

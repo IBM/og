@@ -44,7 +44,7 @@ public class DeleteObjectNameSupplierTest {
     when(objectName.getName()).thenReturn(object);
     when(this.objectManager.remove()).thenReturn(objectName);
 
-    Map<String, String> context = Maps.newHashMap();
+    final Map<String, String> context = Maps.newHashMap();
     assertThat(new DeleteObjectNameSupplier(this.objectManager).apply(context), is(object));
     assertThat(context.get(Headers.X_OG_OBJECT_NAME), is(object));
   }

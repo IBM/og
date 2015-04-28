@@ -104,10 +104,12 @@ public enum SizeUnit {
    * Scale s by m, checking for overflow. This has a short name to make above code more readable.
    */
   private static long x(final long s, final long m, final long over) {
-    if (s > over)
+    if (s > over) {
       return Long.MAX_VALUE;
-    if (s < -over)
+    }
+    if (s < -over) {
       return Long.MIN_VALUE;
+    }
     return s * m;
   }
 

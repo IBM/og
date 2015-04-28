@@ -58,8 +58,9 @@ public class RuntimeCondition implements TestCondition {
   @Override
   public boolean isTriggered() {
     final long currentRuntime = System.nanoTime() - this.timestampStart;
-    if (currentRuntime >= this.runtime)
+    if (currentRuntime >= this.runtime) {
       return true;
+    }
     return false;
   }
 

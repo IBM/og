@@ -37,8 +37,9 @@ public class SelectionConfigTypeAdapterFactory implements TypeAdapterFactory {
   @SuppressWarnings("unchecked")
   public <T> TypeAdapter<T> create(final Gson gson, final TypeToken<T> type) {
     final Class<T> rawType = (Class<T>) type.getRawType();
-    if (!SelectionConfig.class.equals(rawType))
+    if (!SelectionConfig.class.equals(rawType)) {
       return null;
+    }
 
     final TypeAdapter<T> delegate = gson.getDelegateAdapter(this, type);
 
@@ -52,10 +53,10 @@ public class SelectionConfigTypeAdapterFactory implements TypeAdapterFactory {
       public T read(final JsonReader in) throws IOException {
         final Class<?> genericType =
             (Class<?>) ((ParameterizedType) type.getType()).getActualTypeArguments()[0];
-        JsonElement element = gson.getAdapter(JsonElement.class).read(in);
+        final JsonElement element = gson.getAdapter(JsonElement.class).read(in);
 
         if (element.isJsonObject()) {
-          JsonObject object = element.getAsJsonObject();
+          final JsonObject object = element.getAsJsonObject();
           if (object.entrySet().size() <= 2 && object.has("choices")) {
             return delegate.fromJsonTree(object);
           } else {
@@ -68,14 +69,16 @@ public class SelectionConfigTypeAdapterFactory implements TypeAdapterFactory {
         return (T) choice(genericType, element);
       }
 
-      private <S> SelectionConfig<S> choice(Class<S> clazz, JsonElement element) throws IOException {
-        SelectionConfig<S> config = new SelectionConfig<S>();
+      private <S> SelectionConfig<S> choice(final Class<S> clazz, final JsonElement element)
+          throws IOException {
+        final SelectionConfig<S> config = new SelectionConfig<S>();
         config.choices.add(gson.getAdapter(choiceToken(clazz)).fromJsonTree(element));
         return config;
       }
 
-      private <S> SelectionConfig<S> choiceList(Class<S> clazz, JsonArray array) throws IOException {
-        SelectionConfig<S> config = new SelectionConfig<S>();
+      private <S> SelectionConfig<S> choiceList(final Class<S> clazz, final JsonArray array)
+          throws IOException {
+        final SelectionConfig<S> config = new SelectionConfig<S>();
         config.choices = gson.getAdapter(choiceListToken(clazz)).fromJsonTree(array);
         return config;
       }
@@ -83,18 +86,18 @@ public class SelectionConfigTypeAdapterFactory implements TypeAdapterFactory {
       // must use guava's TypeToken implementation to create a TypeToken instance with a dynamic
       // type; then convert back to gson's TypeToken implementation for use in calling code. See:
       // https://groups.google.com/forum/#!topic/guava-discuss/HdBuiO44uaw
-      private <S> TypeToken<ChoiceConfig<S>> choiceToken(Class<S> clazz) {
+      private <S> TypeToken<ChoiceConfig<S>> choiceToken(final Class<S> clazz) {
         @SuppressWarnings("serial")
-        com.google.common.reflect.TypeToken<ChoiceConfig<S>> choiceToken =
+        final com.google.common.reflect.TypeToken<ChoiceConfig<S>> choiceToken =
             new com.google.common.reflect.TypeToken<ChoiceConfig<S>>() {}.where(
                 new TypeParameter<S>() {}, com.google.common.reflect.TypeToken.of(clazz));
 
         return (TypeToken<ChoiceConfig<S>>) TypeToken.get(choiceToken.getType());
       }
 
-      private <S> TypeToken<List<ChoiceConfig<S>>> choiceListToken(Class<S> clazz) {
+      private <S> TypeToken<List<ChoiceConfig<S>>> choiceListToken(final Class<S> clazz) {
         @SuppressWarnings("serial")
-        com.google.common.reflect.TypeToken<List<ChoiceConfig<S>>> choiceToken =
+        final com.google.common.reflect.TypeToken<List<ChoiceConfig<S>>> choiceToken =
             new com.google.common.reflect.TypeToken<List<ChoiceConfig<S>>>() {}.where(
                 new TypeParameter<S>() {}, com.google.common.reflect.TypeToken.of(clazz));
 

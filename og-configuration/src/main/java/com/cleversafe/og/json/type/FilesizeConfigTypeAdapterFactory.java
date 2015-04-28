@@ -32,8 +32,9 @@ public class FilesizeConfigTypeAdapterFactory implements TypeAdapterFactory {
   @SuppressWarnings("unchecked")
   public <T> TypeAdapter<T> create(final Gson gson, final TypeToken<T> type) {
     final Class<T> rawType = (Class<T>) type.getRawType();
-    if (!FilesizeConfig.class.equals(rawType))
+    if (!FilesizeConfig.class.equals(rawType)) {
       return null;
+    }
 
     final TypeAdapter<T> delegate = gson.getDelegateAdapter(this, type);
 
@@ -45,8 +46,9 @@ public class FilesizeConfigTypeAdapterFactory implements TypeAdapterFactory {
 
       @Override
       public T read(final JsonReader in) throws IOException {
-        if (JsonToken.NUMBER == in.peek())
+        if (JsonToken.NUMBER == in.peek()) {
           return (T) new FilesizeConfig(in.nextDouble());
+        }
 
         return delegate.read(in);
       }

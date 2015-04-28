@@ -56,9 +56,9 @@ public class ConcurrentRequestScheduler implements Scheduler {
     this.rampDuration = (long) (rampup * rampupUnit.toNanos(1));
     this.started = new CountDownLatch(1);
 
-    if (DoubleMath.fuzzyEquals(this.rampDuration, 0.0, Math.pow(0.1, 6)))
+    if (DoubleMath.fuzzyEquals(this.rampDuration, 0.0, Math.pow(0.1, 6))) {
       this.sem = new Semaphore(concurrentRequests - 1);
-    else {
+    } else {
       this.sem = new Semaphore(0);
       final Thread rampupThread = new Thread(new Runnable() {
         @Override

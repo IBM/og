@@ -32,8 +32,8 @@ public class UUIDObjectNameSupplier implements Function<Map<String, String>, Str
    * @param context a request creation context for storing metadata to be used by other functions
    */
   @Override
-  public String apply(Map<String, String> context) {
-    String objectName = UUID.randomUUID().toString().replace("-", "") + "0000";
+  public String apply(final Map<String, String> context) {
+    final String objectName = UUID.randomUUID().toString().replace("-", "") + "0000";
     context.put(Headers.X_OG_OBJECT_NAME, objectName);
 
     return objectName;

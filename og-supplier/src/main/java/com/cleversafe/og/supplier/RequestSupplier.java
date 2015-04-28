@@ -109,20 +109,22 @@ public class RequestSupplier implements Supplier<Request> {
       builder.withHeader(header.getKey(), header.getValue().get());
     }
 
-    if (this.id != null)
+    if (this.id != null) {
       builder.withHeader(Headers.X_OG_REQUEST_ID, this.id.get());
-
-    if (this.username != null && this.password != null) {
-      builder.withHeader(Headers.X_OG_USERNAME, username);
-      builder.withHeader(Headers.X_OG_PASSWORD, password);
     }
 
-    for (Map.Entry<String, String> entry : context.entrySet()) {
+    if (this.username != null && this.password != null) {
+      builder.withHeader(Headers.X_OG_USERNAME, this.username);
+      builder.withHeader(Headers.X_OG_PASSWORD, this.password);
+    }
+
+    for (final Map.Entry<String, String> entry : context.entrySet()) {
       builder.withHeader(entry.getKey(), entry.getValue());
     }
 
-    if (this.body != null)
+    if (this.body != null) {
       builder.withBody(this.body.get());
+    }
 
     return builder.build();
   }
@@ -145,11 +147,12 @@ public class RequestSupplier implements Supplier<Request> {
   }
 
   private void appendPort(final StringBuilder s) {
-    if (this.port != null)
+    if (this.port != null) {
       s.append(":").append(this.port);
+    }
   }
 
-  private void appendPath(final StringBuilder s, Map<String, String> context) {
+  private void appendPath(final StringBuilder s, final Map<String, String> context) {
     String objectName = null;
     if (this.object != null) {
       // FIXME must apply object first prior to container to populate context from object manager
@@ -158,24 +161,28 @@ public class RequestSupplier implements Supplier<Request> {
     }
 
     s.append("/");
-    if (this.uriRoot != null)
+    if (this.uriRoot != null) {
       s.append(this.uriRoot).append("/");
+    }
 
     s.append(this.container.apply(context));
 
-    if (objectName != null)
+    if (objectName != null) {
       s.append("/").append(objectName);
+    }
   }
 
   private void appendTrailingSlash(final StringBuilder s) {
-    if (this.trailingSlash)
+    if (this.trailingSlash) {
       s.append("/");
+    }
   }
 
   private void appendQueryParams(final StringBuilder s) {
     final String queryParams = PARAM_JOINER.join(this.queryParameters);
-    if (queryParams.length() > 0)
+    if (queryParams.length() > 0) {
       s.append("?").append(queryParams);
+    }
   }
 
   @Override

@@ -23,7 +23,7 @@ public class UUIDObjectNameSupplierTest {
   @Test
   public void uuidObjectNameSupplier() {
     final Function<Map<String, String>, String> s = new UUIDObjectNameSupplier();
-    Map<String, String> context = Maps.newHashMap();
+    final Map<String, String> context = Maps.newHashMap();
     assertThat(s.apply(context), is(not(s.apply(context))));
   }
 }

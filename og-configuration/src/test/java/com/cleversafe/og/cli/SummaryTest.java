@@ -42,7 +42,7 @@ public class SummaryTest {
 
   @DataProvider
   public static Object[][] provideInvalidSummary() {
-    Statistics stats = new Statistics();
+    final Statistics stats = new Statistics();
     return new Object[][] { {null, 0, 0, NullPointerException.class},
         {stats, -1, 0, IllegalArgumentException.class},
         {stats, 0, -1, IllegalArgumentException.class},
@@ -51,26 +51,28 @@ public class SummaryTest {
 
   @Test
   @UseDataProvider("provideInvalidSummary")
-  public void invalidSummary(Statistics stats, long timestampStart, long timestampFinish,
-      final Class<Exception> expectedException) {
+  public void invalidSummary(final Statistics stats, final long timestampStart,
+      final long timestampFinish, final Class<Exception> expectedException) {
     this.thrown.expect(expectedException);
     new Summary(stats, timestampStart, timestampFinish);
   }
 
   @Test
   public void summary() throws URISyntaxException {
-    Statistics stats = new Statistics();
-    Request request = new HttpRequest.Builder(Method.GET, new URI("http://127.0.0.1")).build();
-    Response response =
+    final Statistics stats = new Statistics();
+    final Request request =
+        new HttpRequest.Builder(Method.GET, new URI("http://127.0.0.1")).build();
+    final Response response =
         new HttpResponse.Builder().withStatusCode(200).withBody(Bodies.zeroes(1024)).build();
     stats.update(Pair.of(request, response));
-    long timestampStart = System.nanoTime();
-    long timestampFinish = timestampStart + 100;
-    double runtime = ((double) (timestampFinish - timestampStart)) / TimeUnit.SECONDS.toMillis(1);
-    Summary summary = new Summary(stats, timestampStart, timestampFinish);
+    final long timestampStart = System.nanoTime();
+    final long timestampFinish = timestampStart + 100;
+    final double runtime =
+        ((double) (timestampFinish - timestampStart)) / TimeUnit.SECONDS.toMillis(1);
+    final Summary summary = new Summary(stats, timestampStart, timestampFinish);
     // can't do much to validate toString correctness, but at least execute it
     summary.toString();
-    SummaryStats summaryStats = summary.getSummaryStats();
+    final SummaryStats summaryStats = summary.getSummaryStats();
 
     assertThat(summaryStats.timestampStart, is(timestampStart));
     assertThat(summaryStats.timestampFinish, is(timestampFinish));

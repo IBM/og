@@ -104,7 +104,7 @@ public class SelectionConfigTypeAdapterFactoryTest {
     final SelectionConfig<MyConfig> config =
         this.gson.fromJson(json, new TypeToken<SelectionConfig<MyConfig>>() {}.getType());
 
-    MyConfig choice = config.choices.get(0).choice;
+    final MyConfig choice = config.choices.get(0).choice;
     assertThat(choice.enabled, is(true));
     assertThat(choice.count, is(1L));
     assertThat(choice.total, is(100L));

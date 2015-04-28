@@ -95,8 +95,9 @@ public class LoadTest implements Callable<Boolean> {
       _logger.error("Exception while producing request", e);
     }
 
-    if (!this.activeRequests.isEmpty())
+    if (!this.activeRequests.isEmpty()) {
       Uninterruptibles.awaitUninterruptibly(this.completed);
+    }
     return this.success;
   }
 
@@ -105,7 +106,7 @@ public class LoadTest implements Callable<Boolean> {
    */
   public void stopTest() {
     this.running = false;
-    for (ListenableFuture<Response> future : this.activeRequests) {
+    for (final ListenableFuture<Response> future : this.activeRequests) {
       future.cancel(true);
     }
   }
@@ -138,8 +139,9 @@ public class LoadTest implements Callable<Boolean> {
 
       private void removeActiveOperation() {
         LoadTest.this.activeRequests.remove(future);
-        if (!LoadTest.this.running && LoadTest.this.activeRequests.isEmpty())
+        if (!LoadTest.this.running && LoadTest.this.activeRequests.isEmpty()) {
           LoadTest.this.completed.countDown();
+        }
       }
 
       private void postOperation(final Response response) {

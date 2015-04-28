@@ -63,15 +63,17 @@ public class StatusCodeCondition implements TestCondition {
    */
   @Subscribe
   public void update(final Pair<Request, Response> operation) {
-    if (isTriggered())
+    if (isTriggered()) {
       this.test.stopTest();
+    }
   }
 
   @Override
   public boolean isTriggered() {
     final long currentValue = this.stats.getStatusCode(this.operation, this.statusCode);
-    if (currentValue >= this.thresholdValue)
+    if (currentValue >= this.thresholdValue) {
       return true;
+    }
     return false;
   }
 

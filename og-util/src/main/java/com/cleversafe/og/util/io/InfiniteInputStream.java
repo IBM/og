@@ -55,10 +55,11 @@ public class InfiniteInputStream extends InputStream {
   @Override
   public int read(final byte[] b, final int off, final int len) {
     checkNotNull(b);
-    if (off < 0 || len < 0 || len > b.length - off)
+    if (off < 0 || len < 0 || len > b.length - off) {
       throw new IndexOutOfBoundsException();
-    else if (len == 0)
+    } else if (len == 0) {
       return 0;
+    }
 
     int copied = 0;
     while (copied < len) {

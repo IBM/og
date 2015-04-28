@@ -44,7 +44,7 @@ public class ReadObjectNameSupplierTest {
     when(objectName.getName()).thenReturn(object);
     when(this.objectManager.get()).thenReturn(objectName);
 
-    Map<String, String> context = Maps.newHashMap();
+    final Map<String, String> context = Maps.newHashMap();
     assertThat(new ReadObjectNameSupplier(this.objectManager).apply(context), is(object));
     assertThat(context.get(Headers.X_OG_OBJECT_NAME), is(object));
   }

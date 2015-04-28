@@ -53,8 +53,9 @@ public class StreamsTest {
 
     assertThat(in.read(buf), is(1024));
     for (int i = 0; i < buf.length; i++) {
-      if (buf[i] != 0)
+      if (buf[i] != 0) {
         nonZero = true;
+      }
     }
     assertThat(nonZero, is(true));
   }

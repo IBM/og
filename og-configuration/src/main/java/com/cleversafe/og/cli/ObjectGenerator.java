@@ -66,11 +66,11 @@ public class ObjectGenerator {
   public static void main(final String[] args) {
     final Cli cli = Application.cli("og", "og.jsap", args);
     if (cli.shouldStop()) {
-      if (cli.help())
+      if (cli.help()) {
         cli.printUsage();
-      else if (cli.version())
+      } else if (cli.version()) {
         cli.printVersion();
-      else if (cli.error()) {
+      } else if (cli.error()) {
         cli.printErrors();
         cli.printUsage();
         Application.exit(Application.TEST_ERROR);
@@ -91,15 +91,15 @@ public class ObjectGenerator {
         new ExecutorCompletionService<Boolean>(executorService);
     long timestampStart = 0;
     long timestampFinish = 0;
-    CountDownLatch shutdownLatch = new CountDownLatch(1);
+    final CountDownLatch shutdownLatch = new CountDownLatch(1);
 
     logBanner();
 
     try {
       _consoleLogger.info("Configuring...");
 
-      File json = cli.flags().getFile("og_config");
-      File defaultJson = new File(Application.getResource("og.json"));
+      final File json = cli.flags().getFile("og_config");
+      final File defaultJson = new File(Application.getResource("og.json"));
       ogConfig = Application.fromJson(json, defaultJson, OGConfig.class, gson);
       _ogJsonLogger.info(gson.toJson(ogConfig));
 
@@ -119,15 +119,16 @@ public class ObjectGenerator {
       success = completionService.take().get();
       timestampFinish = System.currentTimeMillis();
 
-      if (success)
+      if (success) {
         _consoleLogger.info("Test Completed.");
-      else
+      } else {
         _consoleLogger.error("Test ended unsuccessfully. See og.log for details");
+      }
 
-    } catch (InterruptedException e) {
+    } catch (final InterruptedException e) {
       timestampFinish = System.currentTimeMillis();
       _consoleLogger.info("Test interrupted.");
-    } catch (Exception e) {
+    } catch (final Exception e) {
       timestampFinish = System.currentTimeMillis();
       success = false;
 
@@ -135,8 +136,9 @@ public class ObjectGenerator {
       _consoleLogger.error("Test Error. See og.log for details");
       logConsoleException(e);
     } finally {
-      if (test != null)
+      if (test != null) {
         test.stopTest();
+      }
       shutdownClient(client);
       MoreExecutors.shutdownAndAwaitTermination(executorService, 1, TimeUnit.MINUTES);
       shutdownObjectManager(objectManager);
@@ -154,26 +156,29 @@ public class ObjectGenerator {
 
     shutdownLatch.countDown();
 
-    if (!success)
+    if (!success) {
       Application.exit(Application.TEST_ERROR);
+    }
   }
 
-  public static void logConsoleException(Exception e) {
-    if (e instanceof ProvisionException)
+  public static void logConsoleException(final Exception e) {
+    if (e instanceof ProvisionException) {
       logConsoleGuiceMessages(((ProvisionException) e).getErrorMessages());
-    else if (e instanceof CreationException)
+    } else if (e instanceof CreationException) {
       logConsoleGuiceMessages(((CreationException) e).getErrorMessages());
-    else
+    } else {
       _consoleLogger.error(e.getMessage());
+    }
   }
 
-  public static void logConsoleGuiceMessages(Collection<Message> messages) {
+  public static void logConsoleGuiceMessages(final Collection<Message> messages) {
     // guice exceptions contain many duplicate messages with slightly differing causes; we only want
     // unique messages logged to console so filter them here
-    Set<String> uniqueMessages = Sets.newHashSet();
-    for (Message message : messages) {
-      if (!uniqueMessages.contains(message.getMessage()))
+    final Set<String> uniqueMessages = Sets.newHashSet();
+    for (final Message message : messages) {
+      if (!uniqueMessages.contains(message.getMessage())) {
         _consoleLogger.error(message.getMessage());
+      }
       uniqueMessages.add(message.getMessage());
     }
   }
@@ -198,19 +203,21 @@ public class ObjectGenerator {
     return Guice.createInjector(Stage.PRODUCTION, new OGModule(ogConfig));
   }
 
-  public static void shutdownClient(Client client) {
+  public static void shutdownClient(final Client client) {
     try {
-      if (client != null)
+      if (client != null) {
         Uninterruptibles.getUninterruptibly(client.shutdown(true));
+      }
     } catch (final Exception e) {
       _logger.error("Exception while attempting to shutdown client", e);
     }
   }
 
-  public static void shutdownObjectManager(ObjectManager objectManager) {
+  public static void shutdownObjectManager(final ObjectManager objectManager) {
     try {
-      if (objectManager != null)
+      if (objectManager != null) {
         objectManager.shutdown();
+      }
     } catch (final Exception e) {
       _logger.error("Error shutting down object manager", e);
     }

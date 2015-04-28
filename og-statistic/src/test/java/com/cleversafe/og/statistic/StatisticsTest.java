@@ -171,9 +171,10 @@ public class StatisticsTest {
     assertThat(this.stats.get(operation, Counter.BYTES), is(byteCount));
     assertThat(this.stats.getStatusCode(operation, statusCode), is(statusCodeCount));
 
-    for (Entry<Integer, Long> e : this.stats.statusCodes(operation).entrySet()) {
-      if (e.getKey() == statusCode)
+    for (final Entry<Integer, Long> e : this.stats.statusCodes(operation).entrySet()) {
+      if (e.getKey() == statusCode) {
         assertThat(e.getValue(), is(statusCodeCount));
+      }
     }
   }
 }

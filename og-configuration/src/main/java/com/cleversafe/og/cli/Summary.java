@@ -32,7 +32,7 @@ import com.google.common.collect.ImmutableSortedMap;
 public class Summary {
   private static final DateTimeFormatter FORMATTER = DateTimeFormat.forPattern(
       "dd/MMM/yyyy:HH:mm:ss Z").withLocale(Locale.US);
-  private SummaryStats summaryStats;
+  private final SummaryStats summaryStats;
 
   /**
    * Constructs an instance
@@ -61,7 +61,8 @@ public class Summary {
     final OperationStats read;
     final OperationStats delete;
 
-    private SummaryStats(Statistics stats, final long timestampStart, final long timestampFinish) {
+    private SummaryStats(final Statistics stats, final long timestampStart,
+        final long timestampFinish) {
       this.timestampStart = timestampStart;
       this.timestampFinish = timestampFinish;
       this.runtime = ((double) (timestampFinish - timestampStart)) / TimeUnit.SECONDS.toMillis(1);
@@ -86,7 +87,7 @@ public class Summary {
     final long bytes;
     final Map<Integer, Long> statusCodes;
 
-    private OperationStats(Statistics stats, Operation operation) {
+    private OperationStats(final Statistics stats, final Operation operation) {
       this.operation = operation;
       this.operations = stats.get(operation, Counter.OPERATIONS);
       this.bytes = stats.get(operation, Counter.BYTES);
@@ -100,8 +101,9 @@ public class Summary {
     }
 
     private String formatStatusCodes() {
-      if (this.statusCodes.isEmpty())
+      if (this.statusCodes.isEmpty()) {
         return String.format("N/A%n");
+      }
 
       final StringBuilder s = new StringBuilder();
       for (final Entry<Integer, Long> sc : this.statusCodes.entrySet()) {
