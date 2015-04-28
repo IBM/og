@@ -16,6 +16,9 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
 import com.cleversafe.og.http.HttpUtil;
@@ -45,6 +48,7 @@ import com.google.common.util.concurrent.AtomicLongMap;
  */
 @Singleton
 public class Statistics {
+  private static final Logger _logger = LoggerFactory.getLogger(Statistics.class);
   private final Map<Operation, AtomicLongMap<Counter>> counters;
   private final Map<Operation, AtomicLongMap<Integer>> scCounters;
 
@@ -83,6 +87,7 @@ public class Statistics {
     }
     updateStatusCode(operation, response.getStatusCode());
     updateStatusCode(Operation.ALL, response.getStatusCode());
+    _logger.trace("Statistics updated: {}, {}", request, response);
   }
 
   private long getBytes(final Operation operation, final Request request, final Response response) {

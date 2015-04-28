@@ -122,6 +122,7 @@ public class LoadTest implements Callable<Boolean> {
     Futures.addCallback(future, new FutureCallback<Response>() {
       @Override
       public void onSuccess(final Response response) {
+        _logger.trace("Request executed {}, {}", request, response);
         postOperation(response);
         removeActiveOperation();
       }

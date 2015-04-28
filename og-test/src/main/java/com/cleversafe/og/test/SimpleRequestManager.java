@@ -92,7 +92,9 @@ public class SimpleRequestManager implements RequestManager {
 
   @Override
   public Request get() {
-    return this.requestSupplier.get().get();
+    Request request = this.requestSupplier.get().get();
+    _logger.trace("Request generated: {}", request);
+    return request;
   }
 
   @Override

@@ -90,7 +90,7 @@ public class ConcurrentRequestScheduler implements Scheduler {
     try {
       this.sem.acquire();
     } catch (final InterruptedException e) {
-      _logger.info("Interrupted while waiting to schedule next request", e);
+      _logger.warn("Interrupted while waiting to schedule next request", e);
       return;
     }
   }
