@@ -40,8 +40,8 @@ public class FilesizeConfigTypeAdapterFactoryTest {
     final String json = "{\"average\": 75.0, \"weight\": 3.5}";
     final FilesizeConfig config = this.gson.fromJson(json, FilesizeConfig.class);
 
-    assertThat(config.getAverage(), is(75.0));
-    assertThat(config.getWeight(), is(3.5));
+    assertThat(config.average, is(75.0));
+    assertThat(config.weight, is(3.5));
   }
 
   @Test
@@ -49,7 +49,7 @@ public class FilesizeConfigTypeAdapterFactoryTest {
     final String json = "80.0";
     final FilesizeConfig config = this.gson.fromJson(json, FilesizeConfig.class);
 
-    assertThat(config.getAverage(), is(80.0));
+    assertThat(config.average, is(80.0));
   }
 
   @Test

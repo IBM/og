@@ -84,8 +84,8 @@ public class LoadTestTest {
     this.handler = new LoadTestSubscriberExceptionHandler();
     this.eventBus = new EventBus(this.handler);
     this.stats = new Statistics();
-    this.test =
-        new LoadTest(this.requestManager, this.client, this.scheduler, this.eventBus, this.handler);
+    this.test = new LoadTest(this.requestManager, this.client, this.scheduler, this.eventBus);
+    this.handler.setLoadTest(this.test);
 
     final TestCondition condition =
         new CounterCondition(Operation.WRITE, Counter.OPERATIONS, 5, this.test, this.stats);
@@ -101,22 +101,17 @@ public class LoadTestTest {
     final Client client = mock(Client.class);
     final Scheduler scheduler = mock(Scheduler.class);
     final EventBus eventBus = mock(EventBus.class);
-    final LoadTestSubscriberExceptionHandler handler =
-        mock(LoadTestSubscriberExceptionHandler.class);
-    return new Object[][] { {null, client, scheduler, eventBus, handler},
-        {requestSupplier, null, scheduler, eventBus, handler},
-        {requestSupplier, client, null, eventBus, handler},
-        {requestSupplier, client, scheduler, null, handler},
-        {requestSupplier, client, scheduler, eventBus, null}};
+    return new Object[][] { {null, client, scheduler, eventBus},
+        {requestSupplier, null, scheduler, eventBus}, {requestSupplier, client, null, eventBus},
+        {requestSupplier, client, scheduler, null}};
   }
 
   @Test
   @UseDataProvider("provideInvalidLoadTest")
   public void invalidLoadTest(final RequestManager requestManager, final Client client,
-      final Scheduler scheduler, final EventBus eventBus,
-      final LoadTestSubscriberExceptionHandler handler) {
+      final Scheduler scheduler, final EventBus eventBus) {
     this.thrown.expect(NullPointerException.class);
-    new LoadTest(requestManager, client, scheduler, eventBus, handler);
+    new LoadTest(requestManager, client, scheduler, eventBus);
   }
 
   @Test

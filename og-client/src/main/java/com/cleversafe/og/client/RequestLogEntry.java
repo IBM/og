@@ -62,8 +62,8 @@ public class RequestLogEntry {
    * @param timestampStart the timestamp for the start of this request, in milliseconds
    * @param timestampFinish the timestamp for the end of this request, in milliseconds
    */
-  public RequestLogEntry(final Request request, final Response response, String userAgent,
-      RequestTimestamps timestamps) {
+  public RequestLogEntry(final Request request, final Response response, final String userAgent,
+      final RequestTimestamps timestamps) {
     final URI uri = request.getUri();
     // FIXME reliably get localaddress? Name should be clientName? Do we even need this field?
     this.serverName = null;
@@ -79,13 +79,15 @@ public class RequestLogEntry {
 
     String objectName = request.headers().get(Headers.X_OG_OBJECT_NAME);
     // SOH writes
-    if (objectName == null)
+    if (objectName == null) {
       objectName = response.headers().get(Headers.X_OG_OBJECT_NAME);
+    }
     this.objectId = objectName;
 
     Long objectSize = null;
-    if (DataType.NONE != request.getBody().getDataType())
+    if (DataType.NONE != request.getBody().getDataType()) {
       objectSize = request.getBody().getSize();
+    }
 
     this.status = response.getStatusCode();
     // TODO requestLength will not equal objectLength with AWSv4 request overhead
@@ -123,7 +125,7 @@ public class RequestLogEntry {
     final Double responseContent;
     final Double total;
 
-    public RequestStats(RequestTimestamps t) {
+    public RequestStats(final RequestTimestamps t) {
       this.requestContent = duration(t.requestContentStart, t.requestContentFinish);
       this.closeLatency = duration(t.requestContentFinish, t.finish);
       this.ttfb = duration(t.start, t.responseContentFirstBytes);
@@ -131,9 +133,10 @@ public class RequestLogEntry {
       this.total = duration(t.start, t.finish);
     }
 
-    private Double duration(long start, long finish) {
-      if (start > 0 && finish > start)
+    private Double duration(final long start, final long finish) {
+      if (start > 0 && finish > start) {
         return ((double) finish - start) / TimeUnit.MILLISECONDS.toNanos(1);
+      }
       return null;
     }
   }

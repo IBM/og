@@ -33,6 +33,11 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.Uninterruptibles;
 
+/**
+ * a callable test execution
+ * 
+ * @since 1.0
+ */
 @Singleton
 public class LoadTest implements Callable<Boolean> {
   private static final Logger _logger = LoggerFactory.getLogger(LoadTest.class);
@@ -45,21 +50,35 @@ public class LoadTest implements Callable<Boolean> {
   private final Set<ListenableFuture<Response>> activeRequests;
   private final CountDownLatch completed;
 
+  /**
+   * Creates an instance
+   * 
+   * @param requestManager a generator of request instances
+   * @param client a request executor
+   * @param scheduler a scheduler which determines request rate
+   * @param eventBus an event bus for notifying components of events in the system
+   * @throws NullPointerException if requestSupplier, client, scheduler, or eventBus are null
+   */
   @Inject
-  public LoadTest(final RequestManager requestSupplier, final Client client,
-      final Scheduler scheduler, final EventBus eventBus,
-      final LoadTestSubscriberExceptionHandler handler) {
-    this.requestManager = checkNotNull(requestSupplier);
+  public LoadTest(final RequestManager requestManager, final Client client,
+      final Scheduler scheduler, final EventBus eventBus) {
+    this.requestManager = checkNotNull(requestManager);
     this.client = checkNotNull(client);
     this.scheduler = checkNotNull(scheduler);
     this.eventBus = checkNotNull(eventBus);
-    checkNotNull(handler).setLoadTest(this);
     this.running = true;
     this.success = true;
     this.activeRequests = Sets.newConcurrentHashSet();
     this.completed = new CountDownLatch(1);
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see java.util.concurrent.Callable#call()
+   * 
+   * @return whether this test succeeded or failed
+   */
   @Override
   public Boolean call() {
     try {
@@ -76,18 +95,25 @@ public class LoadTest implements Callable<Boolean> {
       _logger.error("Exception while producing request", e);
     }
 
-    if (!this.activeRequests.isEmpty())
+    if (!this.activeRequests.isEmpty()) {
       Uninterruptibles.awaitUninterruptibly(this.completed);
+    }
     return this.success;
   }
 
+  /**
+   * Cleanly stop this test
+   */
   public void stopTest() {
     this.running = false;
-    for (ListenableFuture<Response> future : this.activeRequests) {
+    for (final ListenableFuture<Response> future : this.activeRequests) {
       future.cancel(true);
     }
   }
 
+  /**
+   * Immediately stop this test; marking it as failed
+   */
   public void abortTest() {
     this.success = false;
     stopTest();
@@ -97,6 +123,7 @@ public class LoadTest implements Callable<Boolean> {
     Futures.addCallback(future, new FutureCallback<Response>() {
       @Override
       public void onSuccess(final Response response) {
+        _logger.trace("Request executed {}, {}", request, response);
         postOperation(response);
         removeActiveOperation();
       }
@@ -112,8 +139,9 @@ public class LoadTest implements Callable<Boolean> {
 
       private void removeActiveOperation() {
         LoadTest.this.activeRequests.remove(future);
-        if (!LoadTest.this.running && LoadTest.this.activeRequests.isEmpty())
+        if (!LoadTest.this.running && LoadTest.this.activeRequests.isEmpty()) {
           LoadTest.this.completed.countDown();
+        }
       }
 
       private void postOperation(final Response response) {
@@ -124,7 +152,7 @@ public class LoadTest implements Callable<Boolean> {
 
   @Override
   public String toString() {
-    return String.format("LoadTest [%n" + "requestSupplier=%s,%n" + "scheduler=%s,%n"
+    return String.format("LoadTest [%n" + "requestManager=%s,%n" + "scheduler=%s,%n"
         + "client=%s%n" + "]", this.requestManager, this.scheduler, this.client);
   }
 }

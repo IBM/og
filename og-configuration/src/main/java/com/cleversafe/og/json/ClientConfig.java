@@ -9,20 +9,20 @@
 package com.cleversafe.og.json;
 
 public class ClientConfig {
-  int connectTimeout;
-  int soTimeout;
-  boolean soReuseAddress;
-  int soLinger;
-  boolean soKeepAlive;
-  boolean tcpNoDelay;
-  boolean persistentConnections;
-  boolean chunkedEncoding;
-  boolean expectContinue;
-  int waitForContinue;
-  int retryCount;
-  boolean requestSentRetry;
-  int writeThroughput;
-  int readThroughput;
+  public int connectTimeout;
+  public int soTimeout;
+  public boolean soReuseAddress;
+  public int soLinger;
+  public boolean soKeepAlive;
+  public boolean tcpNoDelay;
+  public boolean persistentConnections;
+  public boolean chunkedEncoding;
+  public boolean expectContinue;
+  public int waitForContinue;
+  public int retryCount;
+  public boolean requestSentRetry;
+  public int writeThroughput;
+  public int readThroughput;
 
   public ClientConfig() {
     this.connectTimeout = 0;
@@ -39,61 +39,5 @@ public class ClientConfig {
     this.requestSentRetry = true;
     this.writeThroughput = 0;
     this.readThroughput = 0;
-  }
-
-  public int getConnectTimeout() {
-    return this.connectTimeout;
-  }
-
-  public int getSoTimeout() {
-    return this.soTimeout;
-  }
-
-  public boolean isSoReuseAddress() {
-    return this.soReuseAddress;
-  }
-
-  public int getSoLinger() {
-    return this.soLinger;
-  }
-
-  public boolean isSoKeepAlive() {
-    return this.soKeepAlive;
-  }
-
-  public boolean isTcpNoDelay() {
-    return this.tcpNoDelay;
-  }
-
-  public boolean isPersistentConnections() {
-    return this.persistentConnections;
-  }
-
-  public boolean isChunkedEncoding() {
-    return this.chunkedEncoding;
-  }
-
-  public boolean isExpectContinue() {
-    return this.expectContinue;
-  }
-
-  public int getWaitForContinue() {
-    return this.waitForContinue;
-  }
-
-  public int getRetryCount() {
-    return this.retryCount;
-  }
-
-  public boolean isRequestSentRetry() {
-    return this.requestSentRetry;
-  }
-
-  public int getWriteThroughput() {
-    return this.writeThroughput;
-  }
-
-  public int getReadThroughput() {
-    return this.readThroughput;
   }
 }

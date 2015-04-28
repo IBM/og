@@ -20,9 +20,4 @@ public class SelectionConfig<T> {
     this.selection = SelectionType.RANDOM;
     this.choices = Lists.newArrayList();
   }
-
-  public SelectionConfig(T choice) {
-    this();
-    this.choices.add(new ChoiceConfig<T>(choice));
-  }
 }

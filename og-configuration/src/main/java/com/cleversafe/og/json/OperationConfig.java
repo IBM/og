@@ -13,9 +13,9 @@ import java.util.Map;
 import com.google.common.collect.Maps;
 
 public class OperationConfig {
-  double weight;
-  SelectionConfig<String> host;
-  Map<String, SelectionConfig<String>> headers;
+  public double weight;
+  public SelectionConfig<String> host;
+  public Map<String, SelectionConfig<String>> headers;
 
   public OperationConfig(final double weight) {
     this();
@@ -26,17 +26,5 @@ public class OperationConfig {
     this.weight = 0.0;
     this.host = null;
     this.headers = Maps.newLinkedHashMap();
-  }
-
-  public double getWeight() {
-    return this.weight;
-  }
-
-  public SelectionConfig<String> getHost() {
-    return this.host;
-  }
-
-  public Map<String, SelectionConfig<String>> getHeaders() {
-    return this.headers;
   }
 }

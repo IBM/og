@@ -11,12 +11,12 @@ package com.cleversafe.og.json;
 import java.util.concurrent.TimeUnit;
 
 public class ConcurrencyConfig {
-  ConcurrencyType type;
-  DistributionType distribution;
-  double count;
-  TimeUnit unit;
-  double rampup;
-  TimeUnit rampupUnit;
+  public ConcurrencyType type;
+  public DistributionType distribution;
+  public double count;
+  public TimeUnit unit;
+  public double rampup;
+  public TimeUnit rampupUnit;
 
   public ConcurrencyConfig(final double count) {
     this();
@@ -30,29 +30,5 @@ public class ConcurrencyConfig {
     this.unit = TimeUnit.SECONDS;
     this.rampup = 0.0;
     this.rampupUnit = TimeUnit.SECONDS;
-  }
-
-  public ConcurrencyType getType() {
-    return this.type;
-  }
-
-  public DistributionType getDistribution() {
-    return this.distribution;
-  }
-
-  public double getCount() {
-    return this.count;
-  }
-
-  public TimeUnit getUnit() {
-    return this.unit;
-  }
-
-  public double getRampup() {
-    return this.rampup;
-  }
-
-  public TimeUnit getRampupUnit() {
-    return this.rampupUnit;
   }
 }

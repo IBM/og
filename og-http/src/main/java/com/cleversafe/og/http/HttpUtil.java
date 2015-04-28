@@ -15,11 +15,13 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.util.Operation;
 import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ContiguousSet;
+import com.google.common.collect.DiscreteDomain;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Range;
 
@@ -30,8 +32,10 @@ import com.google.common.collect.Range;
  */
 public class HttpUtil {
   private static final Splitter URI_SPLITTER = Splitter.on("/").omitEmptyStrings();
-  public static final Range<Integer> VALID_STATUS_CODES = Range.closed(100, 599);
-  public static final List<Integer> SUCCESS_STATUS_CODES = ImmutableList.of(200, 201, 204);
+  public static final Set<Integer> VALID_STATUS_CODES = ContiguousSet.create(
+      Range.closed(100, 599), DiscreteDomain.integers());
+  public static final Set<Integer> SUCCESS_STATUS_CODES = ContiguousSet.create(
+      Range.closed(200, 299), DiscreteDomain.integers());
 
   private HttpUtil() {}
 
@@ -70,8 +74,9 @@ public class HttpUtil {
     Scheme.valueOf(uri.getScheme().toUpperCase(Locale.US));
     final List<String> parts = URI_SPLITTER.splitToList(uri.getPath());
 
-    if (parts.size() == 3)
+    if (parts.size() == 3) {
       return parts.get(2);
+    }
 
     if (parts.size() == 2) {
       try {
@@ -89,9 +94,9 @@ public class HttpUtil {
    * Creates a new, mutable, header map from the provided headers map with the x-og headers filtered
    * out.
    */
-  public static Map<String, String> filterOutOgHeaders(Map<String, String> headers) {
+  public static Map<String, String> filterOutOgHeaders(final Map<String, String> headers) {
     final Map<String, String> filtered = Maps.newHashMap();
-    for (Entry<String, String> header : headers.entrySet()) {
+    for (final Entry<String, String> header : headers.entrySet()) {
       if (!header.getKey().startsWith("x-og")) {
         filtered.put(header.getKey(), header.getValue());
       }

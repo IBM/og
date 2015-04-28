@@ -16,7 +16,6 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Callable;
@@ -141,20 +140,21 @@ public class ApacheClient implements Client {
             .setLongSerializationPolicy(LongSerializationPolicy.STRING)
             .registerTypeAdapter(Double.class, new TypeAdapter<Double>() {
               @Override
-              public void write(JsonWriter out, Double value) throws IOException {
+              public void write(final JsonWriter out, final Double value) throws IOException {
                 // round decimals to 2 places
                 out.value(new BigDecimal(value).setScale(2, RoundingMode.HALF_UP).doubleValue());
               }
 
               @Override
-              public Double read(JsonReader in) throws IOException {
+              public Double read(final JsonReader in) throws IOException {
                 return in.nextDouble();
               }
             }.nullSafe()).create();
 
     final HttpClientBuilder clientBuilder = HttpClients.custom();
-    if (this.userAgent != null)
+    if (this.userAgent != null) {
       clientBuilder.setUserAgent(this.userAgent);
+    }
 
     final ConnectionReuseStrategy connectionReuseStrategy =
         this.persistentConnections ? DefaultConnectionReuseStrategy.INSTANCE
@@ -182,12 +182,9 @@ public class ApacheClient implements Client {
                 new CustomHttpRequestRetryHandler(this.retryCount, this.requestSentRetry))
             .setRedirectStrategy(new CustomRedirectStrategy())
             .setDefaultRequestConfig(
-                RequestConfig.custom()
-                    .setExpectContinueEnabled(this.expectContinue)
-                    // TODO investigate performance impact of stale check (30ms reported)
-                    .setStaleConnectionCheckEnabled(true).setRedirectsEnabled(true)
-                    .setRelativeRedirectsAllowed(true).setConnectTimeout(this.connectTimeout)
-                    .setSocketTimeout(this.soTimeout)
+                RequestConfig.custom().setExpectContinueEnabled(this.expectContinue)
+                    .setRedirectsEnabled(true).setRelativeRedirectsAllowed(true)
+                    .setConnectTimeout(this.connectTimeout).setSocketTimeout(this.soTimeout)
                     // TODO should this be infinite? length of time allowed to request a connection
                     // from the pool
                     .setConnectionRequestTimeout(0).build()).build();
@@ -205,7 +202,8 @@ public class ApacheClient implements Client {
     checkNotNull(request);
     final HttpUriRequest apacheRequest = createRequest(request);
     final ListenableFuture<Response> baseFuture =
-        this.executorService.submit(new BlockingHttpOperation(request, apacheRequest, userAgent));
+        this.executorService.submit(new BlockingHttpOperation(request, apacheRequest,
+            this.userAgent));
 
     return new ForwardingListenableFuture.SimpleForwardingListenableFuture<Response>(baseFuture) {
       @Override
@@ -224,19 +222,20 @@ public class ApacheClient implements Client {
     if (request.headers().get(Headers.X_OG_USERNAME) != null
         && request.headers().get(Headers.X_OG_PASSWORD) != null) {
       authHeaders.putAll(this.authentication.getAuthorizationHeaders(request));
-      for (Entry<String, String> e : authHeaders.entrySet()) {
+      for (final Entry<String, String> e : authHeaders.entrySet()) {
         builder.addHeader(e.getKey(), e.getValue());
       }
     }
 
     for (final Entry<String, String> header : request.headers().entrySet()) {
-      String key = header.getKey();
+      final String key = header.getKey();
       // Filter out OG config headers, and give precedence to auth headers since their versions are
       // likely signed
-      if (key.startsWith("x-og") || authHeaders.containsKey(key))
+      if (key.startsWith("x-og") || authHeaders.containsKey(key)) {
         continue;
-      else
+      } else {
         builder.addHeader(key, header.getValue());
+      }
     }
 
     if (DataType.NONE != request.getBody().getDataType()) {
@@ -264,8 +263,9 @@ public class ApacheClient implements Client {
     return new Runnable() {
       @Override
       public void run() {
-        if (immediate)
+        if (immediate) {
           closeSockets();
+        }
 
         shutdownClient();
         future.set(true);
@@ -311,7 +311,7 @@ public class ApacheClient implements Client {
     private final byte[] buf;
 
     public BlockingHttpOperation(final Request request, final HttpUriRequest apacheRequest,
-        String userAgent) {
+        final String userAgent) {
       this.request = request;
       this.apacheRequest = apacheRequest;
       this.userAgent = userAgent;
@@ -326,8 +326,9 @@ public class ApacheClient implements Client {
       this.timestamps.start = System.nanoTime();
       final HttpResponse.Builder responseBuilder = new HttpResponse.Builder();
       final String requestId = this.request.headers().get(Headers.X_OG_REQUEST_ID);
-      if (requestId != null)
+      if (requestId != null) {
         responseBuilder.withHeader(Headers.X_OG_REQUEST_ID, requestId);
+      }
       final Response response;
       try {
         sendRequest(this.apacheRequest, responseBuilder);
@@ -340,7 +341,7 @@ public class ApacheClient implements Client {
       this.timestamps.finishMillis = System.currentTimeMillis();
 
       final RequestLogEntry entry =
-          new RequestLogEntry(this.request, response, userAgent, this.timestamps);
+          new RequestLogEntry(this.request, response, this.userAgent, this.timestamps);
       _requestLogger.info(ApacheClient.this.gson.toJson(entry));
 
       return response;
@@ -360,11 +361,11 @@ public class ApacheClient implements Client {
       });
     }
 
-    private void setRequestContentTimestamps(HttpUriRequest apacheRequest) {
+    private void setRequestContentTimestamps(final HttpUriRequest apacheRequest) {
       if (apacheRequest instanceof HttpEntityEnclosingRequest) {
-        HttpEntityEnclosingRequest request = (HttpEntityEnclosingRequest) apacheRequest;
+        final HttpEntityEnclosingRequest request = (HttpEntityEnclosingRequest) apacheRequest;
         if (request.getEntity() instanceof CustomHttpEntity) {
-          CustomHttpEntity entity = (CustomHttpEntity) request.getEntity();
+          final CustomHttpEntity entity = (CustomHttpEntity) request.getEntity();
           this.timestamps.requestContentStart = entity.getRequestContentStart();
           this.timestamps.requestContentFinish = entity.getRequestContentFinish();
         }
@@ -392,10 +393,11 @@ public class ApacheClient implements Client {
       if (entity != null) {
         InputStream entityStream = entity.getContent();
         final long readThroughput = ApacheClient.this.readThroughput;
-        if (readThroughput > 0)
+        if (readThroughput > 0) {
           entityStream = Streams.throttle(entityStream, readThroughput);
+        }
 
-        MonitoringInputStream in = new MonitoringInputStream(entityStream);
+        final MonitoringInputStream in = new MonitoringInputStream(entityStream);
 
         // TODO clean this up, should always try to set response entity to response size;
         // will InstrumentedInputStream help with this?
@@ -404,10 +406,8 @@ public class ApacheClient implements Client {
             ApacheClient.this.responseBodyConsumers.get(consumerId);
         this.timestamps.responseContentStart = System.nanoTime();
         if (consumer != null) {
-          final Iterator<Entry<String, String>> it =
-              consumer.consume(response.getStatusLine().getStatusCode(), in);
-          while (it.hasNext()) {
-            final Entry<String, String> e = it.next();
+          for (final Map.Entry<String, String> e : consumer.consume(
+              response.getStatusLine().getStatusCode(), in).entrySet()) {
             responseBuilder.withHeader(e.getKey(), e.getValue());
           }
         } else {
@@ -426,8 +426,9 @@ public class ApacheClient implements Client {
         totalBytes += bytesRead;
       }
 
-      if (totalBytes > 0)
+      if (totalBytes > 0) {
         responseBuilder.withBody(Bodies.zeroes(totalBytes));
+      }
     }
   }
 

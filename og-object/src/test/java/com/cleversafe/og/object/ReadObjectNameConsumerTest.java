@@ -14,14 +14,14 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
-import java.util.List;
+import java.util.Set;
 
 import com.cleversafe.og.api.Method;
 
 public class ReadObjectNameConsumerTest extends AbstractObjectNameConsumerTest {
   @Override
   public AbstractObjectNameConsumer create(final ObjectManager objectManager,
-      final List<Integer> statusCodes) {
+      final Set<Integer> statusCodes) {
     return new ReadObjectNameConsumer(objectManager, statusCodes);
   }
 
@@ -32,17 +32,17 @@ public class ReadObjectNameConsumerTest extends AbstractObjectNameConsumerTest {
 
   @Override
   public void doVerify() {
-    verify(this.objectManager).releaseNameFromRead(isA(ObjectMetadata.class));
+    verify(this.objectManager).getComplete(isA(ObjectMetadata.class));
   }
 
   @Override
   public void doVerifyNever() {
-    verify(this.objectManager, never()).releaseNameFromRead(isA(ObjectMetadata.class));
+    verify(this.objectManager, never()).getComplete(isA(ObjectMetadata.class));
   }
 
   @Override
   public void doThrowIt() {
-    doThrow(new ObjectManagerException()).when(this.objectManager).releaseNameFromRead(
+    doThrow(new ObjectManagerException()).when(this.objectManager).getComplete(
         any(ObjectMetadata.class));
   }
 }

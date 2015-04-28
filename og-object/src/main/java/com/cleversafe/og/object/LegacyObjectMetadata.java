@@ -28,7 +28,7 @@ public class LegacyObjectMetadata implements ObjectMetadata {
   private static final BaseEncoding ENCODING = BaseEncoding.base16().lowerCase();
   private final ByteBuffer objectBuffer;
 
-  private LegacyObjectMetadata(ByteBuffer objectBuffer) {
+  private LegacyObjectMetadata(final ByteBuffer objectBuffer) {
     this.objectBuffer = objectBuffer;
   }
 
@@ -55,17 +55,17 @@ public class LegacyObjectMetadata implements ObjectMetadata {
    * @return a {@code LegacyObjectMetadata} instance
    * @throws IllegalArgumentException if objectSize is negative
    */
-  public static LegacyObjectMetadata fromMetadata(final String objectName, long objectSize) {
+  public static LegacyObjectMetadata fromMetadata(final String objectName, final long objectSize) {
     checkNotNull(objectName);
     // HACK; assume 1 char == 2 bytes for object name string length checking
-    int stringLength = 2 * OBJECT_NAME_SIZE;
+    final int stringLength = 2 * OBJECT_NAME_SIZE;
     checkArgument(objectName.length() == stringLength,
         String.format("objectName length must be == %s", stringLength) + " [%s]",
         objectName.length());
     checkArgument(objectSize >= 0, "objectSize must be >= 0 [%s]", objectSize);
 
-    byte[] b = Arrays.copyOf(ENCODING.decode(objectName), OBJECT_SIZE);
-    ByteBuffer objectBuffer = ByteBuffer.wrap(b);
+    final byte[] b = Arrays.copyOf(ENCODING.decode(objectName), OBJECT_SIZE);
+    final ByteBuffer objectBuffer = ByteBuffer.wrap(b);
     objectBuffer.position(OBJECT_NAME_SIZE);
     objectBuffer.putLong(objectSize);
     return new LegacyObjectMetadata(objectBuffer);
@@ -84,11 +84,13 @@ public class LegacyObjectMetadata implements ObjectMetadata {
 
   @Override
   public boolean equals(final Object obj) {
-    if (obj == null)
+    if (obj == null) {
       return false;
+    }
 
-    if (!(obj instanceof ObjectMetadata))
+    if (!(obj instanceof ObjectMetadata)) {
       return false;
+    }
 
     final ObjectMetadata other = (ObjectMetadata) obj;
     return Arrays.equals(toBytes(), other.toBytes());
@@ -114,8 +116,9 @@ public class LegacyObjectMetadata implements ObjectMetadata {
     while (k < lim) {
       final byte c1 = b1[k];
       final byte c2 = b2[k];
-      if (c1 != c2)
+      if (c1 != c2) {
         return c1 - c2;
+      }
       k++;
     }
     return len1 - len2;

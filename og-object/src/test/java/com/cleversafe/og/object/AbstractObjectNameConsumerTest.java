@@ -13,7 +13,7 @@ import static org.mockito.Mockito.when;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.List;
+import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -28,9 +28,9 @@ import com.cleversafe.og.http.Bodies;
 import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpUtil;
 import com.cleversafe.og.util.Pair;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.tngtech.java.junit.dataprovider.DataProvider;
 import com.tngtech.java.junit.dataprovider.DataProviderRunner;
 import com.tngtech.java.junit.dataprovider.UseDataProvider;
@@ -40,7 +40,7 @@ public abstract class AbstractObjectNameConsumerTest {
   @Rule
   public ExpectedException thrown = ExpectedException.none();
   protected ObjectManager objectManager;
-  protected List<Integer> statusCodes;
+  protected Set<Integer> statusCodes;
   protected String object;
   protected Request request;
   protected Response response;
@@ -69,7 +69,7 @@ public abstract class AbstractObjectNameConsumerTest {
   }
 
   public abstract AbstractObjectNameConsumer create(ObjectManager objectManager,
-      List<Integer> statusCodes);
+      Set<Integer> statusCodes);
 
   public abstract Method method();
 
@@ -82,22 +82,22 @@ public abstract class AbstractObjectNameConsumerTest {
   @DataProvider
   public static Object[][] provideInvalidObjectNameConsumer() {
     final ObjectManager objectManager = mock(ObjectManager.class);
-    final List<Integer> statusCodes = HttpUtil.SUCCESS_STATUS_CODES;
-    final List<Integer> nullElement = Lists.newArrayList();
+    final Set<Integer> statusCodes = HttpUtil.SUCCESS_STATUS_CODES;
+    final Set<Integer> nullElement = Sets.newHashSet();
     nullElement.add(null);
 
     return new Object[][] { {null, statusCodes, NullPointerException.class},
         {objectManager, null, NullPointerException.class},
-        {objectManager, ImmutableList.of(), IllegalArgumentException.class},
+        {objectManager, ImmutableSet.of(), IllegalArgumentException.class},
         {objectManager, nullElement, NullPointerException.class},
-        {objectManager, ImmutableList.of(99), IllegalArgumentException.class},
-        {objectManager, ImmutableList.of(600), IllegalArgumentException.class}};
+        {objectManager, ImmutableSet.of(99), IllegalArgumentException.class},
+        {objectManager, ImmutableSet.of(600), IllegalArgumentException.class}};
   }
 
   @Test
   @UseDataProvider("provideInvalidObjectNameConsumer")
   public void invalidObjectNameConsumer(final ObjectManager objectManager,
-      final List<Integer> statusCodes, final Class<Exception> expectedException) {
+      final Set<Integer> statusCodes, final Class<Exception> expectedException) {
     this.thrown.expect(expectedException);
     create(objectManager, statusCodes);
   }
@@ -129,7 +129,7 @@ public abstract class AbstractObjectNameConsumerTest {
 
   @Test
   public void statusCodeModification() {
-    final List<Integer> mutable = Lists.newArrayList();
+    final Set<Integer> mutable = Sets.newHashSet();
     mutable.add(200);
     final AbstractObjectNameConsumer consumer = create(this.objectManager, mutable);
     mutable.clear();

@@ -40,7 +40,7 @@ public class ConcurrencyConfigTypeAdapterFactoryTest {
     final String json = "{\"count\": 5.0}";
     final ConcurrencyConfig config = this.gson.fromJson(json, ConcurrencyConfig.class);
 
-    assertThat(config.getCount(), is(5.0));
+    assertThat(config.count, is(5.0));
   }
 
   @Test
@@ -48,7 +48,7 @@ public class ConcurrencyConfigTypeAdapterFactoryTest {
     final String json = "10.0";
     final ConcurrencyConfig config = this.gson.fromJson(json, ConcurrencyConfig.class);
 
-    assertThat(config.getCount(), is(10.0));
+    assertThat(config.count, is(10.0));
   }
 
   @Test

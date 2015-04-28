@@ -44,7 +44,7 @@ public class LegacyObjectMetadataTest {
 
   @Test(expected = IllegalArgumentException.class)
   public void fromMetadataLongObjectName() {
-    String objectName = UUID.randomUUID().toString().replace("-", "") + "12345";
+    final String objectName = UUID.randomUUID().toString().replace("-", "") + "12345";
     LegacyObjectMetadata.fromMetadata(objectName, 0);
   }
 
@@ -56,41 +56,43 @@ public class LegacyObjectMetadataTest {
   @Test
   public void legacyObjectMetadataFromBytes() {
     final UUID objectName = UUID.randomUUID();
-    String objectString = objectString(objectName);
-    long objectSize = Long.MAX_VALUE;
+    final String objectString = objectString(objectName);
+    final long objectSize = Long.MAX_VALUE;
 
     final LegacyObjectMetadata objectMetadata =
         LegacyObjectMetadata.fromBytes(bytes(objectName, objectSize));
 
-    String canonical = String.format("%s,%s", objectMetadata.getName(), objectMetadata.getSize());
+    final String canonical =
+        String.format("%s,%s", objectMetadata.getName(), objectMetadata.getSize());
     assertThat(canonical, is(canonicalize(objectString, objectSize)));
   }
 
   @Test
   public void legacyObjectMetadataFromMetadata() {
     final UUID objectName = UUID.randomUUID();
-    String objectString = objectString(objectName);
-    long objectSize = 0;
+    final String objectString = objectString(objectName);
+    final long objectSize = 0;
 
     final LegacyObjectMetadata objectMetadata =
         LegacyObjectMetadata.fromMetadata(objectString, objectSize);
 
-    String canonical = String.format("%s,%s", objectMetadata.getName(), objectMetadata.getSize());
+    final String canonical =
+        String.format("%s,%s", objectMetadata.getName(), objectMetadata.getSize());
     assertThat(canonical, is(canonicalize(objectString, objectSize)));
   }
 
   @Test
   public void compareEqualsNull() {
-    String objectString = objectString(UUID.randomUUID());
-    long objectSize = 0;
+    final String objectString = objectString(UUID.randomUUID());
+    final long objectSize = 0;
 
     assertThat(LegacyObjectMetadata.fromMetadata(objectString, objectSize).equals(null), is(false));
   }
 
   @Test
   public void compareEqualsNonMatchingType() {
-    String objectString = objectString(UUID.randomUUID());
-    long objectSize = 0;
+    final String objectString = objectString(UUID.randomUUID());
+    final long objectSize = 0;
 
     final LegacyObjectMetadata objectName =
         LegacyObjectMetadata.fromMetadata(objectString, objectSize);
@@ -98,17 +100,17 @@ public class LegacyObjectMetadataTest {
     assertThat(objectName.equals("NOT_AN_OBJECT_NAME"), is(false));
   }
 
-  private byte[] bytes(final UUID objectName, long objectSize) {
+  private byte[] bytes(final UUID objectName, final long objectSize) {
     return ByteBuffer.allocate(LegacyObjectMetadata.OBJECT_SIZE)
         .putLong(objectName.getMostSignificantBits()).putLong(objectName.getLeastSignificantBits())
         .putShort((short) 0).putLong(objectSize).array();
   }
 
-  private String objectString(UUID objectName) {
+  private String objectString(final UUID objectName) {
     return objectName.toString().replace("-", "") + "0000";
   }
 
-  private String canonicalize(final String objectName, long objectSize) {
+  private String canonicalize(final String objectName, final long objectSize) {
     return String.format("%s,%s", objectName, objectSize);
   }
 }

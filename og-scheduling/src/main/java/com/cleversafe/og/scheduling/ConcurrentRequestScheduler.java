@@ -27,6 +27,8 @@ import com.google.common.util.concurrent.Uninterruptibles;
 
 /**
  * A scheduler which simulates concurrent actions
+ * 
+ * @since 1.0
  */
 public class ConcurrentRequestScheduler implements Scheduler {
   private static final Logger _logger = LoggerFactory.getLogger(ConcurrentRequestScheduler.class);
@@ -54,9 +56,9 @@ public class ConcurrentRequestScheduler implements Scheduler {
     this.rampDuration = (long) (rampup * rampupUnit.toNanos(1));
     this.started = new CountDownLatch(1);
 
-    if (DoubleMath.fuzzyEquals(this.rampDuration, 0.0, Math.pow(0.1, 6)))
+    if (DoubleMath.fuzzyEquals(this.rampDuration, 0.0, Math.pow(0.1, 6))) {
       this.sem = new Semaphore(concurrentRequests - 1);
-    else {
+    } else {
       this.sem = new Semaphore(0);
       final Thread rampupThread = new Thread(new Runnable() {
         @Override
@@ -88,7 +90,7 @@ public class ConcurrentRequestScheduler implements Scheduler {
     try {
       this.sem.acquire();
     } catch (final InterruptedException e) {
-      _logger.info("Interrupted while waiting to schedule next request", e);
+      _logger.warn("Interrupted while waiting to schedule next request", e);
       return;
     }
   }

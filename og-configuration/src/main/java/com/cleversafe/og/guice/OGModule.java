@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.inject.Named;
@@ -106,6 +107,11 @@ import com.google.inject.name.Names;
 import com.google.inject.spi.ProvisionListener;
 import com.google.inject.util.Providers;
 
+/**
+ * A guice configuration module for wiring up all OG test components
+ * 
+ * @since 1.0
+ */
 public class OGModule extends AbstractModule {
   private final OGConfig config;
   private static final double ERR = Math.pow(0.1, 6);
@@ -122,49 +128,50 @@ public class OGModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    bind(Scheme.class).toInstance(this.config.getScheme());
+    bind(Scheme.class).toInstance(this.config.scheme);
     bind(Integer.class).annotatedWith(Names.named("port")).toProvider(
-        Providers.of(this.config.getPort()));
-    bind(Api.class).toInstance(this.config.getApi());
-    bindConstant().annotatedWith(Names.named("write.weight"))
-        .to(this.config.getWrite().getWeight());
-    bindConstant().annotatedWith(Names.named("read.weight")).to(this.config.getRead().getWeight());
-    bindConstant().annotatedWith(Names.named("delete.weight")).to(
-        this.config.getDelete().getWeight());
-    bind(AuthType.class).toInstance(this.config.getAuthentication().getType());
+        Providers.of(this.config.port));
+    bind(Api.class).toInstance(this.config.api);
+    bindConstant().annotatedWith(Names.named("write.weight")).to(this.config.write.weight);
+    bindConstant().annotatedWith(Names.named("read.weight")).to(this.config.read.weight);
+    bindConstant().annotatedWith(Names.named("delete.weight")).to(this.config.delete.weight);
+    bind(AuthType.class).toInstance(this.config.authentication.type);
     bind(String.class).annotatedWith(Names.named("authentication.username")).toProvider(
-        Providers.of(this.config.getAuthentication().getUsername()));
+        Providers.of(this.config.authentication.username));
     bind(String.class).annotatedWith(Names.named("authentication.password")).toProvider(
-        Providers.of(this.config.getAuthentication().getPassword()));
-    bind(StoppingConditionsConfig.class).toInstance(this.config.getStoppingConditions());
+        Providers.of(this.config.authentication.password));
+    bind(StoppingConditionsConfig.class).toInstance(this.config.stoppingConditions);
 
-    MapBinder<AuthType, HttpAuth> httpAuthBinder =
+    final MapBinder<AuthType, HttpAuth> httpAuthBinder =
         MapBinder.newMapBinder(binder(), AuthType.class, HttpAuth.class);
     httpAuthBinder.addBinding(AuthType.AWSV2).to(AWSAuthV2.class);
     httpAuthBinder.addBinding(AuthType.AWSV4).to(AWSAuthV4.class);
     httpAuthBinder.addBinding(AuthType.AWSV4CHUNKED).to(AWSAuthV4Chunked.class);
     httpAuthBinder.addBinding(AuthType.BASIC).to(BasicAuth.class);
 
-    MapBinder<String, ResponseBodyConsumer> responseBodyConsumers =
+    final MapBinder<String, ResponseBodyConsumer> responseBodyConsumers =
         MapBinder.newMapBinder(binder(), String.class, ResponseBodyConsumer.class);
     responseBodyConsumers.addBinding(SOH_PUT_OBJECT).to(SOHWriteResponseBodyConsumer.class);
 
     bind(RequestManager.class).to(SimpleRequestManager.class);
     bind(LoadTest.class).in(Singleton.class);
-    bind(LoadTestSubscriberExceptionHandler.class).toInstance(this.handler);
     bind(EventBus.class).toInstance(this.eventBus);
     bind(Statistics.class).in(Singleton.class);
     bind(ObjectManager.class).to(RandomObjectPopulator.class).in(Singleton.class);
     bindListener(Matchers.any(), new ProvisionListener() {
       @Override
-      public <T> void onProvision(ProvisionInvocation<T> provision) {
+      public <T> void onProvision(final ProvisionInvocation<T> provision) {
         // register every non-null provisioned instance with the global event bus. EventBus treats
         // registration of instances without an @Subscribe method as a no-op and handles duplicate
         // registration such that a given @Subscribe annotated method will only be triggered once
         // per event
-        T instance = provision.provision();
+        final T instance = provision.provision();
         if (instance != null) {
           OGModule.this.eventBus.register(instance);
+        }
+        if (instance instanceof LoadTest) {
+          // register LoadTest with the event bus' exception handler
+          OGModule.this.handler.setLoadTest((LoadTest) instance);
         }
       }
     });
@@ -181,19 +188,22 @@ public class OGModule extends AbstractModule {
 
     final List<TestCondition> conditions = Lists.newArrayList();
 
-    if (config.getOperations() > 0)
-      conditions.add(new CounterCondition(Operation.ALL, Counter.OPERATIONS,
-          config.getOperations(), test, stats));
-
-    final Map<Integer, Integer> scMap = config.getStatusCodes();
-    for (final Entry<Integer, Integer> sc : scMap.entrySet()) {
-      if (sc.getValue() > 0)
-        conditions.add(new StatusCodeCondition(Operation.ALL, sc.getKey(), sc.getValue(), test,
-            stats));
+    if (config.operations > 0) {
+      conditions.add(new CounterCondition(Operation.ALL, Counter.OPERATIONS, config.operations,
+          test, stats));
     }
 
-    if (config.getRuntime() > 0)
-      conditions.add(new RuntimeCondition(test, config.getRuntime(), config.getRuntimeUnit()));
+    final Map<Integer, Integer> scMap = config.statusCodes;
+    for (final Entry<Integer, Integer> sc : scMap.entrySet()) {
+      if (sc.getValue() > 0) {
+        conditions.add(new StatusCodeCondition(Operation.ALL, sc.getKey(), sc.getValue(), test,
+            stats));
+      }
+    }
+
+    if (config.runtime > 0) {
+      conditions.add(new RuntimeCondition(test, config.runtime, config.runtimeUnit));
+    }
 
     for (final TestCondition condition : conditions) {
       eventBus.register(condition);
@@ -206,8 +216,9 @@ public class OGModule extends AbstractModule {
   @Singleton
   @WriteObjectName
   public Function<Map<String, String>, String> provideWriteObjectName(final Api api) {
-    if (Api.SOH == checkNotNull(api))
+    if (Api.SOH == checkNotNull(api)) {
       return null;
+    }
     return new UUIDObjectNameSupplier();
   }
 
@@ -231,7 +242,7 @@ public class OGModule extends AbstractModule {
   @Singleton
   public List<AbstractObjectNameConsumer> provideObjectNameConsumers(
       final ObjectManager objectManager, final EventBus eventBus) {
-    final List<Integer> sc = HttpUtil.SUCCESS_STATUS_CODES;
+    final Set<Integer> sc = HttpUtil.SUCCESS_STATUS_CODES;
     final List<AbstractObjectNameConsumer> consumers = Lists.newArrayList();
     consumers.add(new WriteObjectNameConsumer(objectManager, sc));
     consumers.add(new ReadObjectNameConsumer(objectManager, sc));
@@ -260,28 +271,28 @@ public class OGModule extends AbstractModule {
   @Singleton
   @Named("host")
   public Supplier<String> provideHost() {
-    return createHost(this.config.getHost());
+    return createHost(this.config.host);
   }
 
   @Provides
   @Singleton
   @WriteHost
   public Supplier<String> provideWriteHost(@Named("host") final Supplier<String> host) {
-    return provideHost(this.config.getWrite(), host);
+    return provideHost(this.config.write, host);
   }
 
   @Provides
   @Singleton
   @ReadHost
   public Supplier<String> provideReadHost(@Named("host") final Supplier<String> host) {
-    return provideHost(this.config.getRead(), host);
+    return provideHost(this.config.read, host);
   }
 
   @Provides
   @Singleton
   @DeleteHost
   public Supplier<String> provideDeleteHost(@Named("host") final Supplier<String> host) {
-    return provideHost(this.config.getDelete(), host);
+    return provideHost(this.config.delete, host);
   }
 
   private Supplier<String> provideHost(final OperationConfig operationConfig,
@@ -289,14 +300,15 @@ public class OGModule extends AbstractModule {
     checkNotNull(operationConfig);
     checkNotNull(testHost);
 
-    final SelectionConfig<String> operationHost = operationConfig.getHost();
-    if (operationHost != null && !operationHost.choices.isEmpty())
-      return createHost(operationConfig.getHost());
+    final SelectionConfig<String> operationHost = operationConfig.host;
+    if (operationHost != null && !operationHost.choices.isEmpty()) {
+      return createHost(operationConfig.host);
+    }
 
     return testHost;
   }
 
-  private Supplier<String> createHost(SelectionConfig<String> host) {
+  private Supplier<String> createHost(final SelectionConfig<String> host) {
     checkNotNull(host);
     checkNotNull(host.selection);
     checkNotNull(host.choices);
@@ -326,29 +338,30 @@ public class OGModule extends AbstractModule {
   @Singleton
   @Named("uri.root")
   public String provideUriRoot() {
-    final String uriRoot = this.config.getUriRoot();
+    final String uriRoot = this.config.uriRoot;
     if (uriRoot != null) {
       final String root = CharMatcher.is('/').trimFrom(uriRoot);
-      if (root.length() > 0)
+      if (root.length() > 0) {
         return root;
+      }
       return null;
     }
 
-    return this.config.getApi().toString().toLowerCase();
+    return this.config.api.toString().toLowerCase();
   }
 
   @Provides
   @Singleton
   @Named("container")
   public Function<Map<String, String>, String> provideContainer() {
-    final String container = checkNotNull(this.config.getContainer());
+    final String container = checkNotNull(this.config.container);
     checkArgument(container.length() > 0, "container must not be empty string");
     // FIXME may need to extract a real Function implementation, especially for multi container
-    final Supplier<String> objectSupplier = Suppliers.of(this.config.getContainer());
+    final Supplier<String> objectSupplier = Suppliers.of(this.config.container);
     return new Function<Map<String, String>, String>() {
 
       @Override
-      public String apply(Map<String, String> input) {
+      public String apply(final Map<String, String> input) {
         return objectSupplier.get();
       }
     };
@@ -358,40 +371,40 @@ public class OGModule extends AbstractModule {
   @Singleton
   @WriteHeaders
   public Map<String, Supplier<String>> provideWriteHeaders() {
-    return provideHeaders(this.config.getWrite().getHeaders());
+    return provideHeaders(this.config.write.headers);
   }
 
   @Provides
   @Singleton
   @ReadHeaders
   public Map<String, Supplier<String>> provideReadHeaders() {
-    return provideHeaders(this.config.getRead().getHeaders());
+    return provideHeaders(this.config.read.headers);
   }
 
   @Provides
   @Singleton
   @DeleteHeaders
   public Map<String, Supplier<String>> provideDeleteHeaders() {
-    return provideHeaders(this.config.getDelete().getHeaders());
+    return provideHeaders(this.config.delete.headers);
   }
 
   private Map<String, Supplier<String>> provideHeaders(
-      Map<String, SelectionConfig<String>> operationHeaders) {
+      final Map<String, SelectionConfig<String>> operationHeaders) {
     checkNotNull(operationHeaders);
-    Map<String, SelectionConfig<String>> configHeaders = this.config.getHeaders();
+    Map<String, SelectionConfig<String>> configHeaders = this.config.headers;
     if (operationHeaders.size() > 0) {
       configHeaders = operationHeaders;
     }
 
-    Map<String, Supplier<String>> headers = Maps.newLinkedHashMap();
-    for (Map.Entry<String, SelectionConfig<String>> e : configHeaders.entrySet()) {
+    final Map<String, Supplier<String>> headers = Maps.newLinkedHashMap();
+    for (final Map.Entry<String, SelectionConfig<String>> e : configHeaders.entrySet()) {
       headers.put(e.getKey(), createHeaderSuppliers(e.getValue()));
     }
 
     return headers;
   }
 
-  private Supplier<String> createHeaderSuppliers(SelectionConfig<String> selectionConfig) {
+  private Supplier<String> createHeaderSuppliers(final SelectionConfig<String> selectionConfig) {
     // FIXME create generalized process for creating random or roundrobin suppliers regardless
     // of config type
     if (SelectionType.ROUNDROBIN == selectionConfig.selection) {
@@ -412,32 +425,33 @@ public class OGModule extends AbstractModule {
   @Provides
   @Singleton
   public Supplier<Body> provideBody() {
-    final SelectionType filesizeSelection = checkNotNull(this.config.getFilesizeSelection());
-    final List<FilesizeConfig> filesizes = checkNotNull(this.config.getFilesize());
+    final SelectionConfig<FilesizeConfig> filesizeConfig = this.config.filesize;
+    final SelectionType filesizeSelection = checkNotNull(filesizeConfig.selection);
+    final List<ChoiceConfig<FilesizeConfig>> filesizes = checkNotNull(filesizeConfig.choices);
     checkArgument(!filesizes.isEmpty(), "filesize must not be empty");
 
     if (SelectionType.ROUNDROBIN == filesizeSelection) {
       final List<Distribution> distributions = Lists.newArrayList();
-      for (final FilesizeConfig f : filesizes) {
-        distributions.add(createSizeDistribution(f));
+      for (final ChoiceConfig<FilesizeConfig> choice : filesizes) {
+        distributions.add(createSizeDistribution(choice.choice));
       }
       return createBodySupplier(Suppliers.cycle(distributions));
     }
 
     final RandomSupplier.Builder<Distribution> wrc = Suppliers.random();
-    for (final FilesizeConfig f : filesizes) {
-      wrc.withChoice(createSizeDistribution(f), f.getWeight());
+    for (final ChoiceConfig<FilesizeConfig> f : filesizes) {
+      wrc.withChoice(createSizeDistribution(f.choice), f.weight);
     }
     return createBodySupplier(wrc.build());
   }
 
   private static Distribution createSizeDistribution(final FilesizeConfig filesize) {
-    final SizeUnit averageUnit = checkNotNull(filesize.getAverageUnit());
-    final SizeUnit spreadUnit = checkNotNull(filesize.getSpreadUnit());
-    final DistributionType distribution = checkNotNull(filesize.getDistribution());
+    final SizeUnit averageUnit = checkNotNull(filesize.averageUnit);
+    final SizeUnit spreadUnit = checkNotNull(filesize.spreadUnit);
+    final DistributionType distribution = checkNotNull(filesize.distribution);
 
-    final double average = filesize.getAverage() * averageUnit.toBytes(1);
-    final double spread = filesize.getSpread() * spreadUnit.toBytes(1);
+    final double average = filesize.average * averageUnit.toBytes(1);
+    final double spread = filesize.spread * spreadUnit.toBytes(1);
 
     switch (distribution) {
       case NORMAL:
@@ -453,7 +467,7 @@ public class OGModule extends AbstractModule {
   }
 
   private Supplier<Body> createBodySupplier(final Supplier<Distribution> distributionSupplier) {
-    final DataType data = checkNotNull(this.config.getData());
+    final DataType data = checkNotNull(this.config.data);
     checkArgument(DataType.NONE != data, "Unacceptable data [%s]", data);
 
     return new Supplier<Body>() {
@@ -475,15 +489,16 @@ public class OGModule extends AbstractModule {
   @Singleton
   @Named("objectfile.location")
   public String provideObjectFileLocation() throws IOException {
-    final String path = checkNotNull(this.config.getObjectManager().getObjectFileLocation());
+    final String path = checkNotNull(this.config.objectManager.objectFileLocation);
     checkArgument(path.length() > 0, "path must not be empty string");
 
     final File f = new File(path).getCanonicalFile();
     if (!f.exists()) {
       final boolean success = f.mkdirs();
-      if (!success)
+      if (!success) {
         throw new RuntimeException(String.format("failed to create object location directories",
             f.toString()));
+      }
     }
 
     checkArgument(f.isDirectory(), "object location is not a directory [%s]", f.toString());
@@ -497,13 +512,14 @@ public class OGModule extends AbstractModule {
       @Named("container") final Function<Map<String, String>, String> container, final Api api) {
     checkNotNull(container);
     checkNotNull(api);
-    final ObjectManagerConfig objectManagerConfig = checkNotNull(this.config.getObjectManager());
-    final String objectFileName = objectManagerConfig.getObjectFileName();
+    final ObjectManagerConfig objectManagerConfig = checkNotNull(this.config.objectManager);
+    final String objectFileName = objectManagerConfig.objectFileName;
 
-    if (objectFileName != null && !objectFileName.isEmpty())
+    if (objectFileName != null && !objectFileName.isEmpty()) {
       return objectFileName;
+    }
     // FIXME this naming scheme will break unless @TestContainer is a constant supplier
-    Map<String, String> context = Maps.newHashMap();
+    final Map<String, String> context = Maps.newHashMap();
     return container.apply(context) + "-" + api.toString().toLowerCase();
   }
 
@@ -511,14 +527,14 @@ public class OGModule extends AbstractModule {
   @Singleton
   public Scheduler provideScheduler(final EventBus eventBus) {
     checkNotNull(eventBus);
-    final ConcurrencyConfig concurrency = checkNotNull(this.config.getConcurrency());
-    final ConcurrencyType type = checkNotNull(concurrency.getType());
-    final DistributionType distribution = checkNotNull(concurrency.getDistribution());
+    final ConcurrencyConfig concurrency = checkNotNull(this.config.concurrency);
+    final ConcurrencyType type = checkNotNull(concurrency.type);
+    final DistributionType distribution = checkNotNull(concurrency.distribution);
 
     if (ConcurrencyType.THREADS == type) {
       final Scheduler scheduler =
-          new ConcurrentRequestScheduler((int) Math.round(concurrency.getCount()),
-              concurrency.getRampup(), concurrency.getRampupUnit());
+          new ConcurrentRequestScheduler((int) Math.round(concurrency.count), concurrency.rampup,
+              concurrency.rampupUnit);
       eventBus.register(scheduler);
       return scheduler;
     }
@@ -526,17 +542,17 @@ public class OGModule extends AbstractModule {
     Distribution count;
     switch (distribution) {
       case POISSON:
-        count = Distributions.poisson(concurrency.getCount());
+        count = Distributions.poisson(concurrency.count);
         break;
       case UNIFORM:
-        count = Distributions.uniform(concurrency.getCount(), 0.0);
+        count = Distributions.uniform(concurrency.count, 0.0);
         break;
       default:
         throw new IllegalArgumentException(String.format(
             "unacceptable scheduler distribution [%s]", distribution));
     }
-    return new RequestRateScheduler(count, concurrency.getUnit(), concurrency.getRampup(),
-        concurrency.getRampupUnit());
+    return new RequestRateScheduler(count, concurrency.unit, concurrency.rampup,
+        concurrency.rampupUnit);
   }
 
   @Provides
@@ -544,24 +560,22 @@ public class OGModule extends AbstractModule {
   public Client provideClient(final AuthType authType,
       final Map<AuthType, HttpAuth> authentication,
       final Map<String, ResponseBodyConsumer> responseBodyConsumers) {
-    ClientConfig clientConfig = this.config.getClient();
+    final ClientConfig clientConfig = this.config.client;
     final ApacheClient.Builder b =
-        new ApacheClient.Builder().withConnectTimeout(clientConfig.getConnectTimeout())
-            .withSoTimeout(clientConfig.getSoTimeout())
-            .usingSoReuseAddress(clientConfig.isSoReuseAddress())
-            .withSoLinger(clientConfig.getSoLinger())
-            .usingSoKeepAlive(clientConfig.isSoKeepAlive())
-            .usingTcpNoDelay(clientConfig.isTcpNoDelay())
-            .usingPersistentConnections(clientConfig.isPersistentConnections())
-            .usingChunkedEncoding(clientConfig.isChunkedEncoding())
-            .usingExpectContinue(clientConfig.isExpectContinue())
-            .withWaitForContinue(clientConfig.getWaitForContinue())
-            .withRetryCount(clientConfig.getRetryCount())
-            .usingRequestSentRetry(clientConfig.isRequestSentRetry())
+        new ApacheClient.Builder().withConnectTimeout(clientConfig.connectTimeout)
+            .withSoTimeout(clientConfig.soTimeout).usingSoReuseAddress(clientConfig.soReuseAddress)
+            .withSoLinger(clientConfig.soLinger).usingSoKeepAlive(clientConfig.soKeepAlive)
+            .usingTcpNoDelay(clientConfig.tcpNoDelay)
+            .usingPersistentConnections(clientConfig.persistentConnections)
+            .usingChunkedEncoding(clientConfig.chunkedEncoding)
+            .usingExpectContinue(clientConfig.expectContinue)
+            .withWaitForContinue(clientConfig.waitForContinue)
+            .withRetryCount(clientConfig.retryCount)
+            .usingRequestSentRetry(clientConfig.requestSentRetry)
             .withAuthentication(authentication.get(authType))
             .withUserAgent(Version.displayVersion())
-            .withWriteThroughput(clientConfig.getWriteThroughput())
-            .withReadThroughput(clientConfig.getReadThroughput());
+            .withWriteThroughput(clientConfig.writeThroughput)
+            .withReadThroughput(clientConfig.readThroughput);
 
     for (final Entry<String, ResponseBodyConsumer> consumer : responseBodyConsumers.entrySet()) {
       b.withResponseBodyConsumer(consumer.getKey(), consumer.getValue());
@@ -583,8 +597,9 @@ public class OGModule extends AbstractModule {
       @Named("authentication.password") final String password) {
     checkNotNull(api);
     // SOH needs to use a special response consumer to extract the returned object id
-    if (Api.SOH == api)
+    if (Api.SOH == api) {
       headers.put(Headers.X_OG_RESPONSE_BODY_CONSUMER, Suppliers.of(SOH_PUT_OBJECT));
+    }
 
     return createRequestSupplier(id, Method.PUT, scheme, host, port, uriRoot, container, object,
         headers, body, username, password);
@@ -621,7 +636,7 @@ public class OGModule extends AbstractModule {
   }
 
   private Supplier<Request> createRequestSupplier(@Named("request.id") final Supplier<String> id,
-      final Method method, Scheme scheme, final Supplier<String> host, final Integer port,
+      final Method method, final Scheme scheme, final Supplier<String> host, final Integer port,
       final String uriRoot, final Function<Map<String, String>, String> container,
       final Function<Map<String, String>, String> object,
       final Map<String, Supplier<String>> headers, final Supplier<Body> body,

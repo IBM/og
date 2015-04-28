@@ -8,7 +8,7 @@
 
 package com.cleversafe.og.object;
 
-import java.util.List;
+import java.util.Set;
 
 import com.cleversafe.og.util.Operation;
 
@@ -25,13 +25,13 @@ public class WriteObjectNameConsumer extends AbstractObjectNameConsumer {
    * @param statusCodes the status codes this instance should work with
    * @throws IllegalArgumentException if any status code in status codes is invalid
    */
-  public WriteObjectNameConsumer(final ObjectManager objectManager, final List<Integer> statusCodes) {
+  public WriteObjectNameConsumer(final ObjectManager objectManager, final Set<Integer> statusCodes) {
     super(objectManager, Operation.WRITE, statusCodes);
   }
 
   @Override
   protected void updateObjectManager(final ObjectMetadata objectName) {
-    this.objectManager.writeNameComplete(objectName);
+    this.objectManager.add(objectName);
   }
 
   @Override

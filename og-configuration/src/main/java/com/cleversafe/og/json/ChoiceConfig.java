@@ -17,7 +17,7 @@ public class ChoiceConfig<T> {
     this.weight = 1.0;
   }
 
-  public ChoiceConfig(T choice) {
+  public ChoiceConfig(final T choice) {
     this();
     this.choice = choice;
   }

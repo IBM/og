@@ -31,6 +31,7 @@ public class Pair<K, V> {
    * 
    * @param key the key for this pair
    * @param value the value for this pair
+   * @throws NullPointerException of key or value are null
    */
   public static <K, V> Pair<K, V> of(final K key, final V value) {
     return new Pair<K, V>(key, value);

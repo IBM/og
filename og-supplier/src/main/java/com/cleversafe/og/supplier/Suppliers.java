@@ -31,6 +31,7 @@ public class Suppliers {
    * 
    * @param value the value to supply
    * @return a supply which always returns the same value
+   * @throws NullPointerException if value is null
    */
   public static <T> Supplier<T> of(final T value) {
     checkNotNull(value);
@@ -52,6 +53,7 @@ public class Suppliers {
    * 
    * @param values the values to supply
    * @return a supplier which supplies values in a cycle
+   * @throws NullPointerException if values is null or contains null elements
    */
   public static <T> Supplier<T> cycle(final List<T> values) {
     final List<T> copy = ImmutableList.copyOf(values);
@@ -77,28 +79,5 @@ public class Suppliers {
    */
   public static <T> RandomSupplier.Builder<T> random() {
     return new RandomSupplier.Builder<T>();
-  }
-
-  /**
-   * Creates a supplier that returns values as if by:
-   * <p>
-   * {@code supplier.get().get()}
-   * 
-   * @param supplier the source supplier to retrieve values from
-   * @return a chain supplier
-   */
-  public static <T> Supplier<T> chain(final Supplier<Supplier<T>> supplier) {
-    checkNotNull(supplier);
-    return new Supplier<T>() {
-      @Override
-      public T get() {
-        return supplier.get().get();
-      }
-
-      @Override
-      public String toString() {
-        return String.format("chain [%s]", supplier);
-      }
-    };
   }
 }

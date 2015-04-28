@@ -57,9 +57,9 @@ public class ThrottledOutputStream extends FilterOutputStream {
   }
 
   private void throttle(final int bytes) {
-    if (bytes == 1)
+    if (bytes == 1) {
       this.rateLimiter.acquire();
-    else if (bytes > 1) {
+    } else if (bytes > 1) {
       // acquire blocks based on previously acquired permits. If multiple bytes written, call
       // acquire twice so throttling occurs even if write is only called once (small files)
       this.rateLimiter.acquire(bytes - 1);

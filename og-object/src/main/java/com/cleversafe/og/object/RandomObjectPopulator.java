@@ -121,6 +121,10 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
     final File[] files = getIdFiles();
     if (files != null && files.length > 1) {
       this.idFileIndex = this.rand.nextInt(files.length - 1);
+      _logger.debug("Initial object files list");
+      for (final File f : files) {
+        _logger.debug("{}", f);
+      }
     } else {
       this.idFileIndex = 0;
     }
@@ -150,6 +154,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
       final byte[] objectBytes = new byte[OBJECT_SIZE];
 
       if (this.saveFile.exists()) {
+        _logger.debug("loading objects from file: {}", this.saveFile);
         final InputStream input = new BufferedInputStream(new FileInputStream(this.saveFile));
         while (input.read(objectBytes) == OBJECT_SIZE) {
           final ObjectMetadata id = LegacyObjectMetadata.fromBytes(objectBytes);
@@ -168,7 +173,6 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
     return dir.listFiles(new IdFilter());
   }
 
-  @Override
   public long getSavedObjectCount() {
     long count = 0;
     final File[] idFiles = getIdFiles();
@@ -188,7 +192,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
    * @see org.cleversafe.simpleobject.performance.ObjectManager#getIdForDelete()
    */
   @Override
-  public ObjectMetadata getNameForDelete() {
+  public ObjectMetadata remove() {
     this.persistLock.readLock().lock();
     try {
       ObjectMetadata id = null;
@@ -206,6 +210,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
           id = null;
         }
       }
+      _logger.trace("Removing object: {}", id);
       return id;
     } finally {
       this.persistLock.readLock().unlock();
@@ -224,7 +229,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
    * @see org.cleversafe.simpleobject.performance.ObjectManager#getIdForRead()
    */
   @Override
-  public ObjectMetadata acquireNameForRead() {
+  public ObjectMetadata get() {
     if (this.testEnded) {
       throw new RuntimeException("Test already ended");
     }
@@ -254,11 +259,12 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
     }
     this.readingLock.writeLock().unlock();
 
+    _logger.trace("Getting object: {}", id);
     return id;
   }
 
   @Override
-  public void releaseNameFromRead(final ObjectMetadata id) {
+  public void getComplete(final ObjectMetadata id) {
     this.readingLock.writeLock().lock();
     final int count = this.currentlyReading.get(id).intValue();
     if (count > 1) {
@@ -267,11 +273,13 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
       this.currentlyReading.remove(id);
     }
     this.readingLock.writeLock().unlock();
+    _logger.trace("Returning read object: {}", id);
     return;
   }
 
   @Override
-  public void writeNameComplete(final ObjectMetadata id) {
+  public void add(final ObjectMetadata id) {
+    _logger.trace("Adding object: {}", id);
     this.persistLock.readLock().lock();
     try {
       this.objects.put(id);
@@ -281,8 +289,10 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
   }
 
   private void persistIds() throws IOException {
+    _logger.debug("persisting objects");
     this.persistLock.writeLock().lock();
     final int toSave = this.objects.size();
+    _logger.debug("number of objects to persist {}", toSave);
     final OutputStream out = new BufferedOutputStream(new FileOutputStream(this.saveFile));
     if (toSave > this.maxObjects) {
       for (int size = this.objects.size(); size > this.maxObjects; size = this.objects.size()) {
@@ -339,8 +349,9 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
             truncater = new RandomAccessFile(surplus, "rwd");
             truncater.setLength(skip);
           } finally {
-            if (truncater != null)
+            if (truncater != null) {
               truncater.close();
+            }
           }
         }
       }
@@ -360,13 +371,17 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
   private int getRemaining(final int size, final File surplus) {
     final int objectsAvailable = size - this.maxObjects;
     final int spaceAvailable = this.maxObjects - ((int) (surplus.length() / OBJECT_SIZE));
-    return Math.min(objectsAvailable, spaceAvailable);
+    final int remaining = Math.min(objectsAvailable, spaceAvailable);
+    _logger.debug("remaining objects {}", remaining);
+    return remaining;
   }
 
   private int getTransferrable(final int size, final File surplus) {
     final int slotsAvailable = this.maxObjects - size;
     final int surplusAvailable = (int) (surplus.length() / OBJECT_SIZE);
-    return Math.min(slotsAvailable, surplusAvailable);
+    final int transferrable = Math.min(slotsAvailable, surplusAvailable);
+    _logger.debug("transferrable objects {}", transferrable);
+    return transferrable;
   }
 
   private File createFile(final int idx) {
@@ -379,7 +394,8 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
    * @see org.cleversafe.simpleobject.performance.ObjectManager#testComplete()
    */
   @Override
-  public void testComplete() {
+  public void shutdown() {
+    _logger.info("shutting down object manager");
     this.testEnded = true;
     shutdownSaverThread();
     try {
@@ -393,6 +409,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
     } catch (final Exception e) {
       throw new ObjectManagerException(e);
     }
+    _logger.info("object manager is shutdown");
   }
 
   private void shutdownSaverThread() {

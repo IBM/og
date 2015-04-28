@@ -42,16 +42,16 @@ public class DeleteObjectNameSupplierTest {
     final String object = "objectName";
     final ObjectMetadata objectName = mock(ObjectMetadata.class);
     when(objectName.getName()).thenReturn(object);
-    when(this.objectManager.getNameForDelete()).thenReturn(objectName);
+    when(this.objectManager.remove()).thenReturn(objectName);
 
-    Map<String, String> context = Maps.newHashMap();
+    final Map<String, String> context = Maps.newHashMap();
     assertThat(new DeleteObjectNameSupplier(this.objectManager).apply(context), is(object));
     assertThat(context.get(Headers.X_OG_OBJECT_NAME), is(object));
   }
 
   @Test(expected = ObjectManagerException.class)
   public void supplierException() {
-    when(this.objectManager.getNameForDelete()).thenThrow(new ObjectManagerException());
+    when(this.objectManager.remove()).thenThrow(new ObjectManagerException());
     new DeleteObjectNameSupplier(this.objectManager).apply(Maps.<String, String>newHashMap());
   }
 }

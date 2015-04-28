@@ -15,7 +15,7 @@ import static org.mockito.Mockito.mock;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Iterator;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import org.junit.Test;
@@ -33,8 +33,8 @@ public class SOHWriteResponseBodyConsumerTest {
   public void invalidStatusCode() throws IOException {
     final SOHWriteResponseBodyConsumer consumer = new SOHWriteResponseBodyConsumer();
     final InputStream in = mock(InputStream.class);
-    final Iterator<Entry<String, String>> it = consumer.consume(500, in);
-    assertThat(it.hasNext(), is(false));
+    final Map<String, String> m = consumer.consume(500, in);
+    assertThat(m.size(), is(0));
   }
 
   @Test
@@ -45,15 +45,14 @@ public class SOHWriteResponseBodyConsumerTest {
       s.append("objectName").append(i).append("\n");
     }
     final InputStream in = new ByteArrayInputStream(s.toString().getBytes(Charsets.UTF_8));
-    final Iterator<Entry<String, String>> it = consumer.consume(201, in);
+    final Map<String, String> m = consumer.consume(201, in);
 
-    assertThat(it.hasNext(), is(true));
+    assertThat(m.size(), is(1));
 
-    final Entry<String, String> e = it.next();
+    final Entry<String, String> e = m.entrySet().iterator().next();
 
     assertThat(e.getKey(), is(Headers.X_OG_OBJECT_NAME));
     assertThat(e.getValue(), is("objectName0"));
-    assertThat(it.hasNext(), is(false));
     assertThat(in.available(), is(0));
   }
 }

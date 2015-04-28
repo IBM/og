@@ -30,7 +30,6 @@ import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpRequest;
 import com.cleversafe.og.http.HttpUtil;
 import com.cleversafe.og.util.io.Streams;
-import com.google.common.collect.Maps;
 
 public class AWSAuthV4ChunkingTest {
   private static Logger _logger = LoggerFactory.getLogger(AWSAuthV4ChunkingTest.class);

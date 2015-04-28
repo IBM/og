@@ -20,6 +20,11 @@ import com.cleversafe.og.util.Operation;
 import com.cleversafe.og.util.Pair;
 import com.google.common.eventbus.Subscribe;
 
+/**
+ * A test condition which is triggered when a counter reaches a threshold value
+ * 
+ * @since 1.0
+ */
 public class CounterCondition implements TestCondition {
   private final Operation operation;
   private final Counter counter;
@@ -27,6 +32,17 @@ public class CounterCondition implements TestCondition {
   private final LoadTest test;
   private final Statistics stats;
 
+  /**
+   * Creates an instance
+   * 
+   * @param operation the operation type to query
+   * @param counter the counter to query
+   * @param thresholdValue the value at which this condition should be triggered
+   * @param test the load test to stop when this condition is triggered
+   * @param stats the statistics instance to query
+   * @throws NullPointerException if operation, counter, test, or stats is null
+   * @throws IllegalArgumentException if thresholdValue is zero or negative
+   */
   public CounterCondition(final Operation operation, final Counter counter,
       final long thresholdValue, final LoadTest test, final Statistics stats) {
     this.operation = checkNotNull(operation);
@@ -37,17 +53,30 @@ public class CounterCondition implements TestCondition {
     this.stats = checkNotNull(stats);
   }
 
+  /**
+   * Triggers a check of this condition
+   * 
+   * @param operation a completed request
+   */
   @Subscribe
   public void update(final Pair<Request, Response> operation) {
-    if (isTriggered())
+    if (isTriggered()) {
       this.test.stopTest();
+    }
   }
 
   @Override
   public boolean isTriggered() {
     final long currentValue = this.stats.get(this.operation, this.counter);
-    if (currentValue >= this.thresholdValue)
+    if (currentValue >= this.thresholdValue) {
       return true;
+    }
     return false;
+  }
+
+  @Override
+  public String toString() {
+    return String.format("CounterCondition [%n" + "operation=%s,%n" + "counter=%s,%n"
+        + "thresholdValue=%s%n" + "]", this.operation, this.counter, this.thresholdValue);
   }
 }

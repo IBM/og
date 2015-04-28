@@ -8,6 +8,11 @@
 
 package com.cleversafe.og.http;
 
+/**
+ * An enum that describes supported http schemes
+ * 
+ * @since 1.0
+ */
 public enum Scheme {
   HTTP, HTTPS
 }

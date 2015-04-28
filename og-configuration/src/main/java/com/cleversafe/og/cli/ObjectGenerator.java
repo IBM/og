@@ -8,8 +8,13 @@
 
 package com.cleversafe.og.cli;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.io.File;
+import java.util.Collection;
+import java.util.Set;
 import java.util.concurrent.CompletionService;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -25,7 +30,6 @@ import com.cleversafe.og.json.OGConfig;
 import com.cleversafe.og.json.type.CaseInsensitiveEnumTypeAdapterFactory;
 import com.cleversafe.og.json.type.ChoiceConfigTypeAdapterFactory;
 import com.cleversafe.og.json.type.ConcurrencyConfigTypeAdapterFactory;
-import com.cleversafe.og.json.type.FilesizeConfigListTypeAdapterFactory;
 import com.cleversafe.og.json.type.FilesizeConfigTypeAdapterFactory;
 import com.cleversafe.og.json.type.OperationConfigTypeAdapterFactory;
 import com.cleversafe.og.json.type.SelectionConfigTypeAdapterFactory;
@@ -36,14 +40,18 @@ import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.test.LoadTest;
 import com.cleversafe.og.util.SizeUnit;
 import com.cleversafe.og.util.Version;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.inject.CreationException;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.ProvisionException;
 import com.google.inject.Stage;
+import com.google.inject.spi.Message;
 
 public class ObjectGenerator {
   private static final Logger _logger = LoggerFactory.getLogger(ObjectGenerator.class);
@@ -58,11 +66,11 @@ public class ObjectGenerator {
   public static void main(final String[] args) {
     final Cli cli = Application.cli("og", "og.jsap", args);
     if (cli.shouldStop()) {
-      if (cli.help())
+      if (cli.help()) {
         cli.printUsage();
-      else if (cli.version())
+      } else if (cli.version()) {
         cli.printVersion();
-      else if (cli.error()) {
+      } else if (cli.error()) {
         cli.printErrors();
         cli.printUsage();
         Application.exit(Application.TEST_ERROR);
@@ -83,14 +91,15 @@ public class ObjectGenerator {
         new ExecutorCompletionService<Boolean>(executorService);
     long timestampStart = 0;
     long timestampFinish = 0;
+    final CountDownLatch shutdownLatch = new CountDownLatch(1);
 
     logBanner();
 
     try {
       _consoleLogger.info("Configuring...");
 
-      File json = cli.flags().getFile("og_config");
-      File defaultJson = new File(Application.getResource("og.json"));
+      final File json = cli.flags().getFile("og_config");
+      final File defaultJson = new File(Application.getResource("og.json"));
       ogConfig = Application.fromJson(json, defaultJson, OGConfig.class, gson);
       _ogJsonLogger.info(gson.toJson(ogConfig));
 
@@ -99,7 +108,7 @@ public class ObjectGenerator {
       client = injector.getInstance(Client.class);
       objectManager = injector.getInstance(ObjectManager.class);
       statistics = injector.getInstance(Statistics.class);
-      Runtime.getRuntime().addShutdownHook(new ShutdownHook(Thread.currentThread()));
+      Runtime.getRuntime().addShutdownHook(new ShutdownHook(Thread.currentThread(), shutdownLatch));
 
       _logger.info("{}", test);
       _consoleLogger.info("Configured.");
@@ -110,23 +119,26 @@ public class ObjectGenerator {
       success = completionService.take().get();
       timestampFinish = System.currentTimeMillis();
 
-      if (success)
+      if (success) {
         _consoleLogger.info("Test Completed.");
-      else
+      } else {
         _consoleLogger.error("Test ended unsuccessfully. See og.log for details");
+      }
 
-    } catch (InterruptedException e) {
+    } catch (final InterruptedException e) {
       timestampFinish = System.currentTimeMillis();
       _consoleLogger.info("Test interrupted.");
-    } catch (Exception e) {
+    } catch (final Exception e) {
       timestampFinish = System.currentTimeMillis();
       success = false;
 
       _logger.error("Exception while configuring and running test", e);
       _consoleLogger.error("Test Error. See og.log for details");
+      logConsoleException(e);
     } finally {
-      if (test != null)
+      if (test != null) {
         test.stopTest();
+      }
       shutdownClient(client);
       MoreExecutors.shutdownAndAwaitTermination(executorService, 1, TimeUnit.MINUTES);
       shutdownObjectManager(objectManager);
@@ -142,8 +154,33 @@ public class ObjectGenerator {
       }
     }
 
-    if (!success)
+    shutdownLatch.countDown();
+
+    if (!success) {
       Application.exit(Application.TEST_ERROR);
+    }
+  }
+
+  public static void logConsoleException(final Exception e) {
+    if (e instanceof ProvisionException) {
+      logConsoleGuiceMessages(((ProvisionException) e).getErrorMessages());
+    } else if (e instanceof CreationException) {
+      logConsoleGuiceMessages(((CreationException) e).getErrorMessages());
+    } else {
+      _consoleLogger.error(e.getMessage());
+    }
+  }
+
+  public static void logConsoleGuiceMessages(final Collection<Message> messages) {
+    // guice exceptions contain many duplicate messages with slightly differing causes; we only want
+    // unique messages logged to console so filter them here
+    final Set<String> uniqueMessages = Sets.newHashSet();
+    for (final Message message : messages) {
+      if (!uniqueMessages.contains(message.getMessage())) {
+        _consoleLogger.error(message.getMessage());
+      }
+      uniqueMessages.add(message.getMessage());
+    }
   }
 
   public static Gson createGson() {
@@ -158,7 +195,6 @@ public class ObjectGenerator {
         .registerTypeAdapterFactory(new SelectionConfigTypeAdapterFactory())
         .registerTypeAdapterFactory(new ChoiceConfigTypeAdapterFactory())
         .registerTypeAdapterFactory(new FilesizeConfigTypeAdapterFactory())
-        .registerTypeAdapterFactory(new FilesizeConfigListTypeAdapterFactory())
         .registerTypeAdapterFactory(new ConcurrencyConfigTypeAdapterFactory()).setPrettyPrinting()
         .create();
   }
@@ -167,19 +203,21 @@ public class ObjectGenerator {
     return Guice.createInjector(Stage.PRODUCTION, new OGModule(ogConfig));
   }
 
-  public static void shutdownClient(Client client) {
+  public static void shutdownClient(final Client client) {
     try {
-      if (client != null)
+      if (client != null) {
         Uninterruptibles.getUninterruptibly(client.shutdown(true));
+      }
     } catch (final Exception e) {
       _logger.error("Exception while attempting to shutdown client", e);
     }
   }
 
-  public static void shutdownObjectManager(ObjectManager objectManager) {
+  public static void shutdownObjectManager(final ObjectManager objectManager) {
     try {
-      if (objectManager != null)
-        objectManager.testComplete();
+      if (objectManager != null) {
+        objectManager.shutdown();
+      }
     } catch (final Exception e) {
       _logger.error("Error shutting down object manager", e);
     }
@@ -200,15 +238,17 @@ public class ObjectGenerator {
 
   private static class ShutdownHook extends Thread {
     private final Thread mainThread;
+    private final CountDownLatch shutdownLatch;
 
-    public ShutdownHook(final Thread mainThread) {
-      this.mainThread = mainThread;
+    public ShutdownHook(final Thread mainThread, final CountDownLatch shutdownLatch) {
+      this.mainThread = checkNotNull(mainThread);
+      this.shutdownLatch = checkNotNull(shutdownLatch);
     }
 
     @Override
     public void run() {
       this.mainThread.interrupt();
-      Uninterruptibles.joinUninterruptibly(this.mainThread, 1, TimeUnit.MINUTES);
+      Uninterruptibles.awaitUninterruptibly(this.shutdownLatch, 1, TimeUnit.MINUTES);
     }
   }
 }
