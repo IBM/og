@@ -20,16 +20,20 @@ import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.http.Bodies;
 import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpRequest;
+import com.cleversafe.og.http.HttpUtil;
 import com.cleversafe.og.util.io.Streams;
 import com.google.common.collect.Maps;
 
 public class AWSAuthV4ChunkingTest {
+  private static Logger _logger = LoggerFactory.getLogger(AWSAuthV4ChunkingTest.class);
 
   private final URI URI;
 
@@ -47,12 +51,12 @@ public class AWSAuthV4ChunkingTest {
       final int userDataBlockSize) throws IOException {
     final InputStream requestStream = Streams.create(request.getBody());
 
-    final Map<String, String> headers = Maps.newHashMap();
+    final Map<String, String> headers = HttpUtil.filterOutOgHeaders(request.headers());
     auth.addChunkHeaders(request, headers);
 
     final AWS4SignerChunked signer = auth.getSigner(request);
     // Call getAuthheaders just to initialize this signer
-    signer.getAuthHeaders(request.headers(), Collections.<String, String>emptyMap(),
+    signer.getAuthHeaders(headers, Collections.<String, String>emptyMap(),
         AWS4SignerChunked.STREAMING_BODY_SHA256, KEY_ID, SECRET_KEY,
         new Date(request.getMessageTime()));
 
@@ -101,7 +105,11 @@ public class AWSAuthV4ChunkingTest {
             actualOutput.write(read);
             read = wrappedStream.read();
           }
-          Assert.assertTrue(Arrays.equals(expectedBuff, actualOutput.toByteArray()));
+          _logger.info("expected = \n{}", new String(expectedBuff));
+          _logger.info("actual = \n{}", actualOutput);
+          Assert.assertTrue("1 byte reads failed with bodySize = " + bodySize
+              + ", userDataBlockSize = " + userDataBlockSize,
+              Arrays.equals(expectedBuff, actualOutput.toByteArray()));
         }
 
         // Test the stream reading 1 - N bytes at a time
@@ -116,7 +124,10 @@ public class AWSAuthV4ChunkingTest {
             actualOutput.write(buff, 0, read);
             read = wrappedStream.read(buff, 0, readAmount);
           }
-          Assert.assertTrue(Arrays.equals(expectedBuff, actualOutput.toByteArray()));
+          actualOutput.close();
+          Assert.assertTrue(readAmount + " byte reads failed with bodySize = " + bodySize
+              + ", userDataBlockSize = " + userDataBlockSize,
+              Arrays.equals(expectedBuff, actualOutput.toByteArray()));
         }
       }
     }

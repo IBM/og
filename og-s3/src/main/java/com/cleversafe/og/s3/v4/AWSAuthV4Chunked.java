@@ -21,7 +21,7 @@ import java.util.Map;
 
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.http.Headers;
-import com.google.common.collect.Maps;
+import com.cleversafe.og.http.HttpUtil;
 
 public class AWSAuthV4Chunked extends AWSAuthV4Base {
 
@@ -57,13 +57,13 @@ public class AWSAuthV4Chunked extends AWSAuthV4Base {
 
   @Override
   public Map<String, String> getAuthorizationHeaders(final Request request) {
-    final Map<String, String> headers = Maps.newHashMap(request.headers());
-    final String keyId = checkNotNull(headers.get(Headers.X_OG_USERNAME));
-    final String secretKey = checkNotNull(headers.get(Headers.X_OG_PASSWORD));
+    final String keyId = checkNotNull(request.headers().get(Headers.X_OG_USERNAME));
+    final String secretKey = checkNotNull(request.headers().get(Headers.X_OG_PASSWORD));
 
-    addChunkHeaders(request, headers);
+    final Map<String, String> signableHeaders = HttpUtil.filterOutOgHeaders(request.headers());
+    addChunkHeaders(request, signableHeaders);
 
-    return getSigner(request).getAuthHeaders(headers, Collections.<String, String>emptyMap(),
+    return getSigner(request).getAuthHeaders(signableHeaders, Collections.<String, String>emptyMap(),
         AWS4SignerChunked.STREAMING_BODY_SHA256, keyId, secretKey,
         new Date(request.getMessageTime()));
   }
@@ -82,14 +82,14 @@ public class AWSAuthV4Chunked extends AWSAuthV4Base {
     // FIXME - Think of a way to store the state including signing key and previous sig to avoid
     // recalculating it here.
 
-    final Map<String, String> headers = Maps.newHashMap(request.headers());
-    final String keyId = checkNotNull(headers.get(Headers.X_OG_USERNAME));
-    final String secretKey = checkNotNull(headers.get(Headers.X_OG_PASSWORD));
+    final String keyId = checkNotNull(request.headers().get(Headers.X_OG_USERNAME));
+    final String secretKey = checkNotNull(request.headers().get(Headers.X_OG_PASSWORD));
 
-    addChunkHeaders(request, headers);
+    final Map<String, String> signableHeaders = HttpUtil.filterOutOgHeaders(request.headers());
+    addChunkHeaders(request, signableHeaders);
 
     final AWS4SignerChunked signer = getSigner(request);
-    signer.getAuthHeaders(headers, Collections.<String, String>emptyMap(),
+    signer.getAuthHeaders(signableHeaders, Collections.<String, String>emptyMap(),
         AWS4SignerChunked.STREAMING_BODY_SHA256, keyId, secretKey,
         new Date(request.getMessageTime()));
 
