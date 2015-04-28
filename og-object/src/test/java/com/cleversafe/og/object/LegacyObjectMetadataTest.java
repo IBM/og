@@ -63,7 +63,9 @@ public class LegacyObjectMetadataTest {
     final LegacyObjectMetadata objectMetadata =
         LegacyObjectMetadata.fromBytes(bytes(objectName, objectSize, containerSuffix));
 
-    final String canonical = String.format("%s,%s,%s", objectMetadata.getName(), objectMetadata.getSize(), objectMetadata.getContainerSuffix());
+    final String canonical =
+        String.format("%s,%s,%s", objectMetadata.getName(), objectMetadata.getSize(),
+            objectMetadata.getContainerSuffix());
     assertThat(canonical, is(canonicalize(objectString, objectSize, containerSuffix)));
   }
 
@@ -77,9 +79,10 @@ public class LegacyObjectMetadataTest {
     final LegacyObjectMetadata objectMetadata =
         LegacyObjectMetadata.fromMetadata(objectString, objectSize, containerSuffix);
 
-    final String canonical = 
-      String.format("%s,%s,%s", objectMetadata.getName(), objectMetadata.getSize(), objectMetadata.getContainerSuffix());
-    assertThat(canonical, is(canonicalize(objectString, objectSize)));
+    final String canonical =
+        String.format("%s,%s,%s", objectMetadata.getName(), objectMetadata.getSize(),
+            objectMetadata.getContainerSuffix());
+    assertThat(canonical, is(canonicalize(objectString, objectSize, containerSuffix)));
   }
 
   @Test
@@ -105,7 +108,7 @@ public class LegacyObjectMetadataTest {
     assertThat(objectName.equals("NOT_AN_OBJECT_NAME"), is(false));
   }
 
-  private byte[] bytes(final UUID objectName, long objectSize, final int containerSuffix) {
+  private byte[] bytes(final UUID objectName, final long objectSize, final int containerSuffix) {
     return ByteBuffer.allocate(LegacyObjectMetadata.OBJECT_SIZE)
         .putLong(objectName.getMostSignificantBits()).putLong(objectName.getLeastSignificantBits())
         .putShort((short) 0).putLong(objectSize).putInt(containerSuffix).array();
@@ -115,7 +118,8 @@ public class LegacyObjectMetadataTest {
     return objectName.toString().replace("-", "") + "0000";
   }
 
-  private String canonicalize(final String objectName, long objectSize, final int containerSuffix) {
+  private String canonicalize(final String objectName, final long objectSize,
+      final int containerSuffix) {
     return String.format("%s,%s,%s", objectName, objectSize, containerSuffix);
   }
 }

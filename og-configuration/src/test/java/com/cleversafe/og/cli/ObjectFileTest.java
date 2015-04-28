@@ -117,12 +117,14 @@ public class ObjectFileTest {
   @Test
   public void read() throws IOException {
     final String objectString = UUID.randomUUID().toString().replace("-", "") + "0000";
-    final LegacyObjectMetadata object = LegacyObjectMetadata.fromMetadata(objectString, 1024);
+    final LegacyObjectMetadata object = LegacyObjectMetadata.fromMetadata(objectString, 1024, 0);
     final InputStream in = new ByteArrayInputStream(object.toBytes());
     final ByteArrayOutputStream out = new ByteArrayOutputStream();
     ObjectFile.read(in, out);
-    assertThat(new String(out.toByteArray()),
-        is(String.format("%s,%s%n", object.getName(), object.getSize())));
+    assertThat(
+        new String(out.toByteArray()),
+        is(String.format("%s,%s,%s%n", object.getName(), object.getSize(),
+            object.getContainerSuffix())));
   }
 
   @DataProvider
@@ -139,17 +141,18 @@ public class ObjectFileTest {
   @Test
   @UseDataProvider("provideInvalidFilter")
   public void invalidFilter(final InputStream in, final OutputStream out, final long minFilesize,
-      final long maxFilesize, final Class<Exception> expectedException) throws IOException {
+      final long maxFilesize, final int minContainerSuffix, final int maxContainerSuffix,
+      final Class<Exception> expectedException) throws IOException {
     this.thrown.expect(expectedException);
-    ObjectFile.filter(in, out, minFilesize, maxFilesize);
+    ObjectFile.filter(in, out, minFilesize, maxFilesize, minContainerSuffix, maxContainerSuffix);
   }
 
   @Test
   public void filter() throws IOException {
     final String s = UUID.randomUUID().toString().replace("-", "") + "0000";
-    final ObjectMetadata o1 = LegacyObjectMetadata.fromMetadata(s, 1);
-    final ObjectMetadata o2 = LegacyObjectMetadata.fromMetadata(s, 2);
-    final ObjectMetadata o3 = LegacyObjectMetadata.fromMetadata(s, 3);
+    final ObjectMetadata o1 = LegacyObjectMetadata.fromMetadata(s, 1, 1);
+    final ObjectMetadata o2 = LegacyObjectMetadata.fromMetadata(s, 2, 2);
+    final ObjectMetadata o3 = LegacyObjectMetadata.fromMetadata(s, 3, 3);
     final ByteArrayOutputStream source = new ByteArrayOutputStream();
     source.write(o1.toBytes());
     source.write(o2.toBytes());
@@ -157,7 +160,7 @@ public class ObjectFileTest {
 
     final ByteArrayInputStream in = new ByteArrayInputStream(source.toByteArray());
     final ByteArrayOutputStream out = new ByteArrayOutputStream();
-    ObjectFile.filter(in, out, 2, 2);
+    ObjectFile.filter(in, out, 1, 2, 2, 3);
 
     assertThat(out.size(), is(LegacyObjectMetadata.OBJECT_SIZE));
     final ObjectMetadata filtered = LegacyObjectMetadata.fromBytes(out.toByteArray());
@@ -198,8 +201,8 @@ public class ObjectFileTest {
     final String prefixFilename = new File(this.folder.getRoot().toString(), prefix).toString();
     final OutputStream out = new ObjectFileOutputStream(prefixFilename, maxObjects, suffix);
     final ObjectMetadata o =
-        LegacyObjectMetadata
-            .fromMetadata(UUID.randomUUID().toString().replace("-", "") + "0000", 0);
+        LegacyObjectMetadata.fromMetadata(UUID.randomUUID().toString().replace("-", "") + "0000",
+            0, 0);
 
     for (int i = 0; i < numObjects; i++) {
       out.write(o.toBytes());
