@@ -13,11 +13,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.net.URI;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.util.Operation;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Range;
 
 /**
@@ -80,5 +83,19 @@ public class HttpUtil {
       }
     }
     return null;
+  }
+
+  /**
+   * Creates a new, mutable, header map from the provided headers map with the x-og headers filtered
+   * out.
+   */
+  public static Map<String, String> filterOutOgHeaders(Map<String, String> headers) {
+    final Map<String, String> filtered = Maps.newHashMap();
+    for (Entry<String, String> header : headers.entrySet()) {
+      if (!header.getKey().startsWith("x-og")) {
+        filtered.put(header.getKey(), header.getValue());
+      }
+    }
+    return filtered;
   }
 }

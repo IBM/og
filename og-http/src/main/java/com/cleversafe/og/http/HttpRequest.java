@@ -34,6 +34,7 @@ public class HttpRequest implements Request {
   private final URI uri;
   private final Map<String, String> headers;
   private final Body body;
+  private final long messageTime;
   private static final DateTimeFormatter RFC1123 = DateTimeFormat.forPattern(
       "EEE, dd MMM yyyy HH:mm:ss zzz").withLocale(Locale.US);
 
@@ -42,6 +43,7 @@ public class HttpRequest implements Request {
     this.uri = checkNotNull(builder.uri);
     this.headers = ImmutableMap.copyOf(builder.headers);
     this.body = checkNotNull(builder.body);
+    this.messageTime = builder.messageTime;
   }
 
   @Override
@@ -65,6 +67,11 @@ public class HttpRequest implements Request {
   }
 
   @Override
+  public long getMessageTime() {
+    return messageTime;
+  }
+
+  @Override
   public String toString() {
     return String.format("HttpRequest [%n" + "method=%s,%n" + "uri=%s,%n" + "headers=%s%n"
         + "body=%s%n]", this.method, this.uri, this.headers, this.body);
@@ -78,6 +85,7 @@ public class HttpRequest implements Request {
     private final URI uri;
     private final Map<String, String> headers;
     private Body body;
+    private long messageTime;
 
     /**
      * Constructs a builder
@@ -92,7 +100,8 @@ public class HttpRequest implements Request {
       this.method = method;
       this.uri = uri;
       this.headers = Maps.newLinkedHashMap();
-      this.headers.put("Date", RFC1123.print(new DateTime()));
+      this.messageTime = System.currentTimeMillis();
+      this.headers.put("Date", RFC1123.print(new DateTime(messageTime)));
       this.body = Bodies.none();
     }
 
@@ -116,6 +125,11 @@ public class HttpRequest implements Request {
      */
     public Builder withBody(final Body body) {
       this.body = body;
+      return this;
+    }
+
+    public Builder withMessageTime(final long messageTime) {
+      this.messageTime = messageTime;
       return this;
     }
 

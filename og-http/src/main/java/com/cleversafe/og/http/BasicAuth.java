@@ -39,7 +39,7 @@ public class BasicAuth implements HttpAuth {
   }
 
   @Override
-  public InputStream wrapStream(InputStream stream) {
+  public InputStream wrapStream(Request request, InputStream stream) {
     return stream;
   }
 

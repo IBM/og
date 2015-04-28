@@ -56,7 +56,7 @@ public class CustomHttpEntity extends AbstractHttpEntity {
   public InputStream getContent() throws IOException, IllegalStateException {
     this.requestContentStart = 0;
     this.requestContentFinish = 0;
-    return auth.wrapStream(Streams.create(this.request.getBody()));
+    return auth.wrapStream(this.request, Streams.create(this.request.getBody()));
   }
 
   @Override

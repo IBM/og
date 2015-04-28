@@ -94,7 +94,7 @@ public class AWSAuthV4Test {
 
     // Hardcode the fields to match the aws test data.
     // 1315611360000 Mon, 09 Sep 2011 23:36:00 GMT
-    this.authV4 = new AWSAuthV4("us-east-1", "host", 1315611360000l);
+    this.authV4 = new AWSAuthV4("us-east-1", "host");
   }
 
   @Test

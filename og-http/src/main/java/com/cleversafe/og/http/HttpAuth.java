@@ -32,11 +32,14 @@ public interface HttpAuth {
    * example, AWS sig4 has a chunked mode where hashes of the chunks of the data stream must be
    * included in between each chunk.
    * 
+   * @param request The {@code Request} used for this stream. Contains header information that needs
+   *        to be used to generate the write signatures for chunked encoding streams.
    * @param InputStream containing the request's data.
+   * 
    * @return Decorated stream containing the data along with any necessary authorization
    *         information.
    */
-  InputStream wrapStream(final InputStream stream);
+  InputStream wrapStream(Request request, final InputStream stream);
 
   /**
    * @return value to use in the Content-Length header field. May be different from the actual

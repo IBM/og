@@ -53,6 +53,11 @@ public class HttpResponse implements Response {
   }
 
   @Override
+  public long getMessageTime() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public String toString() {
     return String.format("HttpResponse [%n" + "statusCode=%s,%n" + "headers=%s%n" + "body=%s%n]",
         this.statusCode, this.headers, this.body);
