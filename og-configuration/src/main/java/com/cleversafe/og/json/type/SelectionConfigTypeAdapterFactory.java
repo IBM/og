@@ -25,6 +25,12 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
+/**
+ * A type adapter factory that abstracts over the notion of a selection from many choices
+ * 
+ * @see ChoiceConfigTypeAdapterFactory
+ * @since 1.0
+ */
 public class SelectionConfigTypeAdapterFactory implements TypeAdapterFactory {
 
   @Override

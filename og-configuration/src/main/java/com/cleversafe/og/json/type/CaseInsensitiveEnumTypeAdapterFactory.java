@@ -19,6 +19,11 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
+/**
+ * A type adapter factory that deserializes enums in a case insensitive way
+ * 
+ * @since 1.0
+ */
 public class CaseInsensitiveEnumTypeAdapterFactory implements TypeAdapterFactory {
   @Override
   public <T> TypeAdapter<T> create(final Gson gson, final TypeToken<T> type) {

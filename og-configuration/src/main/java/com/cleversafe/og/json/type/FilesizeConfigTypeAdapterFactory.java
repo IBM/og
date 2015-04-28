@@ -19,6 +19,12 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 
+/**
+ * A type adapter for file size that allows for either the full filesize configuration or a decimal
+ * that represents average filesize, with all other defaults
+ * 
+ * @since 1.0
+ */
 public class FilesizeConfigTypeAdapterFactory implements TypeAdapterFactory {
   public FilesizeConfigTypeAdapterFactory() {}
 

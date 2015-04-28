@@ -24,11 +24,26 @@ import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.util.Operation;
 import com.google.common.collect.ImmutableSortedMap;
 
+/**
+ * A statistics summary block
+ * 
+ * @since 1.0
+ */
 public class Summary {
   private static final DateTimeFormatter FORMATTER = DateTimeFormat.forPattern(
       "dd/MMM/yyyy:HH:mm:ss Z").withLocale(Locale.US);
   private SummaryStats summaryStats;
 
+  /**
+   * Constructs an instance
+   * 
+   * @param stats the underlying stats to pull from when creating this instance
+   * @param timestampStart the global test start timestamp, in millis.
+   * @param timestampFinish the global test stop timestamp, in millis
+   * @throws NullPointerException if stats is null
+   * @throws IllegalArgumentException if timestampStart is zero or negative, or if timestampEnd is
+   *         less than timestampStart
+   */
   public Summary(final Statistics stats, final long timestampStart, final long timestampFinish) {
     checkNotNull(stats);
     checkArgument(timestampStart >= 0, "timestampStart must be >= 0 [%s]", timestampStart);
@@ -96,6 +111,11 @@ public class Summary {
     }
   }
 
+  /**
+   * Creates and returns a version of this summary suitable for serializing to json
+   * 
+   * @return a json serializable summary block
+   */
   public SummaryStats getSummaryStats() {
     return this.summaryStats;
   }

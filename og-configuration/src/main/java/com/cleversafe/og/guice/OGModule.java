@@ -105,6 +105,11 @@ import com.google.inject.name.Names;
 import com.google.inject.spi.ProvisionListener;
 import com.google.inject.util.Providers;
 
+/**
+ * A guice configuration module for wiring up all OG test components
+ * 
+ * @since 1.0
+ */
 public class OGModule extends AbstractModule {
   private final OGConfig config;
   private static final double ERR = Math.pow(0.1, 6);

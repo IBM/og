@@ -19,6 +19,12 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 
+/**
+ * A type adapter factory for operation type configuration that allows for either the complete
+ * configuration or a decimal that represents the weight for this operation type
+ * 
+ * @since 1.0
+ */
 public class OperationConfigTypeAdapterFactory implements TypeAdapterFactory {
   public OperationConfigTypeAdapterFactory() {}
 

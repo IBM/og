@@ -8,6 +8,11 @@
 
 package com.cleversafe.og.http;
 
+/**
+ * An enum that describes supported Api types
+ * 
+ * @since 1.0
+ */
 public enum Api {
   SOH, S3, OPENSTACK, WEBDAV;
 }

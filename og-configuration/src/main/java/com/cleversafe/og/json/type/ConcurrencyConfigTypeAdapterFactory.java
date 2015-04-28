@@ -19,6 +19,12 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 
+/**
+ * A type adapter factory for concurrency that allows for either the complete configuration or a
+ * decimal that represents thread count for the default concurrency type
+ * 
+ * @since 1.0
+ */
 public class ConcurrencyConfigTypeAdapterFactory implements TypeAdapterFactory {
   public ConcurrencyConfigTypeAdapterFactory() {}
 
