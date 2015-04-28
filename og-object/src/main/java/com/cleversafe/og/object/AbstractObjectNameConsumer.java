@@ -64,24 +64,27 @@ public abstract class AbstractObjectNameConsumer {
     final Response response = operation.getValue();
 
     // if this consumer is not relevant for the current response, ignore
-    if (this.operation != HttpUtil.toOperation(request.getMethod()))
+    if (this.operation != HttpUtil.toOperation(request.getMethod())) {
       return;
+    }
 
     // if the status code of this response does not match what can be consumed, ignore
-    if (!statusCodes.contains(response.getStatusCode()))
+    if (!this.statusCodes.contains(response.getStatusCode())) {
       return;
+    }
 
     final String objectString = getObjectString(request, response);
-    if (objectString == null)
+    if (objectString == null) {
       throw new IllegalStateException("Unable to determine object");
+    }
 
     final ObjectMetadata objectName = getObjectName(request, response);
     updateManager(objectName);
   }
 
-  private ObjectMetadata getObjectName(Request request, Response response) {
-    String objectString = getObjectString(request, response);
-    long objectSize = getObjectSize(request, response);
+  private ObjectMetadata getObjectName(final Request request, final Response response) {
+    final String objectString = getObjectString(request, response);
+    final long objectSize = getObjectSize(request, response);
     int containerSuffix = getContainerSuffix(request, response);
     return LegacyObjectMetadata.fromMetadata(objectString, objectSize, containerSuffix);
   }
@@ -89,8 +92,9 @@ public abstract class AbstractObjectNameConsumer {
   protected String getObjectString(final Request request, final Response response) {
     String objectString = request.headers().get(Headers.X_OG_OBJECT_NAME);
     // SOH writes
-    if (objectString == null)
+    if (objectString == null) {
       objectString = response.headers().get(Headers.X_OG_OBJECT_NAME);
+    }
 
     return objectString;
   }
@@ -104,9 +108,10 @@ public abstract class AbstractObjectNameConsumer {
     }
   }
 
-  private long getObjectSize(Request request, Response response) {
-    if (this.operation == Operation.WRITE)
+  private long getObjectSize(final Request request, final Response response) {
+    if (this.operation == Operation.WRITE) {
       return request.getBody().getSize();
+    }
     return response.getBody().getSize();
   }
 

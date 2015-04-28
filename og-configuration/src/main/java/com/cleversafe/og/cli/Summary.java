@@ -24,11 +24,26 @@ import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.util.Operation;
 import com.google.common.collect.ImmutableSortedMap;
 
+/**
+ * A statistics summary block
+ * 
+ * @since 1.0
+ */
 public class Summary {
   private static final DateTimeFormatter FORMATTER = DateTimeFormat.forPattern(
       "dd/MMM/yyyy:HH:mm:ss Z").withLocale(Locale.US);
-  private SummaryStats summaryStats;
+  private final SummaryStats summaryStats;
 
+  /**
+   * Constructs an instance
+   * 
+   * @param stats the underlying stats to pull from when creating this instance
+   * @param timestampStart the global test start timestamp, in millis.
+   * @param timestampFinish the global test stop timestamp, in millis
+   * @throws NullPointerException if stats is null
+   * @throws IllegalArgumentException if timestampStart is zero or negative, or if timestampEnd is
+   *         less than timestampStart
+   */
   public Summary(final Statistics stats, final long timestampStart, final long timestampFinish) {
     checkNotNull(stats);
     checkArgument(timestampStart >= 0, "timestampStart must be >= 0 [%s]", timestampStart);
@@ -46,7 +61,8 @@ public class Summary {
     final OperationStats read;
     final OperationStats delete;
 
-    private SummaryStats(Statistics stats, final long timestampStart, final long timestampFinish) {
+    private SummaryStats(final Statistics stats, final long timestampStart,
+        final long timestampFinish) {
       this.timestampStart = timestampStart;
       this.timestampFinish = timestampFinish;
       this.runtime = ((double) (timestampFinish - timestampStart)) / TimeUnit.SECONDS.toMillis(1);
@@ -71,7 +87,7 @@ public class Summary {
     final long bytes;
     final Map<Integer, Long> statusCodes;
 
-    private OperationStats(Statistics stats, Operation operation) {
+    private OperationStats(final Statistics stats, final Operation operation) {
       this.operation = operation;
       this.operations = stats.get(operation, Counter.OPERATIONS);
       this.bytes = stats.get(operation, Counter.BYTES);
@@ -85,8 +101,9 @@ public class Summary {
     }
 
     private String formatStatusCodes() {
-      if (this.statusCodes.isEmpty())
+      if (this.statusCodes.isEmpty()) {
         return String.format("N/A%n");
+      }
 
       final StringBuilder s = new StringBuilder();
       for (final Entry<Integer, Long> sc : this.statusCodes.entrySet()) {
@@ -96,6 +113,11 @@ public class Summary {
     }
   }
 
+  /**
+   * Creates and returns a version of this summary suitable for serializing to json
+   * 
+   * @return a json serializable summary block
+   */
   public SummaryStats getSummaryStats() {
     return this.summaryStats;
   }

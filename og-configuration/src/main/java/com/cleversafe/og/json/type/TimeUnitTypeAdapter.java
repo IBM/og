@@ -17,6 +17,13 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
+/**
+ * A type adapter for {@code TimeUnit} that allows for a variety of unit name strings to be used in
+ * place of the enum name
+ * 
+ * @see Units
+ * @since 1.0
+ */
 public class TimeUnitTypeAdapter extends TypeAdapter<TimeUnit> {
   @Override
   public void write(final JsonWriter out, final TimeUnit value) throws IOException {

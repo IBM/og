@@ -103,12 +103,14 @@ public class AWSAuthV2 implements HttpAuth {
   // lookup by key and lower(key)
   private String getHeader(final Request request, final String key, final String defaultValue) {
     String value = request.headers().get(key);
-    if (value != null)
+    if (value != null) {
       return value;
+    }
 
     value = request.headers().get(key.toLowerCase(Locale.US));
-    if (value != null)
+    if (value != null) {
       return value;
+    }
 
     return defaultValue;
   }
@@ -120,8 +122,9 @@ public class AWSAuthV2 implements HttpAuth {
       final String keyLower = header.getKey().trim().toLowerCase(Locale.US);
       // ignoring x-amz-date, is this correct?
       if (keyLower.startsWith("x-amz-") && !"x-amz-date".equals(keyLower)) {
-        if (canonicalHeaders == null)
+        if (canonicalHeaders == null) {
           canonicalHeaders = Maps.newTreeMap();
+        }
 
         canonicalHeaders.put(keyLower, header.getValue().trim());
       }
@@ -142,8 +145,9 @@ public class AWSAuthV2 implements HttpAuth {
     for (final Entry<String, String> q : splitQueryParameters(request.getUri().getQuery())
         .entrySet()) {
       if (SUBRESOURCES.contains(q.getKey())) {
-        if (subresources == null)
+        if (subresources == null) {
           subresources = Maps.newTreeMap();
+        }
 
         subresources.put(q.getKey(), q.getValue());
       }
@@ -161,8 +165,9 @@ public class AWSAuthV2 implements HttpAuth {
   // not always the case for aws signing e.g. torrent, so this method is required
   public Map<String, String> splitQueryParameters(final String query) {
     // short circuit common case where there are no query parameters
-    if (query == null || query.length() == 0)
+    if (query == null || query.length() == 0) {
       return ImmutableMap.of();
+    }
 
     final Map<String, String> queryParameters = Maps.newHashMap();
 
@@ -170,8 +175,9 @@ public class AWSAuthV2 implements HttpAuth {
       final Iterator<String> it = PARAM_SPLITTER.split(q).iterator();
       final String key = it.next();
       String value = null;
-      if (it.hasNext())
+      if (it.hasNext()) {
         value = it.next();
+      }
 
       queryParameters.put(key, value);
     }
@@ -183,8 +189,9 @@ public class AWSAuthV2 implements HttpAuth {
   // not always the case for aws signing e.g. torrent, so this method is required
   public String joinQueryParameters(final Map<String, String> queryParameters) {
     // short circuit common case where there are no query parameters
-    if (queryParameters == null || queryParameters.size() == 0)
+    if (queryParameters == null || queryParameters.size() == 0) {
       return "";
+    }
 
     final StringBuilder s = new StringBuilder();
     final Iterator<Entry<String, String>> it = queryParameters.entrySet().iterator();
@@ -200,8 +207,9 @@ public class AWSAuthV2 implements HttpAuth {
 
   private void appendQueryParam(final StringBuilder s, final Entry<String, String> queryParam) {
     s.append(queryParam.getKey());
-    if (queryParam.getValue() != null)
+    if (queryParam.getValue() != null) {
       s.append("=").append(queryParam.getValue());
+    }
   }
 
   @Override

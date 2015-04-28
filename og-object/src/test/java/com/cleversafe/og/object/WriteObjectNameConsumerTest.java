@@ -47,8 +47,7 @@ public class WriteObjectNameConsumerTest extends AbstractObjectNameConsumerTest 
 
   @Override
   public void doThrowIt() {
-    doThrow(new ObjectManagerException()).when(this.objectManager).add(
-        any(ObjectMetadata.class));
+    doThrow(new ObjectManagerException()).when(this.objectManager).add(any(ObjectMetadata.class));
   }
 
   @Test

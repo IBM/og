@@ -29,8 +29,7 @@ import static org.mockito.Mockito.mock;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Iterator;
-import java.util.Map.Entry;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -472,9 +471,8 @@ public class ApacheClientTest {
     final Client client =
         new ApacheClient.Builder().withResponseBodyConsumer("consumer", new ResponseBodyConsumer() {
           @Override
-          public Iterator<Entry<String, String>> consume(final int statusCode,
-              final InputStream response) {
-            return ImmutableMap.of("key", "value").entrySet().iterator();
+          public Map<String, String> consume(final int statusCode, final InputStream response) {
+            return ImmutableMap.of("key", "value");
           }
         }).build();
 

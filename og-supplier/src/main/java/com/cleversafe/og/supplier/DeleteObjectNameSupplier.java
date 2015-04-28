@@ -17,16 +17,37 @@ import com.cleversafe.og.object.ObjectManager;
 import com.cleversafe.og.object.ObjectMetadata;
 import com.google.common.base.Function;
 
+/**
+ * An object name supplier which generates object names for deletion from a provided
+ * {@code ObjectManager}
+ * 
+ * @since 1.0
+ */
 public class DeleteObjectNameSupplier implements Function<Map<String, String>, String> {
   private final ObjectManager objectManager;
 
+  /**
+   * Creates an instance
+   * 
+   * @param objectManager the object manager to draw object names from
+   * @throws NullPointerException if objectManager is null
+   */
   public DeleteObjectNameSupplier(final ObjectManager objectManager) {
     this.objectManager = checkNotNull(objectManager);
   }
 
+  /**
+   * Creates and returns an object name. Additionally, inserts the following entries into the
+   * context:
+   * <ul>
+   * <li>Headers.X_OG_OBJECT_NAME
+   * </ul>
+   * 
+   * @param context a request creation context for storing metadata to be used by other functions
+   */
   @Override
-  public String apply(Map<String, String> context) {
-    ObjectMetadata objectMetadata = this.objectManager.remove();
+  public String apply(final Map<String, String> context) {
+    final ObjectMetadata objectMetadata = this.objectManager.remove();
     context.put(Headers.X_OG_OBJECT_NAME, objectMetadata.getName());
     context.put(Headers.X_OG_CONTAINER_SUFFIX, String.valueOf(objectMetadata.getContainerSuffix()));
 

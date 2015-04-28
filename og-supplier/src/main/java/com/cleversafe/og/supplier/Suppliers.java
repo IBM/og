@@ -31,6 +31,7 @@ public class Suppliers {
    * 
    * @param value the value to supply
    * @return a supply which always returns the same value
+   * @throws NullPointerException if value is null
    */
   public static <T> Supplier<T> of(final T value) {
     checkNotNull(value);
@@ -52,6 +53,7 @@ public class Suppliers {
    * 
    * @param values the values to supply
    * @return a supplier which supplies values in a cycle
+   * @throws NullPointerException if values is null or contains null elements
    */
   public static <T> Supplier<T> cycle(final List<T> values) {
     final List<T> copy = ImmutableList.copyOf(values);

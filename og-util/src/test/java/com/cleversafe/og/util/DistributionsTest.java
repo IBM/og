@@ -21,21 +21,21 @@ public class DistributionsTest {
 
   @Test
   @UseDataProvider("provideInvalidReal")
-  public void invalidUniform(double average, double spread) {
+  public void invalidUniform(final double average, final double spread) {
     this.thrown.expect(IllegalArgumentException.class);
     Distributions.uniform(average, spread);
   }
 
   @Test
   @UseDataProvider("provideInvalidReal")
-  public void invalidNormal(double average, double spread) {
+  public void invalidNormal(final double average, final double spread) {
     this.thrown.expect(IllegalArgumentException.class);
     Distributions.normal(average, spread);
   }
 
   @Test
   @UseDataProvider("provideInvalidReal")
-  public void invalidLogNormal(double average, double spread) {
+  public void invalidLogNormal(final double average, final double spread) {
     this.thrown.expect(IllegalArgumentException.class);
     Distributions.lognormal(average, spread);
   }
@@ -65,7 +65,7 @@ public class DistributionsTest {
     validate(Distributions.poisson(10));
   }
 
-  private static void validate(Distribution d) {
+  private static void validate(final Distribution d) {
     // TODO more thorough validation of each distribution type
     // just validate that nextSample, getAverage, and toString execute without exception
     for (int i = 0; i < 100; i++) {

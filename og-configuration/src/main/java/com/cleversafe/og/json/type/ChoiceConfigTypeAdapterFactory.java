@@ -21,14 +21,21 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
+/**
+ * A generic choice type adapter factory that can be abstracted over arbitrary types
+ * 
+ * @see SelectionConfigTypeAdapterFactory
+ * @since 1.0
+ */
 public class ChoiceConfigTypeAdapterFactory implements TypeAdapterFactory {
 
   @Override
   @SuppressWarnings("unchecked")
   public <T> TypeAdapter<T> create(final Gson gson, final TypeToken<T> type) {
     final Class<T> rawType = (Class<T>) type.getRawType();
-    if (!ChoiceConfig.class.equals(rawType))
+    if (!ChoiceConfig.class.equals(rawType)) {
       return null;
+    }
 
     final TypeAdapter<T> delegate = gson.getDelegateAdapter(this, type);
 
@@ -58,9 +65,9 @@ public class ChoiceConfigTypeAdapterFactory implements TypeAdapterFactory {
         //
         // compact form where default weight is acceptable
         // {fields for T object}
-        JsonElement element = jsonElementAdapter.read(in);
+        final JsonElement element = jsonElementAdapter.read(in);
         if (element.isJsonObject()) {
-          JsonObject object = element.getAsJsonObject();
+          final JsonObject object = element.getAsJsonObject();
           if (object.entrySet().size() <= 2 && object.has("choice")) {
             return delegate.fromJsonTree(element);
           }

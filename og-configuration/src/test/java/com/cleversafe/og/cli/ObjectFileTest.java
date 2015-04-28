@@ -103,7 +103,7 @@ public class ObjectFileTest {
     final InputStream in = new ByteArrayInputStream(objectMetadata.getBytes());
     final ByteArrayOutputStream out = new ByteArrayOutputStream(LegacyObjectMetadata.OBJECT_SIZE);
     ObjectFile.write(in, out);
-    ObjectMetadata object = LegacyObjectMetadata.fromBytes(out.toByteArray());
+    final ObjectMetadata object = LegacyObjectMetadata.fromBytes(out.toByteArray());
     assertThat(objectMetadata, is(String.format("%s,%s", object.getName(), object.getSize())));
   }
 
@@ -116,7 +116,7 @@ public class ObjectFileTest {
 
   @Test
   public void read() throws IOException {
-    String objectString = UUID.randomUUID().toString().replace("-", "") + "0000";
+    final String objectString = UUID.randomUUID().toString().replace("-", "") + "0000";
     final LegacyObjectMetadata object = LegacyObjectMetadata.fromMetadata(objectString, 1024);
     final InputStream in = new ByteArrayInputStream(object.toBytes());
     final ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -127,8 +127,8 @@ public class ObjectFileTest {
 
   @DataProvider
   public static Object[][] provideInvalidFilter() {
-    InputStream in = new ByteArrayInputStream(new byte[] {});
-    OutputStream out = new ByteArrayOutputStream();
+    final InputStream in = new ByteArrayInputStream(new byte[] {});
+    final OutputStream out = new ByteArrayOutputStream();
     return new Object[][] { {null, out, 0, 0, NullPointerException.class},
         {in, null, 0, 0, NullPointerException.class},
         {in, out, -1, 0, IllegalArgumentException.class},
@@ -138,37 +138,37 @@ public class ObjectFileTest {
 
   @Test
   @UseDataProvider("provideInvalidFilter")
-  public void invalidFilter(final InputStream in, final OutputStream out, long minFilesize,
-      long maxFilesize, Class<Exception> expectedException) throws IOException {
+  public void invalidFilter(final InputStream in, final OutputStream out, final long minFilesize,
+      final long maxFilesize, final Class<Exception> expectedException) throws IOException {
     this.thrown.expect(expectedException);
     ObjectFile.filter(in, out, minFilesize, maxFilesize);
   }
 
   @Test
   public void filter() throws IOException {
-    String s = UUID.randomUUID().toString().replace("-", "") + "0000";
-    ObjectMetadata o1 = LegacyObjectMetadata.fromMetadata(s, 1);
-    ObjectMetadata o2 = LegacyObjectMetadata.fromMetadata(s, 2);
-    ObjectMetadata o3 = LegacyObjectMetadata.fromMetadata(s, 3);
-    ByteArrayOutputStream source = new ByteArrayOutputStream();
+    final String s = UUID.randomUUID().toString().replace("-", "") + "0000";
+    final ObjectMetadata o1 = LegacyObjectMetadata.fromMetadata(s, 1);
+    final ObjectMetadata o2 = LegacyObjectMetadata.fromMetadata(s, 2);
+    final ObjectMetadata o3 = LegacyObjectMetadata.fromMetadata(s, 3);
+    final ByteArrayOutputStream source = new ByteArrayOutputStream();
     source.write(o1.toBytes());
     source.write(o2.toBytes());
     source.write(o3.toBytes());
 
-    ByteArrayInputStream in = new ByteArrayInputStream(source.toByteArray());
-    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    final ByteArrayInputStream in = new ByteArrayInputStream(source.toByteArray());
+    final ByteArrayOutputStream out = new ByteArrayOutputStream();
     ObjectFile.filter(in, out, 2, 2);
 
     assertThat(out.size(), is(LegacyObjectMetadata.OBJECT_SIZE));
-    ObjectMetadata filtered = LegacyObjectMetadata.fromBytes(out.toByteArray());
+    final ObjectMetadata filtered = LegacyObjectMetadata.fromBytes(out.toByteArray());
     assertThat(filtered.getName(), is(s));
     assertThat(filtered.getSize(), is(2L));
   }
 
   @DataProvider
   public static Object[][] provideInvalidObjectFileOutputStream() {
-    String prefix = "id";
-    String suffix = ".object";
+    final String prefix = "id";
+    final String suffix = ".object";
     return new Object[][] { {null, 1, suffix, NullPointerException.class},
         {prefix, -1, suffix, IllegalArgumentException.class},
         {prefix, 0, suffix, IllegalArgumentException.class},
@@ -178,8 +178,8 @@ public class ObjectFileTest {
   @Test
   @SuppressWarnings("resource")
   @UseDataProvider("provideInvalidObjectFileOutputStream")
-  public void invalidObjectFileOutputStream(String prefix, int maxObjects, String suffix,
-      Class<Exception> expectedException) throws FileNotFoundException {
+  public void invalidObjectFileOutputStream(final String prefix, final int maxObjects,
+      final String suffix, final Class<Exception> expectedException) throws FileNotFoundException {
     this.thrown.expect(expectedException);
     new ObjectFileOutputStream(prefix, maxObjects, suffix);
   }
@@ -191,7 +191,7 @@ public class ObjectFileTest {
 
   @Test
   @UseDataProvider("provideObjectFileOutputStream")
-  public void objectFileOutputStream(int maxObjects, int numObjects, int fileCount)
+  public void objectFileOutputStream(final int maxObjects, final int numObjects, final int fileCount)
       throws IOException {
     final String prefix = "id";
     final String suffix = ".object";
@@ -206,9 +206,9 @@ public class ObjectFileTest {
     }
     out.close();
 
-    List<String> objectFiles = Arrays.asList(this.folder.getRoot().list(new FilenameFilter() {
+    final List<String> objectFiles = Arrays.asList(this.folder.getRoot().list(new FilenameFilter() {
       @Override
-      public boolean accept(File dir, String name) {
+      public boolean accept(final File dir, final String name) {
         return name.endsWith(suffix);
       }
     }));
@@ -216,7 +216,7 @@ public class ObjectFileTest {
     assertThat(objectFiles.size(), is(fileCount));
     int persistedObjects = 0;
     for (int i = 0; i < fileCount; i++) {
-      String filename = String.format("%s%d%s", prefix, i, suffix);
+      final String filename = String.format("%s%d%s", prefix, i, suffix);
       assertThat(objectFiles.contains(filename), is(true));
       persistedObjects +=
           new File(this.folder.getRoot(), filename).length() / LegacyObjectMetadata.OBJECT_SIZE;

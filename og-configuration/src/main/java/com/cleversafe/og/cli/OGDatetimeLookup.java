@@ -15,11 +15,19 @@ import org.apache.logging.log4j.core.config.plugins.Plugin;
 import org.apache.logging.log4j.core.lookup.StrLookup;
 import org.joda.time.format.DateTimeFormat;
 
+/**
+ * A custom log4j2 variable lookup to be used for creating a per-test directory name
+ * 
+ * @since 1.0
+ */
 @Plugin(name = "og", category = "Lookup")
 public class OGDatetimeLookup implements StrLookup {
   private static final String DATETIME = DateTimeFormat.forPattern("yyyy-MM-dd_HH.mm.ss")
       .withLocale(Locale.US).print(System.currentTimeMillis());
 
+  /**
+   * Creates an instance
+   */
   public OGDatetimeLookup() {}
 
   @Override

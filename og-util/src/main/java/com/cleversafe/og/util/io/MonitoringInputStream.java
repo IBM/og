@@ -34,7 +34,7 @@ public class MonitoringInputStream extends FilterInputStream {
 
   @Override
   public int read() throws IOException {
-    int val = super.read();
+    final int val = super.read();
     if (this.firstRead == 0) {
       this.firstRead = System.nanoTime();
     }
@@ -48,7 +48,7 @@ public class MonitoringInputStream extends FilterInputStream {
 
   @Override
   public int read(final byte[] b, final int off, final int len) throws IOException {
-    int size = super.read(b, off, len);
+    final int size = super.read(b, off, len);
     if (this.firstRead == 0) {
       this.firstRead = System.nanoTime();
     }

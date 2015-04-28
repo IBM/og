@@ -36,17 +36,18 @@ public class Distributions {
    * @throws IllegalArgumentException if average or spread are negative, or if average - spread is
    *         negative
    */
-  public static Distribution uniform(double average, final double spread) {
+  public static Distribution uniform(final double average, final double spread) {
     checkArgument(average >= 0.0, "average must be >= 0.0 [%s]", average);
     checkArgument(spread >= 0.0, "spread must be >= 0.0 [%s]", spread);
 
-    if (spread == 0.0)
+    if (spread == 0.0) {
       return constant(average);
+    }
 
-    double lower = average - spread;
-    double upper = average + spread;
+    final double lower = average - spread;
+    final double upper = average + spread;
     checkArgument(lower >= 0.0, "average - spread must be >= 0.0 [%s]", lower);
-    String s = String.format("UniformDistribution [average=%s, spread=%s]", average, spread);
+    final String s = String.format("UniformDistribution [average=%s, spread=%s]", average, spread);
     return new RealDistributionAdapter(new UniformRealDistribution(lower, upper), s);
   }
 
@@ -63,12 +64,13 @@ public class Distributions {
     checkArgument(average >= 0.0, "average must be >= 0.0 [%s]", average);
     checkArgument(spread >= 0.0, "spread must be >= 0.0 [%s]", spread);
 
-    if (spread == 0.0)
+    if (spread == 0.0) {
       return constant(average);
+    }
 
     final double min = average - (3 * spread);
     checkArgument(min >= 0.0, "three standard deviations must be >= 0.0 [%s]", min);
-    String s = String.format("NormalDistribution [average=%s, spread=%s]", average, spread);
+    final String s = String.format("NormalDistribution [average=%s, spread=%s]", average, spread);
     return new RealDistributionAdapter(new NormalDistribution(average, spread), s);
   }
 
@@ -86,12 +88,14 @@ public class Distributions {
     checkArgument(average >= 0.0, "average must be >= 0.0 [%s]", average);
     checkArgument(spread >= 0.0, "spread must be >= 0.0 [%s]", spread);
 
-    if (spread == 0.0)
+    if (spread == 0.0) {
       return constant(average);
+    }
 
     final double min = average - (3 * spread);
     checkArgument(min >= 0.0, "three standard deviations must be >= 0.0 [%s]", min);
-    String s = String.format("LogNormalDistribution [average=%s, spread=%s]", average, spread);
+    final String s =
+        String.format("LogNormalDistribution [average=%s, spread=%s]", average, spread);
     return new RealDistributionAdapter(new LogNormalDistribution(average, spread), s);
   }
 
@@ -104,13 +108,13 @@ public class Distributions {
    */
   public static Distribution poisson(final double average) {
     checkArgument(average >= 0.0, "average must be >= 0.0 [%s]", average);
-    String s = String.format("PoissonDistribution [average=%s]", average);
+    final String s = String.format("PoissonDistribution [average=%s]", average);
     return new IntegerDistributionAdapter(new PoissonDistribution(average), s);
   }
 
   private static Distribution constant(final double average) {
     checkArgument(average >= 0.0, "average must be >= 0.0 [%s]", average);
-    String s = String.format("ConstantDistribution [average=%s]", average);
+    final String s = String.format("ConstantDistribution [average=%s]", average);
     return new RealDistributionAdapter(new ConstantRealDistribution(average), s);
   }
 
@@ -119,7 +123,7 @@ public class Distributions {
     private final RealDistribution d;
     private final String toString;
 
-    public RealDistributionAdapter(RealDistribution d, String toString) {
+    public RealDistributionAdapter(final RealDistribution d, final String toString) {
       this.d = checkNotNull(d);
       this.toString = checkNotNull(toString);
     }
@@ -145,7 +149,7 @@ public class Distributions {
     private final IntegerDistribution d;
     private final String toString;
 
-    public IntegerDistributionAdapter(IntegerDistribution d, String toString) {
+    public IntegerDistributionAdapter(final IntegerDistribution d, final String toString) {
       this.d = checkNotNull(d);
       this.toString = checkNotNull(toString);
     }

@@ -19,6 +19,12 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 
+/**
+ * A type adapter factory for operation type configuration that allows for either the complete
+ * configuration or a decimal that represents the weight for this operation type
+ * 
+ * @since 1.0
+ */
 public class OperationConfigTypeAdapterFactory implements TypeAdapterFactory {
   public OperationConfigTypeAdapterFactory() {}
 
@@ -26,8 +32,9 @@ public class OperationConfigTypeAdapterFactory implements TypeAdapterFactory {
   @SuppressWarnings("unchecked")
   public <T> TypeAdapter<T> create(final Gson gson, final TypeToken<T> type) {
     final Class<T> rawType = (Class<T>) type.getRawType();
-    if (!OperationConfig.class.equals(rawType))
+    if (!OperationConfig.class.equals(rawType)) {
       return null;
+    }
 
     final TypeAdapter<T> delegate = gson.getDelegateAdapter(this, type);
 
@@ -39,8 +46,9 @@ public class OperationConfigTypeAdapterFactory implements TypeAdapterFactory {
 
       @Override
       public T read(final JsonReader in) throws IOException {
-        if (JsonToken.NUMBER == in.peek())
+        if (JsonToken.NUMBER == in.peek()) {
           return (T) new OperationConfig(in.nextDouble());
+        }
 
         return delegate.read(in);
       }

@@ -52,20 +52,23 @@ public class RequestRateScheduler implements Scheduler {
     this.rampup = rampup;
     this.rampupUnit = checkNotNull(rampupUnit);
     this.rampDuration = (long) (rampup * rampupUnit.toNanos(1));
-    if (this.rampDuration > 0.0)
+    if (this.rampDuration > 0.0) {
       this.ramp = RateLimiter.create(count.getAverage(), this.rampDuration, TimeUnit.NANOSECONDS);
+    }
   }
 
   @Override
   public void waitForNext() {
     final long timestamp = System.nanoTime();
-    if (this.firstCalledTimestamp == 0)
+    if (this.firstCalledTimestamp == 0) {
       this.firstCalledTimestamp = timestamp;
+    }
 
-    if (timestamp - this.firstCalledTimestamp < this.rampDuration)
+    if (timestamp - this.firstCalledTimestamp < this.rampDuration) {
       this.lastCalledTimestamp = rampWait();
-    else
+    } else {
       this.lastCalledTimestamp = steadyWait(timestamp);
+    }
   }
 
   private long rampWait() {
@@ -96,8 +99,9 @@ public class RequestRateScheduler implements Scheduler {
   }
 
   private final long adjustment(final long timestamp) {
-    if (this.lastCalledTimestamp > 0)
+    if (this.lastCalledTimestamp > 0) {
       return timestamp - this.lastCalledTimestamp;
+    }
     return 0;
   }
 

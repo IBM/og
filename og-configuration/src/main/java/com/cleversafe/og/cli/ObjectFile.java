@@ -42,24 +42,25 @@ public class ObjectFile {
       if (cli.error()) {
         cli.printErrors();
         cli.printUsage();
-      } else if (cli.help())
+      } else if (cli.help()) {
         cli.printUsage();
-      else if (cli.version())
+      } else if (cli.version()) {
         cli.printVersion();
+      }
 
       Application.exit(Application.TEST_ERROR);
     }
 
-    File input = cli.flags().getFile("input");
-    boolean write = cli.flags().getBoolean("write");
-    boolean read = cli.flags().getBoolean("read");
-    boolean filter = cli.flags().getBoolean("filter");
-    boolean split = cli.flags().getBoolean("split");
-    String output = cli.flags().getString("output");
-    long minFilesize = cli.flags().getLong("min-filesize");
-    long maxFilesize = cli.flags().getLong("max-filesize");
-    int minContainerSuffix = cli.flags().getInt("min-suffix");
-    int maxContainerSuffix = cli.flags().getInt("max-suffix");
+    final File input = cli.flags().getFile("input");
+    final boolean write = cli.flags().getBoolean("write");
+    final boolean read = cli.flags().getBoolean("read");
+    final boolean filter = cli.flags().getBoolean("filter");
+    final boolean split = cli.flags().getBoolean("split");
+    final String output = cli.flags().getString("output");
+    final long minFilesize = cli.flags().getLong("min-filesize");
+    final long maxFilesize = cli.flags().getLong("max-filesize");
+    final int minContainerSuffix = cli.flags().getInt("min-suffix");
+    final int maxContainerSuffix = cli.flags().getInt("max-suffix");
 
     try {
       final InputStream in = getInputStream(input);
@@ -79,30 +80,34 @@ public class ObjectFile {
         ByteStreams.copy(in, out);
       }
 
-      if (!out.equals(System.out))
+      if (!out.equals(System.out)) {
         out.close();
+      }
     } catch (final IOException e) {
       _consoleLogger.error("", e);
     }
   }
 
   public static InputStream getInputStream(final File input) throws FileNotFoundException {
-    if (input != null)
+    if (input != null) {
       return new FileInputStream(input);
+    }
     return System.in;
   }
 
-  public static OutputStream getOutputStream(boolean split, String output)
+  public static OutputStream getOutputStream(final boolean split, final String output)
       throws FileNotFoundException {
-    if (split)
+    if (split) {
       return new ObjectFileOutputStream(output, RandomObjectPopulator.MAX_OBJECT_ARG,
           RandomObjectPopulator.SUFFIX);
+    }
     return getOutputStream(output);
   }
 
-  public static OutputStream getOutputStream(String output) throws FileNotFoundException {
-    if (output != null)
+  public static OutputStream getOutputStream(final String output) throws FileNotFoundException {
+    if (output != null) {
       return new FileOutputStream(output);
+    }
     return System.out;
   }
 
@@ -113,12 +118,12 @@ public class ObjectFile {
     final BufferedReader reader = new BufferedReader(new InputStreamReader(in, Charsets.UTF_8));
     String line;
     while ((line = reader.readLine()) != null) {
-      String[] components = line.split(",");
+      final String[] components = line.split(",");
       checkArgument(components.length == 3, "Invalid record - %s", line);
-      String objectString = components[0].trim();
-      long objectSize = Long.valueOf(components[1].trim());
-      int containerSuffix = Integer.valueOf(components[2].trim());
-      ObjectMetadata objectName =
+      final String objectString = components[0].trim();
+      final long objectSize = Long.valueOf(components[1].trim());
+      final int containerSuffix = Integer.valueOf(components[2].trim());
+      final ObjectMetadata objectName =
           LegacyObjectMetadata.fromMetadata(objectString, objectSize, containerSuffix);
       out.write(objectName.toBytes());
     }
@@ -133,19 +138,21 @@ public class ObjectFile {
       writer = new BufferedWriter(new OutputStreamWriter(out, Charsets.UTF_8));
       final byte[] buf = new byte[LegacyObjectMetadata.OBJECT_SIZE];
       while (in.read(buf) == LegacyObjectMetadata.OBJECT_SIZE) {
-        ObjectMetadata objectName = LegacyObjectMetadata.fromBytes(buf);
+        final ObjectMetadata objectName = LegacyObjectMetadata.fromBytes(buf);
         writer.write(String.format("%s,%s,%s", objectName.getName(), objectName.getSize(),
             objectName.getContainerSuffix()));
         writer.newLine();
       }
     } finally {
-      if (writer != null)
+      if (writer != null) {
         writer.flush();
+      }
     }
   }
 
-  public static void filter(InputStream in, OutputStream out, long minFilesize, long maxFilesize,
-      int minContainerSuffix, int maxContainerSuffix) throws IOException {
+  public static void filter(final InputStream in, final OutputStream out, final long minFilesize,
+      final long maxFilesize, final int minContainerSuffix, final int maxContainerSuffix) 
+      throws IOException {
     checkNotNull(in);
     checkNotNull(out);
     checkArgument(minFilesize >= 0, "minFilesize must be >= 0 [%s]", minFilesize);
@@ -159,7 +166,7 @@ public class ObjectFile {
 
     final byte[] buf = new byte[LegacyObjectMetadata.OBJECT_SIZE];
     while (in.read(buf) == LegacyObjectMetadata.OBJECT_SIZE) {
-      ObjectMetadata object = LegacyObjectMetadata.fromBytes(buf);
+      final ObjectMetadata object = LegacyObjectMetadata.fromBytes(buf);
       if ((object.getSize() >= minFilesize && object.getSize() <= maxFilesize)
           && (object.getContainerSuffix() >= minContainerSuffix && object.getContainerSuffix() <= maxContainerSuffix)) {
         out.write(object.toBytes());
@@ -175,7 +182,7 @@ public class ObjectFile {
     private final String suffix;
     private OutputStream out;
 
-    public ObjectFileOutputStream(String prefix, int maxObjects, String suffix)
+    public ObjectFileOutputStream(final String prefix, final int maxObjects, final String suffix)
         throws FileNotFoundException {
       this.prefix = checkNotNull(prefix);
       this.index = 0;
@@ -191,7 +198,7 @@ public class ObjectFile {
     }
 
     @Override
-    public void write(byte[] b) throws IOException {
+    public void write(final byte[] b) throws IOException {
       if (this.written >= this.maxObjects) {
         this.index++;
         this.out = create();
@@ -203,7 +210,7 @@ public class ObjectFile {
     }
 
     @Override
-    public void write(int b) throws IOException {
+    public void write(final int b) throws IOException {
       throw new IOException("ObjectFileOutputStream.write(b) should not be called");
     }
 
