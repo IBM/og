@@ -14,15 +14,12 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Iterator;
-import java.util.Map.Entry;
-import java.util.Set;
+import java.util.Map;
 
 import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.ResponseBodyConsumer;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 
 /**
  * A response body consumer which processes and returns an SOH object name from the response body of
@@ -32,11 +29,10 @@ import com.google.common.collect.ImmutableSet;
  */
 public class SOHWriteResponseBodyConsumer implements ResponseBodyConsumer {
   @Override
-  public Iterator<Entry<String, String>> consume(final int statusCode, final InputStream response)
+  public Map<String, String> consume(final int statusCode, final InputStream response)
       throws IOException {
     if (statusCode != 201) {
-      final Set<Entry<String, String>> emptySet = ImmutableSet.of();
-      return emptySet.iterator();
+      return ImmutableMap.of();
     }
     checkNotNull(response);
 
@@ -47,7 +43,7 @@ public class SOHWriteResponseBodyConsumer implements ResponseBodyConsumer {
     while ((reader.readLine()) != null) {
       // consume the stream, for SOH writes there should never be anything else
     }
-    return ImmutableMap.of(Headers.X_OG_OBJECT_NAME, objectName).entrySet().iterator();
+    return ImmutableMap.of(Headers.X_OG_OBJECT_NAME, objectName);
   }
 
   @Override

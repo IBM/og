@@ -16,7 +16,6 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Callable;
@@ -393,10 +392,8 @@ public class ApacheClient implements Client {
             ApacheClient.this.responseBodyConsumers.get(consumerId);
         this.timestamps.responseContentStart = System.nanoTime();
         if (consumer != null) {
-          final Iterator<Entry<String, String>> it =
-              consumer.consume(response.getStatusLine().getStatusCode(), in);
-          while (it.hasNext()) {
-            final Entry<String, String> e = it.next();
+          for (Map.Entry<String, String> e : consumer.consume(
+              response.getStatusLine().getStatusCode(), in).entrySet()) {
             responseBuilder.withHeader(e.getKey(), e.getValue());
           }
         } else {
