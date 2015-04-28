@@ -36,7 +36,7 @@ public class AWSAuthV4Chunked extends AWSAuthV4Base {
   private static final int DEFAULT_CHUNK_SIZE = 64000;
 
   public AWSAuthV4Chunked() {
-    super("dsnet", "s3");
+    super("us-east-1", "s3");
     this.userDataBlockSize = DEFAULT_CHUNK_SIZE;
   }
 
@@ -61,9 +61,20 @@ public class AWSAuthV4Chunked extends AWSAuthV4Base {
     final String keyId = checkNotNull(headers.get(Headers.X_OG_USERNAME));
     final String secretKey = checkNotNull(headers.get(Headers.X_OG_PASSWORD));
 
+    addChunkHeaders(request, headers);
+
     return getSigner(request).getAuthHeaders(headers, Collections.<String, String>emptyMap(),
         AWS4SignerChunked.STREAMING_BODY_SHA256, keyId, secretKey,
         new Date(request.getMessageTime()));
+  }
+
+  /**
+   * Add aws-chunked specific headers
+   */
+  private void addChunkHeaders(final Request request, final Map<String, String> headers) {
+    headers.put("x-amz-content-sha256", AWS4SignerChunked.STREAMING_BODY_SHA256);
+    headers.put("content-encoding", "" + "aws-chunked");
+    headers.put("x-amz-decoded-content-length", "" + request.getBody().getSize());
   }
 
   @Override
@@ -74,6 +85,8 @@ public class AWSAuthV4Chunked extends AWSAuthV4Base {
     final Map<String, String> headers = Maps.newHashMap(request.headers());
     final String keyId = checkNotNull(headers.get(Headers.X_OG_USERNAME));
     final String secretKey = checkNotNull(headers.get(Headers.X_OG_PASSWORD));
+
+    addChunkHeaders(request, headers);
 
     final AWS4SignerChunked signer = getSigner(request);
     signer.getAuthHeaders(headers, Collections.<String, String>emptyMap(),

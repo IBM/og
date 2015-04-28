@@ -105,15 +105,11 @@ public class AWSAuthV4ChunkingTest {
               auth.wrapStream(request, Streams.create(request.getBody()));
 
           final ByteArrayOutputStream actualOutput = new ByteArrayOutputStream();
-          int written = 0;
           final byte[] buff = new byte[readAmount];
           int read = wrappedStream.read(buff, 0, readAmount);
           while (read != -1) {
             actualOutput.write(buff, 0, read);
-            written += read;
             read = wrappedStream.read(buff, 0, readAmount);
-            System.out.println("buff.length = " + buff.length + ", written = " + written
-                + ", read = " + read);
           }
           Assert.assertTrue(Arrays.equals(expectedBuff, actualOutput.toByteArray()));
         }

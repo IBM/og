@@ -64,6 +64,7 @@ import com.cleversafe.og.object.ReadObjectNameConsumer;
 import com.cleversafe.og.object.WriteObjectNameConsumer;
 import com.cleversafe.og.s3.v2.AWSAuthV2;
 import com.cleversafe.og.s3.v4.AWSAuthV4;
+import com.cleversafe.og.s3.v4.AWSAuthV4Chunked;
 import com.cleversafe.og.scheduling.ConcurrentRequestScheduler;
 import com.cleversafe.og.scheduling.RequestRateScheduler;
 import com.cleversafe.og.scheduling.Scheduler;
@@ -141,6 +142,7 @@ public class OGModule extends AbstractModule {
         MapBinder.newMapBinder(binder(), AuthType.class, HttpAuth.class);
     httpAuthBinder.addBinding(AuthType.AWSV2).to(AWSAuthV2.class);
     httpAuthBinder.addBinding(AuthType.AWSV4).to(AWSAuthV4.class);
+    httpAuthBinder.addBinding(AuthType.AWSV4CHUNKED).to(AWSAuthV4Chunked.class);
     httpAuthBinder.addBinding(AuthType.BASIC).to(BasicAuth.class);
 
     MapBinder<String, ResponseBodyConsumer> responseBodyConsumers =
