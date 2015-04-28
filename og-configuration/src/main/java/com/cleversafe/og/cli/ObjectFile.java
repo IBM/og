@@ -58,6 +58,8 @@ public class ObjectFile {
     String output = cli.flags().getString("output");
     long minFilesize = cli.flags().getLong("min-filesize");
     long maxFilesize = cli.flags().getLong("max-filesize");
+    int minContainerSuffix = cli.flags().getInt("min-suffix");
+    int maxContainerSuffix = cli.flags().getInt("max-suffix");
 
     try {
       final InputStream in = getInputStream(input);
@@ -71,7 +73,7 @@ public class ObjectFile {
         read(in, out);
       } else if (filter) {
         out = getOutputStream(split, output);
-        filter(in, out, minFilesize, maxFilesize);
+        filter(in, out, minFilesize, maxFilesize, minContainerSuffix, maxContainerSuffix);
       } else {
         out = getOutputStream(output);
         ByteStreams.copy(in, out);
@@ -111,10 +113,13 @@ public class ObjectFile {
     final BufferedReader reader = new BufferedReader(new InputStreamReader(in, Charsets.UTF_8));
     String line;
     while ((line = reader.readLine()) != null) {
-      String[] components = line.split(",", 2);
+      String[] components = line.split(",");
+      checkArgument(components.length == 3, "Invalid record - %s", line);
       String objectString = components[0].trim();
       long objectSize = Long.valueOf(components[1].trim());
-      ObjectMetadata objectName = LegacyObjectMetadata.fromMetadata(objectString, objectSize);
+      int containerSuffix = Integer.valueOf(components[2].trim());
+      ObjectMetadata objectName =
+          LegacyObjectMetadata.fromMetadata(objectString, objectSize, containerSuffix);
       out.write(objectName.toBytes());
     }
   }
@@ -129,7 +134,8 @@ public class ObjectFile {
       final byte[] buf = new byte[LegacyObjectMetadata.OBJECT_SIZE];
       while (in.read(buf) == LegacyObjectMetadata.OBJECT_SIZE) {
         ObjectMetadata objectName = LegacyObjectMetadata.fromBytes(buf);
-        writer.write(String.format("%s,%s", objectName.getName(), objectName.getSize()));
+        writer.write(String.format("%s,%s,%s", objectName.getName(), objectName.getSize(),
+            objectName.getContainerSuffix()));
         writer.newLine();
       }
     } finally {
@@ -138,19 +144,26 @@ public class ObjectFile {
     }
   }
 
-  public static void filter(InputStream in, OutputStream out, long minFilesize, long maxFilesize)
-      throws IOException {
+  public static void filter(InputStream in, OutputStream out, long minFilesize, long maxFilesize,
+      int minContainerSuffix, int maxContainerSuffix) throws IOException {
     checkNotNull(in);
     checkNotNull(out);
     checkArgument(minFilesize >= 0, "minFilesize must be >= 0 [%s]", minFilesize);
     checkArgument(minFilesize <= maxFilesize, "minFilesize must be <= maxFilesize [%s, %s]",
         minFilesize, maxFilesize);
+    checkArgument(minContainerSuffix >= -1, "minContainerSuffix must be >= -1 [%s]",
+        minContainerSuffix);
+    checkArgument(minContainerSuffix <= maxContainerSuffix,
+        "minContainerSuffix must be <= maxContainerSuffix [%s, %s]", minContainerSuffix,
+        maxContainerSuffix);
 
     final byte[] buf = new byte[LegacyObjectMetadata.OBJECT_SIZE];
     while (in.read(buf) == LegacyObjectMetadata.OBJECT_SIZE) {
-      ObjectMetadata objectName = LegacyObjectMetadata.fromBytes(buf);
-      if (objectName.getSize() >= minFilesize && objectName.getSize() <= maxFilesize)
-        out.write(objectName.toBytes());
+      ObjectMetadata object = LegacyObjectMetadata.fromBytes(buf);
+      if ((object.getSize() >= minFilesize && object.getSize() <= maxFilesize)
+          && (object.getContainerSuffix() >= minContainerSuffix && object.getContainerSuffix() <= maxContainerSuffix)) {
+        out.write(object.toBytes());
+      }
     }
   }
 

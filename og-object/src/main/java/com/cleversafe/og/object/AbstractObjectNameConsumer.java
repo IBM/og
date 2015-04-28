@@ -82,7 +82,8 @@ public abstract class AbstractObjectNameConsumer {
   private ObjectMetadata getObjectName(Request request, Response response) {
     String objectString = getObjectString(request, response);
     long objectSize = getObjectSize(request, response);
-    return LegacyObjectMetadata.fromMetadata(objectString, objectSize);
+    int containerSuffix = getContainerSuffix(request, response);
+    return LegacyObjectMetadata.fromMetadata(objectString, objectSize, containerSuffix);
   }
 
   protected String getObjectString(final Request request, final Response response) {
@@ -92,6 +93,15 @@ public abstract class AbstractObjectNameConsumer {
       objectString = response.headers().get(Headers.X_OG_OBJECT_NAME);
 
     return objectString;
+  }
+
+  protected int getContainerSuffix(final Request request, final Response response) {
+    String containerSuffix = request.headers().get(Headers.X_OG_CONTAINER_SUFFIX);
+    if (containerSuffix == null) {
+      return -1;
+    } else {
+      return Integer.valueOf(containerSuffix);
+    }
   }
 
   private long getObjectSize(Request request, Response response) {

@@ -24,7 +24,8 @@ import com.google.common.io.BaseEncoding;
 public class LegacyObjectMetadata implements ObjectMetadata {
   public static final int OBJECT_NAME_SIZE = 18;
   public static final int OBJECT_SIZE_SIZE = 8;
-  public static final int OBJECT_SIZE = OBJECT_NAME_SIZE + OBJECT_SIZE_SIZE;
+  public static final int OBJECT_SUFFIX_SIZE = 4;
+  public static final int OBJECT_SIZE = OBJECT_NAME_SIZE + OBJECT_SIZE_SIZE + OBJECT_SUFFIX_SIZE;
   private static final BaseEncoding ENCODING = BaseEncoding.base16().lowerCase();
   private final ByteBuffer objectBuffer;
 
@@ -48,14 +49,16 @@ public class LegacyObjectMetadata implements ObjectMetadata {
   }
 
   /**
-   * Configures an instance using the provided metadata,
+   * Configures an instance using the provided metadata
    * 
    * @param objectName the object name; must be base16 encoded / uuid friendly
    * @param objectSize the size of the object
+   * @param containerSuffix object's container suffix
    * @return a {@code LegacyObjectMetadata} instance
    * @throws IllegalArgumentException if objectSize is negative
    */
-  public static LegacyObjectMetadata fromMetadata(final String objectName, long objectSize) {
+  public static LegacyObjectMetadata fromMetadata(final String objectName, long objectSize,
+      int containerSuffix) {
     checkNotNull(objectName);
     // HACK; assume 1 char == 2 bytes for object name string length checking
     int stringLength = 2 * OBJECT_NAME_SIZE;
@@ -68,6 +71,8 @@ public class LegacyObjectMetadata implements ObjectMetadata {
     ByteBuffer objectBuffer = ByteBuffer.wrap(b);
     objectBuffer.position(OBJECT_NAME_SIZE);
     objectBuffer.putLong(objectSize);
+    objectBuffer.position(OBJECT_NAME_SIZE + OBJECT_SIZE_SIZE);
+    objectBuffer.putInt(containerSuffix);
     return new LegacyObjectMetadata(objectBuffer);
   }
 
@@ -80,6 +85,12 @@ public class LegacyObjectMetadata implements ObjectMetadata {
   public long getSize() {
     this.objectBuffer.position(OBJECT_NAME_SIZE);
     return this.objectBuffer.getLong();
+  }
+
+  @Override
+  public int getContainerSuffix() {
+    this.objectBuffer.position(OBJECT_NAME_SIZE + OBJECT_SIZE_SIZE);
+    return this.objectBuffer.getInt();
   }
 
   @Override

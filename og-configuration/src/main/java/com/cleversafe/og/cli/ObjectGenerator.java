@@ -30,6 +30,7 @@ import com.cleversafe.og.json.OGConfig;
 import com.cleversafe.og.json.type.CaseInsensitiveEnumTypeAdapterFactory;
 import com.cleversafe.og.json.type.ChoiceConfigTypeAdapterFactory;
 import com.cleversafe.og.json.type.ConcurrencyConfigTypeAdapterFactory;
+import com.cleversafe.og.json.type.ContainerConfigTypeAdapterFactory;
 import com.cleversafe.og.json.type.FilesizeConfigTypeAdapterFactory;
 import com.cleversafe.og.json.type.OperationConfigTypeAdapterFactory;
 import com.cleversafe.og.json.type.SelectionConfigTypeAdapterFactory;
@@ -190,6 +191,7 @@ public class ObjectGenerator {
         .registerTypeAdapterFactory(new SelectionConfigTypeAdapterFactory())
         .registerTypeAdapterFactory(new ChoiceConfigTypeAdapterFactory())
         .registerTypeAdapterFactory(new FilesizeConfigTypeAdapterFactory())
+        .registerTypeAdapterFactory(new ContainerConfigTypeAdapterFactory())
         .registerTypeAdapterFactory(new ConcurrencyConfigTypeAdapterFactory()).setPrettyPrinting()
         .create();
   }
