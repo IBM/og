@@ -48,7 +48,7 @@ public class AWSAuthV4Chunked extends AWSAuthV4Base {
   AWS4SignerChunked getSigner(final Request request) {
     try {
       return new AWS4SignerChunked(request.getUri().toURL(), request.getMethod().toString(),
-          serviceName, regionName);
+          this.serviceName, this.regionName);
     } catch (final MalformedURLException e) {
       throw new InvalidParameterException("Can't convert to request.URI(" + request.getUri()
           + ") to  URL:" + e.getMessage());
@@ -71,7 +71,7 @@ public class AWSAuthV4Chunked extends AWSAuthV4Base {
   /**
    * Add aws-chunked specific headers
    */
-  private void addChunkHeaders(final Request request, final Map<String, String> headers) {
+  void addChunkHeaders(final Request request, final Map<String, String> headers) {
     headers.put("x-amz-content-sha256", AWS4SignerChunked.STREAMING_BODY_SHA256);
     headers.put("content-encoding", "" + "aws-chunked");
     headers.put("x-amz-decoded-content-length", "" + request.getBody().getSize());
@@ -104,7 +104,7 @@ public class AWSAuthV4Chunked extends AWSAuthV4Base {
        * Temporary buffer to hold data read from the backing stream. We read userDataChunkSize at a
        * time.
        */
-      byte[] userData = new byte[userDataBlockSize];
+      byte[] userData = new byte[AWSAuthV4Chunked.this.userDataBlockSize];
 
       /**
        * Set to true when we've read all user data and already created the final chunk. If this is
@@ -129,16 +129,18 @@ public class AWSAuthV4Chunked extends AWSAuthV4Base {
        * @throws IOException if you call this after the final chunk has already been created.
        */
       private void getNextChunk() throws IOException {
-        if (eOfUserData)
+        if (this.eOfUserData) {
           throw new EOFException();
+        }
 
-        final int userDataRead = stream.read(userData, 0, userDataBlockSize);
+        final int userDataRead =
+            stream.read(this.userData, 0, AWSAuthV4Chunked.this.userDataBlockSize);
         if (userDataRead == -1) {
           // Read no more data, but we need to call constructSignedChunk to get the final chunk
-          eOfUserData = true;
+          this.eOfUserData = true;
         }
-        chunk = signer.constructSignedChunk(userDataRead, userData);
-        chunkPos = 0;
+        this.chunk = signer.constructSignedChunk(userDataRead, this.userData);
+        this.chunkPos = 0;
       }
 
       @Override
@@ -158,18 +160,19 @@ public class AWSAuthV4Chunked extends AWSAuthV4Base {
           return 0;
         }
 
-        if (eof)
+        if (this.eof) {
           return -1;
+        }
 
         int lenCopied = 0;
         while (lenCopied < len) {
 
           // Read the first/next chunk if necessary
-          if (chunk == null || chunkPos == chunk.length) {
-            if (eOfUserData) {
+          if (this.chunk == null || this.chunkPos == this.chunk.length) {
+            if (this.eOfUserData) {
               // We've already generated all chunks and the chunkPos indicates that we've sent out
               // all the data.
-              eof = true;
+              this.eof = true;
               return lenCopied > 0 ? lenCopied : -1;
             } else {
               getNextChunk();
@@ -178,15 +181,15 @@ public class AWSAuthV4Chunked extends AWSAuthV4Base {
 
           final int copyLen;
           final int copyLenLeft = len - lenCopied;
-          if (copyLenLeft <= chunk.length - chunkPos) {
+          if (copyLenLeft <= this.chunk.length - this.chunkPos) {
             copyLen = copyLenLeft;
           } else {
-            copyLen = chunk.length - chunkPos;
+            copyLen = this.chunk.length - this.chunkPos;
           }
 
-          System.arraycopy(chunk, chunkPos, b, off + lenCopied, copyLen);
-          chunkPos += copyLen;
-          assert chunkPos <= chunk.length;
+          System.arraycopy(this.chunk, this.chunkPos, b, off + lenCopied, copyLen);
+          this.chunkPos += copyLen;
+          assert this.chunkPos <= this.chunk.length;
           lenCopied += copyLen;
         }
 
@@ -199,6 +202,6 @@ public class AWSAuthV4Chunked extends AWSAuthV4Base {
   @Override
   public long getContentLength(final Request request) {
     return AWS4SignerChunked.calculateChunkedContentLength(request.getBody().getSize(),
-        userDataBlockSize);
+        this.userDataBlockSize);
   }
 }

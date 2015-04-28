@@ -16,6 +16,7 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -26,6 +27,7 @@ import com.cleversafe.og.http.Bodies;
 import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpRequest;
 import com.cleversafe.og.util.io.Streams;
+import com.google.common.collect.Maps;
 
 public class AWSAuthV4ChunkingTest {
 
@@ -35,7 +37,7 @@ public class AWSAuthV4ChunkingTest {
   private static final String KEY_ID = "AKIDEXAMPLE";
 
   public AWSAuthV4ChunkingTest() throws URISyntaxException {
-    URI = new URI("http://127.0.0.1:8080/container/object");
+    this.URI = new URI("http://127.0.0.1:8080/container/object");
   }
 
   /**
@@ -44,6 +46,9 @@ public class AWSAuthV4ChunkingTest {
   private byte[] getCompleteChunkedBuff(final Request request, final AWSAuthV4Chunked auth,
       final int userDataBlockSize) throws IOException {
     final InputStream requestStream = Streams.create(request.getBody());
+
+    final Map<String, String> headers = Maps.newHashMap();
+    auth.addChunkHeaders(request, headers);
 
     final AWS4SignerChunked signer = auth.getSigner(request);
     // Call getAuthheaders just to initialize this signer
@@ -76,7 +81,7 @@ public class AWSAuthV4ChunkingTest {
       for (int userDataBlockSize = 1; userDataBlockSize <= bodySize; userDataBlockSize++) {
         // Build a request and auth for this body size and block size
         final AWSAuthV4Chunked auth = new AWSAuthV4Chunked("dsnet", "s3", userDataBlockSize);
-        final HttpRequest.Builder reqBuilder = new HttpRequest.Builder(Method.PUT, URI);
+        final HttpRequest.Builder reqBuilder = new HttpRequest.Builder(Method.PUT, this.URI);
         reqBuilder.withHeader(Headers.X_OG_USERNAME, KEY_ID);
         reqBuilder.withHeader(Headers.X_OG_PASSWORD, SECRET_KEY);
         reqBuilder.withBody(Bodies.zeroes(bodySize));
