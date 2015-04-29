@@ -99,12 +99,15 @@ public class ObjectFileTest {
 
   @Test
   public void write() throws IOException {
-    final String objectMetadata = UUID.randomUUID().toString().replace("-", "") + "0000,0";
+    final String objectMetadata = UUID.randomUUID().toString().replace("-", "") + "0000,0,0";
     final InputStream in = new ByteArrayInputStream(objectMetadata.getBytes());
     final ByteArrayOutputStream out = new ByteArrayOutputStream(LegacyObjectMetadata.OBJECT_SIZE);
     ObjectFile.write(in, out);
     final ObjectMetadata object = LegacyObjectMetadata.fromBytes(out.toByteArray());
-    assertThat(objectMetadata, is(String.format("%s,%s", object.getName(), object.getSize())));
+    assertThat(
+        objectMetadata,
+        is(String.format("%s,%s,%s", object.getName(), object.getSize(),
+            object.getContainerSuffix())));
   }
 
   @Test
@@ -131,11 +134,13 @@ public class ObjectFileTest {
   public static Object[][] provideInvalidFilter() {
     final InputStream in = new ByteArrayInputStream(new byte[] {});
     final OutputStream out = new ByteArrayOutputStream();
-    return new Object[][] { {null, out, 0, 0, NullPointerException.class},
-        {in, null, 0, 0, NullPointerException.class},
-        {in, out, -1, 0, IllegalArgumentException.class},
-        {in, out, 0, -1, IllegalArgumentException.class},
-        {in, out, 10, 9, IllegalArgumentException.class}};
+    return new Object[][] { {null, out, 0, 0, 0, 0, NullPointerException.class},
+        {in, null, 0, 0, 0, 0, NullPointerException.class},
+        {in, out, -1, 0, 0, 0, IllegalArgumentException.class},
+        {in, out, 0, -1, 0, 0, IllegalArgumentException.class},
+        {in, out, 10, 9, 0, 0, IllegalArgumentException.class},
+        {in, out, 0, 0, -2, 2, IllegalArgumentException.class},
+        {in, out, 0, 0, 4, 3, IllegalArgumentException.class}};
   }
 
   @Test
