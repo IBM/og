@@ -68,7 +68,7 @@ public class HttpRequest implements Request {
 
   @Override
   public long getMessageTime() {
-    return messageTime;
+    return this.messageTime;
   }
 
   @Override
@@ -101,7 +101,7 @@ public class HttpRequest implements Request {
       this.uri = uri;
       this.headers = Maps.newLinkedHashMap();
       this.messageTime = System.currentTimeMillis();
-      this.headers.put("Date", RFC1123.print(new DateTime(messageTime)));
+      this.headers.put("Date", RFC1123.print(new DateTime(this.messageTime)));
       this.body = Bodies.none();
     }
 
@@ -130,6 +130,7 @@ public class HttpRequest implements Request {
 
     public Builder withMessageTime(final long messageTime) {
       this.messageTime = messageTime;
+      this.headers.put("Date", RFC1123.print(new DateTime(messageTime)));
       return this;
     }
 

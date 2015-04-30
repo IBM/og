@@ -104,7 +104,7 @@ public class AWSAuthV4Chunked extends AWSAuthV4Base {
        * Temporary buffer to hold data read from the backing stream. We read userDataChunkSize at a
        * time.
        */
-      byte[] userData = new byte[AWSAuthV4Chunked.this.userDataBlockSize];
+      byte[] userData = new byte[AWSAuthV4Chunked.this.getUserDataBlockSize()];
 
       /**
        * Set to true when we've read all user data and already created the final chunk. If this is
@@ -134,7 +134,7 @@ public class AWSAuthV4Chunked extends AWSAuthV4Base {
         }
 
         final int userDataRead =
-            stream.read(this.userData, 0, AWSAuthV4Chunked.this.userDataBlockSize);
+            stream.read(this.userData, 0, AWSAuthV4Chunked.this.getUserDataBlockSize());
         if (userDataRead == -1) {
           // Read no more data, but we need to call constructSignedChunk to get the final chunk
           this.eOfUserData = true;
@@ -202,6 +202,10 @@ public class AWSAuthV4Chunked extends AWSAuthV4Base {
   @Override
   public long getContentLength(final Request request) {
     return AWS4SignerChunked.calculateChunkedContentLength(request.getBody().getSize(),
-        this.userDataBlockSize);
+        this.getUserDataBlockSize());
+  }
+
+  public int getUserDataBlockSize() {
+    return userDataBlockSize;
   }
 }
