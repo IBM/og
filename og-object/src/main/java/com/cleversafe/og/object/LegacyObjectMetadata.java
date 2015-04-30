@@ -66,12 +66,11 @@ public class LegacyObjectMetadata implements ObjectMetadata {
         String.format("objectName length must be == %s", stringLength) + " [%s]",
         objectName.length());
     checkArgument(objectSize >= 0, "objectSize must be >= 0 [%s]", objectSize);
+    checkArgument(containerSuffix >= -1, "containerSuffix must be >= -1 [%s]", containerSuffix);
 
-    final byte[] b = Arrays.copyOf(ENCODING.decode(objectName), OBJECT_SIZE);
-    final ByteBuffer objectBuffer = ByteBuffer.wrap(b);
-    objectBuffer.position(OBJECT_NAME_SIZE);
+    final ByteBuffer objectBuffer = ByteBuffer.allocate(OBJECT_SIZE);
+    objectBuffer.put(ENCODING.decode(objectName), 0, OBJECT_NAME_SIZE);
     objectBuffer.putLong(objectSize);
-    objectBuffer.position(OBJECT_NAME_SIZE + OBJECT_SIZE_SIZE);
     objectBuffer.putInt(containerSuffix);
     return new LegacyObjectMetadata(objectBuffer);
   }

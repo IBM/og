@@ -43,6 +43,11 @@ public class LegacyObjectMetadataTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
+  public void fromMetadataInvalidContainerSuffix() {
+    LegacyObjectMetadata.fromMetadata(objectString(UUID.randomUUID()), 1, -2);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
   public void fromMetadataLongObjectName() {
     final String objectName = UUID.randomUUID().toString().replace("-", "") + "12345";
     LegacyObjectMetadata.fromMetadata(objectName, 0, 0);
