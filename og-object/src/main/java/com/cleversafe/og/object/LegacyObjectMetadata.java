@@ -82,14 +82,12 @@ public class LegacyObjectMetadata implements ObjectMetadata {
 
   @Override
   public long getSize() {
-    this.objectBuffer.position(OBJECT_NAME_SIZE);
-    return this.objectBuffer.getLong();
+    return this.objectBuffer.getLong(OBJECT_NAME_SIZE);
   }
 
   @Override
   public int getContainerSuffix() {
-    this.objectBuffer.position(OBJECT_NAME_SIZE + OBJECT_SIZE_SIZE);
-    return this.objectBuffer.getInt();
+    return this.objectBuffer.getInt(OBJECT_NAME_SIZE + OBJECT_SIZE_SIZE);
   }
 
   @Override

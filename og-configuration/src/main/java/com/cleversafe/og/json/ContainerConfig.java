@@ -14,8 +14,8 @@ public class ContainerConfig {
   public static final int NONE = -1;
   public String prefix;
   public SelectionType selection;
-  public int min_suffix;
-  public int max_suffix;
+  public int minSuffix;
+  public int maxSuffix;
   public List<Double> weights;
 
   public ContainerConfig(final String container) {
@@ -26,8 +26,8 @@ public class ContainerConfig {
   public ContainerConfig() {
     this.prefix = null;
     this.selection = SelectionType.RANDOM;
-    this.min_suffix = NONE;
-    this.max_suffix = NONE;
+    this.minSuffix = NONE;
+    this.maxSuffix = NONE;
     this.weights = null;
   }
 }

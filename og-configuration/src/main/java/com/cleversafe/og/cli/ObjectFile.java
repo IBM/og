@@ -122,7 +122,7 @@ public class ObjectFile {
       checkArgument(components.length == 3, "Invalid record - %s", line);
       final String objectString = components[0].trim();
       final long objectSize = Long.valueOf(components[1].trim());
-      final int containerSuffix = Integer.valueOf(components[2].trim());
+      final int containerSuffix = Integer.parseInt(components[2].trim());
       final ObjectMetadata objectName =
           LegacyObjectMetadata.fromMetadata(objectString, objectSize, containerSuffix);
       out.write(objectName.toBytes());
@@ -151,7 +151,7 @@ public class ObjectFile {
   }
 
   public static void filter(final InputStream in, final OutputStream out, final long minFilesize,
-      final long maxFilesize, final int minContainerSuffix, final int maxContainerSuffix) 
+      final long maxFilesize, final int minContainerSuffix, final int maxContainerSuffix)
       throws IOException {
     checkNotNull(in);
     checkNotNull(out);

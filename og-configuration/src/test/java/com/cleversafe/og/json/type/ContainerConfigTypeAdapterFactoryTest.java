@@ -43,8 +43,8 @@ public class ContainerConfigTypeAdapterFactoryTest {
     final ContainerConfig config = this.gson.fromJson(json, ContainerConfig.class);
     assertThat(config.prefix, is("vault"));
     assertThat(config.selection, is(SelectionType.RANDOM));
-    assertThat(config.min_suffix, is(0));
-    assertThat(config.max_suffix, is(2));
+    assertThat(config.minSuffix, is(0));
+    assertThat(config.maxSuffix, is(2));
     assertThat(config.weights.size(), is(3));
     assertThat(config.weights.get(2), is(3.0));
   }
