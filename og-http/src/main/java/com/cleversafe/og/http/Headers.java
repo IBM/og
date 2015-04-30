@@ -21,4 +21,5 @@ public class Headers {
   public static final String X_OG_USERNAME = "x-og-username";
   public static final String X_OG_PASSWORD = "x-og-password";
   public static final String X_OG_RESPONSE_BODY_CONSUMER = "x-og-response-body-consumer";
+  public static final String X_OG_CONTAINER_SUFFIX = "x-og-container-suffix";
 }
