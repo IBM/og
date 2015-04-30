@@ -6,7 +6,7 @@
  * licensing@cleversafe.com
  */
 
-package com.cleversafe.og.s3;
+package com.cleversafe.og.s3.v2;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasEntry;
