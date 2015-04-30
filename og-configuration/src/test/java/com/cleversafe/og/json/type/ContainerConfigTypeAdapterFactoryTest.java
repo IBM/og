@@ -39,7 +39,7 @@ public class ContainerConfigTypeAdapterFactoryTest {
   @Test
   public void fullContainerConfig() {
     final String json =
-        "{\"prefix\": \"vault\", \"selection\": \"RANDOM\", \"min_suffix\": 0, \"max_suffix\": 2, \"weights\": [1.0, 2.0, 3.0]}";
+        "{\"prefix\": \"vault\", \"selection\": \"RANDOM\", \"minSuffix\": 0, \"maxSuffix\": 2, \"weights\": [1.0, 2.0, 3.0]}";
     final ContainerConfig config = this.gson.fromJson(json, ContainerConfig.class);
     assertThat(config.prefix, is("vault"));
     assertThat(config.selection, is(SelectionType.RANDOM));
