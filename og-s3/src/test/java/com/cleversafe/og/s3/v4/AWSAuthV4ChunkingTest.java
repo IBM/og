@@ -80,7 +80,7 @@ public class AWSAuthV4ChunkingTest {
 
   @Test
   public void wrapTest() throws IOException {
-    for (int bodySize = 0; bodySize <= 17; bodySize++) {
+    for (int bodySize = 0; bodySize <= 5; bodySize++) {
       for (int userDataBlockSize = 1; userDataBlockSize <= bodySize; userDataBlockSize++) {
         // Build a request and auth for this body size and block size
         final AWSAuthV4Chunked auth = new AWSAuthV4Chunked("dsnet", "s3", userDataBlockSize);
