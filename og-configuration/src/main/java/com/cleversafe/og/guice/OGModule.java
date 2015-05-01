@@ -93,6 +93,7 @@ import com.cleversafe.og.util.SizeUnit;
 import com.cleversafe.og.util.Version;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -599,6 +600,9 @@ public class OGModule extends AbstractModule {
       final Map<AuthType, HttpAuth> authentication,
       final Map<String, ResponseBodyConsumer> responseBodyConsumers) {
     final ClientConfig clientConfig = this.config.client;
+    Preconditions.checkArgument(
+        authentication.get(authType) instanceof AWSAuthV4Chunked ? !clientConfig.chunkedEncoding
+            : true, "http layer chunked encoding is not supported with Chunked AWSV4");
     final ApacheClient.Builder b =
         new ApacheClient.Builder().withConnectTimeout(clientConfig.connectTimeout)
             .withSoTimeout(clientConfig.soTimeout).usingSoReuseAddress(clientConfig.soReuseAddress)
