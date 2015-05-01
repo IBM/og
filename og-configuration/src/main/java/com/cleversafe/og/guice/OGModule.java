@@ -99,6 +99,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Range;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.AbstractModule;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.matcher.Matchers;
@@ -140,13 +142,21 @@ public class OGModule extends AbstractModule {
         Providers.of(this.config.authentication.username));
     bind(String.class).annotatedWith(Names.named("authentication.password")).toProvider(
         Providers.of(this.config.authentication.password));
+    bindConstant().annotatedWith(Names.named("authentication.awsChunkSize")).to(
+        this.config.authentication.awsChunkSize);
+    bindConstant().annotatedWith(Names.named("authentication.awsChunked")).to(
+        this.config.authentication.awsChunked);
+
+    // Hard code these values since they don't matter much when testing with a dsnet.
+    bindConstant().annotatedWith(Names.named("s3.serviceName")).to("s3");
+    bindConstant().annotatedWith(Names.named("s3.regionName")).to("us-east-1");
+
     bind(StoppingConditionsConfig.class).toInstance(this.config.stoppingConditions);
 
     final MapBinder<AuthType, HttpAuth> httpAuthBinder =
         MapBinder.newMapBinder(binder(), AuthType.class, HttpAuth.class);
     httpAuthBinder.addBinding(AuthType.AWSV2).to(AWSAuthV2.class);
-    httpAuthBinder.addBinding(AuthType.AWSV4).to(AWSAuthV4.class);
-    httpAuthBinder.addBinding(AuthType.AWSV4CHUNKED).to(AWSAuthV4Chunked.class);
+    httpAuthBinder.addBinding(AuthType.AWSV4).toProvider(AWSAuthProvider.class);
     httpAuthBinder.addBinding(AuthType.BASIC).to(BasicAuth.class);
 
     final MapBinder<String, ResponseBodyConsumer> responseBodyConsumers =
@@ -175,6 +185,34 @@ public class OGModule extends AbstractModule {
         }
       }
     });
+  }
+
+  private static class AWSAuthProvider implements Provider<HttpAuth> {
+
+    private final boolean chunked;
+    private final String regionName;
+    private final String serviceName;
+    private final int chunkSize;
+
+    @Inject
+    public AWSAuthProvider(@Named("authentication.awsChunked") final boolean chunked,
+        @Named("s3.regionName") final String regionName,
+        @Named("s3.serviceName") final String serviceName,
+        @Named("authentication.awsChunkSize") final int chunkSize) {
+      this.chunked = chunked;
+      this.regionName = regionName;
+      this.serviceName = serviceName;
+      this.chunkSize = chunkSize;
+    }
+
+    @Override
+    public HttpAuth get() {
+      if (this.chunked) {
+        return new AWSAuthV4Chunked(this.regionName, this.serviceName, this.chunkSize);
+      } else {
+        return new AWSAuthV4(this.regionName, this.serviceName);
+      }
+    }
   }
 
   @Provides

@@ -156,8 +156,10 @@
 
 // "authentication": {
 // "type": "basic",
+// "aws_chunked": false,
 // "username": "",
-// "password": ""
+// "password": "",
+// "chunkSize": 64000
 // },
 
 

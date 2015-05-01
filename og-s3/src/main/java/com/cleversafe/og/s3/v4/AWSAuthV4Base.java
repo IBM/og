@@ -8,6 +8,8 @@
 
 package com.cleversafe.og.s3.v4;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.cleversafe.og.http.HttpAuth;
 
 public abstract class AWSAuthV4Base implements HttpAuth {
@@ -20,7 +22,7 @@ public abstract class AWSAuthV4Base implements HttpAuth {
    * @param serviceName service name to use in requests. Should be usually be "s3".
    */
   public AWSAuthV4Base(final String regionName, final String serviceName) {
-    this.regionName = regionName;
-    this.serviceName = serviceName;
+    this.regionName = checkNotNull(regionName);
+    this.serviceName = checkNotNull(serviceName);
   }
 }

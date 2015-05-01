@@ -19,9 +19,12 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
 
+import javax.inject.Inject;
+
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpUtil;
+import com.google.common.base.Preconditions;
 
 public class AWSAuthV4Chunked extends AWSAuthV4Base {
 
@@ -33,15 +36,17 @@ public class AWSAuthV4Chunked extends AWSAuthV4Base {
   /**
    * The default amount of user data in each chunk.
    */
-  private static final int DEFAULT_CHUNK_SIZE = 64000;
+  public static final int DEFAULT_CHUNK_SIZE = 64000;
 
   public AWSAuthV4Chunked() {
     super("us-east-1", "s3");
     this.userDataBlockSize = DEFAULT_CHUNK_SIZE;
   }
 
+  @Inject
   public AWSAuthV4Chunked(final String regionName, final String serviceName, final int chunkSize) {
     super(regionName, serviceName);
+    Preconditions.checkArgument(chunkSize > 8000, "AWS Chunk Size less than 8000 not supported.");
     this.userDataBlockSize = chunkSize;
   }
 
@@ -63,9 +68,9 @@ public class AWSAuthV4Chunked extends AWSAuthV4Base {
     final Map<String, String> signableHeaders = HttpUtil.filterOutOgHeaders(request.headers());
     addChunkHeaders(request, signableHeaders);
 
-    return getSigner(request).getAuthHeaders(signableHeaders, Collections.<String, String>emptyMap(),
-        AWS4SignerChunked.STREAMING_BODY_SHA256, keyId, secretKey,
-        new Date(request.getMessageTime()));
+    return getSigner(request).getAuthHeaders(signableHeaders,
+        Collections.<String, String>emptyMap(), AWS4SignerChunked.STREAMING_BODY_SHA256, keyId,
+        secretKey, new Date(request.getMessageTime()));
   }
 
   /**
@@ -206,6 +211,6 @@ public class AWSAuthV4Chunked extends AWSAuthV4Base {
   }
 
   public int getUserDataBlockSize() {
-    return userDataBlockSize;
+    return this.userDataBlockSize;
   }
 }
