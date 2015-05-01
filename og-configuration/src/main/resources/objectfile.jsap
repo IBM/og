@@ -41,6 +41,28 @@
             </defaults>
             <help>Maximum file size to include an object in the output when using --filter, in bytes</help>
         </flaggedOption>
+        <flaggedOption>
+            <id>min-suffix</id>
+            <longFlag>min-suffix</longFlag>
+            <stringParser>
+            <classname>IntegerStringParser</classname>
+            </stringParser>
+            <defaults>
+                <string>-1</string>
+            </defaults>
+            <help>Minimum container suffix to include an object in the output when using --filter</help>
+        </flaggedOption>
+        <flaggedOption>
+            <id>max-suffix</id>
+            <longFlag>max-suffix</longFlag>
+            <stringParser>
+            <classname>IntegerStringParser</classname>
+            </stringParser>
+            <defaults>
+                <string>2147483647</string>
+            </defaults>
+            <help>Maximum container suffix to include an object in the output when using --filter</help>
+        </flaggedOption>
         <switch>
             <id>split</id>
             <shortFlag>s</shortFlag>

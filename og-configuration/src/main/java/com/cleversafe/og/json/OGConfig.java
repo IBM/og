@@ -21,7 +21,7 @@ public class OGConfig {
   public Integer port;
   public Api api;
   public String uriRoot;
-  public String container;
+  public ContainerConfig container;
   public Map<String, SelectionConfig<String>> headers;
   public OperationConfig write;
   public OperationConfig read;
@@ -40,7 +40,7 @@ public class OGConfig {
     this.port = null;
     this.api = Api.SOH;
     this.uriRoot = null;
-    this.container = null;
+    this.container = new ContainerConfig();
     this.headers = Maps.newLinkedHashMap();
     this.write = new OperationConfig();
     this.read = new OperationConfig();
