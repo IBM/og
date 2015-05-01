@@ -22,7 +22,6 @@ import java.util.Map;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpUtil;
-import com.google.common.base.Preconditions;
 
 public class AWSAuthV4Chunked extends AWSAuthV4Base {
 
@@ -43,7 +42,6 @@ public class AWSAuthV4Chunked extends AWSAuthV4Base {
 
   public AWSAuthV4Chunked(final String regionName, final String serviceName, final int chunkSize) {
     super(regionName, serviceName);
-    Preconditions.checkArgument(chunkSize > 8000, "AWS Chunk Size less than 8000 not supported.");
     this.userDataBlockSize = chunkSize;
   }
 

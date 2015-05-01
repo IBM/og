@@ -148,6 +148,8 @@ public class OGModule extends AbstractModule {
         this.config.authentication.awsChunkSize);
     bindConstant().annotatedWith(Names.named("authentication.awsChunked")).to(
         this.config.authentication.awsChunked);
+    Preconditions.checkArgument(this.config.authentication.awsChunkSize >= 8000,
+        "AWS Chunk Size less than 8000 not supported.");
 
     // Hard code these values since they don't matter much when testing with a dsnet.
     bindConstant().annotatedWith(Names.named("s3.serviceName")).to("s3");
