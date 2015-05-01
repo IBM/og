@@ -19,8 +19,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
 
-import javax.inject.Inject;
-
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpUtil;
@@ -43,7 +41,6 @@ public class AWSAuthV4Chunked extends AWSAuthV4Base {
     this.userDataBlockSize = DEFAULT_CHUNK_SIZE;
   }
 
-  @Inject
   public AWSAuthV4Chunked(final String regionName, final String serviceName, final int chunkSize) {
     super(regionName, serviceName);
     Preconditions.checkArgument(chunkSize > 8000, "AWS Chunk Size less than 8000 not supported.");
