@@ -49,6 +49,7 @@ public class DeleteObjectNameSupplier implements Function<Map<String, String>, S
   public String apply(final Map<String, String> context) {
     final ObjectMetadata objectMetadata = this.objectManager.remove();
     context.put(Headers.X_OG_OBJECT_NAME, objectMetadata.getName());
+    context.put(Headers.X_OG_OBJECT_SIZE, String.valueOf(objectMetadata.getSize()));
     context.put(Headers.X_OG_CONTAINER_SUFFIX, String.valueOf(objectMetadata.getContainerSuffix()));
 
     return objectMetadata.getName();

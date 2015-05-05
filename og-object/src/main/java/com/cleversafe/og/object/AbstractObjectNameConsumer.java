@@ -85,7 +85,7 @@ public abstract class AbstractObjectNameConsumer {
   private ObjectMetadata getObjectName(final Request request, final Response response) {
     final String objectString = getObjectString(request, response);
     final long objectSize = getObjectSize(request, response);
-    int containerSuffix = getContainerSuffix(request, response);
+    final int containerSuffix = getContainerSuffix(request, response);
     return LegacyObjectMetadata.fromMetadata(objectString, objectSize, containerSuffix);
   }
 
@@ -100,7 +100,7 @@ public abstract class AbstractObjectNameConsumer {
   }
 
   protected int getContainerSuffix(final Request request, final Response response) {
-    String containerSuffix = request.headers().get(Headers.X_OG_CONTAINER_SUFFIX);
+    final String containerSuffix = request.headers().get(Headers.X_OG_CONTAINER_SUFFIX);
     if (containerSuffix == null) {
       return -1;
     } else {
@@ -112,7 +112,7 @@ public abstract class AbstractObjectNameConsumer {
     if (this.operation == Operation.WRITE) {
       return request.getBody().getSize();
     }
-    return response.getBody().getSize();
+    return Long.parseLong(request.headers().get(Headers.X_OG_OBJECT_SIZE));
   }
 
   private void updateManager(final ObjectMetadata objectName) {
