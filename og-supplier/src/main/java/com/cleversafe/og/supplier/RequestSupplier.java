@@ -174,8 +174,9 @@ public class RequestSupplier implements Supplier<Request> {
       if (this.uriRoot != null) {
         s.append(this.uriRoot).append("/");
       }
-
-      s.append(this.container.apply(context));
+      if (this.container.apply(context) != null) {
+        s.append(this.container.apply(context));
+      }
     }
 
     if (objectName != null) {
