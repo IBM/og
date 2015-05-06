@@ -95,7 +95,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Range;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -113,12 +112,16 @@ import com.google.inject.util.Providers;
  */
 public class OGModule extends AbstractModule {
   private final OGConfig config;
-  private static final double ERR = Math.pow(0.1, 6);
-  private static final Range<Double> PERCENTAGE = Range.closed(0.0, 100.0);
   private static final String SOH_PUT_OBJECT = "soh.put_object";
   private final LoadTestSubscriberExceptionHandler handler;
   private final EventBus eventBus;
 
+  /**
+   * Creates an instance
+   * 
+   * @param config json source configuration
+   * @throws NullPointerException if config is null
+   */
   public OGModule(final OGConfig config) {
     this.config = checkNotNull(config);
     this.handler = new LoadTestSubscriberExceptionHandler();
@@ -381,11 +384,11 @@ public class OGModule extends AbstractModule {
   @Singleton
   @Named("container")
   public Function<Map<String, String>, String> provideContainer() {
-    final ContainerConfig config = this.config.container;
-    final String container = checkNotNull(config.prefix);
+    final ContainerConfig containerConfig = this.config.container;
+    final String container = checkNotNull(containerConfig.prefix);
     checkArgument(container.length() > 0, "container must not be empty string");
 
-    final Supplier<Integer> suffixes = createContainerSuffixes(config);
+    final Supplier<Integer> suffixes = createContainerSuffixes(containerConfig);
 
     return new Function<Map<String, String>, String>() {
 
@@ -541,8 +544,8 @@ public class OGModule extends AbstractModule {
     if (!f.exists()) {
       final boolean success = f.mkdirs();
       if (!success) {
-        throw new RuntimeException(String.format("failed to create object location directories",
-            f.toString()));
+        throw new RuntimeException(String.format(
+            "failed to create object location directories [%s]", f.toString()));
       }
     }
 

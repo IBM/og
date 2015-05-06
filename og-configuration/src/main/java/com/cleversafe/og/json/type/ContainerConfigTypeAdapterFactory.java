@@ -26,8 +26,9 @@ public class ContainerConfigTypeAdapterFactory implements TypeAdapterFactory {
   @SuppressWarnings("unchecked")
   public <T> TypeAdapter<T> create(final Gson gson, final TypeToken<T> type) {
     final Class<T> rawType = (Class<T>) type.getRawType();
-    if (!ContainerConfig.class.equals(rawType))
+    if (!ContainerConfig.class.equals(rawType)) {
       return null;
+    }
 
     final TypeAdapter<T> delegate = gson.getDelegateAdapter(this, type);
 
@@ -39,8 +40,9 @@ public class ContainerConfigTypeAdapterFactory implements TypeAdapterFactory {
 
       @Override
       public T read(final JsonReader in) throws IOException {
-        if (JsonToken.STRING == in.peek())
+        if (JsonToken.STRING == in.peek()) {
           return (T) new ContainerConfig(in.nextString());
+        }
 
         return delegate.read(in);
       }

@@ -76,7 +76,8 @@ public class RequestRateScheduler implements Scheduler {
     return System.nanoTime();
   }
 
-  private long steadyWait(long timestamp) {
+  private long steadyWait(final long startSleepTimestamp) {
+    long timestamp = startSleepTimestamp;
     long sleepRemaining = nextSleepDuration() - adjustment(timestamp);
     while (sleepRemaining > 0) {
       try {

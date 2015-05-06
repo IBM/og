@@ -27,28 +27,28 @@ import com.cleversafe.og.http.Headers;
  * @since 1.0
  */
 public class RequestLogEntry {
-  final String type = "http";
-  final String serverName;
-  final String remoteAddress;
-  final String user;
-  final long timestampStart;
-  final long timestampFinish;
-  final String timeStart;
-  final String timeFinish;
-  final Method requestMethod;
-  final String requestUri;
-  final String objectId;
-  final int status;
-  final Long requestLength;
-  final long responseLength;
-  final String userAgent;
-  final long requestLatency;
-
-  final String clientRequestId;
-  final String requestId;
-  final RequestStats stat;
-  final Long objectLength;
-  final String objectName;
+  private static final String HTTP_TYPE = "http";
+  public final String type;
+  public final String serverName;
+  public final String remoteAddress;
+  public final String user;
+  public final long timestampStart;
+  public final long timestampFinish;
+  public final String timeStart;
+  public final String timeFinish;
+  public final Method requestMethod;
+  public final String requestUri;
+  public final String objectId;
+  public final int status;
+  public final Long requestLength;
+  public final long responseLength;
+  public final String userAgent;
+  public final long requestLatency;
+  public final String clientRequestId;
+  public final String requestId;
+  public final RequestStats stat;
+  public final Long objectLength;
+  public final String objectName;
 
   private static final DateTimeFormatter FORMATTER = DateTimeFormat.forPattern(
       "dd/MMM/yyyy:HH:mm:ss Z").withLocale(Locale.US);
@@ -59,11 +59,12 @@ public class RequestLogEntry {
    * 
    * @param request the request for this operation
    * @param response the response for this operation
-   * @param timestampStart the timestamp for the start of this request, in milliseconds
-   * @param timestampFinish the timestamp for the end of this request, in milliseconds
+   * @param userAgent the http user agent for this operation
+   * @param timestamps a collection of timestamps gathered during execution
    */
   public RequestLogEntry(final Request request, final Response response, final String userAgent,
       final RequestTimestamps timestamps) {
+    this.type = HTTP_TYPE;
     final URI uri = request.getUri();
     // FIXME reliably get localaddress? Name should be clientName? Do we even need this field?
     this.serverName = null;
@@ -77,12 +78,12 @@ public class RequestLogEntry {
 
     this.requestUri = uri.getPath() + (uri.getQuery() != null ? uri.getQuery() : "");
 
-    String objectName = request.headers().get(Headers.X_OG_OBJECT_NAME);
+    String operationObjectName = request.headers().get(Headers.X_OG_OBJECT_NAME);
     // SOH writes
-    if (objectName == null) {
-      objectName = response.headers().get(Headers.X_OG_OBJECT_NAME);
+    if (operationObjectName == null) {
+      operationObjectName = response.headers().get(Headers.X_OG_OBJECT_NAME);
     }
-    this.objectId = objectName;
+    this.objectId = operationObjectName;
 
     Long objectSize = null;
     if (Data.NONE != request.getBody().getData()) {
@@ -95,7 +96,6 @@ public class RequestLogEntry {
     // TODO is this correct?
     this.responseLength = response.getBody().getSize();
     this.userAgent = userAgent;
-    // TODO ask: dsnet access.log uses System.currentTimeMillis() - request.getTimeStamp();
     this.requestLatency = this.timestampFinish - this.timestampStart;
 
     // custom
@@ -103,7 +103,7 @@ public class RequestLogEntry {
     this.requestId = response.headers().get(X_CLV_REQUEST_ID);
     this.stat = new RequestStats(timestamps);
     this.objectLength = objectSize;
-    this.objectName = objectName;
+    this.objectName = operationObjectName;
   }
 
   public static class RequestTimestamps {

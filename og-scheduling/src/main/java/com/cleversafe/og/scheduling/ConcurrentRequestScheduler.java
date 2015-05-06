@@ -37,7 +37,7 @@ public class ConcurrentRequestScheduler implements Scheduler {
   private final TimeUnit rampupUnit;
   private final long rampDuration;
   private final Semaphore sem;
-  private final CountDownLatch started;
+  private final CountDownLatch startedLatch;
 
   /**
    * Constructs an instance with the provided concurrency
@@ -54,7 +54,7 @@ public class ConcurrentRequestScheduler implements Scheduler {
     this.rampup = rampup;
     this.rampupUnit = rampupUnit;
     this.rampDuration = (long) (rampup * rampupUnit.toNanos(1));
-    this.started = new CountDownLatch(1);
+    this.startedLatch = new CountDownLatch(1);
 
     if (DoubleMath.fuzzyEquals(this.rampDuration, 0.0, Math.pow(0.1, 6))) {
       this.sem = new Semaphore(concurrentRequests - 1);
@@ -63,7 +63,7 @@ public class ConcurrentRequestScheduler implements Scheduler {
       final Thread rampupThread = new Thread(new Runnable() {
         @Override
         public void run() {
-          final CountDownLatch started = ConcurrentRequestScheduler.this.started;
+          final CountDownLatch started = ConcurrentRequestScheduler.this.startedLatch;
           final int interval = ConcurrentRequestScheduler.this.concurrentRequests - 1;
           final long sleepDuration = ConcurrentRequestScheduler.this.rampDuration / interval;
 
@@ -86,7 +86,7 @@ public class ConcurrentRequestScheduler implements Scheduler {
    */
   @Override
   public void waitForNext() {
-    this.started.countDown();
+    this.startedLatch.countDown();
     try {
       this.sem.acquire();
     } catch (final InterruptedException e) {

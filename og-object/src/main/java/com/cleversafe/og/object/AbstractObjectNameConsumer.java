@@ -79,13 +79,13 @@ public abstract class AbstractObjectNameConsumer {
     }
 
     final ObjectMetadata objectName = getObjectName(request, response);
-    updateManager(objectName);
+    updateObjectManager(objectName);
   }
 
   private ObjectMetadata getObjectName(final Request request, final Response response) {
     final String objectString = getObjectString(request, response);
-    final long objectSize = getObjectSize(request, response);
-    final int containerSuffix = getContainerSuffix(request, response);
+    final long objectSize = getObjectSize(request);
+    final int containerSuffix = getContainerSuffix(request);
     return LegacyObjectMetadata.fromMetadata(objectString, objectSize, containerSuffix);
   }
 
@@ -99,24 +99,20 @@ public abstract class AbstractObjectNameConsumer {
     return objectString;
   }
 
-  protected int getContainerSuffix(final Request request, final Response response) {
-    final String containerSuffix = request.headers().get(Headers.X_OG_CONTAINER_SUFFIX);
-    if (containerSuffix == null) {
-      return -1;
-    } else {
-      return Integer.valueOf(containerSuffix);
-    }
-  }
-
-  private long getObjectSize(final Request request, final Response response) {
+  private long getObjectSize(final Request request) {
     if (this.operation == Operation.WRITE) {
       return request.getBody().getSize();
     }
     return Long.parseLong(request.headers().get(Headers.X_OG_OBJECT_SIZE));
   }
 
-  private void updateManager(final ObjectMetadata objectName) {
-    updateObjectManager(objectName);
+  protected int getContainerSuffix(final Request request) {
+    final String containerSuffix = request.headers().get(Headers.X_OG_CONTAINER_SUFFIX);
+    if (containerSuffix == null) {
+      return -1;
+    } else {
+      return Integer.parseInt(containerSuffix);
+    }
   }
 
   protected abstract void updateObjectManager(ObjectMetadata objectName);

@@ -33,8 +33,15 @@ import com.cleversafe.og.object.RandomObjectPopulator;
 import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
 
+/**
+ * A cli for managing Object Generator object files
+ * 
+ * @since 1.0
+ */
 public class ObjectFile {
   private static final Logger _consoleLogger = LoggerFactory.getLogger("ConsoleLogger");
+
+  private ObjectFile() {}
 
   public static void main(final String[] args) {
     final Cli cli = Application.cli("object-file", "objectfile.jsap", args);
@@ -121,7 +128,7 @@ public class ObjectFile {
       final String[] components = line.split(",");
       checkArgument(components.length == 3, "Invalid record - %s", line);
       final String objectString = components[0].trim();
-      final long objectSize = Long.valueOf(components[1].trim());
+      final long objectSize = Long.parseLong(components[1].trim());
       final int containerSuffix = Integer.parseInt(components[2].trim());
       final ObjectMetadata objectName =
           LegacyObjectMetadata.fromMetadata(objectString, objectSize, containerSuffix);
