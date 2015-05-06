@@ -24,7 +24,7 @@ import com.cleversafe.og.object.ObjectManagerException;
 import com.cleversafe.og.object.ObjectMetadata;
 import com.google.common.collect.Maps;
 
-public class ReadObjectNameSupplierTest {
+public class ReadObjectNameFunctionTest {
   private ObjectManager objectManager;
 
   @Before
@@ -34,7 +34,7 @@ public class ReadObjectNameSupplierTest {
 
   @Test(expected = NullPointerException.class)
   public void nullObjectManager() {
-    new ReadObjectNameSupplier(null);
+    new ReadObjectNameFunction(null);
   }
 
   @Test
@@ -45,13 +45,13 @@ public class ReadObjectNameSupplierTest {
     when(this.objectManager.get()).thenReturn(objectName);
 
     final Map<String, String> context = Maps.newHashMap();
-    assertThat(new ReadObjectNameSupplier(this.objectManager).apply(context), is(object));
+    assertThat(new ReadObjectNameFunction(this.objectManager).apply(context), is(object));
     assertThat(context.get(Headers.X_OG_OBJECT_NAME), is(object));
   }
 
   @Test(expected = ObjectManagerException.class)
   public void supplierException() {
     when(this.objectManager.get()).thenThrow(new ObjectManagerException());
-    new ReadObjectNameSupplier(this.objectManager).apply(Maps.<String, String>newHashMap());
+    new ReadObjectNameFunction(this.objectManager).apply(Maps.<String, String>newHashMap());
   }
 }

@@ -71,12 +71,12 @@ import com.cleversafe.og.scheduling.Scheduler;
 import com.cleversafe.og.soh.SOHWriteResponseBodyConsumer;
 import com.cleversafe.og.statistic.Counter;
 import com.cleversafe.og.statistic.Statistics;
-import com.cleversafe.og.supplier.DeleteObjectNameSupplier;
+import com.cleversafe.og.supplier.DeleteObjectNameFunction;
 import com.cleversafe.og.supplier.RandomSupplier;
-import com.cleversafe.og.supplier.ReadObjectNameSupplier;
+import com.cleversafe.og.supplier.ReadObjectNameFunction;
 import com.cleversafe.og.supplier.RequestSupplier;
 import com.cleversafe.og.supplier.Suppliers;
-import com.cleversafe.og.supplier.UUIDObjectNameSupplier;
+import com.cleversafe.og.supplier.UUIDObjectNameFunction;
 import com.cleversafe.og.test.LoadTest;
 import com.cleversafe.og.test.LoadTestSubscriberExceptionHandler;
 import com.cleversafe.og.test.RequestManager;
@@ -216,7 +216,7 @@ public class OGModule extends AbstractModule {
     if (Api.SOH == checkNotNull(api)) {
       return null;
     }
-    return new UUIDObjectNameSupplier();
+    return new UUIDObjectNameFunction();
   }
 
   @Provides
@@ -224,7 +224,7 @@ public class OGModule extends AbstractModule {
   @ReadObjectName
   public Function<Map<String, String>, String> provideReadObjectName(
       final ObjectManager objectManager) {
-    return new ReadObjectNameSupplier(objectManager);
+    return new ReadObjectNameFunction(objectManager);
   }
 
   @Provides
@@ -232,7 +232,7 @@ public class OGModule extends AbstractModule {
   @DeleteObjectName
   public Function<Map<String, String>, String> provideDeleteObjectName(
       final ObjectManager objectManager) {
-    return new DeleteObjectNameSupplier(objectManager);
+    return new DeleteObjectNameFunction(objectManager);
   }
 
   @Provides

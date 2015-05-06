@@ -24,7 +24,7 @@ import com.cleversafe.og.object.ObjectManagerException;
 import com.cleversafe.og.object.ObjectMetadata;
 import com.google.common.collect.Maps;
 
-public class DeleteObjectNameSupplierTest {
+public class DeleteObjectNameFunctionTest {
   private ObjectManager objectManager;
 
   @Before
@@ -34,7 +34,7 @@ public class DeleteObjectNameSupplierTest {
 
   @Test(expected = NullPointerException.class)
   public void nullObjectManager() {
-    new DeleteObjectNameSupplier(null);
+    new DeleteObjectNameFunction(null);
   }
 
   @Test
@@ -45,13 +45,13 @@ public class DeleteObjectNameSupplierTest {
     when(this.objectManager.remove()).thenReturn(objectName);
 
     final Map<String, String> context = Maps.newHashMap();
-    assertThat(new DeleteObjectNameSupplier(this.objectManager).apply(context), is(object));
+    assertThat(new DeleteObjectNameFunction(this.objectManager).apply(context), is(object));
     assertThat(context.get(Headers.X_OG_OBJECT_NAME), is(object));
   }
 
   @Test(expected = ObjectManagerException.class)
   public void supplierException() {
     when(this.objectManager.remove()).thenThrow(new ObjectManagerException());
-    new DeleteObjectNameSupplier(this.objectManager).apply(Maps.<String, String>newHashMap());
+    new DeleteObjectNameFunction(this.objectManager).apply(Maps.<String, String>newHashMap());
   }
 }
