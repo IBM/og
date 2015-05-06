@@ -18,12 +18,11 @@ import com.cleversafe.og.object.ObjectMetadata;
 import com.google.common.base.Function;
 
 /**
- * An object name supplier which generates object names for deletion from a provided
- * {@code ObjectManager}
+ * A function which generates object names for deletion from a provided {@code ObjectManager}
  * 
  * @since 1.0
  */
-public class DeleteObjectNameSupplier implements Function<Map<String, String>, String> {
+public class DeleteObjectNameFunction implements Function<Map<String, String>, String> {
   private final ObjectManager objectManager;
 
   /**
@@ -32,7 +31,7 @@ public class DeleteObjectNameSupplier implements Function<Map<String, String>, S
    * @param objectManager the object manager to draw object names from
    * @throws NullPointerException if objectManager is null
    */
-  public DeleteObjectNameSupplier(final ObjectManager objectManager) {
+  public DeleteObjectNameFunction(final ObjectManager objectManager) {
     this.objectManager = checkNotNull(objectManager);
   }
 
@@ -41,6 +40,8 @@ public class DeleteObjectNameSupplier implements Function<Map<String, String>, S
    * context:
    * <ul>
    * <li>Headers.X_OG_OBJECT_NAME
+   * <li>Headers.X_OG_OBJECT_SIZE</li>
+   * <li>Headers.X_OG_CONTAINER_SUFFIX</li>
    * </ul>
    * 
    * @param context a request creation context for storing metadata to be used by other functions
@@ -57,6 +58,6 @@ public class DeleteObjectNameSupplier implements Function<Map<String, String>, S
 
   @Override
   public String toString() {
-    return "DeleteObjectNameSupplier []";
+    return "DeleteObjectNameFunction []";
   }
 }

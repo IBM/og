@@ -15,12 +15,12 @@ import com.cleversafe.og.http.Headers;
 import com.google.common.base.Function;
 
 /**
- * An object name supplier which generates uuid-like object names for write, in a format similar to
- * SOH object names
+ * A function which generates uuid-like object names for write, in a format similar to SOH object
+ * names
  * 
  * @since 1.0
  */
-public class UUIDObjectNameSupplier implements Function<Map<String, String>, String> {
+public class UUIDObjectNameFunction implements Function<Map<String, String>, String> {
 
   /**
    * Creates and returns an object name. Additionally, inserts the following entries into the
@@ -41,6 +41,6 @@ public class UUIDObjectNameSupplier implements Function<Map<String, String>, Str
 
   @Override
   public String toString() {
-    return "UUIDObjectNameSupplier []";
+    return "UUIDObjectNameFunction []";
   }
 }
