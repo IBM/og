@@ -33,6 +33,7 @@ public class OGConfig {
   public ClientConfig client;
   public StoppingConditionsConfig stoppingConditions;
   public ObjectManagerConfig objectManager;
+  public boolean virtualHost;
 
   public OGConfig() {
     this.scheme = Scheme.HTTP;
@@ -53,5 +54,6 @@ public class OGConfig {
     this.client = new ClientConfig();
     this.stoppingConditions = new StoppingConditionsConfig();
     this.objectManager = new ObjectManagerConfig();
+    this.virtualHost = false;
   }
 }

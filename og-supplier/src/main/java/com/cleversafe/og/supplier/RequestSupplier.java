@@ -48,6 +48,7 @@ public class RequestSupplier implements Supplier<Request> {
   private final String username;
   private final String password;
   private final Supplier<Body> body;
+  private final boolean virtualHost;
 
   /**
    * Creates an instance
@@ -74,7 +75,7 @@ public class RequestSupplier implements Supplier<Request> {
       final Function<Map<String, String>, String> object,
       final Map<String, String> queryParameters, final boolean trailingSlash,
       final Map<String, Supplier<String>> headers, final String username, final String password,
-      final Supplier<Body> body) {
+      final Supplier<Body> body, final boolean virtualHost) {
 
     this.id = id;
     this.method = checkNotNull(method);
@@ -98,6 +99,7 @@ public class RequestSupplier implements Supplier<Request> {
       checkArgument(password.length() > 0, "password must not be empty string");
     }
     this.body = body;
+    this.virtualHost = virtualHost;
   }
 
   @Override
@@ -130,10 +132,25 @@ public class RequestSupplier implements Supplier<Request> {
   }
 
   private URI getUrl(final Map<String, String> context) {
-    final StringBuilder s =
-        new StringBuilder().append(this.scheme).append("://").append(this.host.get());
+
+    final StringBuilder s;
+
+    String objectName = null;
+    if (this.object != null) {
+      // FIXME must apply object first prior to container to populate context from object manager
+      // for multi container (container suffix, object name)
+      objectName = this.object.apply(context);
+    }
+
+    if (this.virtualHost) {
+      s =
+          new StringBuilder().append(this.scheme).append("://")
+              .append(this.container.apply(context)).append(".").append(this.host.get());
+    } else {
+      s = new StringBuilder().append(this.scheme).append("://").append(this.host.get());
+    }
     appendPort(s);
-    appendPath(s, context);
+    appendPath(s, objectName, context);
     appendTrailingSlash(s);
     appendQueryParams(s);
 
@@ -152,20 +169,18 @@ public class RequestSupplier implements Supplier<Request> {
     }
   }
 
-  private void appendPath(final StringBuilder s, final Map<String, String> context) {
-    String objectName = null;
-    if (this.object != null) {
-      // FIXME must apply object first prior to container to populate context from object manager
-      // for multi container (container suffix, object name)
-      objectName = this.object.apply(context);
+  private void appendPath(final StringBuilder s, final String objectName,
+      final Map<String, String> context) {
+    if (!this.virtualHost) {
+      s.append("/");
+      if (this.uriRoot != null) {
+        s.append(this.uriRoot).append("/");
+      }
+      // Vault listing operation check to make sure container is not null.
+      if (this.container.apply(context) != null) {
+        s.append(this.container.apply(context));
+      }
     }
-
-    s.append("/");
-    if (this.uriRoot != null) {
-      s.append(this.uriRoot).append("/");
-    }
-
-    s.append(this.container.apply(context));
 
     if (objectName != null) {
       s.append("/").append(objectName);
