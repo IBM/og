@@ -174,6 +174,7 @@ public class RequestSupplier implements Supplier<Request> {
       if (this.uriRoot != null) {
         s.append(this.uriRoot).append("/");
       }
+      // Vault listing operation check to make sure container is not null.
       if (this.container.apply(context) != null) {
         s.append(this.container.apply(context));
       }
