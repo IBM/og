@@ -19,10 +19,10 @@ import org.junit.Test;
 import com.google.common.base.Function;
 import com.google.common.collect.Maps;
 
-public class UUIDObjectNameSupplierTest {
+public class UUIDObjectNameFunctionTest {
   @Test
   public void uuidObjectNameSupplier() {
-    final Function<Map<String, String>, String> s = new UUIDObjectNameSupplier();
+    final Function<Map<String, String>, String> s = new UUIDObjectNameFunction();
     final Map<String, String> context = Maps.newHashMap();
     assertThat(s.apply(context), is(not(s.apply(context))));
   }

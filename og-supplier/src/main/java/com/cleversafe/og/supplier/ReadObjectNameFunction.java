@@ -18,12 +18,11 @@ import com.cleversafe.og.object.ObjectMetadata;
 import com.google.common.base.Function;
 
 /**
- * An object name supplier which generates object names for read from a provided
- * {@code ObjectManager}
+ * A function which generates object names for read from a provided {@code ObjectManager}
  * 
  * @since 1.0
  */
-public class ReadObjectNameSupplier implements Function<Map<String, String>, String> {
+public class ReadObjectNameFunction implements Function<Map<String, String>, String> {
   private final ObjectManager objectManager;
 
   /**
@@ -32,7 +31,7 @@ public class ReadObjectNameSupplier implements Function<Map<String, String>, Str
    * @param objectManager the object manager to draw object names from
    * @throws NullPointerException if objectManager is null
    */
-  public ReadObjectNameSupplier(final ObjectManager objectManager) {
+  public ReadObjectNameFunction(final ObjectManager objectManager) {
     this.objectManager = checkNotNull(objectManager);
   }
 
@@ -41,6 +40,8 @@ public class ReadObjectNameSupplier implements Function<Map<String, String>, Str
    * context:
    * <ul>
    * <li>Headers.X_OG_OBJECT_NAME
+   * <li>Headers.X_OG_OBJECT_SIZE</li>
+   * <li>Headers.X_OG_CONTAINER_SUFFIX</li>
    * </ul>
    * 
    * @param context a request creation context for storing metadata to be used by other functions
@@ -49,6 +50,7 @@ public class ReadObjectNameSupplier implements Function<Map<String, String>, Str
   public String apply(final Map<String, String> context) {
     final ObjectMetadata objectMetadata = this.objectManager.get();
     context.put(Headers.X_OG_OBJECT_NAME, objectMetadata.getName());
+    context.put(Headers.X_OG_OBJECT_SIZE, String.valueOf(objectMetadata.getSize()));
     context.put(Headers.X_OG_CONTAINER_SUFFIX, String.valueOf(objectMetadata.getContainerSuffix()));
 
     return objectMetadata.getName();
@@ -56,6 +58,6 @@ public class ReadObjectNameSupplier implements Function<Map<String, String>, Str
 
   @Override
   public String toString() {
-    return "ReadObjectNameSupplier []";
+    return "ReadObjectNameFunction []";
   }
 }

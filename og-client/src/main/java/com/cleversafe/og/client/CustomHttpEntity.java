@@ -37,8 +37,7 @@ public class CustomHttpEntity extends AbstractHttpEntity {
   public CustomHttpEntity(final Request request, HttpAuth auth, final long writeThroughput) {
     this.request = checkNotNull(request);
     this.auth = checkNotNull(auth);
-    checkArgument(this.writeThroughput >= 0, "writeThroughput must be >= 0 [%s]",
-        this.writeThroughput);
+    checkArgument(this.writeThroughput >= 0, "writeThroughput must be >= 0 [%s]", this.writeThroughput);
     this.writeThroughput = writeThroughput;
   }
 

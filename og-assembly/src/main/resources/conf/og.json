@@ -136,9 +136,6 @@
 
 // The type of concurrency to use. One of ("ops", "threads").
 // the distribution to use for ops testing. One of ("uniform", "poisson").
-// "concurrency": 1,
-//
-// or
 //
 // "concurrency": {
 // "type": "threads",

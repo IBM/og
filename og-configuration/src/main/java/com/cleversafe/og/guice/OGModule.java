@@ -73,12 +73,12 @@ import com.cleversafe.og.scheduling.Scheduler;
 import com.cleversafe.og.soh.SOHWriteResponseBodyConsumer;
 import com.cleversafe.og.statistic.Counter;
 import com.cleversafe.og.statistic.Statistics;
-import com.cleversafe.og.supplier.DeleteObjectNameSupplier;
+import com.cleversafe.og.supplier.DeleteObjectNameFunction;
 import com.cleversafe.og.supplier.RandomSupplier;
-import com.cleversafe.og.supplier.ReadObjectNameSupplier;
+import com.cleversafe.og.supplier.ReadObjectNameFunction;
 import com.cleversafe.og.supplier.RequestSupplier;
 import com.cleversafe.og.supplier.Suppliers;
-import com.cleversafe.og.supplier.UUIDObjectNameSupplier;
+import com.cleversafe.og.supplier.UUIDObjectNameFunction;
 import com.cleversafe.og.test.LoadTest;
 import com.cleversafe.og.test.LoadTestSubscriberExceptionHandler;
 import com.cleversafe.og.test.RequestManager;
@@ -98,7 +98,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Range;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -118,12 +117,16 @@ import com.google.inject.util.Providers;
  */
 public class OGModule extends AbstractModule {
   private final OGConfig config;
-  private static final double ERR = Math.pow(0.1, 6);
-  private static final Range<Double> PERCENTAGE = Range.closed(0.0, 100.0);
   private static final String SOH_PUT_OBJECT = "soh.put_object";
   private final LoadTestSubscriberExceptionHandler handler;
   private final EventBus eventBus;
 
+  /**
+   * Creates an instance
+   * 
+   * @param config json source configuration
+   * @throws NullPointerException if config is null
+   */
   public OGModule(final OGConfig config) {
     this.config = checkNotNull(config);
     this.handler = new LoadTestSubscriberExceptionHandler();
@@ -261,7 +264,7 @@ public class OGModule extends AbstractModule {
     if (Api.SOH == checkNotNull(api)) {
       return null;
     }
-    return new UUIDObjectNameSupplier();
+    return new UUIDObjectNameFunction();
   }
 
   @Provides
@@ -269,7 +272,7 @@ public class OGModule extends AbstractModule {
   @ReadObjectName
   public Function<Map<String, String>, String> provideReadObjectName(
       final ObjectManager objectManager) {
-    return new ReadObjectNameSupplier(objectManager);
+    return new ReadObjectNameFunction(objectManager);
   }
 
   @Provides
@@ -277,7 +280,7 @@ public class OGModule extends AbstractModule {
   @DeleteObjectName
   public Function<Map<String, String>, String> provideDeleteObjectName(
       final ObjectManager objectManager) {
-    return new DeleteObjectNameSupplier(objectManager);
+    return new DeleteObjectNameFunction(objectManager);
   }
 
   @Provides
@@ -426,11 +429,11 @@ public class OGModule extends AbstractModule {
   @Singleton
   @Named("container")
   public Function<Map<String, String>, String> provideContainer() {
-    final ContainerConfig config = this.config.container;
-    final String container = checkNotNull(config.prefix);
+    final ContainerConfig containerConfig = this.config.container;
+    final String container = checkNotNull(containerConfig.prefix);
     checkArgument(container.length() > 0, "container must not be empty string");
 
-    final Supplier<Integer> suffixes = createContainerSuffixes(config);
+    final Supplier<Integer> suffixes = createContainerSuffixes(containerConfig);
 
     return new Function<Map<String, String>, String>() {
 
@@ -586,8 +589,8 @@ public class OGModule extends AbstractModule {
     if (!f.exists()) {
       final boolean success = f.mkdirs();
       if (!success) {
-        throw new RuntimeException(String.format("failed to create object location directories",
-            f.toString()));
+        throw new RuntimeException(String.format(
+            "failed to create object location directories [%s]", f.toString()));
       }
     }
 
