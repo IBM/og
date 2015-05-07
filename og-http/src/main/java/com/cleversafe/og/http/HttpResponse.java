@@ -25,14 +25,14 @@ import com.google.common.collect.Maps;
  */
 public class HttpResponse implements Response {
   private final int statusCode;
-  private final Map<String, String> headers;
+  private final Map<String, String> responseHeaders;
   private final Body body;
 
   private HttpResponse(final Builder builder) {
     this.statusCode = builder.statusCode;
     checkArgument(HttpUtil.VALID_STATUS_CODES.contains(this.statusCode),
         "statusCode must be a valid status code [%s]", this.statusCode);
-    this.headers = ImmutableMap.copyOf(builder.headers);
+    this.responseHeaders = ImmutableMap.copyOf(builder.responseHeaders);
     this.body = checkNotNull(builder.body);
 
   }
@@ -44,7 +44,7 @@ public class HttpResponse implements Response {
 
   @Override
   public Map<String, String> headers() {
-    return this.headers;
+    return this.responseHeaders;
   }
 
   @Override
@@ -55,7 +55,7 @@ public class HttpResponse implements Response {
   @Override
   public String toString() {
     return String.format("HttpResponse [%n" + "statusCode=%s,%n" + "headers=%s%n" + "body=%s%n]",
-        this.statusCode, this.headers, this.body);
+        this.statusCode, this.responseHeaders, this.body);
   }
 
   /**
@@ -63,14 +63,14 @@ public class HttpResponse implements Response {
    */
   public static class Builder {
     private int statusCode;
-    private final Map<String, String> headers;
+    private final Map<String, String> responseHeaders;
     private Body body;
 
     /**
      * Constructs a builder
      */
     public Builder() {
-      this.headers = Maps.newLinkedHashMap();
+      this.responseHeaders = Maps.newLinkedHashMap();
       this.body = Bodies.none();
     }
 
@@ -87,7 +87,7 @@ public class HttpResponse implements Response {
      * @return this builder
      */
     public Builder withHeader(final String key, final String value) {
-      this.headers.put(key, value);
+      this.responseHeaders.put(key, value);
       return this;
     }
 

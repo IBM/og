@@ -19,12 +19,16 @@ import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.apache.commons.math3.distribution.RealDistribution;
 import org.apache.commons.math3.distribution.UniformRealDistribution;
 
+import com.google.common.math.DoubleMath;
+
 /**
  * A utility class for creating distribution instances
  * 
  * @since 1.0
  */
 public class Distributions {
+  private static final double ERR = Math.pow(0.1, 6);
+
   private Distributions() {}
 
   /**
@@ -40,7 +44,7 @@ public class Distributions {
     checkArgument(average >= 0.0, "average must be >= 0.0 [%s]", average);
     checkArgument(spread >= 0.0, "spread must be >= 0.0 [%s]", spread);
 
-    if (spread == 0.0) {
+    if (DoubleMath.fuzzyEquals(spread, 0.0, Distributions.ERR)) {
       return constant(average);
     }
 
@@ -64,7 +68,7 @@ public class Distributions {
     checkArgument(average >= 0.0, "average must be >= 0.0 [%s]", average);
     checkArgument(spread >= 0.0, "spread must be >= 0.0 [%s]", spread);
 
-    if (spread == 0.0) {
+    if (DoubleMath.fuzzyEquals(spread, 0.0, Distributions.ERR)) {
       return constant(average);
     }
 
@@ -88,7 +92,7 @@ public class Distributions {
     checkArgument(average >= 0.0, "average must be >= 0.0 [%s]", average);
     checkArgument(spread >= 0.0, "spread must be >= 0.0 [%s]", spread);
 
-    if (spread == 0.0) {
+    if (DoubleMath.fuzzyEquals(spread, 0.0, Distributions.ERR)) {
       return constant(average);
     }
 
@@ -121,11 +125,11 @@ public class Distributions {
   // adapt apache's RealDistribution interface to og's Distribution interface
   private static class RealDistributionAdapter implements Distribution {
     private final RealDistribution d;
-    private final String toString;
+    private final String stringRepresentation;
 
-    public RealDistributionAdapter(final RealDistribution d, final String toString) {
+    public RealDistributionAdapter(final RealDistribution d, final String stringRepresentation) {
       this.d = checkNotNull(d);
-      this.toString = checkNotNull(toString);
+      this.stringRepresentation = checkNotNull(stringRepresentation);
     }
 
     @Override
@@ -140,18 +144,18 @@ public class Distributions {
 
     @Override
     public String toString() {
-      return this.toString;
+      return this.stringRepresentation;
     }
   }
 
   // adapt apache's IntegerDistribution interface to og's Distribution interface
   private static class IntegerDistributionAdapter implements Distribution {
     private final IntegerDistribution d;
-    private final String toString;
+    private final String stringRepresentation;
 
-    public IntegerDistributionAdapter(final IntegerDistribution d, final String toString) {
+    public IntegerDistributionAdapter(final IntegerDistribution d, final String stringRepresentation) {
       this.d = checkNotNull(d);
-      this.toString = checkNotNull(toString);
+      this.stringRepresentation = checkNotNull(stringRepresentation);
     }
 
     @Override
@@ -166,7 +170,7 @@ public class Distributions {
 
     @Override
     public String toString() {
-      return this.toString;
+      return this.stringRepresentation;
     }
   }
 }

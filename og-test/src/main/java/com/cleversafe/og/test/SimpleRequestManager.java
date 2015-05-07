@@ -31,7 +31,7 @@ import com.google.common.math.DoubleMath;
  * @since 1.0
  */
 public class SimpleRequestManager implements RequestManager {
-  private static Logger _logger = LoggerFactory.getLogger(SimpleRequestManager.class);
+  private static final Logger _logger = LoggerFactory.getLogger(SimpleRequestManager.class);
   private static final Range<Double> PERCENTAGE = Range.closed(0.0, 100.0);
   private static final double ERR = Math.pow(0.1, 6);
   private final Supplier<Supplier<Request>> requestSupplier;
@@ -53,29 +53,32 @@ public class SimpleRequestManager implements RequestManager {
   @Inject
   @Singleton
   public SimpleRequestManager(@Named("write") final Supplier<Request> write,
-      @Named("write.weight") double writeWeight, @Named("read") final Supplier<Request> read,
+      @Named("write.weight") final double writeWeight, @Named("read") final Supplier<Request> read,
       @Named("read.weight") final double readWeight,
       @Named("delete") final Supplier<Request> delete,
       @Named("delete.weight") final double deleteWeight) {
+
     checkNotNull(write);
     checkNotNull(read);
     checkNotNull(delete);
-    if (allEqual(0.0, writeWeight, readWeight, deleteWeight)) {
-      writeWeight = 100.0;
+    double trueWriteWeight = writeWeight;
+
+    if (allEqual(0.0, trueWriteWeight, readWeight, deleteWeight)) {
+      trueWriteWeight = 100.0;
     }
 
-    checkArgument(PERCENTAGE.contains(writeWeight),
-        "write weight must be in range [0.0, 100.0] [%s]", writeWeight);
+    checkArgument(PERCENTAGE.contains(trueWriteWeight),
+        "write weight must be in range [0.0, 100.0] [%s]", trueWriteWeight);
     checkArgument(PERCENTAGE.contains(readWeight),
         "read weight must be in range [0.0, 100.0] [%s]", readWeight);
     checkArgument(PERCENTAGE.contains(deleteWeight),
         "delete weight must be in range [0.0, 100.0] [%s]", deleteWeight);
-    final double sum = readWeight + writeWeight + deleteWeight;
+    final double sum = readWeight + trueWriteWeight + deleteWeight;
     checkArgument(DoubleMath.fuzzyEquals(sum, 100.0, ERR), "sum of weights must be 100.0 [%s]", sum);
 
     final RandomSupplier.Builder<Supplier<Request>> wrc = Suppliers.random();
-    if (writeWeight > 0.0) {
-      wrc.withChoice(write, writeWeight);
+    if (trueWriteWeight > 0.0) {
+      wrc.withChoice(write, trueWriteWeight);
     }
     if (readWeight > 0.0) {
       wrc.withChoice(read, readWeight);

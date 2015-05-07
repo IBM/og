@@ -23,6 +23,13 @@ public interface ObjectMetadata extends Comparable<ObjectMetadata> {
   String getName();
 
   /**
+   * Gets the container suffix of this object
+   * 
+   * @return the container suffix of this object
+   */
+  int getContainerSuffix();
+
+  /**
    * Gets the size of this object
    * 
    * @return the size of this object

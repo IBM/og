@@ -10,14 +10,10 @@ package com.cleversafe.og.http;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.net.URI;
-import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.util.Operation;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ContiguousSet;
 import com.google.common.collect.DiscreteDomain;
 import com.google.common.collect.Range;
@@ -28,7 +24,6 @@ import com.google.common.collect.Range;
  * @since 1.0
  */
 public class HttpUtil {
-  private static final Splitter URI_SPLITTER = Splitter.on("/").omitEmptyStrings();
   public static final Set<Integer> VALID_STATUS_CODES = ContiguousSet.create(
       Range.closed(100, 599), DiscreteDomain.integers());
   public static final Set<Integer> SUCCESS_STATUS_CODES = ContiguousSet.create(
@@ -56,34 +51,5 @@ public class HttpUtil {
       default:
         throw new IllegalArgumentException(String.format("Unrecognized method [%s]", method));
     }
-  }
-
-  /**
-   * Extracts an object name from the provided uri, if it exists
-   * 
-   * @param uri the uri to extract an object name from
-   * @return an object name, if it exists
-   */
-  public static String getObjectName(final URI uri) {
-    checkNotNull(uri);
-    checkNotNull(uri.getScheme());
-    // make sure this uri uses a known scheme
-    Scheme.valueOf(uri.getScheme().toUpperCase(Locale.US));
-    final List<String> parts = URI_SPLITTER.splitToList(uri.getPath());
-
-    if (parts.size() == 3) {
-      return parts.get(2);
-    }
-
-    if (parts.size() == 2) {
-      try {
-        // if 2 parts and first part is an api, must be soh write
-        Api.valueOf(parts.get(0).toUpperCase(Locale.US));
-        return null;
-      } catch (final IllegalArgumentException e) {
-        return parts.get(1);
-      }
-    }
-    return null;
   }
 }

@@ -10,7 +10,7 @@ package com.cleversafe.og.json.type;
 
 import java.io.IOException;
 
-import com.cleversafe.og.json.ConcurrencyConfig;
+import com.cleversafe.og.json.ContainerConfig;
 import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
 import com.google.gson.TypeAdapterFactory;
@@ -19,20 +19,14 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 
-/**
- * A type adapter factory for concurrency that allows for either the complete configuration or a
- * decimal that represents thread count for the default concurrency type
- * 
- * @since 1.0
- */
-public class ConcurrencyConfigTypeAdapterFactory implements TypeAdapterFactory {
-  public ConcurrencyConfigTypeAdapterFactory() {}
+public class ContainerConfigTypeAdapterFactory implements TypeAdapterFactory {
+  public ContainerConfigTypeAdapterFactory() {}
 
   @Override
   @SuppressWarnings("unchecked")
   public <T> TypeAdapter<T> create(final Gson gson, final TypeToken<T> type) {
     final Class<T> rawType = (Class<T>) type.getRawType();
-    if (!ConcurrencyConfig.class.equals(rawType)) {
+    if (!ContainerConfig.class.equals(rawType)) {
       return null;
     }
 
@@ -46,8 +40,8 @@ public class ConcurrencyConfigTypeAdapterFactory implements TypeAdapterFactory {
 
       @Override
       public T read(final JsonReader in) throws IOException {
-        if (JsonToken.NUMBER == in.peek()) {
-          return (T) new ConcurrencyConfig(in.nextDouble());
+        if (JsonToken.STRING == in.peek()) {
+          return (T) new ContainerConfig(in.nextString());
         }
 
         return delegate.read(in);

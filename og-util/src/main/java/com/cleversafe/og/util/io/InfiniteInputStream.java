@@ -23,7 +23,7 @@ import java.io.InputStream;
 public class InfiniteInputStream extends InputStream {
   private final byte[] buf;
   private int cursor;
-  private int mark;
+  private int markLocation;
 
   /**
    * Constructs an infinite input stream, using the provided byte array as its source of data.
@@ -39,7 +39,7 @@ public class InfiniteInputStream extends InputStream {
     this.buf = checkNotNull(buf);
     checkArgument(buf.length > 0, "buf length must be > 0 [%s]", buf.length);
     this.cursor = 0;
-    this.mark = 0;
+    this.markLocation = 0;
   }
 
   @Override
@@ -79,12 +79,12 @@ public class InfiniteInputStream extends InputStream {
 
   @Override
   public void mark(final int readlimit) {
-    this.mark = this.cursor;
+    this.markLocation = this.cursor;
   }
 
   @Override
   public void reset() {
-    this.cursor = this.mark;
+    this.cursor = this.markLocation;
   }
 
   @Override

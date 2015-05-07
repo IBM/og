@@ -50,6 +50,7 @@ import com.cleversafe.og.json.ChoiceConfig;
 import com.cleversafe.og.json.ClientConfig;
 import com.cleversafe.og.json.ConcurrencyConfig;
 import com.cleversafe.og.json.ConcurrencyType;
+import com.cleversafe.og.json.ContainerConfig;
 import com.cleversafe.og.json.DistributionType;
 import com.cleversafe.og.json.FilesizeConfig;
 import com.cleversafe.og.json.OGConfig;
@@ -70,12 +71,12 @@ import com.cleversafe.og.scheduling.Scheduler;
 import com.cleversafe.og.soh.SOHWriteResponseBodyConsumer;
 import com.cleversafe.og.statistic.Counter;
 import com.cleversafe.og.statistic.Statistics;
-import com.cleversafe.og.supplier.DeleteObjectNameSupplier;
+import com.cleversafe.og.supplier.DeleteObjectNameFunction;
 import com.cleversafe.og.supplier.RandomSupplier;
-import com.cleversafe.og.supplier.ReadObjectNameSupplier;
+import com.cleversafe.og.supplier.ReadObjectNameFunction;
 import com.cleversafe.og.supplier.RequestSupplier;
 import com.cleversafe.og.supplier.Suppliers;
-import com.cleversafe.og.supplier.UUIDObjectNameSupplier;
+import com.cleversafe.og.supplier.UUIDObjectNameFunction;
 import com.cleversafe.og.test.LoadTest;
 import com.cleversafe.og.test.LoadTestSubscriberExceptionHandler;
 import com.cleversafe.og.test.RequestManager;
@@ -94,7 +95,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Range;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -112,12 +112,16 @@ import com.google.inject.util.Providers;
  */
 public class OGModule extends AbstractModule {
   private final OGConfig config;
-  private static final double ERR = Math.pow(0.1, 6);
-  private static final Range<Double> PERCENTAGE = Range.closed(0.0, 100.0);
   private static final String SOH_PUT_OBJECT = "soh.put_object";
   private final LoadTestSubscriberExceptionHandler handler;
   private final EventBus eventBus;
 
+  /**
+   * Creates an instance
+   * 
+   * @param config json source configuration
+   * @throws NullPointerException if config is null
+   */
   public OGModule(final OGConfig config) {
     this.config = checkNotNull(config);
     this.handler = new LoadTestSubscriberExceptionHandler();
@@ -216,7 +220,7 @@ public class OGModule extends AbstractModule {
     if (Api.SOH == checkNotNull(api)) {
       return null;
     }
-    return new UUIDObjectNameSupplier();
+    return new UUIDObjectNameFunction();
   }
 
   @Provides
@@ -224,7 +228,7 @@ public class OGModule extends AbstractModule {
   @ReadObjectName
   public Function<Map<String, String>, String> provideReadObjectName(
       final ObjectManager objectManager) {
-    return new ReadObjectNameSupplier(objectManager);
+    return new ReadObjectNameFunction(objectManager);
   }
 
   @Provides
@@ -232,7 +236,7 @@ public class OGModule extends AbstractModule {
   @DeleteObjectName
   public Function<Map<String, String>, String> provideDeleteObjectName(
       final ObjectManager objectManager) {
-    return new DeleteObjectNameSupplier(objectManager);
+    return new DeleteObjectNameFunction(objectManager);
   }
 
   @Provides
@@ -347,19 +351,67 @@ public class OGModule extends AbstractModule {
     return this.config.api.toString().toLowerCase();
   }
 
+  private Supplier<Integer> createContainerSuffixes(final ContainerConfig config) {
+    checkNotNull(config);
+    if ((ContainerConfig.NONE == config.minSuffix) || (ContainerConfig.NONE == config.maxSuffix)) {
+      return null;
+    }
+    checkArgument(config.maxSuffix >= config.minSuffix,
+        "container max_suffix must be greater than or equal to min_suffix");
+
+    if (SelectionType.ROUNDROBIN == config.selection) {
+      final List<Integer> containerList = Lists.newArrayList();
+      for (int i = config.minSuffix; i <= config.maxSuffix; ++i) {
+        containerList.add(i);
+      }
+      return Suppliers.cycle(containerList);
+    } else if (SelectionType.RANDOM == config.selection) {
+      final RandomSupplier.Builder<Integer> cid = Suppliers.random();
+      if (config.weights != null) {
+        for (int i = config.minSuffix; i <= config.maxSuffix; ++i) {
+          cid.withChoice(i, config.weights.get(i - config.minSuffix));
+        }
+      } else {
+        for (int i = config.minSuffix; i <= config.maxSuffix; ++i) {
+          cid.withChoice(i);
+        }
+      }
+      return cid.build();
+    }
+    return null;
+  }
+
   @Provides
   @Singleton
   @Named("container")
   public Function<Map<String, String>, String> provideContainer() {
-    final String container = checkNotNull(this.config.container);
+    final ContainerConfig containerConfig = this.config.container;
+    final String container = checkNotNull(containerConfig.prefix);
     checkArgument(container.length() > 0, "container must not be empty string");
-    // FIXME may need to extract a real Function implementation, especially for multi container
-    final Supplier<String> objectSupplier = Suppliers.of(this.config.container);
+
+    final Supplier<Integer> suffixes = createContainerSuffixes(containerConfig);
+
     return new Function<Map<String, String>, String>() {
 
       @Override
       public String apply(final Map<String, String> input) {
-        return objectSupplier.get();
+        String suffix = input.get(Headers.X_OG_CONTAINER_SUFFIX);
+        if (suffix != null) {
+          if (Integer.parseInt(suffix) == -1) {
+            return container;
+          } else {
+            return container.concat(suffix);
+          }
+        } else {
+          if (suffixes != null) {
+            suffix = suffixes.get().toString();
+            input.put(Headers.X_OG_CONTAINER_SUFFIX, suffix);
+            return container.concat(suffix);
+          } else {
+            input.put(Headers.X_OG_CONTAINER_SUFFIX, "-1");
+            return container;
+          }
+        }
       }
     };
   }
@@ -493,8 +545,8 @@ public class OGModule extends AbstractModule {
     if (!f.exists()) {
       final boolean success = f.mkdirs();
       if (!success) {
-        throw new RuntimeException(String.format("failed to create object location directories",
-            f.toString()));
+        throw new RuntimeException(String.format(
+            "failed to create object location directories [%s]", f.toString()));
       }
     }
 
@@ -515,9 +567,7 @@ public class OGModule extends AbstractModule {
     if (objectFileName != null && !objectFileName.isEmpty()) {
       return objectFileName;
     }
-    // FIXME this naming scheme will break unless @TestContainer is a constant supplier
-    final Map<String, String> context = Maps.newHashMap();
-    return container.apply(context) + "-" + api.toString().toLowerCase();
+    return this.config.container.prefix + "-" + api.toString().toLowerCase();
   }
 
   @Provides

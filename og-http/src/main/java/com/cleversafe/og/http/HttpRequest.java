@@ -32,7 +32,7 @@ import com.google.common.collect.Maps;
 public class HttpRequest implements Request {
   private final Method method;
   private final URI uri;
-  private final Map<String, String> headers;
+  private final Map<String, String> requestHeaders;
   private final Body body;
   private static final DateTimeFormatter RFC1123 = DateTimeFormat.forPattern(
       "EEE, dd MMM yyyy HH:mm:ss zzz").withLocale(Locale.US);
@@ -40,7 +40,7 @@ public class HttpRequest implements Request {
   private HttpRequest(final Builder builder) {
     this.method = checkNotNull(builder.method);
     this.uri = checkNotNull(builder.uri);
-    this.headers = ImmutableMap.copyOf(builder.headers);
+    this.requestHeaders = ImmutableMap.copyOf(builder.requestHeaders);
     this.body = checkNotNull(builder.body);
   }
 
@@ -56,7 +56,7 @@ public class HttpRequest implements Request {
 
   @Override
   public Map<String, String> headers() {
-    return this.headers;
+    return this.requestHeaders;
   }
 
   @Override
@@ -67,7 +67,7 @@ public class HttpRequest implements Request {
   @Override
   public String toString() {
     return String.format("HttpRequest [%n" + "method=%s,%n" + "uri=%s,%n" + "headers=%s%n"
-        + "body=%s%n]", this.method, this.uri, this.headers, this.body);
+        + "body=%s%n]", this.method, this.uri, this.requestHeaders, this.body);
   }
 
   /**
@@ -76,7 +76,7 @@ public class HttpRequest implements Request {
   public static class Builder {
     private final Method method;
     private final URI uri;
-    private final Map<String, String> headers;
+    private final Map<String, String> requestHeaders;
     private Body body;
 
     /**
@@ -91,8 +91,8 @@ public class HttpRequest implements Request {
     public Builder(final Method method, final URI uri) {
       this.method = method;
       this.uri = uri;
-      this.headers = Maps.newLinkedHashMap();
-      this.headers.put("Date", RFC1123.print(new DateTime()));
+      this.requestHeaders = Maps.newLinkedHashMap();
+      this.requestHeaders.put("Date", RFC1123.print(new DateTime()));
       this.body = Bodies.none();
     }
 
@@ -104,7 +104,7 @@ public class HttpRequest implements Request {
      * @return this builder
      */
     public Builder withHeader(final String key, final String value) {
-      this.headers.put(key, value);
+      this.requestHeaders.put(key, value);
       return this;
     }
 

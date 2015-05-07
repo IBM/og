@@ -29,7 +29,7 @@ import com.cleversafe.og.guice.OGModule;
 import com.cleversafe.og.json.OGConfig;
 import com.cleversafe.og.json.type.CaseInsensitiveEnumTypeAdapterFactory;
 import com.cleversafe.og.json.type.ChoiceConfigTypeAdapterFactory;
-import com.cleversafe.og.json.type.ConcurrencyConfigTypeAdapterFactory;
+import com.cleversafe.og.json.type.ContainerConfigTypeAdapterFactory;
 import com.cleversafe.og.json.type.FilesizeConfigTypeAdapterFactory;
 import com.cleversafe.og.json.type.OperationConfigTypeAdapterFactory;
 import com.cleversafe.og.json.type.SelectionConfigTypeAdapterFactory;
@@ -53,6 +53,11 @@ import com.google.inject.ProvisionException;
 import com.google.inject.Stage;
 import com.google.inject.spi.Message;
 
+/**
+ * A cli for the Object Generator load tool
+ * 
+ * @since 1.0
+ */
 public class ObjectGenerator {
   private static final Logger _logger = LoggerFactory.getLogger(ObjectGenerator.class);
   private static final Logger _consoleLogger = LoggerFactory.getLogger("ConsoleLogger");
@@ -195,7 +200,7 @@ public class ObjectGenerator {
         .registerTypeAdapterFactory(new SelectionConfigTypeAdapterFactory())
         .registerTypeAdapterFactory(new ChoiceConfigTypeAdapterFactory())
         .registerTypeAdapterFactory(new FilesizeConfigTypeAdapterFactory())
-        .registerTypeAdapterFactory(new ConcurrencyConfigTypeAdapterFactory()).setPrettyPrinting()
+        .registerTypeAdapterFactory(new ContainerConfigTypeAdapterFactory()).setPrettyPrinting()
         .create();
   }
 
