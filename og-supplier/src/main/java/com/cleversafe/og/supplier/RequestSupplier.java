@@ -134,6 +134,14 @@ public class RequestSupplier implements Supplier<Request> {
   private URI getUrl(final Map<String, String> context) {
 
     final StringBuilder s;
+
+    String objectName = null;
+    if (this.object != null) {
+      // FIXME must apply object first prior to container to populate context from object manager
+      // for multi container (container suffix, object name)
+      objectName = this.object.apply(context);
+    }
+
     if (this.virtualHost) {
       s =
           new StringBuilder().append(this.scheme).append("://")
@@ -142,7 +150,7 @@ public class RequestSupplier implements Supplier<Request> {
       s = new StringBuilder().append(this.scheme).append("://").append(this.host.get());
     }
     appendPort(s);
-    appendPath(s, context);
+    appendPath(s, objectName, context);
     appendTrailingSlash(s);
     appendQueryParams(s);
 
@@ -161,14 +169,8 @@ public class RequestSupplier implements Supplier<Request> {
     }
   }
 
-  private void appendPath(final StringBuilder s, final Map<String, String> context) {
-    String objectName = null;
-    if (this.object != null) {
-      // FIXME must apply object first prior to container to populate context from object manager
-      // for multi container (container suffix, object name)
-      objectName = this.object.apply(context);
-    }
-
+  private void appendPath(final StringBuilder s, final String objectName,
+      final Map<String, String> context) {
     if (!this.virtualHost) {
       s.append("/");
       if (this.uriRoot != null) {
