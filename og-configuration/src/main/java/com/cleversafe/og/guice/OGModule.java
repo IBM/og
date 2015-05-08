@@ -142,6 +142,7 @@ public class OGModule extends AbstractModule {
     bindConstant().annotatedWith(Names.named("write.weight")).to(this.config.write.weight);
     bindConstant().annotatedWith(Names.named("read.weight")).to(this.config.read.weight);
     bindConstant().annotatedWith(Names.named("delete.weight")).to(this.config.delete.weight);
+    bindConstant().annotatedWith(Names.named("virtualhost")).to(this.config.virtualHost);
     bind(AuthType.class).toInstance(this.config.authentication.type);
     bind(String.class).annotatedWith(Names.named("authentication.username")).toProvider(
         Providers.of(this.config.authentication.username));
@@ -688,7 +689,8 @@ public class OGModule extends AbstractModule {
       @WriteObjectName final Function<Map<String, String>, String> object,
       @WriteHeaders final Map<String, Supplier<String>> headers, final Supplier<Body> body,
       @Named("authentication.username") final String username,
-      @Named("authentication.password") final String password) {
+      @Named("authentication.password") final String password,
+      @Named("virtualhost") final boolean virtualHost) {
     checkNotNull(api);
     // SOH needs to use a special response consumer to extract the returned object id
     if (Api.SOH == api) {
@@ -696,7 +698,7 @@ public class OGModule extends AbstractModule {
     }
 
     return createRequestSupplier(id, Method.PUT, scheme, host, port, uriRoot, container, object,
-        headers, body, username, password);
+        headers, body, username, password, virtualHost);
   }
 
   @Provides
@@ -709,9 +711,10 @@ public class OGModule extends AbstractModule {
       @ReadObjectName final Function<Map<String, String>, String> object,
       @ReadHeaders final Map<String, Supplier<String>> headers,
       @Named("authentication.username") final String username,
-      @Named("authentication.password") final String password) {
+      @Named("authentication.password") final String password,
+      @Named("virtualhost") final boolean virtualHost) {
     return createRequestSupplier(id, Method.GET, scheme, host, port, uriRoot, container, object,
-        headers, Suppliers.of(Bodies.none()), username, password);
+        headers, Suppliers.of(Bodies.none()), username, password, virtualHost);
   }
 
   @Provides
@@ -724,9 +727,10 @@ public class OGModule extends AbstractModule {
       @DeleteObjectName final Function<Map<String, String>, String> object,
       @DeleteHeaders final Map<String, Supplier<String>> headers,
       @Named("authentication.username") final String username,
-      @Named("authentication.password") final String password) {
+      @Named("authentication.password") final String password,
+      @Named("virtualhost") final boolean virtualHost) {
     return createRequestSupplier(id, Method.DELETE, scheme, host, port, uriRoot, container, object,
-        headers, Suppliers.of(Bodies.none()), username, password);
+        headers, Suppliers.of(Bodies.none()), username, password, virtualHost);
   }
 
   private Supplier<Request> createRequestSupplier(@Named("request.id") final Supplier<String> id,
@@ -734,9 +738,10 @@ public class OGModule extends AbstractModule {
       final String uriRoot, final Function<Map<String, String>, String> container,
       final Function<Map<String, String>, String> object,
       final Map<String, Supplier<String>> headers, final Supplier<Body> body,
-      final String username, final String password) {
+      final String username, final String password, final boolean virtualHost) {
 
     return new RequestSupplier(id, method, scheme, host, port, uriRoot, container, object,
-        Collections.<String, String>emptyMap(), false, headers, username, password, body);
+        Collections.<String, String>emptyMap(), false, headers, username, password, body,
+        virtualHost);
   }
 }
