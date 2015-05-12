@@ -17,20 +17,40 @@ import java.security.MessageDigest;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpAuth;
 import com.cleversafe.og.util.io.Streams;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 
 public class AWSAuthV4 extends AWSAuthV4Base implements HttpAuth {
-  public AWSAuthV4() {
-    super("us-east-1", "s3");
-  }
+  private static Logger _logger = LoggerFactory.getLogger(AWSAuthV4.class);
 
-  public AWSAuthV4(final String regionName, final String serviceName) {
+  private final LoadingCache<Body, String> hashCache;
+
+  public AWSAuthV4(final String regionName, final String serviceName, final int cacheSize) {
     super(regionName, serviceName);
+    if (cacheSize > 0) {
+      _logger.debug("Aws v4 auth cache configured with size {}", cacheSize);
+      this.hashCache =
+          CacheBuilder.newBuilder().maximumSize(cacheSize).build(new CacheLoader<Body, String>() {
+            @Override
+            public String load(final Body key) throws Exception {
+              return calculateFullBodyHash(key);
+            }
+          });
+    } else {
+      _logger.debug("Aws v4 auth cache disabled");
+      this.hashCache = null;
+    }
   }
 
   @Override
@@ -40,12 +60,11 @@ public class AWSAuthV4 extends AWSAuthV4Base implements HttpAuth {
 
     try {
       final AWS4SignerBase signer =
-          new AWS4SignerBase(request.getUri().toURL(), request.getMethod().toString(), serviceName,
-              regionName);
+          new AWS4SignerBase(request.getUri().toURL(), request.getMethod().toString(),
+              this.serviceName, this.regionName);
 
       return signer.getAuthHeaders(request.headers(), Collections.<String, String>emptyMap(),
-          calculateFullBodyHash(request.getBody()), keyId, secretKey,
-          new Date(request.getMessageTime()));
+          getBodyHash(request.getBody()), keyId, secretKey, new Date(request.getMessageTime()));
 
     } catch (final MalformedURLException e) {
       throw new InvalidParameterException("Can't convert to request.URI(" + request.getUri()
@@ -53,8 +72,19 @@ public class AWSAuthV4 extends AWSAuthV4Base implements HttpAuth {
     }
   }
 
+  private String getBodyHash(final Body body) {
+    if (this.hashCache == null) {
+      return calculateFullBodyHash(body);
+    } else {
+      try {
+        return this.hashCache.get(body);
+      } catch (final ExecutionException e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
+
   private String calculateFullBodyHash(final Body body) {
-    // TODO store a cash for body hashes here if performance is not adequate.
     if (body.getSize() == 0) {
       return AWS4SignerBase.EMPTY_BODY_SHA256;
     } else {
@@ -62,7 +92,7 @@ public class AWSAuthV4 extends AWSAuthV4Base implements HttpAuth {
         final InputStream s = Streams.create(body);
 
         final MessageDigest md = MessageDigest.getInstance("SHA-256");
-        final byte[] buff = new byte[8192];
+        final byte[] buff = new byte[(int) Math.min(body.getSize(), 10000000l)];
         int read = s.read(buff);
         while (read != -1) {
           md.update(buff, 0, read);

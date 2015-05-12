@@ -17,6 +17,7 @@ public class AuthenticationConfig {
   public String password;
   public int awsChunkSize;
   public boolean awsChunked;
+  public int awsCacheSize;
 
   public AuthenticationConfig() {
     this.type = AuthType.BASIC;
@@ -24,5 +25,6 @@ public class AuthenticationConfig {
     this.password = null;
     this.awsChunkSize = AWSAuthV4Chunked.DEFAULT_CHUNK_SIZE;
     this.awsChunked = false;
+    this.awsCacheSize = 0;
   }
 }

@@ -36,7 +36,7 @@ public class AWSAuthV4Test {
   @Test
   public void testAuth() throws IOException {
     final int bodySize = 35;
-    final AWSAuthV4 auth = new AWSAuthV4("dsnet", "s3");
+    final AWSAuthV4 auth = new AWSAuthV4("dsnet", "s3", 10);
     final HttpRequest.Builder reqBuilder = new HttpRequest.Builder(Method.PUT, this.URI);
     reqBuilder.withHeader(Headers.X_OG_USERNAME, KEY_ID);
     reqBuilder.withHeader(Headers.X_OG_PASSWORD, SECRET_KEY);

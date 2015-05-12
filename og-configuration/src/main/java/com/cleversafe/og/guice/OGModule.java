@@ -152,6 +152,8 @@ public class OGModule extends AbstractModule {
         this.config.authentication.awsChunkSize);
     bindConstant().annotatedWith(Names.named("authentication.awsChunked")).to(
         this.config.authentication.awsChunked);
+    bindConstant().annotatedWith(Names.named("authentication.awsCacheSize")).to(
+        this.config.authentication.awsCacheSize);
     Preconditions.checkArgument(this.config.authentication.awsChunkSize >= 8000,
         "AWS Chunk Size less than 8000 not supported.");
 
@@ -201,16 +203,19 @@ public class OGModule extends AbstractModule {
     private final String regionName;
     private final String serviceName;
     private final int chunkSize;
+    private final int cacheSize;
 
     @Inject
     public AWSAuthProvider(@Named("authentication.awsChunked") final boolean chunked,
         @Named("s3.regionName") final String regionName,
         @Named("s3.serviceName") final String serviceName,
-        @Named("authentication.awsChunkSize") final int chunkSize) {
+        @Named("authentication.awsChunkSize") final int chunkSize,
+        @Named("authentication.awsCacheSize") final int cacheSize) {
       this.chunked = chunked;
       this.regionName = regionName;
       this.serviceName = serviceName;
       this.chunkSize = chunkSize;
+      this.cacheSize = cacheSize;
     }
 
     @Override
@@ -218,7 +223,7 @@ public class OGModule extends AbstractModule {
       if (this.chunked) {
         return new AWSAuthV4Chunked(this.regionName, this.serviceName, this.chunkSize);
       } else {
-        return new AWSAuthV4(this.regionName, this.serviceName);
+        return new AWSAuthV4(this.regionName, this.serviceName, this.cacheSize);
       }
     }
   }
