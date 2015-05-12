@@ -59,28 +59,77 @@ public class Bodies {
     checkNotNull(data);
     checkArgument(size >= 0, "size must be >= 0 [%s]", size);
 
-    return new Body() {
-      final long seed = System.nanoTime();
+    return new BodyImpl(System.nanoTime(), size, data);
+  }
 
-      @Override
-      public DataType getDataType() {
-        return data;
-      }
+  private static class BodyImpl implements Body {
 
-      @Override
-      public long getSize() {
-        return size;
-      }
+    private final long seed;
+    private final long size;
+    private final DataType dataType;
 
-      @Override
-      public String toString() {
-        return String.format("Body [data=%s, size=%s]", data, size);
-      }
+    public BodyImpl(final long seed, final long size, final DataType dataType) {
+      super();
+      this.seed = seed;
+      this.size = size;
+      this.dataType = dataType;
+    }
 
-      @Override
-      public long getRandomSeed() {
-        return seed;
+    @Override
+    public DataType getDataType() {
+      return this.dataType;
+    }
+
+    @Override
+    public long getRandomSeed() {
+      return this.seed;
+    }
+
+    @Override
+    public long getSize() {
+      return this.size;
+    }
+
+    @Override
+    public String toString() {
+      return "BodyImpl [seed=" + this.seed + ", size=" + this.size + ", dataType=" + this.dataType
+          + "]";
+    }
+
+    @Override
+    public int hashCode() {
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + ((this.dataType == null) ? 0 : this.dataType.hashCode());
+      if (this.dataType.equals(DataType.RANDOM)) {
+        result = prime * result + (int) (this.seed ^ (this.seed >>> 32));
       }
-    };
+      result = prime * result + (int) (this.size ^ (this.size >>> 32));
+      return result;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+      if (this == obj) {
+        return true;
+      }
+      if (obj == null) {
+        return false;
+      }
+      if (getClass() != obj.getClass()) {
+        return false;
+      }
+      final BodyImpl other = (BodyImpl) obj;
+      if (this.dataType != other.dataType) {
+        return false;
+      }
+      if (this.dataType.equals(DataType.RANDOM) && (this.seed != other.seed)) {
+        return false;
+      }
+      if (this.size != other.size) {
+        return false;
+      }
+      return true;
+    }
   }
 }
