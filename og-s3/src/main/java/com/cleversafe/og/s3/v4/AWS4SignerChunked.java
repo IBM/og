@@ -3,25 +3,17 @@ package com.cleversafe.og.s3.v4;
 import java.net.URL;
 import java.util.concurrent.ExecutionException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
 /**
  * Sample AWS4 signer demonstrating how to sign 'chunked' uploads
  */
 public class AWS4SignerChunked extends AWS4SignerBase {
-  private static Logger _logger = LoggerFactory.getLogger(AWS4SignerChunked.class);
-
   /**
    * Cache to store hashes of all-zeroes strings. Implementing this with the assumption that only
    * all-zeroes will be used greatly simplifies the implementation. If random data is being used
    * then the cache will be useless with pretty much any implementation anyway.
    */
-  // TODO - move this up a layer the signer is recreated for every request
   private final LoadingCache<Integer, String> zeroesHashCache;
 
   /**
@@ -36,22 +28,10 @@ public class AWS4SignerChunked extends AWS4SignerBase {
   private static final byte[] FINAL_CHUNK = new byte[0];
 
   public AWS4SignerChunked(final URL endpointUrl, final String httpMethod,
-      final String serviceName, final String regionName, final int cacheSize) {
+      final String serviceName, final String regionName,
+      final LoadingCache<Integer, String> zeroesHashCache) {
     super(endpointUrl, httpMethod, serviceName, regionName);
-    if (cacheSize > 0) {
-      _logger.debug("Aws v4 auth cache configured with size {}", cacheSize);
-      this.zeroesHashCache =
-          CacheBuilder.newBuilder().maximumSize(cacheSize)
-              .build(new CacheLoader<Integer, String>() {
-                @Override
-                public String load(final Integer key) throws Exception {
-                  return BinaryUtils.toHex(AWS4SignerBase.hash(new byte[key]));
-                }
-              });
-    } else {
-      _logger.debug("Aws v4 auth cache disabled");
-      this.zeroesHashCache = null;
-    }
+    this.zeroesHashCache = zeroesHashCache;
   }
 
   /**

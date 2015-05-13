@@ -19,18 +19,31 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.cleversafe.og.api.DataType;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpUtil;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 
 public class AWSAuthV4Chunked extends AWSAuthV4Base {
+  private static Logger _logger = LoggerFactory.getLogger(AWSAuthV4Chunked.class);
 
   /**
    * The amount of user data in each chunk.
    */
   private final int userDataBlockSize;
-  private final int cacheSize;
+
+  /**
+   * Cache to store hashes of all-zeroes strings. Implementing this with the assumption that only
+   * all-zeroes will be used greatly simplifies the implementation. If random data is being used
+   * then the cache will be useless with pretty much any implementation anyway.
+   */
+  private final LoadingCache<Integer, String> zeroesHashCache;
 
   /**
    * The default amount of user data in each chunk.
@@ -41,13 +54,27 @@ public class AWSAuthV4Chunked extends AWSAuthV4Base {
       final int cacheSize) {
     super(regionName, serviceName);
     this.userDataBlockSize = chunkSize;
-    this.cacheSize = cacheSize;
+
+    if (cacheSize > 0) {
+      _logger.debug("Aws v4 auth cache configured with size {}", cacheSize);
+      this.zeroesHashCache =
+          CacheBuilder.newBuilder().maximumSize(cacheSize)
+              .build(new CacheLoader<Integer, String>() {
+                @Override
+                public String load(final Integer key) throws Exception {
+                  return BinaryUtils.toHex(AWS4SignerBase.hash(new byte[key]));
+                }
+              });
+    } else {
+      _logger.debug("Aws v4 auth cache disabled");
+      this.zeroesHashCache = null;
+    }
   }
 
   AWS4SignerChunked getSigner(final Request request) {
     try {
       return new AWS4SignerChunked(request.getUri().toURL(), request.getMethod().toString(),
-          this.serviceName, this.regionName, this.cacheSize);
+          this.serviceName, this.regionName, this.zeroesHashCache);
     } catch (final MalformedURLException e) {
       throw new InvalidParameterException("Can't convert to request.URI(" + request.getUri()
           + ") to  URL:" + e.getMessage());
