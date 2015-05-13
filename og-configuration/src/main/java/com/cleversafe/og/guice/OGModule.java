@@ -144,6 +144,8 @@ public class OGModule extends AbstractModule {
     bindConstant().annotatedWith(Names.named("delete.weight")).to(this.config.delete.weight);
     bindConstant().annotatedWith(Names.named("virtualhost")).to(this.config.virtualHost);
     bind(AuthType.class).toInstance(this.config.authentication.type);
+    bind(DataType.class).annotatedWith(Names.named("dataType")).toProvider(
+        Providers.of(this.config.data));
     bind(String.class).annotatedWith(Names.named("authentication.username")).toProvider(
         Providers.of(this.config.authentication.username));
     bind(String.class).annotatedWith(Names.named("authentication.password")).toProvider(
@@ -154,16 +156,6 @@ public class OGModule extends AbstractModule {
         this.config.authentication.awsChunked);
     bindConstant().annotatedWith(Names.named("authentication.awsCacheSize")).to(
         this.config.authentication.awsCacheSize);
-    // TODO Move precondition checks to auth provider function
-    checkArgument(this.config.authentication.awsChunkSize >= 8000,
-        "AWS Chunk Size less than 8000 not supported.");
-    checkArgument(
-        this.config.authentication.awsCacheSize > 0 ? this.config.data.equals(DataType.ZEROES)
-            : true, "nonzero aws_cache_size is not supported with random data");
-    // Hard code these values since they don't matter much when testing with a dsnet.
-    bindConstant().annotatedWith(Names.named("s3.serviceName")).to("s3");
-    bindConstant().annotatedWith(Names.named("s3.regionName")).to("us-east-1");
-
     bind(StoppingConditionsConfig.class).toInstance(this.config.stoppingConditions);
 
     final MapBinder<AuthType, HttpAuth> httpAuthBinder =
@@ -210,15 +202,19 @@ public class OGModule extends AbstractModule {
 
     @Inject
     public AWSAuthProvider(@Named("authentication.awsChunked") final boolean chunked,
-        @Named("s3.regionName") final String regionName,
-        @Named("s3.serviceName") final String serviceName,
         @Named("authentication.awsChunkSize") final int chunkSize,
-        @Named("authentication.awsCacheSize") final int cacheSize) {
+        @Named("authentication.awsCacheSize") final int cacheSize,
+        @Named("dataType") final DataType dataType) {
+      checkArgument(chunkSize >= 8000, "AWS Chunk Size less than 8000 not supported.");
+      checkArgument(cacheSize > 0 ? dataType.equals(DataType.ZEROES) : true,
+          "nonzero aws_cache_size is not supported with random data");
       this.chunked = chunked;
-      this.regionName = regionName;
-      this.serviceName = serviceName;
       this.chunkSize = chunkSize;
       this.cacheSize = cacheSize;
+
+      // Hard code these values since they don't matter much when testing with a dsnet.
+      this.regionName = "us-east-1";
+      this.serviceName = "s3";
     }
 
     @Override
