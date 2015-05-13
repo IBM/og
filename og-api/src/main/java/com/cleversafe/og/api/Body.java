@@ -9,7 +9,9 @@
 package com.cleversafe.og.api;
 
 /**
- * A description of an http request or response body
+ * A description of an http request or response body. Implementations should override hashCode() and
+ * equals() to support proper caching for aws v4 auth hashes.
+ * 
  * 
  * @since 1.0
  */

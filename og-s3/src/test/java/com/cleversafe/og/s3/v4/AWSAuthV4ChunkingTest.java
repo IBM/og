@@ -23,6 +23,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.cleversafe.og.api.DataType;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.http.Bodies;
@@ -63,17 +64,18 @@ public class AWSAuthV4ChunkingTest {
 
     final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     final byte[] buffer = new byte[auth.getUserDataBlockSize()];
-    int bytesRead = 0;
+    int bytesRead;
+    final boolean zeroesData = request.getBody().getDataType().equals(DataType.ZEROES);
     while ((bytesRead = requestStream.read(buffer, 0, buffer.length)) != -1) {
       // process into a chunk
-      final byte[] chunk = signer.constructSignedChunk(bytesRead, buffer);
+      final byte[] chunk = signer.constructSignedChunk(bytesRead, buffer, zeroesData);
 
       // send the chunk
       outputStream.write(chunk);
     }
 
     // last step is to send a signed zero-length chunk to complete the upload
-    final byte[] finalChunk = signer.constructSignedChunk(0, buffer);
+    final byte[] finalChunk = signer.constructSignedChunk(0, buffer, zeroesData);
     outputStream.write(finalChunk);
     outputStream.close();
     return outputStream.toByteArray();
@@ -83,7 +85,7 @@ public class AWSAuthV4ChunkingTest {
   public void testChunking() throws IOException {
     final int userDataBlockSize = 10;
     final int bodySize = 35;
-    final AWSAuthV4Chunked auth = new AWSAuthV4Chunked("dsnet", "s3", userDataBlockSize);
+    final AWSAuthV4Chunked auth = new AWSAuthV4Chunked("dsnet", "s3", userDataBlockSize, 100);
     final HttpRequest.Builder reqBuilder = new HttpRequest.Builder(Method.PUT, this.URI);
     reqBuilder.withHeader(Headers.X_OG_USERNAME, KEY_ID);
     reqBuilder.withHeader(Headers.X_OG_PASSWORD, SECRET_KEY);
@@ -120,7 +122,7 @@ public class AWSAuthV4ChunkingTest {
     for (int bodySize = 0; bodySize <= 5; bodySize++) {
       for (int userDataBlockSize = 1; userDataBlockSize <= bodySize; userDataBlockSize++) {
         // Build a request and auth for this body size and block size
-        final AWSAuthV4Chunked auth = new AWSAuthV4Chunked("dsnet", "s3", userDataBlockSize);
+        final AWSAuthV4Chunked auth = new AWSAuthV4Chunked("dsnet", "s3", userDataBlockSize, 100);
         final HttpRequest.Builder reqBuilder = new HttpRequest.Builder(Method.PUT, this.URI);
         reqBuilder.withHeader(Headers.X_OG_USERNAME, KEY_ID);
         reqBuilder.withHeader(Headers.X_OG_PASSWORD, SECRET_KEY);

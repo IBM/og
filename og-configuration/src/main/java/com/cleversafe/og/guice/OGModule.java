@@ -221,7 +221,8 @@ public class OGModule extends AbstractModule {
     @Override
     public HttpAuth get() {
       if (this.chunked) {
-        return new AWSAuthV4Chunked(this.regionName, this.serviceName, this.chunkSize);
+        return new AWSAuthV4Chunked(this.regionName, this.serviceName, this.chunkSize,
+            this.cacheSize);
       } else {
         return new AWSAuthV4(this.regionName, this.serviceName, this.cacheSize);
       }

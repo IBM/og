@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
 
+import com.cleversafe.og.api.DataType;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpUtil;
@@ -29,26 +30,24 @@ public class AWSAuthV4Chunked extends AWSAuthV4Base {
    * The amount of user data in each chunk.
    */
   private final int userDataBlockSize;
+  private final int cacheSize;
 
   /**
    * The default amount of user data in each chunk.
    */
   public static final int DEFAULT_CHUNK_SIZE = 64000;
 
-  public AWSAuthV4Chunked() {
-    super("us-east-1", "s3");
-    this.userDataBlockSize = DEFAULT_CHUNK_SIZE;
-  }
-
-  public AWSAuthV4Chunked(final String regionName, final String serviceName, final int chunkSize) {
+  public AWSAuthV4Chunked(final String regionName, final String serviceName, final int chunkSize,
+      final int cacheSize) {
     super(regionName, serviceName);
     this.userDataBlockSize = chunkSize;
+    this.cacheSize = cacheSize;
   }
 
   AWS4SignerChunked getSigner(final Request request) {
     try {
       return new AWS4SignerChunked(request.getUri().toURL(), request.getMethod().toString(),
-          this.serviceName, this.regionName);
+          this.serviceName, this.regionName, this.cacheSize);
     } catch (final MalformedURLException e) {
       throw new InvalidParameterException("Can't convert to request.URI(" + request.getUri()
           + ") to  URL:" + e.getMessage());
@@ -139,7 +138,9 @@ public class AWSAuthV4Chunked extends AWSAuthV4Base {
           // Read no more data, but we need to call constructSignedChunk to get the final chunk
           this.eOfUserData = true;
         }
-        this.chunk = signer.constructSignedChunk(userDataRead, this.userData);
+        this.chunk =
+            signer.constructSignedChunk(userDataRead, this.userData, request.getBody()
+                .getDataType().equals(DataType.ZEROES));
         this.chunkPos = 0;
       }
 

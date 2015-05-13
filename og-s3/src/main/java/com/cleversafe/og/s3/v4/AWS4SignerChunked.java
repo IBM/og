@@ -1,11 +1,27 @@
 package com.cleversafe.og.s3.v4;
 
 import java.net.URL;
+import java.util.concurrent.ExecutionException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 
 /**
  * Sample AWS4 signer demonstrating how to sign 'chunked' uploads
  */
 public class AWS4SignerChunked extends AWS4SignerBase {
+  private static Logger _logger = LoggerFactory.getLogger(AWS4SignerChunked.class);
+
+  /**
+   * Cache to store hashes of all-zeroes strings. Implementing this with the assumption that only
+   * all-zeroes will be used greatly simplifies the implementation. If random data is being used
+   * then the cache will be useless with pretty much any implementation anyway.
+   */
+  private final LoadingCache<Integer, String> zeroesHashCache;
 
   /**
    * SHA256 substitute marker used in place of x-amz-content-sha256 when employing chunked uploads
@@ -19,8 +35,22 @@ public class AWS4SignerChunked extends AWS4SignerBase {
   private static final byte[] FINAL_CHUNK = new byte[0];
 
   public AWS4SignerChunked(final URL endpointUrl, final String httpMethod,
-      final String serviceName, final String regionName) {
+      final String serviceName, final String regionName, final int cacheSize) {
     super(endpointUrl, httpMethod, serviceName, regionName);
+    if (cacheSize > 0) {
+      _logger.debug("Aws v4 auth cache configured with size {}", cacheSize);
+      this.zeroesHashCache =
+          CacheBuilder.newBuilder().maximumSize(cacheSize)
+              .build(new CacheLoader<Integer, String>() {
+                @Override
+                public String load(final Integer key) throws Exception {
+                  return BinaryUtils.toHex(AWS4SignerBase.hash(new byte[key]));
+                }
+              });
+    } else {
+      _logger.debug("Aws v4 auth cache disabled");
+      this.zeroesHashCache = null;
+    }
   }
 
   /**
@@ -62,9 +92,12 @@ public class AWS4SignerChunked extends AWS4SignerBase {
    * @param userDataLen The length of the user data contained in userData. If <= 0, it is assumed
    *        that this is a request for the final, 0-length chunk.
    * @param userData Contains the user data to be sent in the upload chunk
+   * @param zeroes set to true if the userData is all zeroes. If true, the zeroesHashCache will be
+   *        used (if configured with non-zero cache size).
    * @return A new buffer of data for upload containing the chunk header plus user data
    */
-  public byte[] constructSignedChunk(final int userDataLen, final byte[] userData) {
+  public byte[] constructSignedChunk(final int userDataLen, final byte[] userData,
+      final boolean zeroes) {
     // to keep our computation routine signatures simple, if the userData
     // buffer contains less data than it could, shrink it. Note the special case
     // to handle the requirement that we send an empty chunk to complete
@@ -94,19 +127,30 @@ public class AWS4SignerChunked extends AWS4SignerBase {
     // of the request headers, otherwise we use the cached signature
     // of the previous chunk
 
-    // sig-extension
+    final String chunkHash;
+    if (userDataLen == -1 || userDataLen == 0) {
+      chunkHash = AWS4SignerBase.EMPTY_BODY_SHA256;
+    } else if (zeroes && this.zeroesHashCache != null) {
+      try {
+        chunkHash = this.zeroesHashCache.get(userDataLen);
+      } catch (final ExecutionException e) {
+        throw new RuntimeException(e);
+      }
+    } else {
+      chunkHash = BinaryUtils.toHex(AWS4SignerBase.hash(dataToChunk));
+    }
     final String chunkStringToSign =
-        CHUNK_STRING_TO_SIGN_PREFIX + "\n" + dateTimeStamp + "\n" + scope + "\n"
-            + lastComputedSignature + "\n"
-            + BinaryUtils.toHex(AWS4SignerBase.hash(nonsigExtension)) + "\n"
-            + BinaryUtils.toHex(AWS4SignerBase.hash(dataToChunk));
+        CHUNK_STRING_TO_SIGN_PREFIX + "\n" + this.dateTimeStamp + "\n" + this.scope + "\n"
+            + this.lastComputedSignature + "\n"
+            // nonsig-extension hash (not using any nonsig-extensions, so it's a blank str)
+            + EMPTY_BODY_SHA256 + "\n" + chunkHash;
 
     // compute the V4 signature for the chunk
     final String chunkSignature =
-        BinaryUtils.toHex(AWS4SignerBase.sign(chunkStringToSign, signingKey, "HmacSHA256"));
+        BinaryUtils.toHex(AWS4SignerBase.sign(chunkStringToSign, this.signingKey, "HmacSHA256"));
 
     // cache the signature to include with the next chunk's signature computation
-    lastComputedSignature = chunkSignature;
+    this.lastComputedSignature = chunkSignature;
 
     // construct the actual chunk, comprised of the non-signed extensions, the
     // 'headers' we just signed and their signature, plus a newline then copy
