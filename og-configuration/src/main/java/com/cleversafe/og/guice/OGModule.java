@@ -156,7 +156,9 @@ public class OGModule extends AbstractModule {
         this.config.authentication.awsCacheSize);
     Preconditions.checkArgument(this.config.authentication.awsChunkSize >= 8000,
         "AWS Chunk Size less than 8000 not supported.");
-
+    Preconditions.checkArgument(
+        this.config.authentication.awsCacheSize > 0 ? !this.config.data.equals(DataType.RANDOM)
+            : true, "nonzero aws_cache_size is not supported with random data");
     // Hard code these values since they don't matter much when testing with a dsnet.
     bindConstant().annotatedWith(Names.named("s3.serviceName")).to("s3");
     bindConstant().annotatedWith(Names.named("s3.regionName")).to("us-east-1");

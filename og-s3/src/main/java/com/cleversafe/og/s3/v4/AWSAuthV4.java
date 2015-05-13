@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.api.Body;
+import com.cleversafe.og.api.DataType;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpAuth;
@@ -34,13 +35,18 @@ import com.google.common.cache.LoadingCache;
 public class AWSAuthV4 extends AWSAuthV4Base implements HttpAuth {
   private static Logger _logger = LoggerFactory.getLogger(AWSAuthV4.class);
 
-  private final LoadingCache<Body, String> hashCache;
+  /**
+   * Cache to store hashes of all-zeroes strings. This cache could be keyed on length instead of
+   * body, but since we have a body when calling it, and calculateFullBodyHash takes a body, this is
+   * a little simpler.
+   */
+  private final LoadingCache<Body, String> zeroesHashCache;
 
   public AWSAuthV4(final String regionName, final String serviceName, final int cacheSize) {
     super(regionName, serviceName);
     if (cacheSize > 0) {
       _logger.debug("Aws v4 auth cache configured with size {}", cacheSize);
-      this.hashCache =
+      this.zeroesHashCache =
           CacheBuilder.newBuilder().maximumSize(cacheSize).build(new CacheLoader<Body, String>() {
             @Override
             public String load(final Body key) throws Exception {
@@ -49,7 +55,7 @@ public class AWSAuthV4 extends AWSAuthV4Base implements HttpAuth {
           });
     } else {
       _logger.debug("Aws v4 auth cache disabled");
-      this.hashCache = null;
+      this.zeroesHashCache = null;
     }
   }
 
@@ -72,12 +78,16 @@ public class AWSAuthV4 extends AWSAuthV4Base implements HttpAuth {
     }
   }
 
+  /**
+   * Grab the hash from the cache if it exists and if we aren't using random data. Otherwise
+   * calculate it now.
+   */
   private String getBodyHash(final Body body) {
-    if (this.hashCache == null) {
+    if (this.zeroesHashCache == null || body.getDataType().equals(DataType.RANDOM)) {
       return calculateFullBodyHash(body);
     } else {
       try {
-        return this.hashCache.get(body);
+        return this.zeroesHashCache.get(body);
       } catch (final ExecutionException e) {
         throw new RuntimeException(e);
       }
