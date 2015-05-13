@@ -20,8 +20,6 @@ import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.api.DataType;
 import com.cleversafe.og.api.Method;
@@ -34,7 +32,6 @@ import com.cleversafe.og.util.io.Streams;
 import com.google.common.collect.Maps;
 
 public class AWSAuthV4ChunkingTest {
-  private static Logger _logger = LoggerFactory.getLogger(AWSAuthV4ChunkingTest.class);
 
   private final URI URI;
 
@@ -110,7 +107,6 @@ public class AWSAuthV4ChunkingTest {
     Assert.assertEquals(expectedHeaders, actualHeaders);
 
     final byte[] actualChunkedBuff = getCompleteChunkedBuff(request, auth);
-    System.out.println(BinaryUtils.toHex(actualChunkedBuff));
     final byte[] expectedChunkedBuff =
         BinaryUtils
             .fromHex("613b6368756e6b2d7369676e61747572653d306635366533636261653365666432663232356434333837363566613936663564363732646237653165633534353332313136346137316134323135646338320d0a000000000000000000000d0a613b6368756e6b2d7369676e61747572653d396630396330376261383065346366376564393662646132643838623732336636326633343735613734373432643733633136363730666263336265346331350d0a000000000000000000000d0a613b6368756e6b2d7369676e61747572653d356363366233333535333865656633306639303562323835306466613365666230373136636666626635306235316562663431386266616533626263353235380d0a000000000000000000000d0a353b6368756e6b2d7369676e61747572653d306436666630323866663865663838656266313631373034366533363333613732393465373638333764643264363930653362346434383839343663623130660d0a00000000000d0a303b6368756e6b2d7369676e61747572653d623463336133306433356230623861393731666136343866306339346537646462383462623164343938383863366434646661333639326531353235613463330d0a0d0a");
@@ -143,8 +139,6 @@ public class AWSAuthV4ChunkingTest {
             actualOutput.write(read);
             read = wrappedStream.read();
           }
-          _logger.info("expected = \n{}", new String(expectedBuff));
-          _logger.info("actual = \n{}", actualOutput);
           Assert.assertTrue("1 byte reads failed with bodySize = " + bodySize
               + ", userDataBlockSize = " + userDataBlockSize,
               Arrays.equals(expectedBuff, actualOutput.toByteArray()));

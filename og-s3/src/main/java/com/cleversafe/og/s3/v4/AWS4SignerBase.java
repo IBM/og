@@ -91,10 +91,10 @@ public class AWS4SignerBase {
     this.serviceName = serviceName;
     this.regionName = regionName;
 
-    dateTimeFormat = new SimpleDateFormat(ISO8601BasicFormat);
-    dateTimeFormat.setTimeZone(new SimpleTimeZone(0, "UTC"));
-    dateStampFormat = new SimpleDateFormat(DateStringFormat);
-    dateStampFormat.setTimeZone(new SimpleTimeZone(0, "UTC"));
+    this.dateTimeFormat = new SimpleDateFormat(ISO8601BasicFormat);
+    this.dateTimeFormat.setTimeZone(new SimpleTimeZone(0, "UTC"));
+    this.dateStampFormat = new SimpleDateFormat(DateStringFormat);
+    this.dateStampFormat.setTimeZone(new SimpleTimeZone(0, "UTC"));
   }
 
   /**
@@ -112,13 +112,13 @@ public class AWS4SignerBase {
 
     // first get the date and time for the subsequent request, and convert
     // to ISO 8601 format for use in signature generation
-    this.dateTimeStamp = dateTimeFormat.format(date);
+    this.dateTimeStamp = this.dateTimeFormat.format(date);
 
     // update the headers with required 'x-amz-date' and 'host' values
-    authHeaders.put("x-amz-date", dateTimeStamp);
+    authHeaders.put("x-amz-date", this.dateTimeStamp);
 
-    final String hostHeader = endpointUrl.getHost();
-    final int port = endpointUrl.getPort();
+    final String hostHeader = this.endpointUrl.getHost();
+    final int port = this.endpointUrl.getPort();
     if (port > -1) {
       hostHeader.concat(":" + Integer.toString(port));
     }
@@ -134,35 +134,35 @@ public class AWS4SignerBase {
 
     // canonicalize the various components of the request
     final String canonicalRequest =
-        getCanonicalRequest(endpointUrl, httpMethod, canonicalizedQueryParameters,
+        getCanonicalRequest(this.endpointUrl, this.httpMethod, canonicalizedQueryParameters,
             canonicalizedHeaderNames, canonicalizedHeaders, bodyHash);
-    _logger.debug("--------- Canonical request --------");
-    _logger.debug(canonicalRequest);
-    _logger.debug("------------------------------------");
+    _logger.trace("--------- Canonical request --------");
+    _logger.trace(canonicalRequest);
+    _logger.trace("------------------------------------");
 
     // construct the string to be signed
-    final String dateStamp = dateStampFormat.format(date);
-    this.scope = dateStamp + "/" + regionName + "/" + serviceName + "/" + TERMINATOR;
+    final String dateStamp = this.dateStampFormat.format(date);
+    this.scope = dateStamp + "/" + this.regionName + "/" + this.serviceName + "/" + TERMINATOR;
     final String stringToSign =
-        getStringToSign(SCHEME, ALGORITHM, dateTimeStamp, scope, canonicalRequest);
-    _logger.debug("--------- String to sign -----------");
-    _logger.debug(stringToSign);
-    _logger.debug("------------------------------------");
+        getStringToSign(SCHEME, ALGORITHM, this.dateTimeStamp, this.scope, canonicalRequest);
+    _logger.trace("--------- String to sign -----------");
+    _logger.trace(stringToSign);
+    _logger.trace("------------------------------------");
 
     // compute the signing key
     final byte[] kSecret = (SCHEME + awsSecretKey).getBytes();
     final byte[] kDate = sign(dateStamp, kSecret, "HmacSHA256");
-    final byte[] kRegion = sign(regionName, kDate, "HmacSHA256");
-    final byte[] kService = sign(serviceName, kRegion, "HmacSHA256");
+    final byte[] kRegion = sign(this.regionName, kDate, "HmacSHA256");
+    final byte[] kService = sign(this.serviceName, kRegion, "HmacSHA256");
     this.signingKey = sign(TERMINATOR, kService, "HmacSHA256");
-    final byte[] signature = sign(stringToSign, signingKey, "HmacSHA256");
+    final byte[] signature = sign(stringToSign, this.signingKey, "HmacSHA256");
 
     // cache the computed signature ready for chunk 0 upload
-    lastComputedSignature = BinaryUtils.toHex(signature);
+    this.lastComputedSignature = BinaryUtils.toHex(signature);
 
-    final String credentialsAuthorizationHeader = "Credential=" + awsAccessKey + "/" + scope;
+    final String credentialsAuthorizationHeader = "Credential=" + awsAccessKey + "/" + this.scope;
     final String signedHeadersAuthorizationHeader = "SignedHeaders=" + canonicalizedHeaderNames;
-    final String signatureAuthorizationHeader = "Signature=" + lastComputedSignature;
+    final String signatureAuthorizationHeader = "Signature=" + this.lastComputedSignature;
 
     final String authorizationHeader =
         SCHEME + "-" + ALGORITHM + " " + credentialsAuthorizationHeader + ", "
@@ -184,10 +184,12 @@ public class AWS4SignerBase {
 
     final StringBuilder buffer = new StringBuilder();
     for (final String header : sortedHeaders) {
-      if (header.startsWith("x-og"))
+      if (header.startsWith("x-og")) {
         continue;
-      if (buffer.length() > 0)
+      }
+      if (buffer.length() > 0) {
         buffer.append(";");
+      }
       buffer.append(header.toLowerCase());
     }
 
