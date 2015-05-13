@@ -69,10 +69,8 @@ public class Bodies {
     private final DataType dataType;
 
     public BodyImpl(final long seed, final long size, final DataType dataType) {
-      super();
-      // TODO - if dataType is ZEROes, make seed zero, then revert hashCode and equals to default
-      // eclipse implementation
-      this.seed = seed;
+      // Force the seed to zero for non random data so that it won't affect hashCode() and equals()
+      this.seed = dataType.equals(DataType.RANDOM) ? seed : 0;
       this.size = size;
       this.dataType = dataType;
     }
@@ -103,9 +101,7 @@ public class Bodies {
       final int prime = 31;
       int result = 1;
       result = prime * result + ((this.dataType == null) ? 0 : this.dataType.hashCode());
-      if (this.dataType.equals(DataType.RANDOM)) {
-        result = prime * result + (int) (this.seed ^ (this.seed >>> 32));
-      }
+      result = prime * result + (int) (this.seed ^ (this.seed >>> 32));
       result = prime * result + (int) (this.size ^ (this.size >>> 32));
       return result;
     }
@@ -125,7 +121,7 @@ public class Bodies {
       if (this.dataType != other.dataType) {
         return false;
       }
-      if (this.dataType.equals(DataType.RANDOM) && (this.seed != other.seed)) {
+      if (this.seed != other.seed) {
         return false;
       }
       if (this.size != other.size) {
@@ -133,5 +129,6 @@ public class Bodies {
       }
       return true;
     }
+
   }
 }
