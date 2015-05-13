@@ -47,6 +47,7 @@ public class AWSAuthV4 extends AWSAuthV4Base implements HttpAuth {
     if (cacheSize > 0) {
       _logger.debug("Aws v4 auth cache configured with size {}", cacheSize);
       this.zeroesHashCache =
+      // TODO make sure eviction doesn't happen unless out of room
           CacheBuilder.newBuilder().maximumSize(cacheSize).build(new CacheLoader<Body, String>() {
             @Override
             public String load(final Body key) throws Exception {

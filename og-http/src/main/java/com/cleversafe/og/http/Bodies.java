@@ -70,6 +70,8 @@ public class Bodies {
 
     public BodyImpl(final long seed, final long size, final DataType dataType) {
       super();
+      // TODO - if dataType is ZEROes, make seed zero, then revert hashCode and equals to default
+      // eclipse implementation
       this.seed = seed;
       this.size = size;
       this.dataType = dataType;

@@ -21,6 +21,7 @@ public class AWS4SignerChunked extends AWS4SignerBase {
    * all-zeroes will be used greatly simplifies the implementation. If random data is being used
    * then the cache will be useless with pretty much any implementation anyway.
    */
+  // TODO - move this up a layer the signer is recreated for every request
   private final LoadingCache<Integer, String> zeroesHashCache;
 
   /**
