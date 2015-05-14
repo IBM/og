@@ -16,7 +16,6 @@ public class FilesizeConfig {
   public SizeUnit averageUnit;
   public double spread;
   public SizeUnit spreadUnit;
-  public double weight;
 
   public FilesizeConfig(final double average) {
     this();
@@ -29,6 +28,5 @@ public class FilesizeConfig {
     this.averageUnit = SizeUnit.MEBIBYTES;
     this.spread = 0.0;
     this.spreadUnit = SizeUnit.MEBIBYTES;
-    this.weight = 1.0;
   }
 }

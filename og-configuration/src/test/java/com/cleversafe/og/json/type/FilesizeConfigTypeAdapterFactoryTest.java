@@ -37,11 +37,10 @@ public class FilesizeConfigTypeAdapterFactoryTest {
 
   @Test
   public void fullFilesizeConfig() {
-    final String json = "{\"average\": 75.0, \"weight\": 3.5}";
+    final String json = "{\"average\": 75.0}";
     final FilesizeConfig config = this.gson.fromJson(json, FilesizeConfig.class);
 
     assertThat(config.average, is(75.0));
-    assertThat(config.weight, is(3.5));
   }
 
   @Test
