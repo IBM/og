@@ -13,13 +13,13 @@
       <PatternLayout pattern="%m%n" />
     </Console>
     <RollingRandomAccessFile name="OGLog"
-      append="true" fileName="${log_path}/${og.log}" filePattern="${log_path}/${og.log}-%i.gz">
+    immediateFlush="false" append="true" fileName="${log_path}/${og.log}" filePattern="${log_path}/${og.log}-%i.gz">
       <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%t] %l - %m%n" />
       <SizeBasedTriggeringPolicy size="100MB" />
       <DefaultRolloverStrategy max="20" />
     </RollingRandomAccessFile>
     <RollingRandomAccessFile name="RequestLog"
-      append="true" fileName="${test_path}/${request.log}" filePattern="${test_path}/${request.log}-%i.gz">
+    immediateFlush="false" append="true" fileName="${test_path}/${request.log}" filePattern="${test_path}/${request.log}-%i.gz">
       <PatternLayout pattern="%m%n" />
       <SizeBasedTriggeringPolicy size="500MB" />
       <DefaultRolloverStrategy max="20" />
