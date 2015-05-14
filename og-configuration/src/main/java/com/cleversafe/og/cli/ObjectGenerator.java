@@ -113,7 +113,8 @@ public class ObjectGenerator {
       client = injector.getInstance(Client.class);
       objectManager = injector.getInstance(ObjectManager.class);
       statistics = injector.getInstance(Statistics.class);
-      Runtime.getRuntime().addShutdownHook(new ShutdownHook(Thread.currentThread(), shutdownLatch));
+      OGLog4jShutdownCallbackRegistry.setOGShutdownHook((new ShutdownHook(Thread.currentThread(),
+          shutdownLatch)));
 
       _logger.info("{}", test);
       _consoleLogger.info("Configured.");
