@@ -11,6 +11,7 @@ package com.cleversafe.og.cli;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.notNullValue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -58,7 +59,7 @@ public class ObjectFileTest {
   @Test
   public void getInputStreamNullInput() throws FileNotFoundException {
     final InputStream in = ObjectFile.getInputStream(null);
-    assertThat(in, is(System.in));
+    assertThat(in, is(notNullValue()));
   }
 
   @Test(expected = FileNotFoundException.class)

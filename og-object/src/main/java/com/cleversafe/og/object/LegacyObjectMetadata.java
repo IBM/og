@@ -27,9 +27,9 @@ public class LegacyObjectMetadata implements ObjectMetadata {
   public static final int OBJECT_SUFFIX_SIZE = 4;
   public static final int OBJECT_SIZE = OBJECT_NAME_SIZE + OBJECT_SIZE_SIZE + OBJECT_SUFFIX_SIZE;
   private static final BaseEncoding ENCODING = BaseEncoding.base16().lowerCase();
-  private final ByteBuffer objectBuffer;
+  protected final ByteBuffer objectBuffer;
 
-  private LegacyObjectMetadata(final ByteBuffer objectBuffer) {
+  protected LegacyObjectMetadata(final ByteBuffer objectBuffer) {
     this.objectBuffer = objectBuffer;
   }
 

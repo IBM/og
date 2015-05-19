@@ -11,6 +11,8 @@ package com.cleversafe.og.cli;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -22,6 +24,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.nio.ByteBuffer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,19 +99,25 @@ public class ObjectFile {
   }
 
   public static InputStream getInputStream(final File input) throws FileNotFoundException {
+    InputStream in = System.in;
     if (input != null) {
-      return new FileInputStream(input);
+      in = new FileInputStream(input);
     }
-    return System.in;
+    return new BufferedInputStream(in);
   }
 
   public static OutputStream getOutputStream(final boolean split, final String output)
       throws FileNotFoundException {
+    OutputStream out;
     if (split) {
-      return new ObjectFileOutputStream(output, RandomObjectPopulator.MAX_OBJECT_ARG,
-          RandomObjectPopulator.SUFFIX);
+      out =
+          new ObjectFileOutputStream(output, RandomObjectPopulator.MAX_OBJECT_ARG,
+              RandomObjectPopulator.SUFFIX);
+    } else {
+      out = getOutputStream(output);
     }
-    return getOutputStream(output);
+
+    return new BufferedOutputStream(out);
   }
 
   public static OutputStream getOutputStream(final String output) throws FileNotFoundException {
@@ -172,12 +181,24 @@ public class ObjectFile {
         maxContainerSuffix);
 
     final byte[] buf = new byte[LegacyObjectMetadata.OBJECT_SIZE];
+    final MutableObjectMetadata object = new MutableObjectMetadata();
     while (in.read(buf) == LegacyObjectMetadata.OBJECT_SIZE) {
-      final ObjectMetadata object = LegacyObjectMetadata.fromBytes(buf);
+      object.setBytes(buf);
       if ((object.getSize() >= minFilesize && object.getSize() <= maxFilesize)
           && (object.getContainerSuffix() >= minContainerSuffix && object.getContainerSuffix() <= maxContainerSuffix)) {
         out.write(object.toBytes());
       }
+    }
+  }
+
+  public static class MutableObjectMetadata extends LegacyObjectMetadata {
+    public MutableObjectMetadata() {
+      super(ByteBuffer.allocate(OBJECT_SIZE));
+    }
+
+    public void setBytes(final byte[] bytes) {
+      this.objectBuffer.position(0);
+      this.objectBuffer.put(bytes);
     }
   }
 
