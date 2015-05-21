@@ -34,6 +34,7 @@
     <module>og-s3</module>
     <module>og-client</module>
     <module>og-supplier</module>
+    <module>og-openstack</module>
   </modules>
   <scm>
     <url>http://git.cleversafe.net</url>
