@@ -59,6 +59,11 @@
       <groupId>com.cleversafe</groupId>
       <artifactId>og-supplier</artifactId>
     </dependency>
+    <dependency>
+     <groupId>com.cleversafe</groupId>
+     <artifactId>og-openstack</artifactId>
+     <version>1.0.0-SNAPSHOT</version>
+    </dependency>
   </dependencies>
   <build>
     <finalName>og-${display.version}</finalName>

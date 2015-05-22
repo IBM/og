@@ -219,8 +219,11 @@ public class ApacheClient implements Client {
         RequestBuilder.create(request.getMethod().toString()).setUri(request.getUri());
 
     final Map<String, String> authHeaders = Maps.newHashMap();
-    if (request.headers().get(Headers.X_OG_USERNAME) != null
-        && request.headers().get(Headers.X_OG_PASSWORD) != null) {
+    final Map<String, String> headers = request.headers();
+    // FIXME remove these explicit checks; HttpAuth implementations should handle the case where a
+    // request does not match what they expect
+    if ((headers.get(Headers.X_OG_USERNAME) != null && headers.get(Headers.X_OG_PASSWORD) != null)
+        || (headers.get(Headers.X_OG_KEYSTONE_TOKEN) != null)) {
       authHeaders.putAll(this.authentication.getAuthorizationHeaders(request));
       for (final Entry<String, String> e : authHeaders.entrySet()) {
         builder.addHeader(e.getKey(), e.getValue());

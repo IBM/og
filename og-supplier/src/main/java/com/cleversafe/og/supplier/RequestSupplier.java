@@ -47,6 +47,7 @@ public class RequestSupplier implements Supplier<Request> {
   private final Map<String, Supplier<String>> headers;
   private final String username;
   private final String password;
+  private final String keystoneToken;
   private final Supplier<Body> body;
   private final boolean virtualHost;
 
@@ -67,15 +68,18 @@ public class RequestSupplier implements Supplier<Request> {
    * @param headers headers to add to each request; header values may be dynamic
    * @param username
    * @param password
+   * @param keystoneToken token used for keystone auth
    * @param body a description of the request body to add to the request
    */
+  // FIXME refactor username, password, and keystoneToken so they are embedded in headers rather
+  // than separate fields
   public RequestSupplier(final Supplier<String> id, final Method method, final Scheme scheme,
       final Supplier<String> host, final Integer port, final String uriRoot,
       final Function<Map<String, String>, String> container,
       final Function<Map<String, String>, String> object,
       final Map<String, String> queryParameters, final boolean trailingSlash,
       final Map<String, Supplier<String>> headers, final String username, final String password,
-      final Supplier<Body> body, final boolean virtualHost) {
+      final String keystoneToken, final Supplier<Body> body, final boolean virtualHost) {
 
     this.id = id;
     this.method = checkNotNull(method);
@@ -98,6 +102,7 @@ public class RequestSupplier implements Supplier<Request> {
     if (password != null) {
       checkArgument(password.length() > 0, "password must not be empty string");
     }
+    this.keystoneToken = keystoneToken;
     this.body = body;
     this.virtualHost = virtualHost;
   }
@@ -118,6 +123,10 @@ public class RequestSupplier implements Supplier<Request> {
     if (this.username != null && this.password != null) {
       builder.withHeader(Headers.X_OG_USERNAME, this.username);
       builder.withHeader(Headers.X_OG_PASSWORD, this.password);
+    }
+
+    if (this.keystoneToken != null) {
+      builder.withHeader(Headers.X_OG_KEYSTONE_TOKEN, this.keystoneToken);
     }
 
     for (final Map.Entry<String, String> entry : context.entrySet()) {

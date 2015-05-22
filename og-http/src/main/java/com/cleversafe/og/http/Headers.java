@@ -20,6 +20,8 @@ public class Headers {
   public static final String X_OG_CONTAINER_SUFFIX = "x-og-container-suffix";
   public static final String X_OG_USERNAME = "x-og-username";
   public static final String X_OG_PASSWORD = "x-og-password";
+  // FIXME refactor this into separate openstack guice module
+  public static final String X_OG_KEYSTONE_TOKEN = "x-og-keystone-token";
   public static final String X_OG_RESPONSE_BODY_CONSUMER = "x-og-response-body-consumer";
 
   private Headers() {}
