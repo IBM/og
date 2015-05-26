@@ -48,7 +48,7 @@ public class AWSAuthV4Chunked extends AWSAuthV4Base {
   /**
    * The default amount of user data in each chunk.
    */
-  public static final int DEFAULT_CHUNK_SIZE = 64000;
+  public static final int DEFAULT_CHUNK_SIZE = 65536;
 
   public AWSAuthV4Chunked(final String regionName, final String serviceName, final int chunkSize,
       final int cacheSize) {

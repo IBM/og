@@ -156,7 +156,7 @@
 // "aws_chunked": false,
 // "username": "",
 // "password": "",
-// "aws_chunk_size": 64000,
+// "aws_chunk_size": 65536,
 // "aws_cache_size": 0
 // },
 
