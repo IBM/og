@@ -84,6 +84,11 @@
      <artifactId>log4j-api</artifactId>
      <scope>compile</scope>
     </dependency>
+    <dependency>
+     <groupId>com.cleversafe</groupId>
+     <artifactId>og-openstack</artifactId>
+     <version>1.0.0-SNAPSHOT</version>
+    </dependency>
   </dependencies>
   <build>
     <resources>

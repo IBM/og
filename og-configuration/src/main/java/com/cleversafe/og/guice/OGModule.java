@@ -64,6 +64,7 @@ import com.cleversafe.og.object.ObjectManager;
 import com.cleversafe.og.object.RandomObjectPopulator;
 import com.cleversafe.og.object.ReadObjectNameConsumer;
 import com.cleversafe.og.object.WriteObjectNameConsumer;
+import com.cleversafe.og.openstack.KeystoneAuth;
 import com.cleversafe.og.s3.v2.AWSAuthV2;
 import com.cleversafe.og.s3.v4.AWSAuthV4;
 import com.cleversafe.og.s3.v4.AWSAuthV4Chunked;
@@ -150,6 +151,8 @@ public class OGModule extends AbstractModule {
         Providers.of(this.config.authentication.username));
     bind(String.class).annotatedWith(Names.named("authentication.password")).toProvider(
         Providers.of(this.config.authentication.password));
+    bind(String.class).annotatedWith(Names.named("authentication.keystoneToken")).toProvider(
+        Providers.of(this.config.authentication.keystoneToken));
     bindConstant().annotatedWith(Names.named("authentication.awsChunkSize")).to(
         this.config.authentication.awsChunkSize);
     bindConstant().annotatedWith(Names.named("authentication.awsChunked")).to(
@@ -158,11 +161,13 @@ public class OGModule extends AbstractModule {
         this.config.authentication.awsCacheSize);
     bind(StoppingConditionsConfig.class).toInstance(this.config.stoppingConditions);
 
+    // FIXME add NONE auth type
     final MapBinder<AuthType, HttpAuth> httpAuthBinder =
         MapBinder.newMapBinder(binder(), AuthType.class, HttpAuth.class);
     httpAuthBinder.addBinding(AuthType.AWSV2).to(AWSAuthV2.class);
     httpAuthBinder.addBinding(AuthType.AWSV4).toProvider(AWSAuthProvider.class);
     httpAuthBinder.addBinding(AuthType.BASIC).to(BasicAuth.class);
+    httpAuthBinder.addBinding(AuthType.KEYSTONE).to(KeystoneAuth.class);
 
     final MapBinder<String, ResponseBodyConsumer> responseBodyConsumers =
         MapBinder.newMapBinder(binder(), String.class, ResponseBodyConsumer.class);
@@ -695,6 +700,7 @@ public class OGModule extends AbstractModule {
       @WriteHeaders final Map<String, Supplier<String>> headers, final Supplier<Body> body,
       @Named("authentication.username") final String username,
       @Named("authentication.password") final String password,
+      @Named("authentication.keystoneToken") final String keystoneToken,
       @Named("virtualhost") final boolean virtualHost) {
     checkNotNull(api);
     // SOH needs to use a special response consumer to extract the returned object id
@@ -703,7 +709,7 @@ public class OGModule extends AbstractModule {
     }
 
     return createRequestSupplier(id, Method.PUT, scheme, host, port, uriRoot, container, object,
-        headers, body, username, password, virtualHost);
+        headers, body, username, password, keystoneToken, virtualHost);
   }
 
   @Provides
@@ -717,9 +723,10 @@ public class OGModule extends AbstractModule {
       @ReadHeaders final Map<String, Supplier<String>> headers,
       @Named("authentication.username") final String username,
       @Named("authentication.password") final String password,
+      @Named("authentication.keystoneToken") final String keystoneToken,
       @Named("virtualhost") final boolean virtualHost) {
     return createRequestSupplier(id, Method.GET, scheme, host, port, uriRoot, container, object,
-        headers, Suppliers.of(Bodies.none()), username, password, virtualHost);
+        headers, Suppliers.of(Bodies.none()), username, password, keystoneToken, virtualHost);
   }
 
   @Provides
@@ -733,9 +740,10 @@ public class OGModule extends AbstractModule {
       @DeleteHeaders final Map<String, Supplier<String>> headers,
       @Named("authentication.username") final String username,
       @Named("authentication.password") final String password,
+      @Named("authentication.keystoneToken") final String keystoneToken,
       @Named("virtualhost") final boolean virtualHost) {
     return createRequestSupplier(id, Method.DELETE, scheme, host, port, uriRoot, container, object,
-        headers, Suppliers.of(Bodies.none()), username, password, virtualHost);
+        headers, Suppliers.of(Bodies.none()), username, password, keystoneToken, virtualHost);
   }
 
   private Supplier<Request> createRequestSupplier(@Named("request.id") final Supplier<String> id,
@@ -743,10 +751,11 @@ public class OGModule extends AbstractModule {
       final String uriRoot, final Function<Map<String, String>, String> container,
       final Function<Map<String, String>, String> object,
       final Map<String, Supplier<String>> headers, final Supplier<Body> body,
-      final String username, final String password, final boolean virtualHost) {
+      final String username, final String password, final String keystoneToken,
+      final boolean virtualHost) {
 
     return new RequestSupplier(id, method, scheme, host, port, uriRoot, container, object,
-        Collections.<String, String>emptyMap(), false, headers, username, password, body,
-        virtualHost);
+        Collections.<String, String>emptyMap(), false, headers, username, password, keystoneToken,
+        body, virtualHost);
   }
 }

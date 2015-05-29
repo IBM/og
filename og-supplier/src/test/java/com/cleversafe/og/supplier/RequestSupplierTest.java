@@ -260,6 +260,6 @@ public class RequestSupplierTest {
     final Map<String, Supplier<String>> headers = new HashMap<String, Supplier<String>>();
 
     return new RequestSupplier(id, method, scheme, host, port, uriRoot, container, object,
-        queryParameters, trailingSlash, headers, username, password, body, virtualHost);
+        queryParameters, trailingSlash, headers, username, password, null, body, virtualHost);
   }
 }
