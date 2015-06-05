@@ -65,6 +65,7 @@ public class ObjectFile {
     final boolean write = cli.flags().getBoolean("write");
     final boolean read = cli.flags().getBoolean("read");
     final boolean filter = cli.flags().getBoolean("filter");
+    final boolean upgrade = cli.flags().getBoolean("upgrade");
     final boolean split = cli.flags().getBoolean("split");
     final String output = cli.flags().getString("output");
     final long minFilesize = cli.flags().getLong("min-filesize");
@@ -85,6 +86,9 @@ public class ObjectFile {
       } else if (filter) {
         out = getOutputStream(split, output);
         filter(in, out, minFilesize, maxFilesize, minContainerSuffix, maxContainerSuffix);
+      } else if (upgrade) {
+        out = getOutputStream(split, output);
+        upgrade(in, out);
       } else {
         out = getOutputStream(output);
         ByteStreams.copy(in, out);
@@ -108,16 +112,12 @@ public class ObjectFile {
 
   public static OutputStream getOutputStream(final boolean split, final String output)
       throws FileNotFoundException {
-    OutputStream out;
     if (split) {
-      out =
-          new ObjectFileOutputStream(output, RandomObjectPopulator.MAX_OBJECT_ARG,
-              RandomObjectPopulator.SUFFIX);
+      return new ObjectFileOutputStream(output, RandomObjectPopulator.MAX_OBJECT_ARG,
+          RandomObjectPopulator.SUFFIX);
     } else {
-      out = getOutputStream(output);
+      return new BufferedOutputStream(getOutputStream(output));
     }
-
-    return new BufferedOutputStream(out);
   }
 
   public static OutputStream getOutputStream(final String output) throws FileNotFoundException {
@@ -200,6 +200,29 @@ public class ObjectFile {
       this.objectBuffer.position(0);
       this.objectBuffer.put(bytes);
     }
+
+    public void setSize(final long size) {
+      this.objectBuffer.position(OBJECT_NAME_SIZE);
+      this.objectBuffer.putLong(size);
+    }
+
+    public void setContainerSuffix(final int suffix) {
+      this.objectBuffer.position(OBJECT_NAME_SIZE + OBJECT_SIZE_SIZE);
+      this.objectBuffer.putInt(suffix);
+    }
+  }
+
+  public static void upgrade(final InputStream in, final OutputStream out) throws IOException {
+    // oom size
+    final int legacySize = 18;
+    final byte[] buf = new byte[legacySize];
+    final MutableObjectMetadata object = new MutableObjectMetadata();
+    object.setSize(0);
+    object.setContainerSuffix(-1);
+    while (in.read(buf) == legacySize) {
+      object.setBytes(buf);
+      out.write(object.toBytes());
+    }
   }
 
   public static class ObjectFileOutputStream extends OutputStream {
@@ -222,13 +245,15 @@ public class ObjectFile {
     }
 
     private OutputStream create() throws FileNotFoundException {
-      return new FileOutputStream(String.format("%s%d%s", this.prefix, this.index, this.suffix));
+      return new BufferedOutputStream(new FileOutputStream(String.format("%s%d%s", this.prefix,
+          this.index, this.suffix)));
     }
 
     @Override
     public void write(final byte[] b) throws IOException {
       if (this.written >= this.maxObjects) {
         this.index++;
+        this.out.close();
         this.out = create();
         this.written = 0;
       }
