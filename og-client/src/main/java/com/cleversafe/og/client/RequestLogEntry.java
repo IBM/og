@@ -41,7 +41,7 @@ public class RequestLogEntry {
   public final String objectId;
   public final int status;
   public final Long requestLength;
-  public final long responseLength;
+  public final Long responseLength;
   public final String userAgent;
   public final long requestLatency;
   public final String clientRequestId;
@@ -93,8 +93,11 @@ public class RequestLogEntry {
     this.status = response.getStatusCode();
     // TODO requestLength will not equal objectLength with AWSv4 request overhead
     this.requestLength = objectSize;
-    // TODO is this correct?
-    this.responseLength = response.getBody().getSize();
+    if (response.getBody().getDataType() != DataType.NONE) {
+      this.responseLength = response.getBody().getSize();
+    } else {
+      this.responseLength = null;
+    }
     this.userAgent = userAgent;
     this.requestLatency = this.timestampFinish - this.timestampStart;
 
