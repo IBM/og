@@ -2,7 +2,7 @@
 <Configuration monitorInterval="60">
   <Properties>
     <Property name="log_path">log</Property>
-    <Property name="test_path">${log_path}/${og:datetime}</Property>
+    <Property name="test_path">${log_path}/${sys:OG_TEST_DIR}</Property>
     <Property name="og.log">og.log</Property>
     <Property name="request.log">request.log</Property>
     <Property name="og.json">og.json</Property>
@@ -13,7 +13,7 @@
       <PatternLayout pattern="%m%n" />
     </Console>
     <RollingRandomAccessFile name="OGLog"
-    immediateFlush="false" append="true" fileName="${log_path}/${og.log}" filePattern="${log_path}/${og.log}-%i.gz">
+    immediateFlush="false" append="true" fileName="${test_path}/${og.log}" filePattern="${test_path}/${og.log}-%i.gz">
       <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%t] %l - %m%n" />
       <SizeBasedTriggeringPolicy size="100MB" />
       <DefaultRolloverStrategy max="20" />

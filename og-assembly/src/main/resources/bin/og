@@ -17,8 +17,11 @@ BASE=`dirname ${0}`
 CP=${BASE}/lib/*:${BASE}/conf/log4j/og/:${BASE}/conf/
 CLASS="com.cleversafe.og.cli.ObjectGenerator"
 
+OG_TEST_DIR=`date +%Y-%m-%d_%H.%M.%S`
+mkdir -p log/${OG_TEST_DIR}
+
 # TODO analyze which jvm parameters should be set
-VMOPTS="-XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:log/gc.log -XX:+UseParallelOldGC -XX:MaxGCPauseMillis=5000 -Xss256k -Xmx${MEMORY}m -Xms${MEMORY}m -XX:MaxDirectMemorySize=${MEMORY}m"
-SYSTEMOPTS="-Dlog4j.configurationFile=og-log4j2.xml -DLog4jContextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector -Dlog4j.shutdownCallbackRegistry=com.cleversafe.og.cli.OGLog4jShutdownCallbackRegistry"
+VMOPTS="-XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:log/${OG_TEST_DIR}/gc.log -XX:+UseParallelOldGC -XX:MaxGCPauseMillis=5000 -Xss256k -Xmx${MEMORY}m -Xms${MEMORY}m -XX:MaxDirectMemorySize=${MEMORY}m"
+SYSTEMOPTS="-DOG_TEST_DIR=${OG_TEST_DIR} -Dlog4j.configurationFile=og-log4j2.xml -DLog4jContextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector -Dlog4j.shutdownCallbackRegistry=com.cleversafe.og.cli.OGLog4jShutdownCallbackRegistry"
 
 exec java -cp ${CP} ${VMOPTS} ${SYSTEMOPTS} ${CLASS} "$@"
