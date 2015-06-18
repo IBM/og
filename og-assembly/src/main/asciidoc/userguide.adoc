@@ -42,7 +42,61 @@ in a directory of your choosing.
 ----
 
 == Project Layout
+The OG distribution is comprised of several files and directories:
+
+[source, bash, subs="attributes"]
+----
+~$ tree
+├── conf
+│   ├── object-file-log4j2.xml
+│   ├── og-log4j2.xml
+│   └── sample
+│       ├── authentication-basic.json
+│       ├── concurrency-ops-with-rampup.json
+│       ├── concurrency-threads.json
+│       ├── filesize-distributions.json
+│       ├── host-multiple.json
+│       ├── io-mix.json
+│       ├── simple.json
+│       ├── simple-s3.json
+│       └── stopping-conditions-operations.json
+├── docs
+│   └── userguide.html
+├── lib
+│   └── ...snip...
+├── log
+├── object
+├── object-file # <2>
+└── og # <1>
+----
+<1> primary cli shell script
+<2> auxillary script for manipulating og object files
+
 == Configuration
+OG is configured by a single json config file. See <<Configuration Reference>>
+for more details.
+
+== Results
+For each OG test that is run, a timestamped test results directory is created.
+An example:
+
+[source, bash, subs="attributes"]
+----
+~$ tree log/
+log/
+└── 2015-06-17_23.56.32 # <1>
+    ├── gc.log # <2>
+    ├── og.json # <3>
+    ├── og.log # <4>
+    ├── request.log # <5>
+    └── summary.json # <6>
+----
+<1> parent directory for a test run
+<2> jvm gc.log for this test
+<3> serialized og.json, including default values; useful for config auditing
+<4> applicationg logs
+<5> per-request log, including http details
+<6> summary statistics
 
 == Appendix
 
