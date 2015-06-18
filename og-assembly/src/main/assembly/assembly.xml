@@ -25,8 +25,14 @@
       <directory>src/main/resources/conf</directory>
       <outputDirectory>conf</outputDirectory>
       <includes>
-        <include>og.json</include>
         <include>*.xml</include>
+      </includes>
+    </fileSet>
+    <fileSet>
+      <directory>src/main/resources/conf/sample</directory>
+      <outputDirectory>conf/sample</outputDirectory>
+      <includes>
+        <include>*.json</include>
       </includes>
     </fileSet>
     <fileSet>
