@@ -190,9 +190,10 @@ public class Application {
    * @return A deserialized user object
    * @throws FileNotFoundException if no json configuration can be found at the provided location
    */
-  public static <T> T fromJson(final File userJson, final File defaultJson, final Class<T> cls,
+  public static <T> T fromJson(final File userJson, final String defaultJson, final Class<T> cls,
       final Gson gson) throws FileNotFoundException {
-    final File json = userJson != null ? userJson : checkNotNull(defaultJson);
+    final File json =
+        userJson != null ? userJson : new File(Application.getResource(checkNotNull(defaultJson)));
     checkNotNull(cls);
     checkNotNull(gson);
 

@@ -104,7 +104,7 @@ public class ObjectGenerator {
       _consoleLogger.info("Configuring...");
 
       final File json = cli.flags().getFile("og_config");
-      final File defaultJson = new File(Application.getResource("og.json"));
+      final String defaultJson = "og.json";
       ogConfig = Application.fromJson(json, defaultJson, OGConfig.class, gson);
       _ogJsonLogger.info(gson.toJson(ogConfig));
 

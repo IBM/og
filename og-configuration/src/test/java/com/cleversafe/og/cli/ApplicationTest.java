@@ -37,12 +37,12 @@ public class ApplicationTest {
   private static final String DEFAULT_APPLICATION_JSON = "defaultApplication.json";
   private static final String VALUE = "value";
   private static final String DEFAULT_VALUE = "defaultValue";
-  private File defaultJson;
+  private String defaultJson;
   private Gson gson;
 
   @Before
   public void before() {
-    this.defaultJson = new File(Application.getResource(DEFAULT_APPLICATION_JSON));
+    this.defaultJson = DEFAULT_APPLICATION_JSON;
     this.gson = new GsonBuilder().create();
   }
 
@@ -110,15 +110,15 @@ public class ApplicationTest {
 
   @DataProvider
   public static Object[][] provideInvalidFromJson() {
-    final File defaultJson = new File(Application.getResource(DEFAULT_APPLICATION_JSON));
-    final File nonExistent = new File("/nonexistent");
+    final String defaultJson = DEFAULT_APPLICATION_JSON;
+    final String nonExistent = "nonexistent";
     final Gson gson = new GsonBuilder().create();
 
     return new Object[][] { {null, null, Item.class, gson, NullPointerException.class},
         {null, defaultJson, null, gson, NullPointerException.class},
         {null, defaultJson, Item.class, null, NullPointerException.class},
-        {null, nonExistent, Item.class, gson, FileNotFoundException.class},
-        {nonExistent, defaultJson, Item.class, gson, FileNotFoundException.class}};
+        {null, nonExistent, Item.class, gson, IllegalArgumentException.class},
+        {new File(nonExistent), defaultJson, Item.class, gson, FileNotFoundException.class}};
   }
 
   static class Item {
@@ -127,7 +127,7 @@ public class ApplicationTest {
 
   @Test
   @UseDataProvider("provideInvalidFromJson")
-  public void invalidFromJson(final File userJson, final File defaultJson, final Class<?> cls,
+  public void invalidFromJson(final File userJson, final String defaultJson, final Class<?> cls,
       final Gson gson, final Class<Exception> expectedException) throws FileNotFoundException {
     this.thrown.expect(expectedException);
     Application.fromJson(userJson, defaultJson, cls, gson);
