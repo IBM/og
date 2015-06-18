@@ -56,13 +56,9 @@ in a directory of your choosing.
 |Enum ("http", "https")
 |"http"
 
-|host_selection
-|Enum ("random", "roundrobin")
-|"roundrobin"
-
 |host
-|String or [HostConfig]
-|None; see <<Host Configuration>>
+|String or SelectionConfig<String>
+|None; see <<Selection Configuration>>
 
 |port
 |Integer
@@ -77,8 +73,8 @@ in a directory of your choosing.
 |"/<api>/"
 
 |container
-|String
-|None
+|String or ContainerConfig
+|None; see <<Container Configuration>>
 
 |headers
 |Object
@@ -96,12 +92,8 @@ in a directory of your choosing.
 |Decimal or OperationConfig
 |0.0; see <<Operation Configuration>>
 
-|filesize_selection
-|Enum ("random", "roundrobin")
-|"random"
-
 |filesize
-|Decimal or FilesizeConfig or [FilesizeConfig]
+|Decimal or SelectionConfig<FilesizeConfig>
 |see <<Filesize Configuration>>
 
 |data
@@ -109,7 +101,7 @@ in a directory of your choosing.
 |"random"
 
 |concurrency
-|Integer or ConcurrencyConfig
+|ConcurrencyConfig
 |see <<Concurrency Configuration>>
 
 |authentication
@@ -127,19 +119,6 @@ in a directory of your choosing.
 |object_manager
 |ObjectManagerConfig
 |see <<Object Manager Configuration>>
-|===
-
-==== Host Configuration
-|===
-|Parameter|Type|Default
-
-|host
-|String
-|None
-
-|weight
-|Decimal
-|1.0
 |===
 
 ==== Operation Configuration
@@ -331,6 +310,32 @@ in a directory of your choosing.
 |object_file_name
 |String
 |"<container>-<api>"
+|===
+
+==== Selection Configuration
+|===
+|Parameter|Type|Default
+
+|selection
+|Enum ("random", "roundrobin")
+|"random"
+
+|choices
+|List<ChoiceConfig>; see <<Choice Configuration>>
+|[]
+|===
+
+==== Choice Configuration
+|===
+|Parameter|Type|Default
+
+|choice
+|T
+|None
+
+|weight
+|Decimal
+|1.0
 |===
 
 === Filesize Units
