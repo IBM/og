@@ -8,6 +8,7 @@
 
 package com.cleversafe.og.object;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.BufferedInputStream;
@@ -85,8 +86,11 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
 
   @Inject
   public RandomObjectPopulator(@Named("objectfile.location") final String directory,
-      @Named("objectfile.name") final String prefix) {
-    this(UUID.randomUUID(), directory, prefix, MAX_OBJECT_ARG, MAX_PERSIST_ARG);
+      @Named("objectfile.name") final String prefix,
+      @Named("objectfile.maxsize") final long maxSize,
+      @Named("objectfile.persistfrequency") final long persistFrequency) {
+    this(UUID.randomUUID(), directory, prefix, (int) (maxSize / OBJECT_SIZE),
+        persistFrequency * 1000);
   }
 
   public RandomObjectPopulator(final UUID vaultId, final String directory, final String prefix) {
@@ -117,6 +121,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
     this.filenamePattern =
         Pattern.compile(String.format("%s(\\d|[1-9]\\d*)%s", this.prefix,
             RandomObjectPopulator.SUFFIX));
+    checkArgument(maxObjectCount > 0, "maxObjectCount must be > 0 [%s]", maxObjectCount);
     this.maxObjects = maxObjectCount;
     final File[] files = getIdFiles();
     if (files != null && files.length > 1) {

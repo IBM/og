@@ -627,6 +627,20 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
+  @Named("objectfile.maxsize")
+  public long provideObjectFileMaxSize() {
+    return checkNotNull(this.config.objectManager).objectFileMaxSize;
+  }
+
+  @Provides
+  @Singleton
+  @Named("objectfile.persistfrequency")
+  public long provideObjectFilePersistFrequency() {
+    return checkNotNull(this.config.objectManager).objectFilePersistFrequency;
+  }
+
+  @Provides
+  @Singleton
   public Scheduler provideScheduler(final EventBus eventBus) {
     checkNotNull(eventBus);
     final ConcurrencyConfig concurrency = checkNotNull(this.config.concurrency);
