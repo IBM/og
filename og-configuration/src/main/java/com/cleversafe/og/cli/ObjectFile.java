@@ -15,6 +15,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -153,7 +154,7 @@ public class ObjectFile {
     try {
       writer = new BufferedWriter(new OutputStreamWriter(out, Charsets.UTF_8));
       final byte[] buf = new byte[LegacyObjectMetadata.OBJECT_SIZE];
-      while (in.read(buf) == LegacyObjectMetadata.OBJECT_SIZE) {
+      while (readFully(in, buf)) {
         final ObjectMetadata objectName = LegacyObjectMetadata.fromBytes(buf);
         writer.write(String.format("%s,%s,%s", objectName.getName(), objectName.getSize(),
             objectName.getContainerSuffix()));
@@ -182,10 +183,11 @@ public class ObjectFile {
 
     final byte[] buf = new byte[LegacyObjectMetadata.OBJECT_SIZE];
     final MutableObjectMetadata object = new MutableObjectMetadata();
-    while (in.read(buf) == LegacyObjectMetadata.OBJECT_SIZE) {
+    while (readFully(in, buf)) {
       object.setBytes(buf);
       if ((object.getSize() >= minFilesize && object.getSize() <= maxFilesize)
-          && (object.getContainerSuffix() >= minContainerSuffix && object.getContainerSuffix() <= maxContainerSuffix)) {
+          && (object.getContainerSuffix() >= minContainerSuffix
+              && object.getContainerSuffix() <= maxContainerSuffix)) {
         out.write(object.toBytes());
       }
     }
@@ -219,10 +221,21 @@ public class ObjectFile {
     final MutableObjectMetadata object = new MutableObjectMetadata();
     object.setSize(0);
     object.setContainerSuffix(-1);
-    while (in.read(buf) == legacySize) {
+    while (readFully(in, buf)) {
       object.setBytes(buf);
       out.write(object.toBytes());
     }
+  }
+
+  // adapt Bytestreams.readFully to return a boolean rather than throwing an exception
+  public static boolean readFully(final InputStream in, final byte[] b) throws IOException {
+    try {
+      ByteStreams.readFully(in, b);
+    } catch (final EOFException e) {
+      // FIXME deal with the case where bytes not divisible by b.size, rather than regular EOF
+      return false;
+    }
+    return true;
   }
 
   public static class ObjectFileOutputStream extends OutputStream {
