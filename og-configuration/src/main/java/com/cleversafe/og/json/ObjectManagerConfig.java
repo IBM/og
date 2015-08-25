@@ -19,7 +19,7 @@ public class ObjectManagerConfig {
   public ObjectManagerConfig() {
     this.objectFileLocation = "./object";
     this.objectFileName = null;
-    this.objectFileMaxSize = 1000000000; // 1gb
+    this.objectFileMaxSize = 100000000; // 100mb
     this.objectFilePersistFrequency = 1800; // 30 minutes
   }
 }
