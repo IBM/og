@@ -2,6 +2,7 @@
 
 ULIMIT=4096
 MEMORY=2048
+TEST_PATH=log/`date +%Y-%m-%d_%H.%M.%S`
 
 if [ "x${OG_ULIMIT}" != "x" ]; then
 	ULIMIT=${OG_ULIMIT}
@@ -11,17 +12,20 @@ if [ "x${OG_MEMORY}" != "x" ]; then
 	MEMORY=${OG_MEMORY}
 fi
 
+if [ "x${OG_TEST_PATH}" != "x" ]; then
+  TEST_PATH=${OG_TEST_PATH}
+fi
+
 ulimit -n ${ULIMIT}
 
 BASE=`dirname ${0}`
 CP=${BASE}/lib/*:${BASE}/conf/log4j/og/:${BASE}/conf/
 CLASS="com.cleversafe.og.cli.ObjectGenerator"
 
-OG_TEST_DIR=`date +%Y-%m-%d_%H.%M.%S`
-mkdir -p log/${OG_TEST_DIR}
+mkdir -p ${TEST_PATH}
 
 # TODO analyze which jvm parameters should be set
-VMOPTS="-XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:log/${OG_TEST_DIR}/gc.log -XX:+UseParallelOldGC -XX:MaxGCPauseMillis=5000 -Xss256k -Xmx${MEMORY}m -Xms${MEMORY}m -XX:MaxDirectMemorySize=${MEMORY}m"
-SYSTEMOPTS="-DOG_TEST_DIR=${OG_TEST_DIR} -Dlog4j.configurationFile=og-log4j2.xml -DLog4jContextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector -Dlog4j.shutdownCallbackRegistry=com.cleversafe.og.cli.OGLog4jShutdownCallbackRegistry"
+VMOPTS="-XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:${TEST_PATH}/gc.log -XX:+UseParallelOldGC -XX:MaxGCPauseMillis=5000 -Xss256k -Xmx${MEMORY}m -Xms${MEMORY}m -XX:MaxDirectMemorySize=${MEMORY}m"
+SYSTEMOPTS="-DTEST_PATH=${TEST_PATH} -Dlog4j.configurationFile=og-log4j2.xml -DLog4jContextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector -Dlog4j.shutdownCallbackRegistry=com.cleversafe.og.cli.OGLog4jShutdownCallbackRegistry"
 
 exec java -cp ${CP} ${VMOPTS} ${SYSTEMOPTS} ${CLASS} "$@"

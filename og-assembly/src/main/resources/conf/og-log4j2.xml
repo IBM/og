@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration monitorInterval="60">
   <Properties>
-    <Property name="log_path">log</Property>
-    <Property name="test_path">${log_path}/${sys:OG_TEST_DIR}</Property>
+    <Property name="test_path">${sys:TEST_PATH}</Property>
     <Property name="og.log">og.log</Property>
     <Property name="request.log">request.log</Property>
     <Property name="og.json">og.json</Property>
