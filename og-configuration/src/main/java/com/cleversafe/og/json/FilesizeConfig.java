@@ -24,9 +24,9 @@ public class FilesizeConfig {
 
   public FilesizeConfig() {
     this.distribution = DistributionType.UNIFORM;
-    this.average = 5.0;
-    this.averageUnit = SizeUnit.MEBIBYTES;
+    this.average = 5242880.0;
+    this.averageUnit = SizeUnit.BYTES;
     this.spread = 0.0;
-    this.spreadUnit = SizeUnit.MEBIBYTES;
+    this.spreadUnit = SizeUnit.BYTES;
   }
 }
