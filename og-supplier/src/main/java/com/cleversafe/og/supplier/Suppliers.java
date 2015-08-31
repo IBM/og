@@ -13,6 +13,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
@@ -73,11 +74,66 @@ public class Suppliers {
   }
 
   /**
+   * A supplier which chooses a long value in a cycle
+   * 
+   * @since 1.0
+   */
+  public static Supplier<Long> cycle(final long minValue, final long maxValue) {
+    checkArgument(minValue >= 0, "minValue must be >= 0 [%s]", minValue);
+    checkArgument(minValue <= maxValue, "minValue must be <= maxValue, [%s, %s]", minValue,
+        maxValue);
+
+    return new Supplier<Long>() {
+      // FIXME simplify this implementation
+      long currentValue = minValue - 1;
+
+      @Override
+      public Long get() {
+        this.currentValue = (this.currentValue + 1) % (maxValue + 1);
+        if (this.currentValue == 0) {
+          this.currentValue = minValue;
+        }
+
+        return this.currentValue;
+      }
+
+      @Override
+      public String toString() {
+        return String.format("cycle [minValue=%s, maxValue=%s]", minValue, maxValue);
+      }
+    };
+  }
+
+  /**
    * Creates a random supplier builder
    * 
    * @return a random supplier builder
    */
   public static <T> RandomSupplier.Builder<T> random() {
     return new RandomSupplier.Builder<T>();
+  }
+
+  /**
+   * A supplier which chooses a random long to supply
+   * 
+   * @since 1.0
+   */
+  public static Supplier<Long> random(final long minValue, final long maxValue) {
+    checkArgument(minValue >= 0, "minValue must be >= 0 [%s]", minValue);
+    checkArgument(minValue <= maxValue, "minValue must be <= maxValue, [%s, %s]", minValue,
+        maxValue);
+    final Random random = new Random();
+    return new Supplier<Long>() {
+
+      @Override
+      public Long get() {
+        return minValue + Math.round(random.nextDouble() * (maxValue - minValue));
+      }
+
+      @Override
+      public String toString() {
+        return String.format("random [minValue=%s, maxValue=%s]", minValue, maxValue);
+      }
+    };
   }
 }

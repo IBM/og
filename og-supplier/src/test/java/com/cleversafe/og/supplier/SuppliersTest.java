@@ -80,4 +80,35 @@ public class SuppliersTest {
       assertThat(p.get(), is(2));
     }
   }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void cycleNegativeMinValue() {
+    Suppliers.cycle(-1, 100);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void cycleMaxValueLessThanMinValue() {
+    Suppliers.cycle(10, 9);
+  }
+
+  @Test
+  public void cycleMinValueMaxValue() {
+    final Supplier<Long> cycle = Suppliers.cycle(0, 3);
+    assertThat(cycle.get(), is(0L));
+    assertThat(cycle.get(), is(1L));
+    assertThat(cycle.get(), is(2L));
+    assertThat(cycle.get(), is(3L));
+    assertThat(cycle.get(), is(0L));
+    assertThat(cycle.get(), is(1L));
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void randomNegativeMinValue() {
+    Suppliers.random(-1, 100);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void randomMaxValueLessThanMinValue() {
+    Suppliers.random(10, 9);
+  }
 }
