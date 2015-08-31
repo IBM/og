@@ -54,6 +54,7 @@ import com.cleversafe.og.json.ContainerConfig;
 import com.cleversafe.og.json.DistributionType;
 import com.cleversafe.og.json.FilesizeConfig;
 import com.cleversafe.og.json.OGConfig;
+import com.cleversafe.og.json.ObjectConfig;
 import com.cleversafe.og.json.ObjectManagerConfig;
 import com.cleversafe.og.json.OperationConfig;
 import com.cleversafe.og.json.SelectionConfig;
@@ -270,47 +271,6 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @WriteObjectName
-  public Function<Map<String, String>, String> provideWriteObjectName(final Api api) {
-    if (Api.SOH == checkNotNull(api)) {
-      return null;
-    }
-    return new UUIDObjectNameFunction();
-  }
-
-  @Provides
-  @Singleton
-  @ReadObjectName
-  public Function<Map<String, String>, String> provideReadObjectName(
-      final ObjectManager objectManager) {
-    return new ReadObjectNameFunction(objectManager);
-  }
-
-  @Provides
-  @Singleton
-  @DeleteObjectName
-  public Function<Map<String, String>, String> provideDeleteObjectName(
-      final ObjectManager objectManager) {
-    return new DeleteObjectNameFunction(objectManager);
-  }
-
-  @Provides
-  @Singleton
-  public List<AbstractObjectNameConsumer> provideObjectNameConsumers(
-      final ObjectManager objectManager, final EventBus eventBus) {
-    final Set<Integer> sc = HttpUtil.SUCCESS_STATUS_CODES;
-    final List<AbstractObjectNameConsumer> consumers = Lists.newArrayList();
-    consumers.add(new WriteObjectNameConsumer(objectManager, sc));
-    consumers.add(new ReadObjectNameConsumer(objectManager, sc));
-
-    for (final AbstractObjectNameConsumer consumer : consumers) {
-      eventBus.register(consumer);
-    }
-    return consumers;
-  }
-
-  @Provides
-  @Singleton
   @Named("request.id")
   public Supplier<String> provideIdSupplier() {
     return new Supplier<String>() {
@@ -469,6 +429,91 @@ public class OGModule extends AbstractModule {
         }
       }
     };
+  }
+
+  @Provides
+  @Singleton
+  @WriteObjectName
+  public Function<Map<String, String>, String> provideWriteObjectName(final Api api) {
+    if (Api.SOH == checkNotNull(api)) {
+      return null;
+    }
+    final OperationConfig operationConfig = checkNotNull(this.config.write);
+    if (operationConfig.object.selection != null) {
+      return provideObject(operationConfig);
+    }
+    // default for writes
+    return new UUIDObjectNameFunction();
+  }
+
+  @Provides
+  @Singleton
+  @ReadObjectName
+  public Function<Map<String, String>, String> provideReadObjectName(
+      final ObjectManager objectManager) {
+    final OperationConfig operationConfig = checkNotNull(this.config.read);
+    if (operationConfig.object.selection != null) {
+      return provideObject(operationConfig);
+    }
+    return new ReadObjectNameFunction(objectManager);
+  }
+
+  @Provides
+  @Singleton
+  @DeleteObjectName
+  public Function<Map<String, String>, String> provideDeleteObjectName(
+      final ObjectManager objectManager) {
+    final OperationConfig operationConfig = checkNotNull(this.config.delete);
+    if (operationConfig.object.selection != null) {
+      return provideObject(operationConfig);
+    }
+    return new DeleteObjectNameFunction(objectManager);
+  }
+
+  private Function<Map<String, String>, String> provideObject(
+      final OperationConfig operationConfig) {
+    checkNotNull(operationConfig);
+
+    final ObjectConfig objectConfig = checkNotNull(operationConfig.object);
+    final String prefix = checkNotNull(objectConfig.prefix);
+    final Supplier<Long> suffixes = createObjectSuffixes(objectConfig);
+    return new Function<Map<String, String>, String>() {
+      @Override
+      public String apply(final Map<String, String> context) {
+        final String objectName = prefix + suffixes.get();
+        context.put(Headers.X_OG_OBJECT_NAME, objectName);
+        context.put(Headers.X_OG_SEQUENTIAL_OBJECT_NAME, "true");
+
+        return objectName;
+      }
+    };
+  }
+
+  private Supplier<Long> createObjectSuffixes(final ObjectConfig config) {
+    checkArgument(config.minSuffix >= 0, "minSuffix must be > 0 [%s]", config.minSuffix);
+    checkArgument(config.maxSuffix >= config.minSuffix,
+        "maxSuffix must be greater than or equal to minSuffix");
+
+    if (SelectionType.ROUNDROBIN == config.selection) {
+      return Suppliers.cycle(config.minSuffix, config.maxSuffix);
+    } else {
+      return Suppliers.random(config.minSuffix, config.maxSuffix);
+    }
+  }
+
+  @Provides
+  @Singleton
+  public List<AbstractObjectNameConsumer> provideObjectNameConsumers(
+      final ObjectManager objectManager, final EventBus eventBus) {
+    final Set<Integer> sc = HttpUtil.SUCCESS_STATUS_CODES;
+    final List<AbstractObjectNameConsumer> consumers = Lists.newArrayList();
+    consumers.add(new WriteObjectNameConsumer(objectManager, sc));
+    consumers.add(new ReadObjectNameConsumer(objectManager, sc));
+
+    for (final AbstractObjectNameConsumer consumer : consumers) {
+      eventBus.register(consumer);
+    }
+    return consumers;
   }
 
   @Provides

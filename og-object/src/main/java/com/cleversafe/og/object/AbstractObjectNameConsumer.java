@@ -73,6 +73,10 @@ public abstract class AbstractObjectNameConsumer {
       return;
     }
 
+    if (request.headers().containsKey(Headers.X_OG_SEQUENTIAL_OBJECT_NAME)) {
+      return;
+    }
+
     final String objectString = getObjectString(request, response);
     if (objectString == null) {
       throw new IllegalStateException("Unable to determine object");

@@ -16,6 +16,8 @@ package com.cleversafe.og.http;
 public class Headers {
   public static final String X_OG_REQUEST_ID = "x-og-request-id";
   public static final String X_OG_OBJECT_NAME = "x-og-object-name";
+  // FIXME header to differentiate between objects which can be stored in the object manager
+  public static final String X_OG_SEQUENTIAL_OBJECT_NAME = "x-og-sequential-object-name";
   public static final String X_OG_OBJECT_SIZE = "x-og-object-size";
   public static final String X_OG_CONTAINER_SUFFIX = "x-og-container-suffix";
   public static final String X_OG_USERNAME = "x-og-username";
