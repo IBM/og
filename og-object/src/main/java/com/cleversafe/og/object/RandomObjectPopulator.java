@@ -35,6 +35,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.regex.Pattern;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -58,8 +59,8 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
   private final RandomAccessConcurrentHashSet<ObjectMetadata> objects =
       new RandomAccessConcurrentHashSet<ObjectMetadata>();
   private final ReadWriteLock objectsLock = new ReentrantReadWriteLock(true);
-  private final SortedMap<ObjectMetadata, Integer> currentlyReading = Collections
-      .synchronizedSortedMap(new TreeMap<ObjectMetadata, Integer>());
+  private final SortedMap<ObjectMetadata, Integer> currentlyReading =
+      Collections.synchronizedSortedMap(new TreeMap<ObjectMetadata, Integer>());
   private final ReadWriteLock readingLock = new ReentrantReadWriteLock(true);
   private final ReadWriteLock persistLock = new ReentrantReadWriteLock(true);
   private final File saveFile;
@@ -88,29 +89,30 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
   public RandomObjectPopulator(@Named("objectfile.location") final String directory,
       @Named("objectfile.name") final String prefix,
       @Named("objectfile.maxsize") final long maxSize,
-      @Named("objectfile.persistfrequency") final long persistFrequency) {
+      @Named("objectfile.persistfrequency") final long persistFrequency,
+      @Named("objectfile.index") @Nullable final Integer objectFileIndex) {
     this(UUID.randomUUID(), directory, prefix, (int) (maxSize / OBJECT_SIZE),
-        persistFrequency * 1000);
+        persistFrequency * 1000, objectFileIndex);
   }
 
   public RandomObjectPopulator(final UUID vaultId, final String directory, final String prefix) {
-    this(vaultId, directory, prefix, MAX_OBJECT_ARG, MAX_PERSIST_ARG);
+    this(vaultId, directory, prefix, MAX_OBJECT_ARG, MAX_PERSIST_ARG, null);
   }
 
   public RandomObjectPopulator(final UUID vaultId, final String prefix) {
-    this(vaultId, ".", prefix, MAX_OBJECT_ARG, MAX_PERSIST_ARG);
+    this(vaultId, ".", prefix, MAX_OBJECT_ARG, MAX_PERSIST_ARG, null);
   }
 
   public RandomObjectPopulator(final UUID vaultId, final int maxObjects) {
-    this(vaultId, ".", "", maxObjects, MAX_PERSIST_ARG);
+    this(vaultId, ".", "", maxObjects, MAX_PERSIST_ARG, null);
   }
 
   public RandomObjectPopulator(final UUID vaultId, final String prefix, final int maxObjects) {
-    this(vaultId, ".", prefix, maxObjects, MAX_PERSIST_ARG);
+    this(vaultId, ".", prefix, maxObjects, MAX_PERSIST_ARG, null);
   }
 
   public RandomObjectPopulator(final UUID vaultId, final String directory, final String prefix,
-      final int maxObjectCount, final long persistTime) {
+      final int maxObjectCount, final long persistTime, final Integer objectFileIndex) {
     this.vaultId = checkNotNull(vaultId);
     this.directory = checkNotNull(directory);
     if (prefix != null && !prefix.isEmpty()) {
@@ -124,7 +126,8 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
     this.maxObjects = maxObjectCount;
     final File[] files = getIdFiles();
     if (files != null && files.length > 1) {
-      this.idFileIndex = this.rand.nextInt(files.length - 1);
+      this.idFileIndex = selectInitialObjectFile(files.length, objectFileIndex);
+
       _logger.info("Initial object files list");
       for (final File f : files) {
         _logger.info("{}", f);
@@ -132,6 +135,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
     } else {
       this.idFileIndex = 0;
     }
+    _logger.info("Initial object file index {}", this.idFileIndex);
     this.saveFile = createFile(this.idFileIndex);
 
     loadObjects();
@@ -150,6 +154,14 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
       }
       // Every 30 minutes
     }, persistTime, persistTime, TimeUnit.MILLISECONDS);
+  }
+
+  private int selectInitialObjectFile(final int objectFileCount, final Integer objectFileIndex) {
+    if (objectFileIndex != null) {
+      checkArgument(objectFileIndex >= 0, "index must be >= 0 [%s]", objectFileIndex);
+      return Math.min(objectFileCount - 1, objectFileIndex);
+    }
+    return this.rand.nextInt(objectFileCount - 1);
   }
 
   private void loadObjects() {

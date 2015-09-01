@@ -287,16 +287,16 @@ public class RandomObjectPopulatorTest {
   }
 
   protected ObjectMetadata generateId() {
-    return LegacyObjectMetadata.fromMetadata(
-        UUID.randomUUID().toString().replace("-", "") + "0000", 0, -1);
+    return LegacyObjectMetadata.fromMetadata(UUID.randomUUID().toString().replace("-", "") + "0000",
+        0, -1);
   }
 
   @Ignore
   @Test
-  public void testConcurrency() throws InterruptedException, ExecutionException,
-      ObjectManagerException {
+  public void testConcurrency()
+      throws InterruptedException, ExecutionException, ObjectManagerException {
     final RandomObjectPopulator rop =
-        new RandomObjectPopulator(this.vaultId, ".", "", 100000, 5 * 1000);
+        new RandomObjectPopulator(this.vaultId, ".", "", 100000, 5 * 1000, null);
     final ConcurrentHashMap<ObjectMetadata, ObjectMetadata> ids =
         new ConcurrentHashMap<ObjectMetadata, ObjectMetadata>();
 
@@ -377,7 +377,7 @@ public class RandomObjectPopulatorTest {
 
     RandomObjectPopulator verify;
     do {
-      verify = new RandomObjectPopulator(this.vaultId, ".", "", 100000, 5 * 1000);
+      verify = new RandomObjectPopulator(this.vaultId, ".", "", 100000, 5 * 1000, null);
       final long objectCount = verify.getSavedObjectCount();
       Assert.assertEquals(ids.size(), objectCount);
       while (true) {

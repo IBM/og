@@ -686,6 +686,13 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
+  @Named("objectfile.index")
+  public Integer provideObjectFileIndex() {
+    return checkNotNull(this.config.objectManager).objectFileIndex;
+  }
+
+  @Provides
+  @Singleton
   public Scheduler provideScheduler(final EventBus eventBus) {
     checkNotNull(eventBus);
     final ConcurrencyConfig concurrency = checkNotNull(this.config.concurrency);
