@@ -118,17 +118,16 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
     } else {
       this.prefix = "id_";
     }
-    this.filenamePattern =
-        Pattern.compile(String.format("%s(\\d|[1-9]\\d*)%s", this.prefix,
-            RandomObjectPopulator.SUFFIX));
+    this.filenamePattern = Pattern
+        .compile(String.format("%s(\\d|[1-9]\\d*)%s", this.prefix, RandomObjectPopulator.SUFFIX));
     checkArgument(maxObjectCount > 0, "maxObjectCount must be > 0 [%s]", maxObjectCount);
     this.maxObjects = maxObjectCount;
     final File[] files = getIdFiles();
     if (files != null && files.length > 1) {
       this.idFileIndex = this.rand.nextInt(files.length - 1);
-      _logger.debug("Initial object files list");
+      _logger.info("Initial object files list");
       for (final File f : files) {
-        _logger.debug("{}", f);
+        _logger.info("{}", f);
       }
     } else {
       this.idFileIndex = 0;
@@ -294,10 +293,10 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
   }
 
   private void persistIds() throws IOException {
-    _logger.debug("persisting objects");
+    _logger.info("persisting objects");
     this.persistLock.writeLock().lock();
     final int toSave = this.objects.size();
-    _logger.debug("number of objects to persist {}", toSave);
+    _logger.info("number of objects to persist {}", toSave);
     final OutputStream out = new BufferedOutputStream(new FileOutputStream(this.saveFile));
     if (toSave > this.maxObjects) {
       for (int size = this.objects.size(); size > this.maxObjects; size = this.objects.size()) {
@@ -364,8 +363,8 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
 
     // Finally we save a number less than or equal to the maximum number of objects to our
     // savefile
-    _logger.debug(String.format("Writing state file: %d objects into ", this.objects.size())
-        + this.saveFile);
+    _logger.info(
+        String.format("Writing state file: %d objects into ", this.objects.size()) + this.saveFile);
     for (final Iterator<ObjectMetadata> iterator = this.objects.iterator(); iterator.hasNext();) {
       out.write(iterator.next().toBytes());
     }
