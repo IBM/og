@@ -11,12 +11,12 @@ package com.cleversafe.og.scheduling;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.cleversafe.og.util.Distribution;
 import com.google.common.util.concurrent.RateLimiter;
 
 /**
@@ -24,92 +24,96 @@ import com.google.common.util.concurrent.RateLimiter;
  * 
  * @since 1.0
  */
-// TODO refactor implementation
 public class RequestRateScheduler implements Scheduler {
   private static final Logger _logger = LoggerFactory.getLogger(RequestRateScheduler.class);
-  private final Distribution count;
+  private final double rate;
   private final TimeUnit unit;
   private final double rampup;
   private final TimeUnit rampupUnit;
-  private RateLimiter ramp;
   private final long rampDuration;
-  private long firstCalledTimestamp;
-  private long lastCalledTimestamp;
+  private final RateLimiter ramp;
+  private final RateLimiter steady;
+  private Thread requestThread;
+  private final Semaphore permits;
 
   /**
-   * Construcst an instace using the provided rate {@code count / unit }
+   * Constructs an instance using the provided rate {@code count / unit }
    * 
-   * @param count the numerator of the rate to configure
+   * @param rate the numerator of the rate to configure
    * @param unit the denominator of the rate to configure
    * @param rampup the duration to ramp up to the stable request rate
    * @param rampupUnit the rampup duration unit
    */
-  public RequestRateScheduler(final Distribution count, final TimeUnit unit, final double rampup,
+  public RequestRateScheduler(final double rate, final TimeUnit unit, final double rampup,
       final TimeUnit rampupUnit) {
-    this.count = checkNotNull(count);
+    checkArgument(rate >= 0.0, "rate must be >= 0.0 [%s]", rate);
+    this.rate = rate;
     this.unit = checkNotNull(unit);
     checkArgument(rampup >= 0.0, "rampup must be >= 0.0 [%s]", rampup);
     this.rampup = rampup;
     this.rampupUnit = checkNotNull(rampupUnit);
+
+    // convert arbitrary rate unit to rate/second
+    final double requestsPerSecond =
+        rate / (unit.toNanos(1) / (double) TimeUnit.SECONDS.toNanos(1));
+
     this.rampDuration = (long) (rampup * rampupUnit.toNanos(1));
     if (this.rampDuration > 0.0) {
-      this.ramp = RateLimiter.create(count.getAverage(), this.rampDuration, TimeUnit.NANOSECONDS);
+      this.ramp = RateLimiter.create(requestsPerSecond, this.rampDuration, TimeUnit.NANOSECONDS);
+    } else {
+      this.ramp = null;
     }
+
+    this.steady = RateLimiter.create(requestsPerSecond);
+    this.permits = new Semaphore(0);
   }
 
   @Override
   public void waitForNext() {
-    final long timestamp = System.nanoTime();
-    if (this.firstCalledTimestamp == 0) {
-      this.firstCalledTimestamp = timestamp;
+    if (this.requestThread == null) {
+      this.requestThread = new Thread(new Permitter());
+      this.requestThread.setDaemon(true);
+      this.requestThread.start();
     }
 
-    if (timestamp - this.firstCalledTimestamp < this.rampDuration) {
-      this.lastCalledTimestamp = rampWait();
-    } else {
-      this.lastCalledTimestamp = steadyWait(timestamp);
+    try {
+      this.permits.acquire();
+    } catch (final InterruptedException e) {
+      _logger.info("Interrupted while waiting to schedule next request", e);
     }
   }
 
-  private long rampWait() {
-    this.ramp.acquire();
-    return System.nanoTime();
-  }
+  private class Permitter implements Runnable {
+    public Permitter() {}
 
-  private long steadyWait(final long startSleepTimestamp) {
-    long timestamp = startSleepTimestamp;
-    long sleepRemaining = nextSleepDuration() - adjustment(timestamp);
-    while (sleepRemaining > 0) {
-      try {
-        TimeUnit.NANOSECONDS.sleep(sleepRemaining);
-      } catch (final InterruptedException e) {
-        _logger.info("Interrupted while waiting to schedule next request", e);
-        this.lastCalledTimestamp = System.nanoTime();
-        return timestamp;
+    @Override
+    public void run() {
+      if (RequestRateScheduler.this.ramp != null) {
+        rampWait();
       }
-      final long endTimestamp = System.nanoTime();
-      final long sleptTime = endTimestamp - timestamp;
-      timestamp = endTimestamp;
-      sleepRemaining -= sleptTime;
+      steadyWait();
     }
-    return timestamp;
-  }
 
-  private final long nextSleepDuration() {
-    return (long) (this.unit.toNanos(1) / this.count.nextSample());
-  }
-
-  private final long adjustment(final long timestamp) {
-    if (this.lastCalledTimestamp > 0) {
-      return timestamp - this.lastCalledTimestamp;
+    private void rampWait() {
+      final long start = System.nanoTime();
+      while (System.nanoTime() - start < RequestRateScheduler.this.rampDuration) {
+        RequestRateScheduler.this.steady.acquire();
+        RequestRateScheduler.this.permits.release();
+      }
     }
-    return 0;
+
+    private void steadyWait() {
+      while (true) {
+        RequestRateScheduler.this.steady.acquire();
+        RequestRateScheduler.this.permits.release();
+      }
+    }
   }
 
   @Override
   public String toString() {
     return String.format(
-        "RequestRateScheduler [count=%s, unit=%s, rampup=%s, rampupUnit=%s, rampDuration=%s]",
-        this.count, this.unit, this.rampup, this.rampupUnit, this.rampDuration);
+        "RequestRateScheduler [rate=%s, unit=%s, rampup=%s, rampupUnit=%s, rampDuration=%s]",
+        this.rate, this.unit, this.rampup, this.rampupUnit, this.rampDuration);
   }
 }
