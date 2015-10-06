@@ -138,28 +138,28 @@ public class OGModule extends AbstractModule {
   @Override
   protected void configure() {
     bind(Scheme.class).toInstance(this.config.scheme);
-    bind(Integer.class).annotatedWith(Names.named("port")).toProvider(
-        Providers.of(this.config.port));
+    bind(Integer.class).annotatedWith(Names.named("port"))
+        .toProvider(Providers.of(this.config.port));
     bind(Api.class).toInstance(this.config.api);
     bindConstant().annotatedWith(Names.named("write.weight")).to(this.config.write.weight);
     bindConstant().annotatedWith(Names.named("read.weight")).to(this.config.read.weight);
     bindConstant().annotatedWith(Names.named("delete.weight")).to(this.config.delete.weight);
     bindConstant().annotatedWith(Names.named("virtualhost")).to(this.config.virtualHost);
     bind(AuthType.class).toInstance(this.config.authentication.type);
-    bind(DataType.class).annotatedWith(Names.named("dataType")).toProvider(
-        Providers.of(this.config.data));
-    bind(String.class).annotatedWith(Names.named("authentication.username")).toProvider(
-        Providers.of(this.config.authentication.username));
-    bind(String.class).annotatedWith(Names.named("authentication.password")).toProvider(
-        Providers.of(this.config.authentication.password));
-    bind(String.class).annotatedWith(Names.named("authentication.keystoneToken")).toProvider(
-        Providers.of(this.config.authentication.keystoneToken));
-    bindConstant().annotatedWith(Names.named("authentication.awsChunkSize")).to(
-        this.config.authentication.awsChunkSize);
-    bindConstant().annotatedWith(Names.named("authentication.awsChunked")).to(
-        this.config.authentication.awsChunked);
-    bindConstant().annotatedWith(Names.named("authentication.awsCacheSize")).to(
-        this.config.authentication.awsCacheSize);
+    bind(DataType.class).annotatedWith(Names.named("dataType"))
+        .toProvider(Providers.of(this.config.data));
+    bind(String.class).annotatedWith(Names.named("authentication.username"))
+        .toProvider(Providers.of(this.config.authentication.username));
+    bind(String.class).annotatedWith(Names.named("authentication.password"))
+        .toProvider(Providers.of(this.config.authentication.password));
+    bind(String.class).annotatedWith(Names.named("authentication.keystoneToken"))
+        .toProvider(Providers.of(this.config.authentication.keystoneToken));
+    bindConstant().annotatedWith(Names.named("authentication.awsChunkSize"))
+        .to(this.config.authentication.awsChunkSize);
+    bindConstant().annotatedWith(Names.named("authentication.awsChunked"))
+        .to(this.config.authentication.awsChunked);
+    bindConstant().annotatedWith(Names.named("authentication.awsCacheSize"))
+        .to(this.config.authentication.awsCacheSize);
     bind(StoppingConditionsConfig.class).toInstance(this.config.stoppingConditions);
 
     // FIXME add NONE auth type
@@ -246,15 +246,15 @@ public class OGModule extends AbstractModule {
     final List<TestCondition> conditions = Lists.newArrayList();
 
     if (config.operations > 0) {
-      conditions.add(new CounterCondition(Operation.ALL, Counter.OPERATIONS, config.operations,
-          test, stats));
+      conditions.add(
+          new CounterCondition(Operation.ALL, Counter.OPERATIONS, config.operations, test, stats));
     }
 
     final Map<Integer, Integer> scMap = config.statusCodes;
     for (final Entry<Integer, Integer> sc : scMap.entrySet()) {
       if (sc.getValue() > 0) {
-        conditions.add(new StatusCodeCondition(Operation.ALL, sc.getKey(), sc.getValue(), test,
-            stats));
+        conditions
+            .add(new StatusCodeCondition(Operation.ALL, sc.getKey(), sc.getValue(), test, stats));
       }
     }
 
@@ -610,8 +610,8 @@ public class OGModule extends AbstractModule {
       case UNIFORM:
         return Distributions.uniform(average, spread);
       default:
-        throw new IllegalArgumentException(String.format("unacceptable filesize distribution [%s]",
-            distribution));
+        throw new IllegalArgumentException(
+            String.format("unacceptable filesize distribution [%s]", distribution));
     }
   }
 
@@ -645,8 +645,8 @@ public class OGModule extends AbstractModule {
     if (!f.exists()) {
       final boolean success = f.mkdirs();
       if (!success) {
-        throw new RuntimeException(String.format(
-            "failed to create object location directories [%s]", f.toString()));
+        throw new RuntimeException(
+            String.format("failed to create object location directories [%s]", f.toString()));
       }
     }
 
@@ -700,9 +700,8 @@ public class OGModule extends AbstractModule {
     final DistributionType distribution = checkNotNull(concurrency.distribution);
 
     if (ConcurrencyType.THREADS == type) {
-      final Scheduler scheduler =
-          new ConcurrentRequestScheduler((int) Math.round(concurrency.count), concurrency.rampup,
-              concurrency.rampupUnit);
+      final Scheduler scheduler = new ConcurrentRequestScheduler(
+          (int) Math.round(concurrency.count), concurrency.rampup, concurrency.rampupUnit);
       eventBus.register(scheduler);
       return scheduler;
     }
@@ -716,8 +715,8 @@ public class OGModule extends AbstractModule {
         count = Distributions.uniform(concurrency.count, 0.0);
         break;
       default:
-        throw new IllegalArgumentException(String.format(
-            "unacceptable scheduler distribution [%s]", distribution));
+        throw new IllegalArgumentException(
+            String.format("unacceptable scheduler distribution [%s]", distribution));
     }
     return new RequestRateScheduler(count, concurrency.unit, concurrency.rampup,
         concurrency.rampupUnit);
@@ -725,28 +724,24 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
-  public Client provideClient(final AuthType authType,
-      final Map<AuthType, HttpAuth> authentication,
+  public Client provideClient(final AuthType authType, final Map<AuthType, HttpAuth> authentication,
       final Map<String, ResponseBodyConsumer> responseBodyConsumers) {
     final ClientConfig clientConfig = this.config.client;
-    Preconditions.checkArgument(
-        authentication.get(authType) instanceof AWSAuthV4Chunked ? !clientConfig.chunkedEncoding
-            : true, "http layer chunked encoding is not supported with Chunked AWSV4");
-    final ApacheClient.Builder b =
-        new ApacheClient.Builder().withConnectTimeout(clientConfig.connectTimeout)
-            .withSoTimeout(clientConfig.soTimeout).usingSoReuseAddress(clientConfig.soReuseAddress)
-            .withSoLinger(clientConfig.soLinger).usingSoKeepAlive(clientConfig.soKeepAlive)
-            .usingTcpNoDelay(clientConfig.tcpNoDelay)
-            .usingPersistentConnections(clientConfig.persistentConnections)
-            .usingChunkedEncoding(clientConfig.chunkedEncoding)
-            .usingExpectContinue(clientConfig.expectContinue)
-            .withWaitForContinue(clientConfig.waitForContinue)
-            .withRetryCount(clientConfig.retryCount)
-            .usingRequestSentRetry(clientConfig.requestSentRetry)
-            .withAuthentication(authentication.get(authType))
-            .withUserAgent(Version.displayVersion())
-            .withWriteThroughput(clientConfig.writeThroughput)
-            .withReadThroughput(clientConfig.readThroughput);
+    Preconditions.checkArgument(authentication.get(authType) instanceof AWSAuthV4Chunked
+        ? !clientConfig.chunkedEncoding : true,
+        "http layer chunked encoding is not supported with Chunked AWSV4");
+    final ApacheClient.Builder b = new ApacheClient.Builder()
+        .withConnectTimeout(clientConfig.connectTimeout).withSoTimeout(clientConfig.soTimeout)
+        .usingSoReuseAddress(clientConfig.soReuseAddress).withSoLinger(clientConfig.soLinger)
+        .usingSoKeepAlive(clientConfig.soKeepAlive).usingTcpNoDelay(clientConfig.tcpNoDelay)
+        .usingPersistentConnections(clientConfig.persistentConnections)
+        .usingChunkedEncoding(clientConfig.chunkedEncoding)
+        .usingExpectContinue(clientConfig.expectContinue)
+        .withWaitForContinue(clientConfig.waitForContinue).withRetryCount(clientConfig.retryCount)
+        .usingRequestSentRetry(clientConfig.requestSentRetry)
+        .withAuthentication(authentication.get(authType)).withUserAgent(Version.displayVersion())
+        .withWriteThroughput(clientConfig.writeThroughput)
+        .withReadThroughput(clientConfig.readThroughput);
 
     for (final Entry<String, ResponseBodyConsumer> consumer : responseBodyConsumers.entrySet()) {
       b.withResponseBodyConsumer(consumer.getKey(), consumer.getValue());
@@ -782,8 +777,8 @@ public class OGModule extends AbstractModule {
   @Singleton
   @Named("read")
   public Supplier<Request> provideRead(@Named("request.id") final Supplier<String> id,
-      final Scheme scheme, @ReadHost final Supplier<String> host,
-      @Named("port") final Integer port, @Named("uri.root") final String uriRoot,
+      final Scheme scheme, @ReadHost final Supplier<String> host, @Named("port") final Integer port,
+      @Named("uri.root") final String uriRoot,
       @Named("container") final Function<Map<String, String>, String> container,
       @ReadObjectName final Function<Map<String, String>, String> object,
       @ReadHeaders final Map<String, Supplier<String>> headers,
@@ -816,9 +811,8 @@ public class OGModule extends AbstractModule {
       final Method method, final Scheme scheme, final Supplier<String> host, final Integer port,
       final String uriRoot, final Function<Map<String, String>, String> container,
       final Function<Map<String, String>, String> object,
-      final Map<String, Supplier<String>> headers, final Supplier<Body> body,
-      final String username, final String password, final String keystoneToken,
-      final boolean virtualHost) {
+      final Map<String, Supplier<String>> headers, final Supplier<Body> body, final String username,
+      final String password, final String keystoneToken, final boolean virtualHost) {
 
     return new RequestSupplier(id, method, scheme, host, port, uriRoot, container, object,
         Collections.<String, String>emptyMap(), false, headers, username, password, keystoneToken,
