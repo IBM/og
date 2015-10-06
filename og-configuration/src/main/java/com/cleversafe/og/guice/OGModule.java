@@ -697,7 +697,6 @@ public class OGModule extends AbstractModule {
     checkNotNull(eventBus);
     final ConcurrencyConfig concurrency = checkNotNull(this.config.concurrency);
     final ConcurrencyType type = checkNotNull(concurrency.type);
-    final DistributionType distribution = checkNotNull(concurrency.distribution);
 
     if (ConcurrencyType.THREADS == type) {
       final Scheduler scheduler = new ConcurrentRequestScheduler(
@@ -705,20 +704,7 @@ public class OGModule extends AbstractModule {
       eventBus.register(scheduler);
       return scheduler;
     }
-
-    Distribution count;
-    switch (distribution) {
-      case POISSON:
-        count = Distributions.poisson(concurrency.count);
-        break;
-      case UNIFORM:
-        count = Distributions.uniform(concurrency.count, 0.0);
-        break;
-      default:
-        throw new IllegalArgumentException(
-            String.format("unacceptable scheduler distribution [%s]", distribution));
-    }
-    return new RequestRateScheduler(count, concurrency.unit, concurrency.rampup,
+    return new RequestRateScheduler(concurrency.count, concurrency.unit, concurrency.rampup,
         concurrency.rampupUnit);
   }
 

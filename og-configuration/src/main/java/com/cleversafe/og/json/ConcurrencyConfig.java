@@ -12,7 +12,6 @@ import java.util.concurrent.TimeUnit;
 
 public class ConcurrencyConfig {
   public ConcurrencyType type;
-  public DistributionType distribution;
   public double count;
   public TimeUnit unit;
   public double rampup;
@@ -25,7 +24,6 @@ public class ConcurrencyConfig {
 
   public ConcurrencyConfig() {
     this.type = ConcurrencyType.THREADS;
-    this.distribution = DistributionType.UNIFORM;
     this.count = 1.0;
     this.unit = TimeUnit.SECONDS;
     this.rampup = 0.0;
