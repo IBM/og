@@ -49,12 +49,10 @@ public class AWSAuthV4Test {
 
     final Map<String, String> expectedHeaders = Maps.newHashMap();
     expectedHeaders.put("x-amz-date", "20150430T184047Z");
-    expectedHeaders
-        .put(
-            "Authorization",
-            "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20150430/dsnet/s3/aws4_request, SignedHeaders=date;host;x-amz-content-sha256;x-amz-date, Signature=763172bdb601c03cf538a1b9bee004c90736cccfd913271cae7e6e9508a73192");
+    expectedHeaders.put("Authorization",
+        "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20150430/dsnet/s3/aws4_request, SignedHeaders=date;host;x-amz-content-sha256;x-amz-date, Signature=32e574543e02fb2f975dce2af9ec6c2ddea845ce023fa56b18b70574a5e42986");
     expectedHeaders.put("Host", "127.0.0.1");
-    expectedHeaders.put("Date", "Thu, 30 Apr 2015 13:40:47 CDT");
+    expectedHeaders.put("Date", "Thu, 30 Apr 2015 13:40:47 -0500");
     expectedHeaders.put("x-amz-content-sha256",
         "0d5535e13cc9708d0ff0289af2fae27e564b6bcbcd9242f5140d96957744a517");
 

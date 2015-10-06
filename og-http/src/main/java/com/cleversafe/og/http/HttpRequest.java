@@ -35,8 +35,8 @@ public class HttpRequest implements Request {
   private final Map<String, String> requestHeaders;
   private final Body body;
   private final long messageTime;
-  private static final DateTimeFormatter RFC1123 = DateTimeFormat.forPattern(
-      "EEE, dd MMM yyyy HH:mm:ss zzz").withLocale(Locale.US);
+  private static final DateTimeFormatter RFC1123 =
+      DateTimeFormat.forPattern("EEE, dd MMM yyyy HH:mm:ss Z").withLocale(Locale.US);
 
   private HttpRequest(final Builder builder) {
     this.method = checkNotNull(builder.method);
