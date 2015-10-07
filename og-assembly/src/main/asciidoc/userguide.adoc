@@ -258,10 +258,6 @@ log/
 |Enum ("threads", "ops")
 |"threads"
 
-|distribution
-|Enum ("uniform", "poisson")
-|"uniform"
-
 |count
 |Decimal
 |1.0
