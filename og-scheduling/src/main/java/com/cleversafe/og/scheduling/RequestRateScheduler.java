@@ -24,6 +24,21 @@ import com.google.common.util.concurrent.RateLimiter;
  * 
  * @since 1.0
  */
+/*
+ * Two implementation details of note:
+ * 
+ * 1) two RateLimiters are used rather than one because the RateLimiter class includes undesirable
+ * code which cools down the request rate upon periods of inactivity if the instance was configured
+ * with ramp-up. Workaround is to configure one instance with ramp-up and another that uses a fixed
+ * ops.
+ * 
+ *
+ * 2) this class's wait method must return immediately if the caller thread is interrupted.
+ * RateLimiter does not allow this, so an external semaphore is used to coordinate permits via a
+ * daemon thread.
+ */
+// FIXME make it so Scheduler's do not need to be interruptible (see 2)). Instead, a separate daemon
+// scheduler thread in LoadTest would allow Scheduler implementations to be simpler.
 public class RequestRateScheduler implements Scheduler {
   private static final Logger _logger = LoggerFactory.getLogger(RequestRateScheduler.class);
   private final double rate;
