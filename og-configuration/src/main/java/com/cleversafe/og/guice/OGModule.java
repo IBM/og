@@ -245,6 +245,16 @@ public class OGModule extends AbstractModule {
     checkNotNull(eventBus);
     checkNotNull(stats);
     checkNotNull(config);
+    checkArgument(config.operations >= 0, "operations must be >= 0 [%s]", config.operations);
+    checkArgument(config.runtime >= 0.0, "runtime must be >= 0.0 [%s]", config.runtime);
+    checkNotNull(config.runtimeUnit);
+    checkArgument(config.concurrentRequests >= 0, "concurrentRequests must be >= 0 [%s]",
+        config.concurrentRequests);
+    checkNotNull(config.statusCodes);
+    for (final Entry<Integer, Integer> sc : config.statusCodes.entrySet()) {
+      checkArgument(sc.getValue() >= 0.0, "status code [%s] value must be >= 0.0 [%s]", sc.getKey(),
+          sc.getValue());
+    }
 
     final List<TestCondition> conditions = Lists.newArrayList();
 
