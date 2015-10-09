@@ -161,6 +161,7 @@ public class OGModule extends AbstractModule {
         .to(this.config.authentication.awsChunked);
     bindConstant().annotatedWith(Names.named("authentication.awsCacheSize"))
         .to(this.config.authentication.awsCacheSize);
+    bind(ConcurrencyConfig.class).toInstance(this.config.concurrency);
     bind(StoppingConditionsConfig.class).toInstance(this.config.stoppingConditions);
 
     // FIXME add NONE auth type
@@ -238,7 +239,8 @@ public class OGModule extends AbstractModule {
   @Provides
   @Singleton
   public List<TestCondition> provideTestConditions(final LoadTest test, final EventBus eventBus,
-      final Statistics stats, final StoppingConditionsConfig config) {
+      final Statistics stats, final ConcurrencyConfig concurrency,
+      final StoppingConditionsConfig config) {
     checkNotNull(test);
     checkNotNull(eventBus);
     checkNotNull(stats);
@@ -263,9 +265,10 @@ public class OGModule extends AbstractModule {
       conditions.add(new RuntimeCondition(test, config.runtime, config.runtimeUnit));
     }
 
-    if (config.concurrentRequests > 0) {
-      conditions.add(new ConcurrentRequestCondition(Operation.ALL, config.concurrentRequests, test,
-          stats));
+    // maximum concurrent requests only makes sense in the context of an ops test, so check for that
+    if (config.concurrentRequests > 0 && concurrency.type == ConcurrencyType.OPS) {
+      conditions.add(
+          new ConcurrentRequestCondition(Operation.ALL, config.concurrentRequests, test, stats));
     }
 
     for (final TestCondition condition : conditions) {
