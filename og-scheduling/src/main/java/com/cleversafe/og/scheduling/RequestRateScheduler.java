@@ -110,6 +110,7 @@ public class RequestRateScheduler implements Scheduler {
     }
 
     private void rampWait() {
+      _logger.info("Starting ramp wait");
       final long start = System.nanoTime();
       while (System.nanoTime() - start < RequestRateScheduler.this.rampDuration) {
         RequestRateScheduler.this.steady.acquire();
@@ -118,6 +119,7 @@ public class RequestRateScheduler implements Scheduler {
     }
 
     private void steadyWait() {
+      _logger.info("Starting steady wait");
       while (true) {
         RequestRateScheduler.this.steady.acquire();
         RequestRateScheduler.this.permits.release();
