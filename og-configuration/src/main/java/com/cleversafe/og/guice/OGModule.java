@@ -85,6 +85,7 @@ import com.cleversafe.og.test.LoadTest;
 import com.cleversafe.og.test.LoadTestSubscriberExceptionHandler;
 import com.cleversafe.og.test.RequestManager;
 import com.cleversafe.og.test.SimpleRequestManager;
+import com.cleversafe.og.test.condition.ConcurrentRequestCondition;
 import com.cleversafe.og.test.condition.CounterCondition;
 import com.cleversafe.og.test.condition.RuntimeCondition;
 import com.cleversafe.og.test.condition.StatusCodeCondition;
@@ -260,6 +261,11 @@ public class OGModule extends AbstractModule {
 
     if (config.runtime > 0) {
       conditions.add(new RuntimeCondition(test, config.runtime, config.runtimeUnit));
+    }
+
+    if (config.concurrentRequests > 0) {
+      conditions.add(new ConcurrentRequestCondition(Operation.ALL, config.concurrentRequests, test,
+          stats));
     }
 
     for (final TestCondition condition : conditions) {

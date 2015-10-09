@@ -26,10 +26,10 @@ import com.google.common.eventbus.Subscribe;
  * @since 1.0
  */
 public class CounterCondition implements TestCondition {
-  private final Operation operation;
+  protected final Operation operation;
   private final Counter counter;
-  private final long thresholdValue;
-  private final LoadTest test;
+  protected final long thresholdValue;
+  protected final LoadTest test;
   private final Statistics stats;
 
   /**
