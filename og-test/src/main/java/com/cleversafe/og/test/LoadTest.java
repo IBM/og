@@ -85,6 +85,7 @@ public class LoadTest implements Callable<Boolean> {
       while (this.running) {
         final Request request = this.requestManager.get();
         final ListenableFuture<Response> future = this.client.execute(request);
+        this.eventBus.post(request);
         this.activeRequests.add(future);
         addCallback(request, future);
         this.scheduler.waitForNext();
@@ -145,6 +146,7 @@ public class LoadTest implements Callable<Boolean> {
       }
 
       private void postOperation(final Response response) {
+        LoadTest.this.eventBus.post(response);
         LoadTest.this.eventBus.post(Pair.of(request, response));
       }
     });
