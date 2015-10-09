@@ -369,6 +369,10 @@ log/
 |Enum (see <<Time Units>>)
 |"seconds"
 
+|concurrent_requests
+|Integer
+|2000
+
 |status_codes
 |Object
 |{}
