@@ -66,6 +66,22 @@ public class Statistics {
   }
 
   /**
+   * Updates this instance with data from an in-progress request
+   * 
+   * @param request an in-progress request
+   */
+
+  @Subscribe
+  public void update(final Request request) {
+    checkNotNull(request);
+
+    final Operation operation = HttpUtil.toOperation(request.getMethod());
+    updateCounter(operation, Counter.ACTIVE_OPERATIONS, 1);
+    updateCounter(Operation.ALL, Counter.ACTIVE_OPERATIONS, 1);
+  }
+
+
+  /**
    * Updates this instance with data from a completed operation
    * 
    * @param result the completed operation
@@ -79,6 +95,8 @@ public class Statistics {
     final Operation operation = HttpUtil.toOperation(request.getMethod());
     updateCounter(operation, Counter.OPERATIONS, 1);
     updateCounter(Operation.ALL, Counter.OPERATIONS, 1);
+    updateCounter(operation, Counter.ACTIVE_OPERATIONS, -1);
+    updateCounter(Operation.ALL, Counter.ACTIVE_OPERATIONS, -1);
 
     if (HttpUtil.SUCCESS_STATUS_CODES.contains(response.getStatusCode())) {
       final long bytes = getBytes(operation, request, response);

@@ -55,8 +55,23 @@ public class StatisticsTest {
   }
 
   @Test(expected = NullPointerException.class)
+  public void updateRequestNullOperation() {
+    this.stats.update((Request) null);
+  }
+
+  @Test
+  public void updateRequest() {
+    this.stats.update(this.request);
+    assertThat(this.stats.get(Operation.WRITE, Counter.ACTIVE_OPERATIONS), is(1L));
+    assertThat(this.stats.get(Operation.ALL, Counter.ACTIVE_OPERATIONS), is(1L));
+    this.stats.update(this.operation);
+    assertThat(this.stats.get(Operation.WRITE, Counter.ACTIVE_OPERATIONS), is(0L));
+    assertThat(this.stats.get(Operation.ALL, Counter.ACTIVE_OPERATIONS), is(0L));
+  }
+
+  @Test(expected = NullPointerException.class)
   public void updateNullOperation() {
-    this.stats.update(null);
+    this.stats.update((Pair<Request, Response>) null);
   }
 
   @Test
