@@ -425,7 +425,7 @@ public class ApacheClientTest {
   }
 
   private RequestPatternBuilder requestedFor(final Method method, final String uri) {
-    return new RequestPatternBuilder(RequestMethod.valueOf(method.toString()), urlEqualTo(uri));
+    return new RequestPatternBuilder(RequestMethod.fromString(method.toString()), urlEqualTo(uri));
   }
 
   @Test
