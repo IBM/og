@@ -100,6 +100,7 @@ public class ApacheClient implements Client {
   private final long writeThroughput;
   private final long readThroughput;
   private final Map<String, ResponseBodyConsumer> responseBodyConsumers;
+  private volatile boolean running;
   private final CloseableHttpClient client;
   private final ListeningExecutorService executorService;
   private final Gson gson;
@@ -153,6 +154,7 @@ public class ApacheClient implements Client {
               }
             }.nullSafe()).create();
 
+    this.running = true;
     final HttpClientBuilder clientBuilder = HttpClients.custom();
     if (this.userAgent != null) {
       clientBuilder.setUserAgent(this.userAgent);
@@ -195,6 +197,7 @@ public class ApacheClient implements Client {
 
   @Override
   public ListenableFuture<Response> execute(final Request request) {
+    // FIXME handle case where execute is called after shutdown
     checkNotNull(request);
     final HttpUriRequest apacheRequest = createRequest(request);
     final ListenableFuture<Response> baseFuture = this.executorService
@@ -253,6 +256,7 @@ public class ApacheClient implements Client {
     final SettableFuture<Boolean> future = SettableFuture.create();
     final Thread t = new Thread(getShutdownRunnable(future, immediate));
     t.setName("clientShutdown");
+    this.running = false;
     t.start();
     return future;
   }
@@ -332,17 +336,21 @@ public class ApacheClient implements Client {
       try {
         sendRequest(this.apacheRequest, responseBuilder);
       } catch (final Exception e) {
-        _logger.error("Exception executing request", e);
+        if (ApacheClient.this.running) {
+          _logger.error("Exception executing request", e);
+        }
         responseBuilder.withStatusCode(599);
       }
       response = responseBuilder.build();
       this.timestamps.finish = System.nanoTime();
       this.timestamps.finishMillis = System.currentTimeMillis();
 
-      final RequestLogEntry entry =
-          new RequestLogEntry(this.request, response, this.userAgent, this.timestamps);
-      _requestLogger.info(ApacheClient.this.gson.toJson(entry));
-
+      // do not log requests with 599 response after client shutdown (known aborted requests)
+      if (ApacheClient.this.running || response.getStatusCode() != 599) {
+        final RequestLogEntry entry =
+            new RequestLogEntry(this.request, response, this.userAgent, this.timestamps);
+        _requestLogger.info(ApacheClient.this.gson.toJson(entry));
+      }
       return response;
     }
 
