@@ -74,21 +74,21 @@ public class ApacheClientTest {
     stubFor(any(urlMatching("/container/.*")).willReturn(aResponse().withStatus(200)));
 
     // read
-    stubFor(get(urlMatching("/container/.*")).willReturn(
-        aResponse().withStatus(200).withBody(new byte[1000])));
+    stubFor(get(urlMatching("/container/.*"))
+        .willReturn(aResponse().withStatus(200).withBody(new byte[1000])));
 
     // 5 second delay
-    stubFor(get(urlEqualTo("/delayed"))
-        .willReturn(aResponse().withStatus(200).withFixedDelay(1000)));
+    stubFor(
+        get(urlEqualTo("/delayed")).willReturn(aResponse().withStatus(200).withFixedDelay(1000)));
 
-    stubFor(any(urlEqualTo("/301")).willReturn(
-        aResponse().withStatus(301).withHeader("location", "/container/")));
+    stubFor(any(urlEqualTo("/301"))
+        .willReturn(aResponse().withStatus(301).withHeader("location", "/container/")));
 
-    stubFor(any(urlEqualTo("/302")).willReturn(
-        aResponse().withStatus(302).withHeader("location", "/container/")));
+    stubFor(any(urlEqualTo("/302"))
+        .willReturn(aResponse().withStatus(302).withHeader("location", "/container/")));
 
-    stubFor(any(urlEqualTo("/307")).willReturn(
-        aResponse().withStatus(307).withHeader("location", "/container/")));
+    stubFor(any(urlEqualTo("/307"))
+        .willReturn(aResponse().withStatus(307).withHeader("location", "/container/")));
 
     this.objectUri = uri("/container/object");
     this.delayUri = uri("/delayed");
@@ -222,7 +222,7 @@ public class ApacheClientTest {
     final Body none = Bodies.none();
     final String content = new String(new byte[1000]);
 
-    return new Object[][] { {Method.PUT, none, "", none}, {Method.PUT, zeroes, content, none},
+    return new Object[][] {{Method.PUT, none, "", none}, {Method.PUT, zeroes, content, none},
         {Method.POST, none, "", none}, {Method.POST, zeroes, content, none},
         {Method.GET, none, "", zeroes}, {Method.HEAD, none, "", none},
         {Method.DELETE, none, "", none}};
@@ -248,15 +248,15 @@ public class ApacheClientTest {
     final Request request =
         new HttpRequest.Builder(Method.PUT, this.objectUri).withHeader("key", "value").build();
     this.client.execute(request).get();
-    verify(putRequestedFor(urlEqualTo(this.objectUri.getPath()))
-        .withHeader("key", equalTo("value")));
+    verify(
+        putRequestedFor(urlEqualTo(this.objectUri.getPath())).withHeader("key", equalTo("value")));
   }
 
   @DataProvider
   public static Object[][] provideEncode() {
     final String contentLength = "Content-Length";
     final String transferEncoding = "Transfer-Encoding";
-    return new Object[][] { {false, contentLength, "2048", transferEncoding},
+    return new Object[][] {{false, contentLength, "2048", transferEncoding},
         {true, transferEncoding, "chunked", contentLength},};
   }
 
@@ -294,10 +294,9 @@ public class ApacheClientTest {
   @Test
   public void authentication() throws InterruptedException, ExecutionException {
     final Client client = new ApacheClient.Builder().withAuthentication(new BasicAuth()).build();
-    final Request request =
-        new HttpRequest.Builder(Method.GET, this.objectUri)
-            .withHeader(Headers.X_OG_USERNAME, "test").withHeader(Headers.X_OG_PASSWORD, "test")
-            .build();
+    final Request request = new HttpRequest.Builder(Method.GET, this.objectUri)
+        .withHeader(Headers.X_OG_USERNAME, "test").withHeader(Headers.X_OG_PASSWORD, "test")
+        .build();
     client.execute(request).get();
     verify(getRequestedFor(urlEqualTo(this.objectUri.getPath())).withHeader("Authorization",
         matching("Basic .*")));
@@ -338,9 +337,8 @@ public class ApacheClientTest {
 
   @Test
   public void requestId() throws InterruptedException, ExecutionException {
-    final Request request =
-        new HttpRequest.Builder(Method.GET, this.objectUri)
-            .withHeader(Headers.X_OG_REQUEST_ID, "1").build();
+    final Request request = new HttpRequest.Builder(Method.GET, this.objectUri)
+        .withHeader(Headers.X_OG_REQUEST_ID, "1").build();
     final Response response = this.client.execute(request).get();
     assertThat(response.headers(), hasEntry(Headers.X_OG_REQUEST_ID, "1"));
   }
@@ -380,7 +378,7 @@ public class ApacheClientTest {
     final Body none = Bodies.none();
     final String content = new String(new byte[1000]);
 
-    return new Object[][] { {Method.PUT, one, zeroes, content, none, false},
+    return new Object[][] {{Method.PUT, one, zeroes, content, none, false},
         {Method.PUT, two, zeroes, content, none, false},
         {Method.PUT, three, zeroes, content, none, false},
 
@@ -410,7 +408,7 @@ public class ApacheClientTest {
   @UseDataProvider("provideRedirect")
   public void redirect(final Method method, final URI uri, final Body requestBody,
       final String requestData, final Body responseBody, final boolean chunkedEncoding)
-      throws InterruptedException, ExecutionException {
+          throws InterruptedException, ExecutionException {
     final Client client = new ApacheClient.Builder().usingChunkedEncoding(chunkedEncoding).build();
 
     final Request request = new HttpRequest.Builder(method, uri).withBody(requestBody).build();
@@ -464,9 +462,8 @@ public class ApacheClientTest {
 
   @Test
   public void responseBodyConsumer() throws InterruptedException, ExecutionException {
-    final Request request =
-        new HttpRequest.Builder(Method.GET, this.objectUri).withHeader(
-            Headers.X_OG_RESPONSE_BODY_CONSUMER, "consumer").build();
+    final Request request = new HttpRequest.Builder(Method.GET, this.objectUri)
+        .withHeader(Headers.X_OG_RESPONSE_BODY_CONSUMER, "consumer").build();
 
     final Client client =
         new ApacheClient.Builder().withResponseBodyConsumer("consumer", new ResponseBodyConsumer() {

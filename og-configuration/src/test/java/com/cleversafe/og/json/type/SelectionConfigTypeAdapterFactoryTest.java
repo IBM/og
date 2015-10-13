@@ -30,10 +30,9 @@ public class SelectionConfigTypeAdapterFactoryTest {
   @Before
   public void before() {
     this.typeAdapterFactory = new SelectionConfigTypeAdapterFactory();
-    this.gson =
-        new GsonBuilder().registerTypeAdapterFactory(this.typeAdapterFactory)
-            .registerTypeAdapterFactory(new ChoiceConfigTypeAdapterFactory())
-            .registerTypeAdapterFactory(new CaseInsensitiveEnumTypeAdapterFactory()).create();
+    this.gson = new GsonBuilder().registerTypeAdapterFactory(this.typeAdapterFactory)
+        .registerTypeAdapterFactory(new ChoiceConfigTypeAdapterFactory())
+        .registerTypeAdapterFactory(new CaseInsensitiveEnumTypeAdapterFactory()).create();
   }
 
   @Test

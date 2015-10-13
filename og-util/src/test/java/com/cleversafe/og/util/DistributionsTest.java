@@ -16,7 +16,7 @@ public class DistributionsTest {
 
   @DataProvider
   public static Object[][] provideInvalidReal() {
-    return new Object[][] { {-1, 1}, {1, -1}, {1, 10}};
+    return new Object[][] {{-1, 1}, {1, -1}, {1, 10}};
   }
 
   @Test

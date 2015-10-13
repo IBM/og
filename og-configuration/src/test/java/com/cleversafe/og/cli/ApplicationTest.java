@@ -52,7 +52,7 @@ public class ApplicationTest {
     final String jsap = APPLICATION_JSAP;
     final String[] args = new String[] {};
 
-    return new Object[][] { {null, jsap, args, NullPointerException.class},
+    return new Object[][] {{null, jsap, args, NullPointerException.class},
         {app, null, args, NullPointerException.class},
         {app, jsap, null, NullPointerException.class},
         {app, "nonexistent.jsap", args, IllegalArgumentException.class}};
@@ -114,7 +114,7 @@ public class ApplicationTest {
     final String nonExistent = "nonexistent";
     final Gson gson = new GsonBuilder().create();
 
-    return new Object[][] { {null, null, Item.class, gson, NullPointerException.class},
+    return new Object[][] {{null, null, Item.class, gson, NullPointerException.class},
         {null, defaultJson, null, gson, NullPointerException.class},
         {null, defaultJson, Item.class, null, NullPointerException.class},
         {null, nonExistent, Item.class, gson, IllegalArgumentException.class},

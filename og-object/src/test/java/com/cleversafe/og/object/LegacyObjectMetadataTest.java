@@ -68,9 +68,8 @@ public class LegacyObjectMetadataTest {
     final LegacyObjectMetadata objectMetadata =
         LegacyObjectMetadata.fromBytes(bytes(objectName, objectSize, containerSuffix));
 
-    final String canonical =
-        String.format("%s,%s,%s", objectMetadata.getName(), objectMetadata.getSize(),
-            objectMetadata.getContainerSuffix());
+    final String canonical = String.format("%s,%s,%s", objectMetadata.getName(),
+        objectMetadata.getSize(), objectMetadata.getContainerSuffix());
     assertThat(canonical, is(canonicalize(objectString, objectSize, containerSuffix)));
   }
 
@@ -84,9 +83,8 @@ public class LegacyObjectMetadataTest {
     final LegacyObjectMetadata objectMetadata =
         LegacyObjectMetadata.fromMetadata(objectString, objectSize, containerSuffix);
 
-    final String canonical =
-        String.format("%s,%s,%s", objectMetadata.getName(), objectMetadata.getSize(),
-            objectMetadata.getContainerSuffix());
+    final String canonical = String.format("%s,%s,%s", objectMetadata.getName(),
+        objectMetadata.getSize(), objectMetadata.getContainerSuffix());
     assertThat(canonical, is(canonicalize(objectString, objectSize, containerSuffix)));
   }
 

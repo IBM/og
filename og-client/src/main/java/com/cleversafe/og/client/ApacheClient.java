@@ -123,7 +123,8 @@ public class ApacheClient implements Client {
     this.readThroughput = builder.readThroughput;
     this.responseBodyConsumers = ImmutableMap.copyOf(builder.responseBodyConsumers);
     // perform checks on instance fields rather than builder fields
-    checkArgument(this.connectTimeout >= 0, "connectTimeout must be >= 0 [%s]", this.connectTimeout);
+    checkArgument(this.connectTimeout >= 0, "connectTimeout must be >= 0 [%s]",
+        this.connectTimeout);
     checkArgument(this.soTimeout >= 0, "soTimeout must be >= 0 [%s]", this.soTimeout);
     checkArgument(this.soLinger >= -1, "soLinger must be >= -1 [%s]", this.soLinger);
     checkArgument(this.waitForContinue > 0, "waitForContinue must be > 0 [%s]",
@@ -131,7 +132,8 @@ public class ApacheClient implements Client {
     checkArgument(this.retryCount >= 0, "retryCount must be >= 0 [%s]", this.retryCount);
     checkArgument(this.writeThroughput >= 0, "writeThroughput must be >= 0 [%s]",
         this.writeThroughput);
-    checkArgument(this.readThroughput >= 0, "readThroughput must be >= 0 [%s]", this.readThroughput);
+    checkArgument(this.readThroughput >= 0, "readThroughput must be >= 0 [%s]",
+        this.readThroughput);
 
     final ThreadFactory fac = new ThreadFactoryBuilder().setNameFormat("client-%d").build();
     this.executorService = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool(fac));
@@ -156,44 +158,38 @@ public class ApacheClient implements Client {
       clientBuilder.setUserAgent(this.userAgent);
     }
 
-    final ConnectionReuseStrategy connectionReuseStrategy =
-        this.persistentConnections ? DefaultConnectionReuseStrategy.INSTANCE
-            : NoConnectionReuseStrategy.INSTANCE;
+    final ConnectionReuseStrategy connectionReuseStrategy = this.persistentConnections
+        ? DefaultConnectionReuseStrategy.INSTANCE : NoConnectionReuseStrategy.INSTANCE;
 
-    this.client =
-        clientBuilder
-            // TODO HTTPS: setHostnameVerifier, setSslcontext, and SetSSLSocketFactory methods
-            // TODO investigate ConnectionConfig, particularly bufferSize and fragmentSizeHint
-            // TODO defaultCredentialsProvider and defaultAuthSchemeRegistry for pre/passive auth?
-            .setRequestExecutor(new HttpRequestExecutor(this.waitForContinue))
-            .setMaxConnTotal(Integer.MAX_VALUE)
-            .setMaxConnPerRoute(Integer.MAX_VALUE)
-            .setDefaultSocketConfig(
-                SocketConfig.custom().setSoTimeout(this.soTimeout)
-                    .setSoReuseAddress(this.soReuseAddress).setSoLinger(this.soLinger)
-                    .setSoKeepAlive(this.soKeepAlive).setTcpNoDelay(this.tcpNoDelay).build())
-            .setConnectionReuseStrategy(connectionReuseStrategy)
-            .setKeepAliveStrategy(DefaultConnectionKeepAliveStrategy.INSTANCE)
-            .disableConnectionState()
-            .disableCookieManagement()
-            .disableContentCompression()
-            .disableAuthCaching()
-            .setRetryHandler(
-                new CustomHttpRequestRetryHandler(this.retryCount, this.requestSentRetry))
-            .setRedirectStrategy(new CustomRedirectStrategy())
-            .setDefaultRequestConfig(
-                RequestConfig.custom().setExpectContinueEnabled(this.expectContinue)
-                    .setRedirectsEnabled(true).setRelativeRedirectsAllowed(true)
-                    .setConnectTimeout(this.connectTimeout).setSocketTimeout(this.soTimeout)
-                    // TODO should this be infinite? length of time allowed to request a connection
-                    // from the pool
-                    .setConnectionRequestTimeout(0).build()).build();
+    this.client = clientBuilder
+        // TODO HTTPS: setHostnameVerifier, setSslcontext, and SetSSLSocketFactory methods
+        // TODO investigate ConnectionConfig, particularly bufferSize and fragmentSizeHint
+        // TODO defaultCredentialsProvider and defaultAuthSchemeRegistry for pre/passive auth?
+        .setRequestExecutor(new HttpRequestExecutor(this.waitForContinue))
+        .setMaxConnTotal(Integer.MAX_VALUE).setMaxConnPerRoute(Integer.MAX_VALUE)
+        .setDefaultSocketConfig(SocketConfig.custom().setSoTimeout(this.soTimeout)
+            .setSoReuseAddress(this.soReuseAddress).setSoLinger(this.soLinger)
+            .setSoKeepAlive(this.soKeepAlive).setTcpNoDelay(this.tcpNoDelay).build())
+        .setConnectionReuseStrategy(connectionReuseStrategy)
+        .setKeepAliveStrategy(DefaultConnectionKeepAliveStrategy.INSTANCE).disableConnectionState()
+        .disableCookieManagement().disableContentCompression().disableAuthCaching()
+        .setRetryHandler(new CustomHttpRequestRetryHandler(this.retryCount, this.requestSentRetry))
+        .setRedirectStrategy(new CustomRedirectStrategy())
+        .setDefaultRequestConfig(
+            RequestConfig.custom().setExpectContinueEnabled(this.expectContinue)
+                .setRedirectsEnabled(true).setRelativeRedirectsAllowed(true)
+                .setConnectTimeout(this.connectTimeout).setSocketTimeout(this.soTimeout)
+                // TODO should this be infinite? length of time allowed to request a connection
+                // from the pool
+                .setConnectionRequestTimeout(0).build())
+        .build();
   }
 
   private class CustomHttpRequestRetryHandler extends DefaultHttpRequestRetryHandler {
-    public CustomHttpRequestRetryHandler(final int retryCount, final boolean requestSentRetryEnabled) {
-      super(retryCount, requestSentRetryEnabled, Collections
-          .<Class<? extends IOException>>emptyList());
+    public CustomHttpRequestRetryHandler(final int retryCount,
+        final boolean requestSentRetryEnabled) {
+      super(retryCount, requestSentRetryEnabled,
+          Collections.<Class<? extends IOException>>emptyList());
     }
   }
 
@@ -201,9 +197,8 @@ public class ApacheClient implements Client {
   public ListenableFuture<Response> execute(final Request request) {
     checkNotNull(request);
     final HttpUriRequest apacheRequest = createRequest(request);
-    final ListenableFuture<Response> baseFuture =
-        this.executorService.submit(new BlockingHttpOperation(request, apacheRequest,
-            this.userAgent));
+    final ListenableFuture<Response> baseFuture = this.executorService
+        .submit(new BlockingHttpOperation(request, apacheRequest, this.userAgent));
 
     return new ForwardingListenableFuture.SimpleForwardingListenableFuture<Response>(baseFuture) {
       @Override
@@ -262,7 +257,8 @@ public class ApacheClient implements Client {
     return future;
   }
 
-  private Runnable getShutdownRunnable(final SettableFuture<Boolean> future, final boolean immediate) {
+  private Runnable getShutdownRunnable(final SettableFuture<Boolean> future,
+      final boolean immediate) {
     return new Runnable() {
       @Override
       public void run() {
@@ -297,8 +293,8 @@ public class ApacheClient implements Client {
         try {
           _logger.info("Awaiting client executor service termination for {} {}", timeout, unit);
           final boolean result = ApacheClient.this.executorService.awaitTermination(timeout, unit);
-          _logger.info("Client executor service termination result [{}]", result ? "success"
-              : "failure");
+          _logger.info("Client executor service termination result [{}]",
+              result ? "success" : "failure");
         } catch (final InterruptedException e) {
           _logger.error("Interrupted while waiting for client executor service termination", e);
         }
@@ -409,8 +405,8 @@ public class ApacheClient implements Client {
             ApacheClient.this.responseBodyConsumers.get(consumerId);
         this.timestamps.responseContentStart = System.nanoTime();
         if (consumer != null) {
-          for (final Map.Entry<String, String> e : consumer.consume(
-              response.getStatusLine().getStatusCode(), in).entrySet()) {
+          for (final Map.Entry<String, String> e : consumer
+              .consume(response.getStatusLine().getStatusCode(), in).entrySet()) {
             responseBuilder.withHeader(e.getKey(), e.getValue());
           }
         } else {
@@ -437,14 +433,15 @@ public class ApacheClient implements Client {
 
   @Override
   public String toString() {
-    return String.format("ApacheClient [%n" + "connectTimeout=%s,%n" + "soTimeout=%s,%n"
-        + "soReuseAddress=%s,%n" + "soLinger=%s,%n" + "soKeepAlive=%s,%n" + "tcpNoDelay=%s,%n"
-        + "persistentConnections=%s,%n" + "chunkedEncoding=%s,%n" + "expectContinue=%s,%n"
-        + "waitForContinue=%s,%n" + "retryCount=%s,%n" + "requestSentRetry=%s,%n"
-        + "authentication=%s,%n" + "userAgent=%s,%n" + "writeThroughput=%s,%n"
-        + "readThroughput=%s,%n" + "responseBodyConsumers=%s%n]", this.connectTimeout,
-        this.soTimeout, this.soReuseAddress, this.soLinger, this.soKeepAlive, this.tcpNoDelay,
-        this.persistentConnections, this.chunkedEncoding, this.expectContinue,
+    return String.format(
+        "ApacheClient [%n" + "connectTimeout=%s,%n" + "soTimeout=%s,%n" + "soReuseAddress=%s,%n"
+            + "soLinger=%s,%n" + "soKeepAlive=%s,%n" + "tcpNoDelay=%s,%n"
+            + "persistentConnections=%s,%n" + "chunkedEncoding=%s,%n" + "expectContinue=%s,%n"
+            + "waitForContinue=%s,%n" + "retryCount=%s,%n" + "requestSentRetry=%s,%n"
+            + "authentication=%s,%n" + "userAgent=%s,%n" + "writeThroughput=%s,%n"
+            + "readThroughput=%s,%n" + "responseBodyConsumers=%s%n]",
+        this.connectTimeout, this.soTimeout, this.soReuseAddress, this.soLinger, this.soKeepAlive,
+        this.tcpNoDelay, this.persistentConnections, this.chunkedEncoding, this.expectContinue,
         this.waitForContinue, this.retryCount, this.requestSentRetry, this.authentication,
         this.userAgent, this.writeThroughput, this.readThroughput, this.responseBodyConsumers);
   }

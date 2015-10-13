@@ -30,7 +30,7 @@ public class SizeUnitTest {
 
   @Parameters
   public static Collection<Object[]> data() {
-    return Arrays.asList(new Object[][] { {-1L}, {0L}, {1L}, {1000L}});
+    return Arrays.asList(new Object[][] {{-1L}, {0L}, {1L}, {1000L}});
   }
 
   @Test

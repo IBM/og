@@ -30,8 +30,8 @@ import com.google.common.collect.ImmutableSortedMap;
  * @since 1.0
  */
 public class Summary {
-  private static final DateTimeFormatter FORMATTER = DateTimeFormat.forPattern(
-      "dd/MMM/yyyy:HH:mm:ss Z").withLocale(Locale.US);
+  private static final DateTimeFormatter FORMATTER =
+      DateTimeFormat.forPattern("dd/MMM/yyyy:HH:mm:ss Z").withLocale(Locale.US);
   private final SummaryStats summaryStats;
 
   /**

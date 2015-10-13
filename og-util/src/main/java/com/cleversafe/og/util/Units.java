@@ -26,65 +26,63 @@ public class Units {
   private static final Map<String, SizeUnit> SIZE_UNITS;
 
   static {
-    TIME_UNITS =
-        ImmutableMap.<String, TimeUnit>builder().put("NS", TimeUnit.NANOSECONDS)
-            .put("NANO", TimeUnit.NANOSECONDS).put("NANOS", TimeUnit.NANOSECONDS)
-            .put("NANOSEC", TimeUnit.NANOSECONDS).put("NANOSECS", TimeUnit.NANOSECONDS)
-            .put("NANOSECOND", TimeUnit.NANOSECONDS).put("NANOSECONDS", TimeUnit.NANOSECONDS)
+    TIME_UNITS = ImmutableMap.<String, TimeUnit>builder().put("NS", TimeUnit.NANOSECONDS)
+        .put("NANO", TimeUnit.NANOSECONDS).put("NANOS", TimeUnit.NANOSECONDS)
+        .put("NANOSEC", TimeUnit.NANOSECONDS).put("NANOSECS", TimeUnit.NANOSECONDS)
+        .put("NANOSECOND", TimeUnit.NANOSECONDS).put("NANOSECONDS", TimeUnit.NANOSECONDS)
 
-            .put("MICRO", TimeUnit.MICROSECONDS).put("MICROS", TimeUnit.MICROSECONDS)
-            .put("MICROSEC", TimeUnit.MICROSECONDS).put("MICROSECS", TimeUnit.MICROSECONDS)
-            .put("MICROSECOND", TimeUnit.MICROSECONDS).put("MICROSECONDS", TimeUnit.MICROSECONDS)
+        .put("MICRO", TimeUnit.MICROSECONDS).put("MICROS", TimeUnit.MICROSECONDS)
+        .put("MICROSEC", TimeUnit.MICROSECONDS).put("MICROSECS", TimeUnit.MICROSECONDS)
+        .put("MICROSECOND", TimeUnit.MICROSECONDS).put("MICROSECONDS", TimeUnit.MICROSECONDS)
 
-            .put("MS", TimeUnit.MILLISECONDS).put("MILLI", TimeUnit.MILLISECONDS)
-            .put("MILLIS", TimeUnit.MILLISECONDS).put("MILLISEC", TimeUnit.MILLISECONDS)
-            .put("MILLISECS", TimeUnit.MILLISECONDS).put("MILLISECOND", TimeUnit.MILLISECONDS)
-            .put("MILLISECONDS", TimeUnit.MILLISECONDS)
+        .put("MS", TimeUnit.MILLISECONDS).put("MILLI", TimeUnit.MILLISECONDS)
+        .put("MILLIS", TimeUnit.MILLISECONDS).put("MILLISEC", TimeUnit.MILLISECONDS)
+        .put("MILLISECS", TimeUnit.MILLISECONDS).put("MILLISECOND", TimeUnit.MILLISECONDS)
+        .put("MILLISECONDS", TimeUnit.MILLISECONDS)
 
-            .put("S", TimeUnit.SECONDS).put("SEC", TimeUnit.SECONDS).put("SECS", TimeUnit.SECONDS)
-            .put("SECOND", TimeUnit.SECONDS).put("SECONDS", TimeUnit.SECONDS)
+        .put("S", TimeUnit.SECONDS).put("SEC", TimeUnit.SECONDS).put("SECS", TimeUnit.SECONDS)
+        .put("SECOND", TimeUnit.SECONDS).put("SECONDS", TimeUnit.SECONDS)
 
-            .put("M", TimeUnit.MINUTES).put("MIN", TimeUnit.MINUTES).put("MINS", TimeUnit.MINUTES)
-            .put("MINUTE", TimeUnit.MINUTES).put("MINUTES", TimeUnit.MINUTES)
+        .put("M", TimeUnit.MINUTES).put("MIN", TimeUnit.MINUTES).put("MINS", TimeUnit.MINUTES)
+        .put("MINUTE", TimeUnit.MINUTES).put("MINUTES", TimeUnit.MINUTES)
 
-            .put("H", TimeUnit.HOURS).put("HR", TimeUnit.HOURS).put("HRS", TimeUnit.HOURS)
-            .put("HOUR", TimeUnit.HOURS).put("HOURS", TimeUnit.HOURS)
+        .put("H", TimeUnit.HOURS).put("HR", TimeUnit.HOURS).put("HRS", TimeUnit.HOURS)
+        .put("HOUR", TimeUnit.HOURS).put("HOURS", TimeUnit.HOURS)
 
-            .put("D", TimeUnit.DAYS).put("DAY", TimeUnit.DAYS).put("DAYS", TimeUnit.DAYS).build();
+        .put("D", TimeUnit.DAYS).put("DAY", TimeUnit.DAYS).put("DAYS", TimeUnit.DAYS).build();
 
-    SIZE_UNITS =
-        ImmutableMap.<String, SizeUnit>builder().put("B", SizeUnit.BYTES)
-            .put("BYTE", SizeUnit.BYTES).put("BYTES", SizeUnit.BYTES)
+    SIZE_UNITS = ImmutableMap.<String, SizeUnit>builder().put("B", SizeUnit.BYTES)
+        .put("BYTE", SizeUnit.BYTES).put("BYTES", SizeUnit.BYTES)
 
-            .put("KB", SizeUnit.KILOBYTES).put("KILOBYTE", SizeUnit.KILOBYTES)
-            .put("KILOBYTES", SizeUnit.KILOBYTES)
+        .put("KB", SizeUnit.KILOBYTES).put("KILOBYTE", SizeUnit.KILOBYTES)
+        .put("KILOBYTES", SizeUnit.KILOBYTES)
 
-            .put("KIB", SizeUnit.KIBIBYTES).put("KIBIBYTE", SizeUnit.KIBIBYTES)
-            .put("KIBIBYTES", SizeUnit.KIBIBYTES)
+        .put("KIB", SizeUnit.KIBIBYTES).put("KIBIBYTE", SizeUnit.KIBIBYTES)
+        .put("KIBIBYTES", SizeUnit.KIBIBYTES)
 
-            .put("MB", SizeUnit.MEGABYTES).put("MEGABYTE", SizeUnit.MEGABYTES)
-            .put("MEGABYTES", SizeUnit.MEGABYTES)
+        .put("MB", SizeUnit.MEGABYTES).put("MEGABYTE", SizeUnit.MEGABYTES)
+        .put("MEGABYTES", SizeUnit.MEGABYTES)
 
-            .put("MIB", SizeUnit.MEBIBYTES).put("MEBIBYTE", SizeUnit.MEBIBYTES)
-            .put("MEBIBYTES", SizeUnit.MEBIBYTES)
+        .put("MIB", SizeUnit.MEBIBYTES).put("MEBIBYTE", SizeUnit.MEBIBYTES)
+        .put("MEBIBYTES", SizeUnit.MEBIBYTES)
 
-            .put("GB", SizeUnit.GIGABYTES).put("GIGABYTE", SizeUnit.GIGABYTES)
-            .put("GIGABYTES", SizeUnit.GIGABYTES)
+        .put("GB", SizeUnit.GIGABYTES).put("GIGABYTE", SizeUnit.GIGABYTES)
+        .put("GIGABYTES", SizeUnit.GIGABYTES)
 
-            .put("GIB", SizeUnit.GIBIBYTES).put("GIBIBYTE", SizeUnit.GIBIBYTES)
-            .put("GIBIBYTES", SizeUnit.GIBIBYTES)
+        .put("GIB", SizeUnit.GIBIBYTES).put("GIBIBYTE", SizeUnit.GIBIBYTES)
+        .put("GIBIBYTES", SizeUnit.GIBIBYTES)
 
-            .put("TB", SizeUnit.TERABYTES).put("TERABYTE", SizeUnit.TERABYTES)
-            .put("TERABYTES", SizeUnit.TERABYTES)
+        .put("TB", SizeUnit.TERABYTES).put("TERABYTE", SizeUnit.TERABYTES)
+        .put("TERABYTES", SizeUnit.TERABYTES)
 
-            .put("TIB", SizeUnit.TEBIBYTES).put("TEBIBYTE", SizeUnit.TEBIBYTES)
-            .put("TEBIBYTES", SizeUnit.TEBIBYTES)
+        .put("TIB", SizeUnit.TEBIBYTES).put("TEBIBYTE", SizeUnit.TEBIBYTES)
+        .put("TEBIBYTES", SizeUnit.TEBIBYTES)
 
-            .put("PB", SizeUnit.PETABYTES).put("PETABYTE", SizeUnit.PETABYTES)
-            .put("PETABYTES", SizeUnit.PETABYTES)
+        .put("PB", SizeUnit.PETABYTES).put("PETABYTE", SizeUnit.PETABYTES)
+        .put("PETABYTES", SizeUnit.PETABYTES)
 
-            .put("PIB", SizeUnit.PEBIBYTES).put("PEBIBYTE", SizeUnit.PEBIBYTES)
-            .put("PEBIBYTES", SizeUnit.PEBIBYTES).build();
+        .put("PIB", SizeUnit.PEBIBYTES).put("PEBIBYTE", SizeUnit.PEBIBYTES)
+        .put("PEBIBYTES", SizeUnit.PEBIBYTES).build();
   }
 
   private Units() {}

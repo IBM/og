@@ -34,7 +34,7 @@ public class HttpUtilTest {
 
   @DataProvider
   public static Object[][] provideToOperation() {
-    return new Object[][] { {Method.PUT, Operation.WRITE}, {Method.POST, Operation.WRITE},
+    return new Object[][] {{Method.PUT, Operation.WRITE}, {Method.POST, Operation.WRITE},
         {Method.GET, Operation.READ}, {Method.HEAD, Operation.READ},
         {Method.DELETE, Operation.DELETE}};
   }

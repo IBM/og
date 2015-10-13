@@ -43,7 +43,7 @@ public class SummaryTest {
   @DataProvider
   public static Object[][] provideInvalidSummary() {
     final Statistics stats = new Statistics();
-    return new Object[][] { {null, 0, 0, NullPointerException.class},
+    return new Object[][] {{null, 0, 0, NullPointerException.class},
         {stats, -1, 0, IllegalArgumentException.class},
         {stats, 0, -1, IllegalArgumentException.class},
         {stats, 1, 0, IllegalArgumentException.class}};

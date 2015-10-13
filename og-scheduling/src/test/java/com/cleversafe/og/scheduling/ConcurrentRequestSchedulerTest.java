@@ -36,9 +36,10 @@ public class ConcurrentRequestSchedulerTest {
   @DataProvider
   public static Object[][] provideInvalidConcurrentRequestScheduler() {
     final TimeUnit unit = TimeUnit.SECONDS;
-    return new Object[][] { {-1, 0.0, unit, IllegalArgumentException.class},
+    return new Object[][] {{-1, 0.0, unit, IllegalArgumentException.class},
         {0, 0.0, unit, IllegalArgumentException.class},
-        {1, -1.0, unit, IllegalArgumentException.class}, {1, 0.0, null, NullPointerException.class}};
+        {1, -1.0, unit, IllegalArgumentException.class},
+        {1, 0.0, null, NullPointerException.class}};
   }
 
   @Test

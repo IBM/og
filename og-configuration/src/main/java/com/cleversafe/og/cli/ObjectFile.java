@@ -169,7 +169,7 @@ public class ObjectFile {
 
   public static void filter(final InputStream in, final OutputStream out, final long minFilesize,
       final long maxFilesize, final int minContainerSuffix, final int maxContainerSuffix)
-      throws IOException {
+          throws IOException {
     checkNotNull(in);
     checkNotNull(out);
     checkArgument(minFilesize >= 0, "minFilesize must be >= 0 [%s]", minFilesize);
@@ -258,8 +258,8 @@ public class ObjectFile {
     }
 
     private OutputStream create() throws FileNotFoundException {
-      return new BufferedOutputStream(new FileOutputStream(String.format("%s%d%s", this.prefix,
-          this.index, this.suffix)));
+      return new BufferedOutputStream(
+          new FileOutputStream(String.format("%s%d%s", this.prefix, this.index, this.suffix)));
     }
 
     @Override

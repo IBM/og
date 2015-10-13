@@ -48,8 +48,8 @@ import com.google.common.net.HttpHeaders;
  * x-amz-date header should be ignored when computing canonicalized amz headers. This implementation
  * chooses to follow this derived behavior
  * 
- * @see <a href="http://docs.aws.amazon.com/AmazonS3/latest/dev/RESTAuthentication.html"
- *      target="_blank">Amazon REST Authentication</a>
+ * @see <a href="http://docs.aws.amazon.com/AmazonS3/latest/dev/RESTAuthentication.html" target=
+ *      "_blank">Amazon REST Authentication</a>
  * @since 1.0
  */
 public class AWSAuthV2 implements HttpAuth {
@@ -67,8 +67,8 @@ public class AWSAuthV2 implements HttpAuth {
   }
 
   private String signature(final Request request, final String awsSecretAccessKey) {
-    return BaseEncoding.base64().encode(
-        hmacSha1(awsSecretAccessKey, stringToSign(request).getBytes(Charsets.UTF_8)));
+    return BaseEncoding.base64()
+        .encode(hmacSha1(awsSecretAccessKey, stringToSign(request).getBytes(Charsets.UTF_8)));
   }
 
   public byte[] hmacSha1(final String awsSecretAccessKey, final byte[] data) {

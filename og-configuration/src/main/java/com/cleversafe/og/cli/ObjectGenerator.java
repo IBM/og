@@ -113,8 +113,8 @@ public class ObjectGenerator {
       client = injector.getInstance(Client.class);
       objectManager = injector.getInstance(ObjectManager.class);
       statistics = injector.getInstance(Statistics.class);
-      OGLog4jShutdownCallbackRegistry.setOGShutdownHook((new ShutdownHook(Thread.currentThread(),
-          shutdownLatch)));
+      OGLog4jShutdownCallbackRegistry
+          .setOGShutdownHook((new ShutdownHook(Thread.currentThread(), shutdownLatch)));
 
       _logger.info("{}", test);
       _consoleLogger.info("Configured.");
@@ -190,8 +190,7 @@ public class ObjectGenerator {
   }
 
   public static Gson createGson() {
-    return new GsonBuilder()
-        .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+    return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
         .registerTypeAdapterFactory(new CaseInsensitiveEnumTypeAdapterFactory())
         // SizeUnit and TimeUnit TypeAdapters must be registered after
         // CaseInsensitiveEnumTypeAdapterFactory in order to override the registration

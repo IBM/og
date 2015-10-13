@@ -137,7 +137,7 @@ public class StatisticsTest {
   @DataProvider
   public static Object[][] provideInvalidStatusCode() {
     final Operation operation = Operation.WRITE;
-    return new Object[][] { {null, 201, NullPointerException.class},
+    return new Object[][] {{null, 201, NullPointerException.class},
         {operation, -1, IllegalArgumentException.class},
         {operation, 0, IllegalArgumentException.class},
         {operation, 99, IllegalArgumentException.class},

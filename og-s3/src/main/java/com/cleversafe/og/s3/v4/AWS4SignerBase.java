@@ -133,9 +133,8 @@ public class AWS4SignerBase {
     final String canonicalizedQueryParameters = getCanonicalizedQueryString(queryParameters);
 
     // canonicalize the various components of the request
-    final String canonicalRequest =
-        getCanonicalRequest(this.endpointUrl, this.httpMethod, canonicalizedQueryParameters,
-            canonicalizedHeaderNames, canonicalizedHeaders, bodyHash);
+    final String canonicalRequest = getCanonicalRequest(this.endpointUrl, this.httpMethod,
+        canonicalizedQueryParameters, canonicalizedHeaderNames, canonicalizedHeaders, bodyHash);
     _logger.trace("--------- Canonical request --------");
     _logger.trace(canonicalRequest);
     _logger.trace("------------------------------------");
@@ -314,9 +313,8 @@ public class AWS4SignerBase {
 
   protected static String getStringToSign(final String scheme, final String algorithm,
       final String dateTime, final String scope, final String canonicalRequest) {
-    final String stringToSign =
-        scheme + "-" + algorithm + "\n" + dateTime + "\n" + scope + "\n"
-            + BinaryUtils.toHex(hash(canonicalRequest));
+    final String stringToSign = scheme + "-" + algorithm + "\n" + dateTime + "\n" + scope + "\n"
+        + BinaryUtils.toHex(hash(canonicalRequest));
     return stringToSign;
   }
 

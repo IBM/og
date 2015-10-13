@@ -65,16 +65,15 @@ public class AWSAuthV4 extends AWSAuthV4Base implements HttpAuth {
     final String secretKey = checkNotNull(request.headers().get(Headers.X_OG_PASSWORD));
 
     try {
-      final AWS4SignerBase signer =
-          new AWS4SignerBase(request.getUri().toURL(), request.getMethod().toString(),
-              this.serviceName, this.regionName);
+      final AWS4SignerBase signer = new AWS4SignerBase(request.getUri().toURL(),
+          request.getMethod().toString(), this.serviceName, this.regionName);
 
       return signer.getAuthHeaders(request.headers(), Collections.<String, String>emptyMap(),
           getBodyHash(request.getBody()), keyId, secretKey, new Date(request.getMessageTime()));
 
     } catch (final MalformedURLException e) {
-      throw new InvalidParameterException("Can't convert to request.URI(" + request.getUri()
-          + ") to  URL:" + e.getMessage());
+      throw new InvalidParameterException(
+          "Can't convert to request.URI(" + request.getUri() + ") to  URL:" + e.getMessage());
     }
   }
 
@@ -110,8 +109,8 @@ public class AWSAuthV4 extends AWSAuthV4Base implements HttpAuth {
         }
         return BinaryUtils.toHex(md.digest());
       } catch (final Exception e) {
-        throw new RuntimeException("Unable to compute hash while signing request: "
-            + e.getMessage(), e);
+        throw new RuntimeException(
+            "Unable to compute hash while signing request: " + e.getMessage(), e);
       }
     }
   }

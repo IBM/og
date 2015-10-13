@@ -133,8 +133,8 @@ public class RandomObjectPopulatorTest {
   }
 
   @Test
-  public void simultaneousReadDeleteTest() throws ObjectManagerException, InterruptedException,
-      ExecutionException {
+  public void simultaneousReadDeleteTest()
+      throws ObjectManagerException, InterruptedException, ExecutionException {
     final ObjectMetadata sid = generateId();
     final RandomObjectPopulator rop = new RandomObjectPopulator(this.vaultId);
     rop.add(sid);

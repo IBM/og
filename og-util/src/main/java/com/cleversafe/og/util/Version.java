@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 public class Version {
   private static final Logger _logger = LoggerFactory.getLogger(Version.class);
   private static final String DISPLAY_VERSION;
+
   static {
     String displayVersion;
     try {

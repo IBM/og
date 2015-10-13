@@ -65,7 +65,7 @@ public class InfiniteInputStreamTest {
   @DataProvider
   public static Object[][] provideInvalidRead() {
     final byte[] buf = new byte[1];
-    return new Object[][] { {null, 0, 1, NullPointerException.class},
+    return new Object[][] {{null, 0, 1, NullPointerException.class},
         {buf, -1, 1, IndexOutOfBoundsException.class},
         {buf, buf.length, 1, IndexOutOfBoundsException.class},
         {buf, 0, -1, IndexOutOfBoundsException.class},
@@ -83,7 +83,7 @@ public class InfiniteInputStreamTest {
 
   @DataProvider
   public static Object[][] provideRead() {
-    return new Object[][] { {new byte[0]}, {new byte[BUF_LENGTH - 1]}, {new byte[BUF_LENGTH]},
+    return new Object[][] {{new byte[0]}, {new byte[BUF_LENGTH - 1]}, {new byte[BUF_LENGTH]},
         {new byte[BUF_LENGTH + 1]}};
   }
 

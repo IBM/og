@@ -108,9 +108,8 @@ public class ConcurrentRequestScheduler implements Scheduler {
 
   @Override
   public String toString() {
-    return String
-        .format(
-            "ConcurrentRequestScheduler [concurrentRequests=%s, rampup=%s, rampupUnit=%s, rampDuration=%s]",
-            this.concurrentRequests, this.rampup, this.rampupUnit, this.rampDuration);
+    return String.format(
+        "ConcurrentRequestScheduler [concurrentRequests=%s, rampup=%s, rampupUnit=%s, rampDuration=%s]",
+        this.concurrentRequests, this.rampup, this.rampupUnit, this.rampDuration);
   }
 }

@@ -23,8 +23,8 @@ import com.google.common.eventbus.SubscriberExceptionHandler;
  * @since 1.0
  */
 public class LoadTestSubscriberExceptionHandler implements SubscriberExceptionHandler {
-  private static final Logger _logger = LoggerFactory
-      .getLogger(LoadTestSubscriberExceptionHandler.class);
+  private static final Logger _logger =
+      LoggerFactory.getLogger(LoadTestSubscriberExceptionHandler.class);
   private LoadTest test;
 
   /**

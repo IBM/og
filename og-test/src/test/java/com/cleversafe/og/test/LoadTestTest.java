@@ -65,12 +65,10 @@ public class LoadTestTest {
 
   @Before
   public void before() throws URISyntaxException {
-    this.request =
-        new HttpRequest.Builder(Method.PUT, new URI("http://127.0.0.1")).withHeader(
-            Headers.X_OG_REQUEST_ID, "1").build();
-    this.response =
-        new HttpResponse.Builder().withStatusCode(200).withHeader(Headers.X_OG_REQUEST_ID, "1")
-            .build();
+    this.request = new HttpRequest.Builder(Method.PUT, new URI("http://127.0.0.1"))
+        .withHeader(Headers.X_OG_REQUEST_ID, "1").build();
+    this.response = new HttpResponse.Builder().withStatusCode(200)
+        .withHeader(Headers.X_OG_REQUEST_ID, "1").build();
 
     this.requestManager = mock(RequestManager.class);
     when(this.requestManager.get()).thenReturn(this.request);
@@ -101,7 +99,7 @@ public class LoadTestTest {
     final Client client = mock(Client.class);
     final Scheduler scheduler = mock(Scheduler.class);
     final EventBus eventBus = mock(EventBus.class);
-    return new Object[][] { {null, client, scheduler, eventBus},
+    return new Object[][] {{null, client, scheduler, eventBus},
         {requestSupplier, null, scheduler, eventBus}, {requestSupplier, client, null, eventBus},
         {requestSupplier, client, scheduler, null}};
   }

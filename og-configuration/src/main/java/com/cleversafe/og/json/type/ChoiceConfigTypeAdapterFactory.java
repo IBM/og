@@ -73,8 +73,8 @@ public class ChoiceConfigTypeAdapterFactory implements TypeAdapterFactory {
           }
         }
 
-        return (T) new ChoiceConfig(gson.getAdapter(TypeToken.get(genericType)).fromJsonTree(
-            element));
+        return (T) new ChoiceConfig(
+            gson.getAdapter(TypeToken.get(genericType)).fromJsonTree(element));
       }
     }.nullSafe();
   }

@@ -34,8 +34,8 @@ public class BasicAuth implements HttpAuth {
     final String password = checkNotNull(request.headers().get(Headers.X_OG_PASSWORD));
     final String credentials = username + ":" + password;
 
-    return Collections.singletonMap(HttpHeaders.AUTHORIZATION, "Basic "
-        + BaseEncoding.base64().encode(credentials.getBytes(Charsets.UTF_8)));
+    return Collections.singletonMap(HttpHeaders.AUTHORIZATION,
+        "Basic " + BaseEncoding.base64().encode(credentials.getBytes(Charsets.UTF_8)));
   }
 
   @Override

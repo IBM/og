@@ -61,7 +61,7 @@ public class ConcurrentRequestsConditionTest {
     final LoadTest test = mock(LoadTest.class);
     final Statistics stats = new Statistics();
     final Operation operation = Operation.WRITE;
-    return new Object[][] { {null, 1, test, stats, NullPointerException.class},
+    return new Object[][] {{null, 1, test, stats, NullPointerException.class},
         {operation, -1, test, stats, IllegalArgumentException.class},
         {operation, 0, test, stats, IllegalArgumentException.class},
         {operation, 1, null, stats, NullPointerException.class},

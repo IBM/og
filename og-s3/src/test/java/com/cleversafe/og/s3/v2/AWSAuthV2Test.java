@@ -52,18 +52,25 @@ public class AWSAuthV2Test {
   @DataProvider
   public static Object[][] provideCanonicalizedAmzHeaders() {
     return new Object[][] {
-        {ImmutableMap.of(), ""},
-        {ImmutableMap.of("Foo", "Bar", "Baz", "test"), ""},
-        {ImmutableMap.of("x-amz-foo", "bar"), "x-amz-foo:bar\n"},
-        {ImmutableMap.of("x-AmZ-Foo", "bar"), "x-amz-foo:bar\n"},
+        {ImmutableMap.of(),
+            ""},
+        {ImmutableMap.of("Foo", "Bar", "Baz", "test"),
+            ""},
+        {ImmutableMap
+            .of("x-amz-foo",
+                "bar"),
+            "x-amz-foo:bar\n"},
+        {ImmutableMap
+            .of("x-AmZ-Foo",
+                "bar"),
+            "x-amz-foo:bar\n"},
         {ImmutableMap.of("x-amz-foo", "Bar"), "x-amz-foo:Bar\n"},
         {ImmutableMap.of(" x-amz-foo ", "bar"), "x-amz-foo:bar\n"},
         {ImmutableMap.of("x-amz-foo", " bar "), "x-amz-foo:bar\n"},
         {ImmutableMap.of("x-amz-date", "datexyz"), ""},
-        {
-            ImmutableMap.builder().put("x-amz-date", "datexyz").put("x-AMz-foo", "foo")
-                .put("x-amz-Baz", " baz  ").put(" x-amz-bar  ", "bar").put("Date", "datexyz")
-                .put("Content-Length", "1024").build(),
+        {ImmutableMap.builder().put("x-amz-date", "datexyz").put("x-AMz-foo", "foo")
+            .put("x-amz-Baz", " baz  ").put(" x-amz-bar  ", "bar").put("Date", "datexyz")
+            .put("Content-Length", "1024").build(),
             "x-amz-bar:bar\nx-amz-baz:baz\nx-amz-foo:foo\n"}};
   }
 
@@ -77,8 +84,7 @@ public class AWSAuthV2Test {
 
   @DataProvider
   public static Object[][] provideCanonicalizedResource() {
-    return new Object[][] {
-        {"/container/object", "/container/object"},
+    return new Object[][] {{"/container/object", "/container/object"},
         {"/container/object?foo=bar&baz=test", "/container/object"},
         {"/container/object?torrent", "/container/object?torrent"},
         {"/container/object?uploadId=1", "/container/object?uploadId=1"},
@@ -101,7 +107,7 @@ public class AWSAuthV2Test {
     final Map<String, String> multiple = Maps.newHashMap(single);
     multiple.put("uploadId", "1");
 
-    return new Object[][] { {null, 0, ImmutableMap.of()}, {"", 0, ImmutableMap.of()},
+    return new Object[][] {{null, 0, ImmutableMap.of()}, {"", 0, ImmutableMap.of()},
         {"torrent", 1, single}, {"uploadId=", 1, ImmutableMap.of("uploadId", "")},
         {"uploadId=1", 1, ImmutableMap.of("uploadId", "1")}, {"uploadId=1&torrent", 2, multiple}};
   }
@@ -124,7 +130,7 @@ public class AWSAuthV2Test {
     final Map<String, String> multiple = Maps.newTreeMap(single);
     multiple.put("uploadId", "1");
 
-    return new Object[][] { {null, ""}, {ImmutableMap.of(), ""}, {single, "torrent"},
+    return new Object[][] {{null, ""}, {ImmutableMap.of(), ""}, {single, "torrent"},
         {ImmutableMap.of("uploadId", "1"), "uploadId=1"}, {multiple, "torrent&uploadId=1"}};
   }
 
@@ -165,9 +171,8 @@ public class AWSAuthV2Test {
   }
 
   public static Object[] list() throws URISyntaxException {
-    final Request request =
-        new HttpRequest.Builder(Method.GET, new URI(
-            "/johnsmith/?prefix=photos&max-keys=50&marker=puppy"))
+    final Request request = new HttpRequest.Builder(Method.GET,
+        new URI("/johnsmith/?prefix=photos&max-keys=50&marker=puppy"))
             .withHeader("User-Agent", "Mozilla/5.0")
             .withHeader("Date", "Tue, 27 Mar 2007 19:42:41 +0000")
             .withHeader(Headers.X_OG_USERNAME, AWS_ACCESS_KEY_ID)

@@ -87,7 +87,7 @@ public class ObjectFileTest {
 
   @DataProvider
   public static Object[][] provideInvalidStreams() {
-    return new Object[][] { {null, new ByteArrayOutputStream()},
+    return new Object[][] {{null, new ByteArrayOutputStream()},
         {new ByteArrayInputStream(new byte[] {}), null}};
   }
 
@@ -105,10 +105,8 @@ public class ObjectFileTest {
     final ByteArrayOutputStream out = new ByteArrayOutputStream(LegacyObjectMetadata.OBJECT_SIZE);
     ObjectFile.write(in, out);
     final ObjectMetadata object = LegacyObjectMetadata.fromBytes(out.toByteArray());
-    assertThat(
-        objectMetadata,
-        is(String.format("%s,%s,%s", object.getName(), object.getSize(),
-            object.getContainerSuffix())));
+    assertThat(objectMetadata, is(String.format("%s,%s,%s", object.getName(), object.getSize(),
+        object.getContainerSuffix())));
   }
 
   @Test
@@ -125,17 +123,15 @@ public class ObjectFileTest {
     final InputStream in = new ByteArrayInputStream(object.toBytes());
     final ByteArrayOutputStream out = new ByteArrayOutputStream();
     ObjectFile.read(in, out);
-    assertThat(
-        new String(out.toByteArray()),
-        is(String.format("%s,%s,%s%n", object.getName(), object.getSize(),
-            object.getContainerSuffix())));
+    assertThat(new String(out.toByteArray()), is(String.format("%s,%s,%s%n", object.getName(),
+        object.getSize(), object.getContainerSuffix())));
   }
 
   @DataProvider
   public static Object[][] provideInvalidFilter() {
     final InputStream in = new ByteArrayInputStream(new byte[] {});
     final OutputStream out = new ByteArrayOutputStream();
-    return new Object[][] { {null, out, 0, 0, 0, 0, NullPointerException.class},
+    return new Object[][] {{null, out, 0, 0, 0, 0, NullPointerException.class},
         {in, null, 0, 0, 0, 0, NullPointerException.class},
         {in, out, -1, 0, 0, 0, IllegalArgumentException.class},
         {in, out, 0, -1, 0, 0, IllegalArgumentException.class},
@@ -178,7 +174,7 @@ public class ObjectFileTest {
   public static Object[][] provideInvalidObjectFileOutputStream() {
     final String prefix = "id";
     final String suffix = ".object";
-    return new Object[][] { {null, 1, suffix, NullPointerException.class},
+    return new Object[][] {{null, 1, suffix, NullPointerException.class},
         {prefix, -1, suffix, IllegalArgumentException.class},
         {prefix, 0, suffix, IllegalArgumentException.class},
         {prefix, 1, null, NullPointerException.class}};
@@ -195,20 +191,19 @@ public class ObjectFileTest {
 
   @DataProvider
   public static Object[][] provideObjectFileOutputStream() {
-    return new Object[][] { {10, 5, 1}, {10, 10, 1}, {10, 15, 2}, {10, 25, 3}};
+    return new Object[][] {{10, 5, 1}, {10, 10, 1}, {10, 15, 2}, {10, 25, 3}};
   }
 
   @Test
   @UseDataProvider("provideObjectFileOutputStream")
-  public void objectFileOutputStream(final int maxObjects, final int numObjects, final int fileCount)
-      throws IOException {
+  public void objectFileOutputStream(final int maxObjects, final int numObjects,
+      final int fileCount) throws IOException {
     final String prefix = "id";
     final String suffix = ".object";
     final String prefixFilename = new File(this.folder.getRoot().toString(), prefix).toString();
     final OutputStream out = new ObjectFileOutputStream(prefixFilename, maxObjects, suffix);
-    final ObjectMetadata o =
-        LegacyObjectMetadata.fromMetadata(UUID.randomUUID().toString().replace("-", "") + "0000",
-            0, 0);
+    final ObjectMetadata o = LegacyObjectMetadata
+        .fromMetadata(UUID.randomUUID().toString().replace("-", "") + "0000", 0, 0);
 
     for (int i = 0; i < numObjects; i++) {
       out.write(o.toBytes());

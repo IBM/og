@@ -153,7 +153,8 @@ public class Distributions {
     private final IntegerDistribution d;
     private final String stringRepresentation;
 
-    public IntegerDistributionAdapter(final IntegerDistribution d, final String stringRepresentation) {
+    public IntegerDistributionAdapter(final IntegerDistribution d,
+        final String stringRepresentation) {
       this.d = checkNotNull(d);
       this.stringRepresentation = checkNotNull(stringRepresentation);
     }

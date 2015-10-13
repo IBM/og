@@ -40,7 +40,7 @@ public class StatusCodeConditionTest {
     final Operation operation = Operation.WRITE;
     final LoadTest test = mock(LoadTest.class);
     final Statistics stats = new Statistics();
-    return new Object[][] { {null, 200, 1, test, stats, NullPointerException.class},
+    return new Object[][] {{null, 200, 1, test, stats, NullPointerException.class},
         {operation, -1, 1, test, stats, IllegalArgumentException.class},
         {operation, 0, 1, test, stats, IllegalArgumentException.class},
         {operation, 99, 1, test, stats, IllegalArgumentException.class},

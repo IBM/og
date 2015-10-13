@@ -89,8 +89,8 @@ public class SelectionConfigTypeAdapterFactory implements TypeAdapterFactory {
       private <S> TypeToken<ChoiceConfig<S>> choiceToken(final Class<S> clazz) {
         @SuppressWarnings("serial")
         final com.google.common.reflect.TypeToken<ChoiceConfig<S>> choiceToken =
-            new com.google.common.reflect.TypeToken<ChoiceConfig<S>>() {}.where(
-                new TypeParameter<S>() {}, com.google.common.reflect.TypeToken.of(clazz));
+            new com.google.common.reflect.TypeToken<ChoiceConfig<S>>() {}
+                .where(new TypeParameter<S>() {}, com.google.common.reflect.TypeToken.of(clazz));
 
         return (TypeToken<ChoiceConfig<S>>) TypeToken.get(choiceToken.getType());
       }
@@ -98,8 +98,8 @@ public class SelectionConfigTypeAdapterFactory implements TypeAdapterFactory {
       private <S> TypeToken<List<ChoiceConfig<S>>> choiceListToken(final Class<S> clazz) {
         @SuppressWarnings("serial")
         final com.google.common.reflect.TypeToken<List<ChoiceConfig<S>>> choiceToken =
-            new com.google.common.reflect.TypeToken<List<ChoiceConfig<S>>>() {}.where(
-                new TypeParameter<S>() {}, com.google.common.reflect.TypeToken.of(clazz));
+            new com.google.common.reflect.TypeToken<List<ChoiceConfig<S>>>() {}
+                .where(new TypeParameter<S>() {}, com.google.common.reflect.TypeToken.of(clazz));
 
         return (TypeToken<List<ChoiceConfig<S>>>) TypeToken.get(choiceToken.getType());
       }

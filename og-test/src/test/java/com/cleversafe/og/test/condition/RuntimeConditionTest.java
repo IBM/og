@@ -34,7 +34,7 @@ public class RuntimeConditionTest {
   public static Object[][] provideInvalidRuntimeCondition() {
     final LoadTest test = mock(LoadTest.class);
     final TimeUnit unit = TimeUnit.SECONDS;
-    return new Object[][] { {null, 1.0, unit, NullPointerException.class},
+    return new Object[][] {{null, 1.0, unit, NullPointerException.class},
         {test, -1.0, unit, IllegalArgumentException.class},
         {test, 0.0, unit, IllegalArgumentException.class},
         {test, 1.0, null, NullPointerException.class}};

@@ -34,9 +34,8 @@ public class KeystoneAuthTest {
   public KeystoneAuthTest() throws URISyntaxException {
     this.keystoneAuth = new KeystoneAuth();
     final URI uri = new URI("http://127.0.0.1/openstack/container/object");
-    this.request =
-        new HttpRequest.Builder(Method.PUT, uri).withHeader(Headers.X_OG_KEYSTONE_TOKEN, "token")
-            .withBody(Bodies.random(1024)).build();
+    this.request = new HttpRequest.Builder(Method.PUT, uri)
+        .withHeader(Headers.X_OG_KEYSTONE_TOKEN, "token").withBody(Bodies.random(1024)).build();
   }
 
   @Test

@@ -27,9 +27,8 @@ public class AWS4SignerChunked extends AWS4SignerBase {
   private static final int SIGNATURE_LENGTH = 64;
   private static final byte[] FINAL_CHUNK = new byte[0];
 
-  public AWS4SignerChunked(final URL endpointUrl, final String httpMethod,
-      final String serviceName, final String regionName,
-      final LoadingCache<Integer, String> zeroesHashCache) {
+  public AWS4SignerChunked(final URL endpointUrl, final String httpMethod, final String serviceName,
+      final String regionName, final LoadingCache<Integer, String> zeroesHashCache) {
     super(endpointUrl, httpMethod, serviceName, regionName);
     this.zeroesHashCache = zeroesHashCache;
   }
@@ -120,11 +119,10 @@ public class AWS4SignerChunked extends AWS4SignerBase {
     } else {
       chunkHash = BinaryUtils.toHex(AWS4SignerBase.hash(dataToChunk));
     }
-    final String chunkStringToSign =
-        CHUNK_STRING_TO_SIGN_PREFIX + "\n" + this.dateTimeStamp + "\n" + this.scope + "\n"
-            + this.lastComputedSignature + "\n"
-            // nonsig-extension hash (not using any nonsig-extensions, so it's a blank str)
-            + EMPTY_BODY_SHA256 + "\n" + chunkHash;
+    final String chunkStringToSign = CHUNK_STRING_TO_SIGN_PREFIX + "\n" + this.dateTimeStamp + "\n"
+        + this.scope + "\n" + this.lastComputedSignature + "\n"
+        // nonsig-extension hash (not using any nonsig-extensions, so it's a blank str)
+        + EMPTY_BODY_SHA256 + "\n" + chunkHash;
 
     // compute the V4 signature for the chunk
     final String chunkSignature =

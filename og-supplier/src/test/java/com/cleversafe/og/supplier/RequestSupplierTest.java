@@ -73,9 +73,8 @@ public class RequestSupplierTest {
 
     final String objectName = null;
     final URI uri = new URI("http://" + this.vaultName + "." + this.hostName + ":8080/");
-    final RequestSupplier request =
-        createRequestSupplier(true, this.vaultName, this.hostName, objectName, null,
-            this.trailingSlash);
+    final RequestSupplier request = createRequestSupplier(true, this.vaultName, this.hostName,
+        objectName, null, this.trailingSlash);
 
     final Request req = request.get();
 
@@ -107,9 +106,8 @@ public class RequestSupplierTest {
 
     final String objectName = null;
     final URI uri = new URI("http://" + this.vaultName + "." + this.hostName + ":8080/");
-    final RequestSupplier request =
-        createRequestSupplier(true, this.vaultName, this.hostName, objectName, this.uriRoot,
-            this.trailingSlash);
+    final RequestSupplier request = createRequestSupplier(true, this.vaultName, this.hostName,
+        objectName, this.uriRoot, this.trailingSlash);
 
     final Request req = request.get();
 
@@ -138,12 +136,10 @@ public class RequestSupplierTest {
   @Test
   public void createRequestSupplierWithUriRootPathStyleTest() throws URISyntaxException {
 
-    final URI uri =
-        new URI("http://" + this.hostName + ":8080/" + this.uriRoot + "/" + this.vaultName + "/"
-            + this.objectName);
-    final RequestSupplier request =
-        createRequestSupplier(false, this.vaultName, this.hostName, this.objectName, this.uriRoot,
-            false);
+    final URI uri = new URI("http://" + this.hostName + ":8080/" + this.uriRoot + "/"
+        + this.vaultName + "/" + this.objectName);
+    final RequestSupplier request = createRequestSupplier(false, this.vaultName, this.hostName,
+        this.objectName, this.uriRoot, false);
 
     final Request req = request.get();
 
@@ -159,9 +155,8 @@ public class RequestSupplierTest {
     final String objectName = null;
     final URI uri =
         new URI("http://" + this.hostName + ":8080/" + this.uriRoot + "/" + this.vaultName + "/");
-    final RequestSupplier request =
-        createRequestSupplier(false, this.vaultName, this.hostName, objectName, this.uriRoot,
-            this.trailingSlash);
+    final RequestSupplier request = createRequestSupplier(false, this.vaultName, this.hostName,
+        objectName, this.uriRoot, this.trailingSlash);
 
     final Request req = request.get();
 
@@ -172,14 +167,14 @@ public class RequestSupplierTest {
   }
 
   @Test
-  public void createRequestSupplierWithoutObjectAndUriRootPathStyleTest() throws URISyntaxException {
+  public void createRequestSupplierWithoutObjectAndUriRootPathStyleTest()
+      throws URISyntaxException {
 
     final String objectName = null;
     final String uriRoot = null;
     final URI uri = new URI("http://" + this.hostName + ":8080/" + this.vaultName + "/");
-    final RequestSupplier request =
-        createRequestSupplier(false, this.vaultName, this.hostName, objectName, uriRoot,
-            this.trailingSlash);
+    final RequestSupplier request = createRequestSupplier(false, this.vaultName, this.hostName,
+        objectName, uriRoot, this.trailingSlash);
 
     final Request req = request.get();
 

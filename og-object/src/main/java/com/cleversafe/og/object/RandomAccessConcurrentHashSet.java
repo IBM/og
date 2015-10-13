@@ -693,9 +693,8 @@ public class RandomAccessConcurrentHashSet<K> {
     K random = null;
     do {
       final Segment<K>[] segments = this.segments;
-      random =
-          segments[RandomAccessConcurrentHashSet.generator.nextInt(segments.length)].remove(null,
-              0, true);
+      random = segments[RandomAccessConcurrentHashSet.generator.nextInt(segments.length)]
+          .remove(null, 0, true);
     } while (random == null && !isEmpty());
     return random;
   }

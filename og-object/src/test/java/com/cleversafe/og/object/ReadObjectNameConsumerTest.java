@@ -42,7 +42,7 @@ public class ReadObjectNameConsumerTest extends AbstractObjectNameConsumerTest {
 
   @Override
   public void doThrowIt() {
-    doThrow(new ObjectManagerException()).when(this.objectManager).getComplete(
-        any(ObjectMetadata.class));
+    doThrow(new ObjectManagerException()).when(this.objectManager)
+        .getComplete(any(ObjectMetadata.class));
   }
 }

@@ -43,7 +43,8 @@ public class LegacyObjectMetadata implements ObjectMetadata {
   public static LegacyObjectMetadata fromBytes(final byte[] objectBytes) {
     checkNotNull(objectBytes);
     checkArgument(objectBytes.length == OBJECT_SIZE,
-        String.format("objectName length must be == %s", OBJECT_SIZE) + " [%s]", objectBytes.length);
+        String.format("objectName length must be == %s", OBJECT_SIZE) + " [%s]",
+        objectBytes.length);
 
     return new LegacyObjectMetadata(ByteBuffer.allocate(OBJECT_SIZE).put(objectBytes));
   }

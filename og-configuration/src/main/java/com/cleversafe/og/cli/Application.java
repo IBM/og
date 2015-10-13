@@ -169,8 +169,8 @@ public class Application {
       final URL url = ClassLoader.getSystemResource(resourceName);
 
       if (url == null) {
-        throw new IllegalArgumentException(String.format(
-            "Could not find configuration file on classpath [%s]", resourceName));
+        throw new IllegalArgumentException(
+            String.format("Could not find configuration file on classpath [%s]", resourceName));
       }
 
       return url.toURI();

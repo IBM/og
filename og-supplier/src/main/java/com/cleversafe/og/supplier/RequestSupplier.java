@@ -76,10 +76,10 @@ public class RequestSupplier implements Supplier<Request> {
   public RequestSupplier(final Supplier<String> id, final Method method, final Scheme scheme,
       final Supplier<String> host, final Integer port, final String uriRoot,
       final Function<Map<String, String>, String> container,
-      final Function<Map<String, String>, String> object,
-      final Map<String, String> queryParameters, final boolean trailingSlash,
-      final Map<String, Supplier<String>> headers, final String username, final String password,
-      final String keystoneToken, final Supplier<Body> body, final boolean virtualHost) {
+      final Function<Map<String, String>, String> object, final Map<String, String> queryParameters,
+      final boolean trailingSlash, final Map<String, Supplier<String>> headers,
+      final String username, final String password, final String keystoneToken,
+      final Supplier<Body> body, final boolean virtualHost) {
 
     this.id = id;
     this.method = checkNotNull(method);
@@ -152,9 +152,8 @@ public class RequestSupplier implements Supplier<Request> {
     }
 
     if (this.virtualHost) {
-      s =
-          new StringBuilder().append(this.scheme).append("://")
-              .append(this.container.apply(context)).append(".").append(this.host.get());
+      s = new StringBuilder().append(this.scheme).append("://")
+          .append(this.container.apply(context)).append(".").append(this.host.get());
     } else {
       s = new StringBuilder().append(this.scheme).append("://").append(this.host.get());
     }
@@ -211,9 +210,10 @@ public class RequestSupplier implements Supplier<Request> {
 
   @Override
   public String toString() {
-    return String.format("RequestSupplier [%n" + "method=%s,%n" + "scheme=%s,%n" + "host=%s,%n"
-        + "port=%s,%n" + "uriRoot=%s,%n" + "container=%s,%n" + "object=%s,%n"
-        + "queryParameters=%s,%n" + "trailingSlash=%s,%n" + "headers=%s,%n" + "body=%s%n" + "]",
+    return String.format(
+        "RequestSupplier [%n" + "method=%s,%n" + "scheme=%s,%n" + "host=%s,%n" + "port=%s,%n"
+            + "uriRoot=%s,%n" + "container=%s,%n" + "object=%s,%n" + "queryParameters=%s,%n"
+            + "trailingSlash=%s,%n" + "headers=%s,%n" + "body=%s%n" + "]",
         this.method, this.scheme, this.host, this.port, this.uriRoot, this.container, this.object,
         this.queryParameters, this.trailingSlash, this.headers, this.body);
   }

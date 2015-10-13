@@ -155,8 +155,9 @@ public class AWSAuthV4ChunkingTest {
             read = wrappedStream.read(buff, 0, readAmount);
           }
           actualOutput.close();
-          Assert.assertTrue(readAmount + " byte reads failed with bodySize = " + bodySize
-              + ", userDataBlockSize = " + userDataBlockSize,
+          Assert.assertTrue(
+              readAmount + " byte reads failed with bodySize = " + bodySize
+                  + ", userDataBlockSize = " + userDataBlockSize,
               Arrays.equals(expectedBuff, actualOutput.toByteArray()));
         }
       }

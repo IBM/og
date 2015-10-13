@@ -42,7 +42,7 @@ public class CounterConditionTest {
     final Statistics stats = new Statistics();
     final Operation operation = Operation.WRITE;
     final Counter counter = Counter.BYTES;
-    return new Object[][] { {null, counter, 1, test, stats, NullPointerException.class},
+    return new Object[][] {{null, counter, 1, test, stats, NullPointerException.class},
         {operation, null, 1, test, stats, NullPointerException.class},
         {operation, counter, -1, test, stats, IllegalArgumentException.class},
         {operation, counter, 0, test, stats, IllegalArgumentException.class},

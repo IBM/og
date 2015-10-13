@@ -45,7 +45,8 @@ public class ConcurrentRequestCondition extends CounterCondition {
 
   @Override
   public String toString() {
-    return String.format("ConcurrentRequestCondition [%n" + "operation=%s,%n"
-        + "thresholdValue=%s%n" + "]", this.operation, this.thresholdValue);
+    return String.format(
+        "ConcurrentRequestCondition [%n" + "operation=%s,%n" + "thresholdValue=%s%n" + "]",
+        this.operation, this.thresholdValue);
   }
 }

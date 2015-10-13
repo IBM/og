@@ -46,7 +46,7 @@ public class ThrottledInputStreamTest {
   @DataProvider
   public static Object[][] provideInvalidThrottleInputStream() {
     final InputStream in = mock(InputStream.class);
-    return new Object[][] { {null, 1, NullPointerException.class},
+    return new Object[][] {{null, 1, NullPointerException.class},
         {in, -1, IllegalArgumentException.class}, {in, 0, IllegalArgumentException.class}};
   }
 

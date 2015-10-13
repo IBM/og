@@ -37,7 +37,7 @@ public class OGLog4jShutdownCallbackRegistryTest {
 
   @DataProvider
   public static Object[][] provideIncompleteGzCompressActionFilter() {
-    return new Object[][] { {"request.log", false}, {"request.log-", false},
+    return new Object[][] {{"request.log", false}, {"request.log-", false},
         {"request.log-1.gz", false}, {"request.log-10.gz", false}, {"request.log-100.gz", false},
         {"request.log-1", true}, {"request.log-10", true}, {"request.log-100", true}};
   }

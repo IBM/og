@@ -50,8 +50,8 @@ public class RequestLogEntry {
   public final Long objectLength;
   public final String objectName;
 
-  private static final DateTimeFormatter FORMATTER = DateTimeFormat.forPattern(
-      "dd/MMM/yyyy:HH:mm:ss Z").withLocale(Locale.US);
+  private static final DateTimeFormatter FORMATTER =
+      DateTimeFormat.forPattern("dd/MMM/yyyy:HH:mm:ss Z").withLocale(Locale.US);
   private static final String X_CLV_REQUEST_ID = "X-Clv-Request-Id";
 
   /**

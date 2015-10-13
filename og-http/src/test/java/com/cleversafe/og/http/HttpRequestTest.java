@@ -125,9 +125,8 @@ public class HttpRequestTest {
 
   @Test
   public void body() {
-    final Body body =
-        new HttpRequest.Builder(this.method, this.uri).withBody(Bodies.zeroes(12345)).build()
-            .getBody();
+    final Body body = new HttpRequest.Builder(this.method, this.uri).withBody(Bodies.zeroes(12345))
+        .build().getBody();
     assertThat(body.getDataType(), is(DataType.ZEROES));
     assertThat(body.getSize(), is(12345L));
   }

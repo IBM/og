@@ -41,7 +41,7 @@ public class ThrottledOutputStreamTest {
   @DataProvider
   public static Object[][] provideInvalidThrottleOutputStream() {
     final OutputStream out = mock(OutputStream.class);
-    return new Object[][] { {null, 1, NullPointerException.class},
+    return new Object[][] {{null, 1, NullPointerException.class},
         {out, -1, IllegalArgumentException.class}, {out, 0, IllegalArgumentException.class}};
   }
 

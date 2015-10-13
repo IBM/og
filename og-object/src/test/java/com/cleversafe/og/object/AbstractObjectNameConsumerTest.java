@@ -56,9 +56,8 @@ public abstract class AbstractObjectNameConsumerTest {
     this.request = mock(Request.class);
     when(this.request.getMethod()).thenReturn(method());
     when(this.request.getUri()).thenReturn(new URI("/container/" + this.object));
-    when(this.request.headers()).thenReturn(
-        ImmutableMap.of(Headers.X_OG_OBJECT_NAME, this.object, Headers.X_OG_OBJECT_SIZE,
-            String.valueOf(1024)));
+    when(this.request.headers()).thenReturn(ImmutableMap.of(Headers.X_OG_OBJECT_NAME, this.object,
+        Headers.X_OG_OBJECT_SIZE, String.valueOf(1024)));
     when(this.request.getBody()).thenReturn(Bodies.zeroes(1024));
 
     this.response = mock(Response.class);
@@ -88,7 +87,7 @@ public abstract class AbstractObjectNameConsumerTest {
     final Set<Integer> nullElement = Sets.newHashSet();
     nullElement.add(null);
 
-    return new Object[][] { {null, statusCodes, NullPointerException.class},
+    return new Object[][] {{null, statusCodes, NullPointerException.class},
         {objectManager, null, NullPointerException.class},
         {objectManager, ImmutableSet.of(), IllegalArgumentException.class},
         {objectManager, nullElement, NullPointerException.class},

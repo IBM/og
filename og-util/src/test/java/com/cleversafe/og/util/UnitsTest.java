@@ -31,8 +31,8 @@ public class UnitsTest {
 
   @DataProvider
   public static Object[][] provideInvalidTime() {
-    return new Object[][] { {null, NullPointerException.class},
-        {"", IllegalArgumentException.class}, {"nano_seconds", IllegalArgumentException.class}};
+    return new Object[][] {{null, NullPointerException.class}, {"", IllegalArgumentException.class},
+        {"nano_seconds", IllegalArgumentException.class}};
   }
 
   @Test
@@ -45,15 +45,12 @@ public class UnitsTest {
   @DataProvider
   public static Object[][] provideTime() {
     return new Object[][] {
-        {
-            ImmutableList.of("ns", "nano", "nanos", "nanosec", "nanosecs", "nanosecond",
-                "nanoseconds"), TimeUnit.NANOSECONDS},
-        {
-            ImmutableList.of("micro", "micros", "microsec", "microsecs", "microsecond",
-                "microseconds"), TimeUnit.MICROSECONDS},
-        {
-            ImmutableList.of("ms", "milli", "millis", "millisec", "millisecs", "millisecond",
-                "milliseconds"), TimeUnit.MILLISECONDS},
+        {ImmutableList.of("ns", "nano", "nanos", "nanosec", "nanosecs", "nanosecond",
+            "nanoseconds"), TimeUnit.NANOSECONDS},
+        {ImmutableList.of("micro", "micros", "microsec", "microsecs", "microsecond",
+            "microseconds"), TimeUnit.MICROSECONDS},
+        {ImmutableList.of("ms", "milli", "millis", "millisec", "millisecs", "millisecond",
+            "milliseconds"), TimeUnit.MILLISECONDS},
         {ImmutableList.of("s", "sec", "secs", "second", "seconds"), TimeUnit.SECONDS},
         {ImmutableList.of("m", "min", "mins", "minute", "minutes"), TimeUnit.MINUTES},
         {ImmutableList.of("h", "hr", "hrs", "hour", "hours"), TimeUnit.HOURS},
@@ -75,8 +72,8 @@ public class UnitsTest {
 
   @DataProvider
   public static Object[][] provideInvalidSize() {
-    return new Object[][] { {null, NullPointerException.class},
-        {"", IllegalArgumentException.class}, {"mega_byte", IllegalArgumentException.class}};
+    return new Object[][] {{null, NullPointerException.class}, {"", IllegalArgumentException.class},
+        {"mega_byte", IllegalArgumentException.class}};
   }
 
   @Test
@@ -88,7 +85,7 @@ public class UnitsTest {
 
   @DataProvider
   public static Object[][] provideSize() {
-    return new Object[][] { {ImmutableList.of("b", "byte", "bytes"), SizeUnit.BYTES},
+    return new Object[][] {{ImmutableList.of("b", "byte", "bytes"), SizeUnit.BYTES},
         {ImmutableList.of("kb", "kilobyte", "kilobytes"), SizeUnit.KILOBYTES},
         {ImmutableList.of("kib", "kibibyte", "kibibytes"), SizeUnit.KIBIBYTES},
         {ImmutableList.of("mb", "megabyte", "megabytes"), SizeUnit.MEGABYTES},

@@ -69,12 +69,13 @@ public class SimpleRequestManager implements RequestManager {
 
     checkArgument(PERCENTAGE.contains(trueWriteWeight),
         "write weight must be in range [0.0, 100.0] [%s]", trueWriteWeight);
-    checkArgument(PERCENTAGE.contains(readWeight),
-        "read weight must be in range [0.0, 100.0] [%s]", readWeight);
+    checkArgument(PERCENTAGE.contains(readWeight), "read weight must be in range [0.0, 100.0] [%s]",
+        readWeight);
     checkArgument(PERCENTAGE.contains(deleteWeight),
         "delete weight must be in range [0.0, 100.0] [%s]", deleteWeight);
     final double sum = readWeight + trueWriteWeight + deleteWeight;
-    checkArgument(DoubleMath.fuzzyEquals(sum, 100.0, ERR), "sum of weights must be 100.0 [%s]", sum);
+    checkArgument(DoubleMath.fuzzyEquals(sum, 100.0, ERR), "sum of weights must be 100.0 [%s]",
+        sum);
 
     final RandomSupplier.Builder<Supplier<Request>> wrc = Suppliers.random();
     if (trueWriteWeight > 0.0) {

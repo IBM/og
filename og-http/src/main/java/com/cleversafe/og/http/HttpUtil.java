@@ -27,10 +27,10 @@ import com.google.common.collect.Range;
  * @since 1.0
  */
 public class HttpUtil {
-  public static final Set<Integer> VALID_STATUS_CODES = ContiguousSet.create(
-      Range.closed(100, 599), DiscreteDomain.integers());
-  public static final Set<Integer> SUCCESS_STATUS_CODES = ContiguousSet.create(
-      Range.closed(200, 299), DiscreteDomain.integers());
+  public static final Set<Integer> VALID_STATUS_CODES =
+      ContiguousSet.create(Range.closed(100, 599), DiscreteDomain.integers());
+  public static final Set<Integer> SUCCESS_STATUS_CODES =
+      ContiguousSet.create(Range.closed(200, 299), DiscreteDomain.integers());
 
   private HttpUtil() {}
 

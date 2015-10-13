@@ -43,7 +43,7 @@ public class HttpResponseTest {
 
   @DataProvider
   public static Object[][] provideInvalidStatusCode() {
-    return new Object[][] { {-1}, {0}, {99}, {600}};
+    return new Object[][] {{-1}, {0}, {99}, {600}};
   }
 
   @Test
@@ -83,9 +83,8 @@ public class HttpResponseTest {
 
   @Test
   public void oneHeader() {
-    final HttpResponse response =
-        new HttpResponse.Builder().withStatusCode(this.statusCode).withHeader("key", "value")
-            .build();
+    final HttpResponse response = new HttpResponse.Builder().withStatusCode(this.statusCode)
+        .withHeader("key", "value").build();
     assertThat(response.headers().size(), is(1));
     assertThat(response.headers(), hasEntry("key", "value"));
   }
@@ -129,9 +128,8 @@ public class HttpResponseTest {
 
   @Test
   public void body() {
-    final Body body =
-        new HttpResponse.Builder().withStatusCode(this.statusCode).withBody(Bodies.zeroes(12345))
-            .build().getBody();
+    final Body body = new HttpResponse.Builder().withStatusCode(this.statusCode)
+        .withBody(Bodies.zeroes(12345)).build().getBody();
     assertThat(body.getDataType(), is(DataType.ZEROES));
     assertThat(body.getSize(), is(12345L));
   }

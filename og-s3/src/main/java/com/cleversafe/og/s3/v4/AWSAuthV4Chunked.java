@@ -57,14 +57,13 @@ public class AWSAuthV4Chunked extends AWSAuthV4Base {
 
     if (cacheSize > 0) {
       _logger.debug("Aws v4 auth cache configured with size {}", cacheSize);
-      this.zeroesHashCache =
-          CacheBuilder.newBuilder().maximumSize(cacheSize)
-              .build(new CacheLoader<Integer, String>() {
-                @Override
-                public String load(final Integer key) throws Exception {
-                  return BinaryUtils.toHex(AWS4SignerBase.hash(new byte[key]));
-                }
-              });
+      this.zeroesHashCache = CacheBuilder.newBuilder().maximumSize(cacheSize)
+          .build(new CacheLoader<Integer, String>() {
+            @Override
+            public String load(final Integer key) throws Exception {
+              return BinaryUtils.toHex(AWS4SignerBase.hash(new byte[key]));
+            }
+          });
     } else {
       _logger.debug("Aws v4 auth cache disabled");
       this.zeroesHashCache = null;
@@ -76,8 +75,8 @@ public class AWSAuthV4Chunked extends AWSAuthV4Base {
       return new AWS4SignerChunked(request.getUri().toURL(), request.getMethod().toString(),
           this.serviceName, this.regionName, this.zeroesHashCache);
     } catch (final MalformedURLException e) {
-      throw new InvalidParameterException("Can't convert to request.URI(" + request.getUri()
-          + ") to  URL:" + e.getMessage());
+      throw new InvalidParameterException(
+          "Can't convert to request.URI(" + request.getUri() + ") to  URL:" + e.getMessage());
     }
   }
 
@@ -165,9 +164,8 @@ public class AWSAuthV4Chunked extends AWSAuthV4Base {
           // Read no more data, but we need to call constructSignedChunk to get the final chunk
           this.eOfUserData = true;
         }
-        this.chunk =
-            signer.constructSignedChunk(userDataRead, this.userData, request.getBody()
-                .getDataType().equals(DataType.ZEROES));
+        this.chunk = signer.constructSignedChunk(userDataRead, this.userData,
+            request.getBody().getDataType().equals(DataType.ZEROES));
         this.chunkPos = 0;
       }
 

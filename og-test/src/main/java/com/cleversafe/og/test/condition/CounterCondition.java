@@ -76,7 +76,8 @@ public class CounterCondition implements TestCondition {
 
   @Override
   public String toString() {
-    return String.format("CounterCondition [%n" + "operation=%s,%n" + "counter=%s,%n"
-        + "thresholdValue=%s%n" + "]", this.operation, this.counter, this.thresholdValue);
+    return String.format(
+        "CounterCondition [%n" + "operation=%s,%n" + "counter=%s,%n" + "thresholdValue=%s%n" + "]",
+        this.operation, this.counter, this.thresholdValue);
   }
 }
