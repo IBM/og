@@ -389,6 +389,18 @@ log/
 |object_file_name
 |String
 |"<container>-<api>"
+
+|object_file_max_size
+|Integer; in bytes
+|100000000 // 100mb
+
+|object_file_persist_frequency
+|Integer; in seconds
+|1800 // 30 minutes
+
+|object_file_index
+|Integer
+|None; advanced option
 |===
 
 ==== Selection Configuration
