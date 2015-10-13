@@ -10,9 +10,9 @@ package com.cleversafe.og.test;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -26,7 +26,6 @@ import com.cleversafe.og.api.Response;
 import com.cleversafe.og.http.HttpResponse;
 import com.cleversafe.og.scheduling.Scheduler;
 import com.cleversafe.og.util.Pair;
-import com.google.common.collect.Sets;
 import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -45,9 +44,8 @@ public class LoadTest implements Callable<Boolean> {
   private final Client client;
   private final Scheduler scheduler;
   private final EventBus eventBus;
-  private volatile boolean running;
+  private final AtomicBoolean running;
   private volatile boolean success;
-  private final Set<ListenableFuture<Response>> activeRequests;
   private final CountDownLatch completed;
 
   /**
@@ -66,9 +64,8 @@ public class LoadTest implements Callable<Boolean> {
     this.client = checkNotNull(client);
     this.scheduler = checkNotNull(scheduler);
     this.eventBus = checkNotNull(eventBus);
-    this.running = true;
+    this.running = new AtomicBoolean(true);
     this.success = true;
-    this.activeRequests = Sets.newConcurrentHashSet();
     this.completed = new CountDownLatch(1);
   }
 
@@ -82,23 +79,19 @@ public class LoadTest implements Callable<Boolean> {
   @Override
   public Boolean call() {
     try {
-      while (this.running) {
+      while (this.running.get()) {
         final Request request = this.requestManager.get();
         final ListenableFuture<Response> future = this.client.execute(request);
         this.eventBus.post(request);
-        this.activeRequests.add(future);
         addCallback(request, future);
         this.scheduler.waitForNext();
       }
     } catch (final Exception e) {
-      this.success = false;
-      this.running = false;
       _logger.error("Exception while producing request", e);
+      abortTest();
     }
 
-    if (!this.activeRequests.isEmpty()) {
-      Uninterruptibles.awaitUninterruptibly(this.completed);
-    }
+    Uninterruptibles.awaitUninterruptibly(this.completed);
     return this.success;
   }
 
@@ -106,9 +99,24 @@ public class LoadTest implements Callable<Boolean> {
    * Cleanly stop this test
    */
   public void stopTest() {
-    this.running = false;
-    for (final ListenableFuture<Response> future : this.activeRequests) {
-      future.cancel(true);
+    // ensure this code is only run once
+    if (this.running.getAndSet(false)) {
+      // currently a new thread is required here to run shutdown logic because stopTest can be
+      // called via a client worker thread via client -> eventbus -> stopping condition -> stopTest,
+      // which will introduce a deadlock since stopTest waits until all client threads are done. An
+      // alternative approach is to us an async eventbus, but this requires managing the shutdown of
+      // the async eventbus' executor somewhere
+      new Thread() {
+        @Override
+        public void run() {
+          try {
+            Uninterruptibles.getUninterruptibly(LoadTest.this.client.shutdown(true));
+          } catch (final Exception e) {
+            _logger.error("Exception while attempting to shutdown client", e);
+          }
+          LoadTest.this.completed.countDown();
+        }
+      }.start();
     }
   }
 
@@ -126,23 +134,13 @@ public class LoadTest implements Callable<Boolean> {
       public void onSuccess(final Response response) {
         _logger.trace("Request executed {}, {}", request, response);
         postOperation(response);
-        removeActiveOperation();
       }
 
       @Override
       public void onFailure(final Throwable t) {
         _logger.error("Exception while processing operation", t);
-        LoadTest.this.running = false;
         final Response response = new HttpResponse.Builder().withStatusCode(599).build();
         postOperation(response);
-        removeActiveOperation();
-      }
-
-      private void removeActiveOperation() {
-        LoadTest.this.activeRequests.remove(future);
-        if (!LoadTest.this.running && LoadTest.this.activeRequests.isEmpty()) {
-          LoadTest.this.completed.countDown();
-        }
       }
 
       private void postOperation(final Response response) {

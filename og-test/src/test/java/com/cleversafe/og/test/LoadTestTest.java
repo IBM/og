@@ -13,7 +13,7 @@ import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -116,7 +116,7 @@ public class LoadTestTest {
   public void requestSupplierException() {
     when(this.requestManager.get()).thenThrow(new IllegalStateException());
     assertThat(this.test.call(), is(false));
-    verify(this.client, never()).shutdown(true);
+    verify(this.client, times(1)).shutdown(true);
   }
 
   @Test
@@ -135,6 +135,6 @@ public class LoadTestTest {
     assertThat(this.test.call(), is(true));
     assertThat(this.stats.get(Operation.WRITE, Counter.OPERATIONS), greaterThanOrEqualTo(5L));
     verify(this.client, atLeast(5)).execute(this.request);
-    verify(this.client, never()).shutdown(true);
+    verify(this.client, times(1)).shutdown(true);
   }
 }

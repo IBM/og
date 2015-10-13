@@ -23,7 +23,6 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.cleversafe.og.api.Client;
 import com.cleversafe.og.cli.Application.Cli;
 import com.cleversafe.og.guice.OGModule;
 import com.cleversafe.og.json.OGConfig;
@@ -87,7 +86,6 @@ public class ObjectGenerator {
     final OGConfig ogConfig;
     final Injector injector;
     LoadTest test = null;
-    Client client = null;
     ObjectManager objectManager = null;
     Statistics statistics = null;
     boolean success = true;
@@ -110,7 +108,6 @@ public class ObjectGenerator {
 
       injector = createInjector(ogConfig);
       test = injector.getInstance(LoadTest.class);
-      client = injector.getInstance(Client.class);
       objectManager = injector.getInstance(ObjectManager.class);
       statistics = injector.getInstance(Statistics.class);
       OGLog4jShutdownCallbackRegistry
@@ -145,7 +142,6 @@ public class ObjectGenerator {
       if (test != null) {
         test.stopTest();
       }
-      shutdownClient(client);
       MoreExecutors.shutdownAndAwaitTermination(executorService, 1, TimeUnit.MINUTES);
       shutdownObjectManager(objectManager);
 
@@ -206,16 +202,6 @@ public class ObjectGenerator {
 
   public static Injector createInjector(final OGConfig ogConfig) {
     return Guice.createInjector(Stage.PRODUCTION, new OGModule(ogConfig));
-  }
-
-  public static void shutdownClient(final Client client) {
-    try {
-      if (client != null) {
-        Uninterruptibles.getUninterruptibly(client.shutdown(true));
-      }
-    } catch (final Exception e) {
-      _logger.error("Exception while attempting to shutdown client", e);
-    }
   }
 
   public static void shutdownObjectManager(final ObjectManager objectManager) {
