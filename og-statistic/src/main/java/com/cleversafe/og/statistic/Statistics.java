@@ -24,6 +24,7 @@ import com.cleversafe.og.api.Response;
 import com.cleversafe.og.http.HttpUtil;
 import com.cleversafe.og.util.Operation;
 import com.cleversafe.og.util.Pair;
+import com.cleversafe.og.util.TestState;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.AtomicLongMap;
@@ -49,6 +50,7 @@ import com.google.common.util.concurrent.AtomicLongMap;
 @Singleton
 public class Statistics {
   private static final Logger _logger = LoggerFactory.getLogger(Statistics.class);
+  private volatile boolean running;
   private final Map<Operation, AtomicLongMap<Counter>> counters;
   private final Map<Operation, AtomicLongMap<Integer>> scCounters;
 
@@ -57,11 +59,26 @@ public class Statistics {
    */
   @Inject
   public Statistics() {
+    this.running = true;
     this.counters = Maps.newHashMap();
     this.scCounters = Maps.newHashMap();
     for (final Operation operation : Operation.values()) {
       this.counters.put(operation, AtomicLongMap.<Counter>create());
       this.scCounters.put(operation, AtomicLongMap.<Integer>create());
+    }
+  }
+
+  /**
+   * Updates this instance to a stopping state if test state is STOPPING
+   * 
+   * @param state the state that the test has transitioned to
+   */
+  @Subscribe
+  public void update(final TestState state) {
+    checkNotNull(state);
+
+    if (state == TestState.STOPPING) {
+      this.running = false;
     }
   }
 
@@ -93,18 +110,22 @@ public class Statistics {
     final Response response = result.getValue();
 
     final Operation operation = HttpUtil.toOperation(request.getMethod());
-    updateCounter(operation, Counter.OPERATIONS, 1);
-    updateCounter(Operation.ALL, Counter.OPERATIONS, 1);
     updateCounter(operation, Counter.ACTIVE_OPERATIONS, -1);
     updateCounter(Operation.ALL, Counter.ACTIVE_OPERATIONS, -1);
 
-    if (HttpUtil.SUCCESS_STATUS_CODES.contains(response.getStatusCode())) {
-      final long bytes = getBytes(operation, request, response);
-      updateCounter(operation, Counter.BYTES, bytes);
-      updateCounter(Operation.ALL, Counter.BYTES, bytes);
+    // do not record operations with 599 status after shutdown (known client aborts)
+    if (this.running || response.getStatusCode() != 599) {
+      updateCounter(operation, Counter.OPERATIONS, 1);
+      updateCounter(Operation.ALL, Counter.OPERATIONS, 1);
+
+      if (HttpUtil.SUCCESS_STATUS_CODES.contains(response.getStatusCode())) {
+        final long bytes = getBytes(operation, request, response);
+        updateCounter(operation, Counter.BYTES, bytes);
+        updateCounter(Operation.ALL, Counter.BYTES, bytes);
+      }
+      updateStatusCode(operation, response.getStatusCode());
+      updateStatusCode(Operation.ALL, response.getStatusCode());
     }
-    updateStatusCode(operation, response.getStatusCode());
-    updateStatusCode(Operation.ALL, response.getStatusCode());
     _logger.trace("Statistics updated: {}, {}", request, response);
   }
 

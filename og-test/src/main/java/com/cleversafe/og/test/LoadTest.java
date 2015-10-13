@@ -26,6 +26,7 @@ import com.cleversafe.og.api.Response;
 import com.cleversafe.og.http.HttpResponse;
 import com.cleversafe.og.scheduling.Scheduler;
 import com.cleversafe.og.util.Pair;
+import com.cleversafe.og.util.TestState;
 import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -78,6 +79,7 @@ public class LoadTest implements Callable<Boolean> {
    */
   @Override
   public Boolean call() {
+    this.eventBus.post(TestState.RUNNING);
     try {
       while (this.running.get()) {
         final Request request = this.requestManager.get();
@@ -110,6 +112,7 @@ public class LoadTest implements Callable<Boolean> {
         @Override
         public void run() {
           try {
+            LoadTest.this.eventBus.post(TestState.STOPPING);
             Uninterruptibles.getUninterruptibly(LoadTest.this.client.shutdown(true));
           } catch (final Exception e) {
             _logger.error("Exception while attempting to shutdown client", e);

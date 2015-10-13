@@ -28,6 +28,7 @@ import com.cleversafe.og.api.Response;
 import com.cleversafe.og.http.Bodies;
 import com.cleversafe.og.util.Operation;
 import com.cleversafe.og.util.Pair;
+import com.cleversafe.og.util.TestState;
 import com.google.common.collect.Lists;
 import com.tngtech.java.junit.dataprovider.DataProvider;
 import com.tngtech.java.junit.dataprovider.DataProviderRunner;
@@ -57,6 +58,33 @@ public class StatisticsTest {
   @Test(expected = NullPointerException.class)
   public void updateRequestNullOperation() {
     this.stats.update((Request) null);
+  }
+
+  @Test(expected = NullPointerException.class)
+  public void updateStateNullState() {
+    this.stats.update((TestState) null);
+  }
+
+  @Test
+  public void updateState() {
+    this.stats.update(this.operation);
+    this.stats.update(TestState.STOPPING);
+    // valid responses after shutdown should still be counted
+    this.stats.update(this.operation);
+
+    assertThat(this.stats.get(Operation.ALL, Counter.OPERATIONS), is(2L));
+  }
+
+  @Test
+  public void updateState2() {
+    this.stats.update(this.operation);
+    this.stats.update(TestState.STOPPING);
+    // simulate aborted request posting to event bus after client shutdown
+    when(this.response.getStatusCode()).thenReturn(599);
+    this.stats.update(this.operation);
+
+    // aborted requests after shutdown should not count towards total
+    assertThat(this.stats.get(Operation.ALL, Counter.OPERATIONS), is(1L));
   }
 
   @Test
