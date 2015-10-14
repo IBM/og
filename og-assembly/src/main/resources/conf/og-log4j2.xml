@@ -21,7 +21,7 @@
     immediateFlush="false" append="true" fileName="${test_path}/${request.log}" filePattern="${test_path}/${request.log}-%i.gz">
       <PatternLayout pattern="%m%n" />
       <SizeBasedTriggeringPolicy size="500MB" />
-      <DefaultRolloverStrategy max="50" />
+      <DefaultRolloverStrategy max="150" />
     </RollingRandomAccessFile>
     <File name="OGJson" append="false" fileName="${test_path}/${og.json}">
       <PatternLayout pattern="%m%n" />
