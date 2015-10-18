@@ -22,6 +22,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.http.ConnectionReuseStrategy;
 import org.apache.http.Header;
@@ -101,6 +102,7 @@ public class ApacheClient implements Client {
   private final long readThroughput;
   private final Map<String, ResponseBodyConsumer> responseBodyConsumers;
   private volatile boolean running;
+  private final AtomicInteger abortedRequestsAtShutdown;
   private final CloseableHttpClient client;
   private final ListeningExecutorService executorService;
   private final Gson gson;
@@ -155,6 +157,7 @@ public class ApacheClient implements Client {
             }.nullSafe()).create();
 
     this.running = true;
+    this.abortedRequestsAtShutdown = new AtomicInteger();
     final HttpClientBuilder clientBuilder = HttpClients.custom();
     if (this.userAgent != null) {
       clientBuilder.setUserAgent(this.userAgent);
@@ -291,6 +294,8 @@ public class ApacheClient implements Client {
           awaitShutdown(1, TimeUnit.HOURS);
         }
         _logger.info("Client is shutdown");
+        _logger.info("Number of requests aborted at shutdown [{}]",
+            ApacheClient.this.abortedRequestsAtShutdown.get());
       }
 
       private void awaitShutdown(final long timeout, final TimeUnit unit) {
@@ -338,6 +343,8 @@ public class ApacheClient implements Client {
       } catch (final Exception e) {
         if (ApacheClient.this.running) {
           _logger.error("Exception executing request", e);
+        } else {
+          ApacheClient.this.abortedRequestsAtShutdown.incrementAndGet();
         }
         responseBuilder.withStatusCode(599);
       }
