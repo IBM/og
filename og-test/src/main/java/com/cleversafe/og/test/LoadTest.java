@@ -15,6 +15,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.slf4j.Logger;
@@ -45,6 +46,7 @@ public class LoadTest implements Callable<Boolean> {
   private final Client client;
   private final Scheduler scheduler;
   private final EventBus eventBus;
+  private final boolean shutdownImmediate;
   private final AtomicBoolean running;
   private volatile boolean success;
   private final CountDownLatch completed;
@@ -56,15 +58,19 @@ public class LoadTest implements Callable<Boolean> {
    * @param client a request executor
    * @param scheduler a scheduler which determines request rate
    * @param eventBus an event bus for notifying components of events in the system
+   * @param shutdownImmediate if true, abort all in-progress requests at shutdown, else wait until
+   *        all current requests finish and shutdown gracefully
    * @throws NullPointerException if requestSupplier, client, scheduler, or eventBus are null
    */
   @Inject
   public LoadTest(final RequestManager requestManager, final Client client,
-      final Scheduler scheduler, final EventBus eventBus) {
+      final Scheduler scheduler, final EventBus eventBus,
+      @Named("shutdownImmediate") final boolean shutdownImmediate) {
     this.requestManager = checkNotNull(requestManager);
     this.client = checkNotNull(client);
     this.scheduler = checkNotNull(scheduler);
     this.eventBus = checkNotNull(eventBus);
+    this.shutdownImmediate = shutdownImmediate;
     this.running = new AtomicBoolean(true);
     this.success = true;
     this.completed = new CountDownLatch(1);
@@ -113,7 +119,8 @@ public class LoadTest implements Callable<Boolean> {
         public void run() {
           try {
             LoadTest.this.eventBus.post(TestState.STOPPING);
-            Uninterruptibles.getUninterruptibly(LoadTest.this.client.shutdown(true));
+            Uninterruptibles
+                .getUninterruptibly(LoadTest.this.client.shutdown(LoadTest.this.shutdownImmediate));
           } catch (final Exception e) {
             _logger.error("Exception while attempting to shutdown client", e);
           }
@@ -156,7 +163,8 @@ public class LoadTest implements Callable<Boolean> {
   @Override
   public String toString() {
     return String.format(
-        "LoadTest [%n" + "requestManager=%s,%n" + "scheduler=%s,%n" + "client=%s%n" + "]",
-        this.requestManager, this.scheduler, this.client);
+        "LoadTest [%n" + "requestManager=%s,%n" + "scheduler=%s,%n" + "client=%s,%n"
+            + "shutdownImmediate=%s%n" + "]",
+        this.requestManager, this.scheduler, this.client, this.shutdownImmediate);
   }
 }

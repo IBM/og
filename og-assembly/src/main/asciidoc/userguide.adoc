@@ -173,6 +173,10 @@ log/
 |object_manager
 |ObjectManagerConfig
 |see <<Object Manager Configuration>>
+
+|shutdown_immediate
+|Boolean
+|true
 |===
 
 ==== Operation Configuration

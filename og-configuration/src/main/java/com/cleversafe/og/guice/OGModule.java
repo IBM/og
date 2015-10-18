@@ -163,6 +163,8 @@ public class OGModule extends AbstractModule {
         .to(this.config.authentication.awsCacheSize);
     bind(ConcurrencyConfig.class).toInstance(this.config.concurrency);
     bind(StoppingConditionsConfig.class).toInstance(this.config.stoppingConditions);
+    bindConstant().annotatedWith(Names.named("shutdownImmediate"))
+        .to(this.config.shutdownImmediate);
 
     // FIXME add NONE auth type
     final MapBinder<AuthType, HttpAuth> httpAuthBinder =

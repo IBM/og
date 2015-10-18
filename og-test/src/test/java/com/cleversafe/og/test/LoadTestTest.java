@@ -82,7 +82,7 @@ public class LoadTestTest {
     this.handler = new LoadTestSubscriberExceptionHandler();
     this.eventBus = new EventBus(this.handler);
     this.stats = new Statistics();
-    this.test = new LoadTest(this.requestManager, this.client, this.scheduler, this.eventBus);
+    this.test = new LoadTest(this.requestManager, this.client, this.scheduler, this.eventBus, true);
     this.handler.setLoadTest(this.test);
 
     final TestCondition condition =
@@ -109,7 +109,7 @@ public class LoadTestTest {
   public void invalidLoadTest(final RequestManager requestManager, final Client client,
       final Scheduler scheduler, final EventBus eventBus) {
     this.thrown.expect(NullPointerException.class);
-    new LoadTest(requestManager, client, scheduler, eventBus);
+    new LoadTest(requestManager, client, scheduler, eventBus, true);
   }
 
   @Test
