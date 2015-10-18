@@ -115,7 +115,7 @@ public class LoadTestTest {
   @Test
   public void requestSupplierException() {
     when(this.requestManager.get()).thenThrow(new IllegalStateException());
-    assertThat(this.test.call(), is(false));
+    assertThat(this.test.call().success, is(false));
     verify(this.client, times(1)).shutdown(true);
   }
 
@@ -127,12 +127,12 @@ public class LoadTestTest {
         throw new RuntimeException();
       }
     });
-    assertThat(this.test.call(), is(false));
+    assertThat(this.test.call().success, is(false));
   }
 
   @Test
   public void loadTest() {
-    assertThat(this.test.call(), is(true));
+    assertThat(this.test.call().success, is(true));
     assertThat(this.stats.get(Operation.WRITE, Counter.OPERATIONS), greaterThanOrEqualTo(5L));
     verify(this.client, atLeast(5)).execute(this.request);
     verify(this.client, times(1)).shutdown(true);

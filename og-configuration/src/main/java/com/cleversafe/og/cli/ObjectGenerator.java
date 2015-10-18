@@ -37,6 +37,7 @@ import com.cleversafe.og.json.type.TimeUnitTypeAdapter;
 import com.cleversafe.og.object.ObjectManager;
 import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.test.LoadTest;
+import com.cleversafe.og.test.condition.LoadTestResult;
 import com.cleversafe.og.util.SizeUnit;
 import com.cleversafe.og.util.Version;
 import com.google.common.collect.Sets;
@@ -88,10 +89,10 @@ public class ObjectGenerator {
     LoadTest test = null;
     ObjectManager objectManager = null;
     Statistics statistics = null;
-    boolean success = true;
+    LoadTestResult result = new LoadTestResult(0, 1, true);
     final ExecutorService executorService = Executors.newSingleThreadExecutor();
-    final CompletionService<Boolean> completionService =
-        new ExecutorCompletionService<Boolean>(executorService);
+    final CompletionService<LoadTestResult> completionService =
+        new ExecutorCompletionService<LoadTestResult>(executorService);
     long timestampStart = 0;
     long timestampFinish = 0;
     final CountDownLatch shutdownLatch = new CountDownLatch(1);
@@ -119,10 +120,10 @@ public class ObjectGenerator {
 
       timestampStart = System.currentTimeMillis();
       completionService.submit(test);
-      success = completionService.take().get();
+      result = completionService.take().get();
       timestampFinish = System.currentTimeMillis();
 
-      if (success) {
+      if (result.success) {
         _consoleLogger.info("Test Completed.");
       } else {
         _consoleLogger.error("Test ended unsuccessfully. See og.log for details");
@@ -133,7 +134,7 @@ public class ObjectGenerator {
       _consoleLogger.info("Test interrupted.");
     } catch (final Exception e) {
       timestampFinish = System.currentTimeMillis();
-      success = false;
+      result = new LoadTestResult(result.timestampStart, result.timestampFinish, false);
 
       _logger.error("Exception while configuring and running test", e);
       _consoleLogger.error("Test Error. See og.log for details");
@@ -149,7 +150,7 @@ public class ObjectGenerator {
         final Summary summary = new Summary(statistics, timestampStart, timestampFinish);
         _summaryJsonLogger.info(gson.toJson(summary.getSummaryStats()));
 
-        if (success) {
+        if (result.success) {
           logSummaryBanner();
           _consoleLogger.info("{}", summary);
         }
@@ -158,7 +159,7 @@ public class ObjectGenerator {
 
     shutdownLatch.countDown();
 
-    if (!success) {
+    if (!result.success) {
       Application.exit(Application.TEST_ERROR);
     }
   }

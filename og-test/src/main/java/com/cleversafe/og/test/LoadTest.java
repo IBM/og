@@ -26,6 +26,7 @@ import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
 import com.cleversafe.og.http.HttpResponse;
 import com.cleversafe.og.scheduling.Scheduler;
+import com.cleversafe.og.test.condition.LoadTestResult;
 import com.cleversafe.og.util.Pair;
 import com.cleversafe.og.util.TestState;
 import com.google.common.eventbus.EventBus;
@@ -40,7 +41,7 @@ import com.google.common.util.concurrent.Uninterruptibles;
  * @since 1.0
  */
 @Singleton
-public class LoadTest implements Callable<Boolean> {
+public class LoadTest implements Callable<LoadTestResult> {
   private static final Logger _logger = LoggerFactory.getLogger(LoadTest.class);
   private final RequestManager requestManager;
   private final Client client;
@@ -48,6 +49,8 @@ public class LoadTest implements Callable<Boolean> {
   private final EventBus eventBus;
   private final boolean shutdownImmediate;
   private final AtomicBoolean running;
+  private long timestampStart;
+  private long timestampFinish;
   private volatile boolean success;
   private final CountDownLatch completed;
 
@@ -81,10 +84,11 @@ public class LoadTest implements Callable<Boolean> {
    * 
    * @see java.util.concurrent.Callable#call()
    * 
-   * @return whether this test succeeded or failed
+   * @return results from this test
    */
   @Override
-  public Boolean call() {
+  public LoadTestResult call() {
+    this.timestampStart = System.currentTimeMillis();
     this.eventBus.post(TestState.RUNNING);
     try {
       while (this.running.get()) {
@@ -100,7 +104,8 @@ public class LoadTest implements Callable<Boolean> {
     }
 
     Uninterruptibles.awaitUninterruptibly(this.completed);
-    return this.success;
+    this.timestampFinish = System.currentTimeMillis();
+    return new LoadTestResult(this.timestampStart, this.timestampFinish, this.success);
   }
 
   /**
