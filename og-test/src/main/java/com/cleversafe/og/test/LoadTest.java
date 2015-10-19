@@ -46,6 +46,7 @@ public class LoadTest implements Callable<LoadTestResult> {
   private final RequestManager requestManager;
   private final Client client;
   private final Scheduler scheduler;
+  private final Thread schedulerThread;
   private final EventBus eventBus;
   private final boolean shutdownImmediate;
   private final AtomicBoolean running;
@@ -72,11 +73,30 @@ public class LoadTest implements Callable<LoadTestResult> {
     this.requestManager = checkNotNull(requestManager);
     this.client = checkNotNull(client);
     this.scheduler = checkNotNull(scheduler);
+    this.schedulerThread = new Thread(new SchedulerRunnable(), "loadtest-scheduler");
     this.eventBus = checkNotNull(eventBus);
     this.shutdownImmediate = shutdownImmediate;
     this.running = new AtomicBoolean(true);
     this.success = true;
     this.completed = new CountDownLatch(1);
+  }
+
+  private class SchedulerRunnable implements Runnable {
+    @Override
+    public void run() {
+      try {
+        while (LoadTest.this.running.get()) {
+          final Request request = LoadTest.this.requestManager.get();
+          final ListenableFuture<Response> future = LoadTest.this.client.execute(request);
+          LoadTest.this.eventBus.post(request);
+          addCallback(request, future);
+          LoadTest.this.scheduler.waitForNext();
+        }
+      } catch (final Exception e) {
+        _logger.error("Exception while producing request", e);
+        abortTest();
+      }
+    }
   }
 
   /*
@@ -90,18 +110,8 @@ public class LoadTest implements Callable<LoadTestResult> {
   public LoadTestResult call() {
     this.timestampStart = System.currentTimeMillis();
     this.eventBus.post(TestState.RUNNING);
-    try {
-      while (this.running.get()) {
-        final Request request = this.requestManager.get();
-        final ListenableFuture<Response> future = this.client.execute(request);
-        this.eventBus.post(request);
-        addCallback(request, future);
-        this.scheduler.waitForNext();
-      }
-    } catch (final Exception e) {
-      _logger.error("Exception while producing request", e);
-      abortTest();
-    }
+
+    this.schedulerThread.start();
 
     Uninterruptibles.awaitUninterruptibly(this.completed);
     this.timestampFinish = System.currentTimeMillis();
@@ -114,12 +124,14 @@ public class LoadTest implements Callable<LoadTestResult> {
   public void stopTest() {
     // ensure this code is only run once
     if (this.running.getAndSet(false)) {
+      this.schedulerThread.interrupt();
+
       // currently a new thread is required here to run shutdown logic because stopTest can be
       // called via a client worker thread via client -> eventbus -> stopping condition -> stopTest,
       // which will introduce a deadlock since stopTest waits until all client threads are done. An
       // alternative approach is to us an async eventbus, but this requires managing the shutdown of
       // the async eventbus' executor somewhere
-      new Thread() {
+      new Thread("loadtest-shutdown") {
         @Override
         public void run() {
           try {
