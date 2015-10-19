@@ -219,8 +219,11 @@ public class ObjectGenerator {
 
     @Override
     public void run() {
+      _logger.info("Shutdown hook triggered, stopping test");
       this.test.stopTest();
-      Uninterruptibles.awaitUninterruptibly(this.shutdownLatch, 1, TimeUnit.MINUTES);
+
+      _logger.info("Waiting on shutdown lock");
+      Uninterruptibles.awaitUninterruptibly(this.shutdownLatch);
     }
   }
 }
