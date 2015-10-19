@@ -13,9 +13,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.io.File;
 import java.util.Collection;
 import java.util.Set;
-import java.util.concurrent.CompletionService;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -41,6 +39,7 @@ import com.cleversafe.og.test.condition.LoadTestResult;
 import com.cleversafe.og.util.SizeUnit;
 import com.cleversafe.og.util.Version;
 import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.google.gson.FieldNamingPolicy;
@@ -84,84 +83,67 @@ public class ObjectGenerator {
     }
 
     final Gson gson = createGson();
-    final OGConfig ogConfig;
-    final Injector injector;
-    LoadTest test = null;
-    ObjectManager objectManager = null;
-    Statistics statistics = null;
-    LoadTestResult result = new LoadTestResult(0, 1, true);
-    final ExecutorService executorService = Executors.newSingleThreadExecutor();
-    final CompletionService<LoadTestResult> completionService =
-        new ExecutorCompletionService<LoadTestResult>(executorService);
-    long timestampStart = 0;
-    long timestampFinish = 0;
     final CountDownLatch shutdownLatch = new CountDownLatch(1);
 
     logBanner();
+    _consoleLogger.info("Configuring...");
 
     try {
-      _consoleLogger.info("Configuring...");
-
       final File json = cli.flags().getFile("og_config");
-      final String defaultJson = "og.json";
-      ogConfig = Application.fromJson(json, defaultJson, OGConfig.class, gson);
+      final OGConfig ogConfig = Application.fromJson(json, "og.json", OGConfig.class, gson);
       _ogJsonLogger.info(gson.toJson(ogConfig));
 
-      injector = createInjector(ogConfig);
-      test = injector.getInstance(LoadTest.class);
-      objectManager = injector.getInstance(ObjectManager.class);
-      statistics = injector.getInstance(Statistics.class);
-      OGLog4jShutdownCallbackRegistry
-          .setOGShutdownHook((new ShutdownHook(Thread.currentThread(), shutdownLatch)));
+      final Injector injector = createInjector(ogConfig);
+      final LoadTest test = injector.getInstance(LoadTest.class);
+      final ObjectManager objectManager = injector.getInstance(ObjectManager.class);
+      final Statistics statistics = injector.getInstance(Statistics.class);
 
-      _logger.info("{}", test);
-      _consoleLogger.info("Configured.");
-      _consoleLogger.info("Test Running...");
+      OGLog4jShutdownCallbackRegistry.setOGShutdownHook((new ShutdownHook(test, shutdownLatch)));
 
-      timestampStart = System.currentTimeMillis();
-      completionService.submit(test);
-      result = completionService.take().get();
-      timestampFinish = System.currentTimeMillis();
+      final LoadTestResult result = run(test, objectManager, statistics, gson);
 
-      if (result.success) {
-        _consoleLogger.info("Test Completed.");
-      } else {
-        _consoleLogger.error("Test ended unsuccessfully. See og.log for details");
+      shutdownLatch.countDown();
+
+      // slight race here; if shutdown hook completes prior to the exit line below
+      if (!result.success) {
+        Application.exit(Application.TEST_ERROR);
       }
-
-    } catch (final InterruptedException e) {
-      timestampFinish = System.currentTimeMillis();
-      _consoleLogger.info("Test interrupted.");
     } catch (final Exception e) {
-      timestampFinish = System.currentTimeMillis();
-      result = new LoadTestResult(result.timestampStart, result.timestampFinish, false);
-
       _logger.error("Exception while configuring and running test", e);
       _consoleLogger.error("Test Error. See og.log for details");
       logConsoleException(e);
-    } finally {
-      if (test != null) {
-        test.stopTest();
-      }
-      MoreExecutors.shutdownAndAwaitTermination(executorService, 1, TimeUnit.MINUTES);
-      shutdownObjectManager(objectManager);
-
-      if (statistics != null) {
-        final Summary summary = new Summary(statistics, timestampStart, timestampFinish);
-        _summaryJsonLogger.info(gson.toJson(summary.getSummaryStats()));
-
-        if (result.success) {
-          logSummaryBanner();
-          _consoleLogger.info("{}", summary);
-        }
-      }
-    }
-
-    shutdownLatch.countDown();
-
-    if (!result.success) {
       Application.exit(Application.TEST_ERROR);
     }
+  }
+
+  public static LoadTestResult run(final LoadTest test, final ObjectManager objectManager,
+      final Statistics statistics, final Gson gson) {
+    final ExecutorService executorService = Executors.newSingleThreadExecutor();
+
+    _logger.info("{}", test);
+    _consoleLogger.info("Configured.");
+    _consoleLogger.info("Test Running...");
+
+    final LoadTestResult result = Futures.getUnchecked(executorService.submit(test));
+
+    if (result.success) {
+      _consoleLogger.info("Test Completed.");
+    } else {
+      _consoleLogger.error("Test ended unsuccessfully. See og.log for details");
+    }
+
+    MoreExecutors.shutdownAndAwaitTermination(executorService, 1, TimeUnit.MINUTES);
+    shutdownObjectManager(objectManager);
+
+    final Summary summary = new Summary(statistics, result.timestampStart, result.timestampFinish);
+    _summaryJsonLogger.info(gson.toJson(summary.getSummaryStats()));
+
+    if (result.success) {
+      logSummaryBanner();
+      _consoleLogger.info("{}", summary);
+    }
+
+    return result;
   }
 
   public static void logConsoleException(final Exception e) {
@@ -207,9 +189,7 @@ public class ObjectGenerator {
 
   public static void shutdownObjectManager(final ObjectManager objectManager) {
     try {
-      if (objectManager != null) {
-        objectManager.shutdown();
-      }
+      objectManager.shutdown();
     } catch (final Exception e) {
       _logger.error("Error shutting down object manager", e);
     }
@@ -229,17 +209,17 @@ public class ObjectGenerator {
   }
 
   private static class ShutdownHook extends Thread {
-    private final Thread mainThread;
+    private final LoadTest test;
     private final CountDownLatch shutdownLatch;
 
-    public ShutdownHook(final Thread mainThread, final CountDownLatch shutdownLatch) {
-      this.mainThread = checkNotNull(mainThread);
+    public ShutdownHook(final LoadTest test, final CountDownLatch shutdownLatch) {
+      this.test = checkNotNull(test);
       this.shutdownLatch = checkNotNull(shutdownLatch);
     }
 
     @Override
     public void run() {
-      this.mainThread.interrupt();
+      this.test.stopTest();
       Uninterruptibles.awaitUninterruptibly(this.shutdownLatch, 1, TimeUnit.MINUTES);
     }
   }
