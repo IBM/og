@@ -43,6 +43,8 @@ import javax.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+
 @Singleton
 public class RandomObjectPopulator extends Thread implements ObjectManager {
   private static final Logger _logger = LoggerFactory.getLogger(RandomObjectPopulator.class);
@@ -140,7 +142,8 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
 
     loadObjects();
 
-    this.saver = Executors.newScheduledThreadPool(1);
+    this.saver = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setDaemon(true)
+        .setNameFormat("scheduled-object-persist").build());
     this.saver.scheduleWithFixedDelay(new Runnable() {
       @Override
       public void run() {
