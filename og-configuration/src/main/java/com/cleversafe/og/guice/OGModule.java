@@ -746,7 +746,8 @@ public class OGModule extends AbstractModule {
         .usingExpectContinue(clientConfig.expectContinue)
         .withWaitForContinue(clientConfig.waitForContinue).withRetryCount(clientConfig.retryCount)
         .usingRequestSentRetry(clientConfig.requestSentRetry)
-        .withAuthentication(authentication.get(authType)).withUserAgent(Version.displayVersion())
+        .withAuthentication(authentication.get(authType))
+        .withUserAgent(String.format("og-%s", Version.displayVersion()))
         .withWriteThroughput(clientConfig.writeThroughput)
         .withReadThroughput(clientConfig.readThroughput);
 
