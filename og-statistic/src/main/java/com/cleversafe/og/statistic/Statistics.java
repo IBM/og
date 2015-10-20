@@ -95,6 +95,8 @@ public class Statistics {
     final Operation operation = HttpUtil.toOperation(request.getMethod());
     updateCounter(operation, Counter.ACTIVE_OPERATIONS, 1);
     updateCounter(Operation.ALL, Counter.ACTIVE_OPERATIONS, 1);
+
+    _logger.trace("Statistics request updated: {}", request);
   }
 
 
@@ -126,7 +128,7 @@ public class Statistics {
       updateStatusCode(operation, response.getStatusCode());
       updateStatusCode(Operation.ALL, response.getStatusCode());
     }
-    _logger.trace("Statistics updated: {}, {}", request, response);
+    _logger.trace("Statistics operation updated: {}, {}", request, response);
   }
 
   private long getBytes(final Operation operation, final Request request, final Response response) {

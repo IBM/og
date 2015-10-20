@@ -64,6 +64,7 @@ public class SimpleRequestManager implements RequestManager {
     double trueWriteWeight = writeWeight;
 
     if (allEqual(0.0, trueWriteWeight, readWeight, deleteWeight)) {
+      _logger.debug("No io mix percentages found, setting write=100");
       trueWriteWeight = 100.0;
     }
 
@@ -103,7 +104,6 @@ public class SimpleRequestManager implements RequestManager {
   @Override
   public Request get() {
     final Request request = this.requestSupplier.get().get();
-    _logger.trace("Request generated: {}", request);
     return request;
   }
 

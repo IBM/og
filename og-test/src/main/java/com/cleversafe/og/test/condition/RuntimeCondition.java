@@ -13,6 +13,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.cleversafe.og.test.LoadTest;
 import com.google.common.util.concurrent.Uninterruptibles;
 
@@ -22,6 +25,7 @@ import com.google.common.util.concurrent.Uninterruptibles;
  * @since 1.0
  */
 public class RuntimeCondition implements TestCondition {
+  private static final Logger _logger = LoggerFactory.getLogger(RuntimeCondition.class);
   private final LoadTest test;
   private final long runtime;
   private final TimeUnit unit;
@@ -50,7 +54,7 @@ public class RuntimeCondition implements TestCondition {
         RuntimeCondition.this.test.stopTest();
       }
     });
-    t.setName("runtimeCondition");
+    t.setName("runtime-condition");
     t.setDaemon(true);
     t.start();
   }
@@ -59,6 +63,7 @@ public class RuntimeCondition implements TestCondition {
   public boolean isTriggered() {
     final long currentRuntime = System.nanoTime() - this.timestampStart;
     if (currentRuntime >= this.runtime) {
+      _logger.info("{} is triggered [{}]", toString(), currentRuntime);
       return true;
     }
     return false;

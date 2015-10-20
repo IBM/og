@@ -43,6 +43,7 @@ public class LoadTestSubscriberExceptionHandler implements SubscriberExceptionHa
    * 
    * @param test the load test to manage
    */
+  // this method exists to break a circular dependency in the dependency graph
   public void setLoadTest(final LoadTest test) {
     this.test = checkNotNull(test);
   }

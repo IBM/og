@@ -87,6 +87,8 @@ public class LoadTest implements Callable<LoadTestResult> {
       try {
         while (LoadTest.this.running.get()) {
           final Request request = LoadTest.this.requestManager.get();
+          _logger.trace("Created request {}", request);
+
           final ListenableFuture<Response> future = LoadTest.this.client.execute(request);
           LoadTest.this.eventBus.post(request);
           addCallback(request, future);
@@ -109,10 +111,13 @@ public class LoadTest implements Callable<LoadTestResult> {
   @Override
   public LoadTestResult call() {
     this.timestampStart = System.currentTimeMillis();
+    _logger.debug("Posting TestState.RUNNING to event bus");
     this.eventBus.post(TestState.RUNNING);
 
+    _logger.debug("Starting scheduler thread");
     this.schedulerThread.start();
 
+    _logger.debug("Waiting for test complete");
     Uninterruptibles.awaitUninterruptibly(this.completed);
     this.timestampFinish = System.currentTimeMillis();
     return new LoadTestResult(this.timestampStart, this.timestampFinish, this.success);
@@ -122,8 +127,10 @@ public class LoadTest implements Callable<LoadTestResult> {
    * Cleanly stop this test
    */
   public void stopTest() {
+    _logger.debug("Entering stopTest");
     // ensure this code is only run once
     if (this.running.getAndSet(false)) {
+      _logger.debug("Interrupting scheduler thread");
       this.schedulerThread.interrupt();
 
       // currently a new thread is required here to run shutdown logic because stopTest can be
@@ -135,7 +142,10 @@ public class LoadTest implements Callable<LoadTestResult> {
         @Override
         public void run() {
           try {
+            _logger.debug("Posting TestState.STOPPING to event bus");
             LoadTest.this.eventBus.post(TestState.STOPPING);
+
+            _logger.debug("Waiting on client shutdown future");
             Uninterruptibles
                 .getUninterruptibly(LoadTest.this.client.shutdown(LoadTest.this.shutdownImmediate));
           } catch (final Exception e) {
@@ -151,6 +161,7 @@ public class LoadTest implements Callable<LoadTestResult> {
    * Immediately stop this test; marking it as failed
    */
   public void abortTest() {
+    _logger.debug("Entering abortTest");
     this.success = false;
     stopTest();
   }
@@ -159,7 +170,7 @@ public class LoadTest implements Callable<LoadTestResult> {
     Futures.addCallback(future, new FutureCallback<Response>() {
       @Override
       public void onSuccess(final Response response) {
-        _logger.trace("Request executed {}, {}", request, response);
+        _logger.trace("Operation completed {}, {}", request, response);
         postOperation(response);
       }
 

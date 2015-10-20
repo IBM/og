@@ -64,18 +64,27 @@ public class ConcurrentRequestScheduler implements Scheduler {
         @Override
         public void run() {
           final CountDownLatch started = ConcurrentRequestScheduler.this.startedLatch;
+          _logger.info("Starting ramp");
           final int interval = ConcurrentRequestScheduler.this.concurrentRequests - 1;
-          final long sleepDuration = ConcurrentRequestScheduler.this.rampDuration / interval;
+          _logger.debug("Ramp interval [{}]", interval);
 
+          final long sleepDuration = ConcurrentRequestScheduler.this.rampDuration / interval;
+          _logger.debug("Ramp sleep duration [{}]", sleepDuration);
+
+          _logger.debug("Awaiting start latch");
           Uninterruptibles.awaitUninterruptibly(started);
           for (int i = 0; i < interval; i++) {
+            _logger.debug("Sleeping [{}] nanoseconds", sleepDuration);
             Uninterruptibles.sleepUninterruptibly(sleepDuration, TimeUnit.NANOSECONDS);
+            _logger.debug("Releasing semaphore permit");
             ConcurrentRequestScheduler.this.sem.release();
           }
+          _logger.info("Finished ramp");
         }
-      });
+      }, "concurrent-scheduler-ramp");
       rampupThread.setDaemon(true);
       rampupThread.start();
+      _logger.debug("Starting permits [{}]", this.sem.availablePermits());
     }
   }
 

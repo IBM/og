@@ -29,7 +29,7 @@ public class Version {
       displayVersion = ResourceBundle.getBundle("og").getString("display.version");
     } catch (final MissingResourceException e) {
       _logger.error("Unable to retrieve display version", e);
-      displayVersion = "og";
+      displayVersion = "0.0.0";
     }
     DISPLAY_VERSION = displayVersion;
   }

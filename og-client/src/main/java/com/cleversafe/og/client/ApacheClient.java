@@ -190,6 +190,7 @@ public class ApacheClient implements Client {
         .build();
   }
 
+  // custom retry handler that will retry after any type of exception
   private class CustomHttpRequestRetryHandler extends DefaultHttpRequestRetryHandler {
     public CustomHttpRequestRetryHandler(final int retryCount,
         final boolean requestSentRetryEnabled) {
@@ -258,7 +259,7 @@ public class ApacheClient implements Client {
   public ListenableFuture<Boolean> shutdown(final boolean immediate) {
     final SettableFuture<Boolean> future = SettableFuture.create();
     final Thread t = new Thread(getShutdownRunnable(future, immediate));
-    t.setName("clientShutdown");
+    t.setName("client-shutdown");
     this.running = false;
     t.start();
     return future;
@@ -339,6 +340,7 @@ public class ApacheClient implements Client {
       }
       final Response response;
       try {
+        _logger.trace("Sending request {}", this.request);
         sendRequest(this.apacheRequest, responseBuilder);
       } catch (final Exception e) {
         if (ApacheClient.this.running) {
@@ -349,6 +351,7 @@ public class ApacheClient implements Client {
         responseBuilder.withStatusCode(599);
       }
       response = responseBuilder.build();
+      _logger.trace("Received response {}", response);
       this.timestamps.finish = System.nanoTime();
       this.timestamps.finishMillis = System.currentTimeMillis();
 

@@ -11,6 +11,9 @@ package com.cleversafe.og.test.condition;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
 import com.cleversafe.og.http.HttpUtil;
@@ -26,6 +29,7 @@ import com.google.common.eventbus.Subscribe;
  * @since 1.0
  */
 public class StatusCodeCondition implements TestCondition {
+  private static final Logger _logger = LoggerFactory.getLogger(StatusCodeCondition.class);
   private final Operation operation;
   private final int statusCode;
   private final long thresholdValue;
@@ -72,6 +76,7 @@ public class StatusCodeCondition implements TestCondition {
   public boolean isTriggered() {
     final long currentValue = this.stats.getStatusCode(this.operation, this.statusCode);
     if (currentValue >= this.thresholdValue) {
+      _logger.info("{} is triggered [{}]", toString(), currentValue);
       return true;
     }
     return false;

@@ -115,6 +115,7 @@ public class ObjectGenerator {
   public static LoadTestResult run(final LoadTest test, final ObjectManager objectManager,
       final Statistics statistics, final Gson gson) {
     _logger.info("{}", test);
+    _logger.info("{}", objectManager);
     _consoleLogger.info("Configured.");
     _consoleLogger.info("Test Running...");
 
@@ -212,11 +213,12 @@ public class ObjectGenerator {
 
     @Override
     public void run() {
-      _logger.info("Shutdown hook triggered, stopping test");
+      _logger.debug("og shutdown hook triggered, stopping test");
       this.test.stopTest();
 
       _logger.info("Waiting on shutdown lock");
       Uninterruptibles.awaitUninterruptibly(this.shutdownLatch);
+      _logger.debug("Shutdown lock released, exiting og shutdown hook");
     }
   }
 }

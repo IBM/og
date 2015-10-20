@@ -19,29 +19,33 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.Logger;
 import org.apache.logging.log4j.core.appender.RollingRandomAccessFileAppender;
 import org.apache.logging.log4j.core.util.DefaultShutdownCallbackRegistry;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.util.concurrent.Uninterruptibles;
 
 @SuppressWarnings("serial")
 public class OGLog4jShutdownCallbackRegistry extends DefaultShutdownCallbackRegistry {
+  private static org.slf4j.Logger _logger;
   private static Runnable OG_SHUTDOWN_HOOK;
 
   public OGLog4jShutdownCallbackRegistry() {}
 
   @Override
   public void run() {
+    setLogger();
+
     // gracefully shutdown og components
     if (OG_SHUTDOWN_HOOK != null) {
-      LOGGER.info("Running og shutdown hook");
+      _logger.info("Running og shutdown hook");
       OG_SHUTDOWN_HOOK.run();
     }
 
     // workaround to wait for log4j completion
-    LOGGER.info("Running wait for gzCompressAction task");
+    _logger.info("Running wait for gzCompressAction task");
     waitForGzCompressActionCompletion();
 
     // run default log4j hooks
-    LOGGER.info("Running log4j shutdown hooks");
+    _logger.info("Running log4j shutdown hooks");
     super.run();
   }
 
@@ -57,7 +61,7 @@ public class OGLog4jShutdownCallbackRegistry extends DefaultShutdownCallbackRegi
     final FilenameFilter incompleteGzFilenameFilter = new IncompleteGzCompressAction();
 
     while (logDirectory.list(incompleteGzFilenameFilter).length > 0) {
-      LOGGER.debug("Polling found incomplete gz files, will wait");
+      _logger.debug("Polling found incomplete gz files, will wait");
       Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
     }
   }
@@ -76,8 +80,18 @@ public class OGLog4jShutdownCallbackRegistry extends DefaultShutdownCallbackRegi
 
   }
 
+  // For this class, _logger has to be set after the instance is created because this class is
+  // instantiated as a part of log4j initialization. Setting _logger in the standard way or as an
+  // instance variable will both result in a NullPointerException because log4j is not ready
+  private static void setLogger() {
+    if (_logger == null) {
+      _logger = LoggerFactory.getLogger(OGLog4jShutdownCallbackRegistry.class);
+    }
+  }
+
   public static void setOGShutdownHook(final Runnable ogShutdownHook) {
-    LOGGER.debug("Setting ogShutdownHook to [{}]", ogShutdownHook);
+    setLogger();
+    _logger.debug("Setting ogShutdownHook to [{}]", ogShutdownHook);
     OG_SHUTDOWN_HOOK = checkNotNull(ogShutdownHook);
   }
 }

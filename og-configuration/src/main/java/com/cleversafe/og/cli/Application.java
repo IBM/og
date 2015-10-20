@@ -8,6 +8,7 @@
 
 package com.cleversafe.og.cli;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.File;
@@ -35,6 +36,7 @@ import com.martiansoftware.jsap.JSAPResult;
  * @since 1.0
  */
 public class Application {
+  private static final Logger _logger = LoggerFactory.getLogger(Application.class);
   public static final int TEST_ERROR = 1;
 
   private Application() {}
@@ -167,11 +169,8 @@ public class Application {
     checkNotNull(resourceName);
     try {
       final URL url = ClassLoader.getSystemResource(resourceName);
-
-      if (url == null) {
-        throw new IllegalArgumentException(
-            String.format("Could not find configuration file on classpath [%s]", resourceName));
-      }
+      checkArgument(url != null, "Could not find configuration file on classpath [%s]",
+          resourceName);
 
       return url.toURI();
     } catch (final URISyntaxException e) {
@@ -207,6 +206,7 @@ public class Application {
    * @param exitCode the exit code to pass to System.exit
    */
   public static void exit(final int exitCode) {
+    _logger.info("Exiting with exit code [{}]", exitCode);
     System.exit(exitCode);
   }
 }

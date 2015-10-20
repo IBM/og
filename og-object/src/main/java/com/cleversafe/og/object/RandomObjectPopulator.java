@@ -54,6 +54,8 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
   private final int maxObjects;
   private final String directory;
   private final String prefix;
+  private final long persistFrequency;
+  private final Integer objectFileIndex;
   public static final String SUFFIX = ".object";
   private final Pattern filenamePattern;
 
@@ -126,6 +128,8 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
         .compile(String.format("%s(\\d|[1-9]\\d*)%s", this.prefix, RandomObjectPopulator.SUFFIX));
     checkArgument(maxObjectCount > 0, "maxObjectCount must be > 0 [%s]", maxObjectCount);
     this.maxObjects = maxObjectCount;
+    this.persistFrequency = persistTime;
+    this.objectFileIndex = objectFileIndex;
     final File[] files = getIdFiles();
     if (files != null && files.length > 1) {
       this.idFileIndex = selectInitialObjectFile(files.length, objectFileIndex);
@@ -449,7 +453,8 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
 
   @Override
   public String toString() {
-    return String.format("RandomObjectPopulator [maxObjects=%s, directory=%s, prefix=%s]",
-        this.maxObjects, this.directory, this.prefix);
+    return String.format(
+        "RandomObjectPopulator [maxObjects=%s, directory=%s, prefix=%s, persistFrequency=%s, objectFileIndex=%s]",
+        this.maxObjects, this.directory, this.prefix, this.persistFrequency, this.objectFileIndex);
   }
 }

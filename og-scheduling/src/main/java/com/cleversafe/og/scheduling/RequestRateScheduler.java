@@ -71,6 +71,7 @@ public class RequestRateScheduler implements Scheduler {
     // convert arbitrary rate unit to rate/second
     final double requestsPerSecond =
         rate / (unit.toNanos(1) / (double) TimeUnit.SECONDS.toNanos(1));
+    _logger.debug("Calculated requests per second [{}]", requestsPerSecond);
 
     this.rampDuration = (long) (rampup * rampupUnit.toNanos(1));
     if (this.rampDuration > 0.0) {
@@ -86,7 +87,7 @@ public class RequestRateScheduler implements Scheduler {
   @Override
   public void waitForNext() {
     if (this.requestThread == null) {
-      this.requestThread = new Thread(new Permitter());
+      this.requestThread = new Thread(new Permitter(), "rate-scheduler-ramp");
       this.requestThread.setDaemon(true);
       this.requestThread.start();
     }
