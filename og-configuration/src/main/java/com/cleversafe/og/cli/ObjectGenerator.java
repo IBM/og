@@ -14,8 +14,6 @@ import java.io.File;
 import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -39,8 +37,6 @@ import com.cleversafe.og.test.condition.LoadTestResult;
 import com.cleversafe.og.util.SizeUnit;
 import com.cleversafe.og.util.Version;
 import com.google.common.collect.Sets;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
@@ -118,13 +114,11 @@ public class ObjectGenerator {
 
   public static LoadTestResult run(final LoadTest test, final ObjectManager objectManager,
       final Statistics statistics, final Gson gson) {
-    final ExecutorService executorService = Executors.newSingleThreadExecutor();
-
     _logger.info("{}", test);
     _consoleLogger.info("Configured.");
     _consoleLogger.info("Test Running...");
 
-    final LoadTestResult result = Futures.getUnchecked(executorService.submit(test));
+    final LoadTestResult result = test.call();
 
     if (result.success) {
       _consoleLogger.info("Test Completed.");
@@ -132,7 +126,6 @@ public class ObjectGenerator {
       _consoleLogger.error("Test ended unsuccessfully. See og.log for details");
     }
 
-    MoreExecutors.shutdownAndAwaitTermination(executorService, 1, TimeUnit.MINUTES);
     shutdownObjectManager(objectManager);
 
     final Summary summary = new Summary(statistics, result.timestampStart, result.timestampFinish);
