@@ -15,6 +15,8 @@ public class ClientConfig {
   public int soLinger;
   public boolean soKeepAlive;
   public boolean tcpNoDelay;
+  public int soSndBuf;
+  public int soRcvBuf;
   public boolean persistentConnections;
   public boolean chunkedEncoding;
   public boolean expectContinue;
@@ -31,6 +33,8 @@ public class ClientConfig {
     this.soLinger = -1;
     this.soKeepAlive = true;
     this.tcpNoDelay = true;
+    this.soSndBuf = 0;
+    this.soRcvBuf = 0;
     this.persistentConnections = true;
     this.chunkedEncoding = false;
     this.expectContinue = false;

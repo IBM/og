@@ -741,6 +741,7 @@ public class OGModule extends AbstractModule {
         .withConnectTimeout(clientConfig.connectTimeout).withSoTimeout(clientConfig.soTimeout)
         .usingSoReuseAddress(clientConfig.soReuseAddress).withSoLinger(clientConfig.soLinger)
         .usingSoKeepAlive(clientConfig.soKeepAlive).usingTcpNoDelay(clientConfig.tcpNoDelay)
+        .withSoSndBuf(clientConfig.soSndBuf).withSoRcvBuf(clientConfig.soRcvBuf)
         .usingPersistentConnections(clientConfig.persistentConnections)
         .usingChunkedEncoding(clientConfig.chunkedEncoding)
         .usingExpectContinue(clientConfig.expectContinue)

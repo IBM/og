@@ -324,6 +324,14 @@ log/
 |Boolean
 |true
 
+|so_snd_buf
+|Integer
+|0; "platform default"
+
+|so_rcv_buf
+|Integer
+|0; "platform default"
+
 |persistent_connections
 |Boolean
 |true

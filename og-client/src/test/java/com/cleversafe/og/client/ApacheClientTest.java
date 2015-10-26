@@ -182,6 +182,36 @@ public class ApacheClientTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
+  public void negativeSoSndBuf() {
+    new ApacheClient.Builder().withSoSndBuf(-1).build();
+  }
+
+  @Test
+  public void zeroSoSndBuf() {
+    new ApacheClient.Builder().withSoSndBuf(0).build();
+  }
+
+  @Test
+  public void positiveSoSndBuf() {
+    new ApacheClient.Builder().withSoSndBuf(1).build();
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void negativeSoRcvBuf() {
+    new ApacheClient.Builder().withSoRcvBuf(-1).build();
+  }
+
+  @Test
+  public void zeroSoRcvBuf() {
+    new ApacheClient.Builder().withSoRcvBuf(0).build();
+  }
+
+  @Test
+  public void positiveSoRcvBuf() {
+    new ApacheClient.Builder().withSoRcvBuf(1).build();
+  }
+
+  @Test(expected = IllegalArgumentException.class)
   public void negativeWaitForContinue() {
     new ApacheClient.Builder().withWaitForContinue(-1).build();
   }
