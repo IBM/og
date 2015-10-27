@@ -212,6 +212,38 @@ public class ApacheClientTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
+  public void negativeValidateAfterInactivity() {
+    new ApacheClient.Builder().withValidateAfterInactivity(-1).build();
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void zeroValidateAfterInactivity() {
+    new ApacheClient.Builder().withValidateAfterInactivity(0).build();
+  }
+
+  @Test
+  public void positiveValidateAfterInactivity() {
+    new ApacheClient.Builder().withValidateAfterInactivity(1).build();
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void negativeMaxIdleTime() {
+    new ApacheClient.Builder().withMaxIdleTime(-1).build();
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void zeroMaxIdleTime() {
+    new ApacheClient.Builder().withMaxIdleTime(0).build();
+  }
+
+  @Test
+  public void positiveMaxIdleTime() {
+    // using 100 rather than 1ms and also shutting down client immediately to kill background
+    // eviction thread that is created when using max idle time
+    new ApacheClient.Builder().withMaxIdleTime(100).build().shutdown(true);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
   public void negativeWaitForContinue() {
     new ApacheClient.Builder().withWaitForContinue(-1).build();
   }

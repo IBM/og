@@ -18,6 +18,8 @@ public class ClientConfig {
   public int soSndBuf;
   public int soRcvBuf;
   public boolean persistentConnections;
+  public int validateAfterInactivity;
+  public int maxIdleTime;
   public boolean chunkedEncoding;
   public boolean expectContinue;
   public int waitForContinue;
@@ -36,6 +38,8 @@ public class ClientConfig {
     this.soSndBuf = 0;
     this.soRcvBuf = 0;
     this.persistentConnections = true;
+    this.validateAfterInactivity = 10000;
+    this.maxIdleTime = 60000;
     this.chunkedEncoding = false;
     this.expectContinue = false;
     this.waitForContinue = 3000;

@@ -336,6 +336,14 @@ log/
 |Boolean
 |true
 
+|validate_after_inactivity
+|Integer
+|10000; in milliseconds
+
+|max_idle_time
+|Integer
+|60000; in milliseconds
+
 |chunked_encoding
 |Boolean
 |false

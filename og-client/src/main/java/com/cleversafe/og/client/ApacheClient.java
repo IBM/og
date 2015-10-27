@@ -105,6 +105,8 @@ public class ApacheClient implements Client {
   private final int soSndBuf;
   private final int soRcvBuf;
   private final boolean persistentConnections;
+  private final int validateAfterInactivity;
+  private final int maxIdleTime;
   private final boolean chunkedEncoding;
   private final boolean expectContinue;
   private final int waitForContinue;
@@ -131,6 +133,8 @@ public class ApacheClient implements Client {
     this.soSndBuf = builder.soSndBuf;
     this.soRcvBuf = builder.soRcvBuf;
     this.persistentConnections = builder.persistentConnections;
+    this.validateAfterInactivity = builder.validateAfterInactivity;
+    this.maxIdleTime = builder.maxIdleTime;
     this.chunkedEncoding = builder.chunkedEncoding;
     this.expectContinue = builder.expectContinue;
     this.waitForContinue = builder.waitForContinue;
@@ -154,6 +158,9 @@ public class ApacheClient implements Client {
     checkArgument(this.soLinger >= -1, "soLinger must be >= -1 [%s]", this.soLinger);
     checkArgument(this.soSndBuf >= 0, "soSndBuf must be >= 0 [%s]", this.soSndBuf);
     checkArgument(this.soRcvBuf >= 0, "soRcvBuf must be >= 0 [%s]", this.soRcvBuf);
+    checkArgument(this.validateAfterInactivity > 0, "validateAfterInactivity must be > 0 [%s]",
+        this.validateAfterInactivity);
+    checkArgument(this.maxIdleTime > 0, "maxIdleTime must be > 0 [%s]", this.maxIdleTime);
     checkArgument(this.waitForContinue > 0, "waitForContinue must be > 0 [%s]",
         this.waitForContinue);
     checkArgument(this.retryCount >= 0, "retryCount must be >= 0 [%s]", this.retryCount);
@@ -197,7 +204,8 @@ public class ApacheClient implements Client {
         .disableCookieManagement().disableContentCompression().disableAuthCaching()
         .setRetryHandler(new CustomHttpRequestRetryHandler(this.retryCount, this.requestSentRetry))
         .setRedirectStrategy(new CustomRedirectStrategy())
-        .setDefaultRequestConfig(createRequestConfig()).build();
+        .setDefaultRequestConfig(createRequestConfig()).evictExpiredConnections()
+        .evictIdleConnections(Long.valueOf(this.maxIdleTime), TimeUnit.MILLISECONDS).build();
   }
 
   private HttpClientConnectionManager createConnectionManager() {
@@ -209,6 +217,7 @@ public class ApacheClient implements Client {
     manager.setDefaultSocketConfig(createSocketConfig());
     manager.setMaxTotal(Integer.MAX_VALUE);
     manager.setDefaultMaxPerRoute(Integer.MAX_VALUE);
+    manager.setValidateAfterInactivity(this.validateAfterInactivity);
     return manager;
   }
 
@@ -510,15 +519,16 @@ public class ApacheClient implements Client {
     return String.format(
         "ApacheClient [%n" + "connectTimeout=%s,%n" + "soTimeout=%s,%n" + "soReuseAddress=%s,%n"
             + "soLinger=%s,%n" + "soKeepAlive=%s,%n" + "tcpNoDelay=%s,%n" + "soSndBuf=%s,%n"
-            + "soRcvBuf=%s,%n" + "persistentConnections=%s,%n" + "chunkedEncoding=%s,%n"
-            + "expectContinue=%s,%n" + "waitForContinue=%s,%n" + "retryCount=%s,%n"
-            + "requestSentRetry=%s,%n" + "authentication=%s,%n" + "userAgent=%s,%n"
-            + "writeThroughput=%s,%n" + "readThroughput=%s,%n" + "responseBodyConsumers=%s%n]",
+            + "soRcvBuf=%s,%n" + "persistentConnections=%s,%n" + "validateAfterInactivity=%s,%n"
+            + "maxIdleTime=%s,%n" + "chunkedEncoding=%s,%n" + "expectContinue=%s,%n"
+            + "waitForContinue=%s,%n" + "retryCount=%s,%n" + "requestSentRetry=%s,%n"
+            + "authentication=%s,%n" + "userAgent=%s,%n" + "writeThroughput=%s,%n"
+            + "readThroughput=%s,%n" + "responseBodyConsumers=%s%n]",
         this.connectTimeout, this.soTimeout, this.soReuseAddress, this.soLinger, this.soKeepAlive,
         this.tcpNoDelay, this.soSndBuf, this.soRcvBuf, this.persistentConnections,
-        this.chunkedEncoding, this.expectContinue, this.waitForContinue, this.retryCount,
-        this.requestSentRetry, this.authentication, this.userAgent, this.writeThroughput,
-        this.readThroughput, this.responseBodyConsumers);
+        this.validateAfterInactivity, this.maxIdleTime, this.chunkedEncoding, this.expectContinue,
+        this.waitForContinue, this.retryCount, this.requestSentRetry, this.authentication,
+        this.userAgent, this.writeThroughput, this.readThroughput, this.responseBodyConsumers);
   }
 
   /**
@@ -534,6 +544,8 @@ public class ApacheClient implements Client {
     private int soSndBuf;
     private int soRcvBuf;
     private boolean persistentConnections;
+    private int validateAfterInactivity;
+    private int maxIdleTime;
     private boolean chunkedEncoding;
     private boolean expectContinue;
     private int waitForContinue;
@@ -558,6 +570,8 @@ public class ApacheClient implements Client {
       this.soSndBuf = 0;
       this.soRcvBuf = 0;
       this.persistentConnections = true;
+      this.validateAfterInactivity = 10000;
+      this.maxIdleTime = 60000;
       this.chunkedEncoding = false;
       this.expectContinue = false;
       this.waitForContinue = 3000;
@@ -668,6 +682,31 @@ public class ApacheClient implements Client {
      */
     public Builder usingPersistentConnections(final boolean persistentConnections) {
       this.persistentConnections = persistentConnections;
+      return this;
+    }
+
+    /**
+     * Configures the maximum amount of time a connection is allowed to remain idle and subsequently
+     * be leased without first checking if the connection is stale. Stale connection check costs
+     * 20-30ms.
+     * 
+     * @param validateAfterInactivity maximum idle time, in milliseconds
+     * @return this builder
+     */
+    public Builder withValidateAfterInactivity(final int validateAfterInactivity) {
+      this.validateAfterInactivity = validateAfterInactivity;
+      return this;
+    }
+
+    /**
+     * Configures the maximum amount of time a connection is allowed to remain idle and subsequently
+     * be leased. Connections that are idle longer than maxIdleTime will be closed.
+     * 
+     * @param maxIdleTime maximum idle time prior to connection closure.
+     * @return this builder
+     */
+    public Builder withMaxIdleTime(final int maxIdleTime) {
+      this.maxIdleTime = maxIdleTime;
       return this;
     }
 

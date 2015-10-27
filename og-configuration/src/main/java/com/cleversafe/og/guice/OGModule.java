@@ -743,6 +743,8 @@ public class OGModule extends AbstractModule {
         .usingSoKeepAlive(clientConfig.soKeepAlive).usingTcpNoDelay(clientConfig.tcpNoDelay)
         .withSoSndBuf(clientConfig.soSndBuf).withSoRcvBuf(clientConfig.soRcvBuf)
         .usingPersistentConnections(clientConfig.persistentConnections)
+        .withValidateAfterInactivity(clientConfig.validateAfterInactivity)
+        .withMaxIdleTime(clientConfig.maxIdleTime)
         .usingChunkedEncoding(clientConfig.chunkedEncoding)
         .usingExpectContinue(clientConfig.expectContinue)
         .withWaitForContinue(clientConfig.waitForContinue).withRetryCount(clientConfig.retryCount)
