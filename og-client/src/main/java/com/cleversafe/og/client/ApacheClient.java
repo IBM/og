@@ -24,6 +24,9 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLSocketFactory;
+
 import org.apache.http.ConnectionReuseStrategy;
 import org.apache.http.Header;
 import org.apache.http.HeaderIterator;
@@ -33,7 +36,15 @@ import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
+import org.apache.http.config.RegistryBuilder;
 import org.apache.http.config.SocketConfig;
+import org.apache.http.conn.HttpClientConnectionManager;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.DefaultHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.util.PublicSuffixMatcher;
+import org.apache.http.conn.util.PublicSuffixMatcherLoader;
 import org.apache.http.entity.AbstractHttpEntity;
 import org.apache.http.impl.DefaultConnectionReuseStrategy;
 import org.apache.http.impl.NoConnectionReuseStrategy;
@@ -42,6 +53,7 @@ import org.apache.http.impl.client.DefaultConnectionKeepAliveStrategy;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.protocol.HttpRequestExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -129,6 +141,12 @@ public class ApacheClient implements Client {
     this.writeThroughput = builder.writeThroughput;
     this.readThroughput = builder.readThroughput;
     this.responseBodyConsumers = ImmutableMap.copyOf(builder.responseBodyConsumers);
+    this.running = true;
+    this.abortedRequestsAtShutdown = new AtomicInteger();
+    final ThreadFactory fac = new ThreadFactoryBuilder().setNameFormat("client-%d").build();
+    this.executorService = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool(fac));
+    this.gson = createGson();
+
     // perform checks on instance fields rather than builder fields
     checkArgument(this.connectTimeout >= 0, "connectTimeout must be >= 0 [%s]",
         this.connectTimeout);
@@ -144,57 +162,79 @@ public class ApacheClient implements Client {
     checkArgument(this.readThroughput >= 0, "readThroughput must be >= 0 [%s]",
         this.readThroughput);
 
-    final ThreadFactory fac = new ThreadFactoryBuilder().setNameFormat("client-%d").build();
-    this.executorService = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool(fac));
-    this.gson =
-        new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
-            .setLongSerializationPolicy(LongSerializationPolicy.STRING)
-            .registerTypeAdapter(Double.class, new TypeAdapter<Double>() {
-              @Override
-              public void write(final JsonWriter out, final Double value) throws IOException {
-                // round decimals to 2 places
-                out.value(new BigDecimal(value).setScale(2, RoundingMode.HALF_UP).doubleValue());
-              }
+    this.client = createClient();
+  }
 
-              @Override
-              public Double read(final JsonReader in) throws IOException {
-                return in.nextDouble();
-              }
-            }.nullSafe()).create();
+  private Gson createGson() {
+    return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+        .setLongSerializationPolicy(LongSerializationPolicy.STRING)
+        .registerTypeAdapter(Double.class, new TypeAdapter<Double>() {
+          @Override
+          public void write(final JsonWriter out, final Double value) throws IOException {
+            // round decimals to 2 places
+            out.value(new BigDecimal(value).setScale(2, RoundingMode.HALF_UP).doubleValue());
+          }
 
-    this.running = true;
-    this.abortedRequestsAtShutdown = new AtomicInteger();
-    final HttpClientBuilder clientBuilder = HttpClients.custom();
+          @Override
+          public Double read(final JsonReader in) throws IOException {
+            return in.nextDouble();
+          }
+        }.nullSafe()).create();
+  }
+
+  private CloseableHttpClient createClient() {
+    final HttpClientBuilder builder = HttpClients.custom();
     if (this.userAgent != null) {
-      clientBuilder.setUserAgent(this.userAgent);
+      builder.setUserAgent(this.userAgent);
     }
 
-    final ConnectionReuseStrategy connectionReuseStrategy = this.persistentConnections
-        ? DefaultConnectionReuseStrategy.INSTANCE : NoConnectionReuseStrategy.INSTANCE;
-
-    this.client = clientBuilder
-        // TODO HTTPS: setHostnameVerifier, setSslcontext, and SetSSLSocketFactory methods
+    return builder.setRequestExecutor(new HttpRequestExecutor(this.waitForContinue))
+        .setConnectionManager(createConnectionManager())
         // TODO investigate ConnectionConfig, particularly bufferSize and fragmentSizeHint
         // TODO defaultCredentialsProvider and defaultAuthSchemeRegistry for pre/passive auth?
-        .setRequestExecutor(new HttpRequestExecutor(this.waitForContinue))
-        .setMaxConnTotal(Integer.MAX_VALUE).setMaxConnPerRoute(Integer.MAX_VALUE)
-        .setDefaultSocketConfig(SocketConfig.custom().setSoTimeout(this.soTimeout)
-            .setSoReuseAddress(this.soReuseAddress).setSoLinger(this.soLinger)
-            .setSoKeepAlive(this.soKeepAlive).setTcpNoDelay(this.tcpNoDelay)
-            .setSndBufSize(this.soSndBuf).setRcvBufSize(this.soRcvBuf).build())
-        .setConnectionReuseStrategy(connectionReuseStrategy)
+        .setConnectionReuseStrategy(createConnectionReuseStrategy())
         .setKeepAliveStrategy(DefaultConnectionKeepAliveStrategy.INSTANCE).disableConnectionState()
         .disableCookieManagement().disableContentCompression().disableAuthCaching()
         .setRetryHandler(new CustomHttpRequestRetryHandler(this.retryCount, this.requestSentRetry))
         .setRedirectStrategy(new CustomRedirectStrategy())
-        .setDefaultRequestConfig(
-            RequestConfig.custom().setExpectContinueEnabled(this.expectContinue)
-                .setRedirectsEnabled(true).setRelativeRedirectsAllowed(true)
-                .setConnectTimeout(this.connectTimeout).setSocketTimeout(this.soTimeout)
-                // TODO should this be infinite? length of time allowed to request a connection
-                // from the pool
-                .setConnectionRequestTimeout(0).build())
-        .build();
+        .setDefaultRequestConfig(createRequestConfig()).build();
+  }
+
+  private HttpClientConnectionManager createConnectionManager() {
+    final PoolingHttpClientConnectionManager manager = new PoolingHttpClientConnectionManager(
+        RegistryBuilder.<ConnectionSocketFactory>create()
+            .register("http", createPlainConnectionSocketFactory())
+            .register("https", createSslConnectionSocketFactory()).build(),
+        null, null, null, -1, TimeUnit.MILLISECONDS);
+    manager.setDefaultSocketConfig(createSocketConfig());
+    manager.setMaxTotal(Integer.MAX_VALUE);
+    manager.setDefaultMaxPerRoute(Integer.MAX_VALUE);
+    return manager;
+  }
+
+  private ConnectionSocketFactory createPlainConnectionSocketFactory() {
+    return PlainConnectionSocketFactory.getSocketFactory();
+  }
+
+  private ConnectionSocketFactory createSslConnectionSocketFactory() {
+    // TODO HTTPS: setHostnameVerifier, setSslcontext, and SetSSLSocketFactory methods
+    final PublicSuffixMatcher suffixMatcher = PublicSuffixMatcherLoader.getDefault();
+    final String[] supportedProtocols = null;
+    final String[] supportedCipherSuites = null;
+    final HostnameVerifier hostnameVerifier = new DefaultHostnameVerifier(suffixMatcher);
+    return new SSLConnectionSocketFactory((SSLSocketFactory) SSLSocketFactory.getDefault(),
+        supportedProtocols, supportedCipherSuites, hostnameVerifier);
+  }
+
+  private SocketConfig createSocketConfig() {
+    return SocketConfig.custom().setSoTimeout(this.soTimeout).setSoReuseAddress(this.soReuseAddress)
+        .setSoLinger(this.soLinger).setSoKeepAlive(this.soKeepAlive).setTcpNoDelay(this.tcpNoDelay)
+        .setSndBufSize(this.soSndBuf).setRcvBufSize(this.soRcvBuf).build();
+  }
+
+  private ConnectionReuseStrategy createConnectionReuseStrategy() {
+    return this.persistentConnections ? DefaultConnectionReuseStrategy.INSTANCE
+        : NoConnectionReuseStrategy.INSTANCE;
   }
 
   // custom retry handler that will retry after any type of exception
@@ -204,6 +244,15 @@ public class ApacheClient implements Client {
       super(retryCount, requestSentRetryEnabled,
           Collections.<Class<? extends IOException>>emptyList());
     }
+  }
+
+  private RequestConfig createRequestConfig() {
+    return RequestConfig.custom().setExpectContinueEnabled(this.expectContinue)
+        .setRedirectsEnabled(true).setRelativeRedirectsAllowed(true)
+        .setConnectTimeout(this.connectTimeout).setSocketTimeout(this.soTimeout)
+        // TODO should this be infinite? length of time allowed to request a connection
+        // from the pool
+        .setConnectionRequestTimeout(0).build();
   }
 
   @Override
