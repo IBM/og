@@ -87,7 +87,7 @@ public class LoadTest implements Callable<LoadTestResult> {
     public void run() {
       try {
         while (LoadTest.this.running.get()) {
-          LoadTest.this.scheduler.waitForNext();
+          LoadTest.this.scheduler.schedule();
           if (LoadTest.this.running.get()) {
             final Request request = LoadTest.this.requestManager.get();
             _logger.trace("Created request {}", request);

@@ -45,7 +45,7 @@ public class RequestRateSchedulerIT {
     final long start = System.nanoTime();
     final Scheduler scheduler = new RequestRateScheduler(rate, unit, rampup, rampupUnit);
     for (int i = 0; i < operations; i++) {
-      scheduler.waitForNext();
+      scheduler.schedule();
     }
     final long millis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
     final long error = (long) (expectedMillis * percentError);

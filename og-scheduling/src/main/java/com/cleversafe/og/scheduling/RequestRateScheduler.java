@@ -97,7 +97,7 @@ public class RequestRateScheduler implements Scheduler {
   }
 
   @Override
-  public void waitForNext() {
+  public void schedule() {
     this.started.countDown();
     this.permits.get().acquire();
   }

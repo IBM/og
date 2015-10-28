@@ -93,14 +93,13 @@ public class ConcurrentRequestScheduler implements Scheduler {
    * This implementation blocks until a previously scheduled request has completed
    */
   @Override
-  public void waitForNext() {
+  public void schedule() {
     this.started.countDown();
     this.permits.acquireUninterruptibly();
   }
 
   /**
-   * Informs this scheduler that it should allow the calling thread on {@link #waitForNext} to
-   * proceed
+   * Informs this scheduler that it should allow the calling thread on {@link #schedule} to proceed
    * 
    * @param operation the operation for the completed request
    */

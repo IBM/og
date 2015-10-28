@@ -75,7 +75,7 @@ public class ConcurrentRequestSchedulerTest {
     }).start();
 
     while (running.get()) {
-      scheduler.waitForNext();
+      scheduler.schedule();
       if (running.get()) {
         count++;
       }
