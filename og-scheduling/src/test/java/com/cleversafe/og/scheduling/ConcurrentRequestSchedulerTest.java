@@ -10,10 +10,10 @@ package com.cleversafe.og.scheduling;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.lessThan;
 import static org.mockito.Mockito.mock;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -63,38 +63,23 @@ public class ConcurrentRequestSchedulerTest {
   private void concurrentRequestScheduler(final int concurrentRequests) {
     final ConcurrentRequestScheduler scheduler =
         new ConcurrentRequestScheduler(concurrentRequests, 0.0, TimeUnit.SECONDS);
+    final AtomicBoolean running = new AtomicBoolean(true);
     int count = 0;
-    final int threadWait = 50;
     new Thread(new Runnable() {
       @Override
       public void run() {
-        Uninterruptibles.sleepUninterruptibly(threadWait, TimeUnit.MILLISECONDS);
+        Uninterruptibles.sleepUninterruptibly(10, TimeUnit.MILLISECONDS);
+        running.set(false);
         scheduler.complete(Pair.of(mock(Request.class), mock(Response.class)));
       }
     }).start();
 
-    final long timestampStart = System.nanoTime();
-    while (TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - timestampStart) < threadWait / 2) {
-      count++;
+    while (running.get()) {
       scheduler.waitForNext();
+      if (running.get()) {
+        count++;
+      }
     }
     assertThat(count, is(concurrentRequests));
-  }
-
-  @Test
-  public void interruptedSchedulerThread() {
-    final ConcurrentRequestScheduler s = new ConcurrentRequestScheduler(1, 0.0, TimeUnit.SECONDS);
-    final Thread t = new Thread(new Runnable() {
-      @Override
-      public void run() {
-        s.waitForNext();
-      }
-    });
-    t.start();
-    t.interrupt();
-    final long timestampStart = System.nanoTime();
-    Uninterruptibles.joinUninterruptibly(t);
-    final long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - timestampStart);
-    assertThat(duration, lessThan(1000L));
   }
 }

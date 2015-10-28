@@ -11,45 +11,30 @@ package com.cleversafe.og.scheduling;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.math.DoubleMath;
 import com.google.common.util.concurrent.RateLimiter;
+import com.google.common.util.concurrent.Uninterruptibles;
 
 /**
  * A scheduler which permits calls at a configured rate
  * 
  * @since 1.0
  */
-/*
- * Two implementation details of note:
- * 
- * 1) two RateLimiters are used rather than one because the RateLimiter class includes undesirable
- * code which cools down the request rate upon periods of inactivity if the instance was configured
- * with ramp-up. Workaround is to configure one instance with ramp-up and another that uses a fixed
- * ops.
- * 
- *
- * 2) this class's wait method must return immediately if the caller thread is interrupted.
- * RateLimiter does not allow this, so an external semaphore is used to coordinate permits via a
- * daemon thread.
- */
-// FIXME make it so Scheduler's do not need to be interruptible (see 2)). Instead, a separate daemon
-// scheduler thread in LoadTest would allow Scheduler implementations to be simpler.
 public class RequestRateScheduler implements Scheduler {
   private static final Logger _logger = LoggerFactory.getLogger(RequestRateScheduler.class);
   private final double rate;
   private final TimeUnit unit;
   private final double rampup;
   private final TimeUnit rampupUnit;
-  private final long rampDuration;
-  private final RateLimiter ramp;
-  private final RateLimiter steady;
-  private Thread requestThread;
-  private final Semaphore permits;
+  private final AtomicReference<RateLimiter> permits;
+  private final CountDownLatch started;
 
   /**
    * Constructs an instance using the provided rate {@code count / unit }
@@ -67,71 +52,59 @@ public class RequestRateScheduler implements Scheduler {
     checkArgument(rampup >= 0.0, "rampup must be >= 0.0 [%s]", rampup);
     this.rampup = rampup;
     this.rampupUnit = checkNotNull(rampupUnit);
+    this.permits = new AtomicReference<RateLimiter>();
 
     // convert arbitrary rate unit to rate/second
-    final double requestsPerSecond =
-        rate / (unit.toNanos(1) / (double) TimeUnit.SECONDS.toNanos(1));
+    final double requestsPerSecond = requestsPerSecond(rate, unit);
+
     _logger.debug("Calculated requests per second [{}]", requestsPerSecond);
+    final RateLimiter steady = RateLimiter.create(requestsPerSecond);
 
-    this.rampDuration = (long) (rampup * rampupUnit.toNanos(1));
-    if (this.rampDuration > 0.0) {
-      this.ramp = RateLimiter.create(requestsPerSecond, this.rampDuration, TimeUnit.NANOSECONDS);
+    if (DoubleMath.fuzzyEquals(rampup, 0.0, Math.pow(0.1, 6))) {
+      this.permits.set(steady);
     } else {
-      this.ramp = null;
-    }
+      // two RateLimiters (ramp, steady) are used rather than one because the RateLimiter class
+      // includes undesirable code which cools down request rate if inactive, but only if configured
+      // with a rampup. Workaround is to configure one instance with rampup and another that uses a
+      // fixed ops.
+      final long rampDuration = (long) (rampup * rampupUnit.toNanos(1));
+      this.permits.set(RateLimiter.create(requestsPerSecond, rampDuration, TimeUnit.NANOSECONDS));
+      final Thread rampupThread = new Thread(new Runnable() {
+        @Override
+        public void run() {
+          _logger.debug("Awaiting start latch");
+          Uninterruptibles.awaitUninterruptibly(RequestRateScheduler.this.started);
 
-    this.steady = RateLimiter.create(requestsPerSecond);
-    this.permits = new Semaphore(0);
+          _logger.info("Starting ramp");
+          _logger.debug("Sleeping for [{}] nanoseconds of ramp activity", rampDuration);
+          Uninterruptibles.sleepUninterruptibly(rampDuration, TimeUnit.NANOSECONDS);
+
+          _logger.debug("Swapping RateLimiter implementation from ramp to steady", rampDuration);
+          RequestRateScheduler.this.permits.set(steady);
+
+          _logger.info("Finished ramp");
+        }
+
+      }, "rate-scheduler-ramp");
+      rampupThread.setDaemon(true);
+      rampupThread.start();
+    }
+    this.started = new CountDownLatch(1);
+  }
+
+  double requestsPerSecond(final double rate, final TimeUnit unit) {
+    return rate / (unit.toNanos(1) / (double) TimeUnit.SECONDS.toNanos(1));
   }
 
   @Override
   public void waitForNext() {
-    if (this.requestThread == null) {
-      this.requestThread = new Thread(new Permitter(), "rate-scheduler-ramp");
-      this.requestThread.setDaemon(true);
-      this.requestThread.start();
-    }
-
-    try {
-      this.permits.acquire();
-    } catch (final InterruptedException e) {
-      _logger.info("Interrupted while waiting to schedule next request", e);
-    }
-  }
-
-  private class Permitter implements Runnable {
-    public Permitter() {}
-
-    @Override
-    public void run() {
-      if (RequestRateScheduler.this.ramp != null) {
-        rampWait();
-      }
-      steadyWait();
-    }
-
-    private void rampWait() {
-      _logger.info("Starting ramp wait");
-      final long start = System.nanoTime();
-      while (System.nanoTime() - start < RequestRateScheduler.this.rampDuration) {
-        RequestRateScheduler.this.steady.acquire();
-        RequestRateScheduler.this.permits.release();
-      }
-    }
-
-    private void steadyWait() {
-      _logger.info("Starting steady wait");
-      while (true) {
-        RequestRateScheduler.this.steady.acquire();
-        RequestRateScheduler.this.permits.release();
-      }
-    }
+    this.started.countDown();
+    this.permits.get().acquire();
   }
 
   @Override
   public String toString() {
-    return String.format(
-        "RequestRateScheduler [rate=%s, unit=%s, rampup=%s, rampupUnit=%s, rampDuration=%s]",
-        this.rate, this.unit, this.rampup, this.rampupUnit, this.rampDuration);
+    return String.format("RequestRateScheduler [rate=%s, unit=%s, rampup=%s, rampupUnit=%s]",
+        this.rate, this.unit, this.rampup, this.rampupUnit);
   }
 }

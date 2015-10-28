@@ -23,6 +23,7 @@ import com.cleversafe.og.api.Response;
 import com.cleversafe.og.util.Pair;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.math.DoubleMath;
+import com.google.common.util.concurrent.RateLimiter;
 import com.google.common.util.concurrent.Uninterruptibles;
 
 /**
@@ -35,9 +36,8 @@ public class ConcurrentRequestScheduler implements Scheduler {
   private final int concurrentRequests;
   private final double rampup;
   private final TimeUnit rampupUnit;
-  private final long rampDuration;
-  private final Semaphore sem;
-  private final CountDownLatch startedLatch;
+  private final Semaphore permits;
+  private final CountDownLatch started;
 
   /**
    * Constructs an instance with the provided concurrency
@@ -53,38 +53,37 @@ public class ConcurrentRequestScheduler implements Scheduler {
     this.concurrentRequests = concurrentRequests;
     this.rampup = rampup;
     this.rampupUnit = rampupUnit;
-    this.rampDuration = (long) (rampup * rampupUnit.toNanos(1));
-    this.startedLatch = new CountDownLatch(1);
+    this.started = new CountDownLatch(1);
 
-    if (DoubleMath.fuzzyEquals(this.rampDuration, 0.0, Math.pow(0.1, 6))) {
-      this.sem = new Semaphore(concurrentRequests - 1);
+    if (DoubleMath.fuzzyEquals(rampup, 0.0, Math.pow(0.1, 6))) {
+      this.permits = new Semaphore(concurrentRequests);
     } else {
-      this.sem = new Semaphore(0);
+      this.permits = new Semaphore(0);
       final Thread rampupThread = new Thread(new Runnable() {
         @Override
         public void run() {
-          final CountDownLatch started = ConcurrentRequestScheduler.this.startedLatch;
-          _logger.info("Starting ramp");
-          final int interval = ConcurrentRequestScheduler.this.concurrentRequests - 1;
-          _logger.debug("Ramp interval [{}]", interval);
+          final double rampSeconds = (rampup * rampupUnit.toNanos(1)) / TimeUnit.SECONDS.toNanos(1);
+          _logger.debug("Ramp seconds [{}]", rampSeconds);
 
-          final long sleepDuration = ConcurrentRequestScheduler.this.rampDuration / interval;
-          _logger.debug("Ramp sleep duration [{}]", sleepDuration);
+          final RateLimiter ramp = RateLimiter.create(concurrentRequests / rampSeconds);
+          _logger.debug("Ramp rate [{}]", ramp.getRate());
 
           _logger.debug("Awaiting start latch");
-          Uninterruptibles.awaitUninterruptibly(started);
-          for (int i = 0; i < interval; i++) {
-            _logger.debug("Sleeping [{}] nanoseconds", sleepDuration);
-            Uninterruptibles.sleepUninterruptibly(sleepDuration, TimeUnit.NANOSECONDS);
+          Uninterruptibles.awaitUninterruptibly(ConcurrentRequestScheduler.this.started);
+
+          _logger.info("Starting ramp");
+          for (int i = 0; i < concurrentRequests; i++) {
+            _logger.debug("Acquiring RateLimiter permit");
+            ramp.acquire();
             _logger.debug("Releasing semaphore permit");
-            ConcurrentRequestScheduler.this.sem.release();
+            ConcurrentRequestScheduler.this.permits.release();
           }
           _logger.info("Finished ramp");
         }
       }, "concurrent-scheduler-ramp");
       rampupThread.setDaemon(true);
       rampupThread.start();
-      _logger.debug("Starting permits [{}]", this.sem.availablePermits());
+      _logger.debug("Starting permits [{}]", this.permits.availablePermits());
     }
   }
 
@@ -95,13 +94,8 @@ public class ConcurrentRequestScheduler implements Scheduler {
    */
   @Override
   public void waitForNext() {
-    this.startedLatch.countDown();
-    try {
-      this.sem.acquire();
-    } catch (final InterruptedException e) {
-      _logger.warn("Interrupted while waiting to schedule next request", e);
-      return;
-    }
+    this.started.countDown();
+    this.permits.acquireUninterruptibly();
   }
 
   /**
@@ -112,13 +106,13 @@ public class ConcurrentRequestScheduler implements Scheduler {
    */
   @Subscribe
   public void complete(final Pair<Request, Response> operation) {
-    this.sem.release();
+    this.permits.release();
   }
 
   @Override
   public String toString() {
     return String.format(
-        "ConcurrentRequestScheduler [concurrentRequests=%s, rampup=%s, rampupUnit=%s, rampDuration=%s]",
-        this.concurrentRequests, this.rampup, this.rampupUnit, this.rampDuration);
+        "ConcurrentRequestScheduler [concurrentRequests=%s, rampup=%s, rampupUnit=%s]",
+        this.concurrentRequests, this.rampup, this.rampupUnit);
   }
 }

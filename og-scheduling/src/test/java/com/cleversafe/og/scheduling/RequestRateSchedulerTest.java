@@ -9,7 +9,7 @@
 package com.cleversafe.og.scheduling;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.lessThan;
+import static org.hamcrest.Matchers.closeTo;
 
 import java.util.concurrent.TimeUnit;
 
@@ -18,7 +18,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 
-import com.google.common.util.concurrent.Uninterruptibles;
 import com.tngtech.java.junit.dataprovider.DataProvider;
 import com.tngtech.java.junit.dataprovider.DataProviderRunner;
 import com.tngtech.java.junit.dataprovider.UseDataProvider;
@@ -46,21 +45,23 @@ public class RequestRateSchedulerTest {
     new RequestRateScheduler(rate, unit, rampup, rampupUnit);
   }
 
+  @DataProvider
+  public static Object[][] provideRequestsPerSecond() {
+    return new Object[][] {{1.0, TimeUnit.SECONDS, 1.0}, {1.5, TimeUnit.SECONDS, 1.5},
+        {1.5, TimeUnit.MILLISECONDS, 1500.0}, {1.5, TimeUnit.MINUTES, 0.025},
+        {100.0, TimeUnit.DAYS, 0.0011574}};
+
+  }
+
   @Test
-  public void interruptedSchedulerThread() {
-    final RequestRateScheduler scheduler =
-        new RequestRateScheduler(10.0, TimeUnit.DAYS, 0.0, TimeUnit.NANOSECONDS);
-    final Thread t = new Thread(new Runnable() {
-      @Override
-      public void run() {
-        scheduler.waitForNext();
-      }
-    });
-    t.start();
-    t.interrupt();
-    final long timestampStart = System.nanoTime();
-    Uninterruptibles.joinUninterruptibly(t);
-    final long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - timestampStart);
-    assertThat(duration, lessThan(1000L));
+  @UseDataProvider("provideRequestsPerSecond")
+  public void requestsPerSecond(final double rate, final TimeUnit unit,
+      final double expectedRequestsPerSecond) {
+    // constructor values don't matter here, just need an instance to test the public method
+    final RequestRateScheduler s =
+        new RequestRateScheduler(1.0, TimeUnit.SECONDS, 0.0, TimeUnit.SECONDS);
+
+    assertThat(s.requestsPerSecond(rate, unit),
+        closeTo(expectedRequestsPerSecond, Math.pow(0.1, 6)));
   }
 }

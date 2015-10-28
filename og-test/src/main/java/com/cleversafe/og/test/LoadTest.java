@@ -74,6 +74,7 @@ public class LoadTest implements Callable<LoadTestResult> {
     this.client = checkNotNull(client);
     this.scheduler = checkNotNull(scheduler);
     this.schedulerThread = new Thread(new SchedulerRunnable(), "loadtest-scheduler");
+    this.schedulerThread.setDaemon(true);
     this.eventBus = checkNotNull(eventBus);
     this.shutdownImmediate = shutdownImmediate;
     this.running = new AtomicBoolean(true);
@@ -86,13 +87,15 @@ public class LoadTest implements Callable<LoadTestResult> {
     public void run() {
       try {
         while (LoadTest.this.running.get()) {
-          final Request request = LoadTest.this.requestManager.get();
-          _logger.trace("Created request {}", request);
-
-          final ListenableFuture<Response> future = LoadTest.this.client.execute(request);
-          LoadTest.this.eventBus.post(request);
-          addCallback(request, future);
           LoadTest.this.scheduler.waitForNext();
+          if (LoadTest.this.running.get()) {
+            final Request request = LoadTest.this.requestManager.get();
+            _logger.trace("Created request {}", request);
+
+            final ListenableFuture<Response> future = LoadTest.this.client.execute(request);
+            LoadTest.this.eventBus.post(request);
+            addCallback(request, future);
+          }
         }
       } catch (final Exception e) {
         _logger.error("Exception while producing request", e);
