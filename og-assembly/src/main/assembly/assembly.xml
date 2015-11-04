@@ -36,6 +36,13 @@
       </includes>
     </fileSet>
     <fileSet>
+      <directory>src/main/asciidoc</directory>
+      <outputDirectory>docs</outputDirectory>
+      <includes>
+        <include>*.adoc</include>
+      </includes>
+    </fileSet>
+    <fileSet>
       <directory>target/generated-docs</directory>
       <outputDirectory>docs</outputDirectory>
       <includes>
