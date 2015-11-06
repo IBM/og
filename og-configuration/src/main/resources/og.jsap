@@ -7,7 +7,7 @@
       <stringParser>
         <classname>FileStringParser</classname>
       </stringParser>
-      <help>A relative or absolute path to an og test configuration file. If not specified, og will search for a config file named "og.json" on the classpath</help>
+      <help>A relative or absolute path to an og json configuration file</help>
     </unflaggedOption>
     <switch>
       <id>version</id>

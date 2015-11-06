@@ -34,15 +34,11 @@ public class ApplicationTest {
   public ExpectedException thrown = ExpectedException.none();
   private static final String APPLICATION_JSAP = "application.jsap";
   private static final String APPLICATION_JSON = "application.json";
-  private static final String DEFAULT_APPLICATION_JSON = "defaultApplication.json";
   private static final String VALUE = "value";
-  private static final String DEFAULT_VALUE = "defaultValue";
-  private String defaultJson;
   private Gson gson;
 
   @Before
   public void before() {
-    this.defaultJson = DEFAULT_APPLICATION_JSON;
     this.gson = new GsonBuilder().create();
   }
 
@@ -110,15 +106,13 @@ public class ApplicationTest {
 
   @DataProvider
   public static Object[][] provideInvalidFromJson() {
-    final String defaultJson = DEFAULT_APPLICATION_JSON;
-    final String nonExistent = "nonexistent";
+    final File json = new File("nonExistent");
     final Gson gson = new GsonBuilder().create();
 
-    return new Object[][] {{null, null, Item.class, gson, NullPointerException.class},
-        {null, defaultJson, null, gson, NullPointerException.class},
-        {null, defaultJson, Item.class, null, NullPointerException.class},
-        {null, nonExistent, Item.class, gson, IllegalArgumentException.class},
-        {new File(nonExistent), defaultJson, Item.class, gson, FileNotFoundException.class}};
+    return new Object[][] {{null, Item.class, gson, NullPointerException.class},
+        {json, null, gson, NullPointerException.class},
+        {json, Item.class, null, NullPointerException.class},
+        {json, Item.class, gson, FileNotFoundException.class}};
   }
 
   static class Item {
@@ -127,22 +121,16 @@ public class ApplicationTest {
 
   @Test
   @UseDataProvider("provideInvalidFromJson")
-  public void invalidFromJson(final File userJson, final String defaultJson, final Class<?> cls,
-      final Gson gson, final Class<Exception> expectedException) throws FileNotFoundException {
+  public void invalidFromJson(final File json, final Class<?> cls, final Gson gson,
+      final Class<Exception> expectedException) throws FileNotFoundException {
     this.thrown.expect(expectedException);
-    Application.fromJson(userJson, defaultJson, cls, gson);
-  }
-
-  @Test
-  public void fromJsonDefault() throws FileNotFoundException {
-    final Item item = Application.fromJson(null, this.defaultJson, Item.class, this.gson);
-    assertThat(item.key, is(DEFAULT_VALUE));
+    Application.fromJson(json, cls, gson);
   }
 
   @Test
   public void fromJson() throws FileNotFoundException {
     final File json = new File(Application.getResource(APPLICATION_JSON));
-    final Item item = Application.fromJson(json, this.defaultJson, Item.class, this.gson);
+    final Item item = Application.fromJson(json, Item.class, this.gson);
     assertThat(item.key, is(VALUE));
   }
 }

@@ -179,20 +179,17 @@ public class Application {
   }
 
   /**
-   * Creates an object from an underlying json configuration. If a user specified file location is
-   * provided use it; otherwise use a default configuration file location
+   * Creates an object from an underlying json configuration
    * 
-   * @param userJson a file pointing to a user specified json configuration file
-   * @param defaultJson a file pointing to a default json configuration file
+   * @param json a user specified json configuration file
    * @param cls the class to deserialize the json configuration into
    * @param gson a gson instance to perform deserialization with
    * @return A deserialized user object
    * @throws FileNotFoundException if no json configuration can be found at the provided location
    */
-  public static <T> T fromJson(final File userJson, final String defaultJson, final Class<T> cls,
-      final Gson gson) throws FileNotFoundException {
-    final File json =
-        userJson != null ? userJson : new File(Application.getResource(checkNotNull(defaultJson)));
+  public static <T> T fromJson(final File json, final Class<T> cls, final Gson gson)
+      throws FileNotFoundException {
+    checkNotNull(json);
     checkNotNull(cls);
     checkNotNull(gson);
 

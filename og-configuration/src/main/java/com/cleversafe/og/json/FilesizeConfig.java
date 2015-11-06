@@ -12,7 +12,7 @@ import com.cleversafe.og.util.SizeUnit;
 
 public class FilesizeConfig {
   public DistributionType distribution;
-  public double average;
+  public Double average;
   public SizeUnit averageUnit;
   public double spread;
   public SizeUnit spreadUnit;
@@ -24,7 +24,7 @@ public class FilesizeConfig {
 
   public FilesizeConfig() {
     this.distribution = DistributionType.UNIFORM;
-    this.average = 5242880.0;
+    this.average = null;
     this.averageUnit = SizeUnit.BYTES;
     this.spread = 0.0;
     this.spreadUnit = SizeUnit.BYTES;

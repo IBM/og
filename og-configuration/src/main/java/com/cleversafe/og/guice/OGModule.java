@@ -141,7 +141,12 @@ public class OGModule extends AbstractModule {
     bind(Scheme.class).toInstance(this.config.scheme);
     bind(Integer.class).annotatedWith(Names.named("port"))
         .toProvider(Providers.of(this.config.port));
-    bind(Api.class).toInstance(this.config.api);
+    bind(Api.class).toProvider(new Provider<Api>() {
+      @Override
+      public Api get() {
+        return checkNotNull(OGModule.this.config.api, "api must not be null");
+      }
+    });
     bindConstant().annotatedWith(Names.named("write.weight")).to(this.config.write.weight);
     bindConstant().annotatedWith(Names.named("read.weight")).to(this.config.read.weight);
     bindConstant().annotatedWith(Names.named("delete.weight")).to(this.config.delete.weight);
@@ -161,7 +166,14 @@ public class OGModule extends AbstractModule {
         .to(this.config.authentication.awsChunked);
     bindConstant().annotatedWith(Names.named("authentication.awsCacheSize"))
         .to(this.config.authentication.awsCacheSize);
-    bind(ConcurrencyConfig.class).toInstance(this.config.concurrency);
+    // FIXME create something like MoreProviders.notNull as a variant of Providers.of which does a
+    // null check at creation time, with a custom error message; replace all uses of this pattern
+    bind(ConcurrencyConfig.class).toProvider(new Provider<ConcurrencyConfig>() {
+      @Override
+      public ConcurrencyConfig get() {
+        return checkNotNull(OGModule.this.config.concurrency, "concurrency must not be null");
+      }
+    });
     bind(StoppingConditionsConfig.class).toInstance(this.config.stoppingConditions);
     bindConstant().annotatedWith(Names.named("shutdownImmediate"))
         .to(this.config.shutdownImmediate);
@@ -244,7 +256,6 @@ public class OGModule extends AbstractModule {
       final Statistics stats, final ConcurrencyConfig concurrency,
       final StoppingConditionsConfig config) {
     checkNotNull(test);
-    checkNotNull(eventBus);
     checkNotNull(stats);
     checkNotNull(config);
     checkArgument(config.operations >= 0, "operations must be >= 0 [%s]", config.operations);
@@ -374,7 +385,7 @@ public class OGModule extends AbstractModule {
   @Provides
   @Singleton
   @Named("uri.root")
-  public String provideUriRoot() {
+  public String provideUriRoot(final Api api) {
     final String uriRoot = this.config.uriRoot;
     if (uriRoot != null) {
       final String root = CharMatcher.is('/').trimFrom(uriRoot);
@@ -456,7 +467,7 @@ public class OGModule extends AbstractModule {
   @Singleton
   @WriteObjectName
   public Function<Map<String, String>, String> provideWriteObjectName(final Api api) {
-    if (Api.SOH == checkNotNull(api)) {
+    if (Api.SOH == api) {
       return null;
     }
     final OperationConfig operationConfig = checkNotNull(this.config.write);
@@ -595,7 +606,8 @@ public class OGModule extends AbstractModule {
   @Provides
   @Singleton
   public Supplier<Body> provideBody() {
-    final SelectionConfig<FilesizeConfig> filesizeConfig = this.config.filesize;
+    final SelectionConfig<FilesizeConfig> filesizeConfig =
+        checkNotNull(this.config.filesize, "filesize must not be null");
     final SelectionType filesizeSelection = checkNotNull(filesizeConfig.selection);
     final List<ChoiceConfig<FilesizeConfig>> filesizes = checkNotNull(filesizeConfig.choices);
     checkArgument(!filesizes.isEmpty(), "filesize must not be empty");
@@ -619,6 +631,7 @@ public class OGModule extends AbstractModule {
     final SizeUnit averageUnit = checkNotNull(filesize.averageUnit);
     final SizeUnit spreadUnit = checkNotNull(filesize.spreadUnit);
     final DistributionType distribution = checkNotNull(filesize.distribution);
+    checkNotNull(filesize.average, "filesize average must not be null");
 
     final double average = filesize.average * averageUnit.toBytes(1);
     final double spread = filesize.spread * spreadUnit.toBytes(1);
@@ -681,7 +694,6 @@ public class OGModule extends AbstractModule {
   public String provideObjectFileName(
       @Named("container") final Function<Map<String, String>, String> container, final Api api) {
     checkNotNull(container);
-    checkNotNull(api);
     final ObjectManagerConfig objectManagerConfig = checkNotNull(this.config.objectManager);
     final String objectFileName = objectManagerConfig.objectFileName;
 
@@ -714,10 +726,10 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
-  public Scheduler provideScheduler(final EventBus eventBus) {
-    checkNotNull(eventBus);
-    final ConcurrencyConfig concurrency = checkNotNull(this.config.concurrency);
-    final ConcurrencyType type = checkNotNull(concurrency.type);
+  public Scheduler provideScheduler(final ConcurrencyConfig concurrency, final EventBus eventBus) {
+    final ConcurrencyType type =
+        checkNotNull(concurrency.type, "concurrency type must not be null");
+    checkNotNull(concurrency.count, "concurrency count must not be null");
 
     if (ConcurrencyType.THREADS == type) {
       final Scheduler scheduler = new ConcurrentRequestScheduler(
@@ -774,7 +786,6 @@ public class OGModule extends AbstractModule {
       @Named("authentication.password") final String password,
       @Named("authentication.keystoneToken") final String keystoneToken,
       @Named("virtualhost") final boolean virtualHost) {
-    checkNotNull(api);
     // SOH needs to use a special response consumer to extract the returned object id
     if (Api.SOH == api) {
       headers.put(Headers.X_OG_RESPONSE_BODY_CONSUMER, Suppliers.of(SOH_PUT_OBJECT));

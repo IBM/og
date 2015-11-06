@@ -12,19 +12,14 @@ import java.util.concurrent.TimeUnit;
 
 public class ConcurrencyConfig {
   public ConcurrencyType type;
-  public double count;
+  public Double count;
   public TimeUnit unit;
   public double rampup;
   public TimeUnit rampupUnit;
 
-  public ConcurrencyConfig(final double count) {
-    this();
-    this.count = count;
-  }
-
   public ConcurrencyConfig() {
-    this.type = ConcurrencyType.THREADS;
-    this.count = 1.0;
+    this.type = null;
+    this.count = null;
     this.unit = TimeUnit.SECONDS;
     this.rampup = 0.0;
     this.rampupUnit = TimeUnit.SECONDS;

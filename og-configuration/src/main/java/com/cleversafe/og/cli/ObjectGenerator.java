@@ -86,7 +86,13 @@ public class ObjectGenerator {
 
     try {
       final File json = cli.flags().getFile("og_config");
-      final OGConfig ogConfig = Application.fromJson(json, "og.json", OGConfig.class, gson);
+      if (json == null) {
+        _consoleLogger.error("A json configuration file is required");
+        cli.printUsage();
+        Application.exit(Application.TEST_ERROR);
+      }
+
+      final OGConfig ogConfig = Application.fromJson(json, OGConfig.class, gson);
       _ogJsonLogger.info(gson.toJson(ogConfig));
 
       final Injector injector = createInjector(ogConfig);

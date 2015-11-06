@@ -61,26 +61,20 @@ public class SimpleRequestManager implements RequestManager {
     checkNotNull(write);
     checkNotNull(read);
     checkNotNull(delete);
-    double trueWriteWeight = writeWeight;
 
-    if (allEqual(0.0, trueWriteWeight, readWeight, deleteWeight)) {
-      _logger.debug("No io mix percentages found, setting write=100");
-      trueWriteWeight = 100.0;
-    }
-
-    checkArgument(PERCENTAGE.contains(trueWriteWeight),
-        "write weight must be in range [0.0, 100.0] [%s]", trueWriteWeight);
+    checkArgument(PERCENTAGE.contains(writeWeight),
+        "write weight must be in range [0.0, 100.0] [%s]", writeWeight);
     checkArgument(PERCENTAGE.contains(readWeight), "read weight must be in range [0.0, 100.0] [%s]",
         readWeight);
     checkArgument(PERCENTAGE.contains(deleteWeight),
         "delete weight must be in range [0.0, 100.0] [%s]", deleteWeight);
-    final double sum = readWeight + trueWriteWeight + deleteWeight;
+    final double sum = writeWeight + readWeight + deleteWeight;
     checkArgument(DoubleMath.fuzzyEquals(sum, 100.0, ERR), "sum of weights must be 100.0 [%s]",
         sum);
 
     final RandomSupplier.Builder<Supplier<Request>> wrc = Suppliers.random();
-    if (trueWriteWeight > 0.0) {
-      wrc.withChoice(write, trueWriteWeight);
+    if (writeWeight > 0.0) {
+      wrc.withChoice(write, writeWeight);
     }
     if (readWeight > 0.0) {
       wrc.withChoice(read, readWeight);
@@ -90,15 +84,6 @@ public class SimpleRequestManager implements RequestManager {
     }
 
     this.requestSupplier = wrc.build();
-  }
-
-  private boolean allEqual(final double compare, final double... values) {
-    for (final double v : values) {
-      if (!DoubleMath.fuzzyEquals(v, compare, ERR)) {
-        return false;
-      }
-    }
-    return true;
   }
 
   @Override
