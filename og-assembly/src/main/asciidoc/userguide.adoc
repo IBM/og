@@ -301,9 +301,9 @@ configured via the _port_ key.
 Container is the logical bucket that the OG load tool will write objects into.
 OG supports single and multiple container configurations. For multiple
 containers, OG supports selection of a container for a given request via round
-robin or random configurations. With multiple containers, an optional _prefix_
-key and two required keys, _min_suffix_ and _max_suffix_, are used to produce a
-range of container names. Container(s) are configured via the _container_ key.
+robin or random configurations. With multiple containers, _prefix_,
+_min_suffix_ and _max_suffix_, keys are used to produce a range of container
+names. Container(s) are configured via the _container_ key.
 
 .Single Container Example
 [source, json]
@@ -328,16 +328,6 @@ range of container names. Container(s) are configured via the _container_ key.
 "container": {
   "selection": "random",
   "prefix": "my_container",
-  "min_suffix": 0,
-  "max_suffix": 100
-}
-----
-
-.Multiple Container No Prefix Example
-[source, json]
-----
-"container": {
-  "selection": "random",
   "min_suffix": 0,
   "max_suffix": 100
 }
