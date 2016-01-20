@@ -4,9 +4,14 @@ v{display-version}, April 6th, 2015
 :sectlinks:
 :sectanchors:
 :numbered:
+:source-highlighter: highlightjs
+:icons: font
+:sampledir: ../resources/conf/sample
 
 == Introduction
-Object Generator (OG) is an HTTP object storage performance test tool.
+Object Generator (OG) is an HTTP object storage load tool designed for system
+level stress, stability, and performance test. OG supports several common
+object storage APIs including S3 and OpenStack Swift.
 
 == Installation
 
@@ -20,8 +25,8 @@ Object Generator (OG) is an HTTP object storage performance test tool.
 |Memory
 |4GB system; 2GB available
 
-|Free space
-|10GB
+|Free Disk Space
+|20GB for logging
 
 |Operating System
 |Modern Linux OS*
@@ -34,7 +39,7 @@ NOTE: OG has been tested on Ubuntu 14.04, but any modern linux OS should work.
 
 === Distribution
 OG is distributed as a _tar.gz_ archive. To install, simply unpack the archive
-in a directory of your choosing.
+in a directory of your choice.
 
 [source, bash, subs="attributes"]
 ----
@@ -42,59 +47,321 @@ in a directory of your choosing.
 ----
 
 == Project Layout
-The OG distribution is comprised of several files and directories:
+The OG project consists of the following files and directories:
 
-[source, bash, subs="attributes"]
+[source, bash]
 ----
 ~$ tree
-├── conf
+├── conf // <1>
 │   ├── object-file-log4j2.xml
-│   ├── og-log4j2.xml
-│   └── sample
-│       ├── authentication-basic.json
-│       ├── concurrency-ops-with-rampup.json
-│       ├── concurrency-threads.json
-│       ├── filesize-distributions.json
-│       ├── host-multiple.json
-│       ├── io-mix.json
-│       ├── simple.json
-│       ├── simple-s3.json
-│       └── stopping-conditions-operations.json
+│   ├── og-log4j2.xml // <2>
+│   └── sample // <3>
 ├── docs
-│   └── userguide.html
-├── lib
-│   └── ...snip...
-├── log
-├── object
-├── object-file # <2>
-└── og # <1>
+│   └── userguide.html <4>
+├── lib // <5>
+├── log // <6>
+├── object // <7>
+├── object-file // <8>
+└── og // <9>
 ----
-<1> primary cli shell script
-<2> auxillary script for manipulating og object files
+<1> Configuration directory. Includes logging configuration and sample test configurations
+<2> OG logging configuration
+<3> Sample test configurations
+<4> This user guide
+<5> Third party library dependencies
+<6> Default log location
+<7> Default object file location
+<8> Auxiliary object file management script
+<9> Primary OG load driver script
+
+=== Invocation
+OG is a command line load tool which is controlled via the _og_ launch
+script.
+
+[source, bash]
+----
+$ ./og --help
+Usage: og [<og_config>] [-v|--version] [-h|--help]
+  [<og_config>]
+        A relative or absolute path to an og json configuration file
+
+  [-v|--version]
+        Prints the og version and exits
+
+  [-h|--help]
+        Prints this help and exits
+----
 
 == Configuration
-OG is configured by a single json config file. See <<Configuration Reference>>
-for more details.
+OG is configured via a json formatted test configuration file. This file
+controls which object storage API to use, request and file size mix, the type
+of concurrency to use, and much more.
+
+=== Storage
+OG supports the following Storage APIs:
+
+|===
+|Storage API
+
+|S3
+
+|OpenStack Swift
+
+|Cleversafe SOH
+
+|WebDAV
+|===
+
+Write, Read, and Delete operations are supported for each of the supported
+Storage APIs. Storage API is configured via the _api_ key:
+
+.S3 API Example
+[source, json]
+----
+"api": "s3"
+----
+
+=== Authentication
+OG supports the following authentication configurations:
+
+|===
+|Authentication
+
+|Anonymous
+
+|Basic Auth
+
+|AWS Auth V2
+
+|AWS Auth V4
+
+|Keystone
+|===
+
+Authentication is configured via an _authentication_ block of the test
+configuration:
+
+[source, json]
+----
+"authentication": {}
+----
+
+==== Anonymous
+Anonymous authentication is the default authentication configuration. It
+is configured by omitting the _authentication_ block from the test
+configuration.
+
+==== Basic Auth
+Basic authentication uses base64 encoding to encode username and password
+credentials into an authorization request header that is sent to the target
+server.
+
+.Basic Auth Example
+[source, json]
+----
+"authentication": {
+  "type": "basic",
+  "username": "my_user",
+  "password": "my_password"
+}
+----
+
+==== AWS Auth V2
+AWS Auth V2 authentication is an S3 authentication scheme which uses several
+elements of an object storage request to generate a request signature.
+
+AWS Auth uses an access key and secret key for credentials, which map onto OG
+_username_ and _password_ keys, respectively.
+
+.AWS Auth V2 Example
+[source, json]
+----
+"authentication": {
+  "type": "awsv2",
+  "username": "AKIAIOSFODNN74SFNMK",
+  "password": "nJalrUUFklNEMI/K7MDENG/gPwRfiCYXY73DER"
+}
+----
+
+==== AWS Auth V4
+AWS Auth V4 authentication is an S3 authentication scheme which uses several
+elements of an object storage request to generate a request signature.
+
+AWS Auth uses an access key and secret key for credentials, which map onto OG
+_username_ and _password_ keys, respectively.
+
+With AWS Auth V4, the body of the request is included in the signing process.
+AWS Auth V4 requests can either sign the entire request body up front, which
+requires reading the entire contents first, or sign the body in chunks as the
+request is sent. Chunked signing and chunk size are configured via
+_aws_chunked_ and _aws_chunk_size_, respectively. Both configurations are
+optional.
+
+NOTE: For more information about AWS V4 signing, see: http://docs.aws.amazon.com/AmazonS3/latest/dev/RESTAuthentication.html[Signing and Authenticating REST Requests]
+
+Because the signing process for V4 requests is CPU intensive, OG additionally
+provides an optional mechanism for caching signatures for request bodies. This
+reduces the CPU load on the load tool, which in turn reduces the risk of the
+load tool as a performance bottleneck when executing V4 performance tests. To
+enable caching, OG must be configured to write objects with all zeroes for data
+(See Data section) so that the signatures are cacheable. Then, to enable the
+cache, configure the cache size via _aws_cache_size_.
+
+.AWS Auth V4 Example
+[source, json]
+----
+"authentication": {
+  "type": "awsv4",
+  "username": "AKIAIOSFODNN74SFNMK",
+  "password": "nJalrUUFklNEMI/K7MDENG/gPwRfiCYXY73DER",
+  "aws_chunked": true,
+  "aws_chunk_size": 8000,
+  "aws_cache_size": 1000 
+}
+----
+
+==== Keystone
+Keystone authentication is an OpenStack Swift authentication scheme which
+typically relies on an external Keystone server to generate an authentication
+token for use by object storage requests. Keystone support in OG does not
+include token lookup via an external Keystone server. Rather, OG requires a
+keystone token be manually generated prior to test start.
+
+.Keystone Example
+[source, json]
+----
+"authentication": {
+  "type": "keystone",
+  "keystone_token": "7fe2cd9ee6384a1894a43878d3e52daf"
+}
+----
+
+=== Host
+Host is the target server that the OG load tool communicates with to execute
+object storage requests. A host can be either a host name or an IPv4 IP
+address. OG supports single and multiple host configurations. For multiple
+hosts, OG supports selection of a host for a given request via round robin,
+random, or weighted random configurations. Host(s) are configured via the
+_host_ key.
+
+.Single Host Example
+[source, json]
+----
+"host": "127.0.0.1"
+----
+
+.Multiple Host Round Robin Example
+[source, json]
+----
+"host": {
+  "selection": "roundrobin",
+  "choices": ["127.0.0.1", "s3.amazonaws.com"]
+}
+----
+
+.Multiple Host Random Example
+[source, json]
+----
+"host": {
+  "selection": "random",
+  "choices": ["127.0.0.1", "s3.amazonaws.com"]
+}
+----
+
+.Multiple Host Weighted Random Example
+[source, json]
+----
+"host": {
+  "selection": "random",
+  "choices": [
+    {
+      "choice": "127.0.0.1",
+      "weight": 80.0
+    },
+    {
+      "choice": "s3.amazonaws.com",
+      "weight": 20.0
+    }
+  ]
+}
+----
+
+=== Port
+OG supports configuring the port that object storage requests are executed
+against. Port configuration applies to all configured hosts. Port is
+configured via the _port_ key.
+
+.Port Example
+[source, json]
+----
+"port": "8080"
+----
+
+=== Container
+Container is the logical bucket that the OG load tool will write objects into.
+OG supports single and multiple container configurations. For multiple
+containers, OG supports selection of a container for a given request via round
+robin or random configurations. With multiple containers, an optional _prefix_
+key and two required keys, _min_suffix_ and _max_suffix_, are used to produce a
+range of container names. Container(s) are configured via the _container_ key.
+
+.Single Container Example
+[source, json]
+----
+"container": "my_container"
+----
+
+.Multiple Container Round Robin Example
+[source, json]
+----
+"container": {
+  "selection": "roundrobin",
+  "prefix": "my_container",
+  "min_suffix": 0,
+  "max_suffix": 100
+}
+----
+
+.Multiple Container Random Example
+[source, json]
+----
+"container": {
+  "selection": "random",
+  "prefix": "my_container",
+  "min_suffix": 0,
+  "max_suffix": 100
+}
+----
+
+.Multiple Container No Prefix Example
+[source, json]
+----
+"container": {
+  "selection": "random",
+  "min_suffix": 0,
+  "max_suffix": 100
+}
+----
 
 == Results
 For each OG test that is run, a timestamped test results directory is created.
 An example:
 
-[source, bash, subs="attributes"]
+[source, bash]
 ----
 ~$ tree log/
 log/
-└── 2015-06-17_23.56.32 # <1>
-    ├── gc.log # <2>
-    ├── og.json # <3>
-    ├── og.log # <4>
-    ├── request.log # <5>
-    └── summary.json # <6>
+└── 2015-06-17_23.56.32 // <1>
+    ├── gc.log // <2>
+    ├── og.json // <3>
+    ├── og.log // <4>
+    ├── request.log // <5>
+    └── summary.json // <6>
 ----
 <1> parent directory for a test run
 <2> jvm gc.log for this test
 <3> serialized og.json, including default values; useful for config auditing
-<4> applicationg logs
+<4> application logs
 <5> per-request log, including http details
 <6> summary statistics
 
@@ -119,8 +386,8 @@ log/
 |None
 
 |api
-|Enum ("soh", "s3", "openstack", "webdav")
-|"soh"
+|Enum ("s3", "openstack", "soh", "webdav")
+|None
 
 |uri_root
 |String
