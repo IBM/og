@@ -1,5 +1,5 @@
 = Object Generator
-v{display-version}, April 6th, 2015
+v{display-version}, January 22nd, 2016
 :toc: right
 :sectlinks:
 :sectanchors:
@@ -297,6 +297,43 @@ configured via the _port_ key.
 "port": "8080"
 ----
 
+=== URI Root
+OG supports configuring the root URI path that the object storage API is
+located at. URI Root is configured via the _uri_root_ key, and the default
+value is to root the configured Storage API at _/<api>/_. For example,
+request URIs for S3 requests using the default _uri_root_ would take the form: 
+
+[source, bash]
+----
+/s3/<container>/<object>
+----
+
+.URI Root Alternate Example
+[source, json]
+----
+"uri_root": "/"
+----
+
+=== Virtual Host
+Some Object Storage implementations support virtual host addressing, which is
+a way to express containers as virtual sub-domains. OG supports this
+configuration via the _virtual_host_ key. The default configuration is false,
+which means that object storage request URIs are of the form: 
+
+[source, bash]
+----
+<host>://<uri_root>/<container>/<object>
+----
+
+With virtual host set to true, request URIs are of the form:
+
+[source, json]
+----
+<container>.<host>://<object>
+----
+
+NOTE: When virtual host is enabled, the _uri_root_ configuration is ignored.
+
 === Container
 Container is the logical bucket that the OG load tool will write objects into.
 OG supports single and multiple container configurations. For multiple
@@ -332,6 +369,313 @@ names. Container(s) are configured via the _container_ key.
   "max_suffix": 100
 }
 ----
+
+=== Headers
+Custom HTTP request headers can be added to every request that is executed.
+Header values can be constant or dynamic. For dynamic header value
+configuration, values can be selected via round robin, random, or weighted
+random. Headers are configured via the _headers_ key.
+
+.Headers Static Values Example
+[source, json]
+----
+"headers": {
+  "x-custom-01": "1000",
+  "x-custom-02": "true"
+}
+----
+
+.Headers Random Dynamic Values Example
+[source, json]
+----
+"headers": {
+  "x-custom-01": {
+    "selection": "random",
+    "choices": ["1000", "2000", "10000"]
+  },
+  "x-custom-02": "true"
+}
+----
+
+.Headers Round Robin Dynamic Values Example
+[source, json]
+----
+"headers": {
+  "x-custom-01": {
+    "selection": "roundrobin",
+    "choices": ["1000", "2000", "10000"]
+  },
+  "x-custom-02": "true"
+}
+----
+
+.Headers Weighted Random Dynamic Values Example
+[source, json]
+----
+"headers": {
+  "x-custom-01": {
+    "selection": "random",
+    "choices": [
+      {"choice": "1000", "weight": 20.0},
+      {"choice": "2000", "weight": 75.0},
+      {"choice": "10000", "weight": 5.0}
+    ]
+  },
+  "x-custom-02": "true"
+}
+----
+
+=== Write, Read, Delete Operations
+Write, Read, and Delete operations are supported for all Object Storage APIs.
+Operation mix is configured via _write_, _read_, and _delete_ keys,
+respectively.
+
+Each operation type is configured via a configuration block. E.g. for write:
+
+[source, json]
+----
+"write": {}
+----
+
+The configuration block supports _weight_, _host_, _object_, and _header_ keys.
+
+==== Operation Weight
+The _weight_ configuration key determines what percentage of requests are of
+each operation type.
+
+.100% Write Example
+[source, json]
+----
+"write": {"weight": 100.0},
+"read": {"weight": 0.0},
+"delete": {"weight": 0.0}
+----
+
+==== Operation Host
+OG supports overriding the global host configuration for a particular operation
+type. See <<Host>> for more details.
+
+==== Operation Object
+OG supports multiple object name configurations via the _object_ key:
+
+[source, json]
+----
+"object": {}
+----
+
+By default, OG will generate a unique, uuid-like object name for every Write
+request. Read and Delete requests will select a random object name from objects
+which have already been written. See <<Object Manager>>.
+
+To override this behavior, the _object_ configuration block can be configured
+to include _selection_, _prefix_, _min_suffix_, and _max_suffix_ keys. Random
+and round robin selection configuration is supported. The resulting object name
+will be of the form:
+
+[source, bash]
+----
+<prefix><suffix>
+----
+
+WARNING: Using custom object name configuration bypasses object management.
+Object names written with a custom prefix and suffix will not be stored in the
+object manager, for example.
+
+.Round Robin Object Name Example
+[source, json]
+----
+"object": {
+  "selection": "roundrobin",
+  "prefix": "my_object",
+  "min_suffix": 0,
+  "max_suffix": 100
+}
+----
+
+==== Operation Headers
+OG supports overriding the global headers configuration for a particular operation
+type. See <<Headers>> for more details.
+
+=== Filesize
+OG supports one or more filesize distributions for describing object file
+sizes to be written for write requests. If multiple filesize distributions are
+configured, round robin, random, and weighted random selection are supported.
+
+Each file size distribution supports _distribution_, _average_, _average_unit_,
+_spread_, and _spread_unit_ keys. *uniform* and *normal* distributions are
+supported.
+
+For *uniform* distribution, the shape of the distribution is _average_ +/-
+spread. For *normal* distribution the shape of the distribution is centered
+about _average_, with one standard deviation of _spread_.
+
+Both _average_unit_ and _spread_unit_ support a large number of size units.
+See <<Filesize Units>> for details.
+
+.Single Fixed Filesize (10KB) Example
+[source, json]
+----
+"filesize": {"average": 10, "average_unit": "kb"}
+----
+
+.Single Filesize Distribution Example
+[source, json]
+----
+"filesize": {
+  "distribution": "uniform",
+  "average": 10,
+  "average_unit": "kb",
+  "spread": 2,
+  "spread_unit": "kb"
+}
+----
+
+.Multiple Filesize Distributions Round Robin Example
+[source, json]
+----
+"filesize": {
+  "selection": "roundrobin",
+  "choices": [
+    {
+      "distribution": "uniform",
+      "average": 10,
+      "average_unit": "kb",
+      "spread": 2,
+      "spread_unit": "kb"
+    },
+    {
+      "distribution": "normal",
+      "average": 100,
+      "average_unit": "mb"
+    }
+  ]
+}
+----
+
+.Multiple Filesize Distributions Weighted Random Example
+[source, json]
+----
+"filesize": {
+  "selection": "random",
+  "choices": [
+    {
+      "choice": {
+        "distribution": "uniform",
+        "average": 10,
+        "average_unit": "kb",
+        "spread": 2,
+        "spread_unit": "kb"
+      },
+      "weight": 80.0
+    },
+    {
+      "choice": {
+        "distribution": "normal",
+        "average": 100,
+        "average_unit": "mb"
+      },
+      "weight": 20.0
+    }
+  ]
+}
+----
+
+=== Data
+Data determines what type of source data is used for write requests. By
+default, OG will generate a small, fixed buffer of random data for every write
+request, which is returned repeatedly until the length of the object is
+satisfied. Optionally, data can be configured to use all zeroes for object
+content. Data is configured via the _data_ key; valid options are *random* and
+*zeroes*.
+
+.Zeroes Data Example
+[source, json]
+----
+"data": "zeroes"
+----
+
+=== Concurrency
+Concurrency configuration allows the OG tool to execute requests in parallel.
+There are two types of supported concurrency in OG, *threads* and *ops*.
+Concurrency is configured via the _concurrency_ key.
+
+[source, json]
+----
+"concurrency": {}
+----
+
+==== Threads Concurrency
+Thread testing involves configuring a fixed number of concurrent TCP
+connections, each of which will execute requests as quickly as possible. Thread
+based testing is good for measuring system capacity.
+
+Thread testing supports _count_, _rampup_, and _rampup_unit_ keys. Rampup
+allows a thread based test to build up to a steady connection rate over a
+configurable period of time.
+
+.Single Thread Example
+[source, json]
+----
+"concurrency": {
+  "type": "threads",
+  "count": 1
+}
+----
+
+.Multiple Threads Example
+[source, json]
+----
+"concurrency": {
+  "type": "threads",
+  "count": 10
+}
+----
+
+.Multiple Threads With Rampup Example
+[source, json]
+----
+"concurrency": {
+  "type": "threads",
+  "count": 10,
+  "rampup": 60,
+  "rampup_unit": "seconds"
+}
+----
+
+See <<Time Units>> for supported time units.
+
+==== Request Rate Concurrency
+Request Rate concurrency (ops) testing involves configuring a desired request
+rate to send requests at. A variable number of TCP connections will be used to
+satisfy the configured rate.
+
+Request Rate testing supports _count_, _unit_, _rampup_, and _rampup_unit_
+keys. Rampup allows an ops based test to build up to a steady request rate
+over a configurable period of time.
+
+.Request Rate (100 op/s) Example
+[source, json]
+----
+"concurrency": {
+  "type": "ops",
+  "count": 100,
+  "unit": "seconds"
+}
+----
+
+.Request Rate (500 op/minute) With Rampup Example
+[source, json]
+----
+"concurrency": {
+  "type": "ops",
+  "count": 500,
+  "unit": "minutes",
+  "rampup": 60,
+  "rampup_unit": "seconds"
+}
+----
+
+See <<Time Units>> for supported time units.
 
 == Results
 For each OG test that is run, a timestamped test results directory is created.
