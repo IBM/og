@@ -75,9 +75,10 @@ The OG project consists of the following files and directories:
 <9> Primary OG load driver script
 
 === Invocation
-OG is a command line load tool which is controlled via the _og_ launch
+OG is a command line load tool which is controlled via the _og_ shell
 script.
 
+.OG Help
 [source, bash]
 ----
 $ ./og --help
@@ -90,6 +91,56 @@ Usage: og [<og_config>] [-v|--version] [-h|--help]
 
   [-h|--help]
         Prints this help and exits
+----
+
+To run a test with OG, call the _og_ shell script with a relative or absolute
+path to a configuration file:
+
+.Basic Invocation
+[source, bash, subs="attributes"]
+----
+$ ./og conf/sample/simple-s3.json
+-------------------------------------------------------------------------------
+Object Generator ({display-version})
+-------------------------------------------------------------------------------
+Configuring...
+Configured.
+Test Running...
+Test Completed.
+-------------------------------------------------------------------------------
+Summary
+-------------------------------------------------------------------------------
+Start: 21/Jan/2016:23:20:31 -0600
+End: 21/Jan/2016:23:20:32 -0600
+Runtime: 0.29 Seconds
+Operations: 31
+
+[WRITE]
+Operations: 31
+Bytes: 310.00
+Throughput: 1.07 KB/s
+OPS: 107.27
+Status Codes:
+201: 31
+
+[READ]
+Operations: 0
+Bytes: 0.00
+Throughput: 0.00 B/s
+OPS: 0.00
+Status Codes:
+N/A
+
+[DELETE]
+Operations: 0
+Bytes: 0.00
+Throughput: 0.00 B/s
+OPS: 0.00
+Status Codes:
+N/A
+
+
+$
 ----
 
 == Configuration
@@ -183,6 +234,9 @@ _username_ and _password_ keys, respectively.
 }
 ----
 
+NOTE: The current AWS Auth V2 implementation does not support virtual host
+addressing. See <<Virtual Host>> for more details.
+
 ==== AWS Auth V4
 AWS Auth V4 authentication is an S3 authentication scheme which uses several
 elements of an object storage request to generate a request signature.
@@ -207,7 +261,17 @@ enable caching, OG must be configured to write objects with all zeroes for data
 (See Data section) so that the signatures are cacheable. Then, to enable the
 cache, configure the cache size via _aws_cache_size_.
 
-.AWS Auth V4 Example
+.AWS Auth V4 With Signing The Entire Request Example
+[source, json]
+----
+"authentication": {
+  "type": "awsv4",
+  "username": "AKIAIOSFODNN74SFNMK",
+  "password": "nJalrUUFklNEMI/K7MDENG/gPwRfiCYXY73DER"
+}
+----
+
+.AWS Auth V4 With Chunked Signing Example
 [source, json]
 ----
 "authentication": {
@@ -215,8 +279,7 @@ cache, configure the cache size via _aws_cache_size_.
   "username": "AKIAIOSFODNN74SFNMK",
   "password": "nJalrUUFklNEMI/K7MDENG/gPwRfiCYXY73DER",
   "aws_chunked": true,
-  "aws_chunk_size": 8000,
-  "aws_cache_size": 1000 
+  "aws_chunk_size": 8000
 }
 ----
 
@@ -237,7 +300,7 @@ keystone token be manually generated prior to test start.
 ----
 
 === Host
-Host is the target server that the OG load tool communicates with to execute
+Host is the target endpoint that the OG load tool communicates with to execute
 object storage requests. A host can be either a host name or an IPv4 IP
 address. OG supports single and multiple host configurations. For multiple
 hosts, OG supports selection of a host for a given request via round robin,
@@ -247,7 +310,7 @@ _host_ key.
 .Single Host Example
 [source, json]
 ----
-"host": "127.0.0.1"
+"host": "s3.amazonaws.com"
 ----
 
 .Multiple Host Round Robin Example
@@ -255,7 +318,7 @@ _host_ key.
 ----
 "host": {
   "selection": "roundrobin",
-  "choices": ["127.0.0.1", "s3.amazonaws.com"]
+  "choices": ["10.129.100.100", "s3.amazonaws.com", "loadbalancer01.example.com"]
 }
 ----
 
@@ -264,7 +327,7 @@ _host_ key.
 ----
 "host": {
   "selection": "random",
-  "choices": ["127.0.0.1", "s3.amazonaws.com"]
+  "choices": ["10.129.100.100", "s3.amazonaws.com"]
 }
 ----
 
@@ -275,7 +338,7 @@ _host_ key.
   "selection": "random",
   "choices": [
     {
-      "choice": "127.0.0.1",
+      "choice": "10.129.100.100",
       "weight": 80.0
     },
     {
@@ -296,43 +359,6 @@ configured via the _port_ key.
 ----
 "port": "8080"
 ----
-
-=== URI Root
-OG supports configuring the root URI path that the object storage API is
-located at. URI Root is configured via the _uri_root_ key, and the default
-value is to root the configured Storage API at _/<api>/_. For example,
-request URIs for S3 requests using the default _uri_root_ would take the form: 
-
-[source, bash]
-----
-/s3/<container>/<object>
-----
-
-.URI Root Alternate Example
-[source, json]
-----
-"uri_root": "/"
-----
-
-=== Virtual Host
-Some Object Storage implementations support virtual host addressing, which is
-a way to express containers as virtual sub-domains. OG supports this
-configuration via the _virtual_host_ key. The default configuration is false,
-which means that object storage request URIs are of the form: 
-
-[source, bash]
-----
-<host>://<uri_root>/<container>/<object>
-----
-
-With virtual host set to true, request URIs are of the form:
-
-[source, json]
-----
-<container>.<host>://<object>
-----
-
-NOTE: When virtual host is enabled, the _uri_root_ configuration is ignored.
 
 === Container
 Container is the logical bucket that the OG load tool will write objects into.
@@ -465,7 +491,7 @@ OG supports multiple object name configurations via the _object_ key:
 
 By default, OG will generate a unique, uuid-like object name for every Write
 request. Read and Delete requests will select a random object name from objects
-which have already been written. See <<Object Manager>>.
+which have already been written. See <<Object Management>>.
 
 To override this behavior, the _object_ configuration block can be configured
 to include _selection_, _prefix_, _min_suffix_, and _max_suffix_ keys. Random
@@ -495,6 +521,20 @@ object manager, for example.
 ==== Operation Headers
 OG supports overriding the global headers configuration for a particular operation
 type. See <<Headers>> for more details.
+
+.100% Write Operation with Random Objects In Range my_object0 to my_object100 Example
+[source, json]
+----
+"write": {
+  "weight": 100.0,
+  "object": {
+    "selection": "random",
+    "prefix": "my_object",
+    "min_suffix": 0,
+    "max_suffix": 100
+  }
+}
+----
 
 === Filesize
 OG supports one or more filesize distributions for describing object file
@@ -677,9 +717,177 @@ over a configurable period of time.
 
 See <<Time Units>> for supported time units.
 
+=== Stopping Conditions
+Stopping conditions determine when a running OG instance should stop. By
+default, OG will run indefinitely until a user stops it via a ctrl-c or
+equivalent signal. Stopping conditions are configured via the
+_stopping_conditions_ key:
+
+[source, json]
+----
+"stopping_conditions": {}
+----
+
+==== Operations
+The operations stopping condition causes OG to stop when a threshold number
+of operations has completed. Operations is configured via the _operations_
+key.
+
+.Stop after 100 Operations Example
+[source, json]
+----
+"stopping_conditions": {
+  "operations": 100
+}
+----
+
+==== Runtime
+The runtime stopping condition causes OG to stop when a threshold period of
+time has elapsed. Runtime is configured via the _runtime_ and _runtime_unit_
+keys.
+
+.Stop after 3.5 Hours Example
+[source, json]
+----
+"stopping_conditions": {
+  "runtime": 3.5,
+  "runtime_unit": "hours"
+}
+----
+
+See <<Time Units>> for supported time units.
+
+==== Status Codes
+The status codes stopping condition causes OG to stop when a threshold number
+of status codes of a given number have been received.
+
+.Stop after 100 "200" Status Codes Received Example
+[source, json]
+----
+"stopping_conditions": {
+  "status_codes": {
+    "200": 100
+  }
+}
+----
+
+.Stop after any "404", "500", or "503" Status Codes Received Example
+[source, json]
+----
+"stopping_conditions": {
+  "status_codes": {
+    "404": 1,
+    "500": 1,
+    "503": 1
+  }
+}
+----
+
+NOTE: OG uses a special reserved status code "599" to indicate a failed or
+aborted request. This special status code can also be used as a status code
+stopping condition.
+
+=== Object Management
+OG tracks the state of objects written to containers. The OG object manager
+writes metadata about the objects into a set of binary files called "object
+files". Object management is configured via the _objec_manager_ key. The
+location to store object files is configured via _object_file_location_ and
+_object_file_name_ keys.
+
+_object_file_location_ specifies which directory the object file(s) should be
+written to. The default location is in the *object* sub-directory of the OG
+distribution.
+
+_object_file_name_ specifies an file prefix to use when writing object files.
+Every object file that is written will contain a numeric component to the file
+name. If _object_file_name was configured as *my_object* and three files were
+written over the course of an OG test, the resulting object file names would be
+*my_object0.object*, *my_object1.object*, and *my_object2.object*, respectively.
+
+If _object_file_name_ is not specified, a default name of the following form is
+used:
+
+[source, bash]
+----
+<container prefix>-<api>
+----
+
+.Object Manager Example
+[source, json]
+----
+"object_manager": {
+  "object_file_location": "/var/log/og-objects",
+  "object_file_name": "my_objects"
+}
+----
+
+WARNING: Object files are not thread safe. Multiple instances of the OG tool
+should not share the same set of object files. Attempting to do so will result
+in object file corruption and/or a loss of object file metadata.
+
+=== Advanced Configuration
+OG supports several additional advanced configuration options that enable its
+use for more complex scenarios, edge case testing, and defect reproduction.
+
+CAUTION: It is recommended to avoid modifying any of the below configuration
+options unless a particular advanced configuration is required for testing.
+
+==== URI Root
+OG supports configuring the root URI path that the object storage API is
+located at. URI Root is configured via the _uri_root_ key, and the default
+value is to root the configured Storage API at _/<api>/_. For example,
+request URIs for S3 requests using the default _uri_root_ would take the form:
+
+[source, bash]
+----
+/s3/<container>/<object>
+----
+
+.URI Root Alternate Example
+[source, json]
+----
+"uri_root": "/"
+----
+
+==== Virtual Host
+Some Object Storage implementations support virtual host addressing, which is
+a way to express containers as virtual sub-domains. OG supports this
+configuration via the _virtual_host_ key. The default configuration is false,
+which means that object storage request URIs are of the form:
+
+[source, bash]
+----
+<host>://<uri_root>/<container>/<object>
+----
+
+With virtual host set to true, request URIs are of the form:
+
+[source, json]
+----
+<container>.<host>://<object>
+----
+
+NOTE: When virtual host is enabled, the _uri_root_ configuration is ignored.
+
+==== Shutdown Behavior
+By default, when OG shuts down it aborts all in progress requests in order to
+ensure that the tool terminates in a reasonable time. For some use cases, it is
+valuable to configure the tool to allow in progress requests to complete prior
+to termination. This option is configured via the _shutdown_immediate_ key.
+
+.Graceful Shutdown Example
+[source, json]
+----
+"shutdown_immediate": false
+----
+
+==== Client Behavior
+OG supports a large number of TCP and HTTP tuning parameters which affect
+client execution behavior. For a complete list, see <<Client Configuration>>.
+
 == Results
-For each OG test that is run, a timestamped test results directory is created.
-An example:
+For each OG test that is run, a test results directory is created with the
+starting timestamp of the test.
 
 [source, bash]
 ----
@@ -692,12 +900,78 @@ log/
     ├── request.log // <5>
     └── summary.json // <6>
 ----
-<1> parent directory for a test run
+<1> parent directory for the test run
 <2> jvm gc.log for this test
 <3> serialized og.json, including default values; useful for config auditing
 <4> application logs
 <5> per-request log, including http details
 <6> summary statistics
+
+=== Request Log
+The OG request.log provide detailed per-request data for every request that is
+executed during a test. Each line in request.log is a json object which
+contains details for an individual request.
+
+.Sample Line From request.log
+[source, json, subs="attributes"]
+----
+{
+  "type": "http",
+  "remote_address": "rtveitch01.s3.amazonaws.com",
+  "timestamp_start": "1452558287118",
+  "timestamp_finish": "1452558287179",
+  "time_start": "11/Jan/2016:18:24:47 -0600",
+  "time_finish": "11/Jan/2016:18:24:47 -0600",
+  "request_method": "PUT",
+  "request_uri": "/147a1efaf72844fd9529ee5f487306af0000",
+  "object_id": "147a1efaf72844fd9529ee5f487306af0000",
+  "status": 200,
+  "request_length": "1000",
+  "user_agent": "og-{display-version}",
+  "request_latency": "61",
+  "client_request_id": "10",
+  "stat": {
+    "request_content": 0.01,
+    "close_latency": 60.11,
+    "ttfb": 60.47,
+    "response_content": 0,
+    "total": 60.52
+  },
+  "object_length": "1000",
+  "object_name": "147a1efaf72844fd9529ee5f487306af0000"
+}
+----
+
+=== Summary Log
+The OG summary.json provide a high level summary of the results of a test run.
+
+.Sample summary.json
+[source, json]
+----
+{
+  "timestamp_start": 1452558285641,
+  "timestamp_finish": 1452558287184,
+  "runtime": 1.543,
+  "operations": 11,
+  "write": {
+    "operations": 11,
+    "bytes": 11000,
+    "status_codes": {
+      "200": 11
+    }
+  },
+  "read": {
+    "operations": 0,
+    "bytes": 0,
+    "status_codes": {}
+  },
+  "delete": {
+    "operations": 0,
+    "bytes": 0,
+    "status_codes": {}
+  }
+}
+----
 
 == Appendix
 
@@ -705,310 +979,366 @@ log/
 
 ==== General Configuration
 |===
-|Parameter|Type|Default
-
-|scheme
-|Enum ("http", "https")
-|"http"
+|Parameter|Type|Required|Default
 
 |host
-|String or SelectionConfig<String>
-|None; see <<Selection Configuration>>
+|String or Complex
+|Yes
+|None
 
 |port
 |Integer
-|None
+|No
+|80
 
 |api
 |Enum ("s3", "openstack", "soh", "webdav")
+|Yes
 |None
 
 |uri_root
 |String
+|No
 |"/<api>/"
 
 |container
-|String or ContainerConfig
-|None; see <<Container Configuration>>
+|String or Complex
+|Yes
+|None
 
 |headers
 |Object
+|No
 |{}
 
 |write
-|Decimal or OperationConfig
-|100.0; see <<Operation Configuration>>
+|Complex
+|Yes
+|None
 
 |read
-|Decimal or OperationConfig
-|0.0; see <<Operation Configuration>>
+|Complex
+|Yes
+|None
 
 |delete
-|Decimal or OperationConfig
-|0.0; see <<Operation Configuration>>
+|Complex
+|Yes
+|None
 
 |filesize
-|Decimal or SelectionConfig<FilesizeConfig>
-|see <<Filesize Configuration>>
+|Complex
+|No
+|None
 
 |data
 |Enum ("random", "zeroes")
+|No
 |"random"
 
 |concurrency
-|ConcurrencyConfig
-|see <<Concurrency Configuration>>
+|Complex
+|Yes
+|None
 
 |authentication
-|AuthenticationConfig
-|see <<Authentication Configuration>>
+|Complex
+|No
+|None
 
 |client
-|ClientConfig
-|see <<Client Configuration>>
+|Complex
+|No
+|None
 
 |stopping_conditions
-|StoppingConditionsConfig
-|see <<Stopping Conditions Configuration>>
+|Complex
+|No
+|None
 
 |object_manager
-|ObjectManagerConfig
-|see <<Object Manager Configuration>>
+|Complex
+|No
+|None
 
 |shutdown_immediate
 |Boolean
+|No
 |true
 |===
 
 ==== Operation Configuration
 |===
-|Parameter|Type|Default
-
-|host_selection
-|Enum ("random", "roundrobin")
-|"roundrobin"
+|Parameter|Type|Required|Default
 
 |host
-|String or [HostConfig]
+|String or Complex
+|No
 |None
 
 |object
-|ObjectConfig
-|see <<Object Configuration>>
+|Complex
+|No
+|None
 
 |headers
 |Object
+|No
 |{}
 
 |weight
 |Decimal
-|1.0
+|No
+|0.0
 |===
 
 ==== Object Configuration
 |===
-|Parameter|Type|Default
+|Parameter|Type|Required|Default
 
 |prefix
 |String
+|No
 |""
 
 |selection
 |Enum ("random", "roundrobin")
-|"random"
+|Yes
+|None
 
 |min_suffix
 |Integer
+|No
 |0
 
 |max_suffix
 |Integer
+|No
 |9223372036854775807
 |===
 
 ==== Filesize Configuration
 |===
-|Parameter|Type|Default
+|Parameter|Type|Required|Default
 
 |distribution
-|Enum ("uniform", "normal", "lognormal")
+|Enum ("uniform", "normal")
+|No
 |"uniform"
 
 |average
 |Decimal
-|5.0
+|Yes
+|None
 
 |average_unit
 |Enum (see <<Filesize Units>>)
-|"mebibytes"
+|No
+|"bytes"
 
 |spread
 |Decimal
+|No
 |0.0
 
 |spread_unit
 |Enum (see <<Filesize Units>>)
-|"mebibytes"
+|No
+|"bytes"
 
 |weight
 |Decimal
-1.0
+|No
+|1.0
 |===
 
 ==== Concurrency Configuration
 |===
-|Parameter|Type|Default
+|Parameter|Type|Required|Default
 
 |type
 |Enum ("threads", "ops")
-|"threads"
+|Yes
+|None
 
 |count
 |Decimal
-|1.0
+|Yes
+|None
 
 |unit
 |Enum (see <<Time Units>>)
+|No
 |"seconds"
 
 |rampup
 |Decimal
+|No
 |0.0
 
 |rampup_unit
 |Enum (see <<Time Units>>)
+|No
 |"seconds"
 |===
 
 ==== Authentication Configuration
 |===
-|Parameter|Type|Default
+|Parameter|Type|Required|Default
 
 |type
 |Enum ("basic", "awsv2", "awsv4")
-|"basic"
+|Yes
+|None
 
 |username
 |String
+|Yes
 |None
 
 |password
 |String
+|Yes
 |None
 |===
 
 ==== Client Configuration
 |===
-|Parameter|Type|Default
+|Parameter|Type|Required|Default
 
 |connect_timeout
 |Integer
+|No
 |0
 
 |so_timeout
 |Integer
+|No
 |0
 
 |so_reuse_address
 |Boolean
+|No
 |false
 
 |so_linger
 |Integer
+|No
 |-1
 
 |so_keep_alive
 |Boolean
+|No
 |true
 
 |tcp_no_delay
 |Boolean
+|No
 |true
 
 |so_snd_buf
 |Integer
+|No
 |0; "platform default"
 
 |so_rcv_buf
 |Integer
+|No
 |0; "platform default"
 
 |persistent_connections
 |Boolean
+|No
 |true
 
 |validate_after_inactivity
 |Integer
+|No
 |10000; in milliseconds
 
 |max_idle_time
 |Integer
+|No
 |60000; in milliseconds
 
 |chunked_encoding
 |Boolean
+|No
 |false
 
 |expect_continue
 |Boolean
+|No
 |false
 
 |wait_for_continue
 |Integer
+|No
 |3000
 
 |retry_count
 |Integer
+|No
 |0
 
 |request_sent_retry
 |Boolean
+|No
 |true
 
 |write_throughput
 |Integer
+|No
 |0
 
 |read_throughput
 |Integer
+|No
 |0
 |===
 
 ==== Stopping Conditions Configuration
 |===
-|Parameter|Type|Default
+|Parameter|Type|Required|Default
 
 |operations
 |Integer
-|0
+|No
+|None
 
 |runtime
 |Decimal
-|0.0
+|No
+|None
 
 |runtime_unit
 |Enum (see <<Time Units>>)
+|No
 |"seconds"
 
 |concurrent_requests
 |Integer
+|No
 |2000
 
 |status_codes
 |Object
+|No
 |{}
 |===
 
 ==== Object Manager Configuration
 |===
-|Parameter|Type|Default
+|Parameter|Type|Required|Default
 
 |object_file_location
 |String
+|No
 |"./object"
 
 |object_file_name
 |String
+|No
 |"<container>-<api>"
 
 |object_file_max_size
@@ -1022,32 +1352,6 @@ log/
 |object_file_index
 |Integer
 |None; advanced option
-|===
-
-==== Selection Configuration
-|===
-|Parameter|Type|Default
-
-|selection
-|Enum ("random", "roundrobin")
-|"random"
-
-|choices
-|List<ChoiceConfig>; see <<Choice Configuration>>
-|[]
-|===
-
-==== Choice Configuration
-|===
-|Parameter|Type|Default
-
-|choice
-|T
-|None
-
-|weight
-|Decimal
-|1.0
 |===
 
 === Filesize Units
