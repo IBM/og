@@ -917,28 +917,28 @@ contains details for an individual request.
 ----
 {
   "type": "http",
-  "remote_address": "rtveitch01.s3.amazonaws.com",
-  "timestamp_start": "1452558287118",
-  "timestamp_finish": "1452558287179",
-  "time_start": "11/Jan/2016:18:24:47 -0600",
-  "time_finish": "11/Jan/2016:18:24:47 -0600",
+  "remote_address": "loadbalancer01.example.com",
+  "timestamp_start": "1453481170147",
+  "timestamp_finish": "1453481170197",
+  "time_start": "22/Jan/2016:10:46:10 -0600",
+  "time_finish": "22/Jan/2016:10:46:10 -0600",
   "request_method": "PUT",
-  "request_uri": "/147a1efaf72844fd9529ee5f487306af0000",
-  "object_id": "147a1efaf72844fd9529ee5f487306af0000",
+  "request_uri": "/s3/test/8ca1dc1cd5a04bbdb10bd9b20e6516250000",
+  "object_id": "8ca1dc1cd5a04bbdb10bd9b20e6516250000",
   "status": 200,
-  "request_length": "1000",
+  "request_length": "10",
   "user_agent": "og-{display-version}",
-  "request_latency": "61",
-  "client_request_id": "10",
+  "request_latency": "50",
+  "client_request_id": "0",
   "stat": {
-    "request_content": 0.01,
-    "close_latency": 60.11,
-    "ttfb": 60.47,
-    "response_content": 0,
-    "total": 60.52
+    "request_content": 0.03,
+    "close_latency": 13.58,
+    "ttfb": 48.86,
+    "response_content": 0.24,
+    "total": 50.03
   },
-  "object_length": "1000",
-  "object_name": "147a1efaf72844fd9529ee5f487306af0000"
+  "object_length": "10",
+  "object_name": "8ca1dc1cd5a04bbdb10bd9b20e6516250000"
 }
 ----
 
