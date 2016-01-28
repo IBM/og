@@ -1110,6 +1110,9 @@ use AWSv2 authentication with *AKIAIOSFODNN74SFNMK* for the access key and
 stop when *one thousand* successful *(200)* or *any* unsuccessful *(500, 503)*
 response codes have been received, whichever comes first.
 
+Object names should be written randomly with names in the range *my_object0* to
+*my_object10000*.
+
 .OG Configuration
 [source, json]
 ----
@@ -1117,7 +1120,15 @@ response codes have been received, whichever comes first.
 "host": "<hostname or IP address>",
 "api": "s3",
 "container": "<container name>",
-"write": {"weight": 100.0},
+"write": {
+  "weight": 100.0,
+  "object": {
+    "selection": "random",
+    "prefix": "my_object",
+    "min_suffix": 0,
+    "max_suffix": 10000
+  }
+},
 "read": {"weight": 0.0},
 "delete": {"weight": 0.0},
 "filesize": {"average": 10, "average_unit": "megabytes"},
