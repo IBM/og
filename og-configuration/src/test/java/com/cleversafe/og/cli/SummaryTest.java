@@ -94,5 +94,10 @@ public class SummaryTest {
     assertThat(summaryStats.delete.operations, is(0L));
     assertThat(summaryStats.delete.bytes, is(0L));
     assertThat(summaryStats.delete.statusCodes.size(), is(0));
+
+    assertThat(summaryStats.metadata.operation, is(Operation.METADATA));
+    assertThat(summaryStats.metadata.operations, is(0L));
+    assertThat(summaryStats.metadata.statusCodes.size(), is(0));
+    assertThat(summaryStats.metadata.statusCodes.size(), is(0));
   }
 }

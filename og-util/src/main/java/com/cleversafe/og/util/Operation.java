@@ -15,5 +15,5 @@ package com.cleversafe.og.util;
  * @since 1.0
  */
 public enum Operation {
-  ALL, WRITE, READ, DELETE;
+  ALL, WRITE, READ, DELETE, METADATA
 }

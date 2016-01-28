@@ -47,8 +47,9 @@ public class HttpUtil {
       case POST:
         return Operation.WRITE;
       case GET:
-      case HEAD:
         return Operation.READ;
+      case HEAD:
+        return Operation.METADATA;
       case DELETE:
         return Operation.DELETE;
       default:

@@ -37,6 +37,9 @@ import com.cleversafe.og.guice.annotation.ReadObjectName;
 import com.cleversafe.og.guice.annotation.WriteHeaders;
 import com.cleversafe.og.guice.annotation.WriteHost;
 import com.cleversafe.og.guice.annotation.WriteObjectName;
+import com.cleversafe.og.guice.annotation.MetadataHeaders;
+import com.cleversafe.og.guice.annotation.MetadataHost;
+import com.cleversafe.og.guice.annotation.MetadataObjectName;
 import com.cleversafe.og.http.Api;
 import com.cleversafe.og.http.BasicAuth;
 import com.cleversafe.og.http.Bodies;
@@ -81,6 +84,7 @@ import com.cleversafe.og.supplier.ReadObjectNameFunction;
 import com.cleversafe.og.supplier.RequestSupplier;
 import com.cleversafe.og.supplier.Suppliers;
 import com.cleversafe.og.supplier.UUIDObjectNameFunction;
+import com.cleversafe.og.supplier.MetadataObjectNameFunction;
 import com.cleversafe.og.test.LoadTest;
 import com.cleversafe.og.test.LoadTestSubscriberExceptionHandler;
 import com.cleversafe.og.test.RequestManager;
@@ -150,6 +154,7 @@ public class OGModule extends AbstractModule {
     bindConstant().annotatedWith(Names.named("write.weight")).to(this.config.write.weight);
     bindConstant().annotatedWith(Names.named("read.weight")).to(this.config.read.weight);
     bindConstant().annotatedWith(Names.named("delete.weight")).to(this.config.delete.weight);
+    bindConstant().annotatedWith(Names.named("metadata.weight")).to(this.config.metadata.weight);
     bindConstant().annotatedWith(Names.named("virtualhost")).to(this.config.virtualHost);
     bind(AuthType.class).toInstance(this.config.authentication.type);
     bind(DataType.class).annotatedWith(Names.named("dataType"))
@@ -343,6 +348,13 @@ public class OGModule extends AbstractModule {
     return provideHost(this.config.delete, host);
   }
 
+  @Provides
+  @Singleton
+  @MetadataHost
+  public Supplier<String> provideMetadataHost(@Named("host") final Supplier<String> host) {
+    return provideHost(this.config.metadata, host);
+  }
+
   private Supplier<String> provideHost(final OperationConfig operationConfig,
       final Supplier<String> testHost) {
     checkNotNull(operationConfig);
@@ -502,6 +514,18 @@ public class OGModule extends AbstractModule {
     return new DeleteObjectNameFunction(objectManager);
   }
 
+  @Provides
+  @Singleton
+  @MetadataObjectName
+  public Function<Map<String, String>, String> provideMetadataObjectName(
+      final ObjectManager objectManager) {
+    final OperationConfig operationConfig = checkNotNull(this.config.metadata);
+    if (operationConfig.object.selection != null) {
+      return provideObject(operationConfig);
+    }
+    return new MetadataObjectNameFunction(objectManager);
+  }
+
   private Function<Map<String, String>, String> provideObject(
       final OperationConfig operationConfig) {
     checkNotNull(operationConfig);
@@ -567,6 +591,13 @@ public class OGModule extends AbstractModule {
   @DeleteHeaders
   public Map<String, Supplier<String>> provideDeleteHeaders() {
     return provideHeaders(this.config.delete.headers);
+  }
+
+  @Provides
+  @Singleton
+  @MetadataHeaders
+  public Map<String, Supplier<String>> provideMetadataHeaders() {
+    return provideHeaders(this.config.metadata.headers);
   }
 
   private Map<String, Supplier<String>> provideHeaders(
@@ -827,6 +858,23 @@ public class OGModule extends AbstractModule {
       @Named("virtualhost") final boolean virtualHost) {
     return createRequestSupplier(id, Method.DELETE, scheme, host, port, uriRoot, container, object,
         headers, Suppliers.of(Bodies.none()), username, password, keystoneToken, virtualHost);
+  }
+
+  @Provides
+  @Singleton
+  @Named("metadata")
+  public Supplier<Request> provideMetadata(@Named("request.id") final Supplier<String> id,
+      final Scheme scheme, @MetadataHost final Supplier<String> host, @Named("port") final Integer port,
+      @Named("uri.root") final String uriRoot,
+      @Named("container") final Function<Map<String, String>, String> container,
+      @MetadataObjectName final Function<Map<String, String>, String> object,
+      @MetadataHeaders final Map<String, Supplier<String>> headers,
+      @Named("authentication.username") final String username,
+      @Named("authentication.password") final String password,
+      @Named("authentication.keystoneToken") final String keystoneToken,
+      @Named("virtualhost") final boolean virtualHost) {
+    return createRequestSupplier(id, Method.HEAD, scheme, host, port, uriRoot, container, object,
+            headers, Suppliers.of(Bodies.none()), username, password, keystoneToken, virtualHost);
   }
 
   private Supplier<Request> createRequestSupplier(@Named("request.id") final Supplier<String> id,
