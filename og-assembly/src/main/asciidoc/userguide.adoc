@@ -315,6 +315,9 @@ hosts, OG supports selection of a host for a given request via round robin,
 random, or weighted random configurations. Host(s) are configured via the
 _host_ key.
 
+NOTE: When testing against a Cleversafe dsNet, the _host_ key refers to
+Accesser hostnames or IP addresses.
+
 .Single Host Example
 [source, json]
 ----
@@ -375,6 +378,9 @@ containers, OG supports selection of a container for a given request via round
 robin or random configurations. With multiple containers, _prefix_,
 _min_suffix_ and _max_suffix_ keys are used to produce a range of container
 names. Container(s) are configured via the _container_ key.
+
+NOTE: When testing against a Cleversafe dsNet, the _container_ key refers to
+dsNet Vaults.
 
 .Single Container Example
 [source, json]
@@ -1049,7 +1055,7 @@ write *10 million objects* and all objects should be *5 megabytes* in size.
 [source, json]
 ----
 {
-"host": "<hostname or IP address>",
+"host": "<hostname or ip address>",
 "api": "s3",
 "container": "<container name>",
 "write": {"weight": 100.0},
@@ -1068,19 +1074,19 @@ write *10 million objects* and all objects should be *5 megabytes* in size.
 === Simple Latency Test, Mixed Operations and Filesize
 .Test Scenario
 Execute an *SOH*, *50%/50% write/read mix* latency test with
-*50 requests per second*. The test should write *3 million objects* and a
-mix of file sizes should be used. *80%* of written files should be a *fixed 5MB*.
-*20%* of files should be a *uniform distribution* between *8MB and 12MB*.
-Object manager object files should be stored at */var/log/objects* with a
-prefix of *soh_objects*.
+*50 requests per second* against a Cleversafe dsNet. The test should write
+*3 million objects* and a mix of file sizes should be used. *80%* of written
+files should be a *fixed 5MB*. *20%* of files should be a *uniform
+distribution* between *8MB and 12MB*. Object manager object files should be
+stored at */var/log/objects* with a prefix of *soh_objects*.
 
 .OG Configuration
 [source, json]
 ----
 {
-"host": "<hostname or IP address>",
+"host": "<dsnet accesser>",
 "api": "soh",
-"container": "<container name>",
+"container": "<dsnet vault>",
 "write": {"weight":50.0},
 "read": {"weight": 50.0},
 "delete": {"weight": 0.0},
@@ -1117,7 +1123,7 @@ Object names should be written randomly with names in the range *my_object0* to
 [source, json]
 ----
 {
-"host": "<hostname or IP address>",
+"host": "<hostname or ip address>",
 "api": "s3",
 "container": "<container name>",
 "write": {
