@@ -1067,17 +1067,19 @@ write *10 million objects* and all objects should be *5 megabytes* in size.
 
 === Simple Latency Test, Mixed Operations and Filesize
 .Test Scenario
-Execute an *OpenStack*, *50%/50% write/read mix* latency test with
+Execute an *SOH*, *50%/50% write/read mix* latency test with
 *50 requests per second*. The test should write *3 million objects* and a
 mix of file sizes should be used. *80%* of written files should be a *fixed 5MB*.
 *20%* of files should be a *uniform distribution* between *8MB and 12MB*.
+Object manager object files should be stored at */var/log/objects* with a
+prefix of *soh_objects*.
 
 .OG Configuration
 [source, json]
 ----
 {
 "host": "<hostname or IP address>",
-"api": "openstack",
+"api": "soh",
 "container": "<container name>",
 "write": {"weight":50.0},
 "read": {"weight": 50.0},
@@ -1093,6 +1095,10 @@ mix of file sizes should be used. *80%* of written files should be a *fixed 5MB*
 },
 "stopping_conditions": {
   "operations": 3000000
+},
+"object_manager": {
+  "object_file_location": "/var/log/objects",
+  "object_file_name": "soh_objects"
 }
 ----
 
