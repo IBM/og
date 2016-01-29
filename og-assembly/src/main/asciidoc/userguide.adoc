@@ -1048,7 +1048,7 @@ options, see <<Configuration>>.
 
 === Simple Capacity Test
 .Test Scenario
-Execute an *S3*, *100% write* capacity test with *100 threads*. The test should
+Execute an *S3*, *100% write* capacity test with *10 threads*. The test should
 write *10 million objects* and all objects should be *5 megabytes* in size.
 
 .OG Configuration
@@ -1064,20 +1064,21 @@ write *10 million objects* and all objects should be *5 megabytes* in size.
 "filesize": {"average": 5, "average_unit": "megabytes"},
 "concurrency": {
 "type": "threads",
-"count": 100
+"count": 10
 },
 "stopping_conditions": {
   "operations": 10000000
+}
 }
 ----
 
 === Simple Latency Test, Mixed Operations and Filesize
 .Test Scenario
 Execute an *SOH*, *50%/50% write/read mix* latency test with
-*50 requests per second* against a Cleversafe dsNet. The test should write
+*10 requests per second* against a Cleversafe dsNet. The test should write
 *3 million objects* and a mix of file sizes should be used. *80%* of written
-files should be a *fixed 5MB*. *20%* of files should be a *uniform
-distribution* between *8MB and 12MB*. Object manager object files should be
+files should be a *fixed 5KB*. *20%* of files should be a *uniform
+distribution* between *8KB and 12KB*. Object manager object files should be
 stored at */var/log/objects* with a prefix of *soh_objects*.
 
 .OG Configuration
@@ -1091,12 +1092,12 @@ stored at */var/log/objects* with a prefix of *soh_objects*.
 "read": {"weight": 50.0},
 "delete": {"weight": 0.0},
 "filesize": [
-{"weight": 80, "average": 5, "average_unit": "megabytes"},
-{"weight": 20, "distribution": "uniform", "average": 10, "average_unit": "megabytes", "spread": 2, "spread_unit": "megabytes"}
+{"weight": 80, "average": 5, "average_unit": "kilobytes"},
+{"weight": 20, "distribution": "uniform", "average": 10, "average_unit": "kilobytes", "spread": 2, "spread_unit": "kilobytes"}
 ],
 "concurrency": {
 "type": "ops",
-"count": 50,
+"count": 10,
 "unit": "seconds"
 },
 "stopping_conditions": {
@@ -1105,6 +1106,7 @@ stored at */var/log/objects* with a prefix of *soh_objects*.
 "object_manager": {
   "object_file_location": "/var/log/objects",
   "object_file_name": "soh_objects"
+}
 }
 ----
 
@@ -1153,6 +1155,7 @@ Object names should be written randomly with names in the range *my_object0* to
     "500": 1,
     "503": 1
   }
+}
 }
 ----
 
