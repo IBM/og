@@ -1322,6 +1322,8 @@ mixed operation tests.
 |===
 
 ==== Object Configuration
+Object keys are only required if the object block is present. The object block
+itself is optional.
 |===
 |Parameter|Type|Required|Default
 
@@ -1412,6 +1414,9 @@ mixed operation tests.
 |===
 
 ==== Authentication Configuration
+Authentication keys are only required if the authentication block is present.
+The authentication block itself is optional, and will default to anoynmous
+authentication if absent.
 |===
 |Parameter|Type|Required|Default
 
