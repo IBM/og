@@ -1064,7 +1064,7 @@ Execute an *SOH*, *50%/50% write/read mix* latency test with
 *3 million objects* and a mix of file sizes should be used. *80%* of written
 files should be a *fixed 5KB*. *20%* of files should be a *uniform
 distribution* between *8KB and 12KB*. Object manager object files should be
-stored at */var/log/objects* with a prefix of *soh_objects*.
+stored at */tmp/objects* with a prefix of *soh_objects*.
 
 .OG Configuration
 [source, json]
