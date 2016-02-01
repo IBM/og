@@ -1,0 +1,26 @@
+{
+  "host":"<hostname or ip address>",
+  "api":"s3",
+  "container":"<container name>",
+  "write":{
+    "weight":100.0
+  },
+  "read":{
+    "weight":0.0
+  },
+  "delete":{
+    "weight":0.0
+  },
+  "filesize":{
+    "average":5,
+    "average_unit":"megabytes"
+  },
+  "concurrency":{
+    "type":"threads",
+    "count":10
+  },
+  "stopping_conditions":{
+    "operations":10000000
+  }
+}
+

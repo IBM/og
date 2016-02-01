@@ -1054,31 +1054,7 @@ write *10 million objects* and all objects should be *5 megabytes* in size.
 .OG Configuration
 [source, json]
 ----
-{
-  "host":"<hostname or ip address>",
-  "api":"s3",
-  "container":"<container name>",
-  "write":{
-    "weight":100.0
-  },
-  "read":{
-    "weight":0.0
-  },
-  "delete":{
-    "weight":0.0
-  },
-  "filesize":{
-    "average":5,
-    "average_unit":"megabytes"
-  },
-  "concurrency":{
-    "type":"threads",
-    "count":10
-  },
-  "stopping_conditions":{
-    "operations":10000000
-  }
-}
+include::{sampledir}/simple-capacity.json[]
 ----
 
 === Simple Latency Test, Mixed Operations and Filesize
@@ -1093,47 +1069,7 @@ stored at */var/log/objects* with a prefix of *soh_objects*.
 .OG Configuration
 [source, json]
 ----
-{
-  "host":"<dsnet accesser>",
-  "api":"soh",
-  "container":"<dsnet vault>",
-  "write":{
-    "weight":50.0
-  },
-  "read":{
-    "weight":50.0
-  },
-  "delete":{
-    "weight":0.0
-  },
-  "filesize":[
-    {
-      "weight":80,
-      "average":5,
-      "average_unit":"kilobytes"
-    },
-    {
-      "weight":20,
-      "distribution":"uniform",
-      "average":10,
-      "average_unit":"kilobytes",
-      "spread":2,
-      "spread_unit":"kilobytes"
-    }
-  ],
-  "concurrency":{
-    "type":"ops",
-    "count":10,
-    "unit":"seconds"
-  },
-  "stopping_conditions":{
-    "operations":3000000
-  },
-  "object_manager":{
-    "object_file_location":"/tmp/objects",
-    "object_file_name":"soh_objects"
-  }
-}
+include::{sampledir}/simple-latency.json[]
 ----
 
 === AWSv2 Authentication Test
@@ -1150,46 +1086,7 @@ Object names should be written randomly with names in the range *my_object0* to
 .OG Configuration
 [source, json]
 ----
-{
-  "host":"<hostname or ip address>",
-  "api":"s3",
-  "container":"<container name>",
-  "write":{
-    "weight":100.0,
-    "object":{
-      "selection":"random",
-      "prefix":"my_object",
-      "min_suffix":0,
-      "max_suffix":10000
-    }
-  },
-  "read":{
-    "weight":0.0
-  },
-  "delete":{
-    "weight":0.0
-  },
-  "filesize":{
-    "average":10,
-    "average_unit":"megabytes"
-  },
-  "concurrency":{
-    "type":"threads",
-    "count":10
-  },
-  "authentication":{
-    "type":"awsv2",
-    "username":"AKIAIOSFODNN74SFNMK",
-    "password":"nJalrUUFklNEMI/K7MDENG/gPwRfiCYXY73DER"
-  },
-  "stopping_conditions":{
-    "status_codes":{
-      "200":1000,
-      "500":1,
-      "503":1
-    }
-  }
-}
+include::{sampledir}/awsv2.json[]
 ----
 
 == FAQ

@@ -1,0 +1,41 @@
+{
+  "host":"<hostname or ip address>",
+  "api":"s3",
+  "container":"<container name>",
+  "write":{
+    "weight":100.0,
+    "object":{
+      "selection":"random",
+      "prefix":"my_object",
+      "min_suffix":0,
+      "max_suffix":10000
+    }
+  },
+  "read":{
+    "weight":0.0
+  },
+  "delete":{
+    "weight":0.0
+  },
+  "filesize":{
+    "average":10,
+    "average_unit":"megabytes"
+  },
+  "concurrency":{
+    "type":"threads",
+    "count":10
+  },
+  "authentication":{
+    "type":"awsv2",
+    "username":"AKIAIOSFODNN74SFNMK",
+    "password":"nJalrUUFklNEMI/K7MDENG/gPwRfiCYXY73DER"
+  },
+  "stopping_conditions":{
+    "status_codes":{
+      "200":1000,
+      "500":1,
+      "503":1
+    }
+  }
+}
+
