@@ -18,6 +18,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
 
+import com.cleversafe.og.api.Operation;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -83,7 +84,7 @@ public class AWSAuthV4ChunkingTest {
     final int userDataBlockSize = 10;
     final int bodySize = 35;
     final AWSAuthV4Chunked auth = new AWSAuthV4Chunked("dsnet", "s3", userDataBlockSize, 100);
-    final HttpRequest.Builder reqBuilder = new HttpRequest.Builder(Method.PUT, this.URI);
+    final HttpRequest.Builder reqBuilder = new HttpRequest.Builder(Method.PUT, this.URI, Operation.WRITE);
     reqBuilder.withHeader(Headers.X_OG_USERNAME, KEY_ID);
     reqBuilder.withHeader(Headers.X_OG_PASSWORD, SECRET_KEY);
     reqBuilder.withBody(Bodies.zeroes(bodySize));
@@ -117,7 +118,7 @@ public class AWSAuthV4ChunkingTest {
       for (int userDataBlockSize = 1; userDataBlockSize <= bodySize; userDataBlockSize++) {
         // Build a request and auth for this body size and block size
         final AWSAuthV4Chunked auth = new AWSAuthV4Chunked("dsnet", "s3", userDataBlockSize, 100);
-        final HttpRequest.Builder reqBuilder = new HttpRequest.Builder(Method.PUT, this.URI);
+        final HttpRequest.Builder reqBuilder = new HttpRequest.Builder(Method.PUT, this.URI, Operation.WRITE);
         reqBuilder.withHeader(Headers.X_OG_USERNAME, KEY_ID);
         reqBuilder.withHeader(Headers.X_OG_PASSWORD, SECRET_KEY);
         reqBuilder.withBody(Bodies.zeroes(bodySize));

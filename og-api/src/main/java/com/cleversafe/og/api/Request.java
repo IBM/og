@@ -9,6 +9,7 @@
 package com.cleversafe.og.api;
 
 import java.net.URI;
+import com.cleversafe.og.api.Operation;
 
 /**
  * An object that describes an http request
@@ -23,6 +24,14 @@ public interface Request extends Message {
    * @see Method
    */
   Method getMethod();
+
+  /**
+   * Gets the OG operation for this request
+   *
+   * @return the operation that corresponds to this request
+   * @see Operation
+   */
+  Operation getOperation();
 
   /**
    * Gets the uri for this request

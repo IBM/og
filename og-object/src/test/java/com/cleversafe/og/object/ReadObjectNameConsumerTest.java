@@ -17,6 +17,7 @@ import static org.mockito.Mockito.verify;
 import java.util.Set;
 
 import com.cleversafe.og.api.Method;
+import com.cleversafe.og.api.Operation;
 
 public class ReadObjectNameConsumerTest extends AbstractObjectNameConsumerTest {
   @Override
@@ -29,6 +30,9 @@ public class ReadObjectNameConsumerTest extends AbstractObjectNameConsumerTest {
   public Method method() {
     return Method.GET;
   }
+
+  @Override
+  public Operation operation() { return Operation.READ; }
 
   @Override
   public void doVerify() {

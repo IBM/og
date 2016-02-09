@@ -17,7 +17,7 @@ import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
 import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpUtil;
-import com.cleversafe.og.util.Operation;
+import com.cleversafe.og.api.Operation;
 import com.cleversafe.og.util.Pair;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.Subscribe;
@@ -64,7 +64,12 @@ public abstract class AbstractObjectNameConsumer {
     final Response response = operation.getValue();
 
     // if this consumer is not relevant for the current response, ignore
-    if (this.operation != HttpUtil.toOperation(request.getMethod())) {
+    if (this.operation != request.getOperation()) {
+      return;
+    }
+
+    // make sure Http request matches OG operation (e.g. PUT == WRITE/OVERWRITE)
+    if (request.getMethod() != HttpUtil.toMethod(request.getOperation())) {
       return;
     }
 

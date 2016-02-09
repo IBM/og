@@ -14,11 +14,7 @@ import static org.hamcrest.Matchers.is;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import com.cleversafe.og.api.Method;
-import com.cleversafe.og.util.Operation;
-import com.tngtech.java.junit.dataprovider.DataProvider;
 import com.tngtech.java.junit.dataprovider.DataProviderRunner;
-import com.tngtech.java.junit.dataprovider.UseDataProvider;
 
 @RunWith(DataProviderRunner.class)
 public class HttpUtilTest {
@@ -27,21 +23,21 @@ public class HttpUtilTest {
     HttpUtil.SUCCESS_STATUS_CODES.add(500);
   }
 
-  @Test(expected = NullPointerException.class)
-  public void nullMethod() {
-    HttpUtil.toOperation(null);
-  }
+//  @Test(expected = NullPointerException.class)
+//  public void nullMethod() {
+//    HttpUtil.toOperation(null);
+//  }
 
-  @DataProvider
-  public static Object[][] provideToOperation() {
-    return new Object[][] {{Method.PUT, Operation.WRITE}, {Method.POST, Operation.WRITE},
-        {Method.GET, Operation.READ}, {Method.HEAD, Operation.METADATA},
-        {Method.DELETE, Operation.DELETE}};
-  }
+//  @DataProvider
+//  public static Object[][] provideToOperation() {
+//    return new Object[][] {{Method.PUT, Operation.WRITE}, {Method.POST, Operation.WRITE},
+//        {Method.GET, Operation.READ}, {Method.HEAD, Operation.METADATA},
+//        {Method.DELETE, Operation.DELETE}};
+//  }
 
-  @Test
-  @UseDataProvider("provideToOperation")
-  public void toOperation(final Method method, final Operation operation) {
-    assertThat(HttpUtil.toOperation(method), is(operation));
-  }
+//  @Test
+//  @UseDataProvider("provideToOperation")
+//  public void toOperation(final Method method, final Operation operation) {
+//    assertThat(HttpUtil.toOperation(method), is(operation));
+//  }
 }

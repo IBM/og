@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.SortedMap;
 
+import com.cleversafe.og.api.Operation;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -148,7 +149,7 @@ public class AWSAuthV2Test {
 
   public static Object[] get() throws URISyntaxException {
     final Request request =
-        new HttpRequest.Builder(Method.GET, new URI("/johnsmith/photos/puppy.jpg"))
+        new HttpRequest.Builder(Method.GET, new URI("/johnsmith/photos/puppy.jpg"), Operation.READ)
             .withHeader("Date", "Tue, 27 Mar 2007 19:36:42 +0000")
             .withHeader(Headers.X_OG_USERNAME, AWS_ACCESS_KEY_ID)
             .withHeader(Headers.X_OG_PASSWORD, AWS_SECRET_ACCESS_KEY).build();
@@ -159,7 +160,7 @@ public class AWSAuthV2Test {
 
   public static Object[] put() throws URISyntaxException {
     final Request request =
-        new HttpRequest.Builder(Method.PUT, new URI("/johnsmith/photos/puppy.jpg"))
+        new HttpRequest.Builder(Method.PUT, new URI("/johnsmith/photos/puppy.jpg"), Operation.WRITE)
             .withHeader("Content-Type", "image/jpeg").withHeader("Content-Length", "94328")
             .withHeader("Date", "Tue, 27 Mar 2007 21:15:45 +0000")
             .withHeader(Headers.X_OG_USERNAME, AWS_ACCESS_KEY_ID)
@@ -172,7 +173,7 @@ public class AWSAuthV2Test {
 
   public static Object[] list() throws URISyntaxException {
     final Request request = new HttpRequest.Builder(Method.GET,
-        new URI("/johnsmith/?prefix=photos&max-keys=50&marker=puppy"))
+        new URI("/johnsmith/?prefix=photos&max-keys=50&marker=puppy"), Operation.READ)
             .withHeader("User-Agent", "Mozilla/5.0")
             .withHeader("Date", "Tue, 27 Mar 2007 19:42:41 +0000")
             .withHeader(Headers.X_OG_USERNAME, AWS_ACCESS_KEY_ID)
@@ -184,7 +185,7 @@ public class AWSAuthV2Test {
 
   public static Object[] delete() throws URISyntaxException {
     final Request request =
-        new HttpRequest.Builder(Method.DELETE, new URI("/johnsmith/photos/puppy.jpg"))
+        new HttpRequest.Builder(Method.DELETE, new URI("/johnsmith/photos/puppy.jpg"), Operation.DELETE)
             .withHeader("User-Agent", "dotnet").withHeader("Host", "s3.amazonaws.com")
             .withHeader("Date", "Tue, 27 Mar 2007 21:20:27 +0000")
             .withHeader("x-amz-date", "Tue, 27 Mar 2007 21:20:26 +0000")

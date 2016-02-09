@@ -27,6 +27,7 @@ public class OGConfig {
   public OperationConfig read;
   public OperationConfig delete;
   public OperationConfig metadata;
+  public OperationConfig overwrite;
   public SelectionConfig<FilesizeConfig> filesize;
   public DataType data;
   public ConcurrencyConfig concurrency;
@@ -49,6 +50,7 @@ public class OGConfig {
     this.read = new OperationConfig();
     this.delete = new OperationConfig();
     this.metadata = new OperationConfig();
+    this.overwrite = new OperationConfig();
     this.filesize = null;
     this.data = DataType.RANDOM;
     this.concurrency = null;

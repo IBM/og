@@ -40,7 +40,7 @@ import com.cleversafe.og.statistic.Counter;
 import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.test.condition.CounterCondition;
 import com.cleversafe.og.test.condition.TestCondition;
-import com.cleversafe.og.util.Operation;
+import com.cleversafe.og.api.Operation;
 import com.cleversafe.og.util.Pair;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
@@ -65,7 +65,7 @@ public class LoadTestTest {
 
   @Before
   public void before() throws URISyntaxException {
-    this.request = new HttpRequest.Builder(Method.PUT, new URI("http://127.0.0.1"))
+    this.request = new HttpRequest.Builder(Method.PUT, new URI("http://127.0.0.1"), Operation.WRITE)
         .withHeader(Headers.X_OG_REQUEST_ID, "1").build();
     this.response = new HttpResponse.Builder().withStatusCode(200)
         .withHeader(Headers.X_OG_REQUEST_ID, "1").build();

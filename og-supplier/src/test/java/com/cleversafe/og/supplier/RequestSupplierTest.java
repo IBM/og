@@ -13,6 +13,7 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.cleversafe.og.api.Operation;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -225,6 +226,7 @@ public class RequestSupplierTest {
       final String hostName, final String objectName, final String uriRoot,
       final boolean trailingSlash) {
     final Method method = Method.PUT;
+    final Operation operation = Operation.WRITE;
     final Scheme scheme = Scheme.HTTP;
     final Supplier<String> host = Suppliers.of(hostName);
     final Function<Map<String, String>, String> object =
@@ -255,6 +257,6 @@ public class RequestSupplierTest {
     final Map<String, Supplier<String>> headers = new HashMap<String, Supplier<String>>();
 
     return new RequestSupplier(id, method, scheme, host, port, uriRoot, container, object,
-        queryParameters, trailingSlash, headers, username, password, null, body, virtualHost);
+        queryParameters, trailingSlash, headers, username, password, null, body, virtualHost, operation);
   }
 }

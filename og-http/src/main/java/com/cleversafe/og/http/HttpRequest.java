@@ -24,6 +24,8 @@ import com.cleversafe.og.api.Request;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
+import com.cleversafe.og.api.Operation;
+
 /**
  * A defacto implementation of the {@code Request} interface
  * 
@@ -37,6 +39,7 @@ public class HttpRequest implements Request {
   private final long messageTime;
   private static final DateTimeFormatter RFC1123 =
       DateTimeFormat.forPattern("EEE, dd MMM yyyy HH:mm:ss Z").withLocale(Locale.US);
+  private final Operation operation;
 
   private HttpRequest(final Builder builder) {
     this.method = checkNotNull(builder.method);
@@ -44,6 +47,7 @@ public class HttpRequest implements Request {
     this.requestHeaders = ImmutableMap.copyOf(builder.requestHeaders);
     this.body = checkNotNull(builder.body);
     this.messageTime = builder.messageTime;
+    this.operation = checkNotNull(builder.operation);
   }
 
   @Override
@@ -71,6 +75,9 @@ public class HttpRequest implements Request {
     return this.messageTime;
   }
 
+  //@Override
+  public Operation getOperation() {return this.operation; }
+
   @Override
   public String toString() {
     return String.format(
@@ -87,6 +94,7 @@ public class HttpRequest implements Request {
     private final Map<String, String> requestHeaders;
     private Body body;
     private long messageTime;
+    private final Operation operation;
 
     /**
      * Constructs a builder
@@ -97,13 +105,14 @@ public class HttpRequest implements Request {
      * @param method the request method for this request
      * @param uri the uri for this request
      */
-    public Builder(final Method method, final URI uri) {
+    public Builder(final Method method, final URI uri, final Operation operation) {
       this.method = method;
       this.uri = uri;
       this.requestHeaders = Maps.newLinkedHashMap();
       this.messageTime = System.currentTimeMillis();
       this.requestHeaders.put("Date", RFC1123.print(new DateTime(this.messageTime)));
       this.body = Bodies.none();
+      this.operation = operation;
     }
 
     /**

@@ -21,6 +21,7 @@ import com.cleversafe.og.api.Request;
 import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpRequest;
 import com.cleversafe.og.http.Scheme;
+import com.cleversafe.og.api.Operation;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
@@ -50,6 +51,7 @@ public class RequestSupplier implements Supplier<Request> {
   private final String keystoneToken;
   private final Supplier<Body> body;
   private final boolean virtualHost;
+  private final Operation operation;
 
   /**
    * Creates an instance
@@ -79,7 +81,7 @@ public class RequestSupplier implements Supplier<Request> {
       final Function<Map<String, String>, String> object, final Map<String, String> queryParameters,
       final boolean trailingSlash, final Map<String, Supplier<String>> headers,
       final String username, final String password, final String keystoneToken,
-      final Supplier<Body> body, final boolean virtualHost) {
+      final Supplier<Body> body, final boolean virtualHost, final Operation operation) {
 
     this.id = id;
     this.method = checkNotNull(method);
@@ -105,12 +107,13 @@ public class RequestSupplier implements Supplier<Request> {
     this.keystoneToken = keystoneToken;
     this.body = body;
     this.virtualHost = virtualHost;
+    this.operation = operation;
   }
 
   @Override
   public Request get() {
     final Map<String, String> context = Maps.newHashMap();
-    final HttpRequest.Builder builder = new HttpRequest.Builder(this.method, getUrl(context));
+    final HttpRequest.Builder builder = new HttpRequest.Builder(this.method, getUrl(context), this.operation);
 
     for (final Map.Entry<String, Supplier<String>> header : this.headers.entrySet()) {
       builder.withHeader(header.getKey(), header.getValue().get());

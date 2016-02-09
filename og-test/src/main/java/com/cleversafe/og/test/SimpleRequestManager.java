@@ -59,12 +59,15 @@ public class SimpleRequestManager implements RequestManager {
       @Named("read.weight") final double readWeight,
       @Named("delete") final Supplier<Request> delete,
       @Named("delete.weight") final double deleteWeight, @Named("metadata") final Supplier<Request> metadata,
-      @Named("metadata.weight") final double metadataWeight) {
+      @Named("metadata.weight") final double metadataWeight,
+      @Named("overwrite") final Supplier<Request> overwrite,
+      @Named("overwrite.weight") final double overwriteWeight){
 
     checkNotNull(write);
     checkNotNull(read);
     checkNotNull(delete);
     checkNotNull(metadata);
+    checkNotNull(overwrite);
 
     checkArgument(PERCENTAGE.contains(writeWeight),
         "write weight must be in range [0.0, 100.0] [%s]", writeWeight);
@@ -74,7 +77,9 @@ public class SimpleRequestManager implements RequestManager {
         "delete weight must be in range [0.0, 100.0] [%s]", deleteWeight);
     checkArgument(PERCENTAGE.contains(metadataWeight),
         "delete weight must be in range [0.0, 100.0] [%s]", metadataWeight);
-    final double sum = writeWeight + readWeight + deleteWeight + metadataWeight;
+    checkArgument(PERCENTAGE.contains(overwriteWeight),
+        "overwrite weight must be in range [0.0, 100.0] [%s]", overwriteWeight);
+    final double sum = writeWeight + readWeight + deleteWeight + metadataWeight + overwriteWeight;
     checkArgument(DoubleMath.fuzzyEquals(sum, 100.0, ERR), "sum of weights must be 100.0 [%s]",
         sum);
 
@@ -90,6 +95,9 @@ public class SimpleRequestManager implements RequestManager {
     }
     if (metadataWeight > 0.0) {
       wrc.withChoice(metadata, metadataWeight);
+    }
+    if (overwriteWeight > 0.0) {
+      wrc.withChoice(overwrite, overwriteWeight);
     }
 
     this.requestSupplier = wrc.build();

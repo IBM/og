@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
 import com.cleversafe.og.http.HttpUtil;
-import com.cleversafe.og.util.Operation;
+import com.cleversafe.og.api.Operation;
 import com.cleversafe.og.util.Pair;
 import com.cleversafe.og.util.TestState;
 import com.google.common.collect.Maps;
@@ -92,7 +92,7 @@ public class Statistics {
   public void update(final Request request) {
     checkNotNull(request);
 
-    final Operation operation = HttpUtil.toOperation(request.getMethod());
+    final Operation operation = request.getOperation();
     updateCounter(operation, Counter.ACTIVE_OPERATIONS, 1);
     updateCounter(Operation.ALL, Counter.ACTIVE_OPERATIONS, 1);
 
@@ -111,7 +111,7 @@ public class Statistics {
     final Request request = result.getKey();
     final Response response = result.getValue();
 
-    final Operation operation = HttpUtil.toOperation(request.getMethod());
+    final Operation operation = request.getOperation();
     updateCounter(operation, Counter.ACTIVE_OPERATIONS, -1);
     updateCounter(Operation.ALL, Counter.ACTIVE_OPERATIONS, -1);
 

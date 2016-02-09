@@ -13,6 +13,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
 
+import com.cleversafe.og.api.Operation;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -37,7 +38,7 @@ public class AWSAuthV4Test {
   public void testAuth() throws IOException {
     final int bodySize = 35;
     final AWSAuthV4 auth = new AWSAuthV4("dsnet", "s3", 10);
-    final HttpRequest.Builder reqBuilder = new HttpRequest.Builder(Method.PUT, this.URI);
+    final HttpRequest.Builder reqBuilder = new HttpRequest.Builder(Method.PUT, this.URI, Operation.WRITE);
     reqBuilder.withHeader(Headers.X_OG_USERNAME, KEY_ID);
     reqBuilder.withHeader(Headers.X_OG_PASSWORD, SECRET_KEY);
     reqBuilder.withBody(Bodies.zeroes(bodySize));

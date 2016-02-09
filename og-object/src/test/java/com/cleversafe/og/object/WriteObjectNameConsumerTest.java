@@ -20,6 +20,7 @@ import java.util.Set;
 import org.junit.Test;
 
 import com.cleversafe.og.api.Method;
+import com.cleversafe.og.api.Operation;
 import com.cleversafe.og.http.Headers;
 import com.google.common.collect.ImmutableMap;
 
@@ -34,6 +35,9 @@ public class WriteObjectNameConsumerTest extends AbstractObjectNameConsumerTest 
   public Method method() {
     return Method.PUT;
   }
+
+  @Override
+  public Operation operation() { return Operation.WRITE; }
 
   @Override
   public void doVerify() {
