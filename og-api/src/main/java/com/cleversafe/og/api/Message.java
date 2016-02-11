@@ -26,4 +26,12 @@ public interface Message {
    * @return the description of the body for this message
    */
   Body getBody();
+
+  /**
+   * Gets the context map for this message. Some messages may include additional context to further
+   * describe the nature of the message.
+   * 
+   * @return context map for this message
+   */
+  Map<String, String> getContext();
 }

@@ -39,6 +39,7 @@ public class HttpRequest implements Request {
   private final Map<String, String> requestHeaders;
   private final Body body;
   private final long messageTime;
+  private final Map<String, String> context;
   private static final DateTimeFormatter RFC1123 =
       DateTimeFormat.forPattern("EEE, dd MMM yyyy HH:mm:ss Z").withLocale(Locale.US);
 
@@ -58,6 +59,7 @@ public class HttpRequest implements Request {
     this.requestHeaders = ImmutableMap.copyOf(builder.requestHeaders);
     this.body = checkNotNull(builder.body);
     this.messageTime = builder.messageTime;
+    this.context = ImmutableMap.copyOf(builder.context);
   }
 
   @Override
@@ -91,11 +93,16 @@ public class HttpRequest implements Request {
   }
 
   @Override
+  public Map<String, String> getContext() {
+    return this.context;
+  }
+
+  @Override
   public String toString() {
     return String.format(
         "HttpRequest [%n" + "method=%s,%n" + "uri=%s,%n" + "queryParameters=%s,%n" + "headers=%s%n"
-            + "body=%s%n]",
-        this.method, this.uri, this.queryParameters, this.requestHeaders, this.body);
+            + "body=%s%n" + "context=%s%n]",
+        this.method, this.uri, this.queryParameters, this.requestHeaders, this.body, this.context);
   }
 
   /**
@@ -108,6 +115,7 @@ public class HttpRequest implements Request {
     private final Map<String, String> requestHeaders;
     private Body body;
     private long messageTime;
+    private final Map<String, String> context;
 
     /**
      * Constructs a builder
@@ -126,6 +134,7 @@ public class HttpRequest implements Request {
       this.messageTime = System.currentTimeMillis();
       this.requestHeaders.put("Date", RFC1123.print(new DateTime(this.messageTime)));
       this.body = Bodies.none();
+      this.context = Maps.newHashMap();
     }
 
     /**
@@ -171,6 +180,18 @@ public class HttpRequest implements Request {
     public Builder withMessageTime(final long messageTime) {
       this.messageTime = messageTime;
       this.requestHeaders.put("Date", RFC1123.print(new DateTime(messageTime)));
+      return this;
+    }
+
+    /**
+     * Configures a context key to include with this request
+     * 
+     * @param key a context key
+     * @param value a context value
+     * @return this builder
+     */
+    public Builder withContext(final String key, final String value) {
+      this.context.put(key, value);
       return this;
     }
 

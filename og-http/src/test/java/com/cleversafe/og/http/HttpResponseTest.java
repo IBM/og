@@ -133,4 +133,43 @@ public class HttpResponseTest {
     assertThat(body.getDataType(), is(DataType.ZEROES));
     assertThat(body.getSize(), is(12345L));
   }
+
+  @Test
+  public void noContext() {
+    final HttpResponse response = new HttpResponse.Builder().withStatusCode(200).build();
+    assertThat(response.getContext().size(), is(0));
+  }
+
+  @Test
+  public void oneContext() {
+    final HttpResponse response =
+        new HttpResponse.Builder().withStatusCode(200).withContext("key", "value").build();
+    assertThat(response.getContext().size(), is(1));
+    assertThat(response.getContext(), hasEntry("key", "value"));
+  }
+
+  @Test
+  public void multipleContext() {
+    final HttpResponse response = new HttpResponse.Builder().withStatusCode(200)
+        .withContext("key1", "value1").withContext("key2", "value2").build();
+    assertThat(response.getContext().size(), is(2));
+    assertThat(response.getContext(), hasEntry("key1", "value1"));
+    assertThat(response.getContext(), hasEntry("key2", "value2"));
+  }
+
+  @Test
+  public void contextModification() {
+    final HttpResponse.Builder b =
+        new HttpResponse.Builder().withStatusCode(200).withContext("key1", "value1");
+    final HttpResponse response = b.build();
+    b.withContext("key2", "value2");
+    assertThat(response.getContext(), hasEntry("key1", "value1"));
+    assertThat(response.getContext(), not(hasEntry("key2", "value2")));
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void contextRemove() {
+    new HttpResponse.Builder().withStatusCode(200).withContext("key", "value").build().getContext()
+        .remove("key");
+  }
 }

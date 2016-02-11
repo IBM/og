@@ -155,6 +155,45 @@ public class HttpRequestTest {
   }
 
   @Test
+  public void noContext() {
+    final HttpRequest request = new HttpRequest.Builder(this.method, this.uri).build();
+    assertThat(request.getContext().size(), is(0));
+  }
+
+  @Test
+  public void oneContext() {
+    final HttpRequest request =
+        new HttpRequest.Builder(this.method, this.uri).withContext("key", "value").build();
+    assertThat(request.getContext().size(), is(1));
+    assertThat(request.getContext(), hasEntry("key", "value"));
+  }
+
+  @Test
+  public void multipleContext() {
+    final HttpRequest request = new HttpRequest.Builder(this.method, this.uri)
+        .withContext("key1", "value1").withContext("key2", "value2").build();
+    assertThat(request.getContext().size(), is(2));
+    assertThat(request.getContext(), hasEntry("key1", "value1"));
+    assertThat(request.getContext(), hasEntry("key2", "value2"));
+  }
+
+  @Test
+  public void contextModification() {
+    final HttpRequest.Builder b =
+        new HttpRequest.Builder(this.method, this.uri).withContext("key1", "value1");
+    final HttpRequest request = b.build();
+    b.withContext("key2", "value2");
+    assertThat(request.getContext(), hasEntry("key1", "value1"));
+    assertThat(request.getContext(), not(hasEntry("key2", "value2")));
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void contextRemove() {
+    new HttpRequest.Builder(this.method, this.uri).withContext("key", "value").build().getContext()
+        .remove("key");
+  }
+
+  @Test
   public void noHeaders() {
     final HttpRequest request = new HttpRequest.Builder(this.method, this.uri).build();
     // auto-generated Date header
