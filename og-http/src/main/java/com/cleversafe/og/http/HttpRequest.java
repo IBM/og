@@ -75,7 +75,7 @@ public class HttpRequest implements Request {
     return this.messageTime;
   }
 
-  //@Override
+  @Override
   public Operation getOperation() {return this.operation; }
 
   @Override

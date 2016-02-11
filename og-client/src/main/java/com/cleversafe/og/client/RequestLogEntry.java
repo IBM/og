@@ -28,6 +28,7 @@ import com.cleversafe.og.http.Headers;
  */
 public class RequestLogEntry {
   private static final String HTTP_TYPE = "http";
+  public final String ogOp;
   public final String type;
   public final String serverName;
   public final String remoteAddress;
@@ -64,6 +65,7 @@ public class RequestLogEntry {
    */
   public RequestLogEntry(final Request request, final Response response, final String userAgent,
       final RequestTimestamps timestamps) {
+    this.ogOp = request.getOperation().toString();
     this.type = HTTP_TYPE;
     final URI uri = request.getUri();
     // FIXME reliably get localaddress? Name should be clientName? Do we even need this field?

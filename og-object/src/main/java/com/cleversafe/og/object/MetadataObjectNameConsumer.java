@@ -13,7 +13,7 @@ import java.util.Set;
 import com.cleversafe.og.api.Operation;
 
 /**
- * A {@code ObjectNameConsumer} implementation which consumes object names for read operations
+ * A {@code ObjectNameConsumer} implementation which consumes object names for metadata operations
  *
  * @since 1.0
  */

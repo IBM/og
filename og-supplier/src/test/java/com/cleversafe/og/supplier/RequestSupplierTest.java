@@ -237,7 +237,7 @@ public class RequestSupplierTest {
             return objectName;
           }
         };
-    final Map<String, String> queryParameters = new HashMap<String, String>();
+    final Map<String, Supplier<String>> queryParameters = new HashMap<String, Supplier<String>>();
     final Supplier<String> id = Suppliers.of("request.id");
     final Function<Map<String, String>, String> container =
         new Function<Map<String, String>, String>() {

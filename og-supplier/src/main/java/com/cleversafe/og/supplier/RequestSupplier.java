@@ -43,7 +43,7 @@ public class RequestSupplier implements Supplier<Request> {
   private final String uriRoot;
   private final Function<Map<String, String>, String> container;
   private final Function<Map<String, String>, String> object;
-  private final Map<String, String> queryParameters;
+  private final Map<String, Supplier<String>> queryParameters;
   private final boolean trailingSlash;
   private final Map<String, Supplier<String>> headers;
   private final String username;
@@ -78,7 +78,8 @@ public class RequestSupplier implements Supplier<Request> {
   public RequestSupplier(final Supplier<String> id, final Method method, final Scheme scheme,
       final Supplier<String> host, final Integer port, final String uriRoot,
       final Function<Map<String, String>, String> container,
-      final Function<Map<String, String>, String> object, final Map<String, String> queryParameters,
+      final Function<Map<String, String>, String> object,
+      final Map<String, Supplier<String>> queryParameters,
       final boolean trailingSlash, final Map<String, Supplier<String>> headers,
       final String username, final String password, final String keystoneToken,
       final Supplier<Body> body, final boolean virtualHost, final Operation operation) {
@@ -148,7 +149,7 @@ public class RequestSupplier implements Supplier<Request> {
     final StringBuilder s;
 
     String objectName = null;
-    if (this.object != null) {
+    if (this.object != null && this.operation != Operation.LIST) {
       // FIXME must apply object first prior to container to populate context from object manager
       // for multi container (container suffix, object name)
       objectName = this.object.apply(context);
@@ -205,7 +206,13 @@ public class RequestSupplier implements Supplier<Request> {
   }
 
   private void appendQueryParams(final StringBuilder s) {
-    final String queryParams = PARAM_JOINER.join(this.queryParameters);
+    Map<String, String> queryParamsMap = Maps.newHashMap();
+
+    for (final Map.Entry<String, Supplier<String>> queryParams : this.queryParameters.entrySet()) {
+      queryParamsMap.put(queryParams.getKey(), queryParams.getValue().get());
+    }
+
+    final String queryParams = PARAM_JOINER.join(queryParamsMap);
     if (queryParams.length() > 0) {
       s.append("?").append(queryParams);
     }
