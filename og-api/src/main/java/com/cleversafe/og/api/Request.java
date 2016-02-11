@@ -9,6 +9,8 @@
 package com.cleversafe.og.api;
 
 import java.net.URI;
+import java.util.List;
+import java.util.Map;
 
 /**
  * An object that describes an http request
@@ -30,4 +32,11 @@ public interface Request extends Message {
    * @return the uri for this request
    */
   URI getUri();
+
+  /**
+   * Gets the query parameters for this request
+   * 
+   * @return the query parameters for this request
+   */
+  Map<String, List<String>> getQueryParameters();
 }

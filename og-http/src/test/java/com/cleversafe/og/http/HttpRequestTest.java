@@ -15,6 +15,7 @@ import static org.hamcrest.Matchers.not;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -68,6 +69,89 @@ public class HttpRequestTest {
   public void uri() {
     final URI uri = new HttpRequest.Builder(this.method, this.uri).build().getUri();
     assertThat(uri, is(this.uri));
+  }
+
+  @Test
+  public void noQueryParameters() {
+    final HttpRequest request = new HttpRequest.Builder(this.method, this.uri).build();
+    assertThat(request.getQueryParameters().size(), is(0));
+  }
+
+  @Test
+  public void oneQueryParameter() {
+    final HttpRequest request =
+        new HttpRequest.Builder(this.method, this.uri).withQueryParameter("key", "value").build();
+    assertThat(request.getQueryParameters().size(), is(1));
+    final List<String> values = request.getQueryParameters().get("key");
+    assertThat(values.size(), is(1));
+    assertThat(values.get(0), is("value"));
+  }
+
+  @Test(expected = NullPointerException.class)
+  public void oneQueryParameterNullKey() {
+    new HttpRequest.Builder(this.method, this.uri).withQueryParameter(null, "value");
+  }
+
+  @Test
+  public void oneQueryParameterNullValue() {
+    final HttpRequest request =
+        new HttpRequest.Builder(this.method, this.uri).withQueryParameter("key", null).build();
+    assertThat(request.getQueryParameters().size(), is(1));
+    final List<String> values = request.getQueryParameters().get("key");
+    assertThat(values.size(), is(1));
+    assertThat(values.get(0), is((String) null));
+  }
+
+  @Test
+  public void oneQueryParameterMultipleValues() {
+    final HttpRequest request = new HttpRequest.Builder(this.method, this.uri)
+        .withQueryParameter("key", "one").withQueryParameter("key", "two").build();
+    assertThat(request.getQueryParameters().size(), is(1));
+    final List<String> values = request.getQueryParameters().get("key");
+    assertThat(values.size(), is(2));
+    assertThat(values.get(0), is("one"));
+    assertThat(values.get(1), is("two"));
+  }
+
+  @Test
+  public void multipleQueryParameters() {
+    final HttpRequest.Builder b = new HttpRequest.Builder(this.method, this.uri);
+    for (int i = 0; i < 10; i++) {
+      // (10 - i) exposes sorted vs insertion order
+      b.withQueryParameter("key" + (10 - i), "value");
+    }
+    final HttpRequest request = b.build();
+    assertThat(request.getQueryParameters().size(), is(10));
+
+    for (int i = 0; i < 10; i++) {
+      final List<String> values = request.getQueryParameters().get("key" + (10 - i));
+      assertThat(values.size(), is(1));
+      assertThat(values.get(0), is("value"));
+    }
+  }
+
+  @Test
+  public void queryParametersModification() {
+    final HttpRequest.Builder b =
+        new HttpRequest.Builder(this.method, this.uri).withQueryParameter("key1", "value1");
+    final HttpRequest request = b.build();
+    b.withQueryParameter("key2", "value2");
+    assertThat(request.getQueryParameters().size(), is(1));
+    final List<String> values = request.getQueryParameters().get("key1");
+    assertThat(values.size(), is(1));
+    assertThat(values.get(0), is("value1"));
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void queryParameterRemove() {
+    new HttpRequest.Builder(this.method, this.uri).withQueryParameter("key", "value").build()
+        .getQueryParameters().remove("key");
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void queryParameterRemoveValue() {
+    new HttpRequest.Builder(this.method, this.uri).withQueryParameter("key", "value").build()
+        .getQueryParameters().get("key").remove(0);
   }
 
   @Test

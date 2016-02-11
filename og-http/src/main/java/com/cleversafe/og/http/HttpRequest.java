@@ -11,6 +11,8 @@ package com.cleversafe.og.http;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URI;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -22,6 +24,7 @@ import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 /**
@@ -32,6 +35,7 @@ import com.google.common.collect.Maps;
 public class HttpRequest implements Request {
   private final Method method;
   private final URI uri;
+  private final Map<String, List<String>> queryParameters;
   private final Map<String, String> requestHeaders;
   private final Body body;
   private final long messageTime;
@@ -41,6 +45,16 @@ public class HttpRequest implements Request {
   private HttpRequest(final Builder builder) {
     this.method = checkNotNull(builder.method);
     this.uri = checkNotNull(builder.uri);
+    // recursively immutable copy
+    final ImmutableMap.Builder<String, List<String>> queryParametersBuilder =
+        ImmutableMap.builder();
+    for (final Map.Entry<String, List<String>> entry : builder.queryParameters.entrySet()) {
+      queryParametersBuilder.put(entry.getKey(),
+          // cannot use ImmutableList.copyOf because it rejects null values
+          // must take null values to support query parameter keys without values
+          Collections.unmodifiableList(Lists.newArrayList(entry.getValue())));
+    }
+    this.queryParameters = queryParametersBuilder.build();
     this.requestHeaders = ImmutableMap.copyOf(builder.requestHeaders);
     this.body = checkNotNull(builder.body);
     this.messageTime = builder.messageTime;
@@ -54,6 +68,11 @@ public class HttpRequest implements Request {
   @Override
   public URI getUri() {
     return this.uri;
+  }
+
+  @Override
+  public Map<String, List<String>> getQueryParameters() {
+    return this.queryParameters;
   }
 
   @Override
@@ -74,8 +93,9 @@ public class HttpRequest implements Request {
   @Override
   public String toString() {
     return String.format(
-        "HttpRequest [%n" + "method=%s,%n" + "uri=%s,%n" + "headers=%s%n" + "body=%s%n]",
-        this.method, this.uri, this.requestHeaders, this.body);
+        "HttpRequest [%n" + "method=%s,%n" + "uri=%s,%n" + "queryParameters=%s,%n" + "headers=%s%n"
+            + "body=%s%n]",
+        this.method, this.uri, this.queryParameters, this.requestHeaders, this.body);
   }
 
   /**
@@ -84,6 +104,7 @@ public class HttpRequest implements Request {
   public static class Builder {
     private final Method method;
     private final URI uri;
+    private final Map<String, List<String>> queryParameters;
     private final Map<String, String> requestHeaders;
     private Body body;
     private long messageTime;
@@ -100,10 +121,28 @@ public class HttpRequest implements Request {
     public Builder(final Method method, final URI uri) {
       this.method = method;
       this.uri = uri;
+      this.queryParameters = Maps.newLinkedHashMap();
       this.requestHeaders = Maps.newLinkedHashMap();
       this.messageTime = System.currentTimeMillis();
       this.requestHeaders.put("Date", RFC1123.print(new DateTime(this.messageTime)));
       this.body = Bodies.none();
+    }
+
+    /**
+     * Configures a request query parameter to include with this request
+     * 
+     * @param key a query parameter key
+     * @param value a query parameter value
+     * @return this builder
+     */
+    public Builder withQueryParameter(final String key, final String value) {
+      List<String> parameterValues = this.queryParameters.get(checkNotNull(key));
+      if (parameterValues == null) {
+        parameterValues = Lists.newArrayList();
+        this.queryParameters.put(key, parameterValues);
+      }
+      parameterValues.add(value);
+      return this;
     }
 
     /**
