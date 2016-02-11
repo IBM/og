@@ -19,7 +19,7 @@ import com.cleversafe.og.api.DataType;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
-import com.cleversafe.og.http.Headers;
+import com.cleversafe.og.util.Context;
 
 /**
  * A class for assisting in the serialization of a request / response pair
@@ -69,7 +69,7 @@ public class RequestLogEntry {
     // FIXME reliably get localaddress? Name should be clientName? Do we even need this field?
     this.serverName = null;
     this.remoteAddress = uri.getHost();
-    this.user = request.headers().get(Headers.X_OG_USERNAME);
+    this.user = request.getContext().get(Context.X_OG_USERNAME);
     this.timestampStart = timestamps.startMillis;
     this.timestampFinish = timestamps.finishMillis;
     this.timeStart = RequestLogEntry.FORMATTER.print(this.timestampStart);
@@ -78,10 +78,10 @@ public class RequestLogEntry {
 
     this.requestUri = uri.getPath() + (uri.getQuery() != null ? uri.getQuery() : "");
 
-    String operationObjectName = request.headers().get(Headers.X_OG_OBJECT_NAME);
+    String operationObjectName = request.getContext().get(Context.X_OG_OBJECT_NAME);
     // SOH writes
     if (operationObjectName == null) {
-      operationObjectName = response.headers().get(Headers.X_OG_OBJECT_NAME);
+      operationObjectName = response.getContext().get(Context.X_OG_OBJECT_NAME);
     }
     this.objectId = operationObjectName;
 
@@ -102,7 +102,7 @@ public class RequestLogEntry {
     this.requestLatency = this.timestampFinish - this.timestampStart;
 
     // custom
-    this.clientRequestId = request.headers().get(Headers.X_OG_REQUEST_ID);
+    this.clientRequestId = request.getContext().get(Context.X_OG_REQUEST_ID);
     this.requestId = response.headers().get(X_CLV_REQUEST_ID);
     this.stat = new RequestStats(timestamps);
     this.objectLength = objectSize;

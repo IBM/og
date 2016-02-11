@@ -16,8 +16,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Map;
 
-import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.ResponseBodyConsumer;
+import com.cleversafe.og.util.Context;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 
@@ -43,7 +43,7 @@ public class SOHWriteResponseBodyConsumer implements ResponseBodyConsumer {
     while ((reader.readLine()) != null) {
       // consume the stream, for SOH writes there should never be anything else
     }
-    return ImmutableMap.of(Headers.X_OG_OBJECT_NAME, objectName);
+    return ImmutableMap.of(Context.X_OG_OBJECT_NAME, objectName);
   }
 
   @Override

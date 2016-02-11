@@ -31,7 +31,6 @@ import com.cleversafe.og.api.Client;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
-import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpRequest;
 import com.cleversafe.og.http.HttpResponse;
 import com.cleversafe.og.scheduling.ConcurrentRequestScheduler;
@@ -40,6 +39,7 @@ import com.cleversafe.og.statistic.Counter;
 import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.test.condition.CounterCondition;
 import com.cleversafe.og.test.condition.TestCondition;
+import com.cleversafe.og.util.Context;
 import com.cleversafe.og.util.Operation;
 import com.cleversafe.og.util.Pair;
 import com.google.common.eventbus.EventBus;
@@ -66,9 +66,9 @@ public class LoadTestTest {
   @Before
   public void before() throws URISyntaxException {
     this.request = new HttpRequest.Builder(Method.PUT, new URI("http://127.0.0.1"))
-        .withHeader(Headers.X_OG_REQUEST_ID, "1").build();
+        .withContext(Context.X_OG_REQUEST_ID, "1").build();
     this.response = new HttpResponse.Builder().withStatusCode(200)
-        .withHeader(Headers.X_OG_REQUEST_ID, "1").build();
+        .withContext(Context.X_OG_REQUEST_ID, "1").build();
 
     this.requestManager = mock(RequestManager.class);
     when(this.requestManager.get()).thenReturn(this.request);

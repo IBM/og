@@ -20,7 +20,7 @@ import java.util.Set;
 import org.junit.Test;
 
 import com.cleversafe.og.api.Method;
-import com.cleversafe.og.http.Headers;
+import com.cleversafe.og.util.Context;
 import com.google.common.collect.ImmutableMap;
 
 public class WriteObjectNameConsumerTest extends AbstractObjectNameConsumerTest {
@@ -54,8 +54,8 @@ public class WriteObjectNameConsumerTest extends AbstractObjectNameConsumerTest 
   public void successfulSOH() {
     // for SOH, the header gets set on response rather than request
     when(this.request.headers()).thenReturn(ImmutableMap.<String, String>of());
-    when(this.response.headers())
-        .thenReturn(ImmutableMap.of(Headers.X_OG_OBJECT_NAME, this.object));
+    when(this.response.getContext())
+        .thenReturn(ImmutableMap.of(Context.X_OG_OBJECT_NAME, this.object));
 
     this.objectNameConsumer.consume(this.operation);
     doVerify();

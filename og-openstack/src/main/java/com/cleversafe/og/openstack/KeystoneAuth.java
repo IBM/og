@@ -14,8 +14,8 @@ import java.io.InputStream;
 import java.util.Map;
 
 import com.cleversafe.og.api.Request;
-import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpAuth;
+import com.cleversafe.og.util.Context;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -28,7 +28,8 @@ import com.google.common.collect.ImmutableMap;
 public class KeystoneAuth implements HttpAuth {
   @Override
   public Map<String, String> getAuthorizationHeaders(final Request request) {
-    final String keystoneToken = checkNotNull(request.headers().get(Headers.X_OG_KEYSTONE_TOKEN));
+    final String keystoneToken =
+        checkNotNull(request.getContext().get(Context.X_OG_KEYSTONE_TOKEN));
 
     return ImmutableMap.of("X-Auth-Token", keystoneToken);
   }

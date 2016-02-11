@@ -15,8 +15,8 @@ import java.util.Set;
 
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
-import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpUtil;
+import com.cleversafe.og.util.Context;
 import com.cleversafe.og.util.Operation;
 import com.cleversafe.og.util.Pair;
 import com.google.common.collect.ImmutableSet;
@@ -73,7 +73,7 @@ public abstract class AbstractObjectNameConsumer {
       return;
     }
 
-    if (request.headers().containsKey(Headers.X_OG_SEQUENTIAL_OBJECT_NAME)) {
+    if (request.getContext().containsKey(Context.X_OG_SEQUENTIAL_OBJECT_NAME)) {
       return;
     }
 
@@ -94,10 +94,10 @@ public abstract class AbstractObjectNameConsumer {
   }
 
   protected String getObjectString(final Request request, final Response response) {
-    String objectString = request.headers().get(Headers.X_OG_OBJECT_NAME);
+    String objectString = request.getContext().get(Context.X_OG_OBJECT_NAME);
     // SOH writes
     if (objectString == null) {
-      objectString = response.headers().get(Headers.X_OG_OBJECT_NAME);
+      objectString = response.getContext().get(Context.X_OG_OBJECT_NAME);
     }
 
     return objectString;
@@ -107,11 +107,11 @@ public abstract class AbstractObjectNameConsumer {
     if (this.operation == Operation.WRITE) {
       return request.getBody().getSize();
     }
-    return Long.parseLong(request.headers().get(Headers.X_OG_OBJECT_SIZE));
+    return Long.parseLong(request.getContext().get(Context.X_OG_OBJECT_SIZE));
   }
 
   protected int getContainerSuffix(final Request request) {
-    final String containerSuffix = request.headers().get(Headers.X_OG_CONTAINER_SUFFIX);
+    final String containerSuffix = request.getContext().get(Context.X_OG_CONTAINER_SUFFIX);
     if (containerSuffix == null) {
       return -1;
     } else {

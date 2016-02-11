@@ -46,9 +46,9 @@ import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
 import com.cleversafe.og.http.BasicAuth;
 import com.cleversafe.og.http.Bodies;
-import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpRequest;
 import com.cleversafe.og.http.ResponseBodyConsumer;
+import com.cleversafe.og.util.Context;
 import com.github.tomakehurst.wiremock.client.RequestPatternBuilder;
 import com.github.tomakehurst.wiremock.http.RequestMethod;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
@@ -357,7 +357,7 @@ public class ApacheClientTest {
   public void authentication() throws InterruptedException, ExecutionException {
     final Client client = new ApacheClient.Builder().withAuthentication(new BasicAuth()).build();
     final Request request = new HttpRequest.Builder(Method.GET, this.objectUri)
-        .withHeader(Headers.X_OG_USERNAME, "test").withHeader(Headers.X_OG_PASSWORD, "test")
+        .withContext(Context.X_OG_USERNAME, "test").withContext(Context.X_OG_PASSWORD, "test")
         .build();
     client.execute(request).get();
     verify(getRequestedFor(urlEqualTo(this.objectUri.getPath())).withHeader("Authorization",
@@ -400,9 +400,9 @@ public class ApacheClientTest {
   @Test
   public void requestId() throws InterruptedException, ExecutionException {
     final Request request = new HttpRequest.Builder(Method.GET, this.objectUri)
-        .withHeader(Headers.X_OG_REQUEST_ID, "1").build();
+        .withContext(Context.X_OG_REQUEST_ID, "1").build();
     final Response response = this.client.execute(request).get();
-    assertThat(response.headers(), hasEntry(Headers.X_OG_REQUEST_ID, "1"));
+    assertThat(response.getContext(), hasEntry(Context.X_OG_REQUEST_ID, "1"));
   }
 
   @Test
@@ -525,7 +525,7 @@ public class ApacheClientTest {
   @Test
   public void responseBodyConsumer() throws InterruptedException, ExecutionException {
     final Request request = new HttpRequest.Builder(Method.GET, this.objectUri)
-        .withHeader(Headers.X_OG_RESPONSE_BODY_CONSUMER, "consumer").build();
+        .withContext(Context.X_OG_RESPONSE_BODY_CONSUMER, "consumer").build();
 
     final Client client =
         new ApacheClient.Builder().withResponseBodyConsumer("consumer", new ResponseBodyConsumer() {
@@ -536,6 +536,6 @@ public class ApacheClientTest {
         }).build();
 
     final Response response = client.execute(request).get();
-    assertThat(response.headers(), hasEntry("key", "value"));
+    assertThat(response.getContext(), hasEntry("key", "value"));
   }
 }

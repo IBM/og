@@ -24,8 +24,8 @@ import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.api.DataType;
 import com.cleversafe.og.api.Request;
-import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpUtil;
+import com.cleversafe.og.util.Context;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -82,8 +82,8 @@ public class AWSAuthV4Chunked extends AWSAuthV4Base {
 
   @Override
   public Map<String, String> getAuthorizationHeaders(final Request request) {
-    final String keyId = checkNotNull(request.headers().get(Headers.X_OG_USERNAME));
-    final String secretKey = checkNotNull(request.headers().get(Headers.X_OG_PASSWORD));
+    final String keyId = checkNotNull(request.getContext().get(Context.X_OG_USERNAME));
+    final String secretKey = checkNotNull(request.getContext().get(Context.X_OG_PASSWORD));
 
     final Map<String, String> signableHeaders = HttpUtil.filterOutOgHeaders(request.headers());
     addChunkHeaders(request, signableHeaders);
@@ -107,8 +107,8 @@ public class AWSAuthV4Chunked extends AWSAuthV4Base {
     // FIXME - Think of a way to store the state including signing key and previous sig to avoid
     // recalculating it here.
 
-    final String keyId = checkNotNull(request.headers().get(Headers.X_OG_USERNAME));
-    final String secretKey = checkNotNull(request.headers().get(Headers.X_OG_PASSWORD));
+    final String keyId = checkNotNull(request.getContext().get(Context.X_OG_USERNAME));
+    final String secretKey = checkNotNull(request.getContext().get(Context.X_OG_PASSWORD));
 
     final Map<String, String> signableHeaders = HttpUtil.filterOutOgHeaders(request.headers());
     addChunkHeaders(request, signableHeaders);

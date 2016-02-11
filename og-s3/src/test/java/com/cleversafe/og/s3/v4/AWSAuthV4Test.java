@@ -19,8 +19,8 @@ import org.junit.Test;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.http.Bodies;
-import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpRequest;
+import com.cleversafe.og.util.Context;
 import com.google.common.collect.Maps;
 
 public class AWSAuthV4Test {
@@ -38,8 +38,8 @@ public class AWSAuthV4Test {
     final int bodySize = 35;
     final AWSAuthV4 auth = new AWSAuthV4("dsnet", "s3", 10);
     final HttpRequest.Builder reqBuilder = new HttpRequest.Builder(Method.PUT, this.URI);
-    reqBuilder.withHeader(Headers.X_OG_USERNAME, KEY_ID);
-    reqBuilder.withHeader(Headers.X_OG_PASSWORD, SECRET_KEY);
+    reqBuilder.withContext(Context.X_OG_USERNAME, KEY_ID);
+    reqBuilder.withContext(Context.X_OG_PASSWORD, SECRET_KEY);
     reqBuilder.withBody(Bodies.zeroes(bodySize));
     reqBuilder.withMessageTime(1430419247000l);
     final Request request = reqBuilder.build();

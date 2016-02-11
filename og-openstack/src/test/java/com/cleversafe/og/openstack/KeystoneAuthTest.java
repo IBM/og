@@ -22,9 +22,9 @@ import org.junit.Test;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.http.Bodies;
-import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpAuth;
 import com.cleversafe.og.http.HttpRequest;
+import com.cleversafe.og.util.Context;
 import com.cleversafe.og.util.io.Streams;
 
 public class KeystoneAuthTest {
@@ -35,7 +35,7 @@ public class KeystoneAuthTest {
     this.keystoneAuth = new KeystoneAuth();
     final URI uri = new URI("http://127.0.0.1/openstack/container/object");
     this.request = new HttpRequest.Builder(Method.PUT, uri)
-        .withHeader(Headers.X_OG_KEYSTONE_TOKEN, "token").withBody(Bodies.random(1024)).build();
+        .withContext(Context.X_OG_KEYSTONE_TOKEN, "token").withBody(Bodies.random(1024)).build();
   }
 
   @Test

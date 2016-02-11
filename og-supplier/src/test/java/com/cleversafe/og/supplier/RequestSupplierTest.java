@@ -23,6 +23,7 @@ import com.cleversafe.og.http.Bodies;
 import com.cleversafe.og.http.Scheme;
 import com.google.common.base.Function;
 import com.google.common.base.Supplier;
+import com.google.common.collect.Maps;
 
 public class RequestSupplierTest {
 
@@ -255,6 +256,7 @@ public class RequestSupplierTest {
     final Map<String, Supplier<String>> headers = new HashMap<String, Supplier<String>>();
 
     return new RequestSupplier(id, method, scheme, host, port, uriRoot, container, object,
-        queryParameters, trailingSlash, headers, username, password, null, body, virtualHost);
+        queryParameters, trailingSlash, headers, Maps.<String, String>newHashMap(), username,
+        password, null, body, virtualHost);
   }
 }

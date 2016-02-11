@@ -20,7 +20,7 @@ import java.util.Map.Entry;
 
 import org.junit.Test;
 
-import com.cleversafe.og.http.Headers;
+import com.cleversafe.og.util.Context;
 import com.google.common.base.Charsets;
 
 public class SOHWriteResponseBodyConsumerTest {
@@ -51,7 +51,7 @@ public class SOHWriteResponseBodyConsumerTest {
 
     final Entry<String, String> e = m.entrySet().iterator().next();
 
-    assertThat(e.getKey(), is(Headers.X_OG_OBJECT_NAME));
+    assertThat(e.getKey(), is(Context.X_OG_OBJECT_NAME));
     assertThat(e.getValue(), is("objectName0"));
     assertThat(in.available(), is(0));
   }

@@ -25,8 +25,8 @@ import org.slf4j.LoggerFactory;
 import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.DataType;
 import com.cleversafe.og.api.Request;
-import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpAuth;
+import com.cleversafe.og.util.Context;
 import com.cleversafe.og.util.io.Streams;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -61,8 +61,8 @@ public class AWSAuthV4 extends AWSAuthV4Base implements HttpAuth {
 
   @Override
   public Map<String, String> getAuthorizationHeaders(final Request request) {
-    final String keyId = checkNotNull(request.headers().get(Headers.X_OG_USERNAME));
-    final String secretKey = checkNotNull(request.headers().get(Headers.X_OG_PASSWORD));
+    final String keyId = checkNotNull(request.getContext().get(Context.X_OG_USERNAME));
+    final String secretKey = checkNotNull(request.getContext().get(Context.X_OG_PASSWORD));
 
     try {
       final AWS4SignerBase signer = new AWS4SignerBase(request.getUri().toURL(),

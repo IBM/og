@@ -18,9 +18,9 @@ import java.util.Map;
 import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
-import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpRequest;
 import com.cleversafe.og.http.Scheme;
+import com.cleversafe.og.util.Context;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
@@ -45,6 +45,7 @@ public class RequestSupplier implements Supplier<Request> {
   private final Map<String, String> queryParameters;
   private final boolean trailingSlash;
   private final Map<String, Supplier<String>> headers;
+  private final Map<String, String> context;
   private final String username;
   private final String password;
   private final String keystoneToken;
@@ -78,8 +79,8 @@ public class RequestSupplier implements Supplier<Request> {
       final Function<Map<String, String>, String> container,
       final Function<Map<String, String>, String> object, final Map<String, String> queryParameters,
       final boolean trailingSlash, final Map<String, Supplier<String>> headers,
-      final String username, final String password, final String keystoneToken,
-      final Supplier<Body> body, final boolean virtualHost) {
+      final Map<String, String> context, final String username, final String password,
+      final String keystoneToken, final Supplier<Body> body, final boolean virtualHost) {
 
     this.id = id;
     this.method = checkNotNull(method);
@@ -92,6 +93,7 @@ public class RequestSupplier implements Supplier<Request> {
     this.queryParameters = ImmutableMap.copyOf(queryParameters);
     this.trailingSlash = trailingSlash;
     this.headers = ImmutableMap.copyOf(headers);
+    this.context = ImmutableMap.copyOf(context);
     this.username = username;
     this.password = password;
     checkArgument((username != null && password != null) || (username == null && password == null),
@@ -109,28 +111,32 @@ public class RequestSupplier implements Supplier<Request> {
 
   @Override
   public Request get() {
-    final Map<String, String> context = Maps.newHashMap();
-    final HttpRequest.Builder builder = new HttpRequest.Builder(this.method, getUrl(context));
+    final Map<String, String> requestContext = Maps.newHashMap();
+    final HttpRequest.Builder builder = new HttpRequest.Builder(this.method, getUrl(requestContext));
 
     for (final Map.Entry<String, Supplier<String>> header : this.headers.entrySet()) {
       builder.withHeader(header.getKey(), header.getValue().get());
     }
 
+    for (final Map.Entry<String, String> entry : this.context.entrySet()) {
+      builder.withContext(entry.getKey(), entry.getValue());
+    }
+
     if (this.id != null) {
-      builder.withHeader(Headers.X_OG_REQUEST_ID, this.id.get());
+      builder.withContext(Context.X_OG_REQUEST_ID, this.id.get());
     }
 
     if (this.username != null && this.password != null) {
-      builder.withHeader(Headers.X_OG_USERNAME, this.username);
-      builder.withHeader(Headers.X_OG_PASSWORD, this.password);
+      builder.withContext(Context.X_OG_USERNAME, this.username);
+      builder.withContext(Context.X_OG_PASSWORD, this.password);
     }
 
     if (this.keystoneToken != null) {
-      builder.withHeader(Headers.X_OG_KEYSTONE_TOKEN, this.keystoneToken);
+      builder.withContext(Context.X_OG_KEYSTONE_TOKEN, this.keystoneToken);
     }
 
-    for (final Map.Entry<String, String> entry : context.entrySet()) {
-      builder.withHeader(entry.getKey(), entry.getValue());
+    for (final Map.Entry<String, String> entry : requestContext.entrySet()) {
+      builder.withContext(entry.getKey(), entry.getValue());
     }
 
     if (this.body != null) {

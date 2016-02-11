@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import com.cleversafe.og.api.Request;
+import com.cleversafe.og.util.Context;
 import com.google.common.base.Charsets;
 import com.google.common.io.BaseEncoding;
 import com.google.common.net.HttpHeaders;
@@ -29,9 +30,9 @@ public class BasicAuth implements HttpAuth {
   public BasicAuth() {}
 
   @Override
-  public Map<String, String> getAuthorizationHeaders(Request request) {
-    final String username = checkNotNull(request.headers().get(Headers.X_OG_USERNAME));
-    final String password = checkNotNull(request.headers().get(Headers.X_OG_PASSWORD));
+  public Map<String, String> getAuthorizationHeaders(final Request request) {
+    final String username = checkNotNull(request.getContext().get(Context.X_OG_USERNAME));
+    final String password = checkNotNull(request.getContext().get(Context.X_OG_PASSWORD));
     final String credentials = username + ":" + password;
 
     return Collections.singletonMap(HttpHeaders.AUTHORIZATION,
@@ -39,7 +40,7 @@ public class BasicAuth implements HttpAuth {
   }
 
   @Override
-  public InputStream wrapStream(Request request, InputStream stream) {
+  public InputStream wrapStream(final Request request, final InputStream stream) {
     return stream;
   }
 

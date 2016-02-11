@@ -40,7 +40,6 @@ import com.cleversafe.og.guice.annotation.WriteObjectName;
 import com.cleversafe.og.http.Api;
 import com.cleversafe.og.http.BasicAuth;
 import com.cleversafe.og.http.Bodies;
-import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpAuth;
 import com.cleversafe.og.http.HttpUtil;
 import com.cleversafe.og.http.ResponseBodyConsumer;
@@ -90,6 +89,7 @@ import com.cleversafe.og.test.condition.CounterCondition;
 import com.cleversafe.og.test.condition.RuntimeCondition;
 import com.cleversafe.og.test.condition.StatusCodeCondition;
 import com.cleversafe.og.test.condition.TestCondition;
+import com.cleversafe.og.util.Context;
 import com.cleversafe.og.util.Distribution;
 import com.cleversafe.og.util.Distributions;
 import com.cleversafe.og.util.Operation;
@@ -99,6 +99,7 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.EventBus;
@@ -442,7 +443,7 @@ public class OGModule extends AbstractModule {
 
       @Override
       public String apply(final Map<String, String> input) {
-        String suffix = input.get(Headers.X_OG_CONTAINER_SUFFIX);
+        String suffix = input.get(Context.X_OG_CONTAINER_SUFFIX);
         if (suffix != null) {
           if (Integer.parseInt(suffix) == -1) {
             return container;
@@ -452,10 +453,10 @@ public class OGModule extends AbstractModule {
         } else {
           if (suffixes != null) {
             suffix = suffixes.get().toString();
-            input.put(Headers.X_OG_CONTAINER_SUFFIX, suffix);
+            input.put(Context.X_OG_CONTAINER_SUFFIX, suffix);
             return container.concat(suffix);
           } else {
-            input.put(Headers.X_OG_CONTAINER_SUFFIX, "-1");
+            input.put(Context.X_OG_CONTAINER_SUFFIX, "-1");
             return container;
           }
         }
@@ -513,8 +514,8 @@ public class OGModule extends AbstractModule {
       @Override
       public String apply(final Map<String, String> context) {
         final String objectName = prefix + suffixes.get();
-        context.put(Headers.X_OG_OBJECT_NAME, objectName);
-        context.put(Headers.X_OG_SEQUENTIAL_OBJECT_NAME, "true");
+        context.put(Context.X_OG_OBJECT_NAME, objectName);
+        context.put(Context.X_OG_SEQUENTIAL_OBJECT_NAME, "true");
 
         return objectName;
       }
@@ -786,13 +787,16 @@ public class OGModule extends AbstractModule {
       @Named("authentication.password") final String password,
       @Named("authentication.keystoneToken") final String keystoneToken,
       @Named("virtualhost") final boolean virtualHost) {
+
+    final Map<String, String> context = Maps.newHashMap();
     // SOH needs to use a special response consumer to extract the returned object id
+    // FIXME create appropriate context providers
     if (Api.SOH == api) {
-      headers.put(Headers.X_OG_RESPONSE_BODY_CONSUMER, Suppliers.of(SOH_PUT_OBJECT));
+      context.put(Context.X_OG_RESPONSE_BODY_CONSUMER, SOH_PUT_OBJECT);
     }
 
     return createRequestSupplier(id, Method.PUT, scheme, host, port, uriRoot, container, object,
-        headers, body, username, password, keystoneToken, virtualHost);
+        headers, context, body, username, password, keystoneToken, virtualHost);
   }
 
   @Provides
@@ -809,7 +813,8 @@ public class OGModule extends AbstractModule {
       @Named("authentication.keystoneToken") final String keystoneToken,
       @Named("virtualhost") final boolean virtualHost) {
     return createRequestSupplier(id, Method.GET, scheme, host, port, uriRoot, container, object,
-        headers, Suppliers.of(Bodies.none()), username, password, keystoneToken, virtualHost);
+        headers, ImmutableMap.<String, String>of(), Suppliers.of(Bodies.none()), username, password,
+        keystoneToken, virtualHost);
   }
 
   @Provides
@@ -826,18 +831,20 @@ public class OGModule extends AbstractModule {
       @Named("authentication.keystoneToken") final String keystoneToken,
       @Named("virtualhost") final boolean virtualHost) {
     return createRequestSupplier(id, Method.DELETE, scheme, host, port, uriRoot, container, object,
-        headers, Suppliers.of(Bodies.none()), username, password, keystoneToken, virtualHost);
+        headers, ImmutableMap.<String, String>of(), Suppliers.of(Bodies.none()), username, password,
+        keystoneToken, virtualHost);
   }
 
   private Supplier<Request> createRequestSupplier(@Named("request.id") final Supplier<String> id,
       final Method method, final Scheme scheme, final Supplier<String> host, final Integer port,
       final String uriRoot, final Function<Map<String, String>, String> container,
       final Function<Map<String, String>, String> object,
-      final Map<String, Supplier<String>> headers, final Supplier<Body> body, final String username,
-      final String password, final String keystoneToken, final boolean virtualHost) {
+      final Map<String, Supplier<String>> headers, final Map<String, String> context,
+      final Supplier<Body> body, final String username, final String password,
+      final String keystoneToken, final boolean virtualHost) {
 
     return new RequestSupplier(id, method, scheme, host, port, uriRoot, container, object,
-        Collections.<String, String>emptyMap(), false, headers, username, password, keystoneToken,
-        body, virtualHost);
+        Collections.<String, String>emptyMap(), false, headers, context, username, password,
+        keystoneToken, body, virtualHost);
   }
 }

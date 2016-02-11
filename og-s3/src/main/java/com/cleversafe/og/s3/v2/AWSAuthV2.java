@@ -23,8 +23,8 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 import com.cleversafe.og.api.Request;
-import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpAuth;
+import com.cleversafe.og.util.Context;
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -212,15 +212,15 @@ public class AWSAuthV2 implements HttpAuth {
   }
 
   @Override
-  public Map<String, String> getAuthorizationHeaders(Request request) {
-    final String awsAccessKeyId = checkNotNull(request.headers().get(Headers.X_OG_USERNAME));
-    final String awsSecretAccessKey = checkNotNull(request.headers().get(Headers.X_OG_PASSWORD));
+  public Map<String, String> getAuthorizationHeaders(final Request request) {
+    final String awsAccessKeyId = checkNotNull(request.getContext().get(Context.X_OG_USERNAME));
+    final String awsSecretAccessKey = checkNotNull(request.getContext().get(Context.X_OG_PASSWORD));
     return Collections.singletonMap(HttpHeaders.AUTHORIZATION,
         authenticate(request, awsAccessKeyId, awsSecretAccessKey));
   }
 
   @Override
-  public InputStream wrapStream(Request request, InputStream stream) {
+  public InputStream wrapStream(final Request request, final InputStream stream) {
     return stream;
   }
 

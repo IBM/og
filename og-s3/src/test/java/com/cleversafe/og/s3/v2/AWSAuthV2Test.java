@@ -26,9 +26,8 @@ import org.junit.runner.RunWith;
 
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
-import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpRequest;
-import com.cleversafe.og.s3.v2.AWSAuthV2;
+import com.cleversafe.og.util.Context;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.net.HttpHeaders;
@@ -150,8 +149,8 @@ public class AWSAuthV2Test {
     final Request request =
         new HttpRequest.Builder(Method.GET, new URI("/johnsmith/photos/puppy.jpg"))
             .withHeader("Date", "Tue, 27 Mar 2007 19:36:42 +0000")
-            .withHeader(Headers.X_OG_USERNAME, AWS_ACCESS_KEY_ID)
-            .withHeader(Headers.X_OG_PASSWORD, AWS_SECRET_ACCESS_KEY).build();
+            .withContext(Context.X_OG_USERNAME, AWS_ACCESS_KEY_ID)
+            .withContext(Context.X_OG_PASSWORD, AWS_SECRET_ACCESS_KEY).build();
     final String toSign = "GET\n\n\nTue, 27 Mar 2007 19:36:42 +0000\n/johnsmith/photos/puppy.jpg";
     final String header = "AWS AKIAIOSFODNN7EXAMPLE:bWq2s1WEIj+Ydj0vQ697zp+IXMU=";
     return new Object[] {request, toSign, header};
@@ -162,8 +161,8 @@ public class AWSAuthV2Test {
         new HttpRequest.Builder(Method.PUT, new URI("/johnsmith/photos/puppy.jpg"))
             .withHeader("Content-Type", "image/jpeg").withHeader("Content-Length", "94328")
             .withHeader("Date", "Tue, 27 Mar 2007 21:15:45 +0000")
-            .withHeader(Headers.X_OG_USERNAME, AWS_ACCESS_KEY_ID)
-            .withHeader(Headers.X_OG_PASSWORD, AWS_SECRET_ACCESS_KEY).build();
+            .withContext(Context.X_OG_USERNAME, AWS_ACCESS_KEY_ID)
+            .withContext(Context.X_OG_PASSWORD, AWS_SECRET_ACCESS_KEY).build();
     final String toSign =
         "PUT\n\nimage/jpeg\nTue, 27 Mar 2007 21:15:45 +0000\n/johnsmith/photos/puppy.jpg";
     final String header = "AWS AKIAIOSFODNN7EXAMPLE:MyyxeRY7whkBe+bq8fHCL/2kKUg=";
@@ -175,8 +174,8 @@ public class AWSAuthV2Test {
         new URI("/johnsmith/?prefix=photos&max-keys=50&marker=puppy"))
             .withHeader("User-Agent", "Mozilla/5.0")
             .withHeader("Date", "Tue, 27 Mar 2007 19:42:41 +0000")
-            .withHeader(Headers.X_OG_USERNAME, AWS_ACCESS_KEY_ID)
-            .withHeader(Headers.X_OG_PASSWORD, AWS_SECRET_ACCESS_KEY).build();
+            .withContext(Context.X_OG_USERNAME, AWS_ACCESS_KEY_ID)
+            .withContext(Context.X_OG_PASSWORD, AWS_SECRET_ACCESS_KEY).build();
     final String toSign = "GET\n\n\nTue, 27 Mar 2007 19:42:41 +0000\n/johnsmith/";
     final String header = "AWS AKIAIOSFODNN7EXAMPLE:htDYFYduRNen8P9ZfE/s9SuKy0U=";
     return new Object[] {request, toSign, header};
@@ -188,8 +187,8 @@ public class AWSAuthV2Test {
             .withHeader("User-Agent", "dotnet").withHeader("Host", "s3.amazonaws.com")
             .withHeader("Date", "Tue, 27 Mar 2007 21:20:27 +0000")
             .withHeader("x-amz-date", "Tue, 27 Mar 2007 21:20:26 +0000")
-            .withHeader(Headers.X_OG_USERNAME, AWS_ACCESS_KEY_ID)
-            .withHeader(Headers.X_OG_PASSWORD, AWS_SECRET_ACCESS_KEY).build();
+            .withContext(Context.X_OG_USERNAME, AWS_ACCESS_KEY_ID)
+            .withContext(Context.X_OG_PASSWORD, AWS_SECRET_ACCESS_KEY).build();
     final String toSign =
         "DELETE\n\n\nTue, 27 Mar 2007 21:20:26 +0000\n/johnsmith/photos/puppy.jpg";
     final String header = "AWS AKIAIOSFODNN7EXAMPLE:lx3byBScXR6KzyMaifNkardMwNk=";
@@ -206,13 +205,13 @@ public class AWSAuthV2Test {
 
   @Test(expected = NullPointerException.class)
   public void nullUsername() {
-    when(this.request.headers()).thenReturn(ImmutableMap.of(Headers.X_OG_PASSWORD, "password"));
-    this.auth.getAuthorizationHeaders(request);
+    when(this.request.getContext()).thenReturn(ImmutableMap.of(Context.X_OG_PASSWORD, "password"));
+    this.auth.getAuthorizationHeaders(this.request);
   }
 
   @Test(expected = NullPointerException.class)
   public void nullPassword() {
-    when(this.request.headers()).thenReturn(ImmutableMap.of(Headers.X_OG_USERNAME, "username"));
-    this.auth.getAuthorizationHeaders(request);
+    when(this.request.getContext()).thenReturn(ImmutableMap.of(Context.X_OG_USERNAME, "username"));
+    this.auth.getAuthorizationHeaders(this.request);
   }
 }

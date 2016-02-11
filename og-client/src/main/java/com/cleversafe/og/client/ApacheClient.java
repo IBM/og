@@ -69,6 +69,7 @@ import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpAuth;
 import com.cleversafe.og.http.HttpResponse;
 import com.cleversafe.og.http.ResponseBodyConsumer;
+import com.cleversafe.og.util.Context;
 import com.cleversafe.og.util.io.MonitoringInputStream;
 import com.cleversafe.og.util.io.Streams;
 import com.google.common.collect.ImmutableMap;
@@ -287,10 +288,11 @@ public class ApacheClient implements Client {
 
     final Map<String, String> authHeaders = Maps.newHashMap();
     final Map<String, String> headers = request.headers();
+    final Map<String, String> context = request.getContext();
     // FIXME remove these explicit checks; HttpAuth implementations should handle the case where a
     // request does not match what they expect
-    if ((headers.get(Headers.X_OG_USERNAME) != null && headers.get(Headers.X_OG_PASSWORD) != null)
-        || (headers.get(Headers.X_OG_KEYSTONE_TOKEN) != null)) {
+    if ((context.get(Context.X_OG_USERNAME) != null && context.get(Context.X_OG_PASSWORD) != null)
+        || (context.get(Context.X_OG_KEYSTONE_TOKEN) != null)) {
       authHeaders.putAll(this.authentication.getAuthorizationHeaders(request));
       for (final Entry<String, String> e : authHeaders.entrySet()) {
         builder.addHeader(e.getKey(), e.getValue());
@@ -399,9 +401,9 @@ public class ApacheClient implements Client {
       this.timestamps.startMillis = System.currentTimeMillis();
       this.timestamps.start = System.nanoTime();
       final HttpResponse.Builder responseBuilder = new HttpResponse.Builder();
-      final String requestId = this.request.headers().get(Headers.X_OG_REQUEST_ID);
+      final String requestId = this.request.getContext().get(Context.X_OG_REQUEST_ID);
       if (requestId != null) {
-        responseBuilder.withHeader(Headers.X_OG_REQUEST_ID, requestId);
+        responseBuilder.withContext(Context.X_OG_REQUEST_ID, requestId);
       }
       final Response response;
       try {
@@ -483,14 +485,15 @@ public class ApacheClient implements Client {
 
         // TODO clean this up, should always try to set response entity to response size;
         // will InstrumentedInputStream help with this?
-        final String consumerId = this.request.headers().get(Headers.X_OG_RESPONSE_BODY_CONSUMER);
+        final String consumerId =
+            this.request.getContext().get(Context.X_OG_RESPONSE_BODY_CONSUMER);
         final ResponseBodyConsumer consumer =
             ApacheClient.this.responseBodyConsumers.get(consumerId);
         this.timestamps.responseContentStart = System.nanoTime();
         if (consumer != null) {
           for (final Map.Entry<String, String> e : consumer
               .consume(response.getStatusLine().getStatusCode(), in).entrySet()) {
-            responseBuilder.withHeader(e.getKey(), e.getValue());
+            responseBuilder.withContext(e.getKey(), e.getValue());
           }
         } else {
           consumeBytes(responseBuilder, in);
