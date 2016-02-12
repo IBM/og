@@ -42,6 +42,7 @@ import com.cleversafe.og.http.BasicAuth;
 import com.cleversafe.og.http.Bodies;
 import com.cleversafe.og.http.HttpAuth;
 import com.cleversafe.og.http.HttpUtil;
+import com.cleversafe.og.http.NoneAuth;
 import com.cleversafe.og.http.ResponseBodyConsumer;
 import com.cleversafe.og.http.Scheme;
 import com.cleversafe.og.json.AuthType;
@@ -179,13 +180,13 @@ public class OGModule extends AbstractModule {
     bindConstant().annotatedWith(Names.named("shutdownImmediate"))
         .to(this.config.shutdownImmediate);
 
-    // FIXME add NONE auth type
     final MapBinder<AuthType, HttpAuth> httpAuthBinder =
         MapBinder.newMapBinder(binder(), AuthType.class, HttpAuth.class);
+    httpAuthBinder.addBinding(AuthType.NONE).to(NoneAuth.class);
+    httpAuthBinder.addBinding(AuthType.BASIC).to(BasicAuth.class);
     httpAuthBinder.addBinding(AuthType.AWSV2).to(AWSAuthV2.class);
     httpAuthBinder.addBinding(AuthType.AWSV4).toProvider(AWSAuthProvider.class);
     httpAuthBinder.addBinding(AuthType.KEYSTONE).to(KeystoneAuth.class);
-    httpAuthBinder.addBinding(AuthType.BASIC).to(BasicAuth.class);
 
     final MapBinder<String, ResponseBodyConsumer> responseBodyConsumers =
         MapBinder.newMapBinder(binder(), String.class, ResponseBodyConsumer.class);

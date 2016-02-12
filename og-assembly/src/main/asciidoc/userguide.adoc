@@ -201,7 +201,15 @@ configuration:
 ==== Anonymous
 Anonymous authentication is the default authentication configuration. It
 is configured by omitting the _authentication_ block from the test
-configuration.
+configuration. It can also be explicitly configured.
+
+.None Auth Example
+[source, json]
+----
+"authentication": {
+  "type": "none"
+}
+----
 
 ==== Basic Auth
 Basic authentication uses base64 encoding to encode username and password
@@ -1348,7 +1356,7 @@ itself is optional.
 
 ==== Authentication Configuration
 Authentication keys are only required if the authentication block is present.
-The authentication block itself is optional, and will default to anoynmous
+The authentication block itself is optional, and will default to anonymous
 authentication if absent.
 |===
 |Parameter|Type|Required|Default
