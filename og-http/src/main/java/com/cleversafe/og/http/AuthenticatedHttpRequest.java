@@ -151,4 +151,14 @@ public class AuthenticatedHttpRequest implements AuthenticatedRequest {
     checkArgument(length >= 0, "length must be >= 0 [%s]", length);
     this.contentLength = length;
   }
+
+  @Override
+  public String toString() {
+    return String.format(
+        "AuthenticatedHttpRequest [%n" + "method=%s,%n" + "uri=%s,%n" + "queryParameters=%s,%n"
+            + "headers=%s%n" + "body=%s%n" + "context=%s%n" + "content=%s%n"
+            + "contentLength=%s%n]",
+        this.getMethod(), this.getUri(), this.queryParameters, this.requestHeaders, this.getBody(),
+        this.getContext(), this.content, this.contentLength);
+  }
 }
