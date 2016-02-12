@@ -10,8 +10,6 @@ package com.cleversafe.og.s3.v2;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.io.InputStream;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -22,7 +20,9 @@ import java.util.SortedMap;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
+import com.cleversafe.og.api.AuthenticatedRequest;
 import com.cleversafe.og.api.Request;
+import com.cleversafe.og.http.AuthenticatedHttpRequest;
 import com.cleversafe.og.http.HttpAuth;
 import com.cleversafe.og.util.Context;
 import com.google.common.base.Charsets;
@@ -34,8 +34,7 @@ import com.google.common.io.BaseEncoding;
 import com.google.common.net.HttpHeaders;
 
 /**
- * An http auth implementation that creates authorization header values using the awsv2 auth
- * algorithm
+ * An http auth implementation which applies header values using the awsv2 algorithm
  * <p>
  * Note: this implementation includes the following limitations:
  * <ul>
@@ -59,6 +58,18 @@ public class AWSAuthV2 implements HttpAuth {
   private static final List<String> SUBRESOURCES = ImmutableList.of("acl", "lifecycle", "location",
       "logging", "notification", "partNumber", "policy", "requestPayment", "torrent", "uploadId",
       "uploads", "versionId", "versioning", "versions", "website");
+
+  @Override
+  public AuthenticatedRequest authenticate(final Request request) {
+    final String awsAccessKeyId = checkNotNull(request.getContext().get(Context.X_OG_USERNAME));
+    final String awsSecretAccessKey = checkNotNull(request.getContext().get(Context.X_OG_PASSWORD));
+
+    final AuthenticatedHttpRequest authenticatedRequest = new AuthenticatedHttpRequest(request);
+    authenticatedRequest.addHeader(HttpHeaders.AUTHORIZATION,
+        authenticate(request, awsAccessKeyId, awsSecretAccessKey));
+
+    return authenticatedRequest;
+  }
 
   protected String authenticate(final Request request, final String awsAccessKeyId,
       final String awsSecretAccessKey) {
@@ -209,23 +220,5 @@ public class AWSAuthV2 implements HttpAuth {
   @Override
   public String toString() {
     return "AWSAuthV2 []";
-  }
-
-  @Override
-  public Map<String, String> getAuthorizationHeaders(final Request request) {
-    final String awsAccessKeyId = checkNotNull(request.getContext().get(Context.X_OG_USERNAME));
-    final String awsSecretAccessKey = checkNotNull(request.getContext().get(Context.X_OG_PASSWORD));
-    return Collections.singletonMap(HttpHeaders.AUTHORIZATION,
-        authenticate(request, awsAccessKeyId, awsSecretAccessKey));
-  }
-
-  @Override
-  public InputStream wrapStream(final Request request, final InputStream stream) {
-    return stream;
-  }
-
-  @Override
-  public long getContentLength(final Request request) {
-    return request.getBody().getSize();
   }
 }

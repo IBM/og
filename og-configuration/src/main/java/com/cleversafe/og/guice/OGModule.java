@@ -184,8 +184,8 @@ public class OGModule extends AbstractModule {
         MapBinder.newMapBinder(binder(), AuthType.class, HttpAuth.class);
     httpAuthBinder.addBinding(AuthType.AWSV2).to(AWSAuthV2.class);
     httpAuthBinder.addBinding(AuthType.AWSV4).toProvider(AWSAuthProvider.class);
-    httpAuthBinder.addBinding(AuthType.BASIC).to(BasicAuth.class);
     httpAuthBinder.addBinding(AuthType.KEYSTONE).to(KeystoneAuth.class);
+    httpAuthBinder.addBinding(AuthType.BASIC).to(BasicAuth.class);
 
     final MapBinder<String, ResponseBodyConsumer> responseBodyConsumers =
         MapBinder.newMapBinder(binder(), String.class, ResponseBodyConsumer.class);

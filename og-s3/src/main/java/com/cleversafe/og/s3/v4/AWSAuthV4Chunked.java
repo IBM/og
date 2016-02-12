@@ -22,9 +22,10 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.cleversafe.og.api.AuthenticatedRequest;
 import com.cleversafe.og.api.DataType;
 import com.cleversafe.og.api.Request;
-import com.cleversafe.og.http.HttpUtil;
+import com.cleversafe.og.http.AuthenticatedHttpRequest;
 import com.cleversafe.og.util.Context;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -70,55 +71,27 @@ public class AWSAuthV4Chunked extends AWSAuthV4Base {
     }
   }
 
-  AWS4SignerChunked getSigner(final Request request) {
-    try {
-      return new AWS4SignerChunked(request.getUri().toURL(), request.getMethod().toString(),
-          this.serviceName, this.regionName, this.zeroesHashCache);
-    } catch (final MalformedURLException e) {
-      throw new InvalidParameterException(
-          "Can't convert to request.URI(" + request.getUri() + ") to  URL:" + e.getMessage());
-    }
-  }
-
   @Override
-  public Map<String, String> getAuthorizationHeaders(final Request request) {
+  public AuthenticatedRequest authenticate(final Request request) {
     final String keyId = checkNotNull(request.getContext().get(Context.X_OG_USERNAME));
     final String secretKey = checkNotNull(request.getContext().get(Context.X_OG_PASSWORD));
 
-    final Map<String, String> signableHeaders = HttpUtil.filterOutOgHeaders(request.headers());
-    addChunkHeaders(request, signableHeaders);
+    final AuthenticatedHttpRequest authenticatedRequest = new AuthenticatedHttpRequest(request);
 
-    return getSigner(request).getAuthHeaders(signableHeaders,
-        Collections.<String, String>emptyMap(), AWS4SignerChunked.STREAMING_BODY_SHA256, keyId,
-        secretKey, new Date(request.getMessageTime()));
-  }
-
-  /**
-   * Add aws-chunked specific headers
-   */
-  void addChunkHeaders(final Request request, final Map<String, String> headers) {
-    headers.put("x-amz-content-sha256", AWS4SignerChunked.STREAMING_BODY_SHA256);
-    headers.put("content-encoding", "" + "aws-chunked");
-    headers.put("x-amz-decoded-content-length", "" + request.getBody().getSize());
-  }
-
-  @Override
-  public InputStream wrapStream(final Request request, final InputStream stream) {
-    // FIXME - Think of a way to store the state including signing key and previous sig to avoid
-    // recalculating it here.
-
-    final String keyId = checkNotNull(request.getContext().get(Context.X_OG_USERNAME));
-    final String secretKey = checkNotNull(request.getContext().get(Context.X_OG_PASSWORD));
-
-    final Map<String, String> signableHeaders = HttpUtil.filterOutOgHeaders(request.headers());
-    addChunkHeaders(request, signableHeaders);
+    addChunkHeaders(request, authenticatedRequest.headers());
 
     final AWS4SignerChunked signer = getSigner(request);
-    signer.getAuthHeaders(signableHeaders, Collections.<String, String>emptyMap(),
-        AWS4SignerChunked.STREAMING_BODY_SHA256, keyId, secretKey,
-        new Date(request.getMessageTime()));
 
-    return new InputStream() {
+    final Map<String, String> authHeaders = signer.getAuthHeaders(authenticatedRequest.headers(),
+        Collections.<String, String>emptyMap(), AWS4SignerChunked.STREAMING_BODY_SHA256, keyId,
+        secretKey, new Date(request.getMessageTime()));
+
+    for (final Map.Entry<String, String> entry : authHeaders.entrySet()) {
+      authenticatedRequest.addHeader(entry.getKey(), entry.getValue());
+    }
+
+    final InputStream stream = authenticatedRequest.getContent();
+    final InputStream chunkStream = new InputStream() {
 
       /**
        * Temporary buffer to hold the current chunk which includes the metadata and signature.
@@ -223,12 +196,31 @@ public class AWSAuthV4Chunked extends AWSAuthV4Base {
         return lenCopied;
       }
     };
+
+    authenticatedRequest.setContent(chunkStream);
+    authenticatedRequest.setContentLength(AWS4SignerChunked
+        .calculateChunkedContentLength(request.getBody().getSize(), this.getUserDataBlockSize()));
+
+    return authenticatedRequest;
   }
 
-  @Override
-  public long getContentLength(final Request request) {
-    return AWS4SignerChunked.calculateChunkedContentLength(request.getBody().getSize(),
-        this.getUserDataBlockSize());
+  AWS4SignerChunked getSigner(final Request request) {
+    try {
+      return new AWS4SignerChunked(request.getUri().toURL(), request.getMethod().toString(),
+          this.serviceName, this.regionName, this.zeroesHashCache);
+    } catch (final MalformedURLException e) {
+      throw new InvalidParameterException(
+          "Can't convert to request.URI(" + request.getUri() + ") to  URL:" + e.getMessage());
+    }
+  }
+
+  /**
+   * Add aws-chunked specific headers
+   */
+  void addChunkHeaders(final Request request, final Map<String, String> headers) {
+    headers.put("x-amz-content-sha256", AWS4SignerChunked.STREAMING_BODY_SHA256);
+    headers.put("content-encoding", "" + "aws-chunked");
+    headers.put("x-amz-decoded-content-length", "" + request.getBody().getSize());
   }
 
   public int getUserDataBlockSize() {

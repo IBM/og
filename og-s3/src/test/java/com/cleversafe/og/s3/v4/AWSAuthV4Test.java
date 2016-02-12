@@ -8,20 +8,22 @@
 
 package com.cleversafe.og.s3.v4;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasEntry;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
 
-import org.junit.Assert;
 import org.junit.Test;
 
+import com.cleversafe.og.api.AuthenticatedRequest;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.http.Bodies;
 import com.cleversafe.og.http.HttpRequest;
 import com.cleversafe.og.util.Context;
-import com.google.common.collect.Maps;
 
 public class AWSAuthV4Test {
   private final URI URI;
@@ -45,18 +47,16 @@ public class AWSAuthV4Test {
     final Request request = reqBuilder.build();
 
 
-    final Map<String, String> actualHeaders = auth.getAuthorizationHeaders(request);
+    final AuthenticatedRequest authenticatedRequest = auth.authenticate(request);
+    final Map<String, String> headers = authenticatedRequest.headers();
 
-    final Map<String, String> expectedHeaders = Maps.newHashMap();
-    expectedHeaders.put("x-amz-date", "20150430T184047Z");
-    expectedHeaders.put("Authorization",
-        "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20150430/dsnet/s3/aws4_request, SignedHeaders=date;host;x-amz-content-sha256;x-amz-date, Signature=32e574543e02fb2f975dce2af9ec6c2ddea845ce023fa56b18b70574a5e42986");
-    expectedHeaders.put("Host", "127.0.0.1");
-    expectedHeaders.put("Date", "Thu, 30 Apr 2015 13:40:47 -0500");
-    expectedHeaders.put("x-amz-content-sha256",
-        "0d5535e13cc9708d0ff0289af2fae27e564b6bcbcd9242f5140d96957744a517");
-
-    Assert.assertEquals(expectedHeaders, actualHeaders);
+    assertThat(headers, hasEntry("x-amz-date", "20150430T184047Z"));
+    assertThat(headers, hasEntry("Authorization",
+        "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20150430/dsnet/s3/aws4_request, SignedHeaders=date;host;x-amz-content-sha256;x-amz-date, Signature=32e574543e02fb2f975dce2af9ec6c2ddea845ce023fa56b18b70574a5e42986"));
+    assertThat(headers, hasEntry("Host", "127.0.0.1"));
+    assertThat(headers, hasEntry("Date", "Thu, 30 Apr 2015 13:40:47 -0500"));
+    assertThat(headers, hasEntry("x-amz-content-sha256",
+        "0d5535e13cc9708d0ff0289af2fae27e564b6bcbcd9242f5140d96957744a517"));
   }
 
 }

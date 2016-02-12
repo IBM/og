@@ -10,38 +10,27 @@ package com.cleversafe.og.openstack;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.io.InputStream;
-import java.util.Map;
-
+import com.cleversafe.og.api.AuthenticatedRequest;
 import com.cleversafe.og.api.Request;
+import com.cleversafe.og.http.AuthenticatedHttpRequest;
 import com.cleversafe.og.http.HttpAuth;
 import com.cleversafe.og.util.Context;
-import com.google.common.collect.ImmutableMap;
 
 /**
- * An http auth implementation that creates authorization header values using the keystone auth
- * algorithm
+ * An http auth implementation which applies header values using the keystone token algorithm
  * 
  * @since 1.0
  */
-// FIXME account for requests that do not have a token
 public class KeystoneAuth implements HttpAuth {
   @Override
-  public Map<String, String> getAuthorizationHeaders(final Request request) {
+  public AuthenticatedRequest authenticate(final Request request) {
     final String keystoneToken =
         checkNotNull(request.getContext().get(Context.X_OG_KEYSTONE_TOKEN));
 
-    return ImmutableMap.of("X-Auth-Token", keystoneToken);
-  }
+    final AuthenticatedHttpRequest authenticatedRequest = new AuthenticatedHttpRequest(request);
+    authenticatedRequest.addHeader("X-Auth-Token", keystoneToken);
 
-  @Override
-  public InputStream wrapStream(final Request request, final InputStream stream) {
-    return stream;
-  }
-
-  @Override
-  public long getContentLength(final Request request) {
-    return request.getBody().getSize();
+    return authenticatedRequest;
   }
 
   @Override

@@ -8,6 +8,9 @@
 
 package com.cleversafe.og.s3.v4;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasEntry;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,6 +24,7 @@ import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.cleversafe.og.api.AuthenticatedRequest;
 import com.cleversafe.og.api.DataType;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
@@ -29,7 +33,6 @@ import com.cleversafe.og.http.HttpRequest;
 import com.cleversafe.og.http.HttpUtil;
 import com.cleversafe.og.util.Context;
 import com.cleversafe.og.util.io.Streams;
-import com.google.common.collect.Maps;
 
 public class AWSAuthV4ChunkingTest {
 
@@ -90,19 +93,17 @@ public class AWSAuthV4ChunkingTest {
     reqBuilder.withMessageTime(1430419247000l);
     final Request request = reqBuilder.build();
 
-    final Map<String, String> actualHeaders = auth.getAuthorizationHeaders(request);
+    final AuthenticatedRequest authenticatedRequest = auth.authenticate(request);
+    final Map<String, String> headers = authenticatedRequest.headers();
 
-    final Map<String, String> expectedHeaders = Maps.newHashMap();
-    expectedHeaders.put("x-amz-date", "20150430T184047Z");
-    expectedHeaders.put("Authorization",
-        "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20150430/dsnet/s3/aws4_request, SignedHeaders=content-encoding;date;host;x-amz-content-sha256;x-amz-date;x-amz-decoded-content-length, Signature=cce603cbbefe2709183044d8511a58a48c019b6c9c1165cab000fe3aa3589431");
-    expectedHeaders.put("x-amz-decoded-content-length", "35");
-    expectedHeaders.put("Host", "127.0.0.1");
-    expectedHeaders.put("Date", "Thu, 30 Apr 2015 13:40:47 -0500");
-    expectedHeaders.put("x-amz-content-sha256", "STREAMING-AWS4-HMAC-SHA256-PAYLOAD");
-    expectedHeaders.put("content-encoding", "aws-chunked");
-
-    Assert.assertEquals(expectedHeaders, actualHeaders);
+    assertThat(headers, hasEntry("x-amz-date", "20150430T184047Z"));
+    assertThat(headers, hasEntry("Authorization",
+        "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20150430/dsnet/s3/aws4_request, SignedHeaders=content-encoding;date;host;x-amz-content-sha256;x-amz-date;x-amz-decoded-content-length, Signature=cce603cbbefe2709183044d8511a58a48c019b6c9c1165cab000fe3aa3589431"));
+    assertThat(headers, hasEntry("x-amz-decoded-content-length", "35"));
+    assertThat(headers, hasEntry("Host", "127.0.0.1"));
+    assertThat(headers, hasEntry("Date", "Thu, 30 Apr 2015 13:40:47 -0500"));
+    assertThat(headers, hasEntry("x-amz-content-sha256", "STREAMING-AWS4-HMAC-SHA256-PAYLOAD"));
+    assertThat(headers, hasEntry("content-encoding", "aws-chunked"));
 
     final byte[] actualChunkedBuff = getCompleteChunkedBuff(request, auth);
     System.out.println(BinaryUtils.toHex(actualChunkedBuff));
@@ -128,8 +129,7 @@ public class AWSAuthV4ChunkingTest {
 
         {
           // Test the wrapping stream reading 1 byte at a time
-          final InputStream wrappedStream =
-              auth.wrapStream(request, Streams.create(request.getBody()));
+          final InputStream wrappedStream = auth.authenticate(request).getContent();
 
           final ByteArrayOutputStream actualOutput = new ByteArrayOutputStream();
           int read = wrappedStream.read();
@@ -144,8 +144,7 @@ public class AWSAuthV4ChunkingTest {
 
         // Test the stream reading 1 - N bytes at a time
         for (int readAmount = 1; readAmount <= expectedBuff.length; readAmount++) {
-          final InputStream wrappedStream =
-              auth.wrapStream(request, Streams.create(request.getBody()));
+          final InputStream wrappedStream = auth.authenticate(request).getContent();
 
           final ByteArrayOutputStream actualOutput = new ByteArrayOutputStream();
           final byte[] buff = new byte[readAmount];

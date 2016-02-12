@@ -21,7 +21,6 @@ import javax.crypto.spec.SecretKeySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.cleversafe.og.http.HttpUtil;
 import com.google.common.net.HttpHeaders;
 
 
@@ -101,12 +100,9 @@ public class AWS4SignerBase {
    * Returns a set of required headers for authentication. Also defines {@link #signingKey}, and
    * {@link #scope}, and {@link #dateTimeStamp}.
    */
-  public Map<String, String> getAuthHeaders(final Map<String, String> headers,
+  public Map<String, String> getAuthHeaders(final Map<String, String> authHeaders,
       final Map<String, String> queryParameters, final String bodyHash, final String awsAccessKey,
       final String awsSecretKey, final Date date) {
-
-    // Don't sign the og headers
-    final Map<String, String> authHeaders = HttpUtil.filterOutOgHeaders(headers);
 
     authHeaders.put("x-amz-content-sha256", bodyHash);
 

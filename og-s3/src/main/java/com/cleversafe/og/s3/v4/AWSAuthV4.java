@@ -22,9 +22,11 @@ import java.util.concurrent.ExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.cleversafe.og.api.AuthenticatedRequest;
 import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.DataType;
 import com.cleversafe.og.api.Request;
+import com.cleversafe.og.http.AuthenticatedHttpRequest;
 import com.cleversafe.og.http.HttpAuth;
 import com.cleversafe.og.util.Context;
 import com.cleversafe.og.util.io.Streams;
@@ -60,16 +62,26 @@ public class AWSAuthV4 extends AWSAuthV4Base implements HttpAuth {
   }
 
   @Override
-  public Map<String, String> getAuthorizationHeaders(final Request request) {
+  public AuthenticatedRequest authenticate(final Request request) {
     final String keyId = checkNotNull(request.getContext().get(Context.X_OG_USERNAME));
     final String secretKey = checkNotNull(request.getContext().get(Context.X_OG_PASSWORD));
+
+    final AuthenticatedHttpRequest authenticatedRequest = new AuthenticatedHttpRequest(request);
 
     try {
       final AWS4SignerBase signer = new AWS4SignerBase(request.getUri().toURL(),
           request.getMethod().toString(), this.serviceName, this.regionName);
 
-      return signer.getAuthHeaders(request.headers(), Collections.<String, String>emptyMap(),
-          getBodyHash(request.getBody()), keyId, secretKey, new Date(request.getMessageTime()));
+      final Map<String, String> authHeaders = signer.getAuthHeaders(authenticatedRequest.headers(),
+          Collections.<String, String>emptyMap(), getBodyHash(request.getBody()), keyId, secretKey,
+          new Date(request.getMessageTime()));
+
+
+      for (final Map.Entry<String, String> entry : authHeaders.entrySet()) {
+        authenticatedRequest.addHeader(entry.getKey(), entry.getValue());
+      }
+
+      return authenticatedRequest;
 
     } catch (final MalformedURLException e) {
       throw new InvalidParameterException(
@@ -113,15 +125,5 @@ public class AWSAuthV4 extends AWSAuthV4Base implements HttpAuth {
             "Unable to compute hash while signing request: " + e.getMessage(), e);
       }
     }
-  }
-
-  @Override
-  public InputStream wrapStream(final Request request, final InputStream stream) {
-    return stream;
-  }
-
-  @Override
-  public long getContentLength(final Request request) {
-    return request.getBody().getSize();
   }
 }

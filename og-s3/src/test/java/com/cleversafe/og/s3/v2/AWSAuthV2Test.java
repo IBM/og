@@ -24,6 +24,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import com.cleversafe.og.api.AuthenticatedRequest;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.http.HttpRequest;
@@ -199,19 +200,19 @@ public class AWSAuthV2Test {
   @UseDataProvider("provideExamples")
   public void testSigning(final Request request, final String toSign, final String header) {
     assertThat(this.auth.stringToSign(request), is(toSign));
-    assertThat(this.auth.getAuthorizationHeaders(request).get(HttpHeaders.AUTHORIZATION),
-        is(header));
+    final AuthenticatedRequest authenticatedRequest = this.auth.authenticate(request);
+    assertThat(authenticatedRequest.headers(), hasEntry(HttpHeaders.AUTHORIZATION, header));
   }
 
   @Test(expected = NullPointerException.class)
   public void nullUsername() {
     when(this.request.getContext()).thenReturn(ImmutableMap.of(Context.X_OG_PASSWORD, "password"));
-    this.auth.getAuthorizationHeaders(this.request);
+    this.auth.authenticate(this.request);
   }
 
   @Test(expected = NullPointerException.class)
   public void nullPassword() {
     when(this.request.getContext()).thenReturn(ImmutableMap.of(Context.X_OG_USERNAME, "username"));
-    this.auth.getAuthorizationHeaders(this.request);
+    this.auth.authenticate(this.request);
   }
 }
