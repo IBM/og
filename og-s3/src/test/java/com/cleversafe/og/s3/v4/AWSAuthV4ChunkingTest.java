@@ -30,9 +30,9 @@ import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.http.Bodies;
 import com.cleversafe.og.http.HttpRequest;
-import com.cleversafe.og.http.HttpUtil;
 import com.cleversafe.og.util.Context;
 import com.cleversafe.og.util.io.Streams;
+import com.google.common.collect.Maps;
 
 public class AWSAuthV4ChunkingTest {
 
@@ -52,7 +52,7 @@ public class AWSAuthV4ChunkingTest {
       throws IOException {
     final InputStream requestStream = Streams.create(request.getBody());
 
-    final Map<String, String> headers = HttpUtil.filterOutOgHeaders(request.headers());
+    final Map<String, String> headers = Maps.newHashMap(request.headers());
     auth.addChunkHeaders(request, headers);
 
     final AWS4SignerChunked signer = auth.getSigner(request);
