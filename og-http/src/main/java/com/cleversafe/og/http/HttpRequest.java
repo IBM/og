@@ -13,12 +13,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.net.URI;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 
 import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.Method;
@@ -38,10 +33,7 @@ public class HttpRequest implements Request {
   private final Map<String, List<String>> queryParameters;
   private final Map<String, String> requestHeaders;
   private final Body body;
-  private final long messageTime;
   private final Map<String, String> context;
-  private static final DateTimeFormatter RFC1123 =
-      DateTimeFormat.forPattern("EEE, dd MMM yyyy HH:mm:ss Z").withLocale(Locale.US);
 
   private HttpRequest(final Builder builder) {
     this.method = checkNotNull(builder.method);
@@ -58,7 +50,6 @@ public class HttpRequest implements Request {
     this.queryParameters = queryParametersBuilder.build();
     this.requestHeaders = ImmutableMap.copyOf(builder.requestHeaders);
     this.body = checkNotNull(builder.body);
-    this.messageTime = builder.messageTime;
     this.context = ImmutableMap.copyOf(builder.context);
   }
 
@@ -88,11 +79,6 @@ public class HttpRequest implements Request {
   }
 
   @Override
-  public long getMessageTime() {
-    return this.messageTime;
-  }
-
-  @Override
   public Map<String, String> getContext() {
     return this.context;
   }
@@ -114,14 +100,10 @@ public class HttpRequest implements Request {
     private final Map<String, List<String>> queryParameters;
     private final Map<String, String> requestHeaders;
     private Body body;
-    private long messageTime;
     private final Map<String, String> context;
 
     /**
      * Constructs a builder
-     * <p>
-     * Note: this builder automatically includes a {@code Date} header with an rfc1123 formatted
-     * datetime set to the time of builder construction
      * 
      * @param method the request method for this request
      * @param uri the uri for this request
@@ -131,8 +113,6 @@ public class HttpRequest implements Request {
       this.uri = uri;
       this.queryParameters = Maps.newLinkedHashMap();
       this.requestHeaders = Maps.newLinkedHashMap();
-      this.messageTime = System.currentTimeMillis();
-      this.requestHeaders.put("Date", RFC1123.print(new DateTime(this.messageTime)));
       this.body = Bodies.none();
       this.context = Maps.newHashMap();
     }
@@ -174,12 +154,6 @@ public class HttpRequest implements Request {
      */
     public Builder withBody(final Body body) {
       this.body = body;
-      return this;
-    }
-
-    public Builder withMessageTime(final long messageTime) {
-      this.messageTime = messageTime;
-      this.requestHeaders.put("Date", RFC1123.print(new DateTime(messageTime)));
       return this;
     }
 

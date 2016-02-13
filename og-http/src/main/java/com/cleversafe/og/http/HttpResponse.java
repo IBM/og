@@ -54,11 +54,6 @@ public class HttpResponse implements Response {
   }
 
   @Override
-  public long getMessageTime() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
   public Map<String, String> getContext() {
     return this.context;
   }

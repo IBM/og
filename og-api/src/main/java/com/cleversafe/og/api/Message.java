@@ -18,8 +18,6 @@ import java.util.Map;
 public interface Message {
   Map<String, String> headers();
 
-  long getMessageTime();
-
   /**
    * Gets the description of the body for this message
    * 

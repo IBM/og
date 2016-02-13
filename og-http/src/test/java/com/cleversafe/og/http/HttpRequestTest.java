@@ -196,15 +196,14 @@ public class HttpRequestTest {
   @Test
   public void noHeaders() {
     final HttpRequest request = new HttpRequest.Builder(this.method, this.uri).build();
-    // auto-generated Date header
-    assertThat(request.headers().size(), is(1));
+    assertThat(request.headers().size(), is(0));
   }
 
   @Test
   public void oneHeader() {
     final HttpRequest request =
         new HttpRequest.Builder(this.method, this.uri).withHeader("key", "value").build();
-    assertThat(request.headers().size(), is(2));
+    assertThat(request.headers().size(), is(1));
     assertThat(request.headers(), hasEntry("key", "value"));
   }
 
@@ -216,7 +215,7 @@ public class HttpRequestTest {
       b.withHeader("key" + (10 - i), "value");
     }
     final HttpRequest request = b.build();
-    assertThat(request.headers().size(), is(11));
+    assertThat(request.headers().size(), is(10));
 
     for (int i = 0; i < 10; i++) {
       assertThat(request.headers(), hasEntry("key" + (10 - i), "value"));
