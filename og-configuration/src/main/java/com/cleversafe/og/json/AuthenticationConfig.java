@@ -8,15 +8,11 @@
 
 package com.cleversafe.og.json;
 
-import com.cleversafe.og.s3.v4.AWSAuthV4Chunked;
-
-
 public class AuthenticationConfig {
   public AuthType type;
   public String username;
   public String password;
   public String keystoneToken;
-  public int awsChunkSize;
   public boolean awsChunked;
   public int awsCacheSize;
 
@@ -25,7 +21,6 @@ public class AuthenticationConfig {
     this.username = null;
     this.password = null;
     this.keystoneToken = null;
-    this.awsChunkSize = AWSAuthV4Chunked.DEFAULT_CHUNK_SIZE;
     this.awsChunked = false;
     this.awsCacheSize = 0;
   }

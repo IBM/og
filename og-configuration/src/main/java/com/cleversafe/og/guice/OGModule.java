@@ -67,8 +67,7 @@ import com.cleversafe.og.object.ReadObjectNameConsumer;
 import com.cleversafe.og.object.WriteObjectNameConsumer;
 import com.cleversafe.og.openstack.KeystoneAuth;
 import com.cleversafe.og.s3.v2.AWSAuthV2;
-import com.cleversafe.og.s3.v4.AWSAuthV4;
-import com.cleversafe.og.s3.v4.AWSAuthV4Chunked;
+import com.cleversafe.og.s3.v4.AWSV4Auth;
 import com.cleversafe.og.scheduling.ConcurrentRequestScheduler;
 import com.cleversafe.og.scheduling.RequestRateScheduler;
 import com.cleversafe.og.scheduling.Scheduler;
@@ -105,7 +104,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -162,8 +160,6 @@ public class OGModule extends AbstractModule {
         .toProvider(Providers.of(this.config.authentication.password));
     bind(String.class).annotatedWith(Names.named("authentication.keystoneToken"))
         .toProvider(Providers.of(this.config.authentication.keystoneToken));
-    bindConstant().annotatedWith(Names.named("authentication.awsChunkSize"))
-        .to(this.config.authentication.awsChunkSize);
     bindConstant().annotatedWith(Names.named("authentication.awsChunked"))
         .to(this.config.authentication.awsChunked);
     bindConstant().annotatedWith(Names.named("authentication.awsCacheSize"))
@@ -185,7 +181,7 @@ public class OGModule extends AbstractModule {
     httpAuthBinder.addBinding(AuthType.NONE).to(NoneAuth.class);
     httpAuthBinder.addBinding(AuthType.BASIC).to(BasicAuth.class);
     httpAuthBinder.addBinding(AuthType.AWSV2).to(AWSAuthV2.class);
-    httpAuthBinder.addBinding(AuthType.AWSV4).toProvider(AWSAuthProvider.class);
+    httpAuthBinder.addBinding(AuthType.AWSV4).to(AWSV4Auth.class);
     httpAuthBinder.addBinding(AuthType.KEYSTONE).to(KeystoneAuth.class);
 
     final MapBinder<String, ResponseBodyConsumer> responseBodyConsumers =
@@ -214,42 +210,6 @@ public class OGModule extends AbstractModule {
         }
       }
     });
-  }
-
-  private static class AWSAuthProvider implements Provider<HttpAuth> {
-
-    private final boolean chunked;
-    private final String regionName;
-    private final String serviceName;
-    private final int chunkSize;
-    private final int cacheSize;
-
-    @Inject
-    public AWSAuthProvider(@Named("authentication.awsChunked") final boolean chunked,
-        @Named("authentication.awsChunkSize") final int chunkSize,
-        @Named("authentication.awsCacheSize") final int cacheSize,
-        @Named("dataType") final DataType dataType) {
-      checkArgument(chunkSize >= 8000, "AWS Chunk Size less than 8000 not supported.");
-      checkArgument(cacheSize > 0 ? dataType.equals(DataType.ZEROES) : true,
-          "nonzero aws_cache_size is not supported with random data");
-      this.chunked = chunked;
-      this.chunkSize = chunkSize;
-      this.cacheSize = cacheSize;
-
-      // Hard code these values since they don't matter much when testing with a dsnet.
-      this.regionName = "us-east-1";
-      this.serviceName = "s3";
-    }
-
-    @Override
-    public HttpAuth get() {
-      if (this.chunked) {
-        return new AWSAuthV4Chunked(this.regionName, this.serviceName, this.chunkSize,
-            this.cacheSize);
-      } else {
-        return new AWSAuthV4(this.regionName, this.serviceName, this.cacheSize);
-      }
-    }
   }
 
   @Provides
@@ -748,8 +708,8 @@ public class OGModule extends AbstractModule {
   public Client provideClient(final AuthType authType, final Map<AuthType, HttpAuth> authentication,
       final Map<String, ResponseBodyConsumer> responseBodyConsumers) {
     final ClientConfig clientConfig = this.config.client;
-    Preconditions.checkArgument(authentication.get(authType) instanceof AWSAuthV4Chunked
-        ? !clientConfig.chunkedEncoding : true,
+    Preconditions.checkArgument(
+        authentication.get(authType) instanceof AWSV4Auth ? !clientConfig.chunkedEncoding : true,
         "http layer chunked encoding is not supported with Chunked AWSV4");
     final ApacheClient.Builder b = new ApacheClient.Builder()
         .withConnectTimeout(clientConfig.connectTimeout).withSoTimeout(clientConfig.soTimeout)
