@@ -21,12 +21,12 @@ import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.api.AuthenticatedRequest;
 import com.cleversafe.og.api.Body;
-import com.cleversafe.og.api.DataType;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.util.io.Streams;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.net.HttpHeaders;
 
 /**
  * A defacto implementation of the {@code AuthenticatedRequest} interface
@@ -39,7 +39,6 @@ public class AuthenticatedHttpRequest implements AuthenticatedRequest {
   private final Map<String, List<String>> queryParameters;
   private final Map<String, String> requestHeaders;
   private InputStream content;
-  private long contentLength;
 
   /**
    * Constructs an authenticated request object which wraps and underlying request
@@ -54,11 +53,9 @@ public class AuthenticatedHttpRequest implements AuthenticatedRequest {
     }
     this.requestHeaders = Maps.newHashMap(request.headers());
 
-    if (request.getBody().getDataType() != DataType.NONE) {
-      this.content = Streams.create(request.getBody());
-      this.content.mark(Integer.MAX_VALUE);
-      this.contentLength = request.getBody().getSize();
-    }
+    this.content = Streams.create(request.getBody());
+    this.content.mark(Integer.MAX_VALUE);
+    this.setContentLength(request.getBody().getSize());
   }
 
   @Override
@@ -107,11 +104,6 @@ public class AuthenticatedHttpRequest implements AuthenticatedRequest {
   }
 
   @Override
-  public long getMessageTime() {
-    return this.request.getMessageTime();
-  }
-
-  @Override
   public Body getBody() {
     return this.request.getBody();
   }
@@ -139,7 +131,10 @@ public class AuthenticatedHttpRequest implements AuthenticatedRequest {
 
   @Override
   public long getContentLength() {
-    return this.contentLength;
+    if (this.headers().containsKey(HttpHeaders.CONTENT_LENGTH)) {
+      return Long.parseLong(this.headers().get(HttpHeaders.CONTENT_LENGTH));
+    }
+    return 0;
   }
 
   /**
@@ -149,7 +144,7 @@ public class AuthenticatedHttpRequest implements AuthenticatedRequest {
    */
   public void setContentLength(final long length) {
     checkArgument(length >= 0, "length must be >= 0 [%s]", length);
-    this.contentLength = length;
+    this.addHeader(HttpHeaders.CONTENT_LENGTH, Long.toString(length));
   }
 
   @Override
@@ -159,6 +154,6 @@ public class AuthenticatedHttpRequest implements AuthenticatedRequest {
             + "headers=%s%n" + "body=%s%n" + "context=%s%n" + "content=%s%n"
             + "contentLength=%s%n]",
         this.getMethod(), this.getUri(), this.queryParameters, this.requestHeaders, this.getBody(),
-        this.getContext(), this.content, this.contentLength);
+        this.getContext(), this.content, this.getContentLength());
   }
 }
