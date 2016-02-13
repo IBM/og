@@ -55,6 +55,6 @@ public class AWSV4Auth implements HttpAuth {
 
   @Override
   public String toString() {
-    return String.format("NewAWSV4Auth [chunkedEncoding=%s]", this.chunkedEncoding);
+    return String.format("AWSV4Auth [chunkedEncoding=%s]", this.chunkedEncoding);
   }
 }
