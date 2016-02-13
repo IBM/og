@@ -32,6 +32,9 @@ import org.apache.http.Header;
 import org.apache.http.HeaderIterator;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
+import org.apache.http.HttpException;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -54,6 +57,8 @@ import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.protocol.HTTP;
+import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpRequestExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -196,6 +201,19 @@ public class ApacheClient implements Client {
     if (this.userAgent != null) {
       builder.setUserAgent(this.userAgent);
     }
+
+    // Some authentication implementations add Content-Length or Transfer-Encoding headers as a part
+    // of their authentication algorithm; remove them here so that the default interceptors do not
+    // throw a ProtocolException
+    // @see RequestContent interceptor
+    builder.addInterceptorFirst(new HttpRequestInterceptor() {
+      @Override
+      public void process(final HttpRequest request, final HttpContext context)
+          throws HttpException, IOException {
+        request.removeHeaders(HTTP.TRANSFER_ENCODING);
+        request.removeHeaders(HTTP.CONTENT_LEN);
+      }
+    });
 
     return builder.setRequestExecutor(new HttpRequestExecutor(this.waitForContinue))
         .setConnectionManager(createConnectionManager())
