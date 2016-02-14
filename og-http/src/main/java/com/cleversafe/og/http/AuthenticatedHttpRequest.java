@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import com.cleversafe.og.api.AuthenticatedRequest;
 import com.cleversafe.og.api.Body;
+import com.cleversafe.og.api.DataType;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.util.io.Streams;
@@ -55,7 +56,9 @@ public class AuthenticatedHttpRequest implements AuthenticatedRequest {
 
     this.content = Streams.create(request.getBody());
     this.content.mark(Integer.MAX_VALUE);
-    this.setContentLength(request.getBody().getSize());
+    if (request.getBody().getDataType() != DataType.NONE) {
+      this.setContentLength(request.getBody().getSize());
+    }
   }
 
   @Override
