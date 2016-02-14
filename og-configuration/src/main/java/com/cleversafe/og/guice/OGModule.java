@@ -66,7 +66,7 @@ import com.cleversafe.og.object.RandomObjectPopulator;
 import com.cleversafe.og.object.ReadObjectNameConsumer;
 import com.cleversafe.og.object.WriteObjectNameConsumer;
 import com.cleversafe.og.openstack.KeystoneAuth;
-import com.cleversafe.og.s3.v2.AWSAuthV2;
+import com.cleversafe.og.s3.v2.AWSV2Auth;
 import com.cleversafe.og.s3.v4.AWSV4Auth;
 import com.cleversafe.og.scheduling.ConcurrentRequestScheduler;
 import com.cleversafe.og.scheduling.RequestRateScheduler;
@@ -179,7 +179,7 @@ public class OGModule extends AbstractModule {
         MapBinder.newMapBinder(binder(), AuthType.class, HttpAuth.class);
     httpAuthBinder.addBinding(AuthType.NONE).to(NoneAuth.class);
     httpAuthBinder.addBinding(AuthType.BASIC).to(BasicAuth.class);
-    httpAuthBinder.addBinding(AuthType.AWSV2).to(AWSAuthV2.class);
+    httpAuthBinder.addBinding(AuthType.AWSV2).to(AWSV2Auth.class);
     httpAuthBinder.addBinding(AuthType.AWSV4).to(AWSV4Auth.class);
     httpAuthBinder.addBinding(AuthType.KEYSTONE).to(KeystoneAuth.class);
 
