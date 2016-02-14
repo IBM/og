@@ -152,8 +152,7 @@ public class OGModule extends AbstractModule {
     bindConstant().annotatedWith(Names.named("delete.weight")).to(this.config.delete.weight);
     bindConstant().annotatedWith(Names.named("virtualhost")).to(this.config.virtualHost);
     bind(AuthType.class).toInstance(this.config.authentication.type);
-    bind(DataType.class).annotatedWith(Names.named("dataType"))
-        .toProvider(Providers.of(this.config.data));
+    bind(DataType.class).toInstance(this.config.data);
     bind(String.class).annotatedWith(Names.named("authentication.username"))
         .toProvider(Providers.of(this.config.authentication.username));
     bind(String.class).annotatedWith(Names.named("authentication.password"))
