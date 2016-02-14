@@ -25,6 +25,7 @@ import com.amazonaws.SignableRequest;
 import com.amazonaws.auth.AWS4Signer;
 import com.amazonaws.auth.AwsChunkedEncodingInputStream;
 import com.amazonaws.auth.internal.AWS4SignerRequestParams;
+import com.amazonaws.http.HttpMethodName;
 import com.amazonaws.services.s3.Headers;
 import com.amazonaws.services.s3.request.S3HandlerContextKeys;
 import com.amazonaws.util.BinaryUtils;
@@ -116,7 +117,8 @@ public class AWSS3V4Signer extends AWS4Signer {
     if (isChunkedEncodingDisabled(request)) {
       return false;
     }
-    return this.chunkedEncoding;
+    // FIXME this may break with POST or part upload
+    return this.chunkedEncoding && request.getHttpMethod() == HttpMethodName.PUT;
   }
 
   /**
