@@ -16,6 +16,9 @@ import static com.amazonaws.auth.internal.SignerConstants.X_AMZ_CONTENT_SHA256;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.ExecutionException;
+
+import javax.annotation.Nullable;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.ReadLimitInfo;
@@ -23,12 +26,12 @@ import com.amazonaws.Request;
 import com.amazonaws.ResetException;
 import com.amazonaws.SignableRequest;
 import com.amazonaws.auth.AWS4Signer;
-import com.amazonaws.auth.AwsChunkedEncodingInputStream;
 import com.amazonaws.auth.internal.AWS4SignerRequestParams;
 import com.amazonaws.http.HttpMethodName;
 import com.amazonaws.services.s3.Headers;
 import com.amazonaws.services.s3.request.S3HandlerContextKeys;
 import com.amazonaws.util.BinaryUtils;
+import com.google.common.cache.LoadingCache;
 
 /**
  * AWS4 signer implementation for AWS S3
@@ -37,15 +40,19 @@ public class AWSS3V4Signer extends AWS4Signer {
   private static final String CONTENT_SHA_256 = "STREAMING-AWS4-HMAC-SHA256-PAYLOAD";
 
   private final boolean chunkedEncoding;
+  private final LoadingCache<Long, byte[]> digestCache;
 
   /**
    * Constructs the signer; configures whether to use aws chunking or not
    * 
-   * @param chunkedEncoding
+   * @param chunkedEncoding whether to use standard or chunked signing
+   * @param digestCache optional digest cache for like-sized objects
    */
-  public AWSS3V4Signer(final boolean chunkedEncoding) {
+  public AWSS3V4Signer(final boolean chunkedEncoding,
+      @Nullable final LoadingCache<Long, byte[]> digestCache) {
     super(false);
     this.chunkedEncoding = chunkedEncoding;
+    this.digestCache = digestCache;
   }
 
   /**
@@ -57,7 +64,7 @@ public class AWSS3V4Signer extends AWS4Signer {
     if (useChunkEncoding(request)) {
       final AwsChunkedEncodingInputStream chunkEncodededStream = new AwsChunkedEncodingInputStream(
           request.getContent(), signingKey, signerRequestParams.getFormattedSigningDateTime(),
-          signerRequestParams.getScope(), BinaryUtils.toHex(signature), this);
+          signerRequestParams.getScope(), BinaryUtils.toHex(signature), this, this.digestCache);
       request.setContent(chunkEncodededStream);
     }
   }
@@ -78,8 +85,8 @@ public class AWSS3V4Signer extends AWS4Signer {
     // we just set the header as "required", and AWS4Signer.sign() will be
     // notified to pick up the header value returned by this method.
     request.addHeader(X_AMZ_CONTENT_SHA256, "required");
+    final String contentLength = request.getHeaders().get(Headers.CONTENT_LENGTH);
     if (useChunkEncoding(request)) {
-      final String contentLength = request.getHeaders().get(Headers.CONTENT_LENGTH);
       final long originalContentLength;
       if (contentLength != null) {
         originalContentLength = Long.parseLong(contentLength);
@@ -104,6 +111,15 @@ public class AWSS3V4Signer extends AWS4Signer {
       request.addHeader(Headers.CONTENT_LENGTH, Long.toString(
           AwsChunkedEncodingInputStream.calculateStreamContentLength(originalContentLength)));
       return CONTENT_SHA_256;
+    }
+
+    if (this.digestCache != null) {
+      try {
+        final long length = contentLength != null ? Long.parseLong(contentLength) : 0;
+        return BinaryUtils.toHex(this.digestCache.get(length));
+      } catch (final ExecutionException e) {
+        throw new RuntimeException(e);
+      }
     }
     return super.calculateContentHash(request);
   }
