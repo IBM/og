@@ -252,9 +252,7 @@ _username_ and _password_ keys, respectively.
 With AWS Auth V4, the body of the request is included in the signing process.
 AWS Auth V4 requests can either sign the entire request body up front, which
 requires reading the entire contents first, or sign the body in chunks as the
-request is sent. Chunked signing and chunk size are configured via
-_aws_chunked_ and _aws_chunk_size_, respectively. Both configurations are
-optional.
+request is sent. Chunked signing is configured via the _aws_chunked_ key.
 
 NOTE: For more information about AWS V4 signing, see: http://docs.aws.amazon.com/AmazonS3/latest/dev/RESTAuthentication.html[Signing and Authenticating REST Requests]
 
@@ -275,8 +273,7 @@ NOTE: For more information about AWS V4 signing, see: http://docs.aws.amazon.com
   "type": "awsv4",
   "username": "AKIAIOSFODNN74SFNMK",
   "password": "nJalrUUFklNEMI/K7MDENG/gPwRfiCYXY73DER",
-  "aws_chunked": true,
-  "aws_chunk_size": 8000
+  "aws_chunked": true
 }
 ----
 
@@ -1380,11 +1377,6 @@ authentication if absent.
 |Boolean
 |No
 |false; S3 only
-
-|aws_chunk_size
-|Integer
-|No
-|65536; S3 only
 
 |aws_cache_size
 |Integer
