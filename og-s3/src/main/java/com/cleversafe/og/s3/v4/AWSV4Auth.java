@@ -34,6 +34,11 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingInputStream;
 
+/**
+ * An http auth implementation which authenticates using the aws v4 algorithm
+ * 
+ * @since 1.0
+ */
 public class AWSV4Auth implements HttpAuth {
   private static Logger _logger = LoggerFactory.getLogger(AWSV4Auth.class);
   private final boolean chunkedEncoding;
