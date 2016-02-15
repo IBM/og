@@ -18,12 +18,18 @@ import java.util.Map;
 public interface Message {
   Map<String, String> headers();
 
-  long getMessageTime();
-
   /**
    * Gets the description of the body for this message
    * 
    * @return the description of the body for this message
    */
   Body getBody();
+
+  /**
+   * Gets the context map for this message. Some messages may include additional context to further
+   * describe the nature of the message.
+   * 
+   * @return context map for this message
+   */
+  Map<String, String> getContext();
 }

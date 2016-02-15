@@ -27,8 +27,8 @@ import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
 import com.cleversafe.og.api.Operation;
 import com.cleversafe.og.http.Bodies;
-import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpUtil;
+import com.cleversafe.og.util.Context;
 import com.cleversafe.og.util.Pair;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -58,14 +58,14 @@ public abstract class AbstractObjectNameConsumerTest {
     this.request = mock(Request.class);
     when(this.request.getMethod()).thenReturn(method());
     when(this.request.getUri()).thenReturn(new URI("/container/" + this.object));
-    when(this.request.headers()).thenReturn(ImmutableMap.of(Headers.X_OG_OBJECT_NAME, this.object,
-        Headers.X_OG_OBJECT_SIZE, String.valueOf(1024)));
+    when(this.request.getContext()).thenReturn(ImmutableMap.of(Context.X_OG_OBJECT_NAME,
+        this.object, Context.X_OG_OBJECT_SIZE, String.valueOf(1024)));
     when(this.request.getBody()).thenReturn(Bodies.zeroes(1024));
     when(this.request.getOperation()).thenReturn(operation());
 
     this.response = mock(Response.class);
     when(this.response.getStatusCode()).thenReturn(200);
-    when(this.response.headers()).thenReturn(ImmutableMap.of(Headers.X_OG_REQUEST_ID, "1"));
+    when(this.response.getContext()).thenReturn(ImmutableMap.of(Context.X_OG_REQUEST_ID, "1"));
     when(this.response.getBody()).thenReturn(Bodies.zeroes(1024));
 
     this.operation = Pair.of(this.request, this.response);
@@ -151,7 +151,7 @@ public abstract class AbstractObjectNameConsumerTest {
 
   @Test(expected = IllegalStateException.class)
   public void noObject() {
-    when(this.request.headers()).thenReturn(ImmutableMap.<String, String>of());
+    when(this.request.getContext()).thenReturn(ImmutableMap.<String, String>of());
     this.objectNameConsumer.consume(this.operation);
   }
 }

@@ -1,0 +1,42 @@
+{
+  "host":"<dsnet accesser>",
+  "api":"soh",
+  "container":"<dsnet vault>",
+  "write":{
+    "weight":50.0
+  },
+  "read":{
+    "weight":50.0
+  },
+  "delete":{
+    "weight":0.0
+  },
+  "filesize":[
+    {
+      "weight":80,
+      "average":5,
+      "average_unit":"kilobytes"
+    },
+    {
+      "weight":20,
+      "distribution":"uniform",
+      "average":10,
+      "average_unit":"kilobytes",
+      "spread":2,
+      "spread_unit":"kilobytes"
+    }
+  ],
+  "concurrency":{
+    "type":"ops",
+    "count":10,
+    "unit":"seconds"
+  },
+  "stopping_conditions":{
+    "operations":3000000
+  },
+  "object_manager":{
+    "object_file_location":"/tmp/objects",
+    "object_file_name":"soh_objects"
+  }
+}
+

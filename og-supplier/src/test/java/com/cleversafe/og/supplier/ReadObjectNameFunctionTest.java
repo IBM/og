@@ -18,10 +18,10 @@ import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.object.ObjectManager;
 import com.cleversafe.og.object.ObjectManagerException;
 import com.cleversafe.og.object.ObjectMetadata;
+import com.cleversafe.og.util.Context;
 import com.google.common.collect.Maps;
 
 public class ReadObjectNameFunctionTest {
@@ -46,7 +46,7 @@ public class ReadObjectNameFunctionTest {
 
     final Map<String, String> context = Maps.newHashMap();
     assertThat(new ReadObjectNameFunction(this.objectManager).apply(context), is(object));
-    assertThat(context.get(Headers.X_OG_OBJECT_NAME), is(object));
+    assertThat(context.get(Context.X_OG_OBJECT_NAME), is(object));
   }
 
   @Test(expected = ObjectManagerException.class)

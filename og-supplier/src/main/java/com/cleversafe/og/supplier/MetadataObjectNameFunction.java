@@ -12,9 +12,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Map;
 
-import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.object.ObjectManager;
 import com.cleversafe.og.object.ObjectMetadata;
+import com.cleversafe.og.util.Context;
 import com.google.common.base.Function;
 
 /**
@@ -49,9 +49,9 @@ public class MetadataObjectNameFunction implements Function<Map<String, String>,
   @Override
   public String apply(final Map<String, String> context) {
     final ObjectMetadata objectMetadata = this.objectManager.get();
-    context.put(Headers.X_OG_OBJECT_NAME, objectMetadata.getName());
-    context.put(Headers.X_OG_OBJECT_SIZE, String.valueOf(objectMetadata.getSize()));
-    context.put(Headers.X_OG_CONTAINER_SUFFIX, String.valueOf(objectMetadata.getContainerSuffix()));
+    context.put(Context.X_OG_OBJECT_NAME, objectMetadata.getName());
+    context.put(Context.X_OG_OBJECT_SIZE, String.valueOf(objectMetadata.getSize()));
+    context.put(Context.X_OG_CONTAINER_SUFFIX, String.valueOf(objectMetadata.getContainerSuffix()));
 
     return objectMetadata.getName();
   }

@@ -32,6 +32,9 @@ import org.apache.http.Header;
 import org.apache.http.HeaderIterator;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
+import org.apache.http.HttpException;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -54,21 +57,25 @@ import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.protocol.HTTP;
+import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpRequestExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.cleversafe.og.api.AuthenticatedRequest;
 import com.cleversafe.og.api.Client;
 import com.cleversafe.og.api.DataType;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
 import com.cleversafe.og.client.RequestLogEntry.RequestTimestamps;
-import com.cleversafe.og.http.BasicAuth;
 import com.cleversafe.og.http.Bodies;
 import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpAuth;
 import com.cleversafe.og.http.HttpResponse;
+import com.cleversafe.og.http.NoneAuth;
 import com.cleversafe.og.http.ResponseBodyConsumer;
+import com.cleversafe.og.util.Context;
 import com.cleversafe.og.util.io.MonitoringInputStream;
 import com.cleversafe.og.util.io.Streams;
 import com.google.common.collect.ImmutableMap;
@@ -195,6 +202,19 @@ public class ApacheClient implements Client {
       builder.setUserAgent(this.userAgent);
     }
 
+    // Some authentication implementations add Content-Length or Transfer-Encoding headers as a part
+    // of their authentication algorithm; remove them here so that the default interceptors do not
+    // throw a ProtocolException
+    // @see RequestContent interceptor
+    builder.addInterceptorFirst(new HttpRequestInterceptor() {
+      @Override
+      public void process(final HttpRequest request, final HttpContext context)
+          throws HttpException, IOException {
+        request.removeHeaders(HTTP.TRANSFER_ENCODING);
+        request.removeHeaders(HTTP.CONTENT_LEN);
+      }
+    });
+
     return builder.setRequestExecutor(new HttpRequestExecutor(this.waitForContinue))
         .setConnectionManager(createConnectionManager())
         // TODO investigate ConnectionConfig, particularly bufferSize and fragmentSizeHint
@@ -268,49 +288,29 @@ public class ApacheClient implements Client {
   public ListenableFuture<Response> execute(final Request request) {
     // FIXME handle case where execute is called after shutdown
     checkNotNull(request);
-    final HttpUriRequest apacheRequest = createRequest(request);
-    final ListenableFuture<Response> baseFuture = this.executorService
-        .submit(new BlockingHttpOperation(request, apacheRequest, this.userAgent));
+
+    final BlockingHttpOperation operation = new BlockingHttpOperation(request);
+    final ListenableFuture<Response> baseFuture = this.executorService.submit(operation);
 
     return new ForwardingListenableFuture.SimpleForwardingListenableFuture<Response>(baseFuture) {
       @Override
       public boolean cancel(final boolean mayInterruptIfRunning) {
-        apacheRequest.abort();
+        operation.getApacheRequest().abort();
         return delegate().cancel(mayInterruptIfRunning);
       }
     };
   }
 
-  private HttpUriRequest createRequest(final Request request) {
+  private HttpUriRequest createRequest(final AuthenticatedRequest request) {
     final RequestBuilder builder =
         RequestBuilder.create(request.getMethod().toString()).setUri(request.getUri());
 
-    final Map<String, String> authHeaders = Maps.newHashMap();
-    final Map<String, String> headers = request.headers();
-    // FIXME remove these explicit checks; HttpAuth implementations should handle the case where a
-    // request does not match what they expect
-    if ((headers.get(Headers.X_OG_USERNAME) != null && headers.get(Headers.X_OG_PASSWORD) != null)
-        || (headers.get(Headers.X_OG_KEYSTONE_TOKEN) != null)) {
-      authHeaders.putAll(this.authentication.getAuthorizationHeaders(request));
-      for (final Entry<String, String> e : authHeaders.entrySet()) {
-        builder.addHeader(e.getKey(), e.getValue());
-      }
-    }
-
     for (final Entry<String, String> header : request.headers().entrySet()) {
-      final String key = header.getKey();
-      // Filter out OG config headers, and give precedence to auth headers since their versions are
-      // likely signed
-      if (key.startsWith("x-og") || authHeaders.containsKey(key)) {
-        continue;
-      } else {
-        builder.addHeader(key, header.getValue());
-      }
+      builder.addHeader(header.getKey(), header.getValue());
     }
 
     if (DataType.NONE != request.getBody().getDataType()) {
-      final AbstractHttpEntity entity =
-          new CustomHttpEntity(request, this.authentication, this.writeThroughput);
+      final AbstractHttpEntity entity = new CustomHttpEntity(request, this.writeThroughput);
       // TODO chunk size for chunked encoding is hardcoded to 2048 bytes. Can only be overridden
       // by implementing a custom connection factory
       entity.setChunked(this.chunkedEncoding);
@@ -379,16 +379,13 @@ public class ApacheClient implements Client {
 
   private class BlockingHttpOperation implements Callable<Response> {
     private final Request request;
-    private final HttpUriRequest apacheRequest;
-    private final String userAgent;
+    private AuthenticatedRequest authenticatedRequest;
+    private HttpUriRequest apacheRequest;
     private final RequestTimestamps timestamps;
     private final byte[] buf;
 
-    public BlockingHttpOperation(final Request request, final HttpUriRequest apacheRequest,
-        final String userAgent) {
-      this.request = request;
-      this.apacheRequest = apacheRequest;
-      this.userAgent = userAgent;
+    public BlockingHttpOperation(final Request request) {
+      this.request = checkNotNull(request);
       this.timestamps = new RequestTimestamps();
       // TODO inject buf size from config
       this.buf = new byte[4096];
@@ -398,10 +395,15 @@ public class ApacheClient implements Client {
     public Response call() {
       this.timestamps.startMillis = System.currentTimeMillis();
       this.timestamps.start = System.nanoTime();
+
+      this.authenticatedRequest =
+          ApacheClient.this.authentication.authenticate(checkNotNull(this.request));
+      this.apacheRequest = ApacheClient.this.createRequest(this.authenticatedRequest);
+
       final HttpResponse.Builder responseBuilder = new HttpResponse.Builder();
-      final String requestId = this.request.headers().get(Headers.X_OG_REQUEST_ID);
+      final String requestId = this.request.getContext().get(Context.X_OG_REQUEST_ID);
       if (requestId != null) {
-        responseBuilder.withHeader(Headers.X_OG_REQUEST_ID, requestId);
+        responseBuilder.withContext(Context.X_OG_REQUEST_ID, requestId);
       }
       final Response response;
       try {
@@ -422,8 +424,8 @@ public class ApacheClient implements Client {
 
       // do not log requests with 599 response after client shutdown (known aborted requests)
       if (ApacheClient.this.running || response.getStatusCode() != 599) {
-        final RequestLogEntry entry =
-            new RequestLogEntry(this.request, response, this.userAgent, this.timestamps);
+        final RequestLogEntry entry = new RequestLogEntry(this.request, response,
+            ApacheClient.this.userAgent, this.timestamps);
         _requestLogger.info(ApacheClient.this.gson.toJson(entry));
       }
       return response;
@@ -483,14 +485,15 @@ public class ApacheClient implements Client {
 
         // TODO clean this up, should always try to set response entity to response size;
         // will InstrumentedInputStream help with this?
-        final String consumerId = this.request.headers().get(Headers.X_OG_RESPONSE_BODY_CONSUMER);
+        final String consumerId =
+            this.request.getContext().get(Context.X_OG_RESPONSE_BODY_CONSUMER);
         final ResponseBodyConsumer consumer =
             ApacheClient.this.responseBodyConsumers.get(consumerId);
         this.timestamps.responseContentStart = System.nanoTime();
         if (consumer != null) {
           for (final Map.Entry<String, String> e : consumer
               .consume(response.getStatusLine().getStatusCode(), in).entrySet()) {
-            responseBuilder.withHeader(e.getKey(), e.getValue());
+            responseBuilder.withContext(e.getKey(), e.getValue());
           }
         } else {
           consumeBytes(responseBuilder, in);
@@ -511,6 +514,10 @@ public class ApacheClient implements Client {
       if (totalBytes > 0) {
         responseBuilder.withBody(Bodies.zeroes(totalBytes));
       }
+    }
+
+    public HttpUriRequest getApacheRequest() {
+      return this.apacheRequest;
     }
   }
 
@@ -577,7 +584,7 @@ public class ApacheClient implements Client {
       this.waitForContinue = 3000;
       this.retryCount = 0;
       this.requestSentRetry = true;
-      this.authentication = new BasicAuth();
+      this.authentication = new NoneAuth();
       this.writeThroughput = 0;
       this.readThroughput = 0;
       this.responseBodyConsumers = Maps.newHashMap();

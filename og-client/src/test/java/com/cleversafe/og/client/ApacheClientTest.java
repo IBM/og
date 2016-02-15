@@ -33,18 +33,23 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import com.cleversafe.og.api.*;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import com.cleversafe.og.api.Body;
+import com.cleversafe.og.api.Client;
+import com.cleversafe.og.api.Method;
+import com.cleversafe.og.api.Operation;
+import com.cleversafe.og.api.Request;
+import com.cleversafe.og.api.Response;
 import com.cleversafe.og.http.BasicAuth;
 import com.cleversafe.og.http.Bodies;
-import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpRequest;
 import com.cleversafe.og.http.ResponseBodyConsumer;
+import com.cleversafe.og.util.Context;
 import com.github.tomakehurst.wiremock.client.RequestPatternBuilder;
 import com.github.tomakehurst.wiremock.http.RequestMethod;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
@@ -292,8 +297,8 @@ public class ApacheClientTest {
   @UseDataProvider("provideExecute")
   public void execute(final Method method, final Body requestBody, final String requestData,
       final Body responseBody) throws InterruptedException, ExecutionException {
-    final Request request =
-        new HttpRequest.Builder(method, this.objectUri, this.operation).withBody(requestBody).build();
+    final Request request = new HttpRequest.Builder(method, this.objectUri, this.operation)
+        .withBody(requestBody).build();
     final Response response = this.client.execute(request).get();
 
     assertThat(response.getStatusCode(), is(200));
@@ -305,8 +310,8 @@ public class ApacheClientTest {
 
   @Test
   public void requestHeaders() throws InterruptedException, ExecutionException {
-    final Request request =
-        new HttpRequest.Builder(Method.PUT, this.objectUri, this.operation).withHeader("key", "value").build();
+    final Request request = new HttpRequest.Builder(Method.PUT, this.objectUri, this.operation)
+        .withHeader("key", "value").build();
     this.client.execute(request).get();
     verify(
         putRequestedFor(urlEqualTo(this.objectUri.getPath())).withHeader("key", equalTo("value")));
@@ -325,8 +330,8 @@ public class ApacheClientTest {
   public void encode(final boolean chunk, final String key, final String value, final String absent)
       throws InterruptedException, ExecutionException {
     final Client client = new ApacheClient.Builder().usingChunkedEncoding(chunk).build();
-    final Request request =
-        new HttpRequest.Builder(Method.PUT, this.objectUri, this.operation).withBody(Bodies.zeroes(2048)).build();
+    final Request request = new HttpRequest.Builder(Method.PUT, this.objectUri, this.operation)
+        .withBody(Bodies.zeroes(2048)).build();
     client.execute(request).get();
     verify(putRequestedFor(urlEqualTo(this.objectUri.getPath())).withHeader(key, equalTo(value))
         .withoutHeader(absent));
@@ -335,8 +340,8 @@ public class ApacheClientTest {
   @Test
   public void expect100Continue() throws InterruptedException, ExecutionException {
     final Client client = new ApacheClient.Builder().usingExpectContinue(true).build();
-    final Request request =
-        new HttpRequest.Builder(Method.PUT, this.objectUri, this.operation).withBody(Bodies.zeroes(2048)).build();
+    final Request request = new HttpRequest.Builder(Method.PUT, this.objectUri, this.operation)
+        .withBody(Bodies.zeroes(2048)).build();
     client.execute(request).get();
     verify(putRequestedFor(urlEqualTo(this.objectUri.getPath())).withHeader("Expect",
         equalTo("100-continue")));
@@ -345,8 +350,8 @@ public class ApacheClientTest {
   @Test
   public void noExpect100Continue() throws InterruptedException, ExecutionException {
     final Client client = new ApacheClient.Builder().usingExpectContinue(false).build();
-    final Request request =
-        new HttpRequest.Builder(Method.PUT, this.objectUri, this.operation).withBody(Bodies.zeroes(2048)).build();
+    final Request request = new HttpRequest.Builder(Method.PUT, this.objectUri, this.operation)
+        .withBody(Bodies.zeroes(2048)).build();
     client.execute(request).get();
     verify(putRequestedFor(urlEqualTo(this.objectUri.getPath())).withoutHeader("Expect"));
   }
@@ -355,7 +360,7 @@ public class ApacheClientTest {
   public void authentication() throws InterruptedException, ExecutionException {
     final Client client = new ApacheClient.Builder().withAuthentication(new BasicAuth()).build();
     final Request request = new HttpRequest.Builder(Method.GET, this.objectUri, this.operation)
-        .withHeader(Headers.X_OG_USERNAME, "test").withHeader(Headers.X_OG_PASSWORD, "test")
+        .withContext(Context.X_OG_USERNAME, "test").withContext(Context.X_OG_PASSWORD, "test")
         .build();
     client.execute(request).get();
     verify(getRequestedFor(urlEqualTo(this.objectUri.getPath())).withHeader("Authorization",
@@ -364,7 +369,8 @@ public class ApacheClientTest {
 
   @Test
   public void noAuthentication() throws InterruptedException, ExecutionException {
-    final Request request = new HttpRequest.Builder(Method.GET, this.objectUri, this.operation).build();
+    final Request request =
+        new HttpRequest.Builder(Method.GET, this.objectUri, this.operation).build();
     this.client.execute(request).get();
     verify(getRequestedFor(urlEqualTo(this.objectUri.getPath())).withoutHeader("Authorization"));
   }
@@ -372,7 +378,8 @@ public class ApacheClientTest {
   @Test
   public void userAgent() throws InterruptedException, ExecutionException {
     final Client client = new ApacheClient.Builder().withUserAgent("testUserAgent").build();
-    final Request request = new HttpRequest.Builder(Method.GET, this.objectUri, this.operation).build();
+    final Request request =
+        new HttpRequest.Builder(Method.GET, this.objectUri, this.operation).build();
     client.execute(request).get();
     verify(getRequestedFor(urlEqualTo(this.objectUri.getPath())).withHeader("User-Agent",
         equalTo("testUserAgent")));
@@ -380,7 +387,8 @@ public class ApacheClientTest {
 
   @Test
   public void noUserAgent() throws InterruptedException, ExecutionException {
-    final Request request = new HttpRequest.Builder(Method.GET, this.objectUri, this.operation).build();
+    final Request request =
+        new HttpRequest.Builder(Method.GET, this.objectUri, this.operation).build();
     this.client.execute(request).get();
     verify(getRequestedFor(urlEqualTo(this.objectUri.getPath())).withHeader("User-Agent",
         matching("Apache.*")));
@@ -389,7 +397,8 @@ public class ApacheClientTest {
   @Test
   public void soTimeoutExceeded() throws InterruptedException, ExecutionException {
     final Client client = new ApacheClient.Builder().withSoTimeout(1).build();
-    final Request request = new HttpRequest.Builder(Method.GET, this.delayUri, this.operation).build();
+    final Request request =
+        new HttpRequest.Builder(Method.GET, this.delayUri, this.operation).build();
     final Response response = client.execute(request).get();
 
     assertThat(response.getStatusCode(), is(599));
@@ -398,14 +407,15 @@ public class ApacheClientTest {
   @Test
   public void requestId() throws InterruptedException, ExecutionException {
     final Request request = new HttpRequest.Builder(Method.GET, this.objectUri, this.operation)
-        .withHeader(Headers.X_OG_REQUEST_ID, "1").build();
+        .withContext(Context.X_OG_REQUEST_ID, "1").build();
     final Response response = this.client.execute(request).get();
-    assertThat(response.headers(), hasEntry(Headers.X_OG_REQUEST_ID, "1"));
+    assertThat(response.getContext(), hasEntry(Context.X_OG_REQUEST_ID, "1"));
   }
 
   @Test
   public void immediateShutdown() throws InterruptedException, ExecutionException {
-    final Request request = new HttpRequest.Builder(Method.GET, this.delayUri, this.operation).build();
+    final Request request =
+        new HttpRequest.Builder(Method.GET, this.delayUri, this.operation).build();
     this.client.execute(request);
     final long start = System.nanoTime();
     this.client.shutdown(true).get();
@@ -416,7 +426,8 @@ public class ApacheClientTest {
 
   @Test
   public void gracefulShutdown() throws InterruptedException, ExecutionException {
-    final Request request = new HttpRequest.Builder(Method.GET, this.delayUri, this.operation).build();
+    final Request request =
+        new HttpRequest.Builder(Method.GET, this.delayUri, this.operation).build();
     this.client.execute(request);
     final long start = System.nanoTime();
     this.client.shutdown(false).get();
@@ -459,24 +470,28 @@ public class ApacheClientTest {
         {Method.POST, two, write, zeroes, content, none, true},
         {Method.POST, three, write, zeroes, content, none, true},
 
-        {Method.GET, one, read, none, "", zeroes, false}, {Method.GET, two, read, none, "", zeroes, false},
+        {Method.GET, one, read, none, "", zeroes, false},
+        {Method.GET, two, read, none, "", zeroes, false},
         {Method.GET, three, read, none, "", zeroes, false},
 
-        {Method.HEAD, one, metadata, none, "", none, false}, {Method.HEAD, two, metadata, none, "", none, false},
+        {Method.HEAD, one, metadata, none, "", none, false},
+        {Method.HEAD, two, metadata, none, "", none, false},
         {Method.HEAD, three, metadata, none, "", none, false},
 
-        {Method.DELETE, one, delete, none, "", none, false}, {Method.DELETE, two, delete, none, "", none, false},
+        {Method.DELETE, one, delete, none, "", none, false},
+        {Method.DELETE, two, delete, none, "", none, false},
         {Method.DELETE, three, delete, none, "", none, false},};
   }
 
   @Test
   @UseDataProvider("provideRedirect")
-  public void redirect(final Method method, final URI uri, final Operation operation, final Body requestBody,
-      final String requestData, final Body responseBody, final boolean chunkedEncoding)
-          throws InterruptedException, ExecutionException {
+  public void redirect(final Method method, final URI uri, final Operation operation,
+      final Body requestBody, final String requestData, final Body responseBody,
+      final boolean chunkedEncoding) throws InterruptedException, ExecutionException {
     final Client client = new ApacheClient.Builder().usingChunkedEncoding(chunkedEncoding).build();
 
-    final Request request = new HttpRequest.Builder(method, uri, operation).withBody(requestBody).build();
+    final Request request =
+        new HttpRequest.Builder(method, uri, operation).withBody(requestBody).build();
     final Response response = client.execute(request).get();
     assertThat(response.getStatusCode(), is(200));
     assertThat(response.getBody().getDataType(), is(responseBody.getDataType()));
@@ -494,8 +509,8 @@ public class ApacheClientTest {
   @Test
   public void writeThroughput() throws InterruptedException, ExecutionException {
     final Client client = new ApacheClient.Builder().withWriteThroughput(1000).build();
-    final Request request =
-        new HttpRequest.Builder(Method.PUT, this.objectUri, this.operation).withBody(Bodies.zeroes(50)).build();
+    final Request request = new HttpRequest.Builder(Method.PUT, this.objectUri, this.operation)
+        .withBody(Bodies.zeroes(50)).build();
     final long timestampStart = System.nanoTime();
     client.execute(request).get();
     final long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - timestampStart);
@@ -506,7 +521,8 @@ public class ApacheClientTest {
   @Test
   public void readThroughput() throws InterruptedException, ExecutionException {
     final Client client = new ApacheClient.Builder().withReadThroughput(20000).build();
-    final Request request = new HttpRequest.Builder(Method.GET, this.objectUri, this.operation).build();
+    final Request request =
+        new HttpRequest.Builder(Method.GET, this.objectUri, this.operation).build();
     final long timestampStart = System.nanoTime();
     client.execute(request).get();
     final long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - timestampStart);
@@ -528,7 +544,7 @@ public class ApacheClientTest {
   @Test
   public void responseBodyConsumer() throws InterruptedException, ExecutionException {
     final Request request = new HttpRequest.Builder(Method.GET, this.objectUri, this.operation)
-        .withHeader(Headers.X_OG_RESPONSE_BODY_CONSUMER, "consumer").build();
+        .withContext(Context.X_OG_RESPONSE_BODY_CONSUMER, "consumer").build();
 
     final Client client =
         new ApacheClient.Builder().withResponseBodyConsumer("consumer", new ResponseBodyConsumer() {
@@ -539,6 +555,6 @@ public class ApacheClientTest {
         }).build();
 
     final Response response = client.execute(request).get();
-    assertThat(response.headers(), hasEntry("key", "value"));
+    assertThat(response.getContext(), hasEntry("key", "value"));
   }
 }

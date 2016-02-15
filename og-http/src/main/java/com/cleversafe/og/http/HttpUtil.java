@@ -10,13 +10,10 @@ package com.cleversafe.og.http;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import com.google.common.collect.ContiguousSet;
 import com.google.common.collect.DiscreteDomain;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Range;
 
 import com.cleversafe.og.api.Method;
@@ -56,19 +53,5 @@ public class HttpUtil {
       default:
         throw new IllegalArgumentException(String.format("Unrecognized operation [%s]", operation));
     }
-  }
-
-  /**
-   * Creates a new, mutable, header map from the provided headers map with the x-og headers filtered
-   * out.
-   */
-  public static Map<String, String> filterOutOgHeaders(final Map<String, String> headers) {
-    final Map<String, String> filtered = Maps.newHashMap();
-    for (final Entry<String, String> header : headers.entrySet()) {
-      if (!header.getKey().startsWith("x-og")) {
-        filtered.put(header.getKey(), header.getValue());
-      }
-    }
-    return filtered;
   }
 }

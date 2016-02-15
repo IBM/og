@@ -1,12 +1,17 @@
 = Object Generator
-v{display-version}, April 6th, 2015
+v{display-version}, January 22nd, 2016
 :toc: right
 :sectlinks:
 :sectanchors:
 :numbered:
+:source-highlighter: highlightjs
+:icons: font
+:sampledir: ../resources/conf/sample
 
 == Introduction
-Object Generator (OG) is an HTTP object storage performance test tool.
+Object Generator (OG) is an HTTP object storage load tool designed for system
+level stress, stability and performance testing. OG supports several common
+object storage APIs including S3 and OpenStack Swift.
 
 == Installation
 
@@ -20,8 +25,8 @@ Object Generator (OG) is an HTTP object storage performance test tool.
 |Memory
 |4GB system; 2GB available
 
-|Free space
-|10GB
+|Free Disk Space
+|20GB for logging
 
 |Operating System
 |Modern Linux OS*
@@ -30,11 +35,11 @@ Object Generator (OG) is an HTTP object storage performance test tool.
 |Java 7
 |===
 
-NOTE: OG has been tested on Ubuntu 14.04, but any modern linux OS should work.
+NOTE: *OG has been tested on Ubuntu 14.04, but any modern linux OS should work.
 
 === Distribution
 OG is distributed as a _tar.gz_ archive. To install, simply unpack the archive
-in a directory of your choosing.
+in a directory of your choice.
 
 [source, bash, subs="attributes"]
 ----
@@ -42,61 +47,1098 @@ in a directory of your choosing.
 ----
 
 == Project Layout
-The OG distribution is comprised of several files and directories:
+The OG project consists of the following files and directories:
 
-[source, bash, subs="attributes"]
+[source, bash]
 ----
 ~$ tree
-├── conf
+├── conf // <1>
 │   ├── object-file-log4j2.xml
-│   ├── og-log4j2.xml
-│   └── sample
-│       ├── authentication-basic.json
-│       ├── concurrency-ops-with-rampup.json
-│       ├── concurrency-threads.json
-│       ├── filesize-distributions.json
-│       ├── host-multiple.json
-│       ├── io-mix.json
-│       ├── simple.json
-│       ├── simple-s3.json
-│       └── stopping-conditions-operations.json
+│   ├── og-log4j2.xml // <2>
+│   └── sample // <3>
 ├── docs
-│   └── userguide.html
-├── lib
-│   └── ...snip...
-├── log
-├── object
-├── object-file # <2>
-└── og # <1>
+│   └── userguide.html <4>
+├── lib // <5>
+├── log // <6>
+├── object // <7>
+├── object-file // <8>
+└── og // <9>
 ----
-<1> primary cli shell script
-<2> auxillary script for manipulating og object files
+<1> Configuration directory. Includes logging configuration and sample test configurations
+<2> OG logging configuration
+<3> Sample test configurations
+<4> This user guide
+<5> Third party library dependencies
+<6> Default log location
+<7> Default object file location
+<8> Auxiliary object file management script
+<9> Primary OG load driver script
+
+=== Invocation
+OG is a command line load tool which is controlled via the _og_ shell
+script.
+
+.OG Help
+[source, bash]
+----
+$ ./og --help
+Usage: og [<og_config>] [-v|--version] [-h|--help]
+  [<og_config>]
+        A relative or absolute path to an og json configuration file
+
+  [-v|--version]
+        Prints the og version and exits
+
+  [-h|--help]
+        Prints this help and exits
+----
+
+To run a test with OG, call the _og_ shell script with a relative or absolute
+path to a configuration file:
+
+.Basic Invocation
+[source, bash, subs="attributes"]
+----
+$ ./og conf/sample/simple-s3.json
+-------------------------------------------------------------------------------
+Object Generator ({display-version})
+-------------------------------------------------------------------------------
+Configuring...
+Configured.
+Test Running...
+Test Completed.
+-------------------------------------------------------------------------------
+Summary
+-------------------------------------------------------------------------------
+Start: 21/Jan/2016:23:20:31 -0600
+End: 21/Jan/2016:23:20:32 -0600
+Runtime: 0.29 Seconds
+Operations: 31
+
+[WRITE]
+Operations: 31
+Bytes: 310.00
+Throughput: 1.07 KB/s
+OPS: 107.27
+Status Codes:
+201: 31
+
+[READ]
+Operations: 0
+Bytes: 0.00
+Throughput: 0.00 B/s
+OPS: 0.00
+Status Codes:
+N/A
+
+[DELETE]
+Operations: 0
+Bytes: 0.00
+Throughput: 0.00 B/s
+OPS: 0.00
+Status Codes:
+N/A
+
+
+$
+----
 
 == Configuration
-OG is configured by a single json config file. See <<Configuration Reference>>
-for more details.
+OG is configured via a json formatted test configuration file. This file
+controls which object storage API, request mix, file size mix and concurrency
+to use, and more. To jump straight to complete examples, see <<Examples>>.
+Otherwise, the following sections describe OG configuration in detail.
+
+=== Storage
+OG supports the following Storage APIs:
+
+|===
+|Storage API
+
+|S3
+
+|OpenStack Swift
+
+|Cleversafe SOH
+
+|WebDAV
+|===
+
+Write, Read and Delete operations are supported for each of the supported
+Storage APIs. Storage API is configured via the _api_ key:
+
+.S3 API Example
+[source, json]
+----
+"api": "s3"
+----
+
+=== Authentication
+OG supports the following authentication configurations:
+
+|===
+|Authentication
+
+|Anonymous
+
+|Basic Auth
+
+|AWS Auth V2
+
+|AWS Auth V4
+
+|Keystone
+|===
+
+Authentication is configured via an _authentication_ block of the test
+configuration:
+
+[source, json]
+----
+"authentication": {}
+----
+
+==== Anonymous
+Anonymous authentication is the default authentication configuration. It
+is configured by omitting the _authentication_ block from the test
+configuration. It can also be explicitly configured.
+
+.None Auth Example
+[source, json]
+----
+"authentication": {
+  "type": "none"
+}
+----
+
+==== Basic Auth
+Basic authentication uses base64 encoding to encode username and password
+credentials into an authorization request header that is sent to the target
+server.
+
+.Basic Auth Example
+[source, json]
+----
+"authentication": {
+  "type": "basic",
+  "username": "my_user",
+  "password": "my_password"
+}
+----
+
+==== AWS Auth V2
+AWS Auth V2 authentication is an S3 authentication scheme which uses an access
+key and secret key for credentials. These keys are configured in OG via
+_username_ and _password_ keys, respectively.
+
+.AWS Auth V2 Example
+[source, json]
+----
+"authentication": {
+  "type": "awsv2",
+  "username": "AKIAIOSFODNN74SFNMK",
+  "password": "nJalrUUFklNEMI/K7MDENG/gPwRfiCYXY73DER"
+}
+----
+
+NOTE: The current AWS Auth V2 implementation does not support virtual host
+addressing. See <<Virtual Host>> for more details.
+
+==== AWS Auth V4
+AWS Auth V4 authentication is an S3 authentication scheme which uses an access
+key and secret key for credentials. These keys are configured in OG via
+_username_ and _password_ keys, respectively.
+
+With AWS Auth V4, the body of the request is included in the signing process.
+AWS Auth V4 requests can either sign the entire request body up front, which
+requires reading the entire contents first, or sign the body in chunks as the
+request is sent. Chunked signing is configured via the _aws_chunked_ key.
+
+NOTE: For more information about AWS V4 signing, see: http://docs.aws.amazon.com/AmazonS3/latest/dev/RESTAuthentication.html[Signing and Authenticating REST Requests]
+
+.AWS Auth V4 With Signing The Entire Request Example
+[source, json]
+----
+"authentication": {
+  "type": "awsv4",
+  "username": "AKIAIOSFODNN74SFNMK",
+  "password": "nJalrUUFklNEMI/K7MDENG/gPwRfiCYXY73DER"
+}
+----
+
+.AWS Auth V4 With Chunked Signing Example
+[source, json]
+----
+"authentication": {
+  "type": "awsv4",
+  "username": "AKIAIOSFODNN74SFNMK",
+  "password": "nJalrUUFklNEMI/K7MDENG/gPwRfiCYXY73DER",
+  "aws_chunked": true
+}
+----
+
+Because the signing process for V4 requests is CPU intensive, OG additionally
+provides an optional mechanism for caching a portion of the signature process,
+which reduces the CPU load on the load tool, which in turn reduces the risk of
+the load tool as a performance bottleneck when executing V4 performance tests.
+To enable caching, OG must be configured to write objects with all zeroes for
+data (See <<Data>>) so that the signatures are cacheable. Then, to enable the
+cache, configure the cache size via _aws_cache_size_.
+
+.AWS Auth V4 With Signature Caching
+[source, json]
+----
+"authentication": {
+  "type": "awsv4",
+  "username": "AKIAIOSFODNN74SFNMK",
+  "password": "nJalrUUFklNEMI/K7MDENG/gPwRfiCYXY73DER",
+  "aws_cache_size": 10000
+}
+----
+
+==== Keystone
+Keystone authentication is an OpenStack Swift authentication scheme which
+typically relies on an external Keystone server to generate an authentication
+token for use by object storage requests. Keystone support in OG does not
+include token lookup via an external Keystone server. Rather, OG requires a
+keystone token be manually generated prior to test start.
+
+.Keystone Example
+[source, json]
+----
+"authentication": {
+  "type": "keystone",
+  "keystone_token": "7fe2cd9ee6384a1894a43878d3e52daf"
+}
+----
+
+=== Host
+Host is the target endpoint that the OG load tool communicates with to execute
+object storage requests. A host can be either a host name or an IPv4 IP
+address. OG supports single and multiple host configurations. For multiple
+hosts, OG supports selection of a host for a given request via round robin,
+random, or weighted random configurations. Host(s) are configured via the
+_host_ key.
+
+NOTE: When testing against a Cleversafe dsNet, the _host_ key refers to
+Accesser hostnames or IP addresses.
+
+.Single Host Example
+[source, json]
+----
+"host": "s3.amazonaws.com"
+----
+
+.Multiple Host Round Robin Example
+[source, json]
+----
+"host": {
+  "selection": "roundrobin",
+  "choices": ["10.129.100.100", "s3.amazonaws.com", "loadbalancer01.example.com"]
+}
+----
+
+.Multiple Host Random Example
+[source, json]
+----
+"host": {
+  "selection": "random",
+  "choices": ["10.129.100.100", "s3.amazonaws.com"]
+}
+----
+
+.Multiple Host Weighted Random Example
+[source, json]
+----
+"host": {
+  "selection": "random",
+  "choices": [
+    {
+      "choice": "10.129.100.100",
+      "weight": 80.0
+    },
+    {
+      "choice": "s3.amazonaws.com",
+      "weight": 20.0
+    }
+  ]
+}
+----
+
+=== Port
+OG supports configuring the port that object storage requests are executed
+against. Port configuration applies to all configured hosts. Port is
+configured via the _port_ key.
+
+.Port Example
+[source, json]
+----
+"port": "8080"
+----
+
+=== Container
+Container is the logical bucket that the OG load tool will write objects into.
+OG supports single and multiple container configurations. For multiple
+containers, OG supports selection of a container for a given request via round
+robin or random configurations. With multiple containers, _prefix_,
+_min_suffix_ and _max_suffix_ keys are used to produce a range of container
+names. Container(s) are configured via the _container_ key.
+
+NOTE: When testing against a Cleversafe dsNet, the _container_ key refers to
+dsNet Vaults.
+
+.Single Container Example
+[source, json]
+----
+"container": "my_container"
+----
+
+.Multiple Container Round Robin Example
+[source, json]
+----
+"container": {
+  "selection": "roundrobin",
+  "prefix": "my_container",
+  "min_suffix": 0,
+  "max_suffix": 100
+}
+----
+
+.Multiple Container Random Example
+[source, json]
+----
+"container": {
+  "selection": "random",
+  "prefix": "my_container",
+  "min_suffix": 0,
+  "max_suffix": 100
+}
+----
+
+=== Headers
+Custom HTTP request headers can be added to every request that is executed.
+Header values can be constant or dynamic. For dynamic header value
+configuration, values can be selected via round robin, random or weighted
+random. Headers are configured via the _headers_ key.
+
+NOTE: Custom headers will be added to every request. To add custom headers
+only for a specific operation type, see <<Operation Headers>>
+
+.Headers Static Values Example
+[source, json]
+----
+"headers": {
+  "custom_key_01": "custom_value_01",
+  "custom_key_02": "custom_value_02"
+}
+----
+
+.Headers Random Dynamic Values Example
+[source, json]
+----
+"headers": {
+  "custom_key_01": {
+    "selection": "random",
+    "choices": ["custom_value_01", "custom_value_02", "custom_value_03"]
+  },
+  "custom_key_02": "custom_value_04"
+}
+----
+
+.Headers Round Robin Dynamic Values Example
+[source, json]
+----
+"headers": {
+  "custom_key_01": {
+    "selection": "roundrobin",
+    "choices": ["custom_value_01", "custom_value_02", "custom_value_03"]
+  },
+  "custom_key_02": "custom_value_04"
+}
+----
+
+.Headers Weighted Random Dynamic Values Example
+[source, json]
+----
+"headers": {
+  "custom_key_01": {
+    "selection": "random",
+    "choices": [
+      {"choice": "custom_value_01", "weight": 20.0},
+      {"choice": "custom_value_02", "weight": 75.0},
+      {"choice": "custom_value_03", "weight": 5.0}
+    ]
+  },
+  "custom_key_02": "custom_value_04"
+}
+----
+
+=== Write, Read, Delete Operations
+Write, Read and Delete operations are supported for all Object Storage APIs.
+Operation mix is configured via _write_, _read_ and _delete_ keys,
+respectively.
+
+Each operation type is configured via a configuration block. E.g. for write:
+
+[source, json]
+----
+"write": {}
+----
+
+The configuration block supports _weight_, _host_, _object_ and _header_ keys.
+
+==== Operation Weight
+The _weight_ configuration key determines what percentage of requests are of
+each operation type.
+
+.100% Write Example
+[source, json]
+----
+"write": {"weight": 100.0},
+"read": {"weight": 0.0},
+"delete": {"weight": 0.0}
+----
+
+==== Operation Host
+OG supports overriding the global host configuration for a particular operation
+type. See <<Host>> for more details.
+
+==== Operation Object
+OG supports multiple object name configurations via the _object_ key:
+
+[source, json]
+----
+"object": {}
+----
+
+By default, OG will generate a unique, uuid-like object name for every write
+request. Read and Delete requests will select a random object name from objects
+which have already been written. See <<Object Management>>.
+
+To override this behavior, the _object_ configuration block can be configured
+to include _selection_, _prefix_, _min_suffix_ and _max_suffix_ keys. Random
+and round robin selection configuration is supported. The resulting object name
+will be of the form:
+
+[source, bash]
+----
+<prefix><suffix>
+----
+
+WARNING: Using custom object name configuration bypasses object management.
+Object names written with a custom prefix and suffix will not be stored in the
+object manager, for example.
+
+CAUTION: The Cleversafe SOH Storage API does not support custom object names.
+Instead, an auto-generated name is returned to the client after the object has
+been written. Because of this, custom object name configuration should not be
+configured in OG for use with the SOH API.
+
+.Random Object Name Example
+[source, json]
+----
+"object": {
+  "selection": "random",
+  "prefix": "my_object",
+  "min_suffix": 0,
+  "max_suffix": 100
+}
+----
+
+.Round Robin Object Name Example
+[source, json]
+----
+"object": {
+  "selection": "roundrobin",
+  "prefix": "my_object",
+  "min_suffix": 0,
+  "max_suffix": 100
+}
+----
+
+==== Operation Headers
+OG supports custom headers for a particular operation type. Headers configured
+for an operation type override any custom headers which were configured
+generally. See <<Headers>> for more details.
+
+.Custom Headers For Write Requests Example
+[source, json]
+----
+"write": {
+  "headers": {
+    "custom_key_01": "custom_value_01",
+    "custom_key_02": "custom_value_02"
+  }
+}
+----
+
+=== Filesize
+OG supports one or more filesize distributions for describing object file
+sizes to be written for write requests. If multiple filesize distributions are
+configured, round robin, random and weighted random selection are supported.
+
+Each file size distribution supports _distribution_, _average_, _average_unit_,
+_spread_ and _spread_unit_ keys. *uniform* and *normal* distributions are
+supported.
+
+For *uniform* distribution, the shape of the distribution is _average_ +/-
+_spread_. For *normal* distribution the shape of the distribution is centered
+about _average_, with one standard deviation of _spread_.
+
+Both _average_unit_ and _spread_unit_ support a large number of size units.
+See <<Filesize Units>> for details. Units are case insensitive.
+
+.Single Fixed Filesize (10KB) Example
+[source, json]
+----
+"filesize": {"average": 10, "average_unit": "kb"}
+----
+
+.Single Filesize Distribution Example
+[source, json]
+----
+"filesize": {
+  "distribution": "uniform",
+  "average": 10,
+  "average_unit": "kb",
+  "spread": 2,
+  "spread_unit": "kb"
+}
+----
+
+.Multiple Filesize Distributions Round Robin Example
+[source, json]
+----
+"filesize": {
+  "selection": "roundrobin",
+  "choices": [
+    {
+      "distribution": "uniform",
+      "average": 10,
+      "average_unit": "kb",
+      "spread": 2,
+      "spread_unit": "kb"
+    },
+    {
+      "distribution": "normal",
+      "average": 100,
+      "average_unit": "mb"
+    }
+  ]
+}
+----
+
+.Multiple Filesize Distributions Weighted Random Example
+[source, json]
+----
+"filesize": {
+  "selection": "random",
+  "choices": [
+    {
+      "choice": {
+        "distribution": "uniform",
+        "average": 10,
+        "average_unit": "kb",
+        "spread": 2,
+        "spread_unit": "kb"
+      },
+      "weight": 80.0
+    },
+    {
+      "choice": {
+        "distribution": "normal",
+        "average": 100,
+        "average_unit": "mb"
+      },
+      "weight": 20.0
+    }
+  ]
+}
+----
+
+=== Data
+Data determines what type of source data is used for write requests. By
+default, OG will generate a small, fixed buffer of random data for every write
+request, which is returned repeatedly until the length of the object is
+satisfied. Optionally, data can be configured to use all zeroes for object
+content. Data is configured via the _data_ key; valid options are *random* and
+*zeroes*.
+
+.Zeroes Data Example
+[source, json]
+----
+"data": "zeroes"
+----
+
+=== Concurrency
+Concurrency configuration allows the OG tool to execute requests in parallel.
+There are two types of supported concurrency in OG, *threads* and *ops*.
+Concurrency is configured via the _concurrency_ key.
+
+[source, json]
+----
+"concurrency": {}
+----
+
+==== Threads Concurrency
+Thread testing involves configuring a fixed number of concurrent TCP
+connections, each of which will execute requests as quickly as possible. Thread
+based testing is good for measuring system capacity.
+
+Thread testing supports _count_, _rampup_ and _rampup_unit_ keys. Rampup
+allows a thread based test to build up to a steady connection rate over a
+configurable period of time.
+
+.Single Thread Example
+[source, json]
+----
+"concurrency": {
+  "type": "threads",
+  "count": 1
+}
+----
+
+.Multiple Threads Example
+[source, json]
+----
+"concurrency": {
+  "type": "threads",
+  "count": 10
+}
+----
+
+.Multiple Threads With Rampup Example
+[source, json]
+----
+"concurrency": {
+  "type": "threads",
+  "count": 10,
+  "rampup": 60,
+  "rampup_unit": "seconds"
+}
+----
+
+See <<Time Units>> for supported time units.
+
+==== Request Rate Concurrency
+Request Rate concurrency (ops) testing involves configuring a desired request
+rate at which to send requests. A variable number of TCP connections will be
+used to satisfy the configured rate. Request rate testing is good for measuring
+system latency.
+
+Request Rate testing supports _count_, _unit_, _rampup_ and _rampup_unit_
+keys. Rampup allows an ops based test to build up to a steady request rate
+over a configurable period of time.
+
+.Request Rate (100 op/s) Example
+[source, json]
+----
+"concurrency": {
+  "type": "ops",
+  "count": 100,
+  "unit": "seconds"
+}
+----
+
+.Request Rate (500 op/minute) With Rampup Example
+[source, json]
+----
+"concurrency": {
+  "type": "ops",
+  "count": 500,
+  "unit": "minutes",
+  "rampup": 60,
+  "rampup_unit": "seconds"
+}
+----
+
+See <<Time Units>> for supported time units.
+
+=== Stopping Conditions
+Stopping conditions determine when a running OG instance should stop. By
+default, OG will run indefinitely until a user stops it via a ctrl-c or
+equivalent signal. Stopping conditions are configured via the
+_stopping_conditions_ key:
+
+[source, json]
+----
+"stopping_conditions": {}
+----
+
+==== Operations
+The operations stopping condition causes OG to stop when a threshold number
+of operations has completed. Operations is configured via the _operations_
+key.
+
+.Stop after 100 Operations Example
+[source, json]
+----
+"stopping_conditions": {
+  "operations": 100
+}
+----
+
+==== Runtime
+The runtime stopping condition causes OG to stop when a threshold period of
+time has elapsed. Runtime is configured via the _runtime_ and _runtime_unit_
+keys.
+
+.Stop after 3.5 Hours Example
+[source, json]
+----
+"stopping_conditions": {
+  "runtime": 3.5,
+  "runtime_unit": "hours"
+}
+----
+
+See <<Time Units>> for supported time units.
+
+==== Status Codes
+The status codes stopping condition causes OG to stop when a threshold number
+of status codes of a given number have been received.
+
+.Stop After One Hundred "200" Status Codes Received Example
+[source, json]
+----
+"stopping_conditions": {
+  "status_codes": {
+    "200": 100
+  }
+}
+----
+
+.Stop After Any "404", "500", or "503" Status Codes Received Example
+[source, json]
+----
+"stopping_conditions": {
+  "status_codes": {
+    "404": 1,
+    "500": 1,
+    "503": 1
+  }
+}
+----
+
+NOTE: OG uses a special reserved status code *599* to indicate a failed or
+aborted request. This special status code can also be used as a status code
+stopping condition.
+
+=== Object Management
+OG tracks the state of objects written to containers. The OG object manager
+writes metadata about the objects into a set of binary files called "object
+files". Object management is configured via the _object_manager_ key. The
+location to store object files is configured via _object_file_location_ and
+_object_file_name_ keys.
+
+_object_file_location_ specifies which directory the object file(s) should be
+written to. The default location is in the *object* sub-directory of the OG
+distribution.
+
+_object_file_name_ specifies a file prefix to use when writing object files.
+Every object file that is written will contain a numeric component to the file
+name. If _object_file_name_ was configured as *my_object* and three files were
+written over the course of an OG test, the resulting object file names would be
+*my_object0.object*, *my_object1.object*, and *my_object2.object*, respectively.
+
+If _object_file_name_ is not specified, a default name of the following form is
+used:
+
+[source, bash]
+----
+<container prefix>-<api>
+----
+
+.Object Manager Example
+[source, json]
+----
+"object_manager": {
+  "object_file_location": "/var/log/og-objects",
+  "object_file_name": "my_objects"
+}
+----
+
+WARNING: Object files are not thread safe. Multiple instances of the OG tool
+should not share the same set of object files. Attempting to do so will result
+in object file corruption and/or a loss of object file metadata.
+
+=== Advanced Configuration
+OG supports several additional advanced configuration options that enable its
+use for more complex scenarios, edge case testing and defect reproduction.
+
+CAUTION: It is recommended to avoid modifying any of the below configuration
+options unless a particular advanced configuration is required for testing.
+
+==== URI Root
+OG supports configuring the root URI path at which the object storage API is
+located. URI Root is configured via the _uri_root_ key and the default value
+is to root the configured Storage API at _/<api>/_. For example, request URIs
+for S3 requests using the default _uri_root_ would take the form:
+
+[source, bash]
+----
+/s3/<container>/<object>
+----
+
+.URI Root Alternate Example
+[source, json]
+----
+"uri_root": "/"
+----
+
+==== Virtual Host
+Some Object Storage implementations support virtual host addressing, which is
+a way to express containers as virtual sub-domains. OG supports this
+configuration via the _virtual_host_ key. The default configuration is false,
+which means that object storage request URIs are of the form:
+
+[source, bash]
+----
+<host>://<uri_root>/<container>/<object>
+----
+
+With virtual host set to true, request URIs are of the form:
+
+[source, json]
+----
+<container>.<host>://<object>
+----
+
+NOTE: When virtual host is enabled, the _uri_root_ configuration is ignored.
+
+==== Shutdown Behavior
+By default, when OG shuts down it aborts all in progress requests in order to
+ensure that the tool terminates in a reasonable time. For some use cases, it is
+valuable to configure the tool to allow in progress requests to complete prior
+to termination. This option is configured via the _shutdown_immediate_ key.
+
+.Graceful Shutdown Example
+[source, json]
+----
+"shutdown_immediate": false
+----
+
+==== Client Behavior
+OG supports a large number of TCP and HTTP tuning parameters which affect
+client execution behavior. For a complete list, see <<Client Configuration>>.
+
+==== Object Management Behavior
+OG supports several configuration options for modifying object management
+behavior. These keys are for development use only and should not be modified
+for production testing. See <<Object Manager Configuration>>.
+
+==== Environment Variables
+OG exposes several environment variables which can be used to modify functional
+and performance characteristics of the tool. They include:
+
+|===
+|Environment Variable|Description
+
+|OG_MEMORY
+|Maximum JVM heap size, in megabytes. Default is 2048 (2GB)
+
+|OG_ULIMIT
+|Maximum open file handles. Default is 4096. Useful to increase if testing
+concurrency larger than 4000 threads (not recommended).
+
+|OG_TEST_PATH
+|Configure a custom test log path
+
+|OG_GC_LOG
+|Configure a custom gc log name. The gc log will be logged relative to
+OG_TEST_PATH
+|===
+
+==== Object Management Script
+OG also includes an _object-file_ shell script, which is used for reading and
+writing object files. A description of the usage of this script is outside the
+scope of this guide, and the script itself is rarely useful other than for
+development purposes.
 
 == Results
-For each OG test that is run, a timestamped test results directory is created.
-An example:
+For each OG test that is run, a test results directory is created with the
+starting timestamp of the test.
 
-[source, bash, subs="attributes"]
+[source, bash]
 ----
 ~$ tree log/
 log/
-└── 2015-06-17_23.56.32 # <1>
-    ├── gc.log # <2>
-    ├── og.json # <3>
-    ├── og.log # <4>
-    ├── request.log # <5>
-    └── summary.json # <6>
+└── 2015-06-17_23.56.32 // <1>
+    ├── gc.log // <2>
+    ├── og.json // <3>
+    ├── og.log // <4>
+    ├── request.log // <5>
+    └── summary.json // <6>
 ----
-<1> parent directory for a test run
-<2> jvm gc.log for this test
-<3> serialized og.json, including default values; useful for config auditing
-<4> applicationg logs
-<5> per-request log, including http details
-<6> summary statistics
+<1> Parent directory for the test run
+<2> JVM gc.log for this test
+<3> Serialized og.json, including default values; useful for config auditing
+<4> Application logs
+<5> Per-request log, including http details
+<6> Summary statistics
+
+=== Request Log
+The OG request.log provides detailed per-request data for every request that is
+executed during a test. Each line in request.log is a json object which
+contains details for an individual request.
+
+.Sample Line From request.log
+[source, json, subs="attributes"]
+----
+{
+  "type": "http",
+  "remote_address": "loadbalancer01.example.com",
+  "timestamp_start": "1453481170147",
+  "timestamp_finish": "1453481170197",
+  "time_start": "22/Jan/2016:10:46:10 -0600",
+  "time_finish": "22/Jan/2016:10:46:10 -0600",
+  "request_method": "PUT",
+  "request_uri": "/s3/test/8ca1dc1cd5a04bbdb10bd9b20e6516250000",
+  "object_id": "8ca1dc1cd5a04bbdb10bd9b20e6516250000",
+  "status": 200,
+  "request_length": "10",
+  "user_agent": "og-{display-version}",
+  "request_latency": "50",
+  "client_request_id": "0",
+  "stat": {
+    "request_content": 0.03,
+    "close_latency": 13.58,
+    "ttfb": 48.86,
+    "response_content": 0.24,
+    "total": 50.03
+  },
+  "object_length": "10",
+  "object_name": "8ca1dc1cd5a04bbdb10bd9b20e6516250000"
+}
+----
+
+For a complete description of all fields, see <<Request Log Fields>>.
+
+=== Summary Log
+The OG summary.json provides a high level summary of the results of a test run.
+
+.Sample summary.json
+[source, json]
+----
+{
+  "timestamp_start": 1452558285641,
+  "timestamp_finish": 1452558287184,
+  "runtime": 1.543,
+  "operations": 11,
+  "write": {
+    "operations": 11,
+    "bytes": 11000,
+    "status_codes": {
+      "200": 11
+    }
+  },
+  "read": {
+    "operations": 0,
+    "bytes": 0,
+    "status_codes": {}
+  },
+  "delete": {
+    "operations": 0,
+    "bytes": 0,
+    "status_codes": {}
+  }
+}
+----
+
+== Examples
+The following examples describe a test scenario and the resulting configuration
+needed to execute the test. Each example is fully functional, requiring minimal
+modification to run. For a detailed explanation of all available configuration
+options, see <<Configuration>>.
+
+=== Simple Capacity Test
+.Test Scenario
+Execute an *S3*, *100% write* capacity test with *10 threads*. The test should
+write *10 million objects* and all objects should be *5 megabytes* in size.
+
+.OG Configuration
+[source, json]
+----
+include::{sampledir}/simple-capacity.json[]
+----
+
+=== Simple Latency Test, Mixed Operations and Filesize
+.Test Scenario
+Execute an *SOH*, *50%/50% write/read mix* latency test with
+*10 requests per second* against a Cleversafe dsNet. The test should write
+*3 million objects* and a mix of file sizes should be used. *80%* of written
+files should be a *fixed 5KB*. *20%* of files should be a *uniform
+distribution* between *8KB and 12KB*. Object manager object files should be
+stored at */tmp/objects* with a prefix of *soh_objects*.
+
+.OG Configuration
+[source, json]
+----
+include::{sampledir}/simple-latency.json[]
+----
+
+=== AWSv2 Authentication Test
+.Test Scenario
+Execute an *S3*, *100% write* capacity test with *10 threads*. The test should
+use AWSv2 authentication with *AKIAIOSFODNN74SFNMK* for the access key and
+*nJalrUUFklNEMI/K7MDENG/gPwRfiCYXY73DER* for the secret key. The test should
+stop when *one thousand* successful *(200)* or *any* unsuccessful *(500, 503)*
+response codes have been received, whichever comes first.
+
+Object names should be written randomly with names in the range *my_object0* to
+*my_object10000*.
+
+.OG Configuration
+[source, json]
+----
+include::{sampledir}/awsv2.json[]
+----
+
+== FAQ
+
+===== Q: What does _com.google.gson.stream.MalformedJsonException_ mean?
+
+A: _MalformedJsonException_ means that the json configuration file that has
+been passed to OG has a syntax error. Common json syntax errors include missing
+or extra commas, curly braces and square braces.
+
+When a malformed configuration file is passed to OG, An error message will be
+printed to the console:
+
+[source, bash]
+----
+$ ./og conf/sample/simple-s3.json
+-------------------------------------------------------------------------------
+Object Generator (1.0.0-SNAPSHOT)
+-------------------------------------------------------------------------------
+Configuring...
+Test Error. See og.log for details
+com.google.gson.stream.MalformedJsonException: Unterminated object at line 4 column 2 path $.api
+----
+
+In the above example, the error message indicates that there is likely a
+missing comma on line 4 of the configuration file.
+
+===== Q: I see several _SocketException_ and _CancellationException_ messages in og.log, should I be concerned?
+
+A: These exceptions are typically either a result of a closed TCP connection
+or OG shutdown. If the exceptions correlate with expected shutdown of the OG
+tool then they are likely of no concern. If an exception is logged in the
+middle of a test, it may be worth investigating. Closed sockets are usually due
+to either a network problem, or an overloaded system under test.
+
+===== Q: I am attempting to run a write/read/delete mix test but it keeps stopping immediately. Why?
+
+A: When running a mixed operation test in OG, the choice of next operation is
+determined randomly based on the configured weights of each operation. If no
+previous test has been run to populate a container with objects, and a mixed
+operation test is executed, there is a chance that a read or delete operation
+request will not have any previously written object to draw from. This will
+cause a perceived "early termination" of the tool.
+
+To prevent early termination of OG, run a one hundred percent write workload to
+populate container(s) with a sufficient number of objects prior to running
+mixed operation tests.
 
 == Appendix
 
@@ -104,352 +1146,537 @@ log/
 
 ==== General Configuration
 |===
-|Parameter|Type|Default
-
-|scheme
-|Enum ("http", "https")
-|"http"
+|Parameter|Type|Required|Default
 
 |host
-|String or SelectionConfig<String>
-|None; see <<Selection Configuration>>
+|String or Complex
+|Yes
+|None
 
 |port
 |Integer
-|None
+|No
+|80
 
 |api
-|Enum ("soh", "s3", "openstack", "webdav")
-|"soh"
+|Enum ("s3", "openstack", "soh", "webdav")
+|Yes
+|None
 
 |uri_root
 |String
+|No
 |"/<api>/"
 
 |container
-|String or ContainerConfig
-|None; see <<Container Configuration>>
+|String or Complex
+|Yes
+|None
 
 |headers
 |Object
+|No
 |{}
 
 |write
-|Decimal or OperationConfig
-|100.0; see <<Operation Configuration>>
+|Complex
+|Yes
+|None
 
 |read
-|Decimal or OperationConfig
-|0.0; see <<Operation Configuration>>
+|Complex
+|Yes
+|None
 
 |delete
-|Decimal or OperationConfig
-|0.0; see <<Operation Configuration>>
+|Complex
+|Yes
+|None
 
 |filesize
-|Decimal or SelectionConfig<FilesizeConfig>
-|see <<Filesize Configuration>>
+|Complex
+|No
+|None
 
 |data
 |Enum ("random", "zeroes")
+|No
 |"random"
 
 |concurrency
-|ConcurrencyConfig
-|see <<Concurrency Configuration>>
+|Complex
+|Yes
+|None
 
 |authentication
-|AuthenticationConfig
-|see <<Authentication Configuration>>
+|Complex
+|No
+|None
 
 |client
-|ClientConfig
-|see <<Client Configuration>>
+|Complex
+|No
+|None
 
 |stopping_conditions
-|StoppingConditionsConfig
-|see <<Stopping Conditions Configuration>>
+|Complex
+|No
+|None
 
 |object_manager
-|ObjectManagerConfig
-|see <<Object Manager Configuration>>
+|Complex
+|No
+|None
 
 |shutdown_immediate
 |Boolean
+|No
 |true
 |===
 
 ==== Operation Configuration
 |===
-|Parameter|Type|Default
-
-|host_selection
-|Enum ("random", "roundrobin")
-|"roundrobin"
+|Parameter|Type|Required|Default
 
 |host
-|String or [HostConfig]
+|String or Complex
+|No
 |None
 
 |object
-|ObjectConfig
-|see <<Object Configuration>>
+|Complex
+|No
+|None
 
 |headers
 |Object
+|No
 |{}
 
 |weight
 |Decimal
-|1.0
+|No
+|0.0
 |===
 
 ==== Object Configuration
+Object keys are only required if the object block is present. The object block
+itself is optional.
 |===
-|Parameter|Type|Default
+|Parameter|Type|Required|Default
 
 |prefix
 |String
+|No
 |""
 
 |selection
 |Enum ("random", "roundrobin")
-|"random"
+|Yes
+|None
 
 |min_suffix
 |Integer
+|No
 |0
 
 |max_suffix
 |Integer
+|No
 |9223372036854775807
 |===
 
 ==== Filesize Configuration
 |===
-|Parameter|Type|Default
+|Parameter|Type|Required|Default
 
 |distribution
-|Enum ("uniform", "normal", "lognormal")
+|Enum ("uniform", "normal")
+|No
 |"uniform"
 
 |average
 |Decimal
-|5.0
+|Yes
+|None
 
 |average_unit
 |Enum (see <<Filesize Units>>)
-|"mebibytes"
+|No
+|"bytes"
 
 |spread
 |Decimal
+|No
 |0.0
 
 |spread_unit
 |Enum (see <<Filesize Units>>)
-|"mebibytes"
+|No
+|"bytes"
 
 |weight
 |Decimal
-1.0
+|No
+|1.0
 |===
 
 ==== Concurrency Configuration
 |===
-|Parameter|Type|Default
+|Parameter|Type|Required|Default
 
 |type
 |Enum ("threads", "ops")
-|"threads"
+|Yes
+|None
 
 |count
 |Decimal
-|1.0
+|Yes
+|None
 
 |unit
 |Enum (see <<Time Units>>)
+|No
 |"seconds"
 
 |rampup
 |Decimal
+|No
 |0.0
 
 |rampup_unit
 |Enum (see <<Time Units>>)
+|No
 |"seconds"
 |===
 
 ==== Authentication Configuration
+Authentication keys are only required if the authentication block is present.
+The authentication block itself is optional, and will default to anonymous
+authentication if absent.
 |===
-|Parameter|Type|Default
+|Parameter|Type|Required|Default
 
 |type
-|Enum ("basic", "awsv2", "awsv4")
-|"basic"
+|Enum ("basic", "awsv2", "awsv4", "keystone")
+|Yes
+|None
 
 |username
 |String
+|Yes
 |None
 
 |password
 |String
+|Yes
 |None
+
+|aws_chunked
+|Boolean
+|No
+|false; S3 only
+
+|aws_cache_size
+|Integer
+|No
+|0; disabled. S3 only
 |===
 
 ==== Client Configuration
 |===
-|Parameter|Type|Default
+|Parameter|Type|Required|Default
 
 |connect_timeout
 |Integer
+|No
 |0
 
 |so_timeout
 |Integer
+|No
 |0
 
 |so_reuse_address
 |Boolean
+|No
 |false
 
 |so_linger
 |Integer
+|No
 |-1
 
 |so_keep_alive
 |Boolean
+|No
 |true
 
 |tcp_no_delay
 |Boolean
+|No
 |true
 
 |so_snd_buf
 |Integer
+|No
 |0; "platform default"
 
 |so_rcv_buf
 |Integer
+|No
 |0; "platform default"
 
 |persistent_connections
 |Boolean
+|No
 |true
 
 |validate_after_inactivity
 |Integer
+|No
 |10000; in milliseconds
 
 |max_idle_time
 |Integer
+|No
 |60000; in milliseconds
 
 |chunked_encoding
 |Boolean
+|No
 |false
 
 |expect_continue
 |Boolean
+|No
 |false
 
 |wait_for_continue
 |Integer
+|No
 |3000
 
 |retry_count
 |Integer
+|No
 |0
 
 |request_sent_retry
 |Boolean
+|No
 |true
 
 |write_throughput
 |Integer
+|No
 |0
 
 |read_throughput
 |Integer
+|No
 |0
 |===
 
 ==== Stopping Conditions Configuration
 |===
-|Parameter|Type|Default
+|Parameter|Type|Required|Default
 
 |operations
 |Integer
-|0
+|No
+|None
 
 |runtime
 |Decimal
-|0.0
+|No
+|None
 
 |runtime_unit
 |Enum (see <<Time Units>>)
+|No
 |"seconds"
 
 |concurrent_requests
 |Integer
+|No
 |2000
 
 |status_codes
 |Object
+|No
 |{}
 |===
 
 ==== Object Manager Configuration
 |===
-|Parameter|Type|Default
+|Parameter|Type|Required|Default
 
 |object_file_location
 |String
+|No
 |"./object"
 
 |object_file_name
 |String
+|No
 |"<container>-<api>"
 
 |object_file_max_size
 |Integer; in bytes
+|No
 |100000000 // 100mb
 
 |object_file_persist_frequency
 |Integer; in seconds
+|No
 |1800 // 30 minutes
 
 |object_file_index
 |Integer
+|No
 |None; advanced option
 |===
 
-==== Selection Configuration
+=== Request Log Fields
 |===
-|Parameter|Type|Default
+|Field|Type|Required|Notes
 
-|selection
-|Enum ("random", "roundrobin")
-|"random"
+|type
+|String
+|Yes
+|Always "http"
 
-|choices
-|List<ChoiceConfig>; see <<Choice Configuration>>
-|[]
-|===
+|remote_address
+|String
+|Yes
+|Hostname or IP address
 
-==== Choice Configuration
-|===
-|Parameter|Type|Default
+|user
+|String
+|No
+|Only available if authentication is configured
 
-|choice
-|T
-|None
+|timestamp_start
+|Integer
+|Yes
+|Unix time, in milliseconds
 
-|weight
+|timestamp_finish
+|Integer
+|Yes
+|Unix time, in milliseconds
+
+|time_start
+|String
+|Yes
+|Format is: "dd/MMM/yyyy:HH:mm:ss Z"
+
+|time_finish
+|String
+|Yes
+|Format is: "dd/MMM/yyyy:HH:mm:ss Z"
+
+|request_method
+|Enum ("PUT", "GET", "HEAD", "DELETE")
+|Yes
+|
+
+|request_uri
+|String
+|Yes
+|
+
+|object_id
+|String
+|Yes
+|Object name used for the request. For SOH write requests, the returned object
+name
+
+|status
+|Integer
+|Yes
+|HTTP status code, or *599* for failed requests
+
+|request_length
+|Integer
+|No
+|Only available for write requests
+
+|response_length
+|Integer
+|No
+|Only available for read requests
+
+|user_agent
+|String
+|No
+|
+
+|request_latency
+|Integer
+|Yes
+|timestamp_finish - timestamp_start, in milliseconds
+
+|client_request_id
+|String
+|Yes
+|unique auto-generated id for every request
+
+|request_id
+|String
+|No
+|Cleversafe unique request id. Only available when testing against a
+Cleversafe dsNet
+
+|stat
+|Object
+|Yes
+|
+
+|stat.request_content
 |Decimal
-|1.0
+|No
+|Time to send request content, in milliseconds. Only available for write
+requests
+
+|stat.close_latency
+|Decimal
+|No
+|Time to complete request after request content has been sent, in milliseconds.
+Only available for write requests
+
+|stat.ttfb
+|Decimal
+|No
+|Time between the beginning of a request and the first byte received of the
+response content, in milliseconds. Only available for read requests
+
+|stat.response_content
+|Decimal
+|No
+|Time to receive response content, in milliseconds. Only available for read
+requests
+
+|stat.total
+|Decimal
+|Yes
+|Total duration
+
+|object_length
+|Integer
+|No
+|Equivalent to _request_length_
+
+|object_name
+|String
+|Yes
+|Equivalent to _object_id_
 |===
 
 === Filesize Units
+All units are case insensitive.
 |===
 |Input|Unit
 
@@ -488,6 +1715,7 @@ log/
 |===
 
 === Time Units
+All units are case insensitive.
 |===
 |Input|Unit
 

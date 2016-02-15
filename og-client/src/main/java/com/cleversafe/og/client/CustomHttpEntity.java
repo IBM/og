@@ -17,8 +17,7 @@ import java.io.OutputStream;
 
 import org.apache.http.entity.AbstractHttpEntity;
 
-import com.cleversafe.og.api.Request;
-import com.cleversafe.og.http.HttpAuth;
+import com.cleversafe.og.api.AuthenticatedRequest;
 import com.cleversafe.og.util.io.Streams;
 import com.google.common.io.ByteStreams;
 
@@ -28,15 +27,13 @@ import com.google.common.io.ByteStreams;
  * @since 1.0
  */
 public class CustomHttpEntity extends AbstractHttpEntity {
-  private final Request request;
-  private final HttpAuth auth;
+  private final AuthenticatedRequest request;
   private final long writeThroughput;
   private long requestContentStart;
   private long requestContentFinish;
 
-  public CustomHttpEntity(final Request request, HttpAuth auth, final long writeThroughput) {
+  public CustomHttpEntity(final AuthenticatedRequest request, final long writeThroughput) {
     this.request = checkNotNull(request);
-    this.auth = checkNotNull(auth);
     checkArgument(this.writeThroughput >= 0, "writeThroughput must be >= 0 [%s]",
         this.writeThroughput);
     this.writeThroughput = writeThroughput;
@@ -49,14 +46,18 @@ public class CustomHttpEntity extends AbstractHttpEntity {
 
   @Override
   public long getContentLength() {
-    return this.auth.getContentLength(request);
+    return this.request.getContentLength();
   }
 
   @Override
+  // FIXME getContent is supposed to return a new instance of InputStream if isRepeatable is true -
+  // is it safe to simply reset the stream?
   public InputStream getContent() throws IOException, IllegalStateException {
     this.requestContentStart = 0;
     this.requestContentFinish = 0;
-    return auth.wrapStream(this.request, Streams.create(this.request.getBody()));
+    final InputStream content = this.request.getContent();
+    content.reset();
+    return content;
   }
 
   @Override

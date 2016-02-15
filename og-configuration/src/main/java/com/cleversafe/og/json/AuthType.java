@@ -9,5 +9,5 @@
 package com.cleversafe.og.json;
 
 public enum AuthType {
-  BASIC, AWSV2, AWSV4, KEYSTONE;
+  NONE, BASIC, AWSV2, AWSV4, KEYSTONE;
 }

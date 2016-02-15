@@ -27,6 +27,7 @@ public class HttpResponse implements Response {
   private final int statusCode;
   private final Map<String, String> responseHeaders;
   private final Body body;
+  private final Map<String, String> context;
 
   private HttpResponse(final Builder builder) {
     this.statusCode = builder.statusCode;
@@ -34,7 +35,7 @@ public class HttpResponse implements Response {
         "statusCode must be a valid status code [%s]", this.statusCode);
     this.responseHeaders = ImmutableMap.copyOf(builder.responseHeaders);
     this.body = checkNotNull(builder.body);
-
+    this.context = ImmutableMap.copyOf(builder.context);
   }
 
   @Override
@@ -53,14 +54,15 @@ public class HttpResponse implements Response {
   }
 
   @Override
-  public long getMessageTime() {
-    throw new UnsupportedOperationException();
+  public Map<String, String> getContext() {
+    return this.context;
   }
 
   @Override
   public String toString() {
-    return String.format("HttpResponse [%n" + "statusCode=%s,%n" + "headers=%s%n" + "body=%s%n]",
-        this.statusCode, this.responseHeaders, this.body);
+    return String.format(
+        "HttpResponse [%n" + "statusCode=%s,%n" + "headers=%s%n" + "body=%s%n" + "context=%s%n]",
+        this.statusCode, this.responseHeaders, this.body, this.context);
   }
 
   /**
@@ -70,6 +72,7 @@ public class HttpResponse implements Response {
     private int statusCode;
     private final Map<String, String> responseHeaders;
     private Body body;
+    private final Map<String, String> context;
 
     /**
      * Constructs a builder
@@ -77,6 +80,7 @@ public class HttpResponse implements Response {
     public Builder() {
       this.responseHeaders = Maps.newLinkedHashMap();
       this.body = Bodies.none();
+      this.context = Maps.newHashMap();
     }
 
     public Builder withStatusCode(final int statusCode) {
@@ -104,6 +108,18 @@ public class HttpResponse implements Response {
      */
     public Builder withBody(final Body body) {
       this.body = body;
+      return this;
+    }
+
+    /**
+     * Configures a context key to include with this response
+     * 
+     * @param key a context key
+     * @param value a context value
+     * @return this builder
+     */
+    public Builder withContext(final String key, final String value) {
+      this.context.put(key, value);
       return this;
     }
 

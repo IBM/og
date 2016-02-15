@@ -1,8 +1,0 @@
-{
-"host": "127.0.0.1",
-"container": "myContainer",
-"filesize": [
-{"choice": {"average": 10.0, "average_unit": "kb", "spread": 0.0, "spread_unit": "kb"}, "weight": 2.0},
-{"choice": {"average": 5.0, "average_unit": "mb", "spread": 0.0, "spread_unit": "kb"}, "weight": 10.0}
-]
-}

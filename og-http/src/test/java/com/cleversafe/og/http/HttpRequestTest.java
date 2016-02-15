@@ -15,14 +15,15 @@ import static org.hamcrest.Matchers.not;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 
-import com.cleversafe.og.api.Operation;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.DataType;
 import com.cleversafe.og.api.Method;
+import com.cleversafe.og.api.Operation;
 
 public class HttpRequestTest {
   private Method method;
@@ -47,11 +48,14 @@ public class HttpRequestTest {
   }
 
   @Test(expected = NullPointerException.class)
-  public void nullOperation() { new HttpRequest.Builder(this.method, this.uri, null).build(); }
+  public void nullOperation() {
+    new HttpRequest.Builder(this.method, this.uri, null).build();
+  }
 
   @Test(expected = NullPointerException.class)
   public void nullKey() {
-    new HttpRequest.Builder(this.method, this.uri, this.operation).withHeader(null, "value").build();
+    new HttpRequest.Builder(this.method, this.uri, this.operation).withHeader(null, "value")
+        .build();
   }
 
   @Test(expected = NullPointerException.class)
@@ -66,7 +70,8 @@ public class HttpRequestTest {
 
   @Test
   public void method() {
-    final Method method = new HttpRequest.Builder(Method.HEAD, this.uri, this.operation).build().getMethod();
+    final Method method =
+        new HttpRequest.Builder(Method.HEAD, this.uri, this.operation).build().getMethod();
     assertThat(method, is(Method.HEAD));
   }
 
@@ -78,22 +83,148 @@ public class HttpRequestTest {
 
   @Test
   public void opeartion() {
-    final Operation operation = new HttpRequest.Builder(this.method, this.uri, this.operation).build().getOperation();
+    final Operation operation =
+        new HttpRequest.Builder(this.method, this.uri, this.operation).build().getOperation();
     assertThat(operation, is(this.operation));
   }
 
   @Test
+  public void noQueryParameters() {
+    final HttpRequest request =
+        new HttpRequest.Builder(this.method, this.uri, Operation.WRITE).build();
+    assertThat(request.getQueryParameters().size(), is(0));
+  }
+
+  @Test
+  public void oneQueryParameter() {
+    final HttpRequest request = new HttpRequest.Builder(this.method, this.uri, Operation.WRITE)
+        .withQueryParameter("key", "value").build();
+    assertThat(request.getQueryParameters().size(), is(1));
+    final List<String> values = request.getQueryParameters().get("key");
+    assertThat(values.size(), is(1));
+    assertThat(values.get(0), is("value"));
+  }
+
+  @Test(expected = NullPointerException.class)
+  public void oneQueryParameterNullKey() {
+    new HttpRequest.Builder(this.method, this.uri, Operation.WRITE).withQueryParameter(null,
+        "value");
+  }
+
+  @Test
+  public void oneQueryParameterNullValue() {
+    final HttpRequest request = new HttpRequest.Builder(this.method, this.uri, Operation.WRITE)
+        .withQueryParameter("key", null).build();
+    assertThat(request.getQueryParameters().size(), is(1));
+    final List<String> values = request.getQueryParameters().get("key");
+    assertThat(values.size(), is(1));
+    assertThat(values.get(0), is((String) null));
+  }
+
+  @Test
+  public void oneQueryParameterMultipleValues() {
+    final HttpRequest request = new HttpRequest.Builder(this.method, this.uri, Operation.WRITE)
+        .withQueryParameter("key", "one").withQueryParameter("key", "two").build();
+    assertThat(request.getQueryParameters().size(), is(1));
+    final List<String> values = request.getQueryParameters().get("key");
+    assertThat(values.size(), is(2));
+    assertThat(values.get(0), is("one"));
+    assertThat(values.get(1), is("two"));
+  }
+
+  @Test
+  public void multipleQueryParameters() {
+    final HttpRequest.Builder b = new HttpRequest.Builder(this.method, this.uri, Operation.WRITE);
+    for (int i = 0; i < 10; i++) {
+      // (10 - i) exposes sorted vs insertion order
+      b.withQueryParameter("key" + (10 - i), "value");
+    }
+    final HttpRequest request = b.build();
+    assertThat(request.getQueryParameters().size(), is(10));
+
+    for (int i = 0; i < 10; i++) {
+      final List<String> values = request.getQueryParameters().get("key" + (10 - i));
+      assertThat(values.size(), is(1));
+      assertThat(values.get(0), is("value"));
+    }
+  }
+
+  @Test
+  public void queryParametersModification() {
+    final HttpRequest.Builder b = new HttpRequest.Builder(this.method, this.uri, Operation.WRITE)
+        .withQueryParameter("key1", "value1");
+    final HttpRequest request = b.build();
+    b.withQueryParameter("key2", "value2");
+    assertThat(request.getQueryParameters().size(), is(1));
+    final List<String> values = request.getQueryParameters().get("key1");
+    assertThat(values.size(), is(1));
+    assertThat(values.get(0), is("value1"));
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void queryParameterRemove() {
+    new HttpRequest.Builder(this.method, this.uri, Operation.WRITE)
+        .withQueryParameter("key", "value").build().getQueryParameters().remove("key");
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void queryParameterRemoveValue() {
+    new HttpRequest.Builder(this.method, this.uri, Operation.WRITE)
+        .withQueryParameter("key", "value").build().getQueryParameters().get("key").remove(0);
+  }
+
+  @Test
+  public void noContext() {
+    final HttpRequest request =
+        new HttpRequest.Builder(this.method, this.uri, Operation.WRITE).build();
+    assertThat(request.getContext().size(), is(0));
+  }
+
+  @Test
+  public void oneContext() {
+    final HttpRequest request = new HttpRequest.Builder(this.method, this.uri, Operation.WRITE)
+        .withContext("key", "value").build();
+    assertThat(request.getContext().size(), is(1));
+    assertThat(request.getContext(), hasEntry("key", "value"));
+  }
+
+  @Test
+  public void multipleContext() {
+    final HttpRequest request = new HttpRequest.Builder(this.method, this.uri, Operation.WRITE)
+        .withContext("key1", "value1").withContext("key2", "value2").build();
+    assertThat(request.getContext().size(), is(2));
+    assertThat(request.getContext(), hasEntry("key1", "value1"));
+    assertThat(request.getContext(), hasEntry("key2", "value2"));
+  }
+
+  @Test
+  public void contextModification() {
+    final HttpRequest.Builder b = new HttpRequest.Builder(this.method, this.uri, Operation.WRITE)
+        .withContext("key1", "value1");
+    final HttpRequest request = b.build();
+    b.withContext("key2", "value2");
+    assertThat(request.getContext(), hasEntry("key1", "value1"));
+    assertThat(request.getContext(), not(hasEntry("key2", "value2")));
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void contextRemove() {
+    new HttpRequest.Builder(this.method, this.uri, Operation.WRITE).withContext("key", "value")
+        .build().getContext().remove("key");
+  }
+
+  @Test
   public void noHeaders() {
-    final HttpRequest request = new HttpRequest.Builder(this.method, this.uri, this.operation).build();
-    // auto-generated Date header
-    assertThat(request.headers().size(), is(1));
+    final HttpRequest request =
+        new HttpRequest.Builder(this.method, this.uri, this.operation).build();
+    assertThat(request.headers().size(), is(0));
   }
 
   @Test
   public void oneHeader() {
-    final HttpRequest request =
-        new HttpRequest.Builder(this.method, this.uri, this.operation).withHeader("key", "value").build();
-    assertThat(request.headers().size(), is(2));
+    final HttpRequest request = new HttpRequest.Builder(this.method, this.uri, this.operation)
+        .withHeader("key", "value").build();
+    assertThat(request.headers().size(), is(1));
     assertThat(request.headers(), hasEntry("key", "value"));
   }
 
@@ -105,7 +236,7 @@ public class HttpRequestTest {
       b.withHeader("key" + (10 - i), "value");
     }
     final HttpRequest request = b.build();
-    assertThat(request.headers().size(), is(11));
+    assertThat(request.headers().size(), is(10));
 
     for (int i = 0; i < 10; i++) {
       assertThat(request.headers(), hasEntry("key" + (10 - i), "value"));
@@ -124,21 +255,22 @@ public class HttpRequestTest {
 
   @Test(expected = UnsupportedOperationException.class)
   public void headerRemove() {
-    new HttpRequest.Builder(this.method, this.uri, this.operation).withHeader("key", "value").build().headers()
-        .remove("key");
+    new HttpRequest.Builder(this.method, this.uri, this.operation).withHeader("key", "value")
+        .build().headers().remove("key");
   }
 
   @Test
   public void defaultBody() {
-    final Body body = new HttpRequest.Builder(this.method, this.uri, this.operation).build().getBody();
+    final Body body =
+        new HttpRequest.Builder(this.method, this.uri, this.operation).build().getBody();
     assertThat(body.getDataType(), is(DataType.NONE));
     assertThat(body.getSize(), is(0L));
   }
 
   @Test
   public void body() {
-    final Body body = new HttpRequest.Builder(this.method, this.uri, this.operation).withBody(Bodies.zeroes(12345))
-        .build().getBody();
+    final Body body = new HttpRequest.Builder(this.method, this.uri, this.operation)
+        .withBody(Bodies.zeroes(12345)).build().getBody();
     assertThat(body.getDataType(), is(DataType.ZEROES));
     assertThat(body.getSize(), is(12345L));
   }

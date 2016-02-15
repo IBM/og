@@ -20,3 +20,5 @@ target
 og-configuration/log/*
 og-configuration/object/*
 
+# OSX
+.DS_Store

@@ -30,6 +30,14 @@ public class Streams {
     public int read() {
       return -1;
     }
+
+    @Override
+    public boolean markSupported() {
+      return true;
+    }
+
+    @Override
+    public void reset() {}
   };
 
   private Streams() {}
@@ -57,7 +65,7 @@ public class Streams {
     return ByteStreams.limit(new InfiniteInputStream(buf), size);
   }
 
-  private static byte[] createRandomBuffer(long seed) {
+  private static byte[] createRandomBuffer(final long seed) {
     final byte[] buf = new byte[REPEAT_LENGTH];
     new Random(seed).nextBytes(buf);
     return buf;

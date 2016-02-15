@@ -26,10 +26,38 @@ import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.Client;
 import com.cleversafe.og.api.DataType;
 import com.cleversafe.og.api.Method;
+import com.cleversafe.og.api.Operation;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.client.ApacheClient;
-import com.cleversafe.og.guice.annotation.*;
-import com.cleversafe.og.http.*;
+import com.cleversafe.og.guice.annotation.DeleteHeaders;
+import com.cleversafe.og.guice.annotation.DeleteHost;
+import com.cleversafe.og.guice.annotation.DeleteObjectName;
+import com.cleversafe.og.guice.annotation.ListHeaders;
+import com.cleversafe.og.guice.annotation.ListHost;
+import com.cleversafe.og.guice.annotation.ListObjectName;
+import com.cleversafe.og.guice.annotation.ListQueryParameters;
+import com.cleversafe.og.guice.annotation.MetadataHeaders;
+import com.cleversafe.og.guice.annotation.MetadataHost;
+import com.cleversafe.og.guice.annotation.MetadataObjectName;
+import com.cleversafe.og.guice.annotation.OverwriteHeaders;
+import com.cleversafe.og.guice.annotation.OverwriteHost;
+import com.cleversafe.og.guice.annotation.OverwriteObjectName;
+import com.cleversafe.og.guice.annotation.ReadHeaders;
+import com.cleversafe.og.guice.annotation.ReadHost;
+import com.cleversafe.og.guice.annotation.ReadObjectName;
+import com.cleversafe.og.guice.annotation.WriteHeaders;
+import com.cleversafe.og.guice.annotation.WriteHost;
+import com.cleversafe.og.guice.annotation.WriteObjectName;
+import com.cleversafe.og.http.Api;
+import com.cleversafe.og.http.BasicAuth;
+import com.cleversafe.og.http.Bodies;
+import com.cleversafe.og.http.Headers;
+import com.cleversafe.og.http.HttpAuth;
+import com.cleversafe.og.http.HttpUtil;
+import com.cleversafe.og.http.NoneAuth;
+import com.cleversafe.og.http.QueryParameters;
+import com.cleversafe.og.http.ResponseBodyConsumer;
+import com.cleversafe.og.http.Scheme;
 import com.cleversafe.og.json.AuthType;
 import com.cleversafe.og.json.ChoiceConfig;
 import com.cleversafe.og.json.ClientConfig;
@@ -45,11 +73,16 @@ import com.cleversafe.og.json.OperationConfig;
 import com.cleversafe.og.json.SelectionConfig;
 import com.cleversafe.og.json.SelectionType;
 import com.cleversafe.og.json.StoppingConditionsConfig;
-import com.cleversafe.og.object.*;
+import com.cleversafe.og.object.AbstractObjectNameConsumer;
+import com.cleversafe.og.object.MetadataObjectNameConsumer;
+import com.cleversafe.og.object.ObjectManager;
+import com.cleversafe.og.object.OverwriteObjectNameConsumer;
+import com.cleversafe.og.object.RandomObjectPopulator;
+import com.cleversafe.og.object.ReadObjectNameConsumer;
+import com.cleversafe.og.object.WriteObjectNameConsumer;
 import com.cleversafe.og.openstack.KeystoneAuth;
-import com.cleversafe.og.s3.v2.AWSAuthV2;
-import com.cleversafe.og.s3.v4.AWSAuthV4;
-import com.cleversafe.og.s3.v4.AWSAuthV4Chunked;
+import com.cleversafe.og.s3.v2.AWSV2Auth;
+import com.cleversafe.og.s3.v4.AWSV4Auth;
 import com.cleversafe.og.scheduling.ConcurrentRequestScheduler;
 import com.cleversafe.og.scheduling.RequestRateScheduler;
 import com.cleversafe.og.scheduling.Scheduler;
@@ -57,12 +90,12 @@ import com.cleversafe.og.soh.SOHWriteResponseBodyConsumer;
 import com.cleversafe.og.statistic.Counter;
 import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.supplier.DeleteObjectNameFunction;
+import com.cleversafe.og.supplier.MetadataObjectNameFunction;
 import com.cleversafe.og.supplier.RandomSupplier;
 import com.cleversafe.og.supplier.ReadObjectNameFunction;
 import com.cleversafe.og.supplier.RequestSupplier;
 import com.cleversafe.og.supplier.Suppliers;
 import com.cleversafe.og.supplier.UUIDObjectNameFunction;
-import com.cleversafe.og.supplier.MetadataObjectNameFunction;
 import com.cleversafe.og.test.LoadTest;
 import com.cleversafe.og.test.LoadTestSubscriberExceptionHandler;
 import com.cleversafe.og.test.RequestManager;
@@ -72,20 +105,20 @@ import com.cleversafe.og.test.condition.CounterCondition;
 import com.cleversafe.og.test.condition.RuntimeCondition;
 import com.cleversafe.og.test.condition.StatusCodeCondition;
 import com.cleversafe.og.test.condition.TestCondition;
+import com.cleversafe.og.util.Context;
 import com.cleversafe.og.util.Distribution;
 import com.cleversafe.og.util.Distributions;
-import com.cleversafe.og.api.Operation;
 import com.cleversafe.og.util.SizeUnit;
 import com.cleversafe.og.util.Version;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -94,7 +127,6 @@ import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Names;
 import com.google.inject.spi.ProvisionListener;
 import com.google.inject.util.Providers;
-import sun.security.pkcs11.wrapper.Functions;
 
 /**
  * A guice configuration module for wiring up all OG test components
@@ -138,16 +170,13 @@ public class OGModule extends AbstractModule {
     bindConstant().annotatedWith(Names.named("list.weight")).to(this.config.list.weight);
     bindConstant().annotatedWith(Names.named("virtualhost")).to(this.config.virtualHost);
     bind(AuthType.class).toInstance(this.config.authentication.type);
-    bind(DataType.class).annotatedWith(Names.named("dataType"))
-        .toProvider(Providers.of(this.config.data));
+    bind(DataType.class).toInstance(this.config.data);
     bind(String.class).annotatedWith(Names.named("authentication.username"))
         .toProvider(Providers.of(this.config.authentication.username));
     bind(String.class).annotatedWith(Names.named("authentication.password"))
         .toProvider(Providers.of(this.config.authentication.password));
     bind(String.class).annotatedWith(Names.named("authentication.keystoneToken"))
         .toProvider(Providers.of(this.config.authentication.keystoneToken));
-    bindConstant().annotatedWith(Names.named("authentication.awsChunkSize"))
-        .to(this.config.authentication.awsChunkSize);
     bindConstant().annotatedWith(Names.named("authentication.awsChunked"))
         .to(this.config.authentication.awsChunked);
     bindConstant().annotatedWith(Names.named("authentication.awsCacheSize"))
@@ -164,12 +193,12 @@ public class OGModule extends AbstractModule {
     bindConstant().annotatedWith(Names.named("shutdownImmediate"))
         .to(this.config.shutdownImmediate);
 
-    // FIXME add NONE auth type
     final MapBinder<AuthType, HttpAuth> httpAuthBinder =
         MapBinder.newMapBinder(binder(), AuthType.class, HttpAuth.class);
-    httpAuthBinder.addBinding(AuthType.AWSV2).to(AWSAuthV2.class);
-    httpAuthBinder.addBinding(AuthType.AWSV4).toProvider(AWSAuthProvider.class);
+    httpAuthBinder.addBinding(AuthType.NONE).to(NoneAuth.class);
     httpAuthBinder.addBinding(AuthType.BASIC).to(BasicAuth.class);
+    httpAuthBinder.addBinding(AuthType.AWSV2).to(AWSV2Auth.class);
+    httpAuthBinder.addBinding(AuthType.AWSV4).to(AWSV4Auth.class);
     httpAuthBinder.addBinding(AuthType.KEYSTONE).to(KeystoneAuth.class);
 
     final MapBinder<String, ResponseBodyConsumer> responseBodyConsumers =
@@ -198,42 +227,6 @@ public class OGModule extends AbstractModule {
         }
       }
     });
-  }
-
-  private static class AWSAuthProvider implements Provider<HttpAuth> {
-
-    private final boolean chunked;
-    private final String regionName;
-    private final String serviceName;
-    private final int chunkSize;
-    private final int cacheSize;
-
-    @Inject
-    public AWSAuthProvider(@Named("authentication.awsChunked") final boolean chunked,
-        @Named("authentication.awsChunkSize") final int chunkSize,
-        @Named("authentication.awsCacheSize") final int cacheSize,
-        @Named("dataType") final DataType dataType) {
-      checkArgument(chunkSize >= 8000, "AWS Chunk Size less than 8000 not supported.");
-      checkArgument(cacheSize > 0 ? dataType.equals(DataType.ZEROES) : true,
-          "nonzero aws_cache_size is not supported with random data");
-      this.chunked = chunked;
-      this.chunkSize = chunkSize;
-      this.cacheSize = cacheSize;
-
-      // Hard code these values since they don't matter much when testing with a dsnet.
-      this.regionName = "us-east-1";
-      this.serviceName = "s3";
-    }
-
-    @Override
-    public HttpAuth get() {
-      if (this.chunked) {
-        return new AWSAuthV4Chunked(this.regionName, this.serviceName, this.chunkSize,
-            this.cacheSize);
-      } else {
-        return new AWSAuthV4(this.regionName, this.serviceName, this.cacheSize);
-      }
-    }
   }
 
   @Provides
@@ -449,7 +442,7 @@ public class OGModule extends AbstractModule {
 
       @Override
       public String apply(final Map<String, String> input) {
-        String suffix = input.get(Headers.X_OG_CONTAINER_SUFFIX);
+        String suffix = input.get(Context.X_OG_CONTAINER_SUFFIX);
         if (suffix != null) {
           if (Integer.parseInt(suffix) == -1) {
             return container;
@@ -459,10 +452,10 @@ public class OGModule extends AbstractModule {
         } else {
           if (suffixes != null) {
             suffix = suffixes.get().toString();
-            input.put(Headers.X_OG_CONTAINER_SUFFIX, suffix);
+            input.put(Context.X_OG_CONTAINER_SUFFIX, suffix);
             return container.concat(suffix);
           } else {
-            input.put(Headers.X_OG_CONTAINER_SUFFIX, "-1");
+            input.put(Context.X_OG_CONTAINER_SUFFIX, "-1");
             return container;
           }
         }
@@ -557,8 +550,8 @@ public class OGModule extends AbstractModule {
       @Override
       public String apply(final Map<String, String> context) {
         final String objectName = prefix + suffixes.get();
-        context.put(Headers.X_OG_OBJECT_NAME, objectName);
-        context.put(Headers.X_OG_SEQUENTIAL_OBJECT_NAME, "true");
+        context.put(Context.X_OG_OBJECT_NAME, objectName);
+        context.put(Context.X_OG_SEQUENTIAL_OBJECT_NAME, "true");
 
         return objectName;
       }
@@ -632,15 +625,16 @@ public class OGModule extends AbstractModule {
   @Provides
   @Singleton
   @ListHeaders
-  public Map<String, Supplier<String>> provideListHeaders(Api api,
+  public Map<String, Supplier<String>> provideListHeaders(final Api api,
       @ListObjectName final Function<Map<String, String>, String> object) {
-    Map<String, Supplier<String>> headers = provideHeaders(this.config.list.headers);
+    final Map<String, Supplier<String>> headers = provideHeaders(this.config.list.headers);
 
-    if(api == Api.SOH) {
+    if (api == Api.SOH) {
       final Map<String, String> emptyContext = Maps.newHashMap();
       headers.put(Headers.X_OPERATION, Suppliers.of("list"));
       headers.put(Headers.X_START_ID, new Supplier<String>() {
-        @Override public String get() {
+        @Override
+        public String get() {
           return object.apply(emptyContext);
         }
       });
@@ -685,21 +679,23 @@ public class OGModule extends AbstractModule {
   @Provides
   @Singleton
   @ListQueryParameters
-  public Map<String, Supplier<String>> provideListQueryParameters(Api api,
+  public Map<String, Supplier<String>> provideListQueryParameters(final Api api,
       @ListObjectName final Function<Map<String, String>, String> object) {
-    Map<String, Supplier<String>> queryParameters = Maps.newHashMap();
+    final Map<String, Supplier<String>> queryParameters = Maps.newHashMap();
 
-    if(api == Api.S3) {
+    if (api == Api.S3) {
       final Map<String, String> emptyContext = Maps.newHashMap();
       queryParameters.put(QueryParameters.S3_MARKER, new Supplier<String>() {
-        @Override public String get() {
+        @Override
+        public String get() {
           return object.apply(emptyContext);
         }
       });
     } else if (api == Api.OPENSTACK) {
       final Map<String, String> emptyContext = Maps.newHashMap();
       queryParameters.put(QueryParameters.OPENSTACK_MARKER, new Supplier<String>() {
-        @Override public String get() {
+        @Override
+        public String get() {
           return object.apply(emptyContext);
         }
       });
@@ -852,8 +848,8 @@ public class OGModule extends AbstractModule {
   public Client provideClient(final AuthType authType, final Map<AuthType, HttpAuth> authentication,
       final Map<String, ResponseBodyConsumer> responseBodyConsumers) {
     final ClientConfig clientConfig = this.config.client;
-    Preconditions.checkArgument(authentication.get(authType) instanceof AWSAuthV4Chunked
-        ? !clientConfig.chunkedEncoding : true,
+    Preconditions.checkArgument(
+        authentication.get(authType) instanceof AWSV4Auth ? !clientConfig.chunkedEncoding : true,
         "http layer chunked encoding is not supported with Chunked AWSV4");
     final ApacheClient.Builder b = new ApacheClient.Builder()
         .withConnectTimeout(clientConfig.connectTimeout).withSoTimeout(clientConfig.soTimeout)
@@ -892,14 +888,17 @@ public class OGModule extends AbstractModule {
       @Named("authentication.password") final String password,
       @Named("authentication.keystoneToken") final String keystoneToken,
       @Named("virtualhost") final boolean virtualHost) {
+
+    final Map<String, String> context = Maps.newHashMap();
     // SOH needs to use a special response consumer to extract the returned object id
+    // FIXME create appropriate context providers
     if (Api.SOH == api) {
-      headers.put(Headers.X_OG_RESPONSE_BODY_CONSUMER, Suppliers.of(SOH_PUT_OBJECT));
+      context.put(Context.X_OG_RESPONSE_BODY_CONSUMER, SOH_PUT_OBJECT);
     }
 
     return createRequestSupplier(id, Method.PUT, scheme, host, port, uriRoot, container, object,
-        Collections.<String, Supplier<String>>emptyMap(), headers, body, username, password,
-        keystoneToken, virtualHost, Operation.WRITE);
+        Collections.<String, Supplier<String>>emptyMap(), headers, context, body, username,
+        password, keystoneToken, virtualHost, Operation.WRITE);
   }
 
   @Provides
@@ -916,8 +915,9 @@ public class OGModule extends AbstractModule {
       @Named("authentication.keystoneToken") final String keystoneToken,
       @Named("virtualhost") final boolean virtualHost) {
     return createRequestSupplier(id, Method.GET, scheme, host, port, uriRoot, container, object,
-        Collections.<String, Supplier<String>>emptyMap(), headers, Suppliers.of(Bodies.none()),
-        username, password, keystoneToken, virtualHost, Operation.READ);
+        Collections.<String, Supplier<String>>emptyMap(), headers,
+        ImmutableMap.<String, String>of(), Suppliers.of(Bodies.none()), username, password,
+        keystoneToken, virtualHost, Operation.READ);
   }
 
   @Provides
@@ -934,16 +934,17 @@ public class OGModule extends AbstractModule {
       @Named("authentication.keystoneToken") final String keystoneToken,
       @Named("virtualhost") final boolean virtualHost) {
     return createRequestSupplier(id, Method.DELETE, scheme, host, port, uriRoot, container, object,
-        Collections.<String, Supplier<String>>emptyMap(), headers, Suppliers.of(Bodies.none()),
-        username, password, keystoneToken, virtualHost, Operation.DELETE);
+        Collections.<String, Supplier<String>>emptyMap(), headers,
+        ImmutableMap.<String, String>of(), Suppliers.of(Bodies.none()), username, password,
+        keystoneToken, virtualHost, Operation.DELETE);
   }
 
   @Provides
   @Singleton
   @Named("metadata")
   public Supplier<Request> provideMetadata(@Named("request.id") final Supplier<String> id,
-      final Scheme scheme, @MetadataHost final Supplier<String> host, @Named("port") final Integer port,
-      @Named("uri.root") final String uriRoot,
+      final Scheme scheme, @MetadataHost final Supplier<String> host,
+      @Named("port") final Integer port, @Named("uri.root") final String uriRoot,
       @Named("container") final Function<Map<String, String>, String> container,
       @MetadataObjectName final Function<Map<String, String>, String> object,
       @MetadataHeaders final Map<String, Supplier<String>> headers,
@@ -952,8 +953,9 @@ public class OGModule extends AbstractModule {
       @Named("authentication.keystoneToken") final String keystoneToken,
       @Named("virtualhost") final boolean virtualHost) {
     return createRequestSupplier(id, Method.HEAD, scheme, host, port, uriRoot, container, object,
-        Collections.<String, Supplier<String>>emptyMap(), headers, Suppliers.of(Bodies.none()),
-        username, password, keystoneToken, virtualHost, Operation.METADATA);
+        Collections.<String, Supplier<String>>emptyMap(), headers,
+        ImmutableMap.<String, String>of(), Suppliers.of(Bodies.none()), username, password,
+        keystoneToken, virtualHost, Operation.METADATA);
   }
 
   @Provides
@@ -976,8 +978,9 @@ public class OGModule extends AbstractModule {
     }
 
     return createRequestSupplier(id, Method.PUT, scheme, host, port, uriRoot, container, object,
-        Collections.<String, Supplier<String>>emptyMap(), headers, body, username, password,
-        keystoneToken, virtualHost, Operation.OVERWRITE);
+        Collections.<String, Supplier<String>>emptyMap(), headers,
+        ImmutableMap.<String, String>of(), body, username, password, keystoneToken, virtualHost,
+        Operation.OVERWRITE);
   }
 
   @Provides
@@ -996,8 +999,8 @@ public class OGModule extends AbstractModule {
       @Named("virtualhost") final boolean virtualHost) throws Exception {
 
     return createRequestSupplier(id, Method.GET, scheme, host, port, uriRoot, container, object,
-        queryParameters, headers, body, username, password, keystoneToken,
-        virtualHost, Operation.LIST);
+        queryParameters, headers, ImmutableMap.<String, String>of(), body, username, password,
+        keystoneToken, virtualHost, Operation.LIST);
   }
 
   private Supplier<Request> createRequestSupplier(@Named("request.id") final Supplier<String> id,
@@ -1005,11 +1008,12 @@ public class OGModule extends AbstractModule {
       final String uriRoot, final Function<Map<String, String>, String> container,
       final Function<Map<String, String>, String> object,
       final Map<String, Supplier<String>> queryParameters,
-      final Map<String, Supplier<String>> headers, final Supplier<Body> body, final String username,
-      final String password, final String keystoneToken, final boolean virtualHost, Operation operation) {
+      final Map<String, Supplier<String>> headers, final Map<String, String> context,
+      final Supplier<Body> body, final String username, final String password,
+      final String keystoneToken, final boolean virtualHost, final Operation operation) {
 
     return new RequestSupplier(id, method, scheme, host, port, uriRoot, container, object,
-        queryParameters, false, headers, username, password, keystoneToken,
-        body, virtualHost, operation);
+        queryParameters, false, headers, context, username, password, keystoneToken, body,
+        virtualHost, operation);
   }
 }

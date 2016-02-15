@@ -240,6 +240,11 @@
         <version>3.3.2</version>
         <scope>runtime</scope>
       </dependency>
+      <dependency>
+        <groupId>com.amazonaws</groupId>
+        <artifactId>aws-java-sdk</artifactId>
+        <version>1.10.50</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
   <dependencies>
@@ -383,7 +388,10 @@
         <plugin>
           <groupId>org.asciidoctor</groupId>
           <artifactId>asciidoctor-maven-plugin</artifactId>
-          <version>1.5.2</version>
+          <version>1.5.3</version>
+          <configuration>
+            <sourceHighlighter>highlightjs</sourceHighlighter>
+          </configuration>
         </plugin>
       </plugins>
     </pluginManagement>

@@ -11,7 +11,7 @@ package com.cleversafe.og.supplier;
 import java.util.Map;
 import java.util.UUID;
 
-import com.cleversafe.og.http.Headers;
+import com.cleversafe.og.util.Context;
 import com.google.common.base.Function;
 
 /**
@@ -34,7 +34,7 @@ public class UUIDObjectNameFunction implements Function<Map<String, String>, Str
   @Override
   public String apply(final Map<String, String> context) {
     final String objectName = UUID.randomUUID().toString().replace("-", "") + "0000";
-    context.put(Headers.X_OG_OBJECT_NAME, objectName);
+    context.put(Context.X_OG_OBJECT_NAME, objectName);
 
     return objectName;
   }

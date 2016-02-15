@@ -13,17 +13,18 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.cleversafe.og.api.Operation;
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.Method;
+import com.cleversafe.og.api.Operation;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.http.Bodies;
 import com.cleversafe.og.http.Scheme;
 import com.google.common.base.Function;
 import com.google.common.base.Supplier;
+import com.google.common.collect.Maps;
 
 public class RequestSupplierTest {
 
@@ -257,6 +258,7 @@ public class RequestSupplierTest {
     final Map<String, Supplier<String>> headers = new HashMap<String, Supplier<String>>();
 
     return new RequestSupplier(id, method, scheme, host, port, uriRoot, container, object,
-        queryParameters, trailingSlash, headers, username, password, null, body, virtualHost, operation);
+        queryParameters, trailingSlash, headers, Maps.<String, String>newHashMap(), username,
+        password, null, body, virtualHost, operation);
   }
 }
