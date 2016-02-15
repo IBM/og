@@ -76,6 +76,17 @@
             <help>Split the output of a --write, --filter, or --split call into one or more object files. object file name prefix is determined by --output</help>
         </switch>
         <flaggedOption>
+            <id>split-size</id>
+            <longFlag>split-size</longFlag>
+            <stringParser>
+            <classname>IntegerStringParser</classname>
+            </stringParser>
+            <defaults>
+                <string>-1</string>
+            </defaults>
+            <help>Maximum file size to use when using the --split option --split-size</help>
+        </flaggedOption>
+        <flaggedOption>
             <id>output</id>
             <shortFlag>o</shortFlag>
             <longFlag>output</longFlag>

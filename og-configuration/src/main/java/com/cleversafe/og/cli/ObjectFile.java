@@ -68,6 +68,7 @@ public class ObjectFile {
     final boolean filter = cli.flags().getBoolean("filter");
     final boolean upgrade = cli.flags().getBoolean("upgrade");
     final boolean split = cli.flags().getBoolean("split");
+    final int splitSize = cli.flags().getInt("split-size");
     final String output = cli.flags().getString("output");
     final long minFilesize = cli.flags().getLong("min-filesize");
     final long maxFilesize = cli.flags().getLong("max-filesize");
@@ -79,16 +80,16 @@ public class ObjectFile {
       final OutputStream out;
 
       if (write) {
-        out = getOutputStream(split, output);
+        out = getOutputStream(split, splitSize, output);
         write(in, out);
       } else if (read) {
         out = getOutputStream(output);
         read(in, out);
       } else if (filter) {
-        out = getOutputStream(split, output);
+        out = getOutputStream(split, splitSize, output);
         filter(in, out, minFilesize, maxFilesize, minContainerSuffix, maxContainerSuffix);
       } else if (upgrade) {
-        out = getOutputStream(split, output);
+        out = getOutputStream(split, splitSize, output);
         upgrade(in, out);
       } else {
         out = getOutputStream(output);
@@ -111,11 +112,15 @@ public class ObjectFile {
     return new BufferedInputStream(in);
   }
 
-  public static OutputStream getOutputStream(final boolean split, final String output)
-      throws FileNotFoundException {
+  public static OutputStream getOutputStream(final boolean split, final int splitSize,
+      final String output) throws FileNotFoundException {
     if (split) {
-      return new ObjectFileOutputStream(output, RandomObjectPopulator.MAX_OBJECT_ARG,
-          RandomObjectPopulator.SUFFIX);
+      int maxObjects;
+      if (splitSize > 0)
+        maxObjects = splitSize/RandomObjectPopulator.OBJECT_SIZE;
+      else
+        maxObjects = RandomObjectPopulator.MAX_OBJECT_ARG;
+      return new ObjectFileOutputStream(output, maxObjects, RandomObjectPopulator.SUFFIX);
     } else {
       return new BufferedOutputStream(getOutputStream(output));
     }
