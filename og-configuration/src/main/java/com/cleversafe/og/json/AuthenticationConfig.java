@@ -17,7 +17,7 @@ public class AuthenticationConfig {
   public int awsCacheSize;
 
   public AuthenticationConfig() {
-    this.type = AuthType.BASIC;
+    this.type = AuthType.NONE;
     this.username = null;
     this.password = null;
     this.keystoneToken = null;
