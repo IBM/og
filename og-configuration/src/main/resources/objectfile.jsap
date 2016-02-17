@@ -84,7 +84,7 @@
             <defaults>
                 <string>-1</string>
             </defaults>
-            <help>Maximum file size to use when using the --split option --split-size</help>
+            <help>Maximum file size to use when using the --split option with --split-size</help>
         </flaggedOption>
         <flaggedOption>
             <id>output</id>
