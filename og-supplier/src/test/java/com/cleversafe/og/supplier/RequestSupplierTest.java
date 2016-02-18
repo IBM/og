@@ -257,8 +257,8 @@ public class RequestSupplierTest {
     final Supplier<Body> body = Suppliers.of(bod);
     final Map<String, Supplier<String>> headers = new HashMap<String, Supplier<String>>();
 
-    return new RequestSupplier(id, method, scheme, host, port, uriRoot, container, object,
+    return new RequestSupplier(operation, id, method, scheme, host, port, uriRoot, container, object,
         queryParameters, trailingSlash, headers, Maps.<String, String>newHashMap(), username,
-        password, null, body, virtualHost, operation);
+        password, null, body, virtualHost);
   }
 }

@@ -82,7 +82,7 @@ public class HttpRequestTest {
   }
 
   @Test
-  public void opeartion() {
+  public void operation() {
     final Operation operation =
         new HttpRequest.Builder(this.method, this.uri, this.operation).build().getOperation();
     assertThat(operation, is(this.operation));

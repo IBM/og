@@ -164,8 +164,9 @@ OG supports the following Storage APIs:
 |WebDAV
 |===
 
-Write, Read and Delete operations are supported for each of the supported
-Storage APIs. Storage API is configured via the _api_ key:
+Write, Read, Metadata, and Delete operations are supported for each of the supported
+Storage APIs. In addition, Overwrite is supported for S3 and OpenStack Swift.
+Storage API is configured via the _api_ key:
 
 .S3 API Example
 [source, json]
@@ -473,9 +474,10 @@ only for a specific operation type, see <<Operation Headers>>
 }
 ----
 
-=== Write, Read, Delete Operations
-Write, Read and Delete operations are supported for all Object Storage APIs.
-Operation mix is configured via _write_, _read_ and _delete_ keys,
+=== Write, Overwrite, Read, Metadata, Delete, List Operations
+Write, Read, Metadata, Delete, and List operations are supported for all Object Storage APIs.
+Overwrite is supported for S3 and OpenStack Swift
+Operation mix is configured via _write_, _overwrite_, _read_, _metadata_, _delete_, and _list_ keys,
 respectively.
 
 Each operation type is configured via a configuration block. E.g. for write:
@@ -512,8 +514,10 @@ OG supports multiple object name configurations via the _object_ key:
 ----
 
 By default, OG will generate a unique, uuid-like object name for every write
-request. Read and Delete requests will select a random object name from objects
-which have already been written. See <<Object Management>>.
+request. Overwrite, Read, Metadata, and Delete requests will select a random object name from
+objects which have already been written. List will use a random object name as its starting
+point and then provide the default number of entries for the associated API.
+See <<Object Management>>.
 
 To override this behavior, the _object_ configuration block can be configured
 to include _selection_, _prefix_, _min_suffix_ and _max_suffix_ keys. Random
@@ -674,6 +678,9 @@ content. Data is configured via the _data_ key; valid options are *random* and
 Concurrency configuration allows the OG tool to execute requests in parallel.
 There are two types of supported concurrency in OG, *threads* and *ops*.
 Concurrency is configured via the _concurrency_ key.
+
+List operations are very resource intensive and excessive concurrency may result
+in 503 errors.
 
 [source, json]
 ----
@@ -986,6 +993,7 @@ contains details for an individual request.
 [source, json, subs="attributes"]
 ----
 {
+  "operation": "WRITE",
   "type": "http",
   "remote_address": "loadbalancer01.example.com",
   "timestamp_start": "1453481170147",
@@ -1542,6 +1550,11 @@ authentication if absent.
 === Request Log Fields
 |===
 |Field|Type|Required|Notes
+
+|operation
+|String
+|Yes
+|Write, Overwrite, Read, Metadata, Delete, List
 
 |type
 |String

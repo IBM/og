@@ -163,10 +163,10 @@ public class OGModule extends AbstractModule {
       }
     });
     bindConstant().annotatedWith(Names.named("write.weight")).to(this.config.write.weight);
-    bindConstant().annotatedWith(Names.named("read.weight")).to(this.config.read.weight);
-    bindConstant().annotatedWith(Names.named("delete.weight")).to(this.config.delete.weight);
-    bindConstant().annotatedWith(Names.named("metadata.weight")).to(this.config.metadata.weight);
     bindConstant().annotatedWith(Names.named("overwrite.weight")).to(this.config.overwrite.weight);
+    bindConstant().annotatedWith(Names.named("read.weight")).to(this.config.read.weight);
+    bindConstant().annotatedWith(Names.named("metadata.weight")).to(this.config.metadata.weight);
+    bindConstant().annotatedWith(Names.named("delete.weight")).to(this.config.delete.weight);
     bindConstant().annotatedWith(Names.named("list.weight")).to(this.config.list.weight);
     bindConstant().annotatedWith(Names.named("virtualhost")).to(this.config.virtualHost);
     bind(AuthType.class).toInstance(this.config.authentication.type);
@@ -310,16 +310,16 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @ReadHost
-  public Supplier<String> provideReadHost(@Named("host") final Supplier<String> host) {
-    return provideHost(this.config.read, host);
+  @OverwriteHost
+  public Supplier<String> provideOverwriteHost(@Named("host") final Supplier<String> host) {
+    return provideHost(this.config.overwrite, host);
   }
 
   @Provides
   @Singleton
-  @DeleteHost
-  public Supplier<String> provideDeleteHost(@Named("host") final Supplier<String> host) {
-    return provideHost(this.config.delete, host);
+  @ReadHost
+  public Supplier<String> provideReadHost(@Named("host") final Supplier<String> host) {
+    return provideHost(this.config.read, host);
   }
 
   @Provides
@@ -331,9 +331,9 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @OverwriteHost
-  public Supplier<String> provideOverwriteHost(@Named("host") final Supplier<String> host) {
-    return provideHost(this.config.overwrite, host);
+  @DeleteHost
+  public Supplier<String> provideDeleteHost(@Named("host") final Supplier<String> host) {
+    return provideHost(this.config.delete, host);
   }
 
   @Provides
@@ -480,6 +480,19 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
+  @OverwriteObjectName
+  public Function<Map<String, String>, String> provideOverwriteObjectName(
+      final ObjectManager objectManager) {
+    final OperationConfig operationConfig = checkNotNull(this.config.overwrite);
+    if (operationConfig.object.selection != null) {
+      return provideObject(operationConfig);
+    }
+    // Delete the object so we know no other threads will be using it
+    return new DeleteObjectNameFunction(objectManager);
+  }
+
+  @Provides
+  @Singleton
   @ReadObjectName
   public Function<Map<String, String>, String> provideReadObjectName(
       final ObjectManager objectManager) {
@@ -488,18 +501,6 @@ public class OGModule extends AbstractModule {
       return provideObject(operationConfig);
     }
     return new ReadObjectNameFunction(objectManager);
-  }
-
-  @Provides
-  @Singleton
-  @DeleteObjectName
-  public Function<Map<String, String>, String> provideDeleteObjectName(
-      final ObjectManager objectManager) {
-    final OperationConfig operationConfig = checkNotNull(this.config.delete);
-    if (operationConfig.object.selection != null) {
-      return provideObject(operationConfig);
-    }
-    return new DeleteObjectNameFunction(objectManager);
   }
 
   @Provides
@@ -516,14 +517,13 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @OverwriteObjectName
-  public Function<Map<String, String>, String> provideOverwriteObjectName(
+  @DeleteObjectName
+  public Function<Map<String, String>, String> provideDeleteObjectName(
       final ObjectManager objectManager) {
-    final OperationConfig operationConfig = checkNotNull(this.config.overwrite);
+    final OperationConfig operationConfig = checkNotNull(this.config.delete);
     if (operationConfig.object.selection != null) {
       return provideObject(operationConfig);
     }
-    // Delete the object so we know no other threads will be using it
     return new DeleteObjectNameFunction(objectManager);
   }
 
@@ -596,16 +596,16 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @ReadHeaders
-  public Map<String, Supplier<String>> provideReadHeaders() {
-    return provideHeaders(this.config.read.headers);
+  @OverwriteHeaders
+  public Map<String, Supplier<String>> provideOverwriteHeaders() {
+    return provideHeaders(this.config.overwrite.headers);
   }
 
   @Provides
   @Singleton
-  @DeleteHeaders
-  public Map<String, Supplier<String>> provideDeleteHeaders() {
-    return provideHeaders(this.config.delete.headers);
+  @ReadHeaders
+  public Map<String, Supplier<String>> provideReadHeaders() {
+    return provideHeaders(this.config.read.headers);
   }
 
   @Provides
@@ -617,9 +617,9 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @OverwriteHeaders
-  public Map<String, Supplier<String>> provideOverwriteHeaders() {
-    return provideHeaders(this.config.overwrite.headers);
+  @DeleteHeaders
+  public Map<String, Supplier<String>> provideDeleteHeaders() {
+    return provideHeaders(this.config.delete.headers);
   }
 
   @Provides
@@ -896,66 +896,9 @@ public class OGModule extends AbstractModule {
       context.put(Context.X_OG_RESPONSE_BODY_CONSUMER, SOH_PUT_OBJECT);
     }
 
-    return createRequestSupplier(id, Method.PUT, scheme, host, port, uriRoot, container, object,
-        Collections.<String, Supplier<String>>emptyMap(), headers, context, body, username,
-        password, keystoneToken, virtualHost, Operation.WRITE);
-  }
-
-  @Provides
-  @Singleton
-  @Named("read")
-  public Supplier<Request> provideRead(@Named("request.id") final Supplier<String> id,
-      final Scheme scheme, @ReadHost final Supplier<String> host, @Named("port") final Integer port,
-      @Named("uri.root") final String uriRoot,
-      @Named("container") final Function<Map<String, String>, String> container,
-      @ReadObjectName final Function<Map<String, String>, String> object,
-      @ReadHeaders final Map<String, Supplier<String>> headers,
-      @Named("authentication.username") final String username,
-      @Named("authentication.password") final String password,
-      @Named("authentication.keystoneToken") final String keystoneToken,
-      @Named("virtualhost") final boolean virtualHost) {
-    return createRequestSupplier(id, Method.GET, scheme, host, port, uriRoot, container, object,
-        Collections.<String, Supplier<String>>emptyMap(), headers,
-        ImmutableMap.<String, String>of(), Suppliers.of(Bodies.none()), username, password,
-        keystoneToken, virtualHost, Operation.READ);
-  }
-
-  @Provides
-  @Singleton
-  @Named("delete")
-  public Supplier<Request> provideDelete(@Named("request.id") final Supplier<String> id,
-      final Scheme scheme, @DeleteHost final Supplier<String> host,
-      @Named("port") final Integer port, @Named("uri.root") final String uriRoot,
-      @Named("container") final Function<Map<String, String>, String> container,
-      @DeleteObjectName final Function<Map<String, String>, String> object,
-      @DeleteHeaders final Map<String, Supplier<String>> headers,
-      @Named("authentication.username") final String username,
-      @Named("authentication.password") final String password,
-      @Named("authentication.keystoneToken") final String keystoneToken,
-      @Named("virtualhost") final boolean virtualHost) {
-    return createRequestSupplier(id, Method.DELETE, scheme, host, port, uriRoot, container, object,
-        Collections.<String, Supplier<String>>emptyMap(), headers,
-        ImmutableMap.<String, String>of(), Suppliers.of(Bodies.none()), username, password,
-        keystoneToken, virtualHost, Operation.DELETE);
-  }
-
-  @Provides
-  @Singleton
-  @Named("metadata")
-  public Supplier<Request> provideMetadata(@Named("request.id") final Supplier<String> id,
-      final Scheme scheme, @MetadataHost final Supplier<String> host,
-      @Named("port") final Integer port, @Named("uri.root") final String uriRoot,
-      @Named("container") final Function<Map<String, String>, String> container,
-      @MetadataObjectName final Function<Map<String, String>, String> object,
-      @MetadataHeaders final Map<String, Supplier<String>> headers,
-      @Named("authentication.username") final String username,
-      @Named("authentication.password") final String password,
-      @Named("authentication.keystoneToken") final String keystoneToken,
-      @Named("virtualhost") final boolean virtualHost) {
-    return createRequestSupplier(id, Method.HEAD, scheme, host, port, uriRoot, container, object,
-        Collections.<String, Supplier<String>>emptyMap(), headers,
-        ImmutableMap.<String, String>of(), Suppliers.of(Bodies.none()), username, password,
-        keystoneToken, virtualHost, Operation.METADATA);
+    return createRequestSupplier(Operation.WRITE, id, Method.PUT, scheme, host, port, uriRoot,
+        container, object, Collections.<String, Supplier<String>>emptyMap(), headers, context, body,
+        username, password, keystoneToken, virtualHost);
   }
 
   @Provides
@@ -977,10 +920,67 @@ public class OGModule extends AbstractModule {
       throw new Exception("Overwrites are not compatible with SOH");
     }
 
-    return createRequestSupplier(id, Method.PUT, scheme, host, port, uriRoot, container, object,
-        Collections.<String, Supplier<String>>emptyMap(), headers,
-        ImmutableMap.<String, String>of(), body, username, password, keystoneToken, virtualHost,
-        Operation.OVERWRITE);
+    return createRequestSupplier(Operation.OVERWRITE, id, Method.PUT, scheme, host, port, uriRoot,
+        container, object, Collections.<String, Supplier<String>>emptyMap(), headers,
+        ImmutableMap.<String, String>of(), body, username, password, keystoneToken, virtualHost
+        );
+  }
+
+  @Provides
+  @Singleton
+  @Named("read")
+  public Supplier<Request> provideRead(@Named("request.id") final Supplier<String> id,
+      final Scheme scheme, @ReadHost final Supplier<String> host, @Named("port") final Integer port,
+      @Named("uri.root") final String uriRoot,
+      @Named("container") final Function<Map<String, String>, String> container,
+      @ReadObjectName final Function<Map<String, String>, String> object,
+      @ReadHeaders final Map<String, Supplier<String>> headers,
+      @Named("authentication.username") final String username,
+      @Named("authentication.password") final String password,
+      @Named("authentication.keystoneToken") final String keystoneToken,
+      @Named("virtualhost") final boolean virtualHost) {
+    return createRequestSupplier(Operation.READ, id, Method.GET, scheme, host, port, uriRoot,
+        container, object, Collections.<String, Supplier<String>>emptyMap(), headers,
+        ImmutableMap.<String, String>of(), Suppliers.of(Bodies.none()), username, password,
+        keystoneToken, virtualHost);
+  }
+
+  @Provides
+  @Singleton
+  @Named("metadata")
+  public Supplier<Request> provideMetadata(@Named("request.id") final Supplier<String> id,
+      final Scheme scheme, @MetadataHost final Supplier<String> host,
+      @Named("port") final Integer port, @Named("uri.root") final String uriRoot,
+      @Named("container") final Function<Map<String, String>, String> container,
+      @MetadataObjectName final Function<Map<String, String>, String> object,
+      @MetadataHeaders final Map<String, Supplier<String>> headers,
+      @Named("authentication.username") final String username,
+      @Named("authentication.password") final String password,
+      @Named("authentication.keystoneToken") final String keystoneToken,
+      @Named("virtualhost") final boolean virtualHost) {
+    return createRequestSupplier(Operation.METADATA, id, Method.HEAD, scheme, host, port, uriRoot,
+        container, object, Collections.<String, Supplier<String>>emptyMap(), headers,
+        ImmutableMap.<String, String>of(), Suppliers.of(Bodies.none()), username, password,
+        keystoneToken, virtualHost);
+  }
+
+  @Provides
+  @Singleton
+  @Named("delete")
+  public Supplier<Request> provideDelete(@Named("request.id") final Supplier<String> id,
+      final Scheme scheme, @DeleteHost final Supplier<String> host,
+      @Named("port") final Integer port, @Named("uri.root") final String uriRoot,
+      @Named("container") final Function<Map<String, String>, String> container,
+      @DeleteObjectName final Function<Map<String, String>, String> object,
+      @DeleteHeaders final Map<String, Supplier<String>> headers,
+      @Named("authentication.username") final String username,
+      @Named("authentication.password") final String password,
+      @Named("authentication.keystoneToken") final String keystoneToken,
+      @Named("virtualhost") final boolean virtualHost) {
+    return createRequestSupplier(Operation.DELETE, id, Method.DELETE, scheme, host, port, uriRoot,
+        container, object, Collections.<String, Supplier<String>>emptyMap(), headers,
+        ImmutableMap.<String, String>of(), Suppliers.of(Bodies.none()), username, password,
+        keystoneToken, virtualHost);
   }
 
   @Provides
@@ -998,22 +998,23 @@ public class OGModule extends AbstractModule {
       @Named("authentication.keystoneToken") final String keystoneToken,
       @Named("virtualhost") final boolean virtualHost) throws Exception {
 
-    return createRequestSupplier(id, Method.GET, scheme, host, port, uriRoot, container, object,
-        queryParameters, headers, ImmutableMap.<String, String>of(), body, username, password,
-        keystoneToken, virtualHost, Operation.LIST);
+    return createRequestSupplier(Operation.LIST, id, Method.GET, scheme, host, port, uriRoot,
+        container, object, queryParameters, headers, ImmutableMap.<String, String>of(), body,
+        username, password, keystoneToken, virtualHost);
   }
 
-  private Supplier<Request> createRequestSupplier(@Named("request.id") final Supplier<String> id,
-      final Method method, final Scheme scheme, final Supplier<String> host, final Integer port,
+  private Supplier<Request> createRequestSupplier(final Operation operation,
+      @Named("request.id") final Supplier<String> id, final Method method, final Scheme scheme,
+      final Supplier<String> host, final Integer port,
       final String uriRoot, final Function<Map<String, String>, String> container,
       final Function<Map<String, String>, String> object,
       final Map<String, Supplier<String>> queryParameters,
       final Map<String, Supplier<String>> headers, final Map<String, String> context,
       final Supplier<Body> body, final String username, final String password,
-      final String keystoneToken, final boolean virtualHost, final Operation operation) {
+      final String keystoneToken, final boolean virtualHost) {
 
-    return new RequestSupplier(id, method, scheme, host, port, uriRoot, container, object,
-        queryParameters, false, headers, context, username, password, keystoneToken, body,
-        virtualHost, operation);
+    return new RequestSupplier(operation, id, method, scheme, host, port, uriRoot, container,
+        object, queryParameters, false, headers, context, username, password, keystoneToken, body,
+        virtualHost);
   }
 }

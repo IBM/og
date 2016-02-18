@@ -76,14 +76,14 @@ public class RequestSupplier implements Supplier<Request> {
    */
   // FIXME refactor username, password, and keystoneToken so they are embedded in headers rather
   // than separate fields
-  public RequestSupplier(final Supplier<String> id, final Method method, final Scheme scheme,
-      final Supplier<String> host, final Integer port, final String uriRoot,
+  public RequestSupplier(final Operation operation, final Supplier<String> id, final Method method,
+      final Scheme scheme, final Supplier<String> host, final Integer port, final String uriRoot,
       final Function<Map<String, String>, String> container,
       final Function<Map<String, String>, String> object,
       final Map<String, Supplier<String>> queryParameters, final boolean trailingSlash,
       final Map<String, Supplier<String>> headers, final Map<String, String> context,
       final String username, final String password, final String keystoneToken,
-      final Supplier<Body> body, final boolean virtualHost, final Operation operation) {
+      final Supplier<Body> body, final boolean virtualHost) {
 
     this.id = id;
     this.method = checkNotNull(method);
