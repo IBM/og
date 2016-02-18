@@ -35,22 +35,22 @@ import com.google.common.collect.Maps;
  */
 public class RequestSupplier implements Supplier<Request> {
   private static final Joiner.MapJoiner PARAM_JOINER = Joiner.on('&').withKeyValueSeparator("=");
-  private final Supplier<String> id;
+  private final Function<Map<String, String>, String> id;
   private final Method method;
   private final Scheme scheme;
-  private final Supplier<String> host;
+  private final Function<Map<String, String>, String> host;
   private final Integer port;
   private final String uriRoot;
   private final Function<Map<String, String>, String> container;
   private final Function<Map<String, String>, String> object;
-  private final Map<String, Supplier<String>> queryParameters;
+  private final Map<String, Function<Map<String, String>, String>> queryParameters;
   private final boolean trailingSlash;
-  private final Map<String, Supplier<String>> headers;
+  private final Map<String, Function<Map<String, String>, String>> headers;
   private final Map<String, String> context;
   private final String username;
   private final String password;
   private final String keystoneToken;
-  private final Supplier<Body> body;
+  private final Function<Map<String, String>, Body> body;
   private final boolean virtualHost;
   private final Operation operation;
 
@@ -76,14 +76,16 @@ public class RequestSupplier implements Supplier<Request> {
    */
   // FIXME refactor username, password, and keystoneToken so they are embedded in headers rather
   // than separate fields
-  public RequestSupplier(final Operation operation, final Supplier<String> id, final Method method,
-      final Scheme scheme, final Supplier<String> host, final Integer port, final String uriRoot,
+  public RequestSupplier(final Operation operation, final Function<Map<String, String>, String> id,
+      final Method method, final Scheme scheme, final Function<Map<String, String>, String> host,
+      final Integer port, final String uriRoot,
       final Function<Map<String, String>, String> container,
       final Function<Map<String, String>, String> object,
-      final Map<String, Supplier<String>> queryParameters, final boolean trailingSlash,
-      final Map<String, Supplier<String>> headers, final Map<String, String> context,
-      final String username, final String password, final String keystoneToken,
-      final Supplier<Body> body, final boolean virtualHost) {
+      final Map<String, Function<Map<String, String>, String>> queryParameters,
+      final boolean trailingSlash, final Map<String, Function<Map<String, String>, String>> headers,
+      final Map<String, String> context, final String username, final String password,
+      final String keystoneToken, final Function<Map<String, String>, Body> body,
+      final boolean virtualHost) {
 
     this.id = id;
     this.method = checkNotNull(method);
@@ -119,8 +121,9 @@ public class RequestSupplier implements Supplier<Request> {
     final HttpRequest.Builder builder =
         new HttpRequest.Builder(this.method, getUrl(requestContext), this.operation);
 
-    for (final Map.Entry<String, Supplier<String>> header : this.headers.entrySet()) {
-      builder.withHeader(header.getKey(), header.getValue().get());
+    for (final Map.Entry<String, Function<Map<String, String>, String>> header : this.headers
+        .entrySet()) {
+      builder.withHeader(header.getKey(), header.getValue().apply(requestContext));
     }
 
     for (final Map.Entry<String, String> entry : this.context.entrySet()) {
@@ -128,7 +131,7 @@ public class RequestSupplier implements Supplier<Request> {
     }
 
     if (this.id != null) {
-      builder.withContext(Context.X_OG_REQUEST_ID, this.id.get());
+      builder.withContext(Context.X_OG_REQUEST_ID, this.id.apply(requestContext));
     }
 
     if (this.username != null && this.password != null) {
@@ -145,7 +148,7 @@ public class RequestSupplier implements Supplier<Request> {
     }
 
     if (this.body != null) {
-      builder.withBody(this.body.get());
+      builder.withBody(this.body.apply(requestContext));
     }
 
     return builder.build();
@@ -164,14 +167,14 @@ public class RequestSupplier implements Supplier<Request> {
 
     if (this.virtualHost) {
       s = new StringBuilder().append(this.scheme).append("://")
-          .append(this.container.apply(context)).append(".").append(this.host.get());
+          .append(this.container.apply(context)).append(".").append(this.host.apply(context));
     } else {
-      s = new StringBuilder().append(this.scheme).append("://").append(this.host.get());
+      s = new StringBuilder().append(this.scheme).append("://").append(this.host.apply(context));
     }
     appendPort(s);
     appendPath(s, objectName, context);
     appendTrailingSlash(s);
-    appendQueryParams(s);
+    appendQueryParams(s, context);
 
     try {
       return new URI(s.toString());
@@ -212,11 +215,12 @@ public class RequestSupplier implements Supplier<Request> {
     }
   }
 
-  private void appendQueryParams(final StringBuilder s) {
+  private void appendQueryParams(final StringBuilder s, final Map<String, String> context) {
     final Map<String, String> queryParamsMap = Maps.newHashMap();
 
-    for (final Map.Entry<String, Supplier<String>> queryParams : this.queryParameters.entrySet()) {
-      queryParamsMap.put(queryParams.getKey(), queryParams.getValue().get());
+    for (final Map.Entry<String, Function<Map<String, String>, String>> queryParams : this.queryParameters
+        .entrySet()) {
+      queryParamsMap.put(queryParams.getKey(), queryParams.getValue().apply(context));
     }
 
     final String queryParams = PARAM_JOINER.join(queryParamsMap);

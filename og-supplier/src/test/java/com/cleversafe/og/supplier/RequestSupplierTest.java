@@ -8,10 +8,13 @@
 
 package com.cleversafe.og.supplier;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashMap;
 import java.util.Map;
+
+import javax.annotation.Nullable;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -22,6 +25,7 @@ import com.cleversafe.og.api.Operation;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.http.Bodies;
 import com.cleversafe.og.http.Scheme;
+import com.cleversafe.og.util.MoreFunctions;
 import com.google.common.base.Function;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Maps;
@@ -221,6 +225,25 @@ public class RequestSupplierTest {
 
   }
 
+  public static <O, T> Function<O, T> forSupplier(final Supplier<T> supplier) {
+    return new SupplierFunction<O, T>(supplier);
+  }
+
+
+  private static class SupplierFunction<O, T> implements Function<O, T> {
+
+    private final Supplier<T> supplier;
+
+    private SupplierFunction(final Supplier<T> supplier) {
+      this.supplier = checkNotNull(supplier);
+    }
+
+    @Override
+    public T apply(@Nullable final O input) {
+      return this.supplier.get();
+    }
+  }
+
   // ------------------------HELPER METHODS--------------------------//
 
   private RequestSupplier createRequestSupplier(final boolean virtualHost, final String vaultName,
@@ -229,7 +252,8 @@ public class RequestSupplierTest {
     final Method method = Method.PUT;
     final Operation operation = Operation.WRITE;
     final Scheme scheme = Scheme.HTTP;
-    final Supplier<String> host = Suppliers.of(hostName);
+    final Supplier<String> hostSupplier = Suppliers.of(hostName);
+    final Function<Map<String, String>, String> host = MoreFunctions.forSupplier(hostSupplier);
     final Function<Map<String, String>, String> object =
         new Function<Map<String, String>, String>() {
 
@@ -238,8 +262,9 @@ public class RequestSupplierTest {
             return objectName;
           }
         };
-    final Map<String, Supplier<String>> queryParameters = new HashMap<String, Supplier<String>>();
-    final Supplier<String> id = Suppliers.of("request.id");
+    final Map<String, Function<Map<String, String>, String>> queryParameters = Maps.newHashMap();
+    final Supplier<String> idSupplier = Suppliers.of("request.id");
+    final Function<Map<String, String>, String> id = MoreFunctions.forSupplier(idSupplier);
     final Function<Map<String, String>, String> container =
         new Function<Map<String, String>, String>() {
 
@@ -254,11 +279,12 @@ public class RequestSupplierTest {
     final String password = "password";
     final Body bod = Bodies.random(10);
 
-    final Supplier<Body> body = Suppliers.of(bod);
-    final Map<String, Supplier<String>> headers = new HashMap<String, Supplier<String>>();
+    final Supplier<Body> bodySupplier = Suppliers.of(bod);
+    final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
+    final Map<String, Function<Map<String, String>, String>> headers = Maps.newHashMap();
 
-    return new RequestSupplier(operation, id, method, scheme, host, port, uriRoot, container, object,
-        queryParameters, trailingSlash, headers, Maps.<String, String>newHashMap(), username,
-        password, null, body, virtualHost);
+    return new RequestSupplier(operation, id, method, scheme, host, port, uriRoot, container,
+        object, queryParameters, trailingSlash, headers, Maps.<String, String>newHashMap(),
+        username, password, null, body, virtualHost);
   }
 }
