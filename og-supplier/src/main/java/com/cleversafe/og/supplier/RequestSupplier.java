@@ -13,6 +13,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.Map;
 
 import com.cleversafe.og.api.Body;
@@ -25,6 +26,7 @@ import com.cleversafe.og.util.Context;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
@@ -46,7 +48,7 @@ public class RequestSupplier implements Supplier<Request> {
   private final Map<String, Function<Map<String, String>, String>> queryParameters;
   private final boolean trailingSlash;
   private final Map<String, Function<Map<String, String>, String>> headers;
-  private final Map<String, String> context;
+  private final List<Function<Map<String, String>, String>> context;
   private final String username;
   private final String password;
   private final String keystoneToken;
@@ -69,6 +71,7 @@ public class RequestSupplier implements Supplier<Request> {
    * @param queryParameters static query parameters to all requests
    * @param trailingSlash whether or not to add a trailing slash to the url
    * @param headers headers to add to each request; header values may be dynamic
+   * @param context request metadata to be sent with the created request
    * @param username
    * @param password
    * @param keystoneToken token used for keystone auth
@@ -83,9 +86,9 @@ public class RequestSupplier implements Supplier<Request> {
       final Function<Map<String, String>, String> object,
       final Map<String, Function<Map<String, String>, String>> queryParameters,
       final boolean trailingSlash, final Map<String, Function<Map<String, String>, String>> headers,
-      final Map<String, String> context, final String username, final String password,
-      final String keystoneToken, final Function<Map<String, String>, Body> body,
-      final boolean virtualHost) {
+      final List<Function<Map<String, String>, String>> context, final String username,
+      final String password, final String keystoneToken,
+      final Function<Map<String, String>, Body> body, final boolean virtualHost) {
 
     this.id = id;
     this.method = checkNotNull(method);
@@ -98,7 +101,7 @@ public class RequestSupplier implements Supplier<Request> {
     this.queryParameters = ImmutableMap.copyOf(queryParameters);
     this.trailingSlash = trailingSlash;
     this.headers = ImmutableMap.copyOf(headers);
-    this.context = ImmutableMap.copyOf(context);
+    this.context = ImmutableList.copyOf(context);
     this.username = username;
     this.password = password;
     checkArgument((username != null && password != null) || (username == null && password == null),
@@ -118,16 +121,19 @@ public class RequestSupplier implements Supplier<Request> {
   @Override
   public Request get() {
     final Map<String, String> requestContext = Maps.newHashMap();
+
+    // populate the context map with any relevant metadata for this request
+    for (final Function<Map<String, String>, String> function : this.context) {
+      // return value for context functions is ignored
+      function.apply(requestContext);
+    }
+
     final HttpRequest.Builder builder =
         new HttpRequest.Builder(this.method, getUrl(requestContext), this.operation);
 
     for (final Map.Entry<String, Function<Map<String, String>, String>> header : this.headers
         .entrySet()) {
       builder.withHeader(header.getKey(), header.getValue().apply(requestContext));
-    }
-
-    for (final Map.Entry<String, String> entry : this.context.entrySet()) {
-      builder.withContext(entry.getKey(), entry.getValue());
     }
 
     if (this.id != null) {
@@ -156,23 +162,10 @@ public class RequestSupplier implements Supplier<Request> {
 
   private URI getUrl(final Map<String, String> context) {
 
-    final StringBuilder s;
-
-    String objectName = null;
-    if (this.object != null && this.operation != Operation.LIST) {
-      // FIXME must apply object first prior to container to populate context from object manager
-      // for multi container (container suffix, object name)
-      objectName = this.object.apply(context);
-    }
-
-    if (this.virtualHost) {
-      s = new StringBuilder().append(this.scheme).append("://")
-          .append(this.container.apply(context)).append(".").append(this.host.apply(context));
-    } else {
-      s = new StringBuilder().append(this.scheme).append("://").append(this.host.apply(context));
-    }
+    final StringBuilder s = new StringBuilder().append(this.scheme).append("://");
+    appendHost(s, context);
     appendPort(s);
-    appendPath(s, objectName, context);
+    appendPath(s, context);
     appendTrailingSlash(s);
     appendQueryParams(s, context);
 
@@ -185,27 +178,32 @@ public class RequestSupplier implements Supplier<Request> {
     }
   }
 
+  private void appendHost(final StringBuilder s, final Map<String, String> context) {
+    if (this.virtualHost) {
+      s.append(this.container.apply(context)).append(".");
+    }
+
+    s.append(this.host.apply(context));
+  }
+
   private void appendPort(final StringBuilder s) {
     if (this.port != null) {
       s.append(":").append(this.port);
     }
   }
 
-  private void appendPath(final StringBuilder s, final String objectName,
-      final Map<String, String> context) {
+  private void appendPath(final StringBuilder s, final Map<String, String> context) {
     if (!this.virtualHost) {
       s.append("/");
       if (this.uriRoot != null) {
         s.append(this.uriRoot).append("/");
       }
-      // Vault listing operation check to make sure container is not null.
-      if (this.container.apply(context) != null) {
-        s.append(this.container.apply(context));
-      }
+
+      s.append(this.container.apply(context));
     }
 
-    if (objectName != null) {
-      s.append("/").append(objectName);
+    if (this.object != null) {
+      s.append("/").append(this.object.apply(context));
     }
   }
 

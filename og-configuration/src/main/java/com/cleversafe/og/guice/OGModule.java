@@ -34,7 +34,6 @@ import com.cleversafe.og.guice.annotation.DeleteHost;
 import com.cleversafe.og.guice.annotation.DeleteObjectName;
 import com.cleversafe.og.guice.annotation.ListHeaders;
 import com.cleversafe.og.guice.annotation.ListHost;
-import com.cleversafe.og.guice.annotation.ListObjectName;
 import com.cleversafe.og.guice.annotation.ListQueryParameters;
 import com.cleversafe.og.guice.annotation.MetadataHeaders;
 import com.cleversafe.og.guice.annotation.MetadataHost;
@@ -115,7 +114,7 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.EventBus;
@@ -481,73 +480,35 @@ public class OGModule extends AbstractModule {
     if (Api.SOH == api) {
       return null;
     }
-    final OperationConfig operationConfig = checkNotNull(this.config.write);
-    if (operationConfig.object.selection != null) {
-      return provideObject(operationConfig);
-    }
-    // default for writes
-    return new UUIDObjectNameFunction();
+    return MoreFunctions.keyLookup(Context.X_OG_OBJECT_NAME);
   }
 
   @Provides
   @Singleton
   @OverwriteObjectName
-  public Function<Map<String, String>, String> provideOverwriteObjectName(
-      final ObjectManager objectManager) {
-    final OperationConfig operationConfig = checkNotNull(this.config.overwrite);
-    if (operationConfig.object.selection != null) {
-      return provideObject(operationConfig);
-    }
-    // Delete the object so we know no other threads will be using it
-    return new DeleteObjectNameFunction(objectManager);
+  public Function<Map<String, String>, String> provideOverwriteObjectName() {
+    return MoreFunctions.keyLookup(Context.X_OG_OBJECT_NAME);
   }
 
   @Provides
   @Singleton
   @ReadObjectName
-  public Function<Map<String, String>, String> provideReadObjectName(
-      final ObjectManager objectManager) {
-    final OperationConfig operationConfig = checkNotNull(this.config.read);
-    if (operationConfig.object.selection != null) {
-      return provideObject(operationConfig);
-    }
-    return new ReadObjectNameFunction(objectManager);
+  public Function<Map<String, String>, String> provideReadObjectName() {
+    return MoreFunctions.keyLookup(Context.X_OG_OBJECT_NAME);
   }
 
   @Provides
   @Singleton
   @MetadataObjectName
-  public Function<Map<String, String>, String> provideMetadataObjectName(
-      final ObjectManager objectManager) {
-    final OperationConfig operationConfig = checkNotNull(this.config.metadata);
-    if (operationConfig.object.selection != null) {
-      return provideObject(operationConfig);
-    }
-    return new MetadataObjectNameFunction(objectManager);
+  public Function<Map<String, String>, String> provideMetadataObjectName() {
+    return MoreFunctions.keyLookup(Context.X_OG_OBJECT_NAME);
   }
 
   @Provides
   @Singleton
   @DeleteObjectName
-  public Function<Map<String, String>, String> provideDeleteObjectName(
-      final ObjectManager objectManager) {
-    final OperationConfig operationConfig = checkNotNull(this.config.delete);
-    if (operationConfig.object.selection != null) {
-      return provideObject(operationConfig);
-    }
-    return new DeleteObjectNameFunction(objectManager);
-  }
-
-  @Provides
-  @Singleton
-  @ListObjectName
-  public Function<Map<String, String>, String> provideListObjectName(
-      final ObjectManager objectManager) {
-    final OperationConfig operationConfig = checkNotNull(this.config.list);
-    if (operationConfig.object.selection != null) {
-      return provideObject(operationConfig);
-    }
-    return new ReadObjectNameFunction(objectManager);
+  public Function<Map<String, String>, String> provideDeleteObjectName() {
+    return MoreFunctions.keyLookup(Context.X_OG_OBJECT_NAME);
   }
 
   private Function<Map<String, String>, String> provideObject(
@@ -636,30 +597,18 @@ public class OGModule extends AbstractModule {
   @Provides
   @Singleton
   @ListHeaders
-  public Map<String, Function<Map<String, String>, String>> provideListHeaders(final Api api,
-      @ListObjectName final Function<Map<String, String>, String> object) {
+  public Map<String, Function<Map<String, String>, String>> provideListHeaders(final Api api) {
 
 
     final Map<String, Function<Map<String, String>, String>> headers =
         provideHeaders(this.config.list.headers);
 
     if (api == Api.SOH) {
-      final Map<String, String> emptyContext = Maps.newHashMap();
       final Supplier<String> operationSupplier = Suppliers.of("list");
       final Function<Map<String, String>, String> operation =
           MoreFunctions.forSupplier(operationSupplier);
       headers.put(Headers.X_OPERATION, operation);
-
-      final Supplier<String> startIdSupplier = new Supplier<String>() {
-        @Override
-        public String get() {
-          return object.apply(emptyContext);
-        }
-      };
-
-      final Function<Map<String, String>, String> startId =
-          MoreFunctions.forSupplier(startIdSupplier);
-      headers.put(Headers.X_START_ID, startId);
+      headers.put(Headers.X_START_ID, MoreFunctions.keyLookup(Context.X_OG_OBJECT_NAME));
     }
     return headers;
   }
@@ -679,6 +628,116 @@ public class OGModule extends AbstractModule {
 
     return headers;
   }
+
+  @Provides
+  @Singleton
+  @Named("write.context")
+  public List<Function<Map<String, String>, String>> provideWriteContext(final Api api) {
+    final List<Function<Map<String, String>, String>> context = Lists.newArrayList();
+
+    final OperationConfig operationConfig = checkNotNull(this.config.write);
+    if (operationConfig.object.selection != null) {
+      context.add(provideObject(operationConfig));
+    } else {
+      // default for writes
+      context.add(new UUIDObjectNameFunction());
+    }
+
+    // SOH needs to use a special response consumer to extract the returned object id
+    if (Api.SOH == api) {
+      context.add(new Function<Map<String, String>, String>() {
+        @Override
+        public String apply(final Map<String, String> input) {
+          input.put(Context.X_OG_RESPONSE_BODY_CONSUMER, SOH_PUT_OBJECT);
+
+          return null;
+        }
+      });
+    }
+
+    return ImmutableList.copyOf(context);
+  }
+
+  @Provides
+  @Singleton
+  @Named("overwrite.context")
+  public List<Function<Map<String, String>, String>> provideOverwriteContext(
+      final ObjectManager objectManager) {
+    // FIXME add check if user has configured random/roundrobin here, it is a logical error
+    // Delete the object so we know no other threads will be using it
+    final Function<Map<String, String>, String> function =
+        new DeleteObjectNameFunction(objectManager);
+    return ImmutableList.of(function);
+  }
+
+  @Provides
+  @Singleton
+  @Named("read.context")
+  public List<Function<Map<String, String>, String>> provideReadContext(
+      final ObjectManager objectManager) {
+    Function<Map<String, String>, String> function;
+
+    final OperationConfig operationConfig = checkNotNull(this.config.read);
+    if (operationConfig.object.selection != null) {
+      function = provideObject(operationConfig);
+    } else {
+      function = new ReadObjectNameFunction(objectManager);
+    }
+
+    return ImmutableList.of(function);
+  }
+
+  @Provides
+  @Singleton
+  @Named("metadata.context")
+  public List<Function<Map<String, String>, String>> provideMetadataContext(
+      final ObjectManager objectManager) {
+    Function<Map<String, String>, String> function;
+
+    final OperationConfig operationConfig = checkNotNull(this.config.metadata);
+    if (operationConfig.object.selection != null) {
+      function = provideObject(operationConfig);
+    } else {
+      function = new MetadataObjectNameFunction(objectManager);
+    }
+
+    return ImmutableList.of(function);
+  }
+
+  @Provides
+  @Singleton
+  @Named("delete.context")
+  public List<Function<Map<String, String>, String>> provideDeleteContext(
+      final ObjectManager objectManager) {
+    Function<Map<String, String>, String> function;
+
+    final OperationConfig operationConfig = checkNotNull(this.config.delete);
+    if (operationConfig.object.selection != null) {
+      function = provideObject(operationConfig);
+    } else {
+      function = new DeleteObjectNameFunction(objectManager);
+    }
+
+    return ImmutableList.of(function);
+  }
+
+  @Provides
+  @Singleton
+  @Named("list.context")
+  public List<Function<Map<String, String>, String>> provideListContext(
+      final ObjectManager objectManager) {
+    Function<Map<String, String>, String> function;
+
+    final OperationConfig operationConfig = checkNotNull(this.config.list);
+    if (operationConfig.object.selection != null) {
+      function = provideObject(operationConfig);
+    } else {
+      function = new ReadObjectNameFunction(objectManager);
+    }
+
+    return ImmutableList.of(function);
+  }
+
 
   private Function<Map<String, String>, String> createHeaderSuppliers(
       final SelectionConfig<String> selectionConfig) {
@@ -705,37 +764,16 @@ public class OGModule extends AbstractModule {
   @Singleton
   @ListQueryParameters
   public Map<String, Function<Map<String, String>, String>> provideListQueryParameters(
-      final Api api, @ListObjectName final Function<Map<String, String>, String> object) {
+      final Api api) {
     final Map<String, Function<Map<String, String>, String>> queryParameters = Maps.newHashMap();
 
     if (api == Api.S3) {
-      final Map<String, String> emptyContext = Maps.newHashMap();
-
-      final Supplier<String> s3MarkerSupplier = new Supplier<String>() {
-        @Override
-        public String get() {
-          return object.apply(emptyContext);
-        }
-      };
-      final Function<Map<String, String>, String> s3Marker =
-          MoreFunctions.forSupplier(s3MarkerSupplier);
-      queryParameters.put(QueryParameters.S3_MARKER, s3Marker);
-
+      queryParameters.put(QueryParameters.S3_MARKER,
+          MoreFunctions.keyLookup(Context.X_OG_OBJECT_NAME));
 
     } else if (api == Api.OPENSTACK) {
-      final Map<String, String> emptyContext = Maps.newHashMap();
-      final Supplier<String> openstackMarkerSupplier = new Supplier<String>() {
-        @Override
-        public String get() {
-          return object.apply(emptyContext);
-        }
-      };
-      final Function<Map<String, String>, String> openstackMarker =
-          MoreFunctions.forSupplier(openstackMarkerSupplier);
-
-      queryParameters.put(QueryParameters.OPENSTACK_MARKER, openstackMarker);
-    } else {
-      return Collections.<String, Function<Map<String, String>, String>>emptyMap();
+      queryParameters.put(QueryParameters.OPENSTACK_MARKER,
+          MoreFunctions.keyLookup(Context.X_OG_OBJECT_NAME));
     }
     return queryParameters;
   }
@@ -920,18 +958,12 @@ public class OGModule extends AbstractModule {
       @Named("container") final Function<Map<String, String>, String> container,
       @WriteObjectName final Function<Map<String, String>, String> object,
       @WriteHeaders final Map<String, Function<Map<String, String>, String>> headers,
+      @Named("write.context") final List<Function<Map<String, String>, String>> context,
       final Function<Map<String, String>, Body> body,
       @Named("authentication.username") final String username,
       @Named("authentication.password") final String password,
       @Named("authentication.keystoneToken") final String keystoneToken,
       @Named("virtualhost") final boolean virtualHost) {
-
-    final Map<String, String> context = Maps.newHashMap();
-    // SOH needs to use a special response consumer to extract the returned object id
-    // FIXME create appropriate context providers
-    if (Api.SOH == api) {
-      context.put(Context.X_OG_RESPONSE_BODY_CONSUMER, SOH_PUT_OBJECT);
-    }
 
     final Map<String, Function<Map<String, String>, String>> queryParameters =
         Collections.emptyMap();
@@ -951,6 +983,7 @@ public class OGModule extends AbstractModule {
       @Named("container") final Function<Map<String, String>, String> container,
       @OverwriteObjectName final Function<Map<String, String>, String> object,
       @OverwriteHeaders final Map<String, Function<Map<String, String>, String>> headers,
+      @Named("overwrite.context") final List<Function<Map<String, String>, String>> context,
       final Function<Map<String, String>, Body> body,
       @Named("authentication.username") final String username,
       @Named("authentication.password") final String password,
@@ -966,8 +999,8 @@ public class OGModule extends AbstractModule {
         Collections.emptyMap();
 
     return createRequestSupplier(Operation.OVERWRITE, id, Method.PUT, scheme, host, port, uriRoot,
-        container, object, queryParameters, headers, ImmutableMap.<String, String>of(), body,
-        username, password, keystoneToken, virtualHost);
+        container, object, queryParameters, headers, context, body, username, password,
+        keystoneToken, virtualHost);
   }
 
   @Provides
@@ -980,6 +1013,7 @@ public class OGModule extends AbstractModule {
       @Named("container") final Function<Map<String, String>, String> container,
       @ReadObjectName final Function<Map<String, String>, String> object,
       @ReadHeaders final Map<String, Function<Map<String, String>, String>> headers,
+      @Named("read.context") final List<Function<Map<String, String>, String>> context,
       @Named("authentication.username") final String username,
       @Named("authentication.password") final String password,
       @Named("authentication.keystoneToken") final String keystoneToken,
@@ -992,8 +1026,8 @@ public class OGModule extends AbstractModule {
     final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
 
     return createRequestSupplier(Operation.READ, id, Method.GET, scheme, host, port, uriRoot,
-        container, object, queryParameters, headers, ImmutableMap.<String, String>of(), body,
-        username, password, keystoneToken, virtualHost);
+        container, object, queryParameters, headers, context, body, username, password,
+        keystoneToken, virtualHost);
   }
 
   @Provides
@@ -1006,6 +1040,7 @@ public class OGModule extends AbstractModule {
       @Named("container") final Function<Map<String, String>, String> container,
       @MetadataObjectName final Function<Map<String, String>, String> object,
       @MetadataHeaders final Map<String, Function<Map<String, String>, String>> headers,
+      @Named("metadata.context") final List<Function<Map<String, String>, String>> context,
       @Named("authentication.username") final String username,
       @Named("authentication.password") final String password,
       @Named("authentication.keystoneToken") final String keystoneToken,
@@ -1018,8 +1053,8 @@ public class OGModule extends AbstractModule {
     final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
 
     return createRequestSupplier(Operation.METADATA, id, Method.HEAD, scheme, host, port, uriRoot,
-        container, object, queryParameters, headers, ImmutableMap.<String, String>of(), body,
-        username, password, keystoneToken, virtualHost);
+        container, object, queryParameters, headers, context, body, username, password,
+        keystoneToken, virtualHost);
   }
 
   @Provides
@@ -1032,6 +1067,7 @@ public class OGModule extends AbstractModule {
       @Named("container") final Function<Map<String, String>, String> container,
       @DeleteObjectName final Function<Map<String, String>, String> object,
       @DeleteHeaders final Map<String, Function<Map<String, String>, String>> headers,
+      @Named("delete.context") final List<Function<Map<String, String>, String>> context,
       @Named("authentication.username") final String username,
       @Named("authentication.password") final String password,
       @Named("authentication.keystoneToken") final String keystoneToken,
@@ -1044,8 +1080,8 @@ public class OGModule extends AbstractModule {
     final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
 
     return createRequestSupplier(Operation.DELETE, id, Method.DELETE, scheme, host, port, uriRoot,
-        container, object, queryParameters, headers, ImmutableMap.<String, String>of(), body,
-        username, password, keystoneToken, virtualHost);
+        container, object, queryParameters, headers, context, body, username, password,
+        keystoneToken, virtualHost);
   }
 
   @Provides
@@ -1057,8 +1093,8 @@ public class OGModule extends AbstractModule {
       @Named("port") final Integer port, @Named("uri.root") final String uriRoot,
       @ListQueryParameters final Map<String, Function<Map<String, String>, String>> queryParameters,
       @Named("container") final Function<Map<String, String>, String> container,
-      @ListObjectName final Function<Map<String, String>, String> object,
       @ListHeaders final Map<String, Function<Map<String, String>, String>> headers,
+      @Named("list.context") final List<Function<Map<String, String>, String>> context,
       final Function<Map<String, String>, Body> body,
       @Named("authentication.username") final String username,
       @Named("authentication.password") final String password,
@@ -1066,8 +1102,8 @@ public class OGModule extends AbstractModule {
       @Named("virtualhost") final boolean virtualHost) throws Exception {
 
     return createRequestSupplier(Operation.LIST, id, Method.GET, scheme, host, port, uriRoot,
-        container, object, queryParameters, headers, ImmutableMap.<String, String>of(), body,
-        username, password, keystoneToken, virtualHost);
+        container, null, queryParameters, headers, context, body, username, password, keystoneToken,
+        virtualHost);
   }
 
   private Supplier<Request> createRequestSupplier(final Operation operation,
@@ -1077,9 +1113,9 @@ public class OGModule extends AbstractModule {
       final Function<Map<String, String>, String> object,
       final Map<String, Function<Map<String, String>, String>> queryParameters,
       final Map<String, Function<Map<String, String>, String>> headers,
-      final Map<String, String> context, final Function<Map<String, String>, Body> body,
-      final String username, final String password, final String keystoneToken,
-      final boolean virtualHost) {
+      final List<Function<Map<String, String>, String>> context,
+      final Function<Map<String, String>, Body> body, final String username, final String password,
+      final String keystoneToken, final boolean virtualHost) {
 
     return new RequestSupplier(operation, id, method, scheme, host, port, uriRoot, container,
         object, queryParameters, false, headers, context, username, password, keystoneToken, body,
