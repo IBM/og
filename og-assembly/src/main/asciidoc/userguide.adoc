@@ -576,6 +576,21 @@ generally. See <<Headers>> for more details.
 }
 ----
 
+=== Operation Query Parameters
+OG supports custom query parameters for a particular operation. This is
+currently supported only for the List operation.
+
+.Custom Query For List Requests Example
+[source, json]
+----
+"list": {
+  "parameters": {
+    "custom_key_01": "custom_value_01",
+    "custom_key_02": "custom_value_02"
+  }
+}
+----
+
 === Filesize
 OG supports one or more filesize distributions for describing object file
 sizes to be written for write requests. If multiple filesize distributions are
