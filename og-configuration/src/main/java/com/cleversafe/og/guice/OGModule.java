@@ -20,6 +20,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
+import javax.annotation.Nullable;
 import javax.inject.Named;
 
 import com.cleversafe.og.api.Body;
@@ -739,13 +740,14 @@ public class OGModule extends AbstractModule {
   @Named("write")
   public Supplier<Request> provideWrite(@Named("request.id") final Supplier<String> id,
       final Api api, final Scheme scheme, @WriteHost final Supplier<String> host,
-      @Named("port") final Integer port, @Named("uri.root") final String uriRoot,
+      @Nullable @Named("port") final Integer port,
+      @Nullable @Named("uri.root") final String uriRoot,
       @Named("container") final Function<Map<String, String>, String> container,
-      @WriteObjectName final Function<Map<String, String>, String> object,
+      @Nullable @WriteObjectName final Function<Map<String, String>, String> object,
       @WriteHeaders final Map<String, Supplier<String>> headers, final Supplier<Body> body,
-      @Named("authentication.username") final String username,
-      @Named("authentication.password") final String password,
-      @Named("authentication.keystoneToken") final String keystoneToken,
+      @Nullable @Named("authentication.username") final String username,
+      @Nullable @Named("authentication.password") final String password,
+      @Nullable @Named("authentication.keystoneToken") final String keystoneToken,
       @Named("virtualhost") final boolean virtualHost) {
 
     final Map<String, String> context = Maps.newHashMap();
@@ -763,14 +765,15 @@ public class OGModule extends AbstractModule {
   @Singleton
   @Named("read")
   public Supplier<Request> provideRead(@Named("request.id") final Supplier<String> id,
-      final Scheme scheme, @ReadHost final Supplier<String> host, @Named("port") final Integer port,
-      @Named("uri.root") final String uriRoot,
+      final Scheme scheme, @ReadHost final Supplier<String> host,
+      @Nullable @Named("port") final Integer port,
+      @Nullable @Named("uri.root") final String uriRoot,
       @Named("container") final Function<Map<String, String>, String> container,
-      @ReadObjectName final Function<Map<String, String>, String> object,
+      @Nullable @ReadObjectName final Function<Map<String, String>, String> object,
       @ReadHeaders final Map<String, Supplier<String>> headers,
-      @Named("authentication.username") final String username,
-      @Named("authentication.password") final String password,
-      @Named("authentication.keystoneToken") final String keystoneToken,
+      @Nullable @Named("authentication.username") final String username,
+      @Nullable @Named("authentication.password") final String password,
+      @Nullable @Named("authentication.keystoneToken") final String keystoneToken,
       @Named("virtualhost") final boolean virtualHost) {
     return createRequestSupplier(id, Method.GET, scheme, host, port, uriRoot, container, object,
         headers, ImmutableMap.<String, String>of(), Suppliers.of(Bodies.none()), username, password,
@@ -782,13 +785,14 @@ public class OGModule extends AbstractModule {
   @Named("delete")
   public Supplier<Request> provideDelete(@Named("request.id") final Supplier<String> id,
       final Scheme scheme, @DeleteHost final Supplier<String> host,
-      @Named("port") final Integer port, @Named("uri.root") final String uriRoot,
+      @Nullable @Named("port") final Integer port,
+      @Nullable @Named("uri.root") final String uriRoot,
       @Named("container") final Function<Map<String, String>, String> container,
-      @DeleteObjectName final Function<Map<String, String>, String> object,
+      @Nullable @DeleteObjectName final Function<Map<String, String>, String> object,
       @DeleteHeaders final Map<String, Supplier<String>> headers,
-      @Named("authentication.username") final String username,
-      @Named("authentication.password") final String password,
-      @Named("authentication.keystoneToken") final String keystoneToken,
+      @Nullable @Named("authentication.username") final String username,
+      @Nullable @Named("authentication.password") final String password,
+      @Nullable @Named("authentication.keystoneToken") final String keystoneToken,
       @Named("virtualhost") final boolean virtualHost) {
     return createRequestSupplier(id, Method.DELETE, scheme, host, port, uriRoot, container, object,
         headers, ImmutableMap.<String, String>of(), Suppliers.of(Bodies.none()), username, password,
