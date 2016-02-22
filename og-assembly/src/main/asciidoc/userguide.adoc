@@ -576,7 +576,7 @@ generally. See <<Headers>> for more details.
 }
 ----
 
-=== Operation Query Parameters
+==== Operation Query Parameters
 OG supports custom query parameters for a particular operation. This is
 currently supported only for the List operation.
 
