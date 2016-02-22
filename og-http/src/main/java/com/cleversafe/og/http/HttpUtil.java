@@ -50,6 +50,8 @@ public class HttpUtil {
         return Method.HEAD;
       case DELETE:
         return Method.DELETE;
+      case LIST:
+        return Method.GET;
       default:
         throw new IllegalArgumentException(String.format("Unrecognized operation [%s]", operation));
     }

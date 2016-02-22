@@ -72,13 +72,7 @@ import com.cleversafe.og.json.OperationConfig;
 import com.cleversafe.og.json.SelectionConfig;
 import com.cleversafe.og.json.SelectionType;
 import com.cleversafe.og.json.StoppingConditionsConfig;
-import com.cleversafe.og.object.AbstractObjectNameConsumer;
-import com.cleversafe.og.object.MetadataObjectNameConsumer;
-import com.cleversafe.og.object.ObjectManager;
-import com.cleversafe.og.object.OverwriteObjectNameConsumer;
-import com.cleversafe.og.object.RandomObjectPopulator;
-import com.cleversafe.og.object.ReadObjectNameConsumer;
-import com.cleversafe.og.object.WriteObjectNameConsumer;
+import com.cleversafe.og.object.*;
 import com.cleversafe.og.openstack.KeystoneAuth;
 import com.cleversafe.og.s3.v2.AWSV2Auth;
 import com.cleversafe.og.s3.v4.AWSV4Auth;
@@ -552,6 +546,7 @@ public class OGModule extends AbstractModule {
     consumers.add(new ReadObjectNameConsumer(objectManager, sc));
     consumers.add(new MetadataObjectNameConsumer(objectManager, sc));
     consumers.add(new OverwriteObjectNameConsumer(objectManager, sc));
+    consumers.add(new ListObjectNameConsumer(objectManager, sc));
 
     for (final AbstractObjectNameConsumer consumer : consumers) {
       eventBus.register(consumer);
@@ -780,7 +775,7 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
-  public Supplier<Body> provideBody() {
+  public Function<Map<String, String>, Body> provideBody() {
     final SelectionConfig<FilesizeConfig> filesizeConfig =
         checkNotNull(this.config.filesize, "filesize must not be null");
     final SelectionType filesizeSelection = checkNotNull(filesizeConfig.selection);
@@ -824,11 +819,11 @@ public class OGModule extends AbstractModule {
     }
   }
 
-  private Supplier<Body> createBodySupplier(final Supplier<Distribution> distributionSupplier) {
+  private Function<Map<String, String>, Body> createBodySupplier(final Supplier<Distribution> distributionSupplier) {
     final DataType data = checkNotNull(this.config.data);
     checkArgument(DataType.NONE != data, "Unacceptable data [%s]", data);
 
-    return new Supplier<Body>() {
+    final Supplier<Body> bodySupplier = new Supplier<Body>() {
       @Override
       public Body get() {
         final long sample = (long) distributionSupplier.get().nextSample();
@@ -841,6 +836,8 @@ public class OGModule extends AbstractModule {
         }
       }
     };
+
+    return MoreFunctions.forSupplier(bodySupplier);
   }
 
   @Provides
@@ -1095,11 +1092,13 @@ public class OGModule extends AbstractModule {
       @Named("container") final Function<Map<String, String>, String> container,
       @ListHeaders final Map<String, Function<Map<String, String>, String>> headers,
       @Named("list.context") final List<Function<Map<String, String>, String>> context,
-      final Function<Map<String, String>, Body> body,
       @Named("authentication.username") final String username,
       @Named("authentication.password") final String password,
       @Named("authentication.keystoneToken") final String keystoneToken,
       @Named("virtualhost") final boolean virtualHost) throws Exception {
+
+    final Supplier<Body> bodySupplier = Suppliers.of(Bodies.none());
+    final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
 
     return createRequestSupplier(Operation.LIST, id, Method.GET, scheme, host, port, uriRoot,
         container, null, queryParameters, headers, context, body, username, password, keystoneToken,
