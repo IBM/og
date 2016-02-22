@@ -760,16 +760,38 @@ public class OGModule extends AbstractModule {
   @ListQueryParameters
   public Map<String, Function<Map<String, String>, String>> provideListQueryParameters(
       final Api api) {
-    final Map<String, Function<Map<String, String>, String>> queryParameters = Maps.newHashMap();
+    final Map<String, Function<Map<String, String>, String>> queryParameters;
+
+    queryParameters = provideQueryParameters(this.config.list.parameters);
 
     if (api == Api.S3) {
       queryParameters.put(QueryParameters.S3_MARKER,
           MoreFunctions.keyLookup(Context.X_OG_OBJECT_NAME));
-
     } else if (api == Api.OPENSTACK) {
       queryParameters.put(QueryParameters.OPENSTACK_MARKER,
           MoreFunctions.keyLookup(Context.X_OG_OBJECT_NAME));
     }
+
+    return queryParameters;
+  }
+
+  Map<String, Function<Map<String, String>, String>> provideQueryParameters(
+      Map<String, String> operationQueryParameters) {
+    final Map<String, Function<Map<String, String>, String>> queryParameters = Maps.newHashMap();
+
+    for (final Map.Entry<String, String> e: operationQueryParameters.entrySet()) {
+      final Supplier<String> queryParameterSupplier = new Supplier<String>() {
+        final private String queryParamValue = e.getValue();
+        @Override
+        public String get() {
+          return queryParamValue;
+        }
+      };
+      Function<Map<String, String>, String> queryParameterFunction =
+          MoreFunctions.forSupplier(queryParameterSupplier);
+      queryParameters.put(e.getKey(), queryParameterFunction);
+    }
+
     return queryParameters;
   }
 

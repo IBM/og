@@ -17,6 +17,7 @@ public class OperationConfig {
   public SelectionConfig<String> host;
   public ObjectConfig object;
   public Map<String, SelectionConfig<String>> headers;
+  public Map<String, String> parameters;
 
   public OperationConfig(final double weight) {
     this();
@@ -28,5 +29,6 @@ public class OperationConfig {
     this.host = null;
     this.object = new ObjectConfig();
     this.headers = Maps.newLinkedHashMap();
+    this.parameters = Maps.newLinkedHashMap();
   }
 }
