@@ -91,7 +91,10 @@ public class ObjectFile {
       } else if (upgrade) {
         out = getOutputStream(split, splitSize, output);
         upgrade(in, out);
-      } else {
+      } else if (split) { // Order matters here - write, filter, upgrade must be above
+        out = getOutputStream(split, splitSize, output);
+        split(in, out);
+      } else { // Default case - just output the same file
         out = getOutputStream(output);
         ByteStreams.copy(in, out);
       }
@@ -195,6 +198,19 @@ public class ObjectFile {
               && object.getContainerSuffix() <= maxContainerSuffix)) {
         out.write(object.toBytes());
       }
+    }
+  }
+
+  public static void split(final InputStream in, final OutputStream out)
+      throws IOException {
+    checkNotNull(in);
+    checkNotNull(out);
+
+    final byte[] buf = new byte[LegacyObjectMetadata.OBJECT_SIZE];
+    final MutableObjectMetadata object = new MutableObjectMetadata();
+    while (readFully(in, buf)) {
+      object.setBytes(buf);
+      out.write(object.toBytes());
     }
   }
 
