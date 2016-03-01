@@ -24,8 +24,11 @@ public class OGConfig {
   public ContainerConfig container;
   public Map<String, SelectionConfig<String>> headers;
   public OperationConfig write;
+  public OperationConfig overwrite;
+  public OperationConfig metadata;
   public OperationConfig read;
   public OperationConfig delete;
+  public OperationConfig list;
   public SelectionConfig<FilesizeConfig> filesize;
   public DataType data;
   public ConcurrencyConfig concurrency;
@@ -45,8 +48,11 @@ public class OGConfig {
     this.container = new ContainerConfig();
     this.headers = Maps.newLinkedHashMap();
     this.write = new OperationConfig();
+    this.overwrite = new OperationConfig();
     this.read = new OperationConfig();
+    this.metadata = new OperationConfig();
     this.delete = new OperationConfig();
+    this.list = new OperationConfig();
     this.filesize = null;
     this.data = DataType.RANDOM;
     this.concurrency = null;

@@ -17,6 +17,7 @@ import java.util.Map;
 
 import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.Method;
+import com.cleversafe.og.api.Operation;
 import com.cleversafe.og.api.Request;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -34,6 +35,7 @@ public class HttpRequest implements Request {
   private final Map<String, String> requestHeaders;
   private final Body body;
   private final Map<String, String> context;
+  private final Operation operation;
 
   private HttpRequest(final Builder builder) {
     this.method = checkNotNull(builder.method);
@@ -51,6 +53,7 @@ public class HttpRequest implements Request {
     this.requestHeaders = ImmutableMap.copyOf(builder.requestHeaders);
     this.body = checkNotNull(builder.body);
     this.context = ImmutableMap.copyOf(builder.context);
+    this.operation = checkNotNull(builder.operation);
   }
 
   @Override
@@ -84,6 +87,11 @@ public class HttpRequest implements Request {
   }
 
   @Override
+  public Operation getOperation() {
+    return this.operation;
+  }
+
+  @Override
   public String toString() {
     return String.format(
         "HttpRequest [%n" + "method=%s,%n" + "uri=%s,%n" + "queryParameters=%s,%n" + "headers=%s%n"
@@ -101,6 +109,7 @@ public class HttpRequest implements Request {
     private final Map<String, String> requestHeaders;
     private Body body;
     private final Map<String, String> context;
+    private final Operation operation;
 
     /**
      * Constructs a builder
@@ -108,13 +117,14 @@ public class HttpRequest implements Request {
      * @param method the request method for this request
      * @param uri the uri for this request
      */
-    public Builder(final Method method, final URI uri) {
+    public Builder(final Method method, final URI uri, final Operation operation) {
       this.method = method;
       this.uri = uri;
       this.queryParameters = Maps.newLinkedHashMap();
       this.requestHeaders = Maps.newLinkedHashMap();
       this.body = Bodies.none();
       this.context = Maps.newHashMap();
+      this.operation = operation;
     }
 
     /**

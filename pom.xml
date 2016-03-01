@@ -131,7 +131,7 @@
       <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
-        <version>1.10.8</version>
+        <version>1.10.19</version>
         <scope>test</scope>
       </dependency>
       <dependency>
@@ -175,7 +175,7 @@
       <dependency>
         <groupId>com.google.inject</groupId>
         <artifactId>guice</artifactId>
-        <version>4.0-beta5</version>
+        <version>4.0</version>
       </dependency>
       <dependency>
         <groupId>com.martiansoftware</groupId>
@@ -195,7 +195,7 @@
       <dependency>
         <groupId>com.github.tomakehurst</groupId>
         <artifactId>wiremock</artifactId>
-        <version>1.56</version>
+        <version>1.46</version>
         <scope>test</scope>
       </dependency>
       <dependency>
@@ -221,7 +221,7 @@
       <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>jcl-over-slf4j</artifactId>
-        <version>1.7.10</version>
+        <version>1.7.12</version>
         <scope>runtime</scope>
       </dependency>
       <dependency>
@@ -232,7 +232,7 @@
       <dependency>
         <groupId>com.google.inject.extensions</groupId>
         <artifactId>guice-multibindings</artifactId>
-        <version>4.0-beta5</version>
+        <version>4.0</version>
       </dependency>
       <dependency>
         <groupId>com.lmax</groupId>
@@ -242,7 +242,7 @@
       </dependency>
       <dependency>
         <groupId>com.amazonaws</groupId>
-        <artifactId>aws-java-sdk</artifactId>
+        <artifactId>aws-java-sdk-s3</artifactId>
         <version>1.10.50</version>
       </dependency>
     </dependencies>

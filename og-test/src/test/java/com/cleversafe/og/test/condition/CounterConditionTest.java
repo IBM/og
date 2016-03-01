@@ -25,7 +25,7 @@ import com.cleversafe.og.http.Bodies;
 import com.cleversafe.og.statistic.Counter;
 import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.test.LoadTest;
-import com.cleversafe.og.util.Operation;
+import com.cleversafe.og.api.Operation;
 import com.cleversafe.og.util.Pair;
 import com.tngtech.java.junit.dataprovider.DataProvider;
 import com.tngtech.java.junit.dataprovider.DataProviderRunner;
@@ -67,6 +67,7 @@ public class CounterConditionTest {
     final Request request = mock(Request.class);
     when(request.getMethod()).thenReturn(Method.PUT);
     when(request.getBody()).thenReturn(Bodies.none());
+    when(request.getOperation()).thenReturn(Operation.WRITE);
 
     final Response response = mock(Response.class);
     when(response.getBody()).thenReturn(Bodies.none());

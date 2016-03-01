@@ -46,6 +46,8 @@ public class SimpleRequestManager implements RequestManager {
    * @param readWeight percentage of the time that a read request should be generated
    * @param delete a supplier of delete requests
    * @param deleteWeight percentage of the time that a delete request should be generated
+   * @param metadata a supplier of metadata (HEAD) requests
+   * @param metadataWeight percentage of the time that a metadata (HEAD) request should be generated
    * @throws NullPointerException if write, read, or delete are null
    * @throws IllegalArgumentException if writeWeight, readWeight, or deleteWeight are not in the
    *         range [0.0, 100.0], or if the sum of the individual weights is not 100.0
@@ -53,22 +55,37 @@ public class SimpleRequestManager implements RequestManager {
   @Inject
   @Singleton
   public SimpleRequestManager(@Named("write") final Supplier<Request> write,
-      @Named("write.weight") final double writeWeight, @Named("read") final Supplier<Request> read,
-      @Named("read.weight") final double readWeight,
+      @Named("write.weight") final double writeWeight,
+      @Named("overwrite") final Supplier<Request> overwrite,
+      @Named("overwrite.weight") final double overwriteWeight,
+      @Named("read.weight") final double readWeight, @Named("read") final Supplier<Request> read,
+      @Named("metadata") final Supplier<Request> metadata,
+      @Named("metadata.weight") final double metadataWeight,
       @Named("delete") final Supplier<Request> delete,
-      @Named("delete.weight") final double deleteWeight) {
+      @Named("delete.weight") final double deleteWeight,
+      @Named("list") final Supplier<Request> list, @Named("list.weight") final double listWeight){
 
     checkNotNull(write);
+    checkNotNull(overwrite);
     checkNotNull(read);
+    checkNotNull(metadata);
     checkNotNull(delete);
+    checkNotNull(list);
 
     checkArgument(PERCENTAGE.contains(writeWeight),
         "write weight must be in range [0.0, 100.0] [%s]", writeWeight);
+    checkArgument(PERCENTAGE.contains(overwriteWeight),
+        "overwrite weight must be in range [0.0, 100.0] [%s]", overwriteWeight);
     checkArgument(PERCENTAGE.contains(readWeight), "read weight must be in range [0.0, 100.0] [%s]",
         readWeight);
+    checkArgument(PERCENTAGE.contains(metadataWeight),
+        "delete weight must be in range [0.0, 100.0] [%s]", metadataWeight);
     checkArgument(PERCENTAGE.contains(deleteWeight),
         "delete weight must be in range [0.0, 100.0] [%s]", deleteWeight);
-    final double sum = writeWeight + readWeight + deleteWeight;
+    checkArgument(PERCENTAGE.contains(listWeight),
+        "list weight must be in range [0.0, 100.0] [%s]", listWeight);
+    final double sum = writeWeight + readWeight + deleteWeight +
+        metadataWeight + overwriteWeight + listWeight;
     checkArgument(DoubleMath.fuzzyEquals(sum, 100.0, ERR), "sum of weights must be 100.0 [%s]",
         sum);
 
@@ -76,13 +93,21 @@ public class SimpleRequestManager implements RequestManager {
     if (writeWeight > 0.0) {
       wrc.withChoice(write, writeWeight);
     }
+    if (overwriteWeight > 0.0) {
+      wrc.withChoice(overwrite, overwriteWeight);
+    }
     if (readWeight > 0.0) {
       wrc.withChoice(read, readWeight);
+    }
+    if (metadataWeight > 0.0) {
+      wrc.withChoice(metadata, metadataWeight);
     }
     if (deleteWeight > 0.0) {
       wrc.withChoice(delete, deleteWeight);
     }
-
+    if (listWeight > 0.0) {
+      wrc.withChoice(list, listWeight);
+    }
     this.requestSupplier = wrc.build();
   }
 
@@ -94,7 +119,7 @@ public class SimpleRequestManager implements RequestManager {
 
   @Override
   public String toString() {
-    return String.format("SimpleRequestManagert [%n" + "requestSupplier=%s%n" + "]",
+    return String.format("SimpleRequestManager [%n" + "requestSupplier=%s%n" + "]",
         this.requestSupplier);
   }
 }

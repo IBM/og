@@ -15,6 +15,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Set;
 
+import com.cleversafe.og.api.Operation;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -24,6 +25,7 @@ import org.junit.runner.RunWith;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
+import com.cleversafe.og.api.Operation;
 import com.cleversafe.og.http.Bodies;
 import com.cleversafe.og.http.HttpUtil;
 import com.cleversafe.og.util.Context;
@@ -59,6 +61,7 @@ public abstract class AbstractObjectNameConsumerTest {
     when(this.request.getContext()).thenReturn(ImmutableMap.of(Context.X_OG_OBJECT_NAME,
         this.object, Context.X_OG_OBJECT_SIZE, String.valueOf(1024)));
     when(this.request.getBody()).thenReturn(Bodies.zeroes(1024));
+    when(this.request.getOperation()).thenReturn(operation());
 
     this.response = mock(Response.class);
     when(this.response.getStatusCode()).thenReturn(200);
@@ -73,6 +76,8 @@ public abstract class AbstractObjectNameConsumerTest {
       Set<Integer> statusCodes);
 
   public abstract Method method();
+
+  public abstract Operation operation();
 
   public abstract void doVerify();
 

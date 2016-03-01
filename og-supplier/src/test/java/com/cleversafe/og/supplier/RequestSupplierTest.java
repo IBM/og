@@ -8,19 +8,26 @@
 
 package com.cleversafe.og.supplier;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashMap;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+
+import javax.annotation.Nullable;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.Method;
+import com.cleversafe.og.api.Operation;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.http.Bodies;
 import com.cleversafe.og.http.Scheme;
+import com.cleversafe.og.util.MoreFunctions;
 import com.google.common.base.Function;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Maps;
@@ -185,39 +192,23 @@ public class RequestSupplierTest {
 
   }
 
-  @Test
-  public void createRequestSupplierWithoutObjectAndVaultPathStyleTest() throws URISyntaxException {
-
-    final String vaultName = null;
-    final String objectName = null;
-    final URI uri = new URI("http://" + this.hostName + ":8080/" + this.uriRoot + "/");
-    final RequestSupplier request =
-        createRequestSupplier(false, vaultName, this.hostName, objectName, this.uriRoot, false);
-
-    final Request req = request.get();
-
-    Assert.assertNotNull(req);
-    Assert.assertEquals(Method.PUT, req.getMethod());
-    Assert.assertEquals(uri, req.getUri());
-
+  public static <O, T> Function<O, T> forSupplier(final Supplier<T> supplier) {
+    return new SupplierFunction<O, T>(supplier);
   }
 
-  @Test
-  public void createRequestSupplierWithoutObjectAndVaultAndUriRootPathStyleTest()
-      throws URISyntaxException {
 
-    final String vaultName = null;
-    final String objectName = null;
-    final URI uri = new URI("http://" + this.hostName + ":8080/");
-    final RequestSupplier request =
-        createRequestSupplier(false, vaultName, this.hostName, objectName, null, false);
+  private static class SupplierFunction<O, T> implements Function<O, T> {
 
-    final Request req = request.get();
+    private final Supplier<T> supplier;
 
-    Assert.assertNotNull(req);
-    Assert.assertEquals(Method.PUT, req.getMethod());
-    Assert.assertEquals(uri, req.getUri());
+    private SupplierFunction(final Supplier<T> supplier) {
+      this.supplier = checkNotNull(supplier);
+    }
 
+    @Override
+    public T apply(@Nullable final O input) {
+      return this.supplier.get();
+    }
   }
 
   // ------------------------HELPER METHODS--------------------------//
@@ -226,18 +217,23 @@ public class RequestSupplierTest {
       final String hostName, final String objectName, final String uriRoot,
       final boolean trailingSlash) {
     final Method method = Method.PUT;
+    final Operation operation = Operation.WRITE;
     final Scheme scheme = Scheme.HTTP;
-    final Supplier<String> host = Suppliers.of(hostName);
-    final Function<Map<String, String>, String> object =
-        new Function<Map<String, String>, String>() {
+    final Supplier<String> hostSupplier = Suppliers.of(hostName);
+    final Function<Map<String, String>, String> host = MoreFunctions.forSupplier(hostSupplier);
+    Function<Map<String, String>, String> object = null;
+    if (objectName != null) {
+      object = new Function<Map<String, String>, String>() {
 
-          @Override
-          public String apply(final Map<String, String> input) {
-            return objectName;
-          }
-        };
-    final Map<String, String> queryParameters = new HashMap<String, String>();
-    final Supplier<String> id = Suppliers.of("request.id");
+        @Override
+        public String apply(final Map<String, String> input) {
+          return objectName;
+        }
+      };
+    }
+    final Map<String, Function<Map<String, String>, String>> queryParameters = Maps.newHashMap();
+    final Supplier<String> idSupplier = Suppliers.of("request.id");
+    final Function<Map<String, String>, String> id = MoreFunctions.forSupplier(idSupplier);
     final Function<Map<String, String>, String> container =
         new Function<Map<String, String>, String>() {
 
@@ -252,11 +248,14 @@ public class RequestSupplierTest {
     final String password = "password";
     final Body bod = Bodies.random(10);
 
-    final Supplier<Body> body = Suppliers.of(bod);
-    final Map<String, Supplier<String>> headers = new HashMap<String, Supplier<String>>();
+    final Supplier<Body> bodySupplier = Suppliers.of(bod);
+    final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
+    final Map<String, Function<Map<String, String>, String>> headers = Maps.newHashMap();
 
-    return new RequestSupplier(id, method, scheme, host, port, uriRoot, container, object,
-        queryParameters, trailingSlash, headers, Maps.<String, String>newHashMap(), username,
-        password, null, body, virtualHost);
+    final List<Function<Map<String, String>, String>> context = Collections.emptyList();
+
+    return new RequestSupplier(operation, id, method, scheme, host, port, uriRoot, container,
+        object, queryParameters, trailingSlash, headers, context, username, password, null, body,
+        virtualHost);
   }
 }

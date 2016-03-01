@@ -26,7 +26,7 @@ import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.api.Response;
 import com.cleversafe.og.http.Bodies;
-import com.cleversafe.og.util.Operation;
+import com.cleversafe.og.api.Operation;
 import com.cleversafe.og.util.Pair;
 import com.cleversafe.og.util.TestState;
 import com.google.common.collect.Lists;
@@ -48,6 +48,7 @@ public class StatisticsTest {
     this.stats = new Statistics();
     this.request = mock(Request.class);
     when(this.request.getMethod()).thenReturn(Method.PUT);
+    when(this.request.getOperation()).thenReturn(Operation.WRITE);
     when(this.request.getBody()).thenReturn(Bodies.random(1024));
     this.response = mock(Response.class);
     when(this.response.getStatusCode()).thenReturn(201);
@@ -126,6 +127,7 @@ public class StatisticsTest {
   @Test
   public void updateReadBytes() {
     when(this.request.getMethod()).thenReturn(Method.GET);
+    when(this.request.getOperation()).thenReturn(Operation.READ);
     when(this.request.getBody()).thenReturn(Bodies.none());
     when(this.response.getBody()).thenReturn(Bodies.zeroes(1024));
     this.stats.update(this.operation);
@@ -135,6 +137,7 @@ public class StatisticsTest {
   @Test
   public void updateReadUnsuccessfulStatusCode() {
     when(this.request.getMethod()).thenReturn(Method.GET);
+    when(this.request.getOperation()).thenReturn(Operation.READ);
     when(this.request.getBody()).thenReturn(Bodies.none());
     when(this.response.getBody()).thenReturn(Bodies.random(1024));
 
@@ -148,6 +151,7 @@ public class StatisticsTest {
   public void updateDeleteBytes() {
     when(this.request.getMethod()).thenReturn(Method.DELETE);
     when(this.request.getBody()).thenReturn(Bodies.none());
+    when(this.request.getOperation()).thenReturn(Operation.DELETE);
     this.stats.update(this.operation);
     assertAll(Operation.DELETE, 1, 0, 201, 1);
   }

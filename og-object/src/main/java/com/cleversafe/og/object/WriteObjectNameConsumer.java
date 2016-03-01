@@ -10,7 +10,7 @@ package com.cleversafe.og.object;
 
 import java.util.Set;
 
-import com.cleversafe.og.util.Operation;
+import com.cleversafe.og.api.Operation;
 
 /**
  * A {@code ObjectNameConsumer} implementation which consumes object names for write operations

@@ -18,13 +18,15 @@ import java.util.List;
 import org.junit.Test;
 
 import com.cleversafe.og.api.Method;
+import com.cleversafe.og.api.Operation;
 import com.cleversafe.og.api.Request;
 
 public class AuthenticatedHttpRequestTest {
   private final Request request;
 
   public AuthenticatedHttpRequestTest() throws URISyntaxException {
-    this.request = new HttpRequest.Builder(Method.PUT, new URI("/container/object")).build();
+    this.request =
+        new HttpRequest.Builder(Method.PUT, new URI("/container/object"), Operation.WRITE).build();
   }
 
   @Test(expected = NullPointerException.class)

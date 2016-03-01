@@ -22,7 +22,7 @@ import org.joda.time.format.DateTimeFormatter;
 
 import com.cleversafe.og.statistic.Counter;
 import com.cleversafe.og.statistic.Statistics;
-import com.cleversafe.og.util.Operation;
+import com.cleversafe.og.api.Operation;
 import com.cleversafe.og.util.Pair;
 import com.cleversafe.og.util.SizeUnit;
 import com.google.common.collect.ImmutableList;
@@ -64,6 +64,9 @@ public class Summary {
     final OperationStats write;
     final OperationStats read;
     final OperationStats delete;
+    final OperationStats metadata;
+    final OperationStats overwrite;
+    final OperationStats list;
 
     private SummaryStats(final Statistics stats, final long timestampStart,
         final long timestampFinish) {
@@ -74,14 +77,18 @@ public class Summary {
       this.write = new OperationStats(stats, Operation.WRITE);
       this.read = new OperationStats(stats, Operation.READ);
       this.delete = new OperationStats(stats, Operation.DELETE);
+      this.metadata = new OperationStats(stats, Operation.METADATA);
+      this.overwrite = new OperationStats(stats, Operation.OVERWRITE);
+      this.list = new OperationStats(stats, Operation.LIST);
     }
 
     @Override
     public String toString() {
-      final String format = "Start: %s%nEnd: %s%nRuntime: %.2f Seconds%nOperations: %s%n%n%s%s%s";
+      final String format = "Start: %s%nEnd: %s%nRuntime: %.2f "
+          + "Seconds%nOperations: %s%n%n%s%s%s%s%s%s";
       return String.format(Locale.US, format, FORMATTER.print(this.timestampStart),
           FORMATTER.print(this.timestampFinish), this.runtime, this.operations, this.write,
-          this.read, this.delete);
+          this.read, this.delete, this.metadata, this.overwrite, this.list);
     }
 
     class OperationStats {

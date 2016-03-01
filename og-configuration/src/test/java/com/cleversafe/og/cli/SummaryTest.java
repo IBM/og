@@ -29,7 +29,7 @@ import com.cleversafe.og.http.Bodies;
 import com.cleversafe.og.http.HttpRequest;
 import com.cleversafe.og.http.HttpResponse;
 import com.cleversafe.og.statistic.Statistics;
-import com.cleversafe.og.util.Operation;
+import com.cleversafe.og.api.Operation;
 import com.cleversafe.og.util.Pair;
 import com.tngtech.java.junit.dataprovider.DataProvider;
 import com.tngtech.java.junit.dataprovider.DataProviderRunner;
@@ -61,7 +61,7 @@ public class SummaryTest {
   public void summary() throws URISyntaxException {
     final Statistics stats = new Statistics();
     final Request request =
-        new HttpRequest.Builder(Method.GET, new URI("http://127.0.0.1")).build();
+        new HttpRequest.Builder(Method.GET, new URI("http://127.0.0.1"), Operation.READ).build();
     final Response response =
         new HttpResponse.Builder().withStatusCode(200).withBody(Bodies.zeroes(1024)).build();
     stats.update(Pair.of(request, response));
@@ -94,5 +94,10 @@ public class SummaryTest {
     assertThat(summaryStats.delete.operations, is(0L));
     assertThat(summaryStats.delete.bytes, is(0L));
     assertThat(summaryStats.delete.statusCodes.size(), is(0));
+
+    assertThat(summaryStats.metadata.operation, is(Operation.METADATA));
+    assertThat(summaryStats.metadata.operations, is(0L));
+    assertThat(summaryStats.metadata.statusCodes.size(), is(0));
+    assertThat(summaryStats.metadata.statusCodes.size(), is(0));
   }
 }

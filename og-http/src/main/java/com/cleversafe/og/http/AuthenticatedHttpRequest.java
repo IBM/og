@@ -23,6 +23,7 @@ import com.cleversafe.og.api.AuthenticatedRequest;
 import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.DataType;
 import com.cleversafe.og.api.Method;
+import com.cleversafe.og.api.Operation;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.util.io.Streams;
 import com.google.common.collect.Lists;
@@ -158,5 +159,10 @@ public class AuthenticatedHttpRequest implements AuthenticatedRequest {
             + "contentLength=%s%n]",
         this.getMethod(), this.getUri(), this.queryParameters, this.requestHeaders, this.getBody(),
         this.getContext(), this.content, this.getContentLength());
+  }
+
+  @Override
+  public Operation getOperation() {
+    return this.request.getOperation();
   }
 }

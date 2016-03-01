@@ -20,17 +20,28 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
+import javax.annotation.Nullable;
 import javax.inject.Named;
 
 import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.Client;
 import com.cleversafe.og.api.DataType;
 import com.cleversafe.og.api.Method;
+import com.cleversafe.og.api.Operation;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.client.ApacheClient;
 import com.cleversafe.og.guice.annotation.DeleteHeaders;
 import com.cleversafe.og.guice.annotation.DeleteHost;
 import com.cleversafe.og.guice.annotation.DeleteObjectName;
+import com.cleversafe.og.guice.annotation.ListHeaders;
+import com.cleversafe.og.guice.annotation.ListHost;
+import com.cleversafe.og.guice.annotation.ListQueryParameters;
+import com.cleversafe.og.guice.annotation.MetadataHeaders;
+import com.cleversafe.og.guice.annotation.MetadataHost;
+import com.cleversafe.og.guice.annotation.MetadataObjectName;
+import com.cleversafe.og.guice.annotation.OverwriteHeaders;
+import com.cleversafe.og.guice.annotation.OverwriteHost;
+import com.cleversafe.og.guice.annotation.OverwriteObjectName;
 import com.cleversafe.og.guice.annotation.ReadHeaders;
 import com.cleversafe.og.guice.annotation.ReadHost;
 import com.cleversafe.og.guice.annotation.ReadObjectName;
@@ -40,9 +51,11 @@ import com.cleversafe.og.guice.annotation.WriteObjectName;
 import com.cleversafe.og.http.Api;
 import com.cleversafe.og.http.BasicAuth;
 import com.cleversafe.og.http.Bodies;
+import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpAuth;
 import com.cleversafe.og.http.HttpUtil;
 import com.cleversafe.og.http.NoneAuth;
+import com.cleversafe.og.http.QueryParameters;
 import com.cleversafe.og.http.ResponseBodyConsumer;
 import com.cleversafe.og.http.Scheme;
 import com.cleversafe.og.json.AuthType;
@@ -60,11 +73,7 @@ import com.cleversafe.og.json.OperationConfig;
 import com.cleversafe.og.json.SelectionConfig;
 import com.cleversafe.og.json.SelectionType;
 import com.cleversafe.og.json.StoppingConditionsConfig;
-import com.cleversafe.og.object.AbstractObjectNameConsumer;
-import com.cleversafe.og.object.ObjectManager;
-import com.cleversafe.og.object.RandomObjectPopulator;
-import com.cleversafe.og.object.ReadObjectNameConsumer;
-import com.cleversafe.og.object.WriteObjectNameConsumer;
+import com.cleversafe.og.object.*;
 import com.cleversafe.og.openstack.KeystoneAuth;
 import com.cleversafe.og.s3.v2.AWSV2Auth;
 import com.cleversafe.og.s3.v4.AWSV4Auth;
@@ -75,6 +84,7 @@ import com.cleversafe.og.soh.SOHWriteResponseBodyConsumer;
 import com.cleversafe.og.statistic.Counter;
 import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.supplier.DeleteObjectNameFunction;
+import com.cleversafe.og.supplier.MetadataObjectNameFunction;
 import com.cleversafe.og.supplier.RandomSupplier;
 import com.cleversafe.og.supplier.ReadObjectNameFunction;
 import com.cleversafe.og.supplier.RequestSupplier;
@@ -92,14 +102,14 @@ import com.cleversafe.og.test.condition.TestCondition;
 import com.cleversafe.og.util.Context;
 import com.cleversafe.og.util.Distribution;
 import com.cleversafe.og.util.Distributions;
-import com.cleversafe.og.util.Operation;
+import com.cleversafe.og.util.MoreFunctions;
 import com.cleversafe.og.util.SizeUnit;
 import com.cleversafe.og.util.Version;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.EventBus;
@@ -148,8 +158,11 @@ public class OGModule extends AbstractModule {
       }
     });
     bindConstant().annotatedWith(Names.named("write.weight")).to(this.config.write.weight);
+    bindConstant().annotatedWith(Names.named("overwrite.weight")).to(this.config.overwrite.weight);
     bindConstant().annotatedWith(Names.named("read.weight")).to(this.config.read.weight);
+    bindConstant().annotatedWith(Names.named("metadata.weight")).to(this.config.metadata.weight);
     bindConstant().annotatedWith(Names.named("delete.weight")).to(this.config.delete.weight);
+    bindConstant().annotatedWith(Names.named("list.weight")).to(this.config.list.weight);
     bindConstant().annotatedWith(Names.named("virtualhost")).to(this.config.virtualHost);
     bind(AuthType.class).toInstance(this.config.authentication.type);
     bind(DataType.class).toInstance(this.config.data);
@@ -265,8 +278,8 @@ public class OGModule extends AbstractModule {
   @Provides
   @Singleton
   @Named("request.id")
-  public Supplier<String> provideIdSupplier() {
-    return new Supplier<String>() {
+  public Function<Map<String, String>, String> provideIdSupplier() {
+    final Supplier<String> idSupplier = new Supplier<String>() {
       private final AtomicLong id = new AtomicLong();
 
       @Override
@@ -274,38 +287,67 @@ public class OGModule extends AbstractModule {
         return String.valueOf(this.id.getAndIncrement());
       }
     };
+
+    return MoreFunctions.forSupplier(idSupplier);
   }
 
   @Provides
   @Singleton
   @Named("host")
-  public Supplier<String> provideHost() {
+  public Function<Map<String, String>, String> provideHost() {
     return createHost(this.config.host);
   }
 
   @Provides
   @Singleton
   @WriteHost
-  public Supplier<String> provideWriteHost(@Named("host") final Supplier<String> host) {
+  public Function<Map<String, String>, String> provideWriteHost(
+      @Named("host") final Function<Map<String, String>, String> host) {
     return provideHost(this.config.write, host);
   }
 
   @Provides
   @Singleton
+  @OverwriteHost
+  public Function<Map<String, String>, String> provideOverwriteHost(
+      @Named("host") final Function<Map<String, String>, String> host) {
+    return provideHost(this.config.overwrite, host);
+  }
+
+  @Provides
+  @Singleton
   @ReadHost
-  public Supplier<String> provideReadHost(@Named("host") final Supplier<String> host) {
+  public Function<Map<String, String>, String> provideReadHost(
+      @Named("host") final Function<Map<String, String>, String> host) {
     return provideHost(this.config.read, host);
   }
 
   @Provides
   @Singleton
+  @MetadataHost
+  public Function<Map<String, String>, String> provideMetadataHost(
+      @Named("host") final Function<Map<String, String>, String> host) {
+    return provideHost(this.config.metadata, host);
+  }
+
+  @Provides
+  @Singleton
   @DeleteHost
-  public Supplier<String> provideDeleteHost(@Named("host") final Supplier<String> host) {
+  public Function<Map<String, String>, String> provideDeleteHost(
+      @Named("host") final Function<Map<String, String>, String> host) {
     return provideHost(this.config.delete, host);
   }
 
-  private Supplier<String> provideHost(final OperationConfig operationConfig,
-      final Supplier<String> testHost) {
+  @Provides
+  @Singleton
+  @ListHost
+  public Function<Map<String, String>, String> provideListHost(
+      @Named("host") final Function<Map<String, String>, String> host) {
+    return provideHost(this.config.list, host);
+  }
+
+  private Function<Map<String, String>, String> provideHost(final OperationConfig operationConfig,
+      final Function<Map<String, String>, String> testHost) {
     checkNotNull(operationConfig);
     checkNotNull(testHost);
 
@@ -317,7 +359,7 @@ public class OGModule extends AbstractModule {
     return testHost;
   }
 
-  private Supplier<String> createHost(final SelectionConfig<String> host) {
+  private Function<Map<String, String>, String> createHost(final SelectionConfig<String> host) {
     checkNotNull(host);
     checkNotNull(host.selection);
     checkNotNull(host.choices);
@@ -333,14 +375,16 @@ public class OGModule extends AbstractModule {
       for (final ChoiceConfig<String> choice : host.choices) {
         hostList.add(choice.choice);
       }
-      return Suppliers.cycle(hostList);
+      final Supplier<String> hostSupplier = Suppliers.cycle(hostList);
+      return MoreFunctions.forSupplier(hostSupplier);
     }
 
     final RandomSupplier.Builder<String> wrc = Suppliers.random();
     for (final ChoiceConfig<String> choice : host.choices) {
       wrc.withChoice(choice.choice, choice.weight);
     }
-    return wrc.build();
+    final Supplier<String> hostSupplier = wrc.build();
+    return MoreFunctions.forSupplier(hostSupplier);
   }
 
   @Provides
@@ -431,36 +475,35 @@ public class OGModule extends AbstractModule {
     if (Api.SOH == api) {
       return null;
     }
-    final OperationConfig operationConfig = checkNotNull(this.config.write);
-    if (operationConfig.object.selection != null) {
-      return provideObject(operationConfig);
-    }
-    // default for writes
-    return new UUIDObjectNameFunction();
+    return MoreFunctions.keyLookup(Context.X_OG_OBJECT_NAME);
+  }
+
+  @Provides
+  @Singleton
+  @OverwriteObjectName
+  public Function<Map<String, String>, String> provideOverwriteObjectName() {
+    return MoreFunctions.keyLookup(Context.X_OG_OBJECT_NAME);
   }
 
   @Provides
   @Singleton
   @ReadObjectName
-  public Function<Map<String, String>, String> provideReadObjectName(
-      final ObjectManager objectManager) {
-    final OperationConfig operationConfig = checkNotNull(this.config.read);
-    if (operationConfig.object.selection != null) {
-      return provideObject(operationConfig);
-    }
-    return new ReadObjectNameFunction(objectManager);
+  public Function<Map<String, String>, String> provideReadObjectName() {
+    return MoreFunctions.keyLookup(Context.X_OG_OBJECT_NAME);
+  }
+
+  @Provides
+  @Singleton
+  @MetadataObjectName
+  public Function<Map<String, String>, String> provideMetadataObjectName() {
+    return MoreFunctions.keyLookup(Context.X_OG_OBJECT_NAME);
   }
 
   @Provides
   @Singleton
   @DeleteObjectName
-  public Function<Map<String, String>, String> provideDeleteObjectName(
-      final ObjectManager objectManager) {
-    final OperationConfig operationConfig = checkNotNull(this.config.delete);
-    if (operationConfig.object.selection != null) {
-      return provideObject(operationConfig);
-    }
-    return new DeleteObjectNameFunction(objectManager);
+  public Function<Map<String, String>, String> provideDeleteObjectName() {
+    return MoreFunctions.keyLookup(Context.X_OG_OBJECT_NAME);
   }
 
   private Function<Map<String, String>, String> provideObject(
@@ -502,6 +545,9 @@ public class OGModule extends AbstractModule {
     final List<AbstractObjectNameConsumer> consumers = Lists.newArrayList();
     consumers.add(new WriteObjectNameConsumer(objectManager, sc));
     consumers.add(new ReadObjectNameConsumer(objectManager, sc));
+    consumers.add(new MetadataObjectNameConsumer(objectManager, sc));
+    consumers.add(new OverwriteObjectNameConsumer(objectManager, sc));
+    consumers.add(new ListObjectNameConsumer(objectManager, sc));
 
     for (final AbstractObjectNameConsumer consumer : consumers) {
       eventBus.register(consumer);
@@ -512,25 +558,58 @@ public class OGModule extends AbstractModule {
   @Provides
   @Singleton
   @WriteHeaders
-  public Map<String, Supplier<String>> provideWriteHeaders() {
+  public Map<String, Function<Map<String, String>, String>> provideWriteHeaders() {
     return provideHeaders(this.config.write.headers);
   }
 
   @Provides
   @Singleton
+  @OverwriteHeaders
+  public Map<String, Function<Map<String, String>, String>> provideOverwriteHeaders() {
+    return provideHeaders(this.config.overwrite.headers);
+  }
+
+  @Provides
+  @Singleton
   @ReadHeaders
-  public Map<String, Supplier<String>> provideReadHeaders() {
+  public Map<String, Function<Map<String, String>, String>> provideReadHeaders() {
     return provideHeaders(this.config.read.headers);
   }
 
   @Provides
   @Singleton
+  @MetadataHeaders
+  public Map<String, Function<Map<String, String>, String>> provideMetadataHeaders() {
+    return provideHeaders(this.config.metadata.headers);
+  }
+
+  @Provides
+  @Singleton
   @DeleteHeaders
-  public Map<String, Supplier<String>> provideDeleteHeaders() {
+  public Map<String, Function<Map<String, String>, String>> provideDeleteHeaders() {
     return provideHeaders(this.config.delete.headers);
   }
 
-  private Map<String, Supplier<String>> provideHeaders(
+  @Provides
+  @Singleton
+  @ListHeaders
+  public Map<String, Function<Map<String, String>, String>> provideListHeaders(final Api api) {
+
+
+    final Map<String, Function<Map<String, String>, String>> headers =
+        provideHeaders(this.config.list.headers);
+
+    if (api == Api.SOH) {
+      final Supplier<String> operationSupplier = Suppliers.of("list");
+      final Function<Map<String, String>, String> operation =
+          MoreFunctions.forSupplier(operationSupplier);
+      headers.put(Headers.X_OPERATION, operation);
+      headers.put(Headers.X_START_ID, MoreFunctions.keyLookup(Context.X_OG_OBJECT_NAME));
+    }
+    return headers;
+  }
+
+  private Map<String, Function<Map<String, String>, String>> provideHeaders(
       final Map<String, SelectionConfig<String>> operationHeaders) {
     checkNotNull(operationHeaders);
     Map<String, SelectionConfig<String>> configHeaders = this.config.headers;
@@ -538,7 +617,7 @@ public class OGModule extends AbstractModule {
       configHeaders = operationHeaders;
     }
 
-    final Map<String, Supplier<String>> headers = Maps.newLinkedHashMap();
+    final Map<String, Function<Map<String, String>, String>> headers = Maps.newLinkedHashMap();
     for (final Map.Entry<String, SelectionConfig<String>> e : configHeaders.entrySet()) {
       headers.put(e.getKey(), createHeaderSuppliers(e.getValue()));
     }
@@ -546,7 +625,118 @@ public class OGModule extends AbstractModule {
     return headers;
   }
 
-  private Supplier<String> createHeaderSuppliers(final SelectionConfig<String> selectionConfig) {
+  @Provides
+  @Singleton
+  @Named("write.context")
+  public List<Function<Map<String, String>, String>> provideWriteContext(final Api api) {
+    final List<Function<Map<String, String>, String>> context = Lists.newArrayList();
+
+    final OperationConfig operationConfig = checkNotNull(this.config.write);
+    if (operationConfig.object.selection != null) {
+      context.add(provideObject(operationConfig));
+    } else {
+      // default for writes
+      context.add(new UUIDObjectNameFunction());
+    }
+
+    // SOH needs to use a special response consumer to extract the returned object id
+    if (Api.SOH == api) {
+      context.add(new Function<Map<String, String>, String>() {
+        @Override
+        public String apply(final Map<String, String> input) {
+          input.put(Context.X_OG_RESPONSE_BODY_CONSUMER, SOH_PUT_OBJECT);
+
+          return null;
+        }
+      });
+    }
+
+    return ImmutableList.copyOf(context);
+  }
+
+  @Provides
+  @Singleton
+  @Named("overwrite.context")
+  public List<Function<Map<String, String>, String>> provideOverwriteContext(
+      final ObjectManager objectManager) {
+    // FIXME add check if user has configured random/roundrobin here, it is a logical error
+    // Delete the object so we know no other threads will be using it
+    final Function<Map<String, String>, String> function =
+        new DeleteObjectNameFunction(objectManager);
+    return ImmutableList.of(function);
+  }
+
+  @Provides
+  @Singleton
+  @Named("read.context")
+  public List<Function<Map<String, String>, String>> provideReadContext(
+      final ObjectManager objectManager) {
+    Function<Map<String, String>, String> function;
+
+    final OperationConfig operationConfig = checkNotNull(this.config.read);
+    if (operationConfig.object.selection != null) {
+      function = provideObject(operationConfig);
+    } else {
+      function = new ReadObjectNameFunction(objectManager);
+    }
+
+    return ImmutableList.of(function);
+  }
+
+  @Provides
+  @Singleton
+  @Named("metadata.context")
+  public List<Function<Map<String, String>, String>> provideMetadataContext(
+      final ObjectManager objectManager) {
+    Function<Map<String, String>, String> function;
+
+    final OperationConfig operationConfig = checkNotNull(this.config.metadata);
+    if (operationConfig.object.selection != null) {
+      function = provideObject(operationConfig);
+    } else {
+      function = new MetadataObjectNameFunction(objectManager);
+    }
+
+    return ImmutableList.of(function);
+  }
+
+  @Provides
+  @Singleton
+  @Named("delete.context")
+  public List<Function<Map<String, String>, String>> provideDeleteContext(
+      final ObjectManager objectManager) {
+    Function<Map<String, String>, String> function;
+
+    final OperationConfig operationConfig = checkNotNull(this.config.delete);
+    if (operationConfig.object.selection != null) {
+      function = provideObject(operationConfig);
+    } else {
+      function = new DeleteObjectNameFunction(objectManager);
+    }
+
+    return ImmutableList.of(function);
+  }
+
+  @Provides
+  @Singleton
+  @Named("list.context")
+  public List<Function<Map<String, String>, String>> provideListContext(
+      final ObjectManager objectManager) {
+    Function<Map<String, String>, String> function;
+
+    final OperationConfig operationConfig = checkNotNull(this.config.list);
+    if (operationConfig.object.selection != null) {
+      function = provideObject(operationConfig);
+    } else {
+      function = new ReadObjectNameFunction(objectManager);
+    }
+
+    return ImmutableList.of(function);
+  }
+
+
+  private Function<Map<String, String>, String> createHeaderSuppliers(
+      final SelectionConfig<String> selectionConfig) {
     // FIXME create generalized process for creating random or roundrobin suppliers regardless
     // of config type
     if (SelectionType.ROUNDROBIN == selectionConfig.selection) {
@@ -554,19 +744,61 @@ public class OGModule extends AbstractModule {
       for (final ChoiceConfig<String> choice : selectionConfig.choices) {
         choiceList.add(choice.choice);
       }
-      return Suppliers.cycle(choiceList);
+      final Supplier<String> headerSupplier = Suppliers.cycle(choiceList);
+      return MoreFunctions.forSupplier(headerSupplier);
     }
 
     final RandomSupplier.Builder<String> wrc = Suppliers.random();
     for (final ChoiceConfig<String> choice : selectionConfig.choices) {
       wrc.withChoice(choice.choice, choice.weight);
     }
-    return wrc.build();
+    final Supplier<String> headerSupplier = wrc.build();
+    return MoreFunctions.forSupplier(headerSupplier);
   }
 
   @Provides
   @Singleton
-  public Supplier<Body> provideBody() {
+  @ListQueryParameters
+  public Map<String, Function<Map<String, String>, String>> provideListQueryParameters(
+      final Api api) {
+    final Map<String, Function<Map<String, String>, String>> queryParameters;
+
+    queryParameters = provideQueryParameters(this.config.list.parameters);
+
+    if (api == Api.S3) {
+      queryParameters.put(QueryParameters.S3_MARKER,
+          MoreFunctions.keyLookup(Context.X_OG_OBJECT_NAME));
+    } else if (api == Api.OPENSTACK) {
+      queryParameters.put(QueryParameters.OPENSTACK_MARKER,
+          MoreFunctions.keyLookup(Context.X_OG_OBJECT_NAME));
+    }
+
+    return queryParameters;
+  }
+
+  Map<String, Function<Map<String, String>, String>> provideQueryParameters(
+      Map<String, String> operationQueryParameters) {
+    final Map<String, Function<Map<String, String>, String>> queryParameters = Maps.newHashMap();
+
+    for (final Map.Entry<String, String> e: operationQueryParameters.entrySet()) {
+      final Supplier<String> queryParameterSupplier = new Supplier<String>() {
+        final private String queryParamValue = e.getValue();
+        @Override
+        public String get() {
+          return queryParamValue;
+        }
+      };
+      Function<Map<String, String>, String> queryParameterFunction =
+          MoreFunctions.forSupplier(queryParameterSupplier);
+      queryParameters.put(e.getKey(), queryParameterFunction);
+    }
+
+    return queryParameters;
+  }
+
+  @Provides
+  @Singleton
+  public Function<Map<String, String>, Body> provideBody() {
     final SelectionConfig<FilesizeConfig> filesizeConfig =
         checkNotNull(this.config.filesize, "filesize must not be null");
     final SelectionType filesizeSelection = checkNotNull(filesizeConfig.selection);
@@ -610,11 +842,11 @@ public class OGModule extends AbstractModule {
     }
   }
 
-  private Supplier<Body> createBodySupplier(final Supplier<Distribution> distributionSupplier) {
+  private Function<Map<String, String>, Body> createBodySupplier(final Supplier<Distribution> distributionSupplier) {
     final DataType data = checkNotNull(this.config.data);
     checkArgument(DataType.NONE != data, "Unacceptable data [%s]", data);
 
-    return new Supplier<Body>() {
+    final Supplier<Body> bodySupplier = new Supplier<Body>() {
       @Override
       public Body get() {
         final long sample = (long) distributionSupplier.get().nextSample();
@@ -627,6 +859,8 @@ public class OGModule extends AbstractModule {
         }
       }
     };
+
+    return MoreFunctions.forSupplier(bodySupplier);
   }
 
   @Provides
@@ -737,74 +971,182 @@ public class OGModule extends AbstractModule {
   @Provides
   @Singleton
   @Named("write")
-  public Supplier<Request> provideWrite(@Named("request.id") final Supplier<String> id,
-      final Api api, final Scheme scheme, @WriteHost final Supplier<String> host,
-      @Named("port") final Integer port, @Named("uri.root") final String uriRoot,
+  public Supplier<Request> provideWrite(
+      @Named("request.id") final Function<Map<String, String>, String> id, final Api api,
+      final Scheme scheme, @WriteHost final Function<Map<String, String>, String> host,
+      @Nullable @Named("port") final Integer port,
+      @Nullable @Named("uri.root") final String uriRoot,
       @Named("container") final Function<Map<String, String>, String> container,
-      @WriteObjectName final Function<Map<String, String>, String> object,
-      @WriteHeaders final Map<String, Supplier<String>> headers, final Supplier<Body> body,
-      @Named("authentication.username") final String username,
-      @Named("authentication.password") final String password,
-      @Named("authentication.keystoneToken") final String keystoneToken,
+      @Nullable @WriteObjectName final Function<Map<String, String>, String> object,
+      @WriteHeaders final Map<String, Function<Map<String, String>, String>> headers,
+      @Named("write.context") final List<Function<Map<String, String>, String>> context,
+      final Function<Map<String, String>, Body> body,
+      @Nullable @Named("authentication.username") final String username,
+      @Nullable @Named("authentication.password") final String password,
+      @Nullable @Named("authentication.keystoneToken") final String keystoneToken,
       @Named("virtualhost") final boolean virtualHost) {
 
-    final Map<String, String> context = Maps.newHashMap();
+    final Map<String, Function<Map<String, String>, String>> queryParameters =
+        Collections.emptyMap();
+
+    return createRequestSupplier(Operation.WRITE, id, Method.PUT, scheme, host, port, uriRoot,
+        container, object, queryParameters, headers, context, body, username, password,
+        keystoneToken, virtualHost);
+  }
+
+  @Provides
+  @Singleton
+  @Named("overwrite")
+  public Supplier<Request> provideOverwrite(
+      @Named("request.id") final Function<Map<String, String>, String> id, final Api api,
+      final Scheme scheme, @OverwriteHost final Function<Map<String, String>, String> host,
+      @Nullable @Named("port") final Integer port,
+      @Nullable @Named("uri.root") final String uriRoot,
+      @Named("container") final Function<Map<String, String>, String> container,
+      @Nullable @OverwriteObjectName final Function<Map<String, String>, String> object,
+      @OverwriteHeaders final Map<String, Function<Map<String, String>, String>> headers,
+      @Named("overwrite.context") final List<Function<Map<String, String>, String>> context,
+      final Function<Map<String, String>, Body> body,
+      @Nullable @Named("authentication.username") final String username,
+      @Nullable @Named("authentication.password") final String password,
+      @Nullable @Named("authentication.keystoneToken") final String keystoneToken,
+      @Named("virtualhost") final boolean virtualHost,
+      @Named("overwrite.weight") final double overwriteWeight) throws Exception {
     // SOH needs to use a special response consumer to extract the returned object id
-    // FIXME create appropriate context providers
-    if (Api.SOH == api) {
-      context.put(Context.X_OG_RESPONSE_BODY_CONSUMER, SOH_PUT_OBJECT);
+    if (Api.SOH == api && overwriteWeight > 0.0) {
+      throw new Exception("Overwrites are not compatible with SOH");
     }
 
-    return createRequestSupplier(id, Method.PUT, scheme, host, port, uriRoot, container, object,
-        headers, context, body, username, password, keystoneToken, virtualHost);
+    final Map<String, Function<Map<String, String>, String>> queryParameters =
+        Collections.emptyMap();
+
+    return createRequestSupplier(Operation.OVERWRITE, id, Method.PUT, scheme, host, port, uriRoot,
+        container, object, queryParameters, headers, context, body, username, password,
+        keystoneToken, virtualHost);
   }
 
   @Provides
   @Singleton
   @Named("read")
-  public Supplier<Request> provideRead(@Named("request.id") final Supplier<String> id,
-      final Scheme scheme, @ReadHost final Supplier<String> host, @Named("port") final Integer port,
-      @Named("uri.root") final String uriRoot,
+  public Supplier<Request> provideRead(
+      @Named("request.id") final Function<Map<String, String>, String> id, final Scheme scheme,
+      @ReadHost final Function<Map<String, String>, String> host,
+      @Nullable @Named("port") final Integer port,
+      @Nullable @Named("uri.root") final String uriRoot,
       @Named("container") final Function<Map<String, String>, String> container,
-      @ReadObjectName final Function<Map<String, String>, String> object,
-      @ReadHeaders final Map<String, Supplier<String>> headers,
-      @Named("authentication.username") final String username,
-      @Named("authentication.password") final String password,
-      @Named("authentication.keystoneToken") final String keystoneToken,
+      @Nullable @ReadObjectName final Function<Map<String, String>, String> object,
+      @ReadHeaders final Map<String, Function<Map<String, String>, String>> headers,
+      @Named("read.context") final List<Function<Map<String, String>, String>> context,
+      @Nullable @Named("authentication.username") final String username,
+      @Nullable @Named("authentication.password") final String password,
+      @Nullable @Named("authentication.keystoneToken") final String keystoneToken,
       @Named("virtualhost") final boolean virtualHost) {
-    return createRequestSupplier(id, Method.GET, scheme, host, port, uriRoot, container, object,
-        headers, ImmutableMap.<String, String>of(), Suppliers.of(Bodies.none()), username, password,
+
+    final Map<String, Function<Map<String, String>, String>> queryParameters =
+        Collections.emptyMap();
+
+    final Supplier<Body> bodySupplier = Suppliers.of(Bodies.none());
+    final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
+
+    return createRequestSupplier(Operation.READ, id, Method.GET, scheme, host, port, uriRoot,
+        container, object, queryParameters, headers, context, body, username, password,
+        keystoneToken, virtualHost);
+  }
+
+  @Provides
+  @Singleton
+  @Named("metadata")
+  public Supplier<Request> provideMetadata(
+      @Named("request.id") final Function<Map<String, String>, String> id, final Scheme scheme,
+      @MetadataHost final Function<Map<String, String>, String> host,
+      @Nullable @Named("port") final Integer port,
+      @Nullable @Named("uri.root") final String uriRoot,
+      @Named("container") final Function<Map<String, String>, String> container,
+      @Nullable @MetadataObjectName final Function<Map<String, String>, String> object,
+      @MetadataHeaders final Map<String, Function<Map<String, String>, String>> headers,
+      @Named("metadata.context") final List<Function<Map<String, String>, String>> context,
+      @Nullable @Named("authentication.username") final String username,
+      @Nullable @Named("authentication.password") final String password,
+      @Nullable @Named("authentication.keystoneToken") final String keystoneToken,
+      @Named("virtualhost") final boolean virtualHost) {
+
+    final Map<String, Function<Map<String, String>, String>> queryParameters =
+        Collections.emptyMap();
+
+    final Supplier<Body> bodySupplier = Suppliers.of(Bodies.none());
+    final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
+
+    return createRequestSupplier(Operation.METADATA, id, Method.HEAD, scheme, host, port, uriRoot,
+        container, object, queryParameters, headers, context, body, username, password,
         keystoneToken, virtualHost);
   }
 
   @Provides
   @Singleton
   @Named("delete")
-  public Supplier<Request> provideDelete(@Named("request.id") final Supplier<String> id,
-      final Scheme scheme, @DeleteHost final Supplier<String> host,
-      @Named("port") final Integer port, @Named("uri.root") final String uriRoot,
+  public Supplier<Request> provideDelete(
+      @Named("request.id") final Function<Map<String, String>, String> id, final Scheme scheme,
+      @DeleteHost final Function<Map<String, String>, String> host,
+      @Nullable @Named("port") final Integer port,
+      @Nullable @Named("uri.root") final String uriRoot,
       @Named("container") final Function<Map<String, String>, String> container,
-      @DeleteObjectName final Function<Map<String, String>, String> object,
-      @DeleteHeaders final Map<String, Supplier<String>> headers,
-      @Named("authentication.username") final String username,
-      @Named("authentication.password") final String password,
-      @Named("authentication.keystoneToken") final String keystoneToken,
+      @Nullable @DeleteObjectName final Function<Map<String, String>, String> object,
+      @DeleteHeaders final Map<String, Function<Map<String, String>, String>> headers,
+      @Named("delete.context") final List<Function<Map<String, String>, String>> context,
+      @Nullable @Named("authentication.username") final String username,
+      @Nullable @Named("authentication.password") final String password,
+      @Nullable @Named("authentication.keystoneToken") final String keystoneToken,
       @Named("virtualhost") final boolean virtualHost) {
-    return createRequestSupplier(id, Method.DELETE, scheme, host, port, uriRoot, container, object,
-        headers, ImmutableMap.<String, String>of(), Suppliers.of(Bodies.none()), username, password,
+
+    final Map<String, Function<Map<String, String>, String>> queryParameters =
+        Collections.emptyMap();
+
+    final Supplier<Body> bodySupplier = Suppliers.of(Bodies.none());
+    final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
+
+    return createRequestSupplier(Operation.DELETE, id, Method.DELETE, scheme, host, port, uriRoot,
+        container, object, queryParameters, headers, context, body, username, password,
         keystoneToken, virtualHost);
   }
 
-  private Supplier<Request> createRequestSupplier(@Named("request.id") final Supplier<String> id,
-      final Method method, final Scheme scheme, final Supplier<String> host, final Integer port,
+  @Provides
+  @Singleton
+  @Named("list")
+  public Supplier<Request> provideList(
+      @Named("request.id") final Function<Map<String, String>, String> id, final Api api,
+      final Scheme scheme, @ListHost final Function<Map<String, String>, String> host,
+      @Nullable @Named("port") final Integer port,
+      @Nullable @Named("uri.root") final String uriRoot,
+      @ListQueryParameters final Map<String, Function<Map<String, String>, String>> queryParameters,
+      @Named("container") final Function<Map<String, String>, String> container,
+      @ListHeaders final Map<String, Function<Map<String, String>, String>> headers,
+      @Named("list.context") final List<Function<Map<String, String>, String>> context,
+      @Nullable @Named("authentication.username") final String username,
+      @Nullable @Named("authentication.password") final String password,
+      @Nullable @Named("authentication.keystoneToken") final String keystoneToken,
+      @Named("virtualhost") final boolean virtualHost) throws Exception {
+
+    final Supplier<Body> bodySupplier = Suppliers.of(Bodies.none());
+    final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
+
+    return createRequestSupplier(Operation.LIST, id, Method.GET, scheme, host, port, uriRoot,
+        container, null, queryParameters, headers, context, body, username, password, keystoneToken,
+        virtualHost);
+  }
+
+  private Supplier<Request> createRequestSupplier(final Operation operation,
+      @Named("request.id") final Function<Map<String, String>, String> id, final Method method,
+      final Scheme scheme, final Function<Map<String, String>, String> host, final Integer port,
       final String uriRoot, final Function<Map<String, String>, String> container,
       final Function<Map<String, String>, String> object,
-      final Map<String, Supplier<String>> headers, final Map<String, String> context,
-      final Supplier<Body> body, final String username, final String password,
+      final Map<String, Function<Map<String, String>, String>> queryParameters,
+      final Map<String, Function<Map<String, String>, String>> headers,
+      final List<Function<Map<String, String>, String>> context,
+      final Function<Map<String, String>, Body> body, final String username, final String password,
       final String keystoneToken, final boolean virtualHost) {
 
-    return new RequestSupplier(id, method, scheme, host, port, uriRoot, container, object,
-        Collections.<String, String>emptyMap(), false, headers, context, username, password,
-        keystoneToken, body, virtualHost);
+    return new RequestSupplier(operation, id, method, scheme, host, port, uriRoot, container,
+        object, queryParameters, false, headers, context, username, password, keystoneToken, body,
+        virtualHost);
   }
 }

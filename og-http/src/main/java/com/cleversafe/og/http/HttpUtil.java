@@ -12,11 +12,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Set;
 
-import com.cleversafe.og.api.Method;
-import com.cleversafe.og.util.Operation;
 import com.google.common.collect.ContiguousSet;
 import com.google.common.collect.DiscreteDomain;
 import com.google.common.collect.Range;
+
+import com.cleversafe.og.api.Method;
+import com.cleversafe.og.api.Operation;
 
 /**
  * A utility class for working with http components
@@ -32,24 +33,27 @@ public class HttpUtil {
   private HttpUtil() {}
 
   /**
-   * Translates the provided method into the corresponding operation
+   * Translates the provided operation into the corresponding method
    * 
-   * @param method the method to convert
+   * @param operation the operation to convert
    * @return the translated operation instance
    */
-  public static Operation toOperation(final Method method) {
-    checkNotNull(method);
-    switch (method) {
-      case PUT:
-      case POST:
-        return Operation.WRITE;
-      case GET:
-      case HEAD:
-        return Operation.READ;
+  public static Method toMethod(final Operation operation) {
+    checkNotNull(operation);
+    switch (operation) {
+      case WRITE:
+      case OVERWRITE:
+        return Method.PUT;
+      case READ:
+        return Method.GET;
+      case METADATA:
+        return Method.HEAD;
       case DELETE:
-        return Operation.DELETE;
+        return Method.DELETE;
+      case LIST:
+        return Method.GET;
       default:
-        throw new IllegalArgumentException(String.format("Unrecognized method [%s]", method));
+        throw new IllegalArgumentException(String.format("Unrecognized operation [%s]", operation));
     }
   }
 }

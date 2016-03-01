@@ -21,6 +21,7 @@ import org.junit.Test;
 
 import com.cleversafe.og.api.AuthenticatedRequest;
 import com.cleversafe.og.api.Method;
+import com.cleversafe.og.api.Operation;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.http.Bodies;
 import com.cleversafe.og.http.HttpAuth;
@@ -38,7 +39,7 @@ public class KeystoneAuthTest {
     this.keystoneAuth = new KeystoneAuth();
     this.uri = new URI("http://127.0.0.1/openstack/container/object");
     this.token = "token";
-    this.request = new HttpRequest.Builder(Method.PUT, this.uri)
+    this.request = new HttpRequest.Builder(Method.PUT, this.uri, Operation.WRITE)
         .withContext(Context.X_OG_KEYSTONE_TOKEN, this.token).withBody(Bodies.random(1024)).build();
     this.authenticatedRequest = this.keystoneAuth.authenticate(this.request);
   }
@@ -60,7 +61,8 @@ public class KeystoneAuthTest {
 
   @Test(expected = RuntimeException.class)
   public void noToken() {
-    final Request badRequest = new HttpRequest.Builder(Method.PUT, this.uri).build();
+    final Request badRequest =
+        new HttpRequest.Builder(Method.PUT, this.uri, Operation.WRITE).build();
     this.keystoneAuth.authenticate(badRequest);
   }
 }

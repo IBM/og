@@ -99,7 +99,6 @@ public class ObjectGenerator {
       final LoadTest test = injector.getInstance(LoadTest.class);
       final ObjectManager objectManager = injector.getInstance(ObjectManager.class);
       final Statistics statistics = injector.getInstance(Statistics.class);
-
       OGLog4jShutdownCallbackRegistry.setOGShutdownHook((new ShutdownHook(test, shutdownLatch)));
 
       final LoadTestResult result = run(test, objectManager, statistics, gson);

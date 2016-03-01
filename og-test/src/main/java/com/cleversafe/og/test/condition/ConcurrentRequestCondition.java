@@ -13,7 +13,7 @@ import com.cleversafe.og.api.Response;
 import com.cleversafe.og.statistic.Counter;
 import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.test.LoadTest;
-import com.cleversafe.og.util.Operation;
+import com.cleversafe.og.api.Operation;
 import com.cleversafe.og.util.Pair;
 import com.google.common.eventbus.Subscribe;
 

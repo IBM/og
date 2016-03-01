@@ -21,6 +21,7 @@ import org.junit.Test;
 
 import com.cleversafe.og.api.AuthenticatedRequest;
 import com.cleversafe.og.api.Method;
+import com.cleversafe.og.api.Operation;
 import com.cleversafe.og.api.Request;
 import com.cleversafe.og.util.Context;
 import com.google.common.base.Charsets;
@@ -41,7 +42,7 @@ public class BasicAuthTest {
     this.uri = new URI("http://127.0.0.1/openstack/container/object");
     this.username = "robert";
     this.password = "password";
-    this.request = new HttpRequest.Builder(Method.PUT, this.uri)
+    this.request = new HttpRequest.Builder(Method.PUT, this.uri, Operation.WRITE)
         .withContext(Context.X_OG_USERNAME, this.username)
         .withContext(Context.X_OG_PASSWORD, this.password).withBody(Bodies.random(1024)).build();
     this.authenticatedRequest = this.basicAuth.authenticate(this.request);
@@ -68,14 +69,14 @@ public class BasicAuthTest {
 
   @Test(expected = NullPointerException.class)
   public void noUsername() {
-    final Request badRequest = new HttpRequest.Builder(Method.PUT, this.uri)
+    final Request badRequest = new HttpRequest.Builder(Method.PUT, this.uri, Operation.WRITE)
         .withContext(Context.X_OG_PASSWORD, this.password).build();
     this.basicAuth.authenticate(badRequest);
   }
 
   @Test(expected = NullPointerException.class)
   public void noPassword() {
-    final Request badRequest = new HttpRequest.Builder(Method.PUT, this.uri)
+    final Request badRequest = new HttpRequest.Builder(Method.PUT, this.uri, Operation.WRITE)
         .withHeader(Context.X_OG_USERNAME, this.username).build();
     this.basicAuth.authenticate(badRequest);
   }

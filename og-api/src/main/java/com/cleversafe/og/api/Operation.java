@@ -6,7 +6,7 @@
  * licensing@cleversafe.com
  */
 
-package com.cleversafe.og.util;
+package com.cleversafe.og.api;
 
 
 /**
@@ -15,5 +15,5 @@ package com.cleversafe.og.util;
  * @since 1.0
  */
 public enum Operation {
-  ALL, WRITE, READ, DELETE;
+  ALL, WRITE, OVERWRITE, READ, METADATA, DELETE, LIST
 }

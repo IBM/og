@@ -27,7 +27,7 @@ import com.cleversafe.og.api.Response;
 import com.cleversafe.og.http.Bodies;
 import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.test.LoadTest;
-import com.cleversafe.og.util.Operation;
+import com.cleversafe.og.api.Operation;
 import com.cleversafe.og.util.Pair;
 import com.tngtech.java.junit.dataprovider.DataProvider;
 import com.tngtech.java.junit.dataprovider.DataProviderRunner;
@@ -51,6 +51,7 @@ public class ConcurrentRequestConditionTest {
     this.request = mock(Request.class);
     when(this.request.getMethod()).thenReturn(Method.PUT);
     when(this.request.getBody()).thenReturn(Bodies.none());
+    when(this.request.getOperation()).thenReturn(Operation.WRITE);
 
     this.response = mock(Response.class);
     when(this.response.getBody()).thenReturn(Bodies.none());

@@ -14,5 +14,8 @@ package com.cleversafe.og.http;
  * @since 1.0
  */
 public class Headers {
+  public static final String X_OPERATION = "x-operation";
+  public static final String X_START_ID = "x-start-id";
+
   private Headers() {}
 }

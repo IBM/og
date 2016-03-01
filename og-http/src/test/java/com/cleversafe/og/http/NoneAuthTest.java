@@ -20,6 +20,7 @@ import org.junit.Test;
 
 import com.cleversafe.og.api.AuthenticatedRequest;
 import com.cleversafe.og.api.Method;
+import com.cleversafe.og.api.Operation;
 import com.cleversafe.og.api.Request;
 
 public class NoneAuthTest {
@@ -31,8 +32,8 @@ public class NoneAuthTest {
   public NoneAuthTest() throws URISyntaxException {
     this.noneAuth = new NoneAuth();
     this.uri = new URI("http://127.0.0.1/openstack/container/object");
-    this.request =
-        new HttpRequest.Builder(Method.PUT, this.uri).withBody(Bodies.random(1024)).build();
+    this.request = new HttpRequest.Builder(Method.PUT, this.uri, Operation.WRITE)
+        .withBody(Bodies.random(1024)).build();
     this.authenticatedRequest = this.noneAuth.authenticate(this.request);
   }
 
