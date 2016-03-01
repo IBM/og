@@ -20,6 +20,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
+import javax.annotation.Nullable;
 import javax.inject.Named;
 
 import com.cleversafe.og.api.Body;
@@ -973,15 +974,16 @@ public class OGModule extends AbstractModule {
   public Supplier<Request> provideWrite(
       @Named("request.id") final Function<Map<String, String>, String> id, final Api api,
       final Scheme scheme, @WriteHost final Function<Map<String, String>, String> host,
-      @Named("port") final Integer port, @Named("uri.root") final String uriRoot,
+      @Nullable @Named("port") final Integer port,
+      @Nullable @Named("uri.root") final String uriRoot,
       @Named("container") final Function<Map<String, String>, String> container,
-      @WriteObjectName final Function<Map<String, String>, String> object,
+      @Nullable @WriteObjectName final Function<Map<String, String>, String> object,
       @WriteHeaders final Map<String, Function<Map<String, String>, String>> headers,
       @Named("write.context") final List<Function<Map<String, String>, String>> context,
       final Function<Map<String, String>, Body> body,
-      @Named("authentication.username") final String username,
-      @Named("authentication.password") final String password,
-      @Named("authentication.keystoneToken") final String keystoneToken,
+      @Nullable @Named("authentication.username") final String username,
+      @Nullable @Named("authentication.password") final String password,
+      @Nullable @Named("authentication.keystoneToken") final String keystoneToken,
       @Named("virtualhost") final boolean virtualHost) {
 
     final Map<String, Function<Map<String, String>, String>> queryParameters =
@@ -998,15 +1000,16 @@ public class OGModule extends AbstractModule {
   public Supplier<Request> provideOverwrite(
       @Named("request.id") final Function<Map<String, String>, String> id, final Api api,
       final Scheme scheme, @OverwriteHost final Function<Map<String, String>, String> host,
-      @Named("port") final Integer port, @Named("uri.root") final String uriRoot,
+      @Nullable @Named("port") final Integer port,
+      @Nullable @Named("uri.root") final String uriRoot,
       @Named("container") final Function<Map<String, String>, String> container,
-      @OverwriteObjectName final Function<Map<String, String>, String> object,
+      @Nullable @OverwriteObjectName final Function<Map<String, String>, String> object,
       @OverwriteHeaders final Map<String, Function<Map<String, String>, String>> headers,
       @Named("overwrite.context") final List<Function<Map<String, String>, String>> context,
       final Function<Map<String, String>, Body> body,
-      @Named("authentication.username") final String username,
-      @Named("authentication.password") final String password,
-      @Named("authentication.keystoneToken") final String keystoneToken,
+      @Nullable @Named("authentication.username") final String username,
+      @Nullable @Named("authentication.password") final String password,
+      @Nullable @Named("authentication.keystoneToken") final String keystoneToken,
       @Named("virtualhost") final boolean virtualHost,
       @Named("overwrite.weight") final double overwriteWeight) throws Exception {
     // SOH needs to use a special response consumer to extract the returned object id
@@ -1027,15 +1030,16 @@ public class OGModule extends AbstractModule {
   @Named("read")
   public Supplier<Request> provideRead(
       @Named("request.id") final Function<Map<String, String>, String> id, final Scheme scheme,
-      @ReadHost final Function<Map<String, String>, String> host, @Named("port") final Integer port,
-      @Named("uri.root") final String uriRoot,
+      @ReadHost final Function<Map<String, String>, String> host,
+      @Nullable @Named("port") final Integer port,
+      @Nullable @Named("uri.root") final String uriRoot,
       @Named("container") final Function<Map<String, String>, String> container,
-      @ReadObjectName final Function<Map<String, String>, String> object,
+      @Nullable @ReadObjectName final Function<Map<String, String>, String> object,
       @ReadHeaders final Map<String, Function<Map<String, String>, String>> headers,
       @Named("read.context") final List<Function<Map<String, String>, String>> context,
-      @Named("authentication.username") final String username,
-      @Named("authentication.password") final String password,
-      @Named("authentication.keystoneToken") final String keystoneToken,
+      @Nullable @Named("authentication.username") final String username,
+      @Nullable @Named("authentication.password") final String password,
+      @Nullable @Named("authentication.keystoneToken") final String keystoneToken,
       @Named("virtualhost") final boolean virtualHost) {
 
     final Map<String, Function<Map<String, String>, String>> queryParameters =
@@ -1055,14 +1059,15 @@ public class OGModule extends AbstractModule {
   public Supplier<Request> provideMetadata(
       @Named("request.id") final Function<Map<String, String>, String> id, final Scheme scheme,
       @MetadataHost final Function<Map<String, String>, String> host,
-      @Named("port") final Integer port, @Named("uri.root") final String uriRoot,
+      @Nullable @Named("port") final Integer port,
+      @Nullable @Named("uri.root") final String uriRoot,
       @Named("container") final Function<Map<String, String>, String> container,
-      @MetadataObjectName final Function<Map<String, String>, String> object,
+      @Nullable @MetadataObjectName final Function<Map<String, String>, String> object,
       @MetadataHeaders final Map<String, Function<Map<String, String>, String>> headers,
       @Named("metadata.context") final List<Function<Map<String, String>, String>> context,
-      @Named("authentication.username") final String username,
-      @Named("authentication.password") final String password,
-      @Named("authentication.keystoneToken") final String keystoneToken,
+      @Nullable @Named("authentication.username") final String username,
+      @Nullable @Named("authentication.password") final String password,
+      @Nullable @Named("authentication.keystoneToken") final String keystoneToken,
       @Named("virtualhost") final boolean virtualHost) {
 
     final Map<String, Function<Map<String, String>, String>> queryParameters =
@@ -1082,14 +1087,15 @@ public class OGModule extends AbstractModule {
   public Supplier<Request> provideDelete(
       @Named("request.id") final Function<Map<String, String>, String> id, final Scheme scheme,
       @DeleteHost final Function<Map<String, String>, String> host,
-      @Named("port") final Integer port, @Named("uri.root") final String uriRoot,
+      @Nullable @Named("port") final Integer port,
+      @Nullable @Named("uri.root") final String uriRoot,
       @Named("container") final Function<Map<String, String>, String> container,
-      @DeleteObjectName final Function<Map<String, String>, String> object,
+      @Nullable @DeleteObjectName final Function<Map<String, String>, String> object,
       @DeleteHeaders final Map<String, Function<Map<String, String>, String>> headers,
       @Named("delete.context") final List<Function<Map<String, String>, String>> context,
-      @Named("authentication.username") final String username,
-      @Named("authentication.password") final String password,
-      @Named("authentication.keystoneToken") final String keystoneToken,
+      @Nullable @Named("authentication.username") final String username,
+      @Nullable @Named("authentication.password") final String password,
+      @Nullable @Named("authentication.keystoneToken") final String keystoneToken,
       @Named("virtualhost") final boolean virtualHost) {
 
     final Map<String, Function<Map<String, String>, String>> queryParameters =
@@ -1109,14 +1115,15 @@ public class OGModule extends AbstractModule {
   public Supplier<Request> provideList(
       @Named("request.id") final Function<Map<String, String>, String> id, final Api api,
       final Scheme scheme, @ListHost final Function<Map<String, String>, String> host,
-      @Named("port") final Integer port, @Named("uri.root") final String uriRoot,
+      @Nullable @Named("port") final Integer port,
+      @Nullable @Named("uri.root") final String uriRoot,
       @ListQueryParameters final Map<String, Function<Map<String, String>, String>> queryParameters,
       @Named("container") final Function<Map<String, String>, String> container,
       @ListHeaders final Map<String, Function<Map<String, String>, String>> headers,
       @Named("list.context") final List<Function<Map<String, String>, String>> context,
-      @Named("authentication.username") final String username,
-      @Named("authentication.password") final String password,
-      @Named("authentication.keystoneToken") final String keystoneToken,
+      @Nullable @Named("authentication.username") final String username,
+      @Nullable @Named("authentication.password") final String password,
+      @Nullable @Named("authentication.keystoneToken") final String keystoneToken,
       @Named("virtualhost") final boolean virtualHost) throws Exception {
 
     final Supplier<Body> bodySupplier = Suppliers.of(Bodies.none());
