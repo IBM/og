@@ -10,6 +10,7 @@ package com.cleversafe.og.json;
 
 import java.util.Map;
 
+import com.cleversafe.og.api.BodySource;
 import com.google.common.collect.Maps;
 
 public class OperationConfig {
@@ -18,6 +19,7 @@ public class OperationConfig {
   public ObjectConfig object;
   public Map<String, SelectionConfig<String>> headers;
   public Map<String, String> parameters;
+  public BodySource body;
 
   public OperationConfig(final double weight) {
     this();
@@ -30,5 +32,6 @@ public class OperationConfig {
     this.object = new ObjectConfig();
     this.headers = Maps.newLinkedHashMap();
     this.parameters = Maps.newLinkedHashMap();
+    this.body = BodySource.NONE;
   }
 }
