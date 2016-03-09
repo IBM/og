@@ -12,13 +12,10 @@ import java.net.URI;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
+import com.cleversafe.og.api.*;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
-import com.cleversafe.og.api.DataType;
-import com.cleversafe.og.api.Method;
-import com.cleversafe.og.api.Request;
-import com.cleversafe.og.api.Response;
 import com.cleversafe.og.util.Context;
 
 /**
@@ -48,6 +45,7 @@ public class RequestLogEntry {
   public final String clientRequestId;
   public final String requestId;
   public final RequestStats stat;
+  public final Long originalObjectLength;
   public final Long objectLength;
   public final String objectName;
 
@@ -107,6 +105,12 @@ public class RequestLogEntry {
     this.clientRequestId = request.getContext().get(Context.X_OG_REQUEST_ID);
     this.requestId = response.headers().get(X_CLV_REQUEST_ID);
     this.stat = new RequestStats(timestamps);
+    // On overwrite, log the original size of the object before overwrite
+    if(request.getOperation() == Operation.OVERWRITE) {
+      this.originalObjectLength = Long.parseLong(request.getContext().get(Context.X_OG_OBJECT_SIZE));
+    } else {
+      this.originalObjectLength = null;
+    }
     this.objectLength = objectSize;
     this.objectName = operationObjectName;
   }

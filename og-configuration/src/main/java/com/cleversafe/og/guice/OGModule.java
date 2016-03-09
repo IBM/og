@@ -23,31 +23,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nullable;
 import javax.inject.Named;
 
-import com.cleversafe.og.api.Body;
-import com.cleversafe.og.api.Client;
-import com.cleversafe.og.api.DataType;
-import com.cleversafe.og.api.Method;
-import com.cleversafe.og.api.Operation;
-import com.cleversafe.og.api.Request;
+import com.cleversafe.og.api.*;
 import com.cleversafe.og.client.ApacheClient;
-import com.cleversafe.og.guice.annotation.DeleteHeaders;
-import com.cleversafe.og.guice.annotation.DeleteHost;
-import com.cleversafe.og.guice.annotation.DeleteObjectName;
-import com.cleversafe.og.guice.annotation.ListHeaders;
-import com.cleversafe.og.guice.annotation.ListHost;
-import com.cleversafe.og.guice.annotation.ListQueryParameters;
-import com.cleversafe.og.guice.annotation.MetadataHeaders;
-import com.cleversafe.og.guice.annotation.MetadataHost;
-import com.cleversafe.og.guice.annotation.MetadataObjectName;
-import com.cleversafe.og.guice.annotation.OverwriteHeaders;
-import com.cleversafe.og.guice.annotation.OverwriteHost;
-import com.cleversafe.og.guice.annotation.OverwriteObjectName;
-import com.cleversafe.og.guice.annotation.ReadHeaders;
-import com.cleversafe.og.guice.annotation.ReadHost;
-import com.cleversafe.og.guice.annotation.ReadObjectName;
-import com.cleversafe.og.guice.annotation.WriteHeaders;
-import com.cleversafe.og.guice.annotation.WriteHost;
-import com.cleversafe.og.guice.annotation.WriteObjectName;
+import com.cleversafe.og.guice.annotation.*;
 import com.cleversafe.og.http.Api;
 import com.cleversafe.og.http.BasicAuth;
 import com.cleversafe.og.http.Bodies;
@@ -820,6 +798,18 @@ public class OGModule extends AbstractModule {
     return createBodySupplier(wrc.build());
   }
 
+
+  @Provides
+  @Singleton
+  @OverwriteBody
+  public Function<Map<String, String>, Body> provideOverwriteBody(){
+    if(this.config.overwrite.body == BodySource.EXISTING) {
+      return createBodySupplier();
+    } else {
+      return provideBody();
+    }
+  }
+
   private static Distribution createSizeDistribution(final FilesizeConfig filesize) {
     final SizeUnit averageUnit = checkNotNull(filesize.averageUnit);
     final SizeUnit spreadUnit = checkNotNull(filesize.spreadUnit);
@@ -861,6 +851,26 @@ public class OGModule extends AbstractModule {
     };
 
     return MoreFunctions.forSupplier(bodySupplier);
+  }
+
+  private Function<Map<String, String>, Body> createBodySupplier() {
+    final DataType data = checkNotNull(this.config.data);
+    checkArgument(DataType.NONE != data, "Unacceptable data [%s]", data);
+
+    final Function<Map<String, String>, Body> function = new Function<Map<String, String>, Body>() {
+      @Override
+      public Body apply(@Nullable Map<String, String> input) {
+        String size = input.get(Context.X_OG_OBJECT_SIZE);
+          switch (data) {
+            case ZEROES:
+              return Bodies.zeroes(Long.parseLong(size));
+            default:
+              return Bodies.random(Long.parseLong(size));
+          }
+        }
+    };
+
+    return function;
   }
 
   @Provides
@@ -1006,7 +1016,7 @@ public class OGModule extends AbstractModule {
       @Nullable @OverwriteObjectName final Function<Map<String, String>, String> object,
       @OverwriteHeaders final Map<String, Function<Map<String, String>, String>> headers,
       @Named("overwrite.context") final List<Function<Map<String, String>, String>> context,
-      final Function<Map<String, String>, Body> body,
+      @OverwriteBody final Function<Map<String, String>, Body> body,
       @Nullable @Named("authentication.username") final String username,
       @Nullable @Named("authentication.password") final String password,
       @Nullable @Named("authentication.keystoneToken") final String keystoneToken,
