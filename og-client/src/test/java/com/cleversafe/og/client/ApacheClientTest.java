@@ -490,8 +490,12 @@ public class ApacheClientTest {
       final boolean chunkedEncoding) throws InterruptedException, ExecutionException {
     final Client client = new ApacheClient.Builder().usingChunkedEncoding(chunkedEncoding).build();
 
-    final Request request =
-        new HttpRequest.Builder(method, uri, operation).withBody(requestBody).build();
+    final HttpRequest.Builder builder =
+        new HttpRequest.Builder(method, uri, operation);
+    builder.withBody(requestBody);
+    builder.withContext(Context.X_OG_OBJECT_SIZE, String.valueOf(requestBody.getSize()));
+    final Request request = builder.build();
+
     final Response response = client.execute(request).get();
     assertThat(response.getStatusCode(), is(200));
     assertThat(response.getBody().getDataType(), is(responseBody.getDataType()));
