@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.SSLContext;
 
 import org.apache.http.ConnectionReuseStrategy;
 import org.apache.http.Header;
@@ -46,6 +46,7 @@ import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.DefaultHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.conn.util.PublicSuffixMatcher;
 import org.apache.http.conn.util.PublicSuffixMatcherLoader;
 import org.apache.http.entity.AbstractHttpEntity;
@@ -60,6 +61,7 @@ import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpRequestExecutor;
+import org.apache.http.ssl.SSLContextBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -119,6 +121,7 @@ public class ApacheClient implements Client {
   private final int waitForContinue;
   private final int retryCount;
   private final boolean requestSentRetry;
+  private final boolean trustSelfSignedCertificates;
   private final HttpAuth authentication;
   private final String userAgent;
   private final long writeThroughput;
@@ -147,6 +150,7 @@ public class ApacheClient implements Client {
     this.waitForContinue = builder.waitForContinue;
     this.retryCount = builder.retryCount;
     this.requestSentRetry = builder.requestSentRetry;
+    this.trustSelfSignedCertificates = builder.trustSelfSignedCertificates;
     this.authentication = checkNotNull(builder.authentication);
     this.userAgent = builder.userAgent;
     this.writeThroughput = builder.writeThroughput;
@@ -251,8 +255,29 @@ public class ApacheClient implements Client {
     final String[] supportedProtocols = null;
     final String[] supportedCipherSuites = null;
     final HostnameVerifier hostnameVerifier = new DefaultHostnameVerifier(suffixMatcher);
-    return new SSLConnectionSocketFactory((SSLSocketFactory) SSLSocketFactory.getDefault(),
-        supportedProtocols, supportedCipherSuites, hostnameVerifier);
+    return new SSLConnectionSocketFactory(createSSLContext(), supportedProtocols,
+        supportedCipherSuites, hostnameVerifier);
+
+  }
+
+  private SSLContext createSSLContext() {
+    final SSLContextBuilder builder = SSLContextBuilder.create();
+    configureTrustStores(builder);
+    try {
+      return builder.build();
+    } catch (final Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private void configureTrustStores(final SSLContextBuilder builder) {
+    try {
+      if (this.trustSelfSignedCertificates) {
+        builder.loadTrustMaterial(TrustSelfSignedStrategy.INSTANCE);
+      }
+    } catch (final Exception e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private SocketConfig createSocketConfig() {
@@ -529,13 +554,14 @@ public class ApacheClient implements Client {
             + "soRcvBuf=%s,%n" + "persistentConnections=%s,%n" + "validateAfterInactivity=%s,%n"
             + "maxIdleTime=%s,%n" + "chunkedEncoding=%s,%n" + "expectContinue=%s,%n"
             + "waitForContinue=%s,%n" + "retryCount=%s,%n" + "requestSentRetry=%s,%n"
-            + "authentication=%s,%n" + "userAgent=%s,%n" + "writeThroughput=%s,%n"
-            + "readThroughput=%s,%n" + "responseBodyConsumers=%s%n]",
+            + "trustSelfSignedCertificates=%s,%n" + "authentication=%s,%n" + "userAgent=%s,%n"
+            + "writeThroughput=%s,%n" + "readThroughput=%s,%n" + "responseBodyConsumers=%s%n]",
         this.connectTimeout, this.soTimeout, this.soReuseAddress, this.soLinger, this.soKeepAlive,
         this.tcpNoDelay, this.soSndBuf, this.soRcvBuf, this.persistentConnections,
         this.validateAfterInactivity, this.maxIdleTime, this.chunkedEncoding, this.expectContinue,
-        this.waitForContinue, this.retryCount, this.requestSentRetry, this.authentication,
-        this.userAgent, this.writeThroughput, this.readThroughput, this.responseBodyConsumers);
+        this.waitForContinue, this.retryCount, this.requestSentRetry,
+        this.trustSelfSignedCertificates, this.authentication, this.userAgent, this.writeThroughput,
+        this.readThroughput, this.responseBodyConsumers);
   }
 
   /**
@@ -558,6 +584,7 @@ public class ApacheClient implements Client {
     private int waitForContinue;
     private int retryCount;
     private boolean requestSentRetry;
+    private boolean trustSelfSignedCertificates;
     private HttpAuth authentication;
     private String userAgent;
     private long writeThroughput;
@@ -584,6 +611,7 @@ public class ApacheClient implements Client {
       this.waitForContinue = 3000;
       this.retryCount = 0;
       this.requestSentRetry = true;
+      this.trustSelfSignedCertificates = false;
       this.authentication = new NoneAuth();
       this.writeThroughput = 0;
       this.readThroughput = 0;
@@ -771,6 +799,17 @@ public class ApacheClient implements Client {
      */
     public Builder usingRequestSentRetry(final boolean requestSentRetry) {
       this.requestSentRetry = requestSentRetry;
+      return this;
+    }
+
+    /**
+     * Configures whether to trust self signed certificates for SSL/TLS requests
+     * 
+     * @param trustSelfSignedCertificates whether to trust self signed certificates
+     * @return this builder
+     */
+    public Builder usingTrustSelfSignedCertificates(final boolean trustSelfSignedCertificates) {
+      this.trustSelfSignedCertificates = trustSelfSignedCertificates;
       return this;
     }
 
