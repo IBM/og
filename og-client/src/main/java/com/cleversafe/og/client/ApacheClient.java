@@ -11,6 +11,7 @@ package com.cleversafe.og.client;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -121,6 +122,8 @@ public class ApacheClient implements Client {
   private final int waitForContinue;
   private final int retryCount;
   private final boolean requestSentRetry;
+  private final File trustStore;
+  private final String trustStorePassword;
   private final boolean trustSelfSignedCertificates;
   private final HttpAuth authentication;
   private final String userAgent;
@@ -150,6 +153,18 @@ public class ApacheClient implements Client {
     this.waitForContinue = builder.waitForContinue;
     this.retryCount = builder.retryCount;
     this.requestSentRetry = builder.requestSentRetry;
+    final String trustStore = builder.trustStore;
+    if (trustStore != null) {
+      this.trustStore = new File(trustStore);
+      checkArgument(this.trustStore.exists(), "trustStore does not exist [%s]", this.trustStore);
+    } else {
+      this.trustStore = null;
+    }
+    this.trustStorePassword = builder.trustStorePassword;
+    if (this.trustStorePassword != null) {
+      checkArgument(this.trustStore != null,
+          "if trustStorePassword is != null, trustStore must be != null");
+    }
     this.trustSelfSignedCertificates = builder.trustSelfSignedCertificates;
     this.authentication = checkNotNull(builder.authentication);
     this.userAgent = builder.userAgent;
@@ -272,6 +287,13 @@ public class ApacheClient implements Client {
 
   private void configureTrustStores(final SSLContextBuilder builder) {
     try {
+      if (this.trustStore != null) {
+        char[] password = null;
+        if (this.trustStorePassword != null) {
+          password = this.trustStorePassword.toCharArray();
+        }
+        builder.loadTrustMaterial(this.trustStore, password);
+      }
       if (this.trustSelfSignedCertificates) {
         builder.loadTrustMaterial(TrustSelfSignedStrategy.INSTANCE);
       }
@@ -554,14 +576,15 @@ public class ApacheClient implements Client {
             + "soRcvBuf=%s,%n" + "persistentConnections=%s,%n" + "validateAfterInactivity=%s,%n"
             + "maxIdleTime=%s,%n" + "chunkedEncoding=%s,%n" + "expectContinue=%s,%n"
             + "waitForContinue=%s,%n" + "retryCount=%s,%n" + "requestSentRetry=%s,%n"
-            + "trustSelfSignedCertificates=%s,%n" + "authentication=%s,%n" + "userAgent=%s,%n"
-            + "writeThroughput=%s,%n" + "readThroughput=%s,%n" + "responseBodyConsumers=%s%n]",
+            + "trustStore=%s,%n" + "trustStorePassword=%s,%n" + "trustSelfSignedCertificates=%s,%n"
+            + "authentication=%s,%n" + "userAgent=%s,%n" + "writeThroughput=%s,%n"
+            + "readThroughput=%s,%n" + "responseBodyConsumers=%s%n]",
         this.connectTimeout, this.soTimeout, this.soReuseAddress, this.soLinger, this.soKeepAlive,
         this.tcpNoDelay, this.soSndBuf, this.soRcvBuf, this.persistentConnections,
         this.validateAfterInactivity, this.maxIdleTime, this.chunkedEncoding, this.expectContinue,
-        this.waitForContinue, this.retryCount, this.requestSentRetry,
-        this.trustSelfSignedCertificates, this.authentication, this.userAgent, this.writeThroughput,
-        this.readThroughput, this.responseBodyConsumers);
+        this.waitForContinue, this.retryCount, this.requestSentRetry, this.trustStore,
+        this.trustStorePassword, this.trustSelfSignedCertificates, this.authentication,
+        this.userAgent, this.writeThroughput, this.readThroughput, this.responseBodyConsumers);
   }
 
   /**
@@ -584,6 +607,8 @@ public class ApacheClient implements Client {
     private int waitForContinue;
     private int retryCount;
     private boolean requestSentRetry;
+    private String trustStore;
+    private String trustStorePassword;
     private boolean trustSelfSignedCertificates;
     private HttpAuth authentication;
     private String userAgent;
@@ -611,6 +636,8 @@ public class ApacheClient implements Client {
       this.waitForContinue = 3000;
       this.retryCount = 0;
       this.requestSentRetry = true;
+      this.trustStore = null;
+      this.trustStorePassword = null;
       this.trustSelfSignedCertificates = false;
       this.authentication = new NoneAuth();
       this.writeThroughput = 0;
@@ -799,6 +826,29 @@ public class ApacheClient implements Client {
      */
     public Builder usingRequestSentRetry(final boolean requestSentRetry) {
       this.requestSentRetry = requestSentRetry;
+      return this;
+    }
+
+    /**
+     * Configures a path to a trust store to use for validating server certificates for SSL/TLS
+     * requests
+     * 
+     * @param trustStore path to a certificate trust store file
+     * @return this builder
+     */
+    public Builder withTrustStore(final String trustStore) {
+      this.trustStore = trustStore;
+      return this;
+    }
+
+    /**
+     * Configures a password to use for a configured trust store
+     * 
+     * @param trustStorePassword password for configured trust store
+     * @return this builder
+     */
+    public Builder withTrustStorePassword(final String trustStorePassword) {
+      this.trustStorePassword = trustStorePassword;
       return this;
     }
 

@@ -25,6 +25,8 @@ public class ClientConfig {
   public int waitForContinue;
   public int retryCount;
   public boolean requestSentRetry;
+  public String trustStore;
+  public String trustStorePassword;
   public boolean trustSelfSignedCertificates;
   public int writeThroughput;
   public int readThroughput;
@@ -46,6 +48,8 @@ public class ClientConfig {
     this.waitForContinue = 3000;
     this.retryCount = 0;
     this.requestSentRetry = true;
+    this.trustStore = null;
+    this.trustStorePassword = null;
     this.trustSelfSignedCertificates = false;
     this.writeThroughput = 0;
     this.readThroughput = 0;
