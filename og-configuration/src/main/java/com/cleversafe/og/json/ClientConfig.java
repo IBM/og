@@ -28,6 +28,9 @@ public class ClientConfig {
   public int retryCount;
   public boolean requestSentRetry;
   public List<String> cipherSuites;
+  public String keyStore;
+  public String keyStorePassword;
+  public String keyPassword;
   public String trustStore;
   public String trustStorePassword;
   public boolean trustSelfSignedCertificates;
@@ -52,6 +55,9 @@ public class ClientConfig {
     this.retryCount = 0;
     this.requestSentRetry = true;
     this.cipherSuites = null;
+    this.keyStore = null;
+    this.keyStorePassword = null;
+    this.keyPassword = null;
     this.trustStore = null;
     this.trustStorePassword = null;
     this.trustSelfSignedCertificates = false;

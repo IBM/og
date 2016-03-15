@@ -126,6 +126,9 @@ public class ApacheClient implements Client {
   private final int retryCount;
   private final boolean requestSentRetry;
   private final List<String> cipherSuites;
+  private final File keyStore;
+  private final String keyStorePassword;
+  private final String keyPassword;
   private final File trustStore;
   private final String trustStorePassword;
   private final boolean trustSelfSignedCertificates;
@@ -163,6 +166,24 @@ public class ApacheClient implements Client {
     } else {
       this.cipherSuites = null;
     }
+
+    final String keyStore = builder.keyStore;
+    if (keyStore != null) {
+      this.keyStore = new File(keyStore);
+      checkArgument(this.keyStore.exists(), "keyStore does not exist [%s]", this.keyStore);
+    } else {
+      this.keyStore = null;
+    }
+    this.keyStorePassword = builder.keyStorePassword;
+    if (this.keyStorePassword != null) {
+      checkArgument(this.keyStore != null,
+          "if keyStorePassword is != null, keyStore must be != null");
+    }
+    this.keyPassword = builder.keyPassword;
+    if (this.keyPassword != null) {
+      checkArgument(this.keyStore != null, "if keyPassword is != null, keyStore must be != null");
+    }
+
     final String trustStore = builder.trustStore;
     if (trustStore != null) {
       this.trustStore = new File(trustStore);
@@ -298,11 +319,24 @@ public class ApacheClient implements Client {
 
   private SSLSocketFactory createSSLSocketFactory() {
     final SSLContextBuilder builder = SSLContextBuilder.create();
+    configureKeyStores(builder);
     configureTrustStores(builder);
     try {
       return builder.build().getSocketFactory();
     } catch (final Exception e) {
       throw new RuntimeException(e);
+    }
+  }
+
+  private void configureKeyStores(final SSLContextBuilder builder) {
+    if (this.keyStore != null) {
+      try {
+        final char[] storePassword = this.keyStorePassword.toCharArray();
+        final char[] keyPassword = this.keyPassword.toCharArray();
+        builder.loadKeyMaterial(this.keyStore, storePassword, keyPassword);
+      } catch (final Exception e) {
+        throw new RuntimeException(e);
+      }
     }
   }
 
@@ -597,16 +631,17 @@ public class ApacheClient implements Client {
             + "soRcvBuf=%s,%n" + "persistentConnections=%s,%n" + "validateAfterInactivity=%s,%n"
             + "maxIdleTime=%s,%n" + "chunkedEncoding=%s,%n" + "expectContinue=%s,%n"
             + "waitForContinue=%s,%n" + "retryCount=%s,%n" + "requestSentRetry=%s,%n"
-            + "cipherSuites=%s,%n" + "trustStore=%s,%n" + "trustStorePassword=%s,%n"
+            + "cipherSuites=%s,%n" + "keyStore=%s,%n" + "keyStorePassword=%s,%n"
+            + "keyPassword=%s,%n" + "trustStore=%s,%n" + "trustStorePassword=%s,%n"
             + "trustSelfSignedCertificates=%s,%n" + "authentication=%s,%n" + "userAgent=%s,%n"
             + "writeThroughput=%s,%n" + "readThroughput=%s,%n" + "responseBodyConsumers=%s%n]",
         this.connectTimeout, this.soTimeout, this.soReuseAddress, this.soLinger, this.soKeepAlive,
         this.tcpNoDelay, this.soSndBuf, this.soRcvBuf, this.persistentConnections,
         this.validateAfterInactivity, this.maxIdleTime, this.chunkedEncoding, this.expectContinue,
         this.waitForContinue, this.retryCount, this.requestSentRetry, this.cipherSuites,
-        this.trustStore, this.trustStorePassword, this.trustSelfSignedCertificates,
-        this.authentication, this.userAgent, this.writeThroughput, this.readThroughput,
-        this.responseBodyConsumers);
+        this.keyStore, this.keyStorePassword, this.keyPassword, this.trustStore,
+        this.trustStorePassword, this.trustSelfSignedCertificates, this.authentication,
+        this.userAgent, this.writeThroughput, this.readThroughput, this.responseBodyConsumers);
   }
 
   /**
@@ -630,6 +665,9 @@ public class ApacheClient implements Client {
     private int retryCount;
     private boolean requestSentRetry;
     private List<String> cipherSuites;
+    public String keyStore;
+    public String keyStorePassword;
+    public String keyPassword;
     private String trustStore;
     private String trustStorePassword;
     private boolean trustSelfSignedCertificates;
@@ -660,6 +698,9 @@ public class ApacheClient implements Client {
       this.retryCount = 0;
       this.requestSentRetry = true;
       this.cipherSuites = null;
+      this.keyStore = null;
+      this.keyStorePassword = null;
+      this.keyPassword = null;
       this.trustStore = null;
       this.trustStorePassword = null;
       this.trustSelfSignedCertificates = false;
@@ -861,6 +902,39 @@ public class ApacheClient implements Client {
      */
     public Builder withCipherSuites(final List<String> cipherSuites) {
       this.cipherSuites = cipherSuites;
+      return this;
+    }
+
+    /**
+     * Configures a path to a key store to use for storing certificates requests
+     * 
+     * @param keyStore path to a certificate key store file
+     * @return this builder
+     */
+    public Builder withKeyStore(final String keyStore) {
+      this.keyStore = keyStore;
+      return this;
+    }
+
+    /**
+     * Configures a password to use for a configured key store
+     * 
+     * @param keyStorePassword password for configured key store
+     * @return this builder
+     */
+    public Builder withKeyStorePassword(final String keyStorePassword) {
+      this.keyStorePassword = keyStorePassword;
+      return this;
+    }
+
+    /**
+     * Configures a password to use for a certificate in the configured key store
+     * 
+     * @param keyPassword password for a certificate in the configured key store
+     * @return this builder
+     */
+    public Builder withKeyPassword(final String keyPassword) {
+      this.keyPassword = keyPassword;
       return this;
     }
 
