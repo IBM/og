@@ -125,6 +125,7 @@ public class ApacheClient implements Client {
   private final int waitForContinue;
   private final int retryCount;
   private final boolean requestSentRetry;
+  private final List<String> protocols;
   private final List<String> cipherSuites;
   private final File keyStore;
   private final String keyStorePassword;
@@ -160,6 +161,15 @@ public class ApacheClient implements Client {
     this.waitForContinue = builder.waitForContinue;
     this.retryCount = builder.retryCount;
     this.requestSentRetry = builder.requestSentRetry;
+
+    // TODO validate protocol values
+    final List<String> protocols = builder.protocols;
+    if (protocols != null) {
+      this.protocols = ImmutableList.copyOf(protocols);
+    } else {
+      this.protocols = null;
+    }
+
     final List<String> cipherSuites = builder.cipherSuites;
     if (cipherSuites != null) {
       this.cipherSuites = ImmutableList.copyOf(cipherSuites);
@@ -297,8 +307,11 @@ public class ApacheClient implements Client {
 
   private ConnectionSocketFactory createSslConnectionSocketFactory() {
     final SSLSocketFactory sslSocketFactory = createSSLSocketFactory();
-    final String[] supportedProtocols = null;
+    String[] configuredProtocols = null;
     String[] configuredCipherSuites = null;
+    if (this.protocols != null) {
+      configuredProtocols = Iterables.toArray(this.protocols, String.class);
+    }
     if (this.cipherSuites != null) {
       final List<String> supportedCipherSuites =
           ImmutableList.copyOf(sslSocketFactory.getSupportedCipherSuites());
@@ -312,7 +325,7 @@ public class ApacheClient implements Client {
     final PublicSuffixMatcher suffixMatcher = PublicSuffixMatcherLoader.getDefault();
     final HostnameVerifier hostnameVerifier = new DefaultHostnameVerifier(suffixMatcher);
 
-    return new SSLConnectionSocketFactory(sslSocketFactory, supportedProtocols,
+    return new SSLConnectionSocketFactory(sslSocketFactory, configuredProtocols,
         configuredCipherSuites, hostnameVerifier);
 
   }
@@ -631,15 +644,15 @@ public class ApacheClient implements Client {
             + "soRcvBuf=%s,%n" + "persistentConnections=%s,%n" + "validateAfterInactivity=%s,%n"
             + "maxIdleTime=%s,%n" + "chunkedEncoding=%s,%n" + "expectContinue=%s,%n"
             + "waitForContinue=%s,%n" + "retryCount=%s,%n" + "requestSentRetry=%s,%n"
-            + "cipherSuites=%s,%n" + "keyStore=%s,%n" + "keyStorePassword=%s,%n"
+            + "protocols=%s,%n" + "cipherSuites=%s,%n" + "keyStore=%s,%n" + "keyStorePassword=%s,%n"
             + "keyPassword=%s,%n" + "trustStore=%s,%n" + "trustStorePassword=%s,%n"
             + "trustSelfSignedCertificates=%s,%n" + "authentication=%s,%n" + "userAgent=%s,%n"
             + "writeThroughput=%s,%n" + "readThroughput=%s,%n" + "responseBodyConsumers=%s%n]",
         this.connectTimeout, this.soTimeout, this.soReuseAddress, this.soLinger, this.soKeepAlive,
         this.tcpNoDelay, this.soSndBuf, this.soRcvBuf, this.persistentConnections,
         this.validateAfterInactivity, this.maxIdleTime, this.chunkedEncoding, this.expectContinue,
-        this.waitForContinue, this.retryCount, this.requestSentRetry, this.cipherSuites,
-        this.keyStore, this.keyStorePassword, this.keyPassword, this.trustStore,
+        this.waitForContinue, this.retryCount, this.requestSentRetry, this.protocols,
+        this.cipherSuites, this.keyStore, this.keyStorePassword, this.keyPassword, this.trustStore,
         this.trustStorePassword, this.trustSelfSignedCertificates, this.authentication,
         this.userAgent, this.writeThroughput, this.readThroughput, this.responseBodyConsumers);
   }
@@ -664,6 +677,7 @@ public class ApacheClient implements Client {
     private int waitForContinue;
     private int retryCount;
     private boolean requestSentRetry;
+    private List<String> protocols;
     private List<String> cipherSuites;
     public String keyStore;
     public String keyStorePassword;
@@ -697,6 +711,7 @@ public class ApacheClient implements Client {
       this.waitForContinue = 3000;
       this.retryCount = 0;
       this.requestSentRetry = true;
+      this.protocols = null;
       this.cipherSuites = null;
       this.keyStore = null;
       this.keyStorePassword = null;
@@ -891,6 +906,17 @@ public class ApacheClient implements Client {
      */
     public Builder usingRequestSentRetry(final boolean requestSentRetry) {
       this.requestSentRetry = requestSentRetry;
+      return this;
+    }
+
+    /**
+     * Configures a list of SSL/TLS protocols to support, in preferred order
+     * 
+     * @param protocols a list of protocols, in preferred order
+     * @return this builder
+     */
+    public Builder withProtocols(final List<String> protocols) {
+      this.protocols = protocols;
       return this;
     }
 

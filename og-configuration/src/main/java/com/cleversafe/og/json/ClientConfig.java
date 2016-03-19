@@ -27,6 +27,7 @@ public class ClientConfig {
   public int waitForContinue;
   public int retryCount;
   public boolean requestSentRetry;
+  public List<String> protocols;
   public List<String> cipherSuites;
   public String keyStore;
   public String keyStorePassword;
@@ -54,6 +55,7 @@ public class ClientConfig {
     this.waitForContinue = 3000;
     this.retryCount = 0;
     this.requestSentRetry = true;
+    this.protocols = null;
     this.cipherSuites = null;
     this.keyStore = null;
     this.keyStorePassword = null;

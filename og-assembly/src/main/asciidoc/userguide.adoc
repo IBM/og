@@ -1491,6 +1491,11 @@ authentication if absent.
 |No
 |true
 
+|protocols
+|List of String
+|No
+|None
+
 |cipher_suites
 |List of String
 |No
