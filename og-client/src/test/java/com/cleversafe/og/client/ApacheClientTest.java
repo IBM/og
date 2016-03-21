@@ -561,4 +561,9 @@ public class ApacheClientTest {
     final Response response = client.execute(request).get();
     assertThat(response.getContext(), hasEntry("key", "value"));
   }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testNullTrustStoreWithTrustStorePassword() {
+    new ApacheClient.Builder().withTrustStorePassword("password").build();
+  }
 }

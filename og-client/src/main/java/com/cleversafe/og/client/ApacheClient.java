@@ -11,11 +11,13 @@ package com.cleversafe.og.client;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Callable;
@@ -46,6 +48,7 @@ import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.DefaultHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.conn.util.PublicSuffixMatcher;
 import org.apache.http.conn.util.PublicSuffixMatcherLoader;
 import org.apache.http.entity.AbstractHttpEntity;
@@ -60,6 +63,7 @@ import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpRequestExecutor;
+import org.apache.http.ssl.SSLContextBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,7 +82,9 @@ import com.cleversafe.og.http.ResponseBodyConsumer;
 import com.cleversafe.og.util.Context;
 import com.cleversafe.og.util.io.MonitoringInputStream;
 import com.cleversafe.og.util.io.Streams;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ForwardingListenableFuture;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -119,6 +125,13 @@ public class ApacheClient implements Client {
   private final int waitForContinue;
   private final int retryCount;
   private final boolean requestSentRetry;
+  private final List<String> cipherSuites;
+  private final File keyStore;
+  private final String keyStorePassword;
+  private final String keyPassword;
+  private final File trustStore;
+  private final String trustStorePassword;
+  private final boolean trustSelfSignedCertificates;
   private final HttpAuth authentication;
   private final String userAgent;
   private final long writeThroughput;
@@ -147,6 +160,43 @@ public class ApacheClient implements Client {
     this.waitForContinue = builder.waitForContinue;
     this.retryCount = builder.retryCount;
     this.requestSentRetry = builder.requestSentRetry;
+    final List<String> cipherSuites = builder.cipherSuites;
+    if (cipherSuites != null) {
+      this.cipherSuites = ImmutableList.copyOf(cipherSuites);
+    } else {
+      this.cipherSuites = null;
+    }
+
+    final String keyStore = builder.keyStore;
+    if (keyStore != null) {
+      this.keyStore = new File(keyStore);
+      checkArgument(this.keyStore.exists(), "keyStore does not exist [%s]", this.keyStore);
+    } else {
+      this.keyStore = null;
+    }
+    this.keyStorePassword = builder.keyStorePassword;
+    if (this.keyStorePassword != null) {
+      checkArgument(this.keyStore != null,
+          "if keyStorePassword is != null, keyStore must be != null");
+    }
+    this.keyPassword = builder.keyPassword;
+    if (this.keyPassword != null) {
+      checkArgument(this.keyStore != null, "if keyPassword is != null, keyStore must be != null");
+    }
+
+    final String trustStore = builder.trustStore;
+    if (trustStore != null) {
+      this.trustStore = new File(trustStore);
+      checkArgument(this.trustStore.exists(), "trustStore does not exist [%s]", this.trustStore);
+    } else {
+      this.trustStore = null;
+    }
+    this.trustStorePassword = builder.trustStorePassword;
+    if (this.trustStorePassword != null) {
+      checkArgument(this.trustStore != null,
+          "if trustStorePassword is != null, trustStore must be != null");
+    }
+    this.trustSelfSignedCertificates = builder.trustSelfSignedCertificates;
     this.authentication = checkNotNull(builder.authentication);
     this.userAgent = builder.userAgent;
     this.writeThroughput = builder.writeThroughput;
@@ -246,13 +296,65 @@ public class ApacheClient implements Client {
   }
 
   private ConnectionSocketFactory createSslConnectionSocketFactory() {
-    // TODO HTTPS: setHostnameVerifier, setSslcontext, and SetSSLSocketFactory methods
-    final PublicSuffixMatcher suffixMatcher = PublicSuffixMatcherLoader.getDefault();
+    final SSLSocketFactory sslSocketFactory = createSSLSocketFactory();
     final String[] supportedProtocols = null;
-    final String[] supportedCipherSuites = null;
+    String[] configuredCipherSuites = null;
+    if (this.cipherSuites != null) {
+      final List<String> supportedCipherSuites =
+          ImmutableList.copyOf(sslSocketFactory.getSupportedCipherSuites());
+      for (final String cipherSuite : this.cipherSuites) {
+        checkArgument(supportedCipherSuites.contains(cipherSuite), "Unsupported cipher suite [%s]",
+            cipherSuite);
+      }
+
+      configuredCipherSuites = Iterables.toArray(this.cipherSuites, String.class);
+    }
+    final PublicSuffixMatcher suffixMatcher = PublicSuffixMatcherLoader.getDefault();
     final HostnameVerifier hostnameVerifier = new DefaultHostnameVerifier(suffixMatcher);
-    return new SSLConnectionSocketFactory((SSLSocketFactory) SSLSocketFactory.getDefault(),
-        supportedProtocols, supportedCipherSuites, hostnameVerifier);
+
+    return new SSLConnectionSocketFactory(sslSocketFactory, supportedProtocols,
+        configuredCipherSuites, hostnameVerifier);
+
+  }
+
+  private SSLSocketFactory createSSLSocketFactory() {
+    final SSLContextBuilder builder = SSLContextBuilder.create();
+    configureKeyStores(builder);
+    configureTrustStores(builder);
+    try {
+      return builder.build().getSocketFactory();
+    } catch (final Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private void configureKeyStores(final SSLContextBuilder builder) {
+    if (this.keyStore != null) {
+      try {
+        final char[] storePassword = this.keyStorePassword.toCharArray();
+        final char[] keyPassword = this.keyPassword.toCharArray();
+        builder.loadKeyMaterial(this.keyStore, storePassword, keyPassword);
+      } catch (final Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
+
+  private void configureTrustStores(final SSLContextBuilder builder) {
+    try {
+      if (this.trustStore != null) {
+        char[] password = null;
+        if (this.trustStorePassword != null) {
+          password = this.trustStorePassword.toCharArray();
+        }
+        builder.loadTrustMaterial(this.trustStore, password);
+      }
+      if (this.trustSelfSignedCertificates) {
+        builder.loadTrustMaterial(TrustSelfSignedStrategy.INSTANCE);
+      }
+    } catch (final Exception e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private SocketConfig createSocketConfig() {
@@ -529,12 +631,16 @@ public class ApacheClient implements Client {
             + "soRcvBuf=%s,%n" + "persistentConnections=%s,%n" + "validateAfterInactivity=%s,%n"
             + "maxIdleTime=%s,%n" + "chunkedEncoding=%s,%n" + "expectContinue=%s,%n"
             + "waitForContinue=%s,%n" + "retryCount=%s,%n" + "requestSentRetry=%s,%n"
-            + "authentication=%s,%n" + "userAgent=%s,%n" + "writeThroughput=%s,%n"
-            + "readThroughput=%s,%n" + "responseBodyConsumers=%s%n]",
+            + "cipherSuites=%s,%n" + "keyStore=%s,%n" + "keyStorePassword=%s,%n"
+            + "keyPassword=%s,%n" + "trustStore=%s,%n" + "trustStorePassword=%s,%n"
+            + "trustSelfSignedCertificates=%s,%n" + "authentication=%s,%n" + "userAgent=%s,%n"
+            + "writeThroughput=%s,%n" + "readThroughput=%s,%n" + "responseBodyConsumers=%s%n]",
         this.connectTimeout, this.soTimeout, this.soReuseAddress, this.soLinger, this.soKeepAlive,
         this.tcpNoDelay, this.soSndBuf, this.soRcvBuf, this.persistentConnections,
         this.validateAfterInactivity, this.maxIdleTime, this.chunkedEncoding, this.expectContinue,
-        this.waitForContinue, this.retryCount, this.requestSentRetry, this.authentication,
+        this.waitForContinue, this.retryCount, this.requestSentRetry, this.cipherSuites,
+        this.keyStore, this.keyStorePassword, this.keyPassword, this.trustStore,
+        this.trustStorePassword, this.trustSelfSignedCertificates, this.authentication,
         this.userAgent, this.writeThroughput, this.readThroughput, this.responseBodyConsumers);
   }
 
@@ -558,6 +664,13 @@ public class ApacheClient implements Client {
     private int waitForContinue;
     private int retryCount;
     private boolean requestSentRetry;
+    private List<String> cipherSuites;
+    public String keyStore;
+    public String keyStorePassword;
+    public String keyPassword;
+    private String trustStore;
+    private String trustStorePassword;
+    private boolean trustSelfSignedCertificates;
     private HttpAuth authentication;
     private String userAgent;
     private long writeThroughput;
@@ -584,6 +697,13 @@ public class ApacheClient implements Client {
       this.waitForContinue = 3000;
       this.retryCount = 0;
       this.requestSentRetry = true;
+      this.cipherSuites = null;
+      this.keyStore = null;
+      this.keyStorePassword = null;
+      this.keyPassword = null;
+      this.trustStore = null;
+      this.trustStorePassword = null;
+      this.trustSelfSignedCertificates = false;
       this.authentication = new NoneAuth();
       this.writeThroughput = 0;
       this.readThroughput = 0;
@@ -771,6 +891,84 @@ public class ApacheClient implements Client {
      */
     public Builder usingRequestSentRetry(final boolean requestSentRetry) {
       this.requestSentRetry = requestSentRetry;
+      return this;
+    }
+
+    /**
+     * Configures a list of cipher suites for SSL/TLS requests, in preferred order
+     * 
+     * @param cipherSuites a list of cipher suites, in preferred order
+     * @return this builder
+     */
+    public Builder withCipherSuites(final List<String> cipherSuites) {
+      this.cipherSuites = cipherSuites;
+      return this;
+    }
+
+    /**
+     * Configures a path to a key store to use for storing certificates requests
+     * 
+     * @param keyStore path to a certificate key store file
+     * @return this builder
+     */
+    public Builder withKeyStore(final String keyStore) {
+      this.keyStore = keyStore;
+      return this;
+    }
+
+    /**
+     * Configures a password to use for a configured key store
+     * 
+     * @param keyStorePassword password for configured key store
+     * @return this builder
+     */
+    public Builder withKeyStorePassword(final String keyStorePassword) {
+      this.keyStorePassword = keyStorePassword;
+      return this;
+    }
+
+    /**
+     * Configures a password to use for a certificate in the configured key store
+     * 
+     * @param keyPassword password for a certificate in the configured key store
+     * @return this builder
+     */
+    public Builder withKeyPassword(final String keyPassword) {
+      this.keyPassword = keyPassword;
+      return this;
+    }
+
+    /**
+     * Configures a path to a trust store to use for validating server certificates for SSL/TLS
+     * requests
+     * 
+     * @param trustStore path to a certificate trust store file
+     * @return this builder
+     */
+    public Builder withTrustStore(final String trustStore) {
+      this.trustStore = trustStore;
+      return this;
+    }
+
+    /**
+     * Configures a password to use for a configured trust store
+     * 
+     * @param trustStorePassword password for configured trust store
+     * @return this builder
+     */
+    public Builder withTrustStorePassword(final String trustStorePassword) {
+      this.trustStorePassword = trustStorePassword;
+      return this;
+    }
+
+    /**
+     * Configures whether to trust self signed certificates for SSL/TLS requests
+     * 
+     * @param trustSelfSignedCertificates whether to trust self signed certificates
+     * @return this builder
+     */
+    public Builder usingTrustSelfSignedCertificates(final boolean trustSelfSignedCertificates) {
+      this.trustSelfSignedCertificates = trustSelfSignedCertificates;
       return this;
     }
 
