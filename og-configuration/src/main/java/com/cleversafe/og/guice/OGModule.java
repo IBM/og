@@ -965,7 +965,7 @@ public class OGModule extends AbstractModule {
         .usingChunkedEncoding(clientConfig.chunkedEncoding)
         .usingExpectContinue(clientConfig.expectContinue)
         .withWaitForContinue(clientConfig.waitForContinue).withRetryCount(clientConfig.retryCount)
-        .usingRequestSentRetry(clientConfig.requestSentRetry)
+        .usingRequestSentRetry(clientConfig.requestSentRetry).withProtocols(clientConfig.protocols)
         .withCipherSuites(clientConfig.cipherSuites).withKeyStore(clientConfig.keyStore)
         .withKeyStorePassword(clientConfig.keyStorePassword)
         .withKeyPassword(clientConfig.keyPassword).withTrustStore(clientConfig.trustStore)
