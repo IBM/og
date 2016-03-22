@@ -971,6 +971,8 @@ public class OGModule extends AbstractModule {
         .withKeyPassword(clientConfig.keyPassword).withTrustStore(clientConfig.trustStore)
         .withTrustStorePassword(clientConfig.trustStorePassword)
         .usingTrustSelfSignedCertificates(clientConfig.trustSelfSignedCertificates)
+        .withDnsCacheTtl(clientConfig.dnsCacheTtl)
+        .withDnsCacheNegativeTtl(clientConfig.dnsCacheNegativeTtl)
         .withAuthentication(authentication.get(authType))
         .withUserAgent(String.format("og-%s", Version.displayVersion()))
         .withWriteThroughput(clientConfig.writeThroughput)

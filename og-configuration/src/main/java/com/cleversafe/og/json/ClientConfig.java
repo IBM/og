@@ -35,6 +35,8 @@ public class ClientConfig {
   public String trustStore;
   public String trustStorePassword;
   public boolean trustSelfSignedCertificates;
+  public int dnsCacheTtl;
+  public int dnsCacheNegativeTtl;
   public int writeThroughput;
   public int readThroughput;
 
@@ -63,6 +65,8 @@ public class ClientConfig {
     this.trustStore = null;
     this.trustStorePassword = null;
     this.trustSelfSignedCertificates = false;
+    this.dnsCacheTtl = 60;
+    this.dnsCacheNegativeTtl = 10;
     this.writeThroughput = 0;
     this.readThroughput = 0;
   }

@@ -1531,6 +1531,16 @@ authentication if absent.
 |No
 |false
 
+|dns_cache_ttl
+|Integer
+|No
+|60
+
+|dns_cache_negative_ttl
+|Integer
+|No
+|10
+
 |write_throughput
 |Integer
 |No

@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.security.Security;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -133,6 +134,8 @@ public class ApacheClient implements Client {
   private final File trustStore;
   private final String trustStorePassword;
   private final boolean trustSelfSignedCertificates;
+  private final int dnsCacheTtl;
+  private final int dnsCacheNegativeTtl;
   private final HttpAuth authentication;
   private final String userAgent;
   private final long writeThroughput;
@@ -207,6 +210,8 @@ public class ApacheClient implements Client {
           "if trustStorePassword is != null, trustStore must be != null");
     }
     this.trustSelfSignedCertificates = builder.trustSelfSignedCertificates;
+    this.dnsCacheTtl = builder.dnsCacheTtl;
+    this.dnsCacheNegativeTtl = builder.dnsCacheNegativeTtl;
     this.authentication = checkNotNull(builder.authentication);
     this.userAgent = builder.userAgent;
     this.writeThroughput = builder.writeThroughput;
@@ -231,10 +236,17 @@ public class ApacheClient implements Client {
     checkArgument(this.waitForContinue > 0, "waitForContinue must be > 0 [%s]",
         this.waitForContinue);
     checkArgument(this.retryCount >= 0, "retryCount must be >= 0 [%s]", this.retryCount);
+    checkArgument(this.dnsCacheTtl >= -1, "dnsCacheTtl must be >= -1 [%s]", this.dnsCacheTtl);
+    checkArgument(this.dnsCacheNegativeTtl >= -1, "dnsCacheNegativeTtl must be >= -1 [%s]",
+        this.dnsCacheNegativeTtl);
     checkArgument(this.writeThroughput >= 0, "writeThroughput must be >= 0 [%s]",
         this.writeThroughput);
     checkArgument(this.readThroughput >= 0, "readThroughput must be >= 0 [%s]",
         this.readThroughput);
+
+    Security.setProperty("networkaddress.cache.ttl", String.valueOf(this.dnsCacheTtl));
+    Security.setProperty("networkaddress.cache.negative.ttl",
+        String.valueOf(this.dnsCacheNegativeTtl));
 
     this.client = createClient();
   }
@@ -646,15 +658,17 @@ public class ApacheClient implements Client {
             + "waitForContinue=%s,%n" + "retryCount=%s,%n" + "requestSentRetry=%s,%n"
             + "protocols=%s,%n" + "cipherSuites=%s,%n" + "keyStore=%s,%n" + "keyStorePassword=%s,%n"
             + "keyPassword=%s,%n" + "trustStore=%s,%n" + "trustStorePassword=%s,%n"
-            + "trustSelfSignedCertificates=%s,%n" + "authentication=%s,%n" + "userAgent=%s,%n"
+            + "trustSelfSignedCertificates=%s,%n" + "dnsCacheTtl=%s,%n"
+            + "dnsCacheNegativeTtl=%s,%n" + "authentication=%s,%n" + "userAgent=%s,%n"
             + "writeThroughput=%s,%n" + "readThroughput=%s,%n" + "responseBodyConsumers=%s%n]",
         this.connectTimeout, this.soTimeout, this.soReuseAddress, this.soLinger, this.soKeepAlive,
         this.tcpNoDelay, this.soSndBuf, this.soRcvBuf, this.persistentConnections,
         this.validateAfterInactivity, this.maxIdleTime, this.chunkedEncoding, this.expectContinue,
         this.waitForContinue, this.retryCount, this.requestSentRetry, this.protocols,
         this.cipherSuites, this.keyStore, this.keyStorePassword, this.keyPassword, this.trustStore,
-        this.trustStorePassword, this.trustSelfSignedCertificates, this.authentication,
-        this.userAgent, this.writeThroughput, this.readThroughput, this.responseBodyConsumers);
+        this.trustStorePassword, this.trustSelfSignedCertificates, this.dnsCacheTtl,
+        this.dnsCacheNegativeTtl, this.authentication, this.userAgent, this.writeThroughput,
+        this.readThroughput, this.responseBodyConsumers);
   }
 
   /**
@@ -685,6 +699,8 @@ public class ApacheClient implements Client {
     private String trustStore;
     private String trustStorePassword;
     private boolean trustSelfSignedCertificates;
+    private int dnsCacheTtl;
+    private int dnsCacheNegativeTtl;
     private HttpAuth authentication;
     private String userAgent;
     private long writeThroughput;
@@ -719,6 +735,8 @@ public class ApacheClient implements Client {
       this.trustStore = null;
       this.trustStorePassword = null;
       this.trustSelfSignedCertificates = false;
+      this.dnsCacheTtl = 60;
+      this.dnsCacheNegativeTtl = 10;
       this.authentication = new NoneAuth();
       this.writeThroughput = 0;
       this.readThroughput = 0;
@@ -995,6 +1013,28 @@ public class ApacheClient implements Client {
      */
     public Builder usingTrustSelfSignedCertificates(final boolean trustSelfSignedCertificates) {
       this.trustSelfSignedCertificates = trustSelfSignedCertificates;
+      return this;
+    }
+
+    /**
+     * Configures dns cache ttl, in seconds
+     * 
+     * @param dnsCacheTtl, cache ttl, in seconds
+     * @return this builder
+     */
+    public Builder withDnsCacheTtl(final int dnsCacheTtl) {
+      this.dnsCacheTtl = dnsCacheTtl;
+      return this;
+    }
+
+    /**
+     * Configures dns cache ttl for negative responses, in seconds
+     * 
+     * @param dnsCacheNegativeTtl, cache ttl for negative responses, in seconds
+     * @return this builder
+     */
+    public Builder withDnsCacheNegativeTtl(final int dnsCacheNegativeTtl) {
+      this.dnsCacheNegativeTtl = dnsCacheNegativeTtl;
       return this;
     }
 
