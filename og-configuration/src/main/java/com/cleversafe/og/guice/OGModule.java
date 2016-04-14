@@ -11,8 +11,13 @@ package com.cleversafe.og.guice;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +34,7 @@ import com.cleversafe.og.guice.annotation.*;
 import com.cleversafe.og.http.Api;
 import com.cleversafe.og.http.BasicAuth;
 import com.cleversafe.og.http.Bodies;
+import com.cleversafe.og.http.Credential;
 import com.cleversafe.og.http.Headers;
 import com.cleversafe.og.http.HttpAuth;
 import com.cleversafe.og.http.HttpUtil;
@@ -42,6 +48,7 @@ import com.cleversafe.og.json.ClientConfig;
 import com.cleversafe.og.json.ConcurrencyConfig;
 import com.cleversafe.og.json.ConcurrencyType;
 import com.cleversafe.og.json.ContainerConfig;
+import com.cleversafe.og.json.CredentialSource;
 import com.cleversafe.og.json.DistributionType;
 import com.cleversafe.og.json.FilesizeConfig;
 import com.cleversafe.og.json.OGConfig;
@@ -712,6 +719,55 @@ public class OGModule extends AbstractModule {
     return ImmutableList.of(function);
   }
 
+  @Provides
+  @Singleton
+  @Named("credentials")
+  private Function<Map<String, String>, Credential> provideCredentials() throws Exception {
+    final List<Credential> credentialList = Lists.newArrayList();
+
+    if (AuthType.NONE == this.config.authentication.type) {
+      return null;
+    } else { //BASIC, AWSV2, AWSV4
+      if (CredentialSource.FILE == this.config.authentication.credentialSource) {
+        Path filepath = FileSystems.getDefault().getPath(this.config.authentication.credentialFile);
+        Charset charset = Charset.forName("US-ASCII");
+        try {
+          BufferedReader reader = Files.newBufferedReader(filepath, charset);
+          String credLine = null;
+          while ((credLine = reader.readLine()) != null) {
+            System.out.println(credLine);
+            if (AuthType.KEYSTONE == this.config.authentication.type) {
+              Credential credential = new Credential(null, null, credLine);
+              credentialList.add(credential);
+            } else {
+              String[] splitCredLine = credLine.split(",");
+              if (splitCredLine.length != 2) {
+                throw new Exception("Invalid credentials '" + credLine + "' provided for '" +
+                    this.config.authentication.type + "' authentication");
+              }
+              Credential credential = new Credential(splitCredLine[0], splitCredLine[1], null);
+              credentialList.add(credential);
+            }
+          }
+        } catch (IOException e) {
+          throw new Exception("CredentialSource set to FILE, but unable to read " +
+              this.config.authentication.credentialFile);
+        }
+      } else if (CredentialSource.CONFIG == this.config.authentication.credentialSource) {
+        Credential credential = new Credential(this.config.authentication.username, this.config.authentication.password,
+            this.config.authentication.keystoneToken);
+        credentialList.add(credential);
+      } else {
+        throw new IllegalArgumentException("Invalid CredentialSource: " + this.config.authentication.credentialSource);
+      }
+    }
+
+    if (credentialList.size() == 0) {
+      throw new Exception("No credentials provided for " + this.config.authentication.type);
+    }
+    final Supplier<Credential> headerSupplier = Suppliers.cycle(credentialList);
+    return MoreFunctions.forSupplier(headerSupplier);
+  }
 
   private Function<Map<String, String>, String> createHeaderSuppliers(
       final SelectionConfig<String> selectionConfig) {
@@ -998,17 +1054,14 @@ public class OGModule extends AbstractModule {
       @WriteHeaders final Map<String, Function<Map<String, String>, String>> headers,
       @Named("write.context") final List<Function<Map<String, String>, String>> context,
       final Function<Map<String, String>, Body> body,
-      @Nullable @Named("authentication.username") final String username,
-      @Nullable @Named("authentication.password") final String password,
-      @Nullable @Named("authentication.keystoneToken") final String keystoneToken,
+      @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
       @Named("virtualhost") final boolean virtualHost) {
 
     final Map<String, Function<Map<String, String>, String>> queryParameters =
         Collections.emptyMap();
 
     return createRequestSupplier(Operation.WRITE, id, Method.PUT, scheme, host, port, uriRoot,
-        container, object, queryParameters, headers, context, body, username, password,
-        keystoneToken, virtualHost);
+        container, object, queryParameters, headers, context, body, credentials, virtualHost);
   }
 
   @Provides
@@ -1024,9 +1077,7 @@ public class OGModule extends AbstractModule {
       @OverwriteHeaders final Map<String, Function<Map<String, String>, String>> headers,
       @Named("overwrite.context") final List<Function<Map<String, String>, String>> context,
       @OverwriteBody final Function<Map<String, String>, Body> body,
-      @Nullable @Named("authentication.username") final String username,
-      @Nullable @Named("authentication.password") final String password,
-      @Nullable @Named("authentication.keystoneToken") final String keystoneToken,
+      @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
       @Named("virtualhost") final boolean virtualHost,
       @Named("overwrite.weight") final double overwriteWeight) throws Exception {
     // SOH needs to use a special response consumer to extract the returned object id
@@ -1038,8 +1089,7 @@ public class OGModule extends AbstractModule {
         Collections.emptyMap();
 
     return createRequestSupplier(Operation.OVERWRITE, id, Method.PUT, scheme, host, port, uriRoot,
-        container, object, queryParameters, headers, context, body, username, password,
-        keystoneToken, virtualHost);
+        container, object, queryParameters, headers, context, body, credentials, virtualHost);
   }
 
   @Provides
@@ -1054,9 +1104,7 @@ public class OGModule extends AbstractModule {
       @Nullable @ReadObjectName final Function<Map<String, String>, String> object,
       @ReadHeaders final Map<String, Function<Map<String, String>, String>> headers,
       @Named("read.context") final List<Function<Map<String, String>, String>> context,
-      @Nullable @Named("authentication.username") final String username,
-      @Nullable @Named("authentication.password") final String password,
-      @Nullable @Named("authentication.keystoneToken") final String keystoneToken,
+      @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
       @Named("virtualhost") final boolean virtualHost) {
 
     final Map<String, Function<Map<String, String>, String>> queryParameters =
@@ -1066,8 +1114,7 @@ public class OGModule extends AbstractModule {
     final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
 
     return createRequestSupplier(Operation.READ, id, Method.GET, scheme, host, port, uriRoot,
-        container, object, queryParameters, headers, context, body, username, password,
-        keystoneToken, virtualHost);
+        container, object, queryParameters, headers, context, body, credentials, virtualHost);
   }
 
   @Provides
@@ -1082,9 +1129,7 @@ public class OGModule extends AbstractModule {
       @Nullable @MetadataObjectName final Function<Map<String, String>, String> object,
       @MetadataHeaders final Map<String, Function<Map<String, String>, String>> headers,
       @Named("metadata.context") final List<Function<Map<String, String>, String>> context,
-      @Nullable @Named("authentication.username") final String username,
-      @Nullable @Named("authentication.password") final String password,
-      @Nullable @Named("authentication.keystoneToken") final String keystoneToken,
+      @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
       @Named("virtualhost") final boolean virtualHost) {
 
     final Map<String, Function<Map<String, String>, String>> queryParameters =
@@ -1094,8 +1139,7 @@ public class OGModule extends AbstractModule {
     final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
 
     return createRequestSupplier(Operation.METADATA, id, Method.HEAD, scheme, host, port, uriRoot,
-        container, object, queryParameters, headers, context, body, username, password,
-        keystoneToken, virtualHost);
+        container, object, queryParameters, headers, context, body, credentials, virtualHost);
   }
 
   @Provides
@@ -1110,9 +1154,7 @@ public class OGModule extends AbstractModule {
       @Nullable @DeleteObjectName final Function<Map<String, String>, String> object,
       @DeleteHeaders final Map<String, Function<Map<String, String>, String>> headers,
       @Named("delete.context") final List<Function<Map<String, String>, String>> context,
-      @Nullable @Named("authentication.username") final String username,
-      @Nullable @Named("authentication.password") final String password,
-      @Nullable @Named("authentication.keystoneToken") final String keystoneToken,
+      @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
       @Named("virtualhost") final boolean virtualHost) {
 
     final Map<String, Function<Map<String, String>, String>> queryParameters =
@@ -1122,8 +1164,7 @@ public class OGModule extends AbstractModule {
     final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
 
     return createRequestSupplier(Operation.DELETE, id, Method.DELETE, scheme, host, port, uriRoot,
-        container, object, queryParameters, headers, context, body, username, password,
-        keystoneToken, virtualHost);
+        container, object, queryParameters, headers, context, body, credentials, virtualHost);
   }
 
   @Provides
@@ -1138,17 +1179,14 @@ public class OGModule extends AbstractModule {
       @Named("container") final Function<Map<String, String>, String> container,
       @ListHeaders final Map<String, Function<Map<String, String>, String>> headers,
       @Named("list.context") final List<Function<Map<String, String>, String>> context,
-      @Nullable @Named("authentication.username") final String username,
-      @Nullable @Named("authentication.password") final String password,
-      @Nullable @Named("authentication.keystoneToken") final String keystoneToken,
+      @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
       @Named("virtualhost") final boolean virtualHost) throws Exception {
 
     final Supplier<Body> bodySupplier = Suppliers.of(Bodies.none());
     final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
 
     return createRequestSupplier(Operation.LIST, id, Method.GET, scheme, host, port, uriRoot,
-        container, null, queryParameters, headers, context, body, username, password, keystoneToken,
-        virtualHost);
+        container, null, queryParameters, headers, context, body, credentials, virtualHost);
   }
 
   private Supplier<Request> createRequestSupplier(final Operation operation,
@@ -1159,11 +1197,11 @@ public class OGModule extends AbstractModule {
       final Map<String, Function<Map<String, String>, String>> queryParameters,
       final Map<String, Function<Map<String, String>, String>> headers,
       final List<Function<Map<String, String>, String>> context,
-      final Function<Map<String, String>, Body> body, final String username, final String password,
-      final String keystoneToken, final boolean virtualHost) {
+      final Function<Map<String, String>, Body> body,
+      final Function<Map<String, String>, Credential> credentials, final boolean virtualHost) {
 
     return new RequestSupplier(operation, id, method, scheme, host, port, uriRoot, container,
-        object, queryParameters, false, headers, context, username, password, keystoneToken, body,
+        object, queryParameters, false, headers, context, credentials, body,
         virtualHost);
   }
 }

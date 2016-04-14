@@ -199,6 +199,26 @@ configuration:
 "authentication": {}
 ----
 
+Authentication credentials can be provided directly in the OG json
+config file for a single user. The credentials can also be provided
+in a CSV formatted file.
+
+.CSV Format For Basic and AWS Authentication Example
+[source, bash]
+----
+username1,password1
+username2,password2
+username3,password3
+----
+
+.CSV Format for Keystone Authentication Example
+[source, bash]
+----
+token1
+token2
+token3
+----
+
 ==== Anonymous
 Anonymous authentication is the default authentication configuration. It
 is configured by omitting the _authentication_ block from the test
@@ -217,13 +237,23 @@ Basic authentication uses base64 encoding to encode username and password
 credentials into an authorization request header that is sent to the target
 server.
 
-.Basic Auth Example
+.Basic Auth with Single User Example
 [source, json]
 ----
 "authentication": {
   "type": "basic",
   "username": "my_user",
   "password": "my_password"
+}
+----
+
+.Basic Auth with Multiple Users Example
+[source, json]
+----
+"authentication": {
+  "type": "basic",
+  "credential_source": "file",
+  "credential_file"": "/var/log/user.csv"
 }
 ----
 
@@ -239,6 +269,16 @@ _username_ and _password_ keys, respectively.
   "type": "awsv2",
   "username": "AKIAIOSFODNN74SFNMK",
   "password": "nJalrUUFklNEMI/K7MDENG/gPwRfiCYXY73DER"
+}
+----
+
+.AWS Auth V2 with Multiple Users Example
+[source, json]
+----
+"authentication": {
+  "type": "awsv2",
+  "credential_source": "file",
+  "credential_file"": "/var/log/user.csv"
 }
 ----
 
@@ -267,6 +307,16 @@ NOTE: For more information about AWS V4 signing, see: http://docs.aws.amazon.com
 }
 ----
 
+.AWS Auth V4  With Signing The Entire Request with Multiple Users Example
+[source, json]
+----
+"authentication": {
+  "type": "awsv4",
+  "credential_source": "file",
+  "credential_file"": "/var/log/user.csv"
+}
+----
+
 .AWS Auth V4 With Chunked Signing Example
 [source, json]
 ----
@@ -274,6 +324,17 @@ NOTE: For more information about AWS V4 signing, see: http://docs.aws.amazon.com
   "type": "awsv4",
   "username": "AKIAIOSFODNN74SFNMK",
   "password": "nJalrUUFklNEMI/K7MDENG/gPwRfiCYXY73DER",
+  "aws_chunked": true
+}
+----
+
+.AWS Auth V4 With Chunked Signing with Multiple Users Example
+[source, json]
+----
+"authentication": {
+  "type": "awsv4",
+  "credential_source": "file",
+  "credential_file"": "/var/log/user.csv",
   "aws_chunked": true
 }
 ----
@@ -297,6 +358,17 @@ cache, configure the cache size via _aws_cache_size_.
 }
 ----
 
+.AWS Auth V4 With Signature Caching with Multiple Users Example
+[source, json]
+----
+"authentication": {
+  "type": "awsv4",
+  "credential_source": "file",
+  "credential_file"": "/var/log/user.csv",
+  "aws_cache_size": 10000
+}
+----
+
 ==== Keystone
 Keystone authentication is an OpenStack Swift authentication scheme which
 typically relies on an external Keystone server to generate an authentication
@@ -310,6 +382,16 @@ keystone token be manually generated prior to test start.
 "authentication": {
   "type": "keystone",
   "keystone_token": "7fe2cd9ee6384a1894a43878d3e52daf"
+}
+----
+
+.Keystone with Multiple Users Example
+[source, json]
+----
+"authentication": {
+  "type": "basic",
+  "credential_source": "file",
+  "credential_file"": "/var/log/user.csv"
 }
 ----
 

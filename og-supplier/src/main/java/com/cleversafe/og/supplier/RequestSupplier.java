@@ -20,6 +20,7 @@ import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Operation;
 import com.cleversafe.og.api.Request;
+import com.cleversafe.og.http.Credential;
 import com.cleversafe.og.http.HttpRequest;
 import com.cleversafe.og.http.Scheme;
 import com.cleversafe.og.util.Context;
@@ -49,9 +50,7 @@ public class RequestSupplier implements Supplier<Request> {
   private final boolean trailingSlash;
   private final Map<String, Function<Map<String, String>, String>> headers;
   private final List<Function<Map<String, String>, String>> context;
-  private final String username;
-  private final String password;
-  private final String keystoneToken;
+  private final Function<Map<String, String>, Credential> credentials;
   private final Function<Map<String, String>, Body> body;
   private final boolean virtualHost;
   private final Operation operation;
@@ -86,8 +85,8 @@ public class RequestSupplier implements Supplier<Request> {
       final Function<Map<String, String>, String> object,
       final Map<String, Function<Map<String, String>, String>> queryParameters,
       final boolean trailingSlash, final Map<String, Function<Map<String, String>, String>> headers,
-      final List<Function<Map<String, String>, String>> context, final String username,
-      final String password, final String keystoneToken,
+      final List<Function<Map<String, String>, String>> context,
+      final Function<Map<String, String>, Credential> credentials,
       final Function<Map<String, String>, Body> body, final boolean virtualHost) {
 
     this.id = id;
@@ -102,17 +101,7 @@ public class RequestSupplier implements Supplier<Request> {
     this.trailingSlash = trailingSlash;
     this.headers = ImmutableMap.copyOf(headers);
     this.context = ImmutableList.copyOf(context);
-    this.username = username;
-    this.password = password;
-    checkArgument((username != null && password != null) || (username == null && password == null),
-        "username and password must both be not null or null [%s, %s]", username, password);
-    if (this.username != null) {
-      checkArgument(this.username.length() > 0, "username must not be empty string");
-    }
-    if (password != null) {
-      checkArgument(password.length() > 0, "password must not be empty string");
-    }
-    this.keystoneToken = keystoneToken;
+    this.credentials = credentials;
     this.body = body;
     this.virtualHost = virtualHost;
     this.operation = operation;
@@ -140,13 +129,18 @@ public class RequestSupplier implements Supplier<Request> {
       builder.withContext(Context.X_OG_REQUEST_ID, this.id.apply(requestContext));
     }
 
-    if (this.username != null && this.password != null) {
-      builder.withContext(Context.X_OG_USERNAME, this.username);
-      builder.withContext(Context.X_OG_PASSWORD, this.password);
-    }
+    if (credentials != null) {
+      Credential credential = this.credentials.apply(requestContext);
+      String username = credential.getUsername();
+      String password = credential.getPassword();
+      String keystoneToken = credential.getKeystoneToken();
 
-    if (this.keystoneToken != null) {
-      builder.withContext(Context.X_OG_KEYSTONE_TOKEN, this.keystoneToken);
+      if(username != null)
+        builder.withContext(Context.X_OG_USERNAME, username);
+      if(password != null)
+        builder.withContext(Context.X_OG_PASSWORD, password);
+      if(keystoneToken != null)
+        builder.withContext(Context.X_OG_KEYSTONE_TOKEN, keystoneToken);
     }
 
     for (final Map.Entry<String, String> entry : requestContext.entrySet()) {
