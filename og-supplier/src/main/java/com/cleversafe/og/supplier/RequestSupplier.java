@@ -71,9 +71,7 @@ public class RequestSupplier implements Supplier<Request> {
    * @param trailingSlash whether or not to add a trailing slash to the url
    * @param headers headers to add to each request; header values may be dynamic
    * @param context request metadata to be sent with the created request
-   * @param username
-   * @param password
-   * @param keystoneToken token used for keystone auth
+   * @param credentials username/password or keystone token
    * @param body a description of the request body to add to the request
    */
   // FIXME refactor username, password, and keystoneToken so they are embedded in headers rather
