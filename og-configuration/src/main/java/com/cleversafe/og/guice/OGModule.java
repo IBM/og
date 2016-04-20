@@ -610,11 +610,13 @@ public class OGModule extends AbstractModule {
     final List<Function<Map<String, String>, String>> context = Lists.newArrayList();
 
     final OperationConfig operationConfig = checkNotNull(this.config.write);
-    if (operationConfig.object.selection != null) {
-      context.add(provideObject(operationConfig));
-    } else {
-      // default for writes
-      context.add(new UUIDObjectNameFunction());
+    if (Api.SOH != api) {
+      if (operationConfig.object.selection != null) {
+        context.add(provideObject(operationConfig));
+      } else {
+        // default for writes
+        context.add(new UUIDObjectNameFunction());
+      }
     }
 
     // SOH needs to use a special response consumer to extract the returned object id
