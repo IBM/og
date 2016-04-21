@@ -18,6 +18,7 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import com.cleversafe.og.http.Credential;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -244,18 +245,19 @@ public class RequestSupplierTest {
           }
         };
     final Integer port = 8080;
-    final String username = "admin";
-    final String password = "password";
     final Body bod = Bodies.random(10);
+    final Credential creds = new Credential("admin", "password", null);
 
     final Supplier<Body> bodySupplier = Suppliers.of(bod);
+    final Supplier<Credential> credentialSupplier = Suppliers.of(creds);
     final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
+    final Function<Map<String, String>, Credential> credentials = MoreFunctions.forSupplier(credentialSupplier);
     final Map<String, Function<Map<String, String>, String>> headers = Maps.newHashMap();
 
     final List<Function<Map<String, String>, String>> context = Collections.emptyList();
 
     return new RequestSupplier(operation, id, method, scheme, host, port, uriRoot, container,
-        object, queryParameters, trailingSlash, headers, context, username, password, null, body,
+        object, queryParameters, trailingSlash, headers, context, credentials, body,
         virtualHost);
   }
 }
