@@ -15,9 +15,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -98,6 +95,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.EventBus;
+import com.google.common.io.Files;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provider;
 import com.google.inject.Provides;
@@ -729,13 +727,12 @@ public class OGModule extends AbstractModule {
       return null;
     } else { //BASIC, AWSV2, AWSV4
       if (CredentialSource.FILE == this.config.authentication.credentialSource) {
-        Path filepath = FileSystems.getDefault().getPath(this.config.authentication.credentialFile);
-        Charset charset = Charset.forName("US-ASCII");
+        File credentialFile = new File(this.config.authentication.credentialFile);
+        Charset charset = Charset.forName("UTF-8");
         try {
-          BufferedReader reader = Files.newBufferedReader(filepath, charset);
+          BufferedReader reader = Files.newReader(credentialFile, charset);
           String credLine = null;
           while ((credLine = reader.readLine()) != null) {
-            System.out.println(credLine);
             if (AuthType.KEYSTONE == this.config.authentication.type) {
               Credential credential = new Credential(null, null, credLine);
               credentialList.add(credential);
@@ -765,8 +762,8 @@ public class OGModule extends AbstractModule {
     if (credentialList.size() == 0) {
       throw new Exception("No credentials provided for " + this.config.authentication.type);
     }
-    final Supplier<Credential> headerSupplier = Suppliers.cycle(credentialList);
-    return MoreFunctions.forSupplier(headerSupplier);
+    final Supplier<Credential> credentialSupplier = Suppliers.cycle(credentialList);
+    return MoreFunctions.forSupplier(credentialSupplier);
   }
 
   private Function<Map<String, String>, String> createHeaderSuppliers(
