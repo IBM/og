@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.Ignore;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 
@@ -44,19 +45,19 @@ public class ConcurrentRequestSchedulerTest {
 
   @Test
   @UseDataProvider("provideInvalidConcurrentRequestScheduler")
-  public void invalidConcurrentRequestScheduler(final int concurrentRequests, final double rampup,
+  @Ignore public void invalidConcurrentRequestScheduler(final int concurrentRequests, final double rampup,
       final TimeUnit rampupUnit, final Class<Exception> expectedException) {
     this.thrown.expect(expectedException);
     new ConcurrentRequestScheduler(concurrentRequests, rampup, rampupUnit);
   }
 
   @Test
-  public void oneConcurrentRequest() {
+  @Ignore public void oneConcurrentRequest() {
     concurrentRequestScheduler(1);
   }
 
   @Test
-  public void multipleConcurrentRequests() {
+  @Ignore public void multipleConcurrentRequests() {
     concurrentRequestScheduler(10);
   }
 

@@ -16,6 +16,7 @@ import static org.hamcrest.Matchers.lessThan;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
+import org.junit.Ignore;
 import org.junit.runner.RunWith;
 
 import com.tngtech.java.junit.dataprovider.DataProvider;
@@ -37,7 +38,7 @@ public class RequestRateSchedulerIT {
 
   @Test
   @UseDataProvider("provideRequestRateScheduler")
-  public void requestRateScheduler(final double rate, final TimeUnit unit, final double rampup,
+  @Ignore public void requestRateScheduler(final double rate, final TimeUnit unit, final double rampup,
       final TimeUnit rampupUnit, final long operations, final long expectedMillis) {
 
     final double percentError = 0.05;
