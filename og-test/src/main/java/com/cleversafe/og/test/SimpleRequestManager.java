@@ -84,8 +84,10 @@ public class SimpleRequestManager implements RequestManager {
         "delete weight must be in range [0.0, 100.0] [%s]", deleteWeight);
     checkArgument(PERCENTAGE.contains(listWeight),
         "list weight must be in range [0.0, 100.0] [%s]", listWeight);
+    checkArgument(PERCENTAGE.contains(containerListWeight),
+        "containerList weight must be in range [0.0, 100.0] [%s]", containerListWeight);
     final double sum = writeWeight + readWeight + deleteWeight +
-        metadataWeight + overwriteWeight + listWeight;
+        metadataWeight + overwriteWeight + listWeight + containerListWeight;
     checkArgument(DoubleMath.fuzzyEquals(sum, 100.0, ERR), "sum of weights must be 100.0 [%s]",
         sum);
 
@@ -107,6 +109,9 @@ public class SimpleRequestManager implements RequestManager {
     }
     if (listWeight > 0.0) {
       wrc.withChoice(list, listWeight);
+    }
+    if (containerListWeight > 0.0) {
+      wrc.withChoice(containerList, containerListWeight);
     }
     this.requestSupplier = wrc.build();
   }

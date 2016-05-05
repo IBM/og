@@ -67,6 +67,7 @@ public class Summary {
     final OperationStats metadata;
     final OperationStats overwrite;
     final OperationStats list;
+    final OperationStats containerList;
 
     private SummaryStats(final Statistics stats, final long timestampStart,
         final long timestampFinish) {
@@ -80,15 +81,16 @@ public class Summary {
       this.metadata = new OperationStats(stats, Operation.METADATA);
       this.overwrite = new OperationStats(stats, Operation.OVERWRITE);
       this.list = new OperationStats(stats, Operation.LIST);
+      this.containerList = new OperationStats(stats, Operation.CONTAINER_LIST);
     }
 
     @Override
     public String toString() {
       final String format = "Start: %s%nEnd: %s%nRuntime: %.2f "
-          + "Seconds%nOperations: %s%n%n%s%s%s%s%s%s";
+          + "Seconds%nOperations: %s%n%n%s%s%s%s%s%s%s";
       return String.format(Locale.US, format, FORMATTER.print(this.timestampStart),
           FORMATTER.print(this.timestampFinish), this.runtime, this.operations, this.write,
-          this.read, this.delete, this.metadata, this.overwrite, this.list);
+          this.read, this.delete, this.metadata, this.overwrite, this.list, this.containerList);
     }
 
     class OperationStats {

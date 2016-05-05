@@ -172,7 +172,9 @@ public class RequestSupplier implements Supplier<Request> {
 
   private void appendHost(final StringBuilder s, final Map<String, String> context) {
     if (this.virtualHost) {
-      s.append(this.container.apply(context)).append(".");
+      if(this.container != null) {
+        s.append(this.container.apply(context)).append(".");
+      }
     }
 
     s.append(this.host.apply(context));
@@ -191,7 +193,9 @@ public class RequestSupplier implements Supplier<Request> {
         s.append(this.uriRoot).append("/");
       }
 
-      s.append(this.container.apply(context));
+      if (this.container != null) {
+        s.append(this.container.apply(context));
+      }
     }
 
     if (this.object != null) {
