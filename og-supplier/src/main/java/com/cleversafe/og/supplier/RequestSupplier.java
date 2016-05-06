@@ -93,7 +93,7 @@ public class RequestSupplier implements Supplier<Request> {
     this.host = checkNotNull(host);
     this.port = port;
     this.uriRoot = uriRoot;
-    this.container = checkNotNull(container);
+    this.container = container;
     this.object = object;
     this.queryParameters = ImmutableMap.copyOf(queryParameters);
     this.trailingSlash = trailingSlash;

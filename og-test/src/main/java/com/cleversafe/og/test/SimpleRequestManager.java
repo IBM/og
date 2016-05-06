@@ -63,7 +63,11 @@ public class SimpleRequestManager implements RequestManager {
       @Named("metadata.weight") final double metadataWeight,
       @Named("delete") final Supplier<Request> delete,
       @Named("delete.weight") final double deleteWeight,
-      @Named("list") final Supplier<Request> list, @Named("list.weight") final double listWeight){
+      @Named("list") final Supplier<Request> list, @Named("list.weight") final double listWeight,
+      @Named("containerList") final Supplier<Request> containerList,
+      @Named("containerList.weight") final double containerListWeight,
+      @Named("containerCreate") final Supplier<Request> containerCreate,
+      @Named("containerCreate.weight") final double containerCreateWeight){
 
     checkNotNull(write);
     checkNotNull(overwrite);
@@ -71,6 +75,8 @@ public class SimpleRequestManager implements RequestManager {
     checkNotNull(metadata);
     checkNotNull(delete);
     checkNotNull(list);
+    checkNotNull(containerList);
+    checkNotNull(containerCreate);
 
     checkArgument(PERCENTAGE.contains(writeWeight),
         "write weight must be in range [0.0, 100.0] [%s]", writeWeight);
@@ -86,8 +92,10 @@ public class SimpleRequestManager implements RequestManager {
         "list weight must be in range [0.0, 100.0] [%s]", listWeight);
     checkArgument(PERCENTAGE.contains(containerListWeight),
         "containerList weight must be in range [0.0, 100.0] [%s]", containerListWeight);
+    checkArgument(PERCENTAGE.contains(containerCreateWeight),
+        "containerCreate weight must be in range [0.0, 100.0] [%s]", containerCreateWeight);
     final double sum = writeWeight + readWeight + deleteWeight +
-        metadataWeight + overwriteWeight + listWeight + containerListWeight;
+        metadataWeight + overwriteWeight + listWeight + containerListWeight + containerCreateWeight;
     checkArgument(DoubleMath.fuzzyEquals(sum, 100.0, ERR), "sum of weights must be 100.0 [%s]",
         sum);
 
@@ -112,6 +120,9 @@ public class SimpleRequestManager implements RequestManager {
     }
     if (containerListWeight > 0.0) {
       wrc.withChoice(containerList, containerListWeight);
+    }
+    if (containerCreateWeight > 0.0) {
+      wrc.withChoice(containerCreate, containerCreateWeight);
     }
     this.requestSupplier = wrc.build();
   }

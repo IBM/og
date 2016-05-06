@@ -147,6 +147,7 @@ public class OGModule extends AbstractModule {
     bindConstant().annotatedWith(Names.named("delete.weight")).to(this.config.delete.weight);
     bindConstant().annotatedWith(Names.named("list.weight")).to(this.config.list.weight);
     bindConstant().annotatedWith(Names.named("containerList.weight")).to(this.config.containerList.weight);
+    bindConstant().annotatedWith(Names.named("containerCreate.weight")).to(this.config.containerCreate.weight);
     bindConstant().annotatedWith(Names.named("virtualhost")).to(this.config.virtualHost);
     bind(AuthType.class).toInstance(this.config.authentication.type);
     bind(DataType.class).toInstance(this.config.data);
@@ -338,6 +339,14 @@ public class OGModule extends AbstractModule {
     return provideHost(this.config.containerList, host);
   }
 
+  @Provides
+  @Singleton
+  @ContainerCreateHost
+  public Function<Map<String, String>, String> provideContainerCreateHost(
+      @Named("host") final Function<Map<String, String>, String> host) {
+    return provideHost(this.config.containerCreate, host);
+  }
+
   private Function<Map<String, String>, String> provideHost(final OperationConfig operationConfig,
       final Function<Map<String, String>, String> testHost) {
     checkNotNull(operationConfig);
@@ -430,6 +439,41 @@ public class OGModule extends AbstractModule {
   @Named("container")
   public Function<Map<String, String>, String> provideContainer() {
     final ContainerConfig containerConfig = this.config.container;
+    final String container = checkNotNull(containerConfig.prefix);
+    checkArgument(container.length() > 0, "container must not be empty string");
+
+    final Supplier<Integer> suffixes = createContainerSuffixes(containerConfig);
+
+    return new Function<Map<String, String>, String>() {
+
+      @Override
+      public String apply(final Map<String, String> input) {
+        String suffix = input.get(Context.X_OG_CONTAINER_SUFFIX);
+        if (suffix != null) {
+          if (Integer.parseInt(suffix) == -1) {
+            return container;
+          } else {
+            return container.concat(suffix);
+          }
+        } else {
+          if (suffixes != null) {
+            suffix = suffixes.get().toString();
+            input.put(Context.X_OG_CONTAINER_SUFFIX, suffix);
+            return container.concat(suffix);
+          } else {
+            input.put(Context.X_OG_CONTAINER_SUFFIX, "-1");
+            return container;
+          }
+        }
+      }
+    };
+  }
+
+  @Provides
+  @Singleton
+  @Named("containerCreateName")
+  public Function<Map<String, String>, String> provideContainerCreateName() {
+    final ContainerConfig containerConfig = this.config.containerCreate.container;
     final String container = checkNotNull(containerConfig.prefix);
     checkArgument(container.length() > 0, "container must not be empty string");
 
@@ -608,6 +652,13 @@ public class OGModule extends AbstractModule {
     return provideHeaders(this.config.containerList.headers);
   }
 
+  @Provides
+  @Singleton
+  @ContainerCreateHeaders
+  public Map<String, Function<Map<String, String>, String>> provideContainerCreateHeaders() {
+    return provideHeaders(this.config.containerCreate.headers);
+  }
+
   private Map<String, Function<Map<String, String>, String>> provideHeaders(
       final Map<String, SelectionConfig<String>> operationHeaders) {
     checkNotNull(operationHeaders);
@@ -739,6 +790,17 @@ public class OGModule extends AbstractModule {
   @Singleton
   @Named("containerList.context")
   public List<Function<Map<String, String>, String>> provideContainerListContext(
+      final ObjectManager objectManager) {
+    final List<Function<Map<String, String>, String>> context = Lists.newArrayList();
+
+    // return an empty context
+    return ImmutableList.copyOf(context);
+  }
+
+  @Provides
+  @Singleton
+  @Named("containerCreate.context")
+  public List<Function<Map<String, String>, String>> provideContainerCreateContext(
       final ObjectManager objectManager) {
     final List<Function<Map<String, String>, String>> context = Lists.newArrayList();
 
@@ -1236,6 +1298,30 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.CONTAINER_LIST, id, Method.GET, scheme, host, port,
         uriRoot, null, null, queryParameters, headers, context, body, credentials, virtualHost);
+  }
+
+  @Provides
+  @Singleton
+  @Named("containerCreate")
+  public Supplier<Request> provideContainerCreate(
+      @Named("request.id") final Function<Map<String, String>, String> id, final Api api,
+      final Scheme scheme, @ContainerListHost final Function<Map<String, String>, String> host,
+      @Nullable @Named("port") final Integer port,
+      @Nullable @Named("uri.root") final String uriRoot,
+      @Named("containerCreateName") final Function<Map<String, String>, String> container,
+      @ContainerCreateHeaders final Map<String, Function<Map<String, String>, String>> headers,
+      @Named("containerCreate.context") final List<Function<Map<String, String>, String>> context,
+      @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
+      @Named("virtualhost") final boolean virtualHost) throws Exception {
+
+    final Map<String, Function<Map<String, String>, String>> queryParameters =
+        Collections.emptyMap();
+
+    final Supplier<Body> bodySupplier = Suppliers.of(Bodies.none());
+    final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
+
+    return createRequestSupplier(Operation.CONTAINER_CREATE, id, Method.PUT, scheme, host, port,
+        uriRoot, container, null, queryParameters, headers, context, body, credentials, virtualHost);
   }
 
   private Supplier<Request> createRequestSupplier(final Operation operation,
