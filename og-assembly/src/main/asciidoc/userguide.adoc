@@ -465,10 +465,16 @@ OG supports single and multiple container configurations. For multiple
 containers, OG supports selection of a container for a given request via round
 robin or random configurations. With multiple containers, _prefix_,
 _min_suffix_ and _max_suffix_ keys are used to produce a range of container
-names. Container(s) are configured via the _container_ key.
+names. Container(s) are configured via the _container_ key. This key is available
+at both the top level and operation level. The most common usage at the operation
+level is for StaaS container creation.
+
+NOTE: If writes are done using container suffixes, then all other operations
+using these objects will need to use a prefix only or prefix+suffix with
+the object configuration block.
 
 NOTE: When testing against a Cleversafe dsNet, the _container_ key refers to
-dsNet Vaults.
+dsNet Vaults or StaaS containers.
 
 .Single Container Example
 [source, json]
@@ -556,11 +562,13 @@ only for a specific operation type, see <<Operation Headers>>
 }
 ----
 
-=== Write, Overwrite, Read, Metadata, Delete, List Operations
+=== Write, Overwrite, Read, Metadata, Delete, List, Container Create, Container List Operations
 Write, Read, Metadata, Delete, and List operations are supported for all Object Storage APIs.
 Overwrite is supported for S3 and OpenStack Swift
+Container Create and Container List are supported for S3 only and the current dsnet implementation
+requires the uri_root be set to "/".
 Operation mix is configured via _write_, _overwrite_, _read_, _metadata_, _delete_, and _list_ keys,
-respectively.
+_container_create_, and _container_list_ respectively.
 
 Each operation type is configured via a configuration block. E.g. for write:
 
@@ -672,6 +680,10 @@ currently supported only for the List operation.
   }
 }
 ----
+
+==== Operation Container
+OG supports the _container_ key at the operation level with some
+caveats as noted in the Container section.
 
 === Filesize
 OG supports one or more filesize distributions for describing object file
