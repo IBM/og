@@ -434,46 +434,96 @@ public class OGModule extends AbstractModule {
     return null;
   }
 
-  @Provides
-  @Singleton
-  @Named("container")
-  public Function<Map<String, String>, String> provideContainer() {
-    final ContainerConfig containerConfig = this.config.container;
-    final String container = checkNotNull(containerConfig.prefix);
-    checkArgument(container.length() > 0, "container must not be empty string");
-
-    final Supplier<Integer> suffixes = createContainerSuffixes(containerConfig);
-
-    return new Function<Map<String, String>, String>() {
-
-      @Override
-      public String apply(final Map<String, String> input) {
-        String suffix = input.get(Context.X_OG_CONTAINER_SUFFIX);
-        if (suffix != null) {
-          if (Integer.parseInt(suffix) == -1) {
-            return container;
-          } else {
-            return container.concat(suffix);
-          }
-        } else {
-          if (suffixes != null) {
-            suffix = suffixes.get().toString();
-            input.put(Context.X_OG_CONTAINER_SUFFIX, suffix);
-            return container.concat(suffix);
-          } else {
-            input.put(Context.X_OG_CONTAINER_SUFFIX, "-1");
-            return container;
-          }
-        }
-      }
-    };
+  private void checkContainerObjectConfig(OperationConfig operationConfig)
+      throws Exception {
+    if((operationConfig.container.maxSuffix != -1 || operationConfig.container.minSuffix != -1) &&
+        operationConfig.object.prefix == "" && operationConfig.weight > 0.0) {
+      throw new Exception("Must specify ObjectConfig prefix if using min/max suffix in container config");
+    }
   }
 
   @Provides
   @Singleton
-  @Named("containerCreateName")
-  public Function<Map<String, String>, String> provideContainerCreateName() {
-    final ContainerConfig containerConfig = this.config.containerCreate.container;
+  @Named("write.container")
+  public Function<Map<String, String>, String> provideWriteContainer() {
+    if(config.write.container.prefix != null){
+      return provideContainer(config.write.container);
+    } else {
+      return provideContainer(config.container);
+    }
+  }
+
+  @Provides
+  @Singleton
+  @Named("overwrite.container")
+  public Function<Map<String, String>, String> provideOverwriteContainer() throws Exception {
+    if(config.overwrite.container.prefix != null){
+      checkContainerObjectConfig(config.overwrite);
+      return provideContainer(config.overwrite.container);
+    } else {
+      return provideContainer(config.container);
+    }
+  }
+
+  @Provides
+  @Singleton
+  @Named("read.container")
+  public Function<Map<String, String>, String> provideReadContainer() throws Exception {
+    if(config.read.container.prefix != null){
+      checkContainerObjectConfig(config.read);
+      return provideContainer(config.read.container);
+    } else {
+      return provideContainer(config.container);
+    }
+  }
+
+  @Provides
+  @Singleton
+  @Named("metadata.container")
+  public Function<Map<String, String>, String> provideMetadataContainer() throws Exception {
+    if(config.metadata.container.prefix != null){
+      checkContainerObjectConfig(config.metadata);
+      return provideContainer(config.metadata.container);
+    } else {
+      return provideContainer(config.container);
+    }
+  }
+
+  @Provides
+  @Singleton
+  @Named("delete.container")
+  public Function<Map<String, String>, String> provideDeleteContainer() throws Exception {
+    if(config.delete.container.prefix != null){
+      checkContainerObjectConfig(config.delete);
+      return provideContainer(config.delete.container);
+    } else {
+      return provideContainer(config.container);
+    }
+  }
+
+  @Provides
+  @Singleton
+  @Named("list.container")
+  public Function<Map<String, String>, String> provideListContainer() {
+    if(config.list.container.prefix != null){
+      return provideContainer(config.list.container);
+    } else {
+      return provideContainer(config.container);
+    }
+  }
+
+  @Provides
+  @Singleton
+  @Named("containerCreate.container")
+  public Function<Map<String, String>, String> provideContainerCreateContainer() {
+    if(config.containerCreate.container.prefix != null){
+      return provideContainer(config.containerCreate.container);
+    } else {
+      return provideContainer(config.container);
+    }
+  }
+
+  public Function<Map<String, String>, String> provideContainer(ContainerConfig containerConfig) {
     final String container = checkNotNull(containerConfig.prefix);
     checkArgument(container.length() > 0, "container must not be empty string");
 
@@ -1040,9 +1090,7 @@ public class OGModule extends AbstractModule {
   @Provides
   @Singleton
   @Named("objectfile.name")
-  public String provideObjectFileName(
-      @Named("container") final Function<Map<String, String>, String> container, final Api api) {
-    checkNotNull(container);
+  public String provideObjectFileName(final Api api) {
     final ObjectManagerConfig objectManagerConfig = checkNotNull(this.config.objectManager);
     final String objectFileName = objectManagerConfig.objectFileName;
 
@@ -1137,7 +1185,7 @@ public class OGModule extends AbstractModule {
       final Scheme scheme, @WriteHost final Function<Map<String, String>, String> host,
       @Nullable @Named("port") final Integer port,
       @Nullable @Named("uri.root") final String uriRoot,
-      @Named("container") final Function<Map<String, String>, String> container,
+      @Named("write.container") final Function<Map<String, String>, String> container,
       @Nullable @WriteObjectName final Function<Map<String, String>, String> object,
       @WriteHeaders final Map<String, Function<Map<String, String>, String>> headers,
       @Named("write.context") final List<Function<Map<String, String>, String>> context,
@@ -1160,7 +1208,7 @@ public class OGModule extends AbstractModule {
       final Scheme scheme, @OverwriteHost final Function<Map<String, String>, String> host,
       @Nullable @Named("port") final Integer port,
       @Nullable @Named("uri.root") final String uriRoot,
-      @Named("container") final Function<Map<String, String>, String> container,
+      @Named("overwrite.container") final Function<Map<String, String>, String> container,
       @Nullable @OverwriteObjectName final Function<Map<String, String>, String> object,
       @OverwriteHeaders final Map<String, Function<Map<String, String>, String>> headers,
       @Named("overwrite.context") final List<Function<Map<String, String>, String>> context,
@@ -1188,7 +1236,7 @@ public class OGModule extends AbstractModule {
       @ReadHost final Function<Map<String, String>, String> host,
       @Nullable @Named("port") final Integer port,
       @Nullable @Named("uri.root") final String uriRoot,
-      @Named("container") final Function<Map<String, String>, String> container,
+      @Named("read.container") final Function<Map<String, String>, String> container,
       @Nullable @ReadObjectName final Function<Map<String, String>, String> object,
       @ReadHeaders final Map<String, Function<Map<String, String>, String>> headers,
       @Named("read.context") final List<Function<Map<String, String>, String>> context,
@@ -1213,7 +1261,7 @@ public class OGModule extends AbstractModule {
       @MetadataHost final Function<Map<String, String>, String> host,
       @Nullable @Named("port") final Integer port,
       @Nullable @Named("uri.root") final String uriRoot,
-      @Named("container") final Function<Map<String, String>, String> container,
+      @Named("metadata.container") final Function<Map<String, String>, String> container,
       @Nullable @MetadataObjectName final Function<Map<String, String>, String> object,
       @MetadataHeaders final Map<String, Function<Map<String, String>, String>> headers,
       @Named("metadata.context") final List<Function<Map<String, String>, String>> context,
@@ -1238,7 +1286,7 @@ public class OGModule extends AbstractModule {
       @DeleteHost final Function<Map<String, String>, String> host,
       @Nullable @Named("port") final Integer port,
       @Nullable @Named("uri.root") final String uriRoot,
-      @Named("container") final Function<Map<String, String>, String> container,
+      @Named("delete.container") final Function<Map<String, String>, String> container,
       @Nullable @DeleteObjectName final Function<Map<String, String>, String> object,
       @DeleteHeaders final Map<String, Function<Map<String, String>, String>> headers,
       @Named("delete.context") final List<Function<Map<String, String>, String>> context,
@@ -1264,7 +1312,7 @@ public class OGModule extends AbstractModule {
       @Nullable @Named("port") final Integer port,
       @Nullable @Named("uri.root") final String uriRoot,
       @ListQueryParameters final Map<String, Function<Map<String, String>, String>> queryParameters,
-      @Named("container") final Function<Map<String, String>, String> container,
+      @Named("list.container") final Function<Map<String, String>, String> container,
       @ListHeaders final Map<String, Function<Map<String, String>, String>> headers,
       @Named("list.context") final List<Function<Map<String, String>, String>> context,
       @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
@@ -1296,6 +1344,7 @@ public class OGModule extends AbstractModule {
     final Supplier<Body> bodySupplier = Suppliers.of(Bodies.none());
     final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
 
+    // null container since request is on the service http://<accesser ip>/
     return createRequestSupplier(Operation.CONTAINER_LIST, id, Method.GET, scheme, host, port,
         uriRoot, null, null, queryParameters, headers, context, body, credentials, virtualHost);
   }
@@ -1308,7 +1357,7 @@ public class OGModule extends AbstractModule {
       final Scheme scheme, @ContainerListHost final Function<Map<String, String>, String> host,
       @Nullable @Named("port") final Integer port,
       @Nullable @Named("uri.root") final String uriRoot,
-      @Named("containerCreateName") final Function<Map<String, String>, String> container,
+      @Named("containerCreate.container") final Function<Map<String, String>, String> container,
       @ContainerCreateHeaders final Map<String, Function<Map<String, String>, String>> headers,
       @Named("containerCreate.context") final List<Function<Map<String, String>, String>> context,
       @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
