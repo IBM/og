@@ -103,6 +103,8 @@ public class RequestSupplier implements Supplier<Request> {
     this.body = body;
     this.virtualHost = virtualHost;
     this.operation = operation;
+
+    checkArgument(!(this.container == null && this.object != null));
   }
 
   @Override
