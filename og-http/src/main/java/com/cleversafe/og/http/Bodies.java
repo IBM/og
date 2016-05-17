@@ -55,11 +55,29 @@ public class Bodies {
     return create(DataType.ZEROES, size);
   }
 
+  /**
+   * Creates a body instance representing a body with custom data
+   *
+   * @param size the size of the body
+   * @return a custom defined body instance
+   * @throws IllegalArgumentException if size is negative
+   */
+  public static Body custom(final long size, String content) {
+    return create(DataType.CUSTOM, size, content);
+  }
+
   private static Body create(final DataType data, final long size) {
     checkNotNull(data);
     checkArgument(size >= 0, "size must be >= 0 [%s]", size);
 
-    return new BodyImpl(System.nanoTime(), size, data);
+    return new BodyImpl(System.nanoTime(), size, data, null);
+  }
+
+  private static Body create(final DataType data, final long size, String content) {
+    checkNotNull(data);
+    checkArgument(size >= 0, "size must be >= 0 [%s]", size);
+
+    return new BodyImpl(System.nanoTime(), size, data, content);
   }
 
   private static class BodyImpl implements Body {
@@ -67,12 +85,14 @@ public class Bodies {
     private final long seed;
     private final long size;
     private final DataType dataType;
+    private final String content;
 
-    public BodyImpl(final long seed, final long size, final DataType dataType) {
+    public BodyImpl(final long seed, final long size, final DataType dataType, String content) {
       // Force the seed to zero for non random data so that it won't affect hashCode() and equals()
       this.seed = dataType.equals(DataType.RANDOM) ? seed : 0;
       this.size = size;
       this.dataType = dataType;
+      this.content = content;
     }
 
     @Override
@@ -89,6 +109,9 @@ public class Bodies {
     public long getSize() {
       return this.size;
     }
+
+    @Override
+    public String getContent() { return this.content; }
 
     @Override
     public String toString() {

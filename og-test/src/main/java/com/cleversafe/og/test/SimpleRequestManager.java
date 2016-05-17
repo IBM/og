@@ -67,7 +67,9 @@ public class SimpleRequestManager implements RequestManager {
       @Named("containerList") final Supplier<Request> containerList,
       @Named("containerList.weight") final double containerListWeight,
       @Named("containerCreate") final Supplier<Request> containerCreate,
-      @Named("containerCreate.weight") final double containerCreateWeight){
+      @Named("containerCreate.weight") final double containerCreateWeight,
+      @Named("multipartWrite") final Supplier<Request> writeMultipart,
+      @Named("multipartWrite.weight") final double writeMultipartWeight){
 
     checkNotNull(write);
     checkNotNull(overwrite);
@@ -77,6 +79,7 @@ public class SimpleRequestManager implements RequestManager {
     checkNotNull(list);
     checkNotNull(containerList);
     checkNotNull(containerCreate);
+    checkNotNull(writeMultipart);
 
     checkArgument(PERCENTAGE.contains(writeWeight),
         "write weight must be in range [0.0, 100.0] [%s]", writeWeight);
@@ -94,8 +97,11 @@ public class SimpleRequestManager implements RequestManager {
         "containerList weight must be in range [0.0, 100.0] [%s]", containerListWeight);
     checkArgument(PERCENTAGE.contains(containerCreateWeight),
         "containerCreate weight must be in range [0.0, 100.0] [%s]", containerCreateWeight);
+    checkArgument(PERCENTAGE.contains(writeMultipartWeight),
+        "writeMultipart weight must be in range [0.0, 100.0] [%s]", writeMultipartWeight);
     final double sum = writeWeight + readWeight + deleteWeight +
-        metadataWeight + overwriteWeight + listWeight + containerListWeight + containerCreateWeight;
+        metadataWeight + overwriteWeight + listWeight + containerListWeight +
+        containerCreateWeight + writeMultipartWeight;
     checkArgument(DoubleMath.fuzzyEquals(sum, 100.0, ERR), "sum of weights must be 100.0 [%s]",
         sum);
 
@@ -123,6 +129,9 @@ public class SimpleRequestManager implements RequestManager {
     }
     if (containerCreateWeight > 0.0) {
       wrc.withChoice(containerCreate, containerCreateWeight);
+    }
+    if (writeMultipartWeight > 0.0) {
+      wrc.withChoice(writeMultipart, writeMultipartWeight);
     }
     this.requestSupplier = wrc.build();
   }

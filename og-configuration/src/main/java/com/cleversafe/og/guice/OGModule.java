@@ -59,6 +59,7 @@ import com.cleversafe.og.object.*;
 import com.cleversafe.og.openstack.KeystoneAuth;
 import com.cleversafe.og.s3.v2.AWSV2Auth;
 import com.cleversafe.og.s3.v4.AWSV4Auth;
+import com.cleversafe.og.s3.S3MultipartWriteResponseBodyConsumer;
 import com.cleversafe.og.scheduling.ConcurrentRequestScheduler;
 import com.cleversafe.og.scheduling.RequestRateScheduler;
 import com.cleversafe.og.scheduling.Scheduler;
@@ -67,6 +68,7 @@ import com.cleversafe.og.statistic.Counter;
 import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.supplier.DeleteObjectNameFunction;
 import com.cleversafe.og.supplier.MetadataObjectNameFunction;
+import com.cleversafe.og.supplier.MultipartRequestSupplier;
 import com.cleversafe.og.supplier.RandomSupplier;
 import com.cleversafe.og.supplier.ReadObjectNameFunction;
 import com.cleversafe.og.supplier.RequestSupplier;
@@ -114,6 +116,7 @@ import com.google.inject.util.Providers;
 public class OGModule extends AbstractModule {
   private final OGConfig config;
   private static final String SOH_PUT_OBJECT = "soh.put_object";
+  private static final String S3_MULTIPART = "s3.multipart";
   private final LoadTestSubscriberExceptionHandler handler;
   private final EventBus eventBus;
 
@@ -148,6 +151,7 @@ public class OGModule extends AbstractModule {
     bindConstant().annotatedWith(Names.named("list.weight")).to(this.config.list.weight);
     bindConstant().annotatedWith(Names.named("containerList.weight")).to(this.config.containerList.weight);
     bindConstant().annotatedWith(Names.named("containerCreate.weight")).to(this.config.containerCreate.weight);
+    bindConstant().annotatedWith(Names.named("multipartWrite.weight")).to(this.config.multipartWrite.weight);
     bindConstant().annotatedWith(Names.named("virtualhost")).to(this.config.virtualHost);
     bind(AuthType.class).toInstance(this.config.authentication.type);
     bind(DataType.class).toInstance(this.config.data);
@@ -184,6 +188,7 @@ public class OGModule extends AbstractModule {
     final MapBinder<String, ResponseBodyConsumer> responseBodyConsumers =
         MapBinder.newMapBinder(binder(), String.class, ResponseBodyConsumer.class);
     responseBodyConsumers.addBinding(SOH_PUT_OBJECT).to(SOHWriteResponseBodyConsumer.class);
+    responseBodyConsumers.addBinding(S3_MULTIPART).to(S3MultipartWriteResponseBodyConsumer.class);
 
     bind(RequestManager.class).to(SimpleRequestManager.class);
     bind(LoadTest.class).in(Singleton.class);
@@ -345,6 +350,14 @@ public class OGModule extends AbstractModule {
   public Function<Map<String, String>, String> provideContainerCreateHost(
       @Named("host") final Function<Map<String, String>, String> host) {
     return provideHost(this.config.containerCreate, host);
+  }
+
+  @Provides
+  @Singleton
+  @MultipartWriteHost
+  public Function<Map<String, String>, String> provideMultipartWriteHost(
+      @Named("host") final Function<Map<String, String>, String> host) {
+    return provideHost(this.config.multipartWrite, host);
   }
 
   private Function<Map<String, String>, String> provideHost(final OperationConfig operationConfig,
@@ -523,6 +536,17 @@ public class OGModule extends AbstractModule {
     }
   }
 
+  @Provides
+  @Singleton
+  @Named("multipartWrite.container")
+  public Function<Map<String, String>, String> provideMultipartWriteContainer() {
+    if(config.multipartWrite.container.prefix != null){
+      return provideContainer(config.multipartWrite.container);
+    } else {
+      return provideContainer(config.container);
+    }
+  }
+
   public Function<Map<String, String>, String> provideContainer(ContainerConfig containerConfig) {
     final String container = checkNotNull(containerConfig.prefix);
     checkArgument(container.length() > 0, "container must not be empty string");
@@ -592,6 +616,13 @@ public class OGModule extends AbstractModule {
     return MoreFunctions.keyLookup(Context.X_OG_OBJECT_NAME);
   }
 
+  @Provides
+  @Singleton
+  @MultipartWriteObjectName
+  public Function<Map<String, String>, String> provideMultipartWriteObjectName() {
+    return MoreFunctions.keyLookup(Context.X_OG_OBJECT_NAME);
+  }
+
   private Function<Map<String, String>, String> provideObject(
       final OperationConfig operationConfig) {
     checkNotNull(operationConfig);
@@ -634,6 +665,7 @@ public class OGModule extends AbstractModule {
     consumers.add(new MetadataObjectNameConsumer(objectManager, sc));
     consumers.add(new OverwriteObjectNameConsumer(objectManager, sc));
     consumers.add(new ListObjectNameConsumer(objectManager, sc));
+    consumers.add(new MultipartWriteObjectNameConsumer(objectManager, sc));
 
     for (final AbstractObjectNameConsumer consumer : consumers) {
       eventBus.register(consumer);
@@ -707,6 +739,13 @@ public class OGModule extends AbstractModule {
   @ContainerCreateHeaders
   public Map<String, Function<Map<String, String>, String>> provideContainerCreateHeaders() {
     return provideHeaders(this.config.containerCreate.headers);
+  }
+
+  @Provides
+  @Singleton
+  @MultipartWriteHeaders
+  public Map<String, Function<Map<String, String>, String>> provideMultipartWriteHeaders() {
+    return provideHeaders(this.config.multipartWrite.headers);
   }
 
   private Map<String, Function<Map<String, String>, String>> provideHeaders(
@@ -855,6 +894,25 @@ public class OGModule extends AbstractModule {
     final List<Function<Map<String, String>, String>> context = Lists.newArrayList();
 
     // return an empty context
+    return ImmutableList.copyOf(context);
+  }
+
+  @Provides
+  @Singleton
+  @Named("multipartWrite.context")
+  public List<Function<Map<String, String>, String>> provideMultipartWriteContext(Api api) {
+    final List<Function<Map<String, String>, String>> context = Lists.newArrayList();
+
+    final OperationConfig operationConfig = checkNotNull(this.config.multipartWrite);
+    if (Api.SOH != api) {
+      if (operationConfig.object.selection != null) {
+        context.add(provideObject(operationConfig));
+      } else {
+        // default for writes
+        context.add(new UUIDObjectNameFunction());
+      }
+    }
+
     return ImmutableList.copyOf(context);
   }
 
@@ -1386,6 +1444,45 @@ public class OGModule extends AbstractModule {
 
     return new RequestSupplier(operation, id, method, scheme, host, port, uriRoot, container,
         object, queryParameters, false, headers, context, credentials, body,
+        virtualHost);
+  }
+
+  @Provides
+  @Singleton
+  @Named("multipartWrite")
+  public Supplier<Request> provideMultipartWrite(
+      @Named("request.id") final Function<Map<String, String>, String> id, final Api api,
+      final Scheme scheme, @MultipartWriteHost final Function<Map<String, String>, String> host,
+      @Nullable @Named("port") final Integer port,
+      @Nullable @Named("uri.root") final String uriRoot,
+      @Named("multipartWrite.container") final Function<Map<String, String>, String> container,
+      @Nullable @MultipartWriteObjectName final Function<Map<String, String>, String> object,
+      @MultipartWriteHeaders final Map<String, Function<Map<String, String>, String>> headers,
+      @Named("multipartWrite.context") final List<Function<Map<String, String>, String>> context,
+      final Function<Map<String, String>, Body> body,
+      @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
+      @Named("virtualhost") final boolean virtualHost) {
+
+    final Map<String, Function<Map<String, String>, String>> queryParameters =
+        Collections.emptyMap();
+
+    return createMultipartRequestSupplier(Operation.MULTIPART_WRITE, id, Method.POST, scheme, host,
+        port, uriRoot, container, object, queryParameters, headers, context, body, credentials, virtualHost);
+  }
+
+  private Supplier<Request> createMultipartRequestSupplier(final Operation operation,
+      @Named("request.id") final Function<Map<String, String>, String> id, final Method method,
+      final Scheme scheme, final Function<Map<String, String>, String> host, final Integer port,
+      final String uriRoot, final Function<Map<String, String>, String> container,
+      final Function<Map<String, String>, String> object,
+      final Map<String, Function<Map<String, String>, String>> queryParameters,
+      final Map<String, Function<Map<String, String>, String>> headers,
+      final List<Function<Map<String, String>, String>> context,
+      final Function<Map<String, String>, Body> body,
+      final Function<Map<String, String>, Credential> credentials, final boolean virtualHost) {
+
+    return new MultipartRequestSupplier(operation, id, scheme, host, port, uriRoot,
+        container, object, queryParameters, false, headers, context, credentials, body,
         virtualHost);
   }
 }
