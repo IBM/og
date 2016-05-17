@@ -29,6 +29,8 @@ public class OGConfig {
   public OperationConfig read;
   public OperationConfig delete;
   public OperationConfig list;
+  public OperationConfig containerList;
+  public OperationConfig containerCreate;
   public SelectionConfig<FilesizeConfig> filesize;
   public DataType data;
   public ConcurrencyConfig concurrency;
@@ -53,6 +55,8 @@ public class OGConfig {
     this.metadata = new OperationConfig();
     this.delete = new OperationConfig();
     this.list = new OperationConfig();
+    this.containerList = new OperationConfig();
+    this.containerCreate = new OperationConfig();
     this.filesize = null;
     this.data = DataType.RANDOM;
     this.concurrency = null;

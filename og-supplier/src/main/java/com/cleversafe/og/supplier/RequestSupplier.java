@@ -93,7 +93,7 @@ public class RequestSupplier implements Supplier<Request> {
     this.host = checkNotNull(host);
     this.port = port;
     this.uriRoot = uriRoot;
-    this.container = checkNotNull(container);
+    this.container = container;
     this.object = object;
     this.queryParameters = ImmutableMap.copyOf(queryParameters);
     this.trailingSlash = trailingSlash;
@@ -103,6 +103,8 @@ public class RequestSupplier implements Supplier<Request> {
     this.body = body;
     this.virtualHost = virtualHost;
     this.operation = operation;
+
+    checkArgument(!(this.container == null && this.object != null));
   }
 
   @Override
@@ -172,7 +174,9 @@ public class RequestSupplier implements Supplier<Request> {
 
   private void appendHost(final StringBuilder s, final Map<String, String> context) {
     if (this.virtualHost) {
-      s.append(this.container.apply(context)).append(".");
+      if(this.container != null) {
+        s.append(this.container.apply(context)).append(".");
+      }
     }
 
     s.append(this.host.apply(context));
@@ -191,7 +195,9 @@ public class RequestSupplier implements Supplier<Request> {
         s.append(this.uriRoot).append("/");
       }
 
-      s.append(this.container.apply(context));
+      if (this.container != null) {
+        s.append(this.container.apply(context));
+      }
     }
 
     if (this.object != null) {
