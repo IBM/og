@@ -580,6 +580,57 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
+  @Named("multipartWrite.partSize")
+  public Function<Map<String, String>, Integer> provideMultipartWritePartSize(
+      @Named("host") final Function<Map<String, String>, String> host) {
+    return providePartSize(this.config.multipartWrite);
+  }
+
+  private Function<Map<String, String>, Integer> providePartSize(final OperationConfig operationConfig) {
+    checkNotNull(operationConfig);
+
+    final SelectionConfig<Integer> operationPartSize = operationConfig.object.partSize;
+    if (operationPartSize != null && !operationPartSize.choices.isEmpty()) {
+      return createPartSize(operationConfig.object.partSize);
+    }
+
+    // default to 5
+    final List<Integer> partSizeList = Lists.newArrayList();
+    partSizeList.add(5);
+    final Supplier<Integer> partSizeSupplier = Suppliers.cycle(partSizeList);
+    return MoreFunctions.forSupplier(partSizeSupplier);
+  }
+
+  private Function<Map<String, String>, Integer> createPartSize(final SelectionConfig<Integer> partSize) {
+    checkNotNull(partSize);
+    checkNotNull(partSize.selection);
+    checkNotNull(partSize.choices);
+    checkArgument(!partSize.choices.isEmpty(), "must specify at least one part");
+    for (final ChoiceConfig<Integer> choice : partSize.choices) {
+      checkNotNull(choice);
+      checkNotNull(choice.choice);
+      checkArgument(choice.choice >= 5, "partSize must be greater than 5 MiB");
+    }
+
+    if (SelectionType.ROUNDROBIN == partSize.selection) {
+      final List<Integer> partSizeList = Lists.newArrayList();
+      for (final ChoiceConfig<Integer> choice : partSize.choices) {
+        partSizeList.add(choice.choice);
+      }
+      final Supplier<Integer> partSizeSupplier = Suppliers.cycle(partSizeList);
+      return MoreFunctions.forSupplier(partSizeSupplier);
+    }
+
+    final RandomSupplier.Builder<Integer> wrc = Suppliers.random();
+    for (final ChoiceConfig<Integer> choice : partSize.choices) {
+      wrc.withChoice(choice.choice, choice.weight);
+    }
+    final Supplier<Integer> partSizeSupplier = wrc.build();
+    return MoreFunctions.forSupplier(partSizeSupplier);
+  }
+
+  @Provides
+  @Singleton
   @WriteObjectName
   public Function<Map<String, String>, String> provideWriteObjectName(final Api api) {
     if (Api.SOH == api) {
@@ -1457,6 +1508,7 @@ public class OGModule extends AbstractModule {
       @Nullable @Named("uri.root") final String uriRoot,
       @Named("multipartWrite.container") final Function<Map<String, String>, String> container,
       @Nullable @MultipartWriteObjectName final Function<Map<String, String>, String> object,
+      @Named("multipartWrite.partSize") final Function<Map<String, String>, Integer> partSize,
       @MultipartWriteHeaders final Map<String, Function<Map<String, String>, String>> headers,
       @Named("multipartWrite.context") final List<Function<Map<String, String>, String>> context,
       final Function<Map<String, String>, Body> body,
@@ -1467,7 +1519,7 @@ public class OGModule extends AbstractModule {
         Collections.emptyMap();
 
     return createMultipartRequestSupplier(Operation.MULTIPART_WRITE, id, Method.POST, scheme, host,
-        port, uriRoot, container, object, queryParameters, headers, context, body, credentials, virtualHost);
+        port, uriRoot, container, object, partSize, queryParameters, headers, context, body, credentials, virtualHost);
   }
 
   private Supplier<Request> createMultipartRequestSupplier(final Operation operation,
@@ -1475,6 +1527,7 @@ public class OGModule extends AbstractModule {
       final Scheme scheme, final Function<Map<String, String>, String> host, final Integer port,
       final String uriRoot, final Function<Map<String, String>, String> container,
       final Function<Map<String, String>, String> object,
+      final Function<Map<String, String>, Integer> partSize,
       final Map<String, Function<Map<String, String>, String>> queryParameters,
       final Map<String, Function<Map<String, String>, String>> headers,
       final List<Function<Map<String, String>, String>> context,
@@ -1482,7 +1535,7 @@ public class OGModule extends AbstractModule {
       final Function<Map<String, String>, Credential> credentials, final boolean virtualHost) {
 
     return new MultipartRequestSupplier(operation, id, scheme, host, port, uriRoot,
-        container, object, queryParameters, false, headers, context, credentials, body,
+        container, object, partSize, queryParameters, false, headers, context, credentials, body,
         virtualHost);
   }
 }

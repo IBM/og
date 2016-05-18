@@ -9,6 +9,7 @@
 package com.cleversafe.og.supplier;
 
 import com.cleversafe.og.api.Body;
+import com.cleversafe.og.api.DataType;
 import com.cleversafe.og.api.Method;
 import com.cleversafe.og.api.Operation;
 import com.cleversafe.og.api.Request;
@@ -30,12 +31,15 @@ import com.google.common.eventbus.Subscribe;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.PriorityBlockingQueue;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -54,6 +58,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
   private final String uriRoot;
   private final Function<Map<String, String>, String> container;
   private final Function<Map<String, String>, String> object;
+  private final Function<Map<String, String>, Integer> partSize;
   private final Map<String, Function<Map<String, String>, String>> queryParameters;
   private final boolean trailingSlash;
   private final Map<String, Function<Map<String, String>, String>> headers;
@@ -68,13 +73,16 @@ public class MultipartRequestSupplier implements Supplier<Request> {
   private final String UPLOAD_ID = "uploadId";
   private final String PART_NUMBER = "partNumber";
   private final String UPLOADS = "uploads";
-  private final int PART_SIZE_BYTES = 5243000; //5MiB
 
   // request queues and hashmap
   private final Deque<MultipartInfo> inProgressMultipartRequests;
   private final Deque<MultipartInfo> toBeCompletedMultipartRequests;
-  private final Map<String, MultipartInfo> inProgressCompleteMultipartRequests;
   private final Map<String, MultipartInfo> multipartRequestMap;
+
+  // valid headers
+  private final List<String> initiateValidHeaders;
+  private final List<String> partValidHeaders;
+  private final List<String> commonValidHeaders;
 
   /**
    * Creates an instance
@@ -101,6 +109,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
       final Integer port, final String uriRoot,
       final Function<Map<String, String>, String> container,
       final Function<Map<String, String>, String> object,
+      final Function<Map<String, String>, Integer> partSize,
       final Map<String, Function<Map<String, String>, String>> queryParameters,
       final boolean trailingSlash, final Map<String, Function<Map<String, String>, String>> headers,
       final List<Function<Map<String, String>, String>> context,
@@ -115,6 +124,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     this.uriRoot = uriRoot;
     this.container = container;
     this.object = object;
+    this.partSize = partSize;
     this.queryParameters = ImmutableMap.copyOf(queryParameters);
     this.trailingSlash = trailingSlash;
     this.headers = ImmutableMap.copyOf(headers);
@@ -125,8 +135,51 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     this.operation = operation;
     this.inProgressMultipartRequests = new ConcurrentLinkedDeque<MultipartInfo>();
     this.toBeCompletedMultipartRequests = new ConcurrentLinkedDeque<MultipartInfo>();
-    this.inProgressCompleteMultipartRequests = new ConcurrentHashMap<String, MultipartInfo>();
     this.multipartRequestMap = new ConcurrentHashMap<String, MultipartInfo>();
+
+    this.initiateValidHeaders = new ArrayList<String>(
+        Arrays.asList("Cache-Control",
+            "Content-Disposition",
+            "Content-Encoding",
+            "Content-Type",
+            "Expires",
+            "x-amz-storage-​class",
+            "x-amz-website-redirect-location",
+            "x-amz-acl",
+            "x-amz-grant-read",
+            "x-amz-grant-write",
+            "x-amz-grant-read-acp",
+            "x-amz-grant-write-acp",
+            "x-amz-grant-full-control",
+            "x-amz-server-side-encryption",
+            "x-amz-server-side-encryption-aws-kms-key-id",
+            "x-amz-server-side-encryption-context",
+            "x-amz-server-side-encryption-customer-algorithm",
+            "x-amz-server-side-encryption-customer-key",
+            "x-amz-server-side-encryption-customer-key-MD5")
+    );
+
+    this.partValidHeaders = new ArrayList<String>(
+        Arrays.asList("Content-Length",
+            "Content-MD5",
+            "Expect",
+            "x-amz-server-side​-encryption​-customer-algorithm",
+            "x-amz-server-side-encryption-customer-key",
+            "x-amz-server-side-encryption-customer-key-MD5")
+    );
+
+    this.commonValidHeaders = new ArrayList<String>(
+        Arrays.asList("Authorization",
+            "Content-Length",
+            "Content-Type",
+            "Content-MD5",
+            "Date",
+            "Expect",
+            "Host",
+            "x-amz-content-sha256",
+            "x-amz-date",
+            "x-amz-security-token")
+    );
   }
 
   private enum MultipartRequest {
@@ -145,32 +198,61 @@ public class MultipartRequestSupplier implements Supplier<Request> {
   }
 
   private class MultipartInfo {
+    private Object lock_nextPartNumber;
+    private Object lock_inProgressPartRequests;
+    private Object lock_finishedPartRequests;
+    private Object lock_inProgressCompleteRequest;
+    private Object lock_finishedCompleteRequest;
+
+    String containerName;
+    String containerSuffix;
     String objectName;
+    String bodyDataType;
     int objectSize;
     int partSize;
     int lastPartSize;
     String uploadId;
-    ArrayList<PartInfo> partsInfo;
+    Queue<PartInfo> partsInfo;
     int partRequestsToSend; //Part Requests
     int nextPartNumber;
     int inProgressPartRequests;
     int finishedPartRequests;
-    boolean finishedCompleteRequest;
     boolean inProgressCompleteRequest;
+    boolean finishedCompleteRequest;
 
-    public MultipartInfo(String objectName, String uploadId, int objectSize, int partSize) {
+    public MultipartInfo(String containerName, String objectName, String uploadId,
+        int objectSize, int partSize, String containerSuffix, String bodyDataType) {
+      this.lock_nextPartNumber = new Object();
+      this.lock_inProgressPartRequests = new Object();
+      this.lock_finishedPartRequests = new Object();
+      this.lock_inProgressCompleteRequest = new Object();
+      this.lock_finishedCompleteRequest = new Object();
+
+      this.containerName = containerName;
+      this.containerSuffix = containerSuffix;
+      this.bodyDataType = bodyDataType;
       this.objectName = objectName;
       this.objectSize = objectSize;
-      this.partSize = partSize;
+      this.partSize = partSize; // bytes - converted from MiB in createInitiateRequest
       this.uploadId = uploadId;
       this.nextPartNumber = 0;
       this.inProgressPartRequests = 0;
       this.finishedPartRequests = 0;
       this.inProgressCompleteRequest = false;
       this.finishedCompleteRequest = false;
-      this.partsInfo = new ArrayList<PartInfo>();
+      this.partsInfo = new PriorityBlockingQueue<PartInfo>(200, new Comparator<PartInfo>() {
+        @Override public int compare(PartInfo o1, PartInfo o2) {
+          if(Integer.valueOf(o1.partNumber) < Integer.valueOf(o2.partNumber)) {
+            return -1;
+          } else if (Integer.valueOf(o1.partNumber) > Integer.valueOf(o2.partNumber)) {
+            return 1;
+          } else {
+            return 0;
+          }
+        }
+      });
 
-      double parts = (double)objectSize/(double)partSize;
+      double parts = (double)objectSize/(double)this.partSize;
       double flooredParts = Math.floor(parts);
 
       // not all parts are the same size
@@ -182,36 +264,46 @@ public class MultipartRequestSupplier implements Supplier<Request> {
         this.partRequestsToSend = (int) parts;
         this.lastPartSize = partSize;
       }
-
     }
 
     public MultipartRequest getNextMultipartRequest() {
       // all parts sent, no complete yet, send the complete
-      if((this.inProgressPartRequests == 0) &&
-        (this.finishedCompleteRequest == false) &&
-        (this.inProgressCompleteRequest == false) &&
-        (this.finishedPartRequests == this.partRequestsToSend)) {
-        return MultipartRequest.COMPLETE;
-        // all parts sent, complete sent, done
-      } else if((this.finishedPartRequests == this.partRequestsToSend) &&
-          (this.finishedCompleteRequest == true) && (this.inProgressCompleteRequest == false)) {
-        return MultipartRequest.INTERNAL_DONE;
-        // haven't sent all the parts
-      } else if((this.inProgressPartRequests + this.finishedPartRequests) < this.partRequestsToSend) {
-        return MultipartRequest.PART;
-        // all parts sent, but not finished
-      } else if((this.inProgressPartRequests + this.finishedPartRequests) == this.partRequestsToSend) {
-        return MultipartRequest.INTERNAL_PENDING;
-      } else {
-        return MultipartRequest.INTERNAL_ERROR;
+      synchronized (lock_inProgressPartRequests) {
+        synchronized (lock_finishedPartRequests) {
+          synchronized (lock_inProgressCompleteRequest) {
+            synchronized (lock_finishedCompleteRequest) {
+              if((this.inProgressPartRequests == 0) &&
+                  (this.finishedCompleteRequest == false) &&
+                  (this.inProgressCompleteRequest == false) &&
+                  (this.finishedPartRequests == this.partRequestsToSend)) {
+                return MultipartRequest.COMPLETE;
+                // all parts sent, complete sent, done
+              } else if((this.finishedPartRequests == this.partRequestsToSend) &&
+                  (this.finishedCompleteRequest == true) && (this.inProgressCompleteRequest == false)) {
+                return MultipartRequest.INTERNAL_DONE;
+                // haven't sent all the parts
+              } else if((this.inProgressPartRequests + this.finishedPartRequests) < this.partRequestsToSend) {
+                return MultipartRequest.PART;
+                // all parts sent, but not finished
+              } else if((this.inProgressPartRequests + this.finishedPartRequests) == this.partRequestsToSend) {
+                return MultipartRequest.INTERNAL_PENDING;
+              } else {
+                return MultipartRequest.INTERNAL_ERROR;
+              }
+            }
+          }
+        }
+
       }
     }
 
     public int getNextPartSize() {
-      if (this.nextPartNumber < this.partRequestsToSend) {
-        return this.partSize;
-      } else {
-        return this.lastPartSize;
+      synchronized (lock_nextPartNumber) {
+        if (this.nextPartNumber < this.partRequestsToSend) {
+          return this.partSize;
+        } else {
+          return this.lastPartSize;
+        }
       }
     }
 
@@ -219,25 +311,39 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     returns the next partNumber
      */
     public Integer startPartRequest() {
-      this.inProgressPartRequests++;
-      this.nextPartNumber++;
-      return this.nextPartNumber;
+      synchronized (lock_inProgressPartRequests) {
+        synchronized (lock_nextPartNumber) {
+          this.inProgressPartRequests++;
+          this.nextPartNumber++;
+          return this.nextPartNumber;
+        }
+      }
     }
 
     public void finishPartRequest(PartInfo partInfo) {
       this.partsInfo.add(partInfo);
-      this.inProgressPartRequests--;
-      this.finishedPartRequests++;
+      synchronized (lock_inProgressPartRequests) {
+        synchronized (lock_finishedPartRequests) {
+          this.inProgressPartRequests--;
+          this.finishedPartRequests++;
+        }
+      }
     }
 
     public String startCompleteRequest() {
-      this.inProgressCompleteRequest = true;
+      synchronized (lock_inProgressCompleteRequest) {
+        this.inProgressCompleteRequest = true;
+      }
       return generateCompleteRequestBody();
     }
 
     public void finishCompleteRequest() {
-      this.finishedCompleteRequest = true;
-      this.inProgressCompleteRequest = false;
+      synchronized (lock_inProgressCompleteRequest) {
+        synchronized (lock_inProgressCompleteRequest) {
+          this.finishedCompleteRequest = true;
+          this.inProgressCompleteRequest = false;
+        }
+      }
     }
 
     private String generateCompleteRequestBody() {
@@ -252,7 +358,9 @@ public class MultipartRequestSupplier implements Supplier<Request> {
       
       String completeRequestBody = completeMultipartUploadBeginElement;
 
-      for (PartInfo part : this.partsInfo) {
+      PartInfo part;
+      while(!partsInfo.isEmpty()) {
+        part = partsInfo.poll();
         completeRequestBody += partBeginElement + partNumberBeginElement + part.partNumber +
             partNumberEndElement + etagBeginElement + part.partId + etagEndElement + partEndElement;
       }
@@ -272,8 +380,12 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     Map<String, String> responseHeaders = response.headers();
 
     String multipartrequestOperation = requestContext.get(Context.X_OG_MULTIPART_REQUEST);
+    String requestBodyDataType = requestContext.get(Context.X_OG_MULTIPART_BODY_DATA_TYPE);
+    String requestContainerName = requestContext.get(Context.X_OG_MULTIPART_CONTAINER);
+    String requestContainerSuffix = requestContext.get(Context.X_OG_CONTAINER_SUFFIX);
     String requestObjectName = requestContext.get(Context.X_OG_OBJECT_NAME);
     String requestObjectSize = requestContext.get(Context.X_OG_OBJECT_SIZE);
+    String requestPartSize = requestContext.get(Context.X_OG_MULTIPART_PART_SIZE);
     String requestUploadId = requestContext.get(Context.X_OG_MULTIPART_UPLOAD_ID);
     String requestPartNumber = requestContext.get(Context.X_OG_MULTIPART_PART_NUMBER);
     String responseUploadId = responseContext.get(Context.X_OG_MULTIPART_UPLOAD_ID);
@@ -282,8 +394,8 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     MultipartInfo multipartInfo;
 
     if (multipartrequestOperation == MultipartRequest.INITIATE.toString()) {
-      multipartInfo = new MultipartInfo(requestObjectName, responseUploadId,
-          Integer.valueOf(requestObjectSize), PART_SIZE_BYTES);
+      multipartInfo = new MultipartInfo(requestContainerName, requestObjectName, responseUploadId,
+          Integer.valueOf(requestObjectSize), Integer.valueOf(requestPartSize), requestContainerSuffix, requestBodyDataType);
       multipartRequestMap.put(responseUploadId, multipartInfo);
       inProgressMultipartRequests.add(multipartInfo);
     } else if (multipartrequestOperation == MultipartRequest.PART.toString()) {
@@ -320,16 +432,18 @@ public class MultipartRequestSupplier implements Supplier<Request> {
       switch(activeMultipartInfo.getNextMultipartRequest()) {
         case PART:
           builder = createPartRequest(requestContext, activeMultipartInfo.startPartRequest(),
-              activeMultipartInfo.uploadId, activeMultipartInfo.objectName, activeMultipartInfo.getNextPartSize());
+              activeMultipartInfo.uploadId, activeMultipartInfo.objectName,
+              activeMultipartInfo.getNextPartSize(), activeMultipartInfo.containerName,
+              activeMultipartInfo.bodyDataType);
           break;
         case COMPLETE:
-          activeMultipartInfo.startCompleteRequest();
           builder = createCompleteRequest(requestContext, activeMultipartInfo.uploadId,
-              activeMultipartInfo.objectName, activeMultipartInfo.generateCompleteRequestBody());
+              activeMultipartInfo.objectName, activeMultipartInfo.startCompleteRequest(),
+              activeMultipartInfo.containerName, activeMultipartInfo.containerSuffix);
           break;
         case ABORT:
           builder = createAbortRequest(requestContext, activeMultipartInfo.uploadId,
-              activeMultipartInfo.objectName);
+              activeMultipartInfo.objectName, activeMultipartInfo.containerName);
           break;
         default:
           return null;
@@ -423,38 +537,56 @@ public class MultipartRequestSupplier implements Supplier<Request> {
   }
 
   private HttpRequest.Builder createInitiateRequest(final Map<String, String> context) {
+    Body fullBody = this.body.apply(context);
+    Integer partSize = this.partSize.apply(context) * 1024 * 1024;
+    String containerName = this.container.apply(context);
+
     final HttpRequest.Builder builder =
         new HttpRequest.Builder(Method.POST,
-            getUrl(context, MultipartRequest.INITIATE, NO_PART, null, null),
+            getUrl(context, MultipartRequest.INITIATE, NO_PART, null, null, containerName),
             Operation.MULTIPART_WRITE_INITIATE);
 
-    //TODO add list of allowable headers
     for (final Map.Entry<String, Function<Map<String, String>, String>> header : this.headers
         .entrySet()) {
-      builder.withHeader(header.getKey(), header.getValue().apply(context));
+      // all headers defined as one block, so have to make sure
+      // the header is valid for an Initiate
+      // x-amz-meta- is dynamic and a special case for Initiate. e.g. x-amz-meta-og, x-amz-meta-perfd
+      if(this.initiateValidHeaders.contains(header.getKey()) || header.getKey().contains("x-amz-meta-")) {
+        builder.withHeader(header.getKey(), header.getValue().apply(context));
+      }
     }
 
-    Body fullBody = this.body.apply(context);
-
     builder.withContext(Context.X_OG_OBJECT_SIZE, String.valueOf(fullBody.getSize()));
+    builder.withContext(Context.X_OG_MULTIPART_BODY_DATA_TYPE, fullBody.getDataType().toString());
     builder.withContext(Context.X_OG_MULTIPART_REQUEST, MultipartRequest.INITIATE.toString());
+    builder.withContext(Context.X_OG_MULTIPART_CONTAINER, containerName);
+    builder.withContext(Context.X_OG_MULTIPART_PART_SIZE, partSize.toString());
 
     return builder;
   }
 
   private HttpRequest.Builder createPartRequest(final Map<String, String> context,
-      int partNumber, String uploadId, String objectName, int partSize) {
+      int partNumber, String uploadId, String objectName, int partSize, String containerName, String bodyDataType) {
     final HttpRequest.Builder builder =
         new HttpRequest.Builder(Method.PUT, getUrl(context, MultipartRequest.PART,
-            partNumber, uploadId, objectName), Operation.MULTIPART_WRITE_PART);
+            partNumber, uploadId, objectName, containerName), Operation.MULTIPART_WRITE_PART);
 
-    //TODO add list of allowable headers
     for (final Map.Entry<String, Function<Map<String, String>, String>> header : this.headers
         .entrySet()) {
-      builder.withHeader(header.getKey(), header.getValue().apply(context));
+      // all headers defined as one block, so have to make sure
+      // the header is valid for a Part
+      if(this.partValidHeaders.contains(header.getKey()) || this.commonValidHeaders.contains(header.getKey())) {
+        builder.withHeader(header.getKey(), header.getValue().apply(context));
+      }
     }
 
-    builder.withBody(Bodies.random(partSize));
+    if(bodyDataType == DataType.RANDOM.toString()) {
+      builder.withBody(Bodies.random(partSize));
+    } else if(bodyDataType == DataType.ZEROES.toString()) {
+      builder.withBody(Bodies.zeroes(partSize));
+    } else {
+      builder.withBody(Bodies.random(partSize));
+    }
 
     builder.withContext(Context.X_OG_MULTIPART_REQUEST, MultipartRequest.PART.toString());
     builder.withContext(Context.X_OG_MULTIPART_PART_NUMBER, String.valueOf(partNumber));
@@ -466,16 +598,19 @@ public class MultipartRequestSupplier implements Supplier<Request> {
   }
 
   private HttpRequest.Builder createCompleteRequest(final Map<String, String> context,
-      String uploadId, String objectName, String body) {
+      String uploadId, String objectName, String body, String containerName, String containerSuffix) {
     final HttpRequest.Builder builder =
         new HttpRequest.Builder(Method.POST,
-            getUrl(context, MultipartRequest.COMPLETE, NO_PART, uploadId, objectName),
-            Operation.MULTIPART_WRITE_COMPLETE);
+            getUrl(context, MultipartRequest.COMPLETE, NO_PART, uploadId, objectName,
+                containerName), Operation.MULTIPART_WRITE_COMPLETE);
 
-    //TODO add list of allowable headers
     for (final Map.Entry<String, Function<Map<String, String>, String>> header : this.headers
         .entrySet()) {
-      builder.withHeader(header.getKey(), header.getValue().apply(context));
+      // all headers defined as one block, so have to make sure
+      // the header is valid for a Complete
+      if(this.commonValidHeaders.contains(header.getKey())) {
+        builder.withHeader(header.getKey(), header.getValue().apply(context));
+      }
     }
 
     builder.withBody(Bodies.custom(body.length(), body));
@@ -484,20 +619,25 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     builder.withContext(Context.X_OG_MULTIPART_UPLOAD_ID, uploadId);
     builder.withContext(Context.X_OG_OBJECT_NAME, objectName);
     builder.withContext(Context.X_OG_OBJECT_SIZE, String.valueOf(body.length()));
+    builder.withContext(Context.X_OG_CONTAINER_SUFFIX, containerSuffix);
 
     return builder;
   }
 
-  private HttpRequest.Builder createAbortRequest(final Map<String, String> context, String uploadId, String objectName) {
+  private HttpRequest.Builder createAbortRequest(final Map<String, String> context, String uploadId,
+      String objectName, String containerName) {
     final HttpRequest.Builder builder =
         new HttpRequest.Builder(Method.DELETE,
-            getUrl(context, MultipartRequest.ABORT, NO_PART, uploadId, objectName),
+            getUrl(context, MultipartRequest.ABORT, NO_PART, uploadId, objectName, containerName),
             Operation.MULTIPART_WRITE_ABORT);
 
-    //TODO add list of allowable headers
     for (final Map.Entry<String, Function<Map<String, String>, String>> header : this.headers
         .entrySet()) {
-      builder.withHeader(header.getKey(), header.getValue().apply(context));
+      // all headers defined as one block, so have to make sure
+      // the header is valid for an Abort
+      if(this.commonValidHeaders.contains(header.getKey())) {
+        builder.withHeader(header.getKey(), header.getValue().apply(context));
+      }
     }
 
     builder.withContext(Context.X_OG_OBJECT_NAME, objectName);
@@ -506,12 +646,12 @@ public class MultipartRequestSupplier implements Supplier<Request> {
   }
 
   private URI getUrl(final Map<String, String> context, MultipartRequest multipartRequest,
-      int partNumber, String uploadId, String objectName) {
+      int partNumber, String uploadId, String objectName, String containerName) {
 
     final StringBuilder s = new StringBuilder().append(this.scheme).append("://");
-    appendHost(s, context);
+    appendHost(s, context, multipartRequest, containerName);
     appendPort(s);
-    appendPath(s, context, multipartRequest, objectName);
+    appendPath(s, context, multipartRequest, objectName, containerName);
     appendTrailingSlash(s);
     appendQueryParams(s, multipartRequest, partNumber, uploadId);
 
@@ -524,10 +664,11 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     }
   }
 
-  private void appendHost(final StringBuilder s, final Map<String, String> context) {
+  private void appendHost(final StringBuilder s, final Map<String, String> context,
+      MultipartRequest multipartRequest, String containerName) {
     if (this.virtualHost) {
-      if(this.container != null) {
-        s.append(this.container.apply(context)).append(".");
+      if (containerName != null)  {
+        s.append(containerName).append(".");
       }
     }
 
@@ -541,21 +682,21 @@ public class MultipartRequestSupplier implements Supplier<Request> {
   }
 
   private void appendPath(final StringBuilder s, final Map<String, String> context,
-      MultipartRequest multipartRequest, String objectName) {
+      MultipartRequest multipartRequest, String objectName, String containerName) {
     if (!this.virtualHost) {
       s.append("/");
       if (this.uriRoot != null) {
         s.append(this.uriRoot).append("/");
       }
 
-      if (this.container != null) {
-        s.append(this.container.apply(context));
+      if (containerName != null) {
+        s.append(containerName);
       }
     }
 
     if (this.object != null && multipartRequest == MultipartRequest.INITIATE) {
       s.append("/").append(this.object.apply(context));
-    } else {
+    } else if(objectName != null) {
       s.append("/").append(objectName);
     }
   }
