@@ -380,6 +380,10 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     Map<String, String> responseHeaders = response.headers();
 
     String multipartrequestOperation = requestContext.get(Context.X_OG_MULTIPART_REQUEST);
+    if(multipartrequestOperation == null) {
+      // not a multipart operation so just return
+      return;
+    }
     String requestBodyDataType = requestContext.get(Context.X_OG_MULTIPART_BODY_DATA_TYPE);
     String requestContainerName = requestContext.get(Context.X_OG_MULTIPART_CONTAINER);
     String requestContainerSuffix = requestContext.get(Context.X_OG_CONTAINER_SUFFIX);
@@ -394,6 +398,11 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     MultipartInfo multipartInfo;
 
     if (multipartrequestOperation == MultipartRequest.INITIATE.toString()) {
+      if(response.getStatusCode() != 200) {
+        // bad response, so just return
+        System.out.println("Multipart Initiate Failed with " + response.getStatusCode());
+        return;
+      }
       multipartInfo = new MultipartInfo(requestContainerName, requestObjectName, responseUploadId,
           Integer.valueOf(requestObjectSize), Integer.valueOf(requestPartSize), requestContainerSuffix, requestBodyDataType);
       multipartRequestMap.put(responseUploadId, multipartInfo);
