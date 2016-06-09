@@ -581,8 +581,7 @@ public class OGModule extends AbstractModule {
   @Provides
   @Singleton
   @Named("multipartWrite.partSize")
-  public Function<Map<String, String>, Integer> provideMultipartWritePartSize(
-      @Named("host") final Function<Map<String, String>, String> host) {
+  public Function<Map<String, String>, Integer> provideMultipartWritePartSize() {
     return providePartSize(this.config.multipartWrite);
   }
 
@@ -594,9 +593,9 @@ public class OGModule extends AbstractModule {
       return createPartSize(operationConfig.object.partSize);
     }
 
-    // default to 5
+    // default to 5242880 bytes
     final List<Integer> partSizeList = Lists.newArrayList();
-    partSizeList.add(5);
+    partSizeList.add(5242880);
     final Supplier<Integer> partSizeSupplier = Suppliers.cycle(partSizeList);
     return MoreFunctions.forSupplier(partSizeSupplier);
   }
@@ -609,7 +608,7 @@ public class OGModule extends AbstractModule {
     for (final ChoiceConfig<Integer> choice : partSize.choices) {
       checkNotNull(choice);
       checkNotNull(choice.choice);
-      checkArgument(choice.choice >= 5, "partSize must be greater than 5 MiB");
+      checkArgument(choice.choice >= 5242880, "partSize must be greater than or equal to 5242880 bytes (5 MiB)");
     }
 
     if (SelectionType.ROUNDROBIN == partSize.selection) {
@@ -1518,12 +1517,12 @@ public class OGModule extends AbstractModule {
     final Map<String, Function<Map<String, String>, String>> queryParameters =
         Collections.emptyMap();
 
-    return createMultipartRequestSupplier(Operation.MULTIPART_WRITE, id, Method.POST, scheme, host,
-        port, uriRoot, container, object, partSize, queryParameters, headers, context, body, credentials, virtualHost);
+    return createMultipartRequestSupplier(id, scheme, host, port, uriRoot, container, object,
+        partSize, queryParameters, headers, context, body, credentials, virtualHost);
   }
 
-  private Supplier<Request> createMultipartRequestSupplier(final Operation operation,
-      @Named("request.id") final Function<Map<String, String>, String> id, final Method method,
+  private Supplier<Request> createMultipartRequestSupplier(
+      @Named("request.id") final Function<Map<String, String>, String> id,
       final Scheme scheme, final Function<Map<String, String>, String> host, final Integer port,
       final String uriRoot, final Function<Map<String, String>, String> container,
       final Function<Map<String, String>, String> object,
@@ -1534,8 +1533,7 @@ public class OGModule extends AbstractModule {
       final Function<Map<String, String>, Body> body,
       final Function<Map<String, String>, Credential> credentials, final boolean virtualHost) {
 
-    return new MultipartRequestSupplier(operation, id, scheme, host, port, uriRoot,
-        container, object, partSize, queryParameters, false, headers, context, credentials, body,
-        virtualHost);
+    return new MultipartRequestSupplier(id, scheme, host, port, uriRoot, container, object,
+        partSize, queryParameters, false, headers, context, credentials, body, virtualHost);
   }
 }

@@ -49,16 +49,14 @@ public class S3MultipartWriteResponseBodyConsumer implements ResponseBodyConsume
     try {
       documentBuilder = documentBuilderFactory.newDocumentBuilder();
     } catch (ParserConfigurationException e) {
-      e.printStackTrace();
-      throw new RuntimeException();
+      throw new RuntimeException(e);
     }
     try {
       if(response.available() > 0) {
         document = documentBuilder.parse(response);
       }
     } catch (SAXException e) {
-      e.printStackTrace();
-      throw new RuntimeException();
+      throw new RuntimeException(e);
     }
 
     if(document != null) {

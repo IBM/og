@@ -27,6 +27,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -49,9 +51,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @since 1.0
  */
 public class MultipartRequestSupplier implements Supplier<Request> {
+  private static final Logger _consoleLogger = LoggerFactory.getLogger("ConsoleLogger");
+
   private static final Joiner.MapJoiner PARAM_JOINER = Joiner.on('&').withKeyValueSeparator("=");
   private final Function<Map<String, String>, String> id;
-  private final Method method;
   private final Scheme scheme;
   private final Function<Map<String, String>, String> host;
   private final Integer port;
@@ -66,7 +69,6 @@ public class MultipartRequestSupplier implements Supplier<Request> {
   private final Function<Map<String, String>, Credential> credentials;
   private final Function<Map<String, String>, Body> body;
   private final boolean virtualHost;
-  private final Operation operation;
 
   // constants
   private final int NO_PART = -1;
@@ -78,11 +80,6 @@ public class MultipartRequestSupplier implements Supplier<Request> {
   private final Deque<MultipartInfo> inProgressMultipartRequests;
   private final Deque<MultipartInfo> toBeCompletedMultipartRequests;
   private final Map<String, MultipartInfo> multipartRequestMap;
-
-  // valid headers
-  private final List<String> initiateValidHeaders;
-  private final List<String> partValidHeaders;
-  private final List<String> commonValidHeaders;
 
   /**
    * Creates an instance
@@ -104,7 +101,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
    */
   // FIXME refactor username, password, and keystoneToken so they are embedded in headers rather
   // than separate fields
-  public MultipartRequestSupplier(final Operation operation, final Function<Map<String, String>, String> id,
+  public MultipartRequestSupplier(final Function<Map<String, String>, String> id,
       final Scheme scheme, final Function<Map<String, String>, String> host,
       final Integer port, final String uriRoot,
       final Function<Map<String, String>, String> container,
@@ -117,7 +114,6 @@ public class MultipartRequestSupplier implements Supplier<Request> {
       final Function<Map<String, String>, Body> body, final boolean virtualHost) {
 
     this.id = id;
-    this.method = null;
     this.scheme = checkNotNull(scheme);
     this.host = checkNotNull(host);
     this.port = port;
@@ -132,54 +128,9 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     this.credentials = credentials;
     this.body = body;
     this.virtualHost = virtualHost;
-    this.operation = operation;
     this.inProgressMultipartRequests = new ConcurrentLinkedDeque<MultipartInfo>();
     this.toBeCompletedMultipartRequests = new ConcurrentLinkedDeque<MultipartInfo>();
     this.multipartRequestMap = new ConcurrentHashMap<String, MultipartInfo>();
-
-    this.initiateValidHeaders = new ArrayList<String>(
-        Arrays.asList("Cache-Control",
-            "Content-Disposition",
-            "Content-Encoding",
-            "Content-Type",
-            "Expires",
-            "x-amz-storage-​class",
-            "x-amz-website-redirect-location",
-            "x-amz-acl",
-            "x-amz-grant-read",
-            "x-amz-grant-write",
-            "x-amz-grant-read-acp",
-            "x-amz-grant-write-acp",
-            "x-amz-grant-full-control",
-            "x-amz-server-side-encryption",
-            "x-amz-server-side-encryption-aws-kms-key-id",
-            "x-amz-server-side-encryption-context",
-            "x-amz-server-side-encryption-customer-algorithm",
-            "x-amz-server-side-encryption-customer-key",
-            "x-amz-server-side-encryption-customer-key-MD5")
-    );
-
-    this.partValidHeaders = new ArrayList<String>(
-        Arrays.asList("Content-Length",
-            "Content-MD5",
-            "Expect",
-            "x-amz-server-side​-encryption​-customer-algorithm",
-            "x-amz-server-side-encryption-customer-key",
-            "x-amz-server-side-encryption-customer-key-MD5")
-    );
-
-    this.commonValidHeaders = new ArrayList<String>(
-        Arrays.asList("Authorization",
-            "Content-Length",
-            "Content-Type",
-            "Content-MD5",
-            "Date",
-            "Expect",
-            "Host",
-            "x-amz-content-sha256",
-            "x-amz-date",
-            "x-amz-security-token")
-    );
   }
 
   private enum MultipartRequest {
@@ -233,7 +184,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
       this.bodyDataType = bodyDataType;
       this.objectName = objectName;
       this.objectSize = objectSize;
-      this.partSize = partSize; // bytes - converted from MiB in createInitiateRequest
+      this.partSize = partSize; // bytes
       this.uploadId = uploadId;
       this.nextPartNumber = 0;
       this.inProgressPartRequests = 0;
@@ -242,9 +193,9 @@ public class MultipartRequestSupplier implements Supplier<Request> {
       this.finishedCompleteRequest = false;
       this.partsInfo = new PriorityBlockingQueue<PartInfo>(200, new Comparator<PartInfo>() {
         @Override public int compare(PartInfo o1, PartInfo o2) {
-          if(Integer.valueOf(o1.partNumber) < Integer.valueOf(o2.partNumber)) {
+          if(Integer.parseInt(o1.partNumber) < Integer.parseInt(o2.partNumber)) {
             return -1;
-          } else if (Integer.valueOf(o1.partNumber) > Integer.valueOf(o2.partNumber)) {
+          } else if (Integer.parseInt(o1.partNumber) > Integer.parseInt(o2.partNumber)) {
             return 1;
           } else {
             return 0;
@@ -252,16 +203,15 @@ public class MultipartRequestSupplier implements Supplier<Request> {
         }
       });
 
-      double parts = (double)objectSize/(double)this.partSize;
-      double flooredParts = Math.floor(parts);
+      int parts = this.objectSize/this.partSize;
 
       // not all parts are the same size
-      if(parts != flooredParts) {
-        this.partRequestsToSend = (int) parts + 1;
-        this.lastPartSize = this.objectSize - (this.partSize * (this.partRequestsToSend - 1));
+      if(0 != (this.objectSize % this.partSize)) {
+        this.partRequestsToSend = parts + 1;
+        this.lastPartSize = this.objectSize % this.partSize;
         // parts are all the same size
       } else {
-        this.partRequestsToSend = (int) parts;
+        this.partRequestsToSend = parts;
         this.lastPartSize = partSize;
       }
     }
@@ -310,7 +260,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     /*
     returns the next partNumber
      */
-    public Integer startPartRequest() {
+    public int startPartRequest() {
       synchronized (lock_inProgressPartRequests) {
         synchronized (lock_nextPartNumber) {
           this.inProgressPartRequests++;
@@ -355,19 +305,20 @@ public class MultipartRequestSupplier implements Supplier<Request> {
       String partNumberEndElement = "</PartNumber>";
       String etagBeginElement = "<ETag>";
       String etagEndElement = "</ETag>";
-      
-      String completeRequestBody = completeMultipartUploadBeginElement;
 
       PartInfo part;
+      StringBuilder sb = new StringBuilder();
+      sb.append(completeMultipartUploadBeginElement);
+
       while(!partsInfo.isEmpty()) {
         part = partsInfo.poll();
-        completeRequestBody += partBeginElement + partNumberBeginElement + part.partNumber +
-            partNumberEndElement + etagBeginElement + part.partId + etagEndElement + partEndElement;
+        sb.append(partBeginElement).append(partNumberBeginElement).append(part.partNumber).append(partNumberEndElement).append(etagBeginElement)
+            .append(part.partId).append(etagEndElement).append(partEndElement);
       }
 
-      completeRequestBody += completeMultipartUploadEndElement;
+      sb.append(completeMultipartUploadEndElement);
 
-      return completeRequestBody;
+      return sb.toString();
     }
   }
 
@@ -396,15 +347,14 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     String responsePartId = responseHeaders.get("ETag");
 
     MultipartInfo multipartInfo;
-
     if (multipartrequestOperation == MultipartRequest.INITIATE.toString()) {
       if(response.getStatusCode() != 200) {
         // bad response, so just return
-        System.out.println("Multipart Initiate Failed with " + response.getStatusCode());
+        this._consoleLogger.info("Multipart Initiate Failed with " + response.getStatusCode());
         return;
       }
       multipartInfo = new MultipartInfo(requestContainerName, requestObjectName, responseUploadId,
-          Integer.valueOf(requestObjectSize), Integer.valueOf(requestPartSize), requestContainerSuffix, requestBodyDataType);
+          Integer.parseInt(requestObjectSize), Integer.parseInt(requestPartSize), requestContainerSuffix, requestBodyDataType);
       multipartRequestMap.put(responseUploadId, multipartInfo);
       inProgressMultipartRequests.add(multipartInfo);
     } else if (multipartrequestOperation == MultipartRequest.PART.toString()) {
@@ -426,16 +376,15 @@ public class MultipartRequestSupplier implements Supplier<Request> {
 
     MultipartInfo activeMultipartInfo = getActiveMultipartOperation();
 
-    // populate the context map with any relevant metadata for this request
-    // based on what the current operation is
-    if (activeMultipartInfo == null){
+    if(activeMultipartInfo == null) {
+      // populate the context map with any relevant metadata for this request
+      // based on what the current operation is
       for (final Function<Map<String, String>, String> function : this.context) {
         // return value for context functions is ignored
         function.apply(requestContext);
       }
-    }
 
-    if(activeMultipartInfo == null) {
+      // create the initiate request
       builder = createInitiateRequest(requestContext);
     } else {
       switch(activeMultipartInfo.getNextMultipartRequest()) {
@@ -456,6 +405,13 @@ public class MultipartRequestSupplier implements Supplier<Request> {
           break;
         default:
           return null;
+      }
+    }
+
+    if (this.headers != null) {
+      for (final Map.Entry<String, Function<Map<String, String>, String>> header : this.headers
+          .entrySet()) {
+        builder.withHeader(header.getKey(), header.getValue().apply(requestContext));
       }
     }
 
@@ -503,7 +459,6 @@ public class MultipartRequestSupplier implements Supplier<Request> {
         // any other state, take no action
       } else if(nextRequest != MultipartRequest.COMPLETE) {
         noActionMultipart.addFirst(multipartToCheck);
-        continue;
         // if complete, we have our action
       } else {
         multipartToReturn = multipartToCheck;
@@ -547,23 +502,13 @@ public class MultipartRequestSupplier implements Supplier<Request> {
 
   private HttpRequest.Builder createInitiateRequest(final Map<String, String> context) {
     Body fullBody = this.body.apply(context);
-    Integer partSize = this.partSize.apply(context) * 1024 * 1024;
+    Integer partSize = this.partSize.apply(context); // bytes
     String containerName = this.container.apply(context);
 
     final HttpRequest.Builder builder =
         new HttpRequest.Builder(Method.POST,
             getUrl(context, MultipartRequest.INITIATE, NO_PART, null, null, containerName),
             Operation.MULTIPART_WRITE_INITIATE);
-
-    for (final Map.Entry<String, Function<Map<String, String>, String>> header : this.headers
-        .entrySet()) {
-      // all headers defined as one block, so have to make sure
-      // the header is valid for an Initiate
-      // x-amz-meta- is dynamic and a special case for Initiate. e.g. x-amz-meta-og, x-amz-meta-perfd
-      if(this.initiateValidHeaders.contains(header.getKey()) || header.getKey().contains("x-amz-meta-")) {
-        builder.withHeader(header.getKey(), header.getValue().apply(context));
-      }
-    }
 
     builder.withContext(Context.X_OG_OBJECT_SIZE, String.valueOf(fullBody.getSize()));
     builder.withContext(Context.X_OG_MULTIPART_BODY_DATA_TYPE, fullBody.getDataType().toString());
@@ -579,15 +524,6 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     final HttpRequest.Builder builder =
         new HttpRequest.Builder(Method.PUT, getUrl(context, MultipartRequest.PART,
             partNumber, uploadId, objectName, containerName), Operation.MULTIPART_WRITE_PART);
-
-    for (final Map.Entry<String, Function<Map<String, String>, String>> header : this.headers
-        .entrySet()) {
-      // all headers defined as one block, so have to make sure
-      // the header is valid for a Part
-      if(this.partValidHeaders.contains(header.getKey()) || this.commonValidHeaders.contains(header.getKey())) {
-        builder.withHeader(header.getKey(), header.getValue().apply(context));
-      }
-    }
 
     if(bodyDataType == DataType.RANDOM.toString()) {
       builder.withBody(Bodies.random(partSize));
@@ -613,15 +549,6 @@ public class MultipartRequestSupplier implements Supplier<Request> {
             getUrl(context, MultipartRequest.COMPLETE, NO_PART, uploadId, objectName,
                 containerName), Operation.MULTIPART_WRITE_COMPLETE);
 
-    for (final Map.Entry<String, Function<Map<String, String>, String>> header : this.headers
-        .entrySet()) {
-      // all headers defined as one block, so have to make sure
-      // the header is valid for a Complete
-      if(this.commonValidHeaders.contains(header.getKey())) {
-        builder.withHeader(header.getKey(), header.getValue().apply(context));
-      }
-    }
-
     builder.withBody(Bodies.custom(body.length(), body));
 
     builder.withContext(Context.X_OG_MULTIPART_REQUEST, MultipartRequest.COMPLETE.toString());
@@ -639,15 +566,6 @@ public class MultipartRequestSupplier implements Supplier<Request> {
         new HttpRequest.Builder(Method.DELETE,
             getUrl(context, MultipartRequest.ABORT, NO_PART, uploadId, objectName, containerName),
             Operation.MULTIPART_WRITE_ABORT);
-
-    for (final Map.Entry<String, Function<Map<String, String>, String>> header : this.headers
-        .entrySet()) {
-      // all headers defined as one block, so have to make sure
-      // the header is valid for an Abort
-      if(this.commonValidHeaders.contains(header.getKey())) {
-        builder.withHeader(header.getKey(), header.getValue().apply(context));
-      }
-    }
 
     builder.withContext(Context.X_OG_OBJECT_NAME, objectName);
 
@@ -750,10 +668,10 @@ public class MultipartRequestSupplier implements Supplier<Request> {
   @Override
   public String toString() {
     return String.format(
-        "RequestSupplier [%n" + "method=%s,%n" + "scheme=%s,%n" + "host=%s,%n" + "port=%s,%n"
+        "RequestSupplier [" + "scheme=%s,%n" + "host=%s,%n" + "port=%s,%n"
             + "uriRoot=%s,%n" + "container=%s,%n" + "object=%s,%n" + "queryParameters=%s,%n"
             + "trailingSlash=%s,%n" + "headers=%s,%n" + "body=%s%n" + "]",
-        this.method, this.scheme, this.host, this.port, this.uriRoot, this.container, this.object,
+        this.scheme, this.host, this.port, this.uriRoot, this.container, this.object,
         this.queryParameters, this.trailingSlash, this.headers, this.body);
   }
 }

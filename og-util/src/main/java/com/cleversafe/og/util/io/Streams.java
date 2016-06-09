@@ -15,6 +15,7 @@ import java.io.OutputStream;
 import java.util.Random;
 
 import com.cleversafe.og.api.Body;
+import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
 
 /**
@@ -57,7 +58,7 @@ public class Streams {
       case ZEROES:
         return create(ZERO_BUF, body.getSize());
       case CUSTOM:
-        return create(body.getContent().getBytes(), body.getSize());
+        return create(body.getContent().getBytes(Charsets.UTF_8), body.getSize());
       default:
         return create(createRandomBuffer(body.getRandomSeed()), body.getSize());
     }
