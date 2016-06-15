@@ -109,10 +109,9 @@ public class ObjectGenerator {
         juiceProvider = JuiCEProviderOpenSSL.getInstance();
         Security.removeProvider(JuiCEProviderOpenSSL.NAME);
         Security.insertProviderAt(juiceProvider, 1);
-        _consoleLogger.info("Using the JuiCE provider");
+        _logger.info("Using the JuiCE provider");
       } catch (final Exception e) {
-        _consoleLogger.info(e.getMessage());
-        _consoleLogger.info("The JuiCE provider is not available on this platform.");
+        _logger.warn("The JuiCE provider is not available on this platform.", e);
       }
 
       final LoadTestResult result = run(test, objectManager, statistics, gson);
