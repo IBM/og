@@ -6,7 +6,7 @@
  * licensing@cleversafe.com
  */
 
-package com.cleversafe.og.supplier;
+package com.cleversafe.og.s3;
 
 import com.cleversafe.og.api.Body;
 import com.cleversafe.og.api.DataType;
@@ -32,8 +32,6 @@ import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Deque;
 import java.util.List;
@@ -51,7 +49,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @since 1.0
  */
 public class MultipartRequestSupplier implements Supplier<Request> {
-  private static final Logger _consoleLogger = LoggerFactory.getLogger("ConsoleLogger");
+  private static final Logger _logger = LoggerFactory.getLogger(MultipartRequestSupplier.class);
 
   private static final Joiner.MapJoiner PARAM_JOINER = Joiner.on('&').withKeyValueSeparator("=");
   private final Function<Map<String, String>, String> id;
@@ -350,7 +348,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     if (multipartrequestOperation == MultipartRequest.INITIATE.toString()) {
       if(response.getStatusCode() != 200) {
         // bad response, so just return
-        this._consoleLogger.info("Multipart Initiate Failed with " + response.getStatusCode());
+        _logger.info("Multipart Initiate Failed with " + response.getStatusCode());
         return;
       }
       multipartInfo = new MultipartInfo(requestContainerName, requestObjectName, responseUploadId,

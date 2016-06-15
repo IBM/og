@@ -68,7 +68,7 @@ import com.cleversafe.og.statistic.Counter;
 import com.cleversafe.og.statistic.Statistics;
 import com.cleversafe.og.supplier.DeleteObjectNameFunction;
 import com.cleversafe.og.supplier.MetadataObjectNameFunction;
-import com.cleversafe.og.supplier.MultipartRequestSupplier;
+import com.cleversafe.og.s3.MultipartRequestSupplier;
 import com.cleversafe.og.supplier.RandomSupplier;
 import com.cleversafe.og.supplier.ReadObjectNameFunction;
 import com.cleversafe.og.supplier.RequestSupplier;
