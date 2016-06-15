@@ -25,6 +25,13 @@ public class Context {
   // FIXME refactor this into separate openstack guice module
   public static final String X_OG_KEYSTONE_TOKEN = "x-og-keystone-token";
   public static final String X_OG_RESPONSE_BODY_CONSUMER = "x-og-response-body-consumer";
+  // Multipart Context Keys
+  public static final String X_OG_MULTIPART_REQUEST = "x-og-multipart-request";
+  public static final String X_OG_MULTIPART_UPLOAD_ID = "x-og-multipart-upload-id";
+  public static final String X_OG_MULTIPART_PART_NUMBER = "x-og-multipart-part-number";
+  public static final String X_OG_MULTIPART_PART_SIZE = "x-og-multipart-part-size";
+  public static final String X_OG_MULTIPART_CONTAINER = "x-og-multipart-container";
+  public static final String X_OG_MULTIPART_BODY_DATA_TYPE = "x-og-multipart-body-data-type";
 
   private Context() {}
 }

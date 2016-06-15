@@ -69,6 +69,9 @@ public class Summary {
     final OperationStats list;
     final OperationStats containerList;
     final OperationStats containerCreate;
+    final OperationStats multipartWriteInitiate;
+    final OperationStats multipartWritePart;
+    final OperationStats multipartWriteComplete;
 
     private SummaryStats(final Statistics stats, final long timestampStart,
         final long timestampFinish) {
@@ -84,16 +87,19 @@ public class Summary {
       this.list = new OperationStats(stats, Operation.LIST);
       this.containerList = new OperationStats(stats, Operation.CONTAINER_LIST);
       this.containerCreate = new OperationStats(stats, Operation.CONTAINER_CREATE);
+      this.multipartWriteInitiate = new OperationStats(stats, Operation.MULTIPART_WRITE_INITIATE);
+      this.multipartWritePart = new OperationStats(stats, Operation.MULTIPART_WRITE_PART);
+      this.multipartWriteComplete = new OperationStats(stats, Operation.MULTIPART_WRITE_COMPLETE);
     }
 
     @Override
     public String toString() {
       final String format = "Start: %s%nEnd: %s%nRuntime: %.2f "
-          + "Seconds%nOperations: %s%n%n%s%s%s%s%s%s%s%s";
+          + "Seconds%nOperations: %s%n%n%s%s%s%s%s%s%s%s%s%s%s";
       return String.format(Locale.US, format, FORMATTER.print(this.timestampStart),
           FORMATTER.print(this.timestampFinish), this.runtime, this.operations, this.write,
           this.read, this.delete, this.metadata, this.overwrite, this.list, this.containerList,
-          this.containerCreate);
+          this.containerCreate, this.multipartWriteInitiate, this.multipartWritePart, this.multipartWriteComplete);
     }
 
     class OperationStats {

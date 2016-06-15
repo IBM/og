@@ -14,5 +14,5 @@ package com.cleversafe.og.api;
  * @since 1.0
  */
 public enum DataType {
-  NONE, RANDOM, ZEROES;
+  NONE, RANDOM, ZEROES, CUSTOM;
 }

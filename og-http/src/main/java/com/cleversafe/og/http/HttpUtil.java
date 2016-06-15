@@ -43,15 +43,20 @@ public class HttpUtil {
     switch (operation) {
       case WRITE:
       case OVERWRITE:
+      case MULTIPART_WRITE_PART:
         return Method.PUT;
       case READ:
         return Method.GET;
       case METADATA:
         return Method.HEAD;
       case DELETE:
+      case MULTIPART_WRITE_ABORT:
         return Method.DELETE;
       case LIST:
         return Method.GET;
+      case MULTIPART_WRITE_INITIATE:
+      case MULTIPART_WRITE_COMPLETE:
+        return Method.POST;
       default:
         throw new IllegalArgumentException(String.format("Unrecognized operation [%s]", operation));
     }

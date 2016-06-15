@@ -37,4 +37,11 @@ public interface Body {
    * @return the size of this body
    */
   long getSize();
+
+  /**
+   * Gets the content of this body
+   *
+   * @return the content of this body
+   */
+  String getContent();
 }
