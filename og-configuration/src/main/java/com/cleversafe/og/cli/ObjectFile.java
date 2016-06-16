@@ -26,6 +26,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.ByteBuffer;
+import java.util.Set;
+import java.util.HashSet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,6 +76,9 @@ public class ObjectFile {
     final long maxFilesize = cli.flags().getLong("max-filesize");
     final int minContainerSuffix = cli.flags().getInt("min-suffix");
     final int maxContainerSuffix = cli.flags().getInt("max-suffix");
+    final int[] tmpContainerSuffixes = cli.flags().getIntArray("container-suffixes");
+
+    final Set<Integer> containerSuffixes = convertPrimitiveArray(tmpContainerSuffixes);
 
     try {
       final InputStream in = getInputStream(input);
@@ -87,7 +92,7 @@ public class ObjectFile {
         read(in, out);
       } else if (filter) {
         out = getOutputStream(split, splitSize, output);
-        filter(in, out, minFilesize, maxFilesize, minContainerSuffix, maxContainerSuffix);
+        filter(in, out, minFilesize, maxFilesize, minContainerSuffix, maxContainerSuffix, containerSuffixes);
       } else if (upgrade) {
         out = getOutputStream(split, splitSize, output);
         upgrade(in, out);
@@ -105,6 +110,16 @@ public class ObjectFile {
     } catch (final IOException e) {
       _consoleLogger.error("", e);
     }
+  }
+
+  private static Set<Integer> convertPrimitiveArray(final int[] primitiveArray) {
+    Set<Integer> newSet = new HashSet<Integer>();
+
+    for(int i = 0; i < primitiveArray.length; i++) {
+      newSet.add(primitiveArray[i]);
+    }
+
+    return newSet;
   }
 
   public static InputStream getInputStream(final File input) throws FileNotFoundException {
@@ -176,7 +191,7 @@ public class ObjectFile {
   }
 
   public static void filter(final InputStream in, final OutputStream out, final long minFilesize,
-      final long maxFilesize, final int minContainerSuffix, final int maxContainerSuffix)
+      final long maxFilesize, final int minContainerSuffix, final int maxContainerSuffix, final Set<Integer> containerSuffixes)
           throws IOException {
     checkNotNull(in);
     checkNotNull(out);
@@ -196,7 +211,11 @@ public class ObjectFile {
       if ((object.getSize() >= minFilesize && object.getSize() <= maxFilesize)
           && (object.getContainerSuffix() >= minContainerSuffix
               && object.getContainerSuffix() <= maxContainerSuffix)) {
-        out.write(object.toBytes());
+        if(!containerSuffixes.isEmpty() && containerSuffixes.contains(object.getContainerSuffix())) {
+          out.write(object.toBytes());
+        } else if (containerSuffixes.isEmpty()) {
+          out.write(object.toBytes());
+        }
       }
     }
   }
