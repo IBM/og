@@ -29,6 +29,8 @@ import java.nio.ByteBuffer;
 import java.util.Set;
 import java.util.HashSet;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.common.primitives.Ints;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,7 +80,7 @@ public class ObjectFile {
     final int maxContainerSuffix = cli.flags().getInt("max-suffix");
     final int[] tmpContainerSuffixes = cli.flags().getIntArray("container-suffixes");
 
-    final Set<Integer> containerSuffixes = convertPrimitiveArray(tmpContainerSuffixes);
+    final Set<Integer> containerSuffixes = ImmutableSet.copyOf(Ints.asList(tmpContainerSuffixes));
 
     try {
       final InputStream in = getInputStream(input);
@@ -110,16 +112,6 @@ public class ObjectFile {
     } catch (final IOException e) {
       _consoleLogger.error("", e);
     }
-  }
-
-  private static Set<Integer> convertPrimitiveArray(final int[] primitiveArray) {
-    Set<Integer> newSet = new HashSet<Integer>();
-
-    for(int i = 0; i < primitiveArray.length; i++) {
-      newSet.add(primitiveArray[i]);
-    }
-
-    return newSet;
   }
 
   public static InputStream getInputStream(final File input) throws FileNotFoundException {
