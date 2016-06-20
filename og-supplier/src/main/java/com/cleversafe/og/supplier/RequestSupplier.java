@@ -151,6 +151,13 @@ public class RequestSupplier implements Supplier<Request> {
       builder.withBody(this.body.apply(requestContext));
     }
 
+    if (this.queryParameters != null) {
+      for (final Map.Entry<String, Function<Map<String, String>, String>> queryParams : this.queryParameters
+          .entrySet()) {
+        builder.withQueryParameter(queryParams.getKey(), queryParams.getValue().apply(requestContext));
+      }
+    }
+
     return builder.build();
   }
 
