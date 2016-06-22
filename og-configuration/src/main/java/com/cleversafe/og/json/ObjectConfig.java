@@ -13,7 +13,7 @@ public class ObjectConfig {
   public SelectionType selection;
   public long minSuffix;
   public long maxSuffix;
-  public SelectionConfig<Integer> partSize;
+  public SelectionConfig<Long> partSize;
 
   public ObjectConfig() {
     this.prefix = "";
