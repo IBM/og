@@ -581,50 +581,50 @@ public class OGModule extends AbstractModule {
   @Provides
   @Singleton
   @Named("multipartWrite.partSize")
-  public Function<Map<String, String>, Integer> provideMultipartWritePartSize() {
+  public Function<Map<String, String>, Long> provideMultipartWritePartSize() {
     return providePartSize(this.config.multipartWrite);
   }
 
-  private Function<Map<String, String>, Integer> providePartSize(final OperationConfig operationConfig) {
+  private Function<Map<String, String>, Long> providePartSize(final OperationConfig operationConfig) {
     checkNotNull(operationConfig);
 
-    final SelectionConfig<Integer> operationPartSize = operationConfig.object.partSize;
+    final SelectionConfig<Long> operationPartSize = operationConfig.object.partSize;
     if (operationPartSize != null && !operationPartSize.choices.isEmpty()) {
       return createPartSize(operationConfig.object.partSize);
     }
 
     // default to 5242880 bytes
-    final List<Integer> partSizeList = Lists.newArrayList();
-    partSizeList.add(5242880);
-    final Supplier<Integer> partSizeSupplier = Suppliers.cycle(partSizeList);
+    final List<Long> partSizeList = Lists.newArrayList();
+    partSizeList.add(5242880L);
+    final Supplier<Long> partSizeSupplier = Suppliers.cycle(partSizeList);
     return MoreFunctions.forSupplier(partSizeSupplier);
   }
 
-  private Function<Map<String, String>, Integer> createPartSize(final SelectionConfig<Integer> partSize) {
+  private Function<Map<String, String>, Long> createPartSize(final SelectionConfig<Long> partSize) {
     checkNotNull(partSize);
     checkNotNull(partSize.selection);
     checkNotNull(partSize.choices);
     checkArgument(!partSize.choices.isEmpty(), "must specify at least one part");
-    for (final ChoiceConfig<Integer> choice : partSize.choices) {
+    for (final ChoiceConfig<Long> choice : partSize.choices) {
       checkNotNull(choice);
       checkNotNull(choice.choice);
       checkArgument(choice.choice >= 5242880, "partSize must be greater than or equal to 5242880 bytes (5 MiB)");
     }
 
     if (SelectionType.ROUNDROBIN == partSize.selection) {
-      final List<Integer> partSizeList = Lists.newArrayList();
-      for (final ChoiceConfig<Integer> choice : partSize.choices) {
+      final List<Long> partSizeList = Lists.newArrayList();
+      for (final ChoiceConfig<Long> choice : partSize.choices) {
         partSizeList.add(choice.choice);
       }
-      final Supplier<Integer> partSizeSupplier = Suppliers.cycle(partSizeList);
+      final Supplier<Long> partSizeSupplier = Suppliers.cycle(partSizeList);
       return MoreFunctions.forSupplier(partSizeSupplier);
     }
 
-    final RandomSupplier.Builder<Integer> wrc = Suppliers.random();
-    for (final ChoiceConfig<Integer> choice : partSize.choices) {
+    final RandomSupplier.Builder<Long> wrc = Suppliers.random();
+    for (final ChoiceConfig<Long> choice : partSize.choices) {
       wrc.withChoice(choice.choice, choice.weight);
     }
-    final Supplier<Integer> partSizeSupplier = wrc.build();
+    final Supplier<Long> partSizeSupplier = wrc.build();
     return MoreFunctions.forSupplier(partSizeSupplier);
   }
 
@@ -1507,7 +1507,7 @@ public class OGModule extends AbstractModule {
       @Nullable @Named("uri.root") final String uriRoot,
       @Named("multipartWrite.container") final Function<Map<String, String>, String> container,
       @Nullable @MultipartWriteObjectName final Function<Map<String, String>, String> object,
-      @Named("multipartWrite.partSize") final Function<Map<String, String>, Integer> partSize,
+      @Named("multipartWrite.partSize") final Function<Map<String, String>, Long> partSize,
       @MultipartWriteHeaders final Map<String, Function<Map<String, String>, String>> headers,
       @Named("multipartWrite.context") final List<Function<Map<String, String>, String>> context,
       final Function<Map<String, String>, Body> body,
@@ -1526,7 +1526,7 @@ public class OGModule extends AbstractModule {
       final Scheme scheme, final Function<Map<String, String>, String> host, final Integer port,
       final String uriRoot, final Function<Map<String, String>, String> container,
       final Function<Map<String, String>, String> object,
-      final Function<Map<String, String>, Integer> partSize,
+      final Function<Map<String, String>, Long> partSize,
       final Map<String, Function<Map<String, String>, String>> queryParameters,
       final Map<String, Function<Map<String, String>, String>> headers,
       final List<Function<Map<String, String>, String>> context,

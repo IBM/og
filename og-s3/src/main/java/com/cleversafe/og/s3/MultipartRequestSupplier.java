@@ -59,7 +59,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
   private final String uriRoot;
   private final Function<Map<String, String>, String> container;
   private final Function<Map<String, String>, String> object;
-  private final Function<Map<String, String>, Integer> partSize;
+  private final Function<Map<String, String>, Long> partSize;
   private final Map<String, Function<Map<String, String>, String>> queryParameters;
   private final boolean trailingSlash;
   private final Map<String, Function<Map<String, String>, String>> headers;
@@ -104,7 +104,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
       final Integer port, final String uriRoot,
       final Function<Map<String, String>, String> container,
       final Function<Map<String, String>, String> object,
-      final Function<Map<String, String>, Integer> partSize,
+      final Function<Map<String, String>, Long> partSize,
       final Map<String, Function<Map<String, String>, String>> queryParameters,
       final boolean trailingSlash, final Map<String, Function<Map<String, String>, String>> headers,
       final List<Function<Map<String, String>, String>> context,
@@ -157,9 +157,9 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     String containerSuffix;
     String objectName;
     String bodyDataType;
-    int objectSize;
-    int partSize;
-    int lastPartSize;
+    long objectSize;
+    long partSize;
+    long lastPartSize;
     String uploadId;
     Queue<PartInfo> partsInfo;
     int partRequestsToSend; //Part Requests
@@ -170,7 +170,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     boolean finishedCompleteRequest;
 
     public MultipartInfo(String containerName, String objectName, String uploadId,
-        int objectSize, int partSize, String containerSuffix, String bodyDataType) {
+        long objectSize, long partSize, String containerSuffix, String bodyDataType) {
       this.lock_nextPartNumber = new Object();
       this.lock_inProgressPartRequests = new Object();
       this.lock_finishedPartRequests = new Object();
@@ -201,7 +201,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
         }
       });
 
-      int parts = this.objectSize/this.partSize;
+      int parts = (int)(this.objectSize/this.partSize);
 
       // not all parts are the same size
       if(0 != (this.objectSize % this.partSize)) {
@@ -245,7 +245,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
       }
     }
 
-    public int getNextPartSize() {
+    public long getNextPartSize() {
       synchronized (lock_nextPartNumber) {
         if (this.nextPartNumber < this.partRequestsToSend) {
           return this.partSize;
@@ -352,7 +352,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
         return;
       }
       multipartInfo = new MultipartInfo(requestContainerName, requestObjectName, responseUploadId,
-          Integer.parseInt(requestObjectSize), Integer.parseInt(requestPartSize), requestContainerSuffix, requestBodyDataType);
+          Long.parseLong(requestObjectSize), Long.parseLong(requestPartSize), requestContainerSuffix, requestBodyDataType);
       multipartRequestMap.put(responseUploadId, multipartInfo);
       inProgressMultipartRequests.add(multipartInfo);
     } else if (multipartrequestOperation == MultipartRequest.PART.toString()) {
@@ -500,7 +500,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
 
   private HttpRequest.Builder createInitiateRequest(final Map<String, String> context) {
     Body fullBody = this.body.apply(context);
-    Integer partSize = this.partSize.apply(context); // bytes
+    Long partSize = this.partSize.apply(context); // bytes
     String containerName = this.container.apply(context);
 
     final HttpRequest.Builder builder =
@@ -518,7 +518,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
   }
 
   private HttpRequest.Builder createPartRequest(final Map<String, String> context,
-      int partNumber, String uploadId, String objectName, int partSize, String containerName, String bodyDataType) {
+      int partNumber, String uploadId, String objectName, long partSize, String containerName, String bodyDataType) {
     final HttpRequest.Builder builder =
         new HttpRequest.Builder(Method.PUT, getUrl(context, MultipartRequest.PART,
             partNumber, uploadId, objectName, containerName), Operation.MULTIPART_WRITE_PART);
