@@ -17,6 +17,7 @@ import java.io.OutputStream;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -28,6 +29,7 @@ import com.tngtech.java.junit.dataprovider.UseDataProvider;
 
 @SuppressWarnings("resource")
 @RunWith(DataProviderRunner.class)
+@Ignore
 public class ThrottledOutputStreamTest {
   @Rule
   public ExpectedException thrown = ExpectedException.none();
