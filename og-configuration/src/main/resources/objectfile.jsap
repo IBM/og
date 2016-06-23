@@ -63,6 +63,16 @@
             </defaults>
             <help>Maximum container suffix to include an object in the output when using --filter</help>
         </flaggedOption>
+        <flaggedOption>
+            <id>container-suffixes</id>
+            <longFlag>container-suffixes</longFlag>
+            <list>true</list>
+            <listSeparator>,</listSeparator>
+            <stringParser>
+            <classname>IntegerStringParser</classname>
+            </stringParser>
+            <help>List of container suffixes (comma delimited) to include an object in the output when using --filter</help>
+        </flaggedOption>
         <switch>
             <id>upgrade</id>
             <shortFlag>u</shortFlag>

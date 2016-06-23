@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 
@@ -131,22 +133,22 @@ public class ObjectFileTest {
   public static Object[][] provideInvalidFilter() {
     final InputStream in = new ByteArrayInputStream(new byte[] {});
     final OutputStream out = new ByteArrayOutputStream();
-    return new Object[][] {{null, out, 0, 0, 0, 0, NullPointerException.class},
-        {in, null, 0, 0, 0, 0, NullPointerException.class},
-        {in, out, -1, 0, 0, 0, IllegalArgumentException.class},
-        {in, out, 0, -1, 0, 0, IllegalArgumentException.class},
-        {in, out, 10, 9, 0, 0, IllegalArgumentException.class},
-        {in, out, 0, 0, -2, 2, IllegalArgumentException.class},
-        {in, out, 0, 0, 4, 3, IllegalArgumentException.class}};
+    return new Object[][] {{null, out, 0, 0, 0, 0, new HashSet<Integer>(), NullPointerException.class},
+        {in, null, 0, 0, 0, 0, new HashSet<Integer>(), NullPointerException.class},
+        {in, out, -1, 0, 0, 0, new HashSet<Integer>(), IllegalArgumentException.class},
+        {in, out, 0, -1, 0, 0, new HashSet<Integer>(), IllegalArgumentException.class},
+        {in, out, 10, 9, 0, 0, new HashSet<Integer>(), IllegalArgumentException.class},
+        {in, out, 0, 0, -2, 2, new HashSet<Integer>(), IllegalArgumentException.class},
+        {in, out, 0, 0, 4, 3, new HashSet<Integer>(), IllegalArgumentException.class}};
   }
 
   @Test
   @UseDataProvider("provideInvalidFilter")
   public void invalidFilter(final InputStream in, final OutputStream out, final long minFilesize,
-      final long maxFilesize, final int minContainerSuffix, final int maxContainerSuffix,
+      final long maxFilesize, final int minContainerSuffix, final int maxContainerSuffix, final Set<Integer> containerSuffixes,
       final Class<Exception> expectedException) throws IOException {
     this.thrown.expect(expectedException);
-    ObjectFile.filter(in, out, minFilesize, maxFilesize, minContainerSuffix, maxContainerSuffix);
+    ObjectFile.filter(in, out, minFilesize, maxFilesize, minContainerSuffix, maxContainerSuffix, containerSuffixes);
   }
 
   @Test
@@ -162,7 +164,8 @@ public class ObjectFileTest {
 
     final ByteArrayInputStream in = new ByteArrayInputStream(source.toByteArray());
     final ByteArrayOutputStream out = new ByteArrayOutputStream();
-    ObjectFile.filter(in, out, 1, 2, 2, 3);
+    final Set<Integer> pointSuffixList = new HashSet<Integer>();
+    ObjectFile.filter(in, out, 1, 2, 2, 3, new HashSet<Integer>());
 
     assertThat(out.size(), is(LegacyObjectMetadata.OBJECT_SIZE));
     final ObjectMetadata filtered = LegacyObjectMetadata.fromBytes(out.toByteArray());
