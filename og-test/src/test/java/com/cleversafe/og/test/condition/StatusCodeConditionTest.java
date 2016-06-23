@@ -57,7 +57,7 @@ public class StatusCodeConditionTest {
       final long thresholdValue, final LoadTest test, final Statistics stats,
       final Class<Exception> expectedException) {
     this.thrown.expect(expectedException);
-    new StatusCodeCondition(operation, statusCode, thresholdValue, test, stats);
+    new StatusCodeCondition(operation, statusCode, thresholdValue, test, stats, false);
   }
 
   @Test
@@ -77,7 +77,7 @@ public class StatusCodeConditionTest {
     final Pair<Request, Response> operation = Pair.of(request, response);
 
     final StatusCodeCondition condition =
-        new StatusCodeCondition(Operation.WRITE, 200, 2, test, stats);
+        new StatusCodeCondition(Operation.WRITE, 200, 2, test, stats, false);
 
     assertThat(condition.isTriggered(), is(false));
     stats.update(operation);

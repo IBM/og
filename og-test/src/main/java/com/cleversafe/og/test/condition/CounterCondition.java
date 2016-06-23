@@ -35,6 +35,7 @@ public class CounterCondition implements TestCondition {
   protected final long thresholdValue;
   protected final LoadTest test;
   private final Statistics stats;
+  protected final boolean failureCondition;
 
   /**
    * Creates an instance
@@ -48,13 +49,14 @@ public class CounterCondition implements TestCondition {
    * @throws IllegalArgumentException if thresholdValue is zero or negative
    */
   public CounterCondition(final Operation operation, final Counter counter,
-      final long thresholdValue, final LoadTest test, final Statistics stats) {
+      final long thresholdValue, final LoadTest test, final Statistics stats, final boolean failureCondition) {
     this.operation = checkNotNull(operation);
     this.counter = checkNotNull(counter);
     checkArgument(thresholdValue > 0, "thresholdValue must be > 0 [%s]", thresholdValue);
     this.thresholdValue = thresholdValue;
     this.test = checkNotNull(test);
     this.stats = checkNotNull(stats);
+    this.failureCondition = failureCondition;
   }
 
   /**
@@ -65,7 +67,11 @@ public class CounterCondition implements TestCondition {
   @Subscribe
   public void update(final Pair<Request, Response> operation) {
     if (isTriggered()) {
-      this.test.stopTest();
+      if (this.failureCondition) {
+        this.test.abortTest();
+      } else {
+        this.test.stopTest();
+      }
     }
   }
 

@@ -150,10 +150,8 @@ public class ObjectGenerator {
     final Summary summary = new Summary(statistics, result.timestampStart, result.timestampFinish);
     _summaryJsonLogger.info(gson.toJson(summary.getSummaryStats()));
 
-    if (result.success) {
-      logSummaryBanner();
-      _consoleLogger.info("{}", summary);
-    }
+    logSummaryBanner();
+    _consoleLogger.info("{}", summary);
 
     return result;
   }

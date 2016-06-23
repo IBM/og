@@ -56,7 +56,7 @@ public class CounterConditionTest {
       final long thresholdValue, final LoadTest test, final Statistics stats,
       final Class<Exception> expectedException) {
     this.thrown.expect(expectedException);
-    new CounterCondition(operation, counter, thresholdValue, test, stats);
+    new CounterCondition(operation, counter, thresholdValue, test, stats, false);
   }
 
   @Test
@@ -75,7 +75,7 @@ public class CounterConditionTest {
     final Pair<Request, Response> operation = Pair.of(request, response);
 
     final CounterCondition condition =
-        new CounterCondition(Operation.WRITE, Counter.OPERATIONS, 2, test, stats);
+        new CounterCondition(Operation.WRITE, Counter.OPERATIONS, 2, test, stats, false);
 
     assertThat(condition.isTriggered(), is(false));
     stats.update(operation);

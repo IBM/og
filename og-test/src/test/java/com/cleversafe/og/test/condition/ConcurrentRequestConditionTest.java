@@ -75,13 +75,13 @@ public class ConcurrentRequestConditionTest {
       final long thresholdValue, final LoadTest test, final Statistics stats,
       final Class<Exception> expectedException) {
     this.thrown.expect(expectedException);
-    new ConcurrentRequestCondition(operation, thresholdValue, test, stats);
+    new ConcurrentRequestCondition(operation, thresholdValue, test, stats, false);
   }
 
   @Test
   public void concurrentRequestsCondition() {
     final ConcurrentRequestCondition condition =
-        new ConcurrentRequestCondition(Operation.WRITE, 2, this.test, this.stats);
+        new ConcurrentRequestCondition(Operation.WRITE, 2, this.test, this.stats, false);
 
     assertThat(condition.isTriggered(), is(false));
     this.stats.update(this.request);
@@ -93,7 +93,7 @@ public class ConcurrentRequestConditionTest {
   @Test
   public void parentUpdateOverriden() {
     final ConcurrentRequestCondition condition =
-        new ConcurrentRequestCondition(Operation.WRITE, 1, this.test, this.stats);
+        new ConcurrentRequestCondition(Operation.WRITE, 1, this.test, this.stats, false);
 
     this.stats.update(this.request);
     this.stats.update(this.request);
