@@ -384,22 +384,28 @@ public class MultipartRequestSupplier implements Supplier<Request> {
 
       // create the initiate request
       builder = createInitiateRequest(requestContext);
+      builder.withQueryParameter(UPLOADS, "");
     } else {
       switch(activeMultipartInfo.getNextMultipartRequest()) {
         case PART:
-          builder = createPartRequest(requestContext, activeMultipartInfo.startPartRequest(),
+          int partNumber = activeMultipartInfo.startPartRequest();
+          builder = createPartRequest(requestContext, partNumber,
               activeMultipartInfo.uploadId, activeMultipartInfo.objectName,
               activeMultipartInfo.getNextPartSize(), activeMultipartInfo.containerName,
               activeMultipartInfo.bodyDataType);
+          builder.withQueryParameter(PART_NUMBER, String.valueOf(partNumber));
+          builder.withQueryParameter(UPLOAD_ID, activeMultipartInfo.uploadId);
           break;
         case COMPLETE:
           builder = createCompleteRequest(requestContext, activeMultipartInfo.uploadId,
               activeMultipartInfo.objectName, activeMultipartInfo.startCompleteRequest(),
               activeMultipartInfo.containerName, activeMultipartInfo.containerSuffix);
+          builder.withQueryParameter(UPLOAD_ID, activeMultipartInfo.uploadId);
           break;
         case ABORT:
           builder = createAbortRequest(requestContext, activeMultipartInfo.uploadId,
               activeMultipartInfo.objectName, activeMultipartInfo.containerName);
+          builder.withQueryParameter(UPLOAD_ID, activeMultipartInfo.uploadId);
           break;
         default:
           return null;
