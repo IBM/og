@@ -128,6 +128,8 @@ public class ObjectGenerator {
       logConsoleException(e);
       Application.exit(Application.TEST_ERROR);
     }
+
+    Application.exit(0);
   }
 
   public static LoadTestResult run(final LoadTest test, final ObjectManager objectManager,

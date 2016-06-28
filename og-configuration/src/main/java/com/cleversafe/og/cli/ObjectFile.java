@@ -27,7 +27,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.ByteBuffer;
 import java.util.Set;
-import java.util.HashSet;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Ints;
@@ -54,16 +53,16 @@ public class ObjectFile {
   public static void main(final String[] args) {
     final Cli cli = Application.cli("object-file", "objectfile.jsap", args);
     if (cli.shouldStop()) {
-      if (cli.error()) {
-        cli.printErrors();
-        cli.printUsage();
-      } else if (cli.help()) {
+      if (cli.help()) {
         cli.printUsage();
       } else if (cli.version()) {
         cli.printVersion();
+      } else if (cli.error()) {
+        cli.printErrors();
+        cli.printUsage();
+        Application.exit(Application.TEST_ERROR);
       }
-
-      Application.exit(Application.TEST_ERROR);
+      Application.exit(0);
     }
 
     final File input = cli.flags().getFile("input");
@@ -111,7 +110,10 @@ public class ObjectFile {
       }
     } catch (final IOException e) {
       _consoleLogger.error("", e);
+      Application.exit(Application.TEST_ERROR);
     }
+
+    Application.exit(0);
   }
 
   public static InputStream getInputStream(final File input) throws FileNotFoundException {

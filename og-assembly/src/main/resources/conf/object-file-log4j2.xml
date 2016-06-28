@@ -6,6 +6,7 @@
     </Console>
   </Appenders>
   <Loggers>
+    <Logger name="com.cleversafe.og.cli.Application" level="warn" />
     <Root level="info">
       <AppenderRef ref="Console" />
     </Root>
