@@ -4,6 +4,7 @@
     <Property name="test_path">${sys:TEST_PATH}</Property>
     <Property name="og.log">og.log</Property>
     <Property name="request.log">request.log</Property>
+    <Property name="exception.log">exception.log</Property>
     <Property name="og.json">og.json</Property>
     <Property name="summary.json">summary.json</Property>
   </Properties>
@@ -23,6 +24,11 @@
       <SizeBasedTriggeringPolicy size="500MB" />
       <DefaultRolloverStrategy max="150" />
     </RollingRandomAccessFile>
+    <RollingRandomAccessFile name="ExceptionLog" immediateFlush="false" append="true" fileName="${test_path}/${exception.log}" filePattern="${test_path}/${exception.log}-%i.gz">
+      <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%t] %l - %m%n" />
+      <SizeBasedTriggeringPolicy size="100MB" />
+      <DefaultRolloverStrategy max="20" />
+    </RollingRandomAccessFile>
     <File name="OGJson" append="false" fileName="${test_path}/${og.json}">
       <PatternLayout pattern="%m%n" />
     </File>
@@ -39,6 +45,9 @@
     </Logger>
     <Logger name="RequestLogger" level="info" additivity="false">
       <AppenderRef ref="RequestLog" />
+    </Logger>
+    <Logger name="ExceptionLogger" level="info" additivity="false">
+      <AppenderRef ref="ExceptionLog" />
     </Logger>
     <Logger name="SummaryJsonLogger" level="info" additivity="false">
       <AppenderRef ref="SummaryJson" />
