@@ -562,13 +562,14 @@ only for a specific operation type, see <<Operation Headers>>
 }
 ----
 
-=== Write, Overwrite, Read, Metadata, Delete, List, Container Create, Container List Operations
+=== Write, Overwrite, Read, Metadata, Delete, List, Container Create, Container List, Multipart Write Operations
 Write, Read, Metadata, Delete, and List operations are supported for all Object Storage APIs.
 Overwrite is supported for S3 and OpenStack Swift
 Container Create and Container List are supported for S3 only and the current dsnet implementation
 requires the uri_root be set to "/".
-Operation mix is configured via _write_, _overwrite_, _read_, _metadata_, _delete_, and _list_ keys,
-_container_create_, and _container_list_ respectively.
+Multipart Write is also only supported for S3
+Operation mix is configured via _write_, _overwrite_, _read_, _metadata_, _delete_, _list_,
+_container_create_, _container_list_, _multipart_write keys respectively.
 
 Each operation type is configured via a configuration block. E.g. for write:
 
@@ -885,6 +886,12 @@ _stopping_conditions_ key:
 The operations stopping condition causes OG to stop when a threshold number
 of operations has completed. Operations is configured via the _operations_
 key.
+
+NOTE: Since Multipart Write is a sequence of multiple operations, the operation count does
+not map directly to the number of Multipart Write sequences, but the total number of
+operations for all sequences. For example, a single Multipart Write of an object consisting
+of an Initiate, Part, Part, and Complete would count as 4 operations towards the
+stopping condition
 
 .Stop after 100 Operations Example
 [source, json]
@@ -1401,6 +1408,11 @@ itself is optional.
 |Integer
 |No
 |9223372036854775807
+
+|part_size
+|Long
+|No
+|5242880 bytes
 |===
 
 ==== Filesize Configuration
