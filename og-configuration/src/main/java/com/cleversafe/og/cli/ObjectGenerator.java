@@ -61,6 +61,7 @@ public class ObjectGenerator {
   private static final Logger _consoleLogger = LoggerFactory.getLogger("ConsoleLogger");
   private static final Logger _ogJsonLogger = LoggerFactory.getLogger("OGJsonLogger");
   private static final Logger _summaryJsonLogger = LoggerFactory.getLogger("SummaryJsonLogger");
+  private static final Logger _exceptionLogger = LoggerFactory.getLogger("ExceptionLogger");
   private static final String LINE_SEPARATOR =
       "-------------------------------------------------------------------------------";
 
@@ -126,6 +127,7 @@ public class ObjectGenerator {
       _logger.error("Exception while configuring and running test", e);
       _consoleLogger.error("Test Error. See og.log for details");
       logConsoleException(e);
+      logExceptionToFile(e);
       Application.exit(Application.TEST_ERROR);
     }
 
@@ -144,7 +146,7 @@ public class ObjectGenerator {
     if (result.success) {
       _consoleLogger.info("Test Completed.");
     } else {
-      _consoleLogger.error("Test ended unsuccessfully. See og.log for details");
+      _consoleLogger.error("Test ended unsuccessfully. See og.log or exception.log for details");
     }
 
     shutdownObjectManager(objectManager);
@@ -178,6 +180,10 @@ public class ObjectGenerator {
       }
       uniqueMessages.add(message.getMessage());
     }
+  }
+
+  public static void logExceptionToFile(final Exception e) {
+    _exceptionLogger.error("Exception: ", e);
   }
 
   public static Gson createGson() {

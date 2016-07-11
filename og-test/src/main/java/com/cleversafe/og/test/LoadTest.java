@@ -43,6 +43,7 @@ import com.google.common.util.concurrent.Uninterruptibles;
 @Singleton
 public class LoadTest implements Callable<LoadTestResult> {
   private static final Logger _logger = LoggerFactory.getLogger(LoadTest.class);
+  private static final Logger _exceptionLogger = LoggerFactory.getLogger("ExceptionLogger");
   private final RequestManager requestManager;
   private final Client client;
   private final Scheduler scheduler;
@@ -99,6 +100,7 @@ public class LoadTest implements Callable<LoadTestResult> {
         }
       } catch (final Exception e) {
         _logger.error("Exception while producing request", e);
+        _exceptionLogger.error("Exception while producing request", e);
         abortTest();
       }
     }
