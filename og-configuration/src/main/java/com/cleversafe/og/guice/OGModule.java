@@ -47,6 +47,7 @@ import com.cleversafe.og.json.ConcurrencyType;
 import com.cleversafe.og.json.ContainerConfig;
 import com.cleversafe.og.json.CredentialSource;
 import com.cleversafe.og.json.DistributionType;
+import com.cleversafe.og.json.FailingConditionsConfig;
 import com.cleversafe.og.json.FilesizeConfig;
 import com.cleversafe.og.json.OGConfig;
 import com.cleversafe.og.json.ObjectConfig;
@@ -174,6 +175,7 @@ public class OGModule extends AbstractModule {
       }
     });
     bind(StoppingConditionsConfig.class).toInstance(this.config.stoppingConditions);
+    bind(FailingConditionsConfig.class).toInstance(this.config.failingConditions);
     bindConstant().annotatedWith(Names.named("shutdownImmediate"))
         .to(this.config.shutdownImmediate);
 
@@ -218,44 +220,83 @@ public class OGModule extends AbstractModule {
   @Singleton
   public List<TestCondition> provideTestConditions(final LoadTest test, final EventBus eventBus,
       final Statistics stats, final ConcurrencyConfig concurrency,
-      final StoppingConditionsConfig config) {
+      final StoppingConditionsConfig stoppingConditionsConfig,
+      final FailingConditionsConfig failingConditionsConfig) {
     checkNotNull(test);
     checkNotNull(stats);
-    checkNotNull(config);
-    checkArgument(config.operations >= 0, "operations must be >= 0 [%s]", config.operations);
-    checkArgument(config.runtime >= 0.0, "runtime must be >= 0.0 [%s]", config.runtime);
-    checkNotNull(config.runtimeUnit);
-    checkArgument(config.concurrentRequests >= 0, "concurrentRequests must be >= 0 [%s]",
-        config.concurrentRequests);
-    checkNotNull(config.statusCodes);
-    for (final Entry<Integer, Integer> sc : config.statusCodes.entrySet()) {
+    // Stopping conditions
+    checkNotNull(stoppingConditionsConfig);
+    checkArgument(stoppingConditionsConfig.operations >= 0, "operations must be >= 0 [%s]", stoppingConditionsConfig.operations);
+    checkArgument(stoppingConditionsConfig.runtime >= 0.0, "runtime must be >= 0.0 [%s]", stoppingConditionsConfig.runtime);
+    checkNotNull(stoppingConditionsConfig.runtimeUnit);
+    checkArgument(stoppingConditionsConfig.concurrentRequests >= 0, "concurrentRequests must be >= 0 [%s]",
+        stoppingConditionsConfig.concurrentRequests);
+    checkNotNull(stoppingConditionsConfig.statusCodes);
+    for (final Entry<Integer, Integer> sc : stoppingConditionsConfig.statusCodes.entrySet()) {
+      checkArgument(sc.getValue() >= 0.0, "status code [%s] value must be >= 0.0 [%s]", sc.getKey(),
+          sc.getValue());
+    }
+    // Failing conditions
+    checkNotNull(failingConditionsConfig);
+    checkArgument(failingConditionsConfig.operations >= 0, "operations must be >= 0 [%s]", failingConditionsConfig.operations);
+    checkArgument(failingConditionsConfig.runtime >= 0.0, "runtime must be >= 0.0 [%s]", failingConditionsConfig.runtime);
+    checkNotNull(failingConditionsConfig.runtimeUnit);
+    checkArgument(failingConditionsConfig.concurrentRequests >= 0, "concurrentRequests must be >= 0 [%s]",
+        failingConditionsConfig.concurrentRequests);
+    checkNotNull(failingConditionsConfig.statusCodes);
+    for (final Entry<Integer, Integer> sc : failingConditionsConfig.statusCodes.entrySet()) {
       checkArgument(sc.getValue() >= 0.0, "status code [%s] value must be >= 0.0 [%s]", sc.getKey(),
           sc.getValue());
     }
 
     final List<TestCondition> conditions = Lists.newArrayList();
 
-    if (config.operations > 0) {
+    // Stopping conditions
+    if (stoppingConditionsConfig.operations > 0) {
       conditions.add(
-          new CounterCondition(Operation.ALL, Counter.OPERATIONS, config.operations, test, stats));
+          new CounterCondition(Operation.ALL, Counter.OPERATIONS, stoppingConditionsConfig.operations, test, stats, false));
     }
 
-    final Map<Integer, Integer> scMap = config.statusCodes;
-    for (final Entry<Integer, Integer> sc : scMap.entrySet()) {
+    final Map<Integer, Integer> stoppingSCMap = stoppingConditionsConfig.statusCodes;
+    for (final Entry<Integer, Integer> sc : stoppingSCMap.entrySet()) {
       if (sc.getValue() > 0) {
         conditions
-            .add(new StatusCodeCondition(Operation.ALL, sc.getKey(), sc.getValue(), test, stats));
+            .add(new StatusCodeCondition(Operation.ALL, sc.getKey(), sc.getValue(), test, stats, false));
       }
     }
 
-    if (config.runtime > 0) {
-      conditions.add(new RuntimeCondition(test, config.runtime, config.runtimeUnit));
+    if (stoppingConditionsConfig.runtime > 0) {
+      conditions.add(new RuntimeCondition(test, stoppingConditionsConfig.runtime, stoppingConditionsConfig.runtimeUnit, false));
     }
 
     // maximum concurrent requests only makes sense in the context of an ops test, so check for that
-    if (config.concurrentRequests > 0 && concurrency.type == ConcurrencyType.OPS) {
+    if (stoppingConditionsConfig.concurrentRequests > 0 && concurrency.type == ConcurrencyType.OPS) {
       conditions.add(
-          new ConcurrentRequestCondition(Operation.ALL, config.concurrentRequests, test, stats));
+          new ConcurrentRequestCondition(Operation.ALL, stoppingConditionsConfig.concurrentRequests, test, stats, false));
+    }
+
+    // Failing conditions
+    if (failingConditionsConfig.operations > 0) {
+      conditions.add(
+          new CounterCondition(Operation.ALL, Counter.OPERATIONS, failingConditionsConfig.operations, test, stats, true));
+    }
+
+    final Map<Integer, Integer> failingSCMap = failingConditionsConfig.statusCodes;
+    for (final Entry<Integer, Integer> sc : failingSCMap.entrySet()) {
+      if (sc.getValue() > 0) {
+        conditions
+            .add(new StatusCodeCondition(Operation.ALL, sc.getKey(), sc.getValue(), test, stats, true));
+      }
+    }
+
+    if (failingConditionsConfig.runtime > 0) {
+      conditions.add(new RuntimeCondition(test, failingConditionsConfig.runtime, failingConditionsConfig.runtimeUnit, true));
+    }
+
+    // maximum concurrent requests only makes sense in the context of an ops test, so check for that
+    if (failingConditionsConfig.concurrentRequests > 0 && concurrency.type == ConcurrencyType.OPS) {
+      conditions.add(
+          new ConcurrentRequestCondition(Operation.ALL, failingConditionsConfig.concurrentRequests, test, stats, true));
     }
 
     for (final TestCondition condition : conditions) {

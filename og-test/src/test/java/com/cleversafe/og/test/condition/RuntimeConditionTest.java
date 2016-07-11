@@ -45,13 +45,13 @@ public class RuntimeConditionTest {
   public void invalidRuntimeCondition(final LoadTest test, final double runtime,
       final TimeUnit unit, final Class<Exception> expectedException) {
     this.thrown.expect(expectedException);
-    new RuntimeCondition(test, runtime, unit);
+    new RuntimeCondition(test, runtime, unit, false);
   }
 
   @Test
   public void runtimeCondition() {
     final RuntimeCondition condition =
-        new RuntimeCondition(mock(LoadTest.class), 50, TimeUnit.MILLISECONDS);
+        new RuntimeCondition(mock(LoadTest.class), 50, TimeUnit.MILLISECONDS, false);
 
     assertThat(condition.isTriggered(), is(false));
     Uninterruptibles.sleepUninterruptibly(25, TimeUnit.MILLISECONDS);

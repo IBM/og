@@ -38,6 +38,7 @@ public class OGConfig {
   public AuthenticationConfig authentication;
   public ClientConfig client;
   public StoppingConditionsConfig stoppingConditions;
+  public FailingConditionsConfig failingConditions;
   public ObjectManagerConfig objectManager;
   public boolean shutdownImmediate;
   public boolean virtualHost;
@@ -65,6 +66,7 @@ public class OGConfig {
     this.authentication = new AuthenticationConfig();
     this.client = new ClientConfig();
     this.stoppingConditions = new StoppingConditionsConfig();
+    this.failingConditions = new FailingConditionsConfig();
     this.objectManager = new ObjectManagerConfig();
     this.shutdownImmediate = true;
     this.virtualHost = false;

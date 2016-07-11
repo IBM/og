@@ -25,14 +25,18 @@ import com.google.common.eventbus.Subscribe;
 public class ConcurrentRequestCondition extends CounterCondition {
 
   public ConcurrentRequestCondition(final Operation operation, final long thresholdValue,
-      final LoadTest test, final Statistics stats) {
-    super(operation, Counter.ACTIVE_OPERATIONS, thresholdValue, test, stats);
+      final LoadTest test, final Statistics stats, final boolean failureCondition) {
+    super(operation, Counter.ACTIVE_OPERATIONS, thresholdValue, test, stats, failureCondition);
   }
 
   @Subscribe
   public void update(final Request request) {
     if (isTriggered()) {
-      this.test.stopTest();
+      if (this.failureCondition) {
+        this.test.abortTest();
+      } else {
+        this.test.stopTest();
+      }
     }
   }
 

@@ -13,6 +13,7 @@ import static org.mockito.Mockito.mock;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import com.cleversafe.og.json.FailingConditionsConfig;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -76,8 +77,15 @@ public class OGModuleTest {
     stoppingConditions.concurrentRequests = concurrentRequests;
     stoppingConditions.statusCodes = statusCodes;
 
+    final FailingConditionsConfig failingConditions = new FailingConditionsConfig();
+    failingConditions.operations = operations;
+    failingConditions.runtime = runtime;
+    failingConditions.runtimeUnit = runtimeUnit;
+    failingConditions.concurrentRequests = concurrentRequests;
+    failingConditions.statusCodes = statusCodes;
+
     this.thrown.expect(expectedException);
     module.provideTestConditions(this.test, this.eventBus, this.stats, this.concurrency,
-        stoppingConditions);
+        stoppingConditions, failingConditions);
   }
 }

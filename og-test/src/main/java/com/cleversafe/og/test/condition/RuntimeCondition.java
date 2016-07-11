@@ -30,6 +30,7 @@ public class RuntimeCondition implements TestCondition {
   private final long runtime;
   private final TimeUnit unit;
   private final long timestampStart;
+  private final boolean failureCondition;
 
   /**
    * Creates an instance
@@ -40,18 +41,24 @@ public class RuntimeCondition implements TestCondition {
    * @throws NullPointerException if test or unit is null
    * @throws IllegalArgumentException if runtime is zero or negative
    */
-  public RuntimeCondition(final LoadTest test, final double runtime, final TimeUnit unit) {
+  public RuntimeCondition(final LoadTest test, final double runtime, final TimeUnit unit,
+      final boolean failureCondition) {
     this.test = checkNotNull(test);
     checkArgument(runtime > 0.0, "duration must be > 0.0 [%s]", runtime);
     this.unit = checkNotNull(unit);
     this.runtime = (long) (runtime * unit.toNanos(1));
     this.timestampStart = System.nanoTime();
+    this.failureCondition = failureCondition;
 
     final Thread t = new Thread(new Runnable() {
       @Override
       public void run() {
         Uninterruptibles.sleepUninterruptibly(RuntimeCondition.this.runtime, TimeUnit.NANOSECONDS);
-        RuntimeCondition.this.test.stopTest();
+        if (failureCondition){
+          RuntimeCondition.this.test.abortTest();
+        } else {
+          RuntimeCondition.this.test.stopTest();
+        }
       }
     });
     t.setName("runtime-condition");

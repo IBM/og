@@ -86,7 +86,7 @@ public class LoadTestTest {
     this.handler.setLoadTest(this.test);
 
     final TestCondition condition =
-        new CounterCondition(Operation.WRITE, Counter.OPERATIONS, 5, this.test, this.stats);
+        new CounterCondition(Operation.WRITE, Counter.OPERATIONS, 5, this.test, this.stats, false);
 
     this.eventBus.register(this.scheduler);
     this.eventBus.register(this.stats);
