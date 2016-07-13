@@ -24,7 +24,7 @@
       <SizeBasedTriggeringPolicy size="500MB" />
       <DefaultRolloverStrategy max="150" />
     </RollingRandomAccessFile>
-    <RandomAccessFile name="ExceptionLog" immediateFlush="false" append="true" fileName="${test_path}/${exception.log}" filePattern="${test_path}/${exception.log}-%i.gz">
+    <RandomAccessFile name="ExceptionLog" immediateFlush="false" append="true" fileName="${test_path}/${exception.log}">
       <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%t] %l - %m%n" />
     </RandomAccessFile>
     <File name="OGJson" append="false" fileName="${test_path}/${og.json}">
