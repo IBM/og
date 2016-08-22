@@ -12,6 +12,7 @@ target
 
 *.orig
 *.swp
+*.iml
 .classpath
 .metadata
 .repository
