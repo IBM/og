@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2015 Cleversafe, Inc. All rights reserved.
+ * Copyright (C) 2005-2016 Cleversafe, Inc. All rights reserved.
  * 
  * Contact Information: Cleversafe, Inc. 222 South Riverside Plaza Suite 1700 Chicago, IL 60606, USA
  * 
@@ -45,49 +45,101 @@ public class ApplicationTest {
   @DataProvider
   public static Object[][] provideInvalidCli() {
     final String app = "application";
-    final String jsap = APPLICATION_JSAP;
     final String[] args = new String[] {};
 
-    return new Object[][] {{null, jsap, args, NullPointerException.class},
-        {app, null, args, NullPointerException.class},
-        {app, jsap, null, NullPointerException.class},
-        {app, "nonexistent.jsap", args, IllegalArgumentException.class}};
+    return new Object[][] {{null, args, NullPointerException.class},
+        {app, null, NullPointerException.class}};
+
   }
 
   @Test
   @UseDataProvider("provideInvalidCli")
-  public void invalidCli(final String name, final String jsapResourceName, final String[] args,
+  public void invalidCli(final String name, final String[] args,
       final Class<Exception> expectedException) {
     this.thrown.expect(expectedException);
-    Application.cli(name, jsapResourceName, args);
+    Application.cli(name, args);
   }
 
   @DataProvider
   public static Object[][] provideCli() {
     return new Object[][] {
-        // args, shouldStop, error, help, version
-        {new String[] {}, false, false, false, false},
-        {new String[] {"--nonexistent"}, true, true, false, false},
-        {new String[] {"-h"}, true, false, true, false},
-        {new String[] {"-v"}, true, false, false, true}};
+            // args, shouldStop, error, help, version
+            {new String[] {}, false, false, false, false},
+            {new String[] {"-h"}, true, false, true, false},
+            {new String[] {"-v"}, true, false, false, true}};
   }
+
 
   @Test
   @UseDataProvider("provideCli")
   public void cli(final String[] args, final boolean shouldStop, final boolean error,
       final boolean help, final boolean version) {
-    final Cli cli = Application.cli("application", APPLICATION_JSAP, args);
+    final Cli cli = Application.cli("application", args);
     assertThat(cli.shouldStop(), is(shouldStop));
     assertThat(cli.error(), is(error));
     assertThat(cli.help(), is(help));
     assertThat(cli.version(), is(version));
-    assertThat(cli.flags(), notNullValue());
 
     // not a good way to validate these so just call them and make sure they don't throw
     cli.printUsage();
     cli.printErrors();
     cli.printVersion();
   }
+
+  @DataProvider
+  public static Object[][] provideOGCli() {
+    return new Object[][] {
+            // args, shouldStop, error, help, version
+            {new String[] {}, true, true, false, false},
+            {new String[] {"og-file.json"}, false, false, false, false}};
+  }
+
+
+
+  @Test
+  @UseDataProvider("provideOGCli")
+  public void ogcli(final String[] args, final boolean shouldStop, final boolean error,
+                  final boolean help, final boolean version) {
+    final Cli cli = Application.cli("og", args);
+    assertThat(cli.shouldStop(), is(shouldStop));
+    assertThat(cli.error(), is(error));
+    assertThat(cli.help(), is(help));
+    assertThat(cli.version(), is(version));
+
+    // not a good way to validate these so just call them and make sure they don't throw
+    cli.printUsage();
+    cli.printErrors();
+    cli.printVersion();
+  }
+
+  @DataProvider
+  public static Object[][] provideObjectFileCli() {
+    return new Object[][] {
+            // args, shouldStop, error, help, version
+            {new String[] {}, false, false  , false, false},
+            {new String[] {"input-file"}, false, false, false, false},
+            {new String[] {"--help"}, true, false, true, false},
+            {new String[] {"--version"}, true, false, false, true}};
+  }
+
+
+
+  @Test
+  @UseDataProvider("provideObjectFileCli")
+  public void objectfilecli(final String[] args, final boolean shouldStop, final boolean error,
+                    final boolean help, final boolean version) {
+    final Cli cli = Application.cli("object-file", args);
+    assertThat(cli.shouldStop(), is(shouldStop));
+    assertThat(cli.error(), is(error));
+    assertThat(cli.help(), is(help));
+    assertThat(cli.version(), is(version));
+
+    // not a good way to validate these so just call them and make sure they don't throw
+    cli.printUsage();
+    cli.printErrors();
+    cli.printVersion();
+  }
+
 
   @Test(expected = NullPointerException.class)
   public void getResourceNullResource() {

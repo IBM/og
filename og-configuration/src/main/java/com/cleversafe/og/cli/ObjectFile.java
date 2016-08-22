@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2015 Cleversafe, Inc. All rights reserved.
+ * Copyright (C) 2005-2016 Cleversafe, Inc. All rights reserved.
  * 
  * Contact Information: Cleversafe, Inc. 222 South Riverside Plaza Suite 1700 Chicago, IL 60606, USA
  * 
@@ -51,7 +51,7 @@ public class ObjectFile {
   private ObjectFile() {}
 
   public static void main(final String[] args) {
-    final Cli cli = Application.cli("object-file", "objectfile.jsap", args);
+    final Cli cli = Application.cli("object-file", args);
     if (cli.shouldStop()) {
       if (cli.help()) {
         cli.printUsage();
@@ -65,19 +65,21 @@ public class ObjectFile {
       Application.exit(0);
     }
 
-    final File input = cli.flags().getFile("input");
-    final boolean write = cli.flags().getBoolean("write");
-    final boolean read = cli.flags().getBoolean("read");
-    final boolean filter = cli.flags().getBoolean("filter");
-    final boolean upgrade = cli.flags().getBoolean("upgrade");
-    final boolean split = cli.flags().getBoolean("split");
-    final int splitSize = cli.flags().getInt("split-size");
-    final String output = cli.flags().getString("output");
-    final long minFilesize = cli.flags().getLong("min-filesize");
-    final long maxFilesize = cli.flags().getLong("max-filesize");
-    final int minContainerSuffix = cli.flags().getInt("min-suffix");
-    final int maxContainerSuffix = cli.flags().getInt("max-suffix");
-    final int[] tmpContainerSuffixes = cli.flags().getIntArray("container-suffixes");
+    ObjectFileGetOpt getOpt = (ObjectFileGetOpt)cli.getOpt();
+    final File input = getOpt.getInput();
+
+    final boolean write = getOpt.getWrite();
+    final boolean read = getOpt.getRead();
+    final boolean filter = getOpt.getFilter();
+    final boolean upgrade = getOpt.getUpgrade();
+    final boolean split = getOpt.getSplit();
+    final int splitSize = getOpt.getSplitSize();
+    final String output = getOpt.getOutput();
+    final long minFilesize = getOpt.getMinSize();
+    final long maxFilesize = getOpt.getMaxSize();
+    final int minContainerSuffix = getOpt.getMinSuffix();
+    final int maxContainerSuffix = getOpt.getMaxSuffix();
+    final int[] tmpContainerSuffixes = getOpt.getContainerSuffixes();
 
     final Set<Integer> containerSuffixes = ImmutableSet.copyOf(Ints.asList(tmpContainerSuffixes));
 
