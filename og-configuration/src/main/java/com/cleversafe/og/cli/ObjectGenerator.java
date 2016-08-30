@@ -68,7 +68,8 @@ public class ObjectGenerator {
   private ObjectGenerator() {}
 
   public static void main(final String[] args) {
-    final Cli cli = Application.cli("og", args);
+    final OGGetOpt getopt = new OGGetOpt();
+    final Cli cli = Application.cli("og", getopt, args);
     if (cli.shouldStop()) {
       if (cli.help()) {
         cli.printUsage();
@@ -89,8 +90,8 @@ public class ObjectGenerator {
     _consoleLogger.info("Configuring...");
 
     try {
-      OGGetOpt getOpt = (OGGetOpt)cli.getOpt();
-      final File json = new File(getOpt.getOGConfigFileName());
+
+      final File json = new File(getopt.getOGConfigFileName());
       if (json == null) {
         _consoleLogger.error("A json configuration file is required");
         cli.printUsage();

@@ -245,6 +245,11 @@
         <artifactId>apache-juice</artifactId>
         <version>0.9.0.cs.fips.8</version>
       </dependency>
+      <dependency>
+        <groupId>com.beust</groupId>
+        <artifactId>jcommander</artifactId>
+        <version>1.48</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
   <dependencies>
@@ -303,12 +308,6 @@
       <groupId>com.lmax</groupId>
       <artifactId>disruptor</artifactId>
       <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.beust</groupId>
-      <artifactId>jcommander</artifactId>
-      <version>1.48</version>
-      <scope>compile</scope>
     </dependency>
   </dependencies>
   <repositories>

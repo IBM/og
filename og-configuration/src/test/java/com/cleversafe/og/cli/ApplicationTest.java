@@ -47,6 +47,7 @@ public class ApplicationTest {
     final String app = "application";
     final String[] args = new String[] {};
 
+
     return new Object[][] {{null, args, NullPointerException.class},
         {app, null, NullPointerException.class}};
 
@@ -57,11 +58,13 @@ public class ApplicationTest {
   public void invalidCli(final String name, final String[] args,
       final Class<Exception> expectedException) {
     this.thrown.expect(expectedException);
-    Application.cli(name, args);
+    final GetOpt getopt = new GetOpt();
+    Application.cli(name, getopt, args);
   }
 
   @DataProvider
   public static Object[][] provideCli() {
+
     return new Object[][] {
             // args, shouldStop, error, help, version
             {new String[] {}, false, false, false, false},
@@ -73,8 +76,9 @@ public class ApplicationTest {
   @Test
   @UseDataProvider("provideCli")
   public void cli(final String[] args, final boolean shouldStop, final boolean error,
-      final boolean help, final boolean version) {
-    final Cli cli = Application.cli("application", args);
+                  final boolean help, final boolean version) {
+    final GetOpt getopt = new GetOpt();
+    final Cli cli = Application.cli("application", getopt, args);
     assertThat(cli.shouldStop(), is(shouldStop));
     assertThat(cli.error(), is(error));
     assertThat(cli.help(), is(help));
@@ -100,7 +104,9 @@ public class ApplicationTest {
   @UseDataProvider("provideOGCli")
   public void ogcli(final String[] args, final boolean shouldStop, final boolean error,
                   final boolean help, final boolean version) {
-    final Cli cli = Application.cli("og", args);
+
+    final GetOpt getopt = new OGGetOpt();
+    final Cli cli = Application.cli("og", getopt, args);
     assertThat(cli.shouldStop(), is(shouldStop));
     assertThat(cli.error(), is(error));
     assertThat(cli.help(), is(help));
@@ -116,7 +122,7 @@ public class ApplicationTest {
   public static Object[][] provideObjectFileCli() {
     return new Object[][] {
             // args, shouldStop, error, help, version
-            {new String[] {}, false, false  , false, false},
+            {new String[] {}, false, false, false, false},
             {new String[] {"input-file"}, false, false, false, false},
             {new String[] {"--help"}, true, false, true, false},
             {new String[] {"--version"}, true, false, false, true}};
@@ -128,7 +134,8 @@ public class ApplicationTest {
   @UseDataProvider("provideObjectFileCli")
   public void objectfilecli(final String[] args, final boolean shouldStop, final boolean error,
                     final boolean help, final boolean version) {
-    final Cli cli = Application.cli("object-file", args);
+    final ObjectFileGetOpt getopt = new ObjectFileGetOpt();
+    final Cli cli = Application.cli("object-file", getopt, args);
     assertThat(cli.shouldStop(), is(shouldStop));
     assertThat(cli.error(), is(error));
     assertThat(cli.help(), is(help));

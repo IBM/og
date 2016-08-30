@@ -27,6 +27,8 @@ import com.cleversafe.og.util.Version;
 import com.google.common.base.Charsets;
 import com.google.gson.Gson;
 
+import com.beust.jcommander.JCommander;
+
 /**
  * A utility class for creating an application cli
  * 
@@ -46,8 +48,7 @@ public class Application {
    * @return a Cli instance
    * @throws NullPointerException if name, or args are null
    */
-  public static Cli cli(final String name, final String[] args) {
-    GetOpt getopt = ArgumentProcessorFactory.makeArgumentProcessor(name);
+  public static Cli cli(final String name, final GetOpt getopt, final String[] args) {
     return new Cli(name, getopt, args);
   }
 
@@ -56,10 +57,13 @@ public class Application {
    * 
    * @since 1.0
    */
-  public static class Cli {
+  public static class Cli <T extends GetOpt> {
     private static final Logger _consoleLogger = LoggerFactory.getLogger("ConsoleLogger");
     private final String name;
-    private GetOpt getopt;
+    private T getopt;
+    private JCommander jc;
+    private boolean error;
+    private String errorMsg;
 
     /**
      * Creates an instance
@@ -69,17 +73,33 @@ public class Application {
      * @return a Cli instance
      * @throws NullPointerException if name, or args are null
      */
-    private Cli(final String name, final GetOpt getopt, final String[] args) {
+    private Cli(final String name, final T getopt, final String[] args) {
       this.name = checkNotNull(name);
       checkNotNull(args);
       checkNotNull(getopt);
       try {
         this.getopt = getopt;
-        getopt.processArguments(name, args);
+        processArguments(name, args);
       } catch (final Exception e) {
         throw new IllegalArgumentException(e);
       }
     }
+
+    private void processArguments (String progName,  String args[]) {
+
+      try {
+        jc = new JCommander(getopt);
+        jc.setProgramName(progName);
+        jc.parse(args);
+        getopt.validate();
+      } catch(RuntimeException re) {
+        // record error in the state to match with the existing semantics
+        error = true;
+        errorMsg = re.getLocalizedMessage();
+      }
+
+    }
+
 
     /**
      * Determines if the caller should stop, whether due to errors, help, or version commands
@@ -87,7 +107,7 @@ public class Application {
      * @return true if the caller should stop; false otherwise
      */
     public boolean shouldStop() {
-      return getopt.isError() || getopt.getHelp() || getopt.getVersion();
+      return error() || help() || version();
     }
 
     /**
@@ -96,7 +116,8 @@ public class Application {
      * @return true if cli parsing errors occurred; false otherwise
      */
     public boolean error() {
-      return getopt.isError();
+      // error is set if the JCommander parse fails and throws RuntimeException
+      return error;
     }
 
     /**
@@ -118,18 +139,13 @@ public class Application {
     }
 
 
-    public GetOpt getOpt() {
-      return getopt;
-    }
-
-
     /**
      * Generates and logs a suitable cli usage block to the console
      */
     public void printUsage() {
       //_consoleLogger.info("Usage: {} {}", this.name, this.jsap.getUsage());
       StringBuilder sb = new StringBuilder();
-      getopt.usage(sb);
+      jc.usage(sb);
       _consoleLogger.info(sb.toString());
     }
 
@@ -137,7 +153,7 @@ public class Application {
      * Generates and logs a suitable errors block to console
      */
     public void printErrors() {
-      _consoleLogger.error("{}", getopt.getErrorMsg());
+      _consoleLogger.error("{}", errorMsg);
     }
 
     /**
@@ -148,37 +164,6 @@ public class Application {
     }
   }
 
-  /**
-   *  Helper Factory class to create the appropriate Argument Processor based on the application name
-   */
-  private static class ArgumentProcessorFactory {
-
-    private ArgumentProcessorFactory() {}
-
-    /***
-     *
-     * @param appName a textual name that describes the cli
-     * @return a Cli instance
-     */
-    public static GetOpt makeArgumentProcessor(String appName) {
-
-      if (appName.contentEquals("application")) {
-        // just basic Argument process that supports options help and version - for testing only
-        return new GetOpt();
-      } else if (appName.contentEquals("og")) {
-        // Arg processor for Object Generator
-        return new OGGetOpt();
-      } else if (appName.contentEquals("object-file")) {
-        // Arg processor for Object File
-        return new ObjectFileGetOpt();
-      } else {
-        // throw IllegalArgument exception
-        throw new IllegalArgumentException("Illegal application Name " + appName);
-      }
-
-    }
-
-  }
 
   /**
    * Creates a URI that points to a classpath resource

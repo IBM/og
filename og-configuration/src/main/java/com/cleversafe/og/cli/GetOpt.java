@@ -12,71 +12,44 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 
 
+/**
+ *  class to hold command line arguments.  This class can be extended to add additional command line options and
+ *
+ *
+ * @since 1.0
+ */
 public class GetOpt {
     @Parameter(names = {"--version", "-v"}, description = "Prints the og version and exits")
-    private boolean version = false;
+    protected boolean version = false;
 
     @Parameter(names = {"--help", "-h"}, description = "Prints this help and exits")
-    private boolean help;
+    protected boolean help = false;
 
-    private boolean error;
-
-    private String errorMsg = "";
-
-    private JCommander jc;
-
-    public Boolean getVersion() {
+    public boolean getVersion() {
         return version;
     }
 
-    public void setVersion(Boolean version) {
-        this.version = version;
-    }
-
-    public Boolean getHelp() {
+    public boolean getHelp() {
         return help;
     }
 
-    public void setHelp(Boolean help) {
-        this.help = help;
-    }
 
-    public boolean isError() {
-        return error;
-    }
-
-    public void setError(boolean error) {
-        this.error = error;
-    }
-
-    public String getErrorMsg() {
-        return errorMsg;
-    }
-
-    public void setErrorMsg(String errorMsg) {
-        this.errorMsg = errorMsg;
-    }
-
-
-
-    public void processArguments (String progName,  String args[]) {
-
-        try {
-            jc = new JCommander(this);
-            jc.setProgramName(progName);
-            jc.parse(args);
-        } catch(RuntimeException re) {
-            // record error in the state to match with the existing semantics
-            error = true;
-            errorMsg = re.getLocalizedMessage();
-
-        }
+    public GetOpt() {
 
     }
 
-    public void usage(StringBuilder sb) {
-        jc.usage(sb);
+
+    /**
+     * Checks the validity of the arguments. The application specific logic to
+     * validate the various combination of the arguments etc.
+     *
+     * @return boolean  true if arguments are valid false otherwise
+     * @throws RuntimeException if arguments are not valid
+     */
+    public boolean validate() {
+        return true;
     }
+
 
 
 }

@@ -51,7 +51,8 @@ public class ObjectFile {
   private ObjectFile() {}
 
   public static void main(final String[] args) {
-    final Cli cli = Application.cli("object-file", args);
+    final ObjectFileGetOpt getopt = new ObjectFileGetOpt();
+    final Cli cli = Application.cli("object-file", getopt, args);
     if (cli.shouldStop()) {
       if (cli.help()) {
         cli.printUsage();
@@ -65,23 +66,21 @@ public class ObjectFile {
       Application.exit(0);
     }
 
-    ObjectFileGetOpt getOpt = (ObjectFileGetOpt)cli.getOpt();
-    final File input = getOpt.getInput();
+    final File input = getopt.getInput();
 
-    final boolean write = getOpt.getWrite();
-    final boolean read = getOpt.getRead();
-    final boolean filter = getOpt.getFilter();
-    final boolean upgrade = getOpt.getUpgrade();
-    final boolean split = getOpt.getSplit();
-    final int splitSize = getOpt.getSplitSize();
-    final String output = getOpt.getOutput();
-    final long minFilesize = getOpt.getMinSize();
-    final long maxFilesize = getOpt.getMaxSize();
-    final int minContainerSuffix = getOpt.getMinSuffix();
-    final int maxContainerSuffix = getOpt.getMaxSuffix();
-    final int[] tmpContainerSuffixes = getOpt.getContainerSuffixes();
+    final boolean write = getopt.getWrite();
+    final boolean read = getopt.getRead();
+    final boolean filter = getopt.getFilter();
+    final boolean upgrade = getopt.getUpgrade();
+    final boolean split = getopt.getSplit();
+    final int splitSize = getopt.getSplitSize();
+    final String output = getopt.getOutput();
+    final long minFilesize = getopt.getMinSize();
+    final long maxFilesize = getopt.getMaxSize();
+    final int minContainerSuffix = getopt.getMinSuffix();
+    final int maxContainerSuffix = getopt.getMaxSuffix();
 
-    final Set<Integer> containerSuffixes = ImmutableSet.copyOf(Ints.asList(tmpContainerSuffixes));
+    final Set<Integer> containerSuffixes = getopt.getContainerSuffixes();
 
     try {
       final InputStream in = getInputStream(input);
