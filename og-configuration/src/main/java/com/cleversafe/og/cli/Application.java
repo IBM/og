@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2015 Cleversafe, Inc. All rights reserved.
+ * Copyright (C) 2005-2016 Cleversafe, Inc. All rights reserved.
  * 
  * Contact Information: Cleversafe, Inc. 222 South Riverside Plaza Suite 1700 Chicago, IL 60606, USA
  * 
@@ -19,7 +19,6 @@ import java.io.Reader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.Iterator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,8 +26,8 @@ import org.slf4j.LoggerFactory;
 import com.cleversafe.og.util.Version;
 import com.google.common.base.Charsets;
 import com.google.gson.Gson;
-import com.martiansoftware.jsap.JSAP;
-import com.martiansoftware.jsap.JSAPResult;
+
+import com.beust.jcommander.JCommander;
 
 /**
  * A utility class for creating an application cli
@@ -45,13 +44,12 @@ public class Application {
    * Creates a Cli instance
    * 
    * @param name a textual name that describes this cli
-   * @param jsapResourceName the classpath location for this cli's jsap configuration
    * @param args command line arguments
    * @return a Cli instance
-   * @throws NullPointerException if name, jsapResourceName or args are null
+   * @throws NullPointerException if name, or args are null
    */
-  public static Cli cli(final String name, final String jsapResourceName, final String[] args) {
-    return new Cli(name, jsapResourceName, args);
+  public static Cli cli(final String name, final GetOpt getopt, final String[] args) {
+    return new Cli(name, getopt, args);
   }
 
   /**
@@ -59,32 +57,49 @@ public class Application {
    * 
    * @since 1.0
    */
-  public static class Cli {
+  public static class Cli <T extends GetOpt> {
     private static final Logger _consoleLogger = LoggerFactory.getLogger("ConsoleLogger");
     private final String name;
-    private final JSAP jsap;
-    private final JSAPResult jsapResult;
+    private T getopt;
+    private JCommander jc;
+    private boolean error;
+    private String errorMsg;
 
     /**
      * Creates an instance
      * 
      * @param name a textual name that describes this cli
-     * @param jsapResourceName the classpath location for this cli's jsap configuration
      * @param args command line arguments
      * @return a Cli instance
-     * @throws NullPointerException if name, jsapResourceName or args are null
+     * @throws NullPointerException if name, or args are null
      */
-    private Cli(final String name, final String jsapResourceName, final String[] args) {
+    private Cli(final String name, final T getopt, final String[] args) {
       this.name = checkNotNull(name);
-      checkNotNull(jsapResourceName);
       checkNotNull(args);
+      checkNotNull(getopt);
       try {
-        this.jsap = new JSAP(Application.getResource(jsapResourceName).toURL());
-        this.jsapResult = this.jsap.parse(args);
+        this.getopt = getopt;
+        processArguments(name, args);
       } catch (final Exception e) {
         throw new IllegalArgumentException(e);
       }
     }
+
+    private void processArguments (String progName,  String args[]) {
+
+      try {
+        jc = new JCommander(getopt);
+        jc.setProgramName(progName);
+        jc.parse(args);
+        getopt.validate();
+      } catch(RuntimeException re) {
+        // record error in the state to match with the existing semantics
+        error = true;
+        errorMsg = re.getLocalizedMessage();
+      }
+
+    }
+
 
     /**
      * Determines if the caller should stop, whether due to errors, help, or version commands
@@ -101,7 +116,8 @@ public class Application {
      * @return true if cli parsing errors occurred; false otherwise
      */
     public boolean error() {
-      return !this.jsapResult.success();
+      // error is set if the JCommander parse fails and throws RuntimeException
+      return error;
     }
 
     /**
@@ -110,7 +126,7 @@ public class Application {
      * @return true if a help flag is present; false otherwise
      */
     public boolean help() {
-      return this.jsapResult.getBoolean("help");
+      return getopt.getHelp();
     }
 
     /**
@@ -119,35 +135,25 @@ public class Application {
      * @return true if a version plag is present; false otherwise
      */
     public boolean version() {
-      return this.jsapResult.getBoolean("version");
+      return getopt.getVersion();
     }
 
-    /**
-     * Makes available the underlying {@code JSAPResult } result object
-     * 
-     * @return the underlying cli results object
-     */
-    public JSAPResult flags() {
-      return this.jsapResult;
-    }
 
     /**
      * Generates and logs a suitable cli usage block to the console
      */
     public void printUsage() {
-      _consoleLogger.info("Usage: {} {}", this.name, this.jsap.getUsage());
-      _consoleLogger.info(this.jsap.getHelp());
+      //_consoleLogger.info("Usage: {} {}", this.name, this.jsap.getUsage());
+      StringBuilder sb = new StringBuilder();
+      jc.usage(sb);
+      _consoleLogger.info(sb.toString());
     }
 
     /**
      * Generates and logs a suitable errors block to console
      */
     public void printErrors() {
-      @SuppressWarnings("rawtypes")
-      final Iterator errs = this.jsapResult.getErrorMessageIterator();
-      while (errs.hasNext()) {
-        _consoleLogger.error("{}", errs.next());
-      }
+      _consoleLogger.error("{}", errorMsg);
     }
 
     /**
@@ -157,6 +163,7 @@ public class Application {
       _consoleLogger.info(Version.displayVersion());
     }
   }
+
 
   /**
    * Creates a URI that points to a classpath resource

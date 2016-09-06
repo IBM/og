@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2015 Cleversafe, Inc. All rights reserved.
+ * Copyright (C) 2005-2016 Cleversafe, Inc. All rights reserved.
  * 
  * Contact Information: Cleversafe, Inc. 222 South Riverside Plaza Suite 1700 Chicago, IL 60606, USA
  * 
@@ -68,7 +68,8 @@ public class ObjectGenerator {
   private ObjectGenerator() {}
 
   public static void main(final String[] args) {
-    final Cli cli = Application.cli("og", "og.jsap", args);
+    final OGGetOpt getopt = new OGGetOpt();
+    final Cli cli = Application.cli("og", getopt, args);
     if (cli.shouldStop()) {
       if (cli.help()) {
         cli.printUsage();
@@ -89,7 +90,8 @@ public class ObjectGenerator {
     _consoleLogger.info("Configuring...");
 
     try {
-      final File json = cli.flags().getFile("og_config");
+
+      final File json = new File(getopt.getOGConfigFileName());
       if (json == null) {
         _consoleLogger.error("A json configuration file is required");
         cli.printUsage();
