@@ -114,7 +114,8 @@ public class LoadTestTest {
 
   @Test
   public void requestSupplierException() {
-    when(this.requestManager.get()).thenThrow(new IllegalStateException());
+    when(this.requestManager.get()).thenThrow(
+            new IllegalStateException("RequestsupplierException test - throw IllegalStateException for testing"));
     assertThat(this.test.call().success, is(false));
     verify(this.client, times(1)).shutdown(true);
   }

@@ -48,12 +48,13 @@ public class Summary {
    * @throws IllegalArgumentException if timestampStart is zero or negative, or if timestampEnd is
    *         less than timestampStart
    */
-  public Summary(final Statistics stats, final long timestampStart, final long timestampFinish) {
+  public Summary(final Statistics stats, final long timestampStart, final long timestampFinish,
+                 final int exitCode, ImmutableList<String> messages) {
     checkNotNull(stats);
     checkArgument(timestampStart >= 0, "timestampStart must be >= 0 [%s]", timestampStart);
     checkArgument(timestampStart <= timestampFinish,
         "timestampStart must be <= timestampFinish [%s, %s]", timestampStart, timestampFinish);
-    this.summaryStats = new SummaryStats(stats, timestampStart, timestampFinish);
+    this.summaryStats = new SummaryStats(stats, timestampStart, timestampFinish, exitCode, messages);
   }
 
   static class SummaryStats {
@@ -72,9 +73,11 @@ public class Summary {
     final OperationStats multipartWriteInitiate;
     final OperationStats multipartWritePart;
     final OperationStats multipartWriteComplete;
+    final int exitCode;
+    final ImmutableList<String> exitMessages;
 
     private SummaryStats(final Statistics stats, final long timestampStart,
-        final long timestampFinish) {
+        final long timestampFinish, final int exitCode, final ImmutableList<String> messages) {
       this.timestampStart = timestampStart;
       this.timestampFinish = timestampFinish;
       this.runtime = ((double) (timestampFinish - timestampStart)) / TimeUnit.SECONDS.toMillis(1);
@@ -90,16 +93,19 @@ public class Summary {
       this.multipartWriteInitiate = new OperationStats(stats, Operation.MULTIPART_WRITE_INITIATE);
       this.multipartWritePart = new OperationStats(stats, Operation.MULTIPART_WRITE_PART);
       this.multipartWriteComplete = new OperationStats(stats, Operation.MULTIPART_WRITE_COMPLETE);
+      this.exitCode = exitCode;
+      this.exitMessages = messages;
     }
 
     @Override
     public String toString() {
       final String format = "Start: %s%nEnd: %s%nRuntime: %.2f "
-          + "Seconds%nOperations: %s%n%n%s%s%s%s%s%s%s%s%s%s%s";
+          + "Seconds%nOperations: %s%n%n%s%s%s%s%s%s%s%s%s%s%sExitCode: %s%nExitMessages:%s";
       return String.format(Locale.US, format, FORMATTER.print(this.timestampStart),
           FORMATTER.print(this.timestampFinish), this.runtime, this.operations, this.write,
           this.read, this.delete, this.metadata, this.overwrite, this.list, this.containerList,
-          this.containerCreate, this.multipartWriteInitiate, this.multipartWritePart, this.multipartWriteComplete);
+          this.containerCreate, this.multipartWriteInitiate, this.multipartWritePart, this.multipartWriteComplete,
+          this.exitCode, prettyExitMessages());
     }
 
     class OperationStats {
@@ -173,6 +179,14 @@ public class Summary {
         return Pair.of(bytes, SizeUnit.BYTES);
       }
     }
+    private String prettyExitMessages() {
+      StringBuilder sb = new StringBuilder();
+      for(String s: exitMessages) {
+        sb.append(String.format("%n%s", s));
+      }
+      return sb.toString();
+    }
+
   }
 
   /**
@@ -188,4 +202,6 @@ public class Summary {
   public String toString() {
     return this.summaryStats.toString();
   }
+
+
 }

@@ -55,7 +55,7 @@ public class RuntimeCondition implements TestCondition {
       public void run() {
         Uninterruptibles.sleepUninterruptibly(RuntimeCondition.this.runtime, TimeUnit.NANOSECONDS);
         if (failureCondition){
-          RuntimeCondition.this.test.abortTest();
+          RuntimeCondition.this.test.abortTest(String.format("Failed Condition: %s", toString()));
         } else {
           RuntimeCondition.this.test.stopTest();
         }

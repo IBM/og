@@ -16,6 +16,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.collect.ImmutableList;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -43,18 +44,18 @@ public class SummaryTest {
   @DataProvider
   public static Object[][] provideInvalidSummary() {
     final Statistics stats = new Statistics();
-    return new Object[][] {{null, 0, 0, NullPointerException.class},
-        {stats, -1, 0, IllegalArgumentException.class},
-        {stats, 0, -1, IllegalArgumentException.class},
-        {stats, 1, 0, IllegalArgumentException.class}};
+    return new Object[][] {{null, 0, 0, NullPointerException.class, 1, ImmutableList.of("Invalid Input")},
+        {stats, -1, 0, IllegalArgumentException.class, 1, ImmutableList.of("Invalid Input")},
+        {stats, 0, -1, IllegalArgumentException.class, 1, ImmutableList.of("Invalid Input")},
+        {stats, 1, 0, IllegalArgumentException.class, 1, ImmutableList.of("Invalid Input")}};
   }
 
   @Test
   @UseDataProvider("provideInvalidSummary")
   public void invalidSummary(final Statistics stats, final long timestampStart,
-      final long timestampFinish, final Class<Exception> expectedException) {
+      final long timestampFinish, final Class<Exception> expectedException, final int exitCode, ImmutableList<String> messages) {
     this.thrown.expect(expectedException);
-    new Summary(stats, timestampStart, timestampFinish);
+    new Summary(stats, timestampStart, timestampFinish, exitCode, messages);
   }
 
   @Test
@@ -69,7 +70,7 @@ public class SummaryTest {
     final long timestampFinish = timestampStart + 100;
     final double runtime =
         ((double) (timestampFinish - timestampStart)) / TimeUnit.SECONDS.toMillis(1);
-    final Summary summary = new Summary(stats, timestampStart, timestampFinish);
+    final Summary summary = new Summary(stats, timestampStart, timestampFinish, 0, ImmutableList.of("Test Success"));
     // can't do much to validate toString correctness, but at least execute it
     summary.toString();
     final SummaryStats summaryStats = summary.getSummaryStats();

@@ -10,6 +10,7 @@ package com.cleversafe.og.test;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.ArrayList;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -18,6 +19,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import com.google.common.collect.ImmutableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,6 +57,7 @@ public class LoadTest implements Callable<LoadTestResult> {
   private long timestampFinish;
   private volatile boolean success;
   private final CountDownLatch completed;
+  private ArrayList<String> messages;
 
   /**
    * Creates an instance
@@ -81,6 +84,8 @@ public class LoadTest implements Callable<LoadTestResult> {
     this.running = new AtomicBoolean(true);
     this.success = true;
     this.completed = new CountDownLatch(1);
+    this.messages =  new ArrayList<String>();
+
   }
 
   private class SchedulerRunnable implements Runnable {
@@ -101,7 +106,7 @@ public class LoadTest implements Callable<LoadTestResult> {
       } catch (final Exception e) {
         _logger.error("Exception while producing request", e);
         _exceptionLogger.error("Exception while producing request", e);
-        abortTest();
+        abortTest(e.getMessage());
       }
     }
   }
@@ -125,7 +130,7 @@ public class LoadTest implements Callable<LoadTestResult> {
     _logger.debug("Waiting for test complete");
     Uninterruptibles.awaitUninterruptibly(this.completed);
     this.timestampFinish = System.currentTimeMillis();
-    return new LoadTestResult(this.timestampStart, this.timestampFinish, this.success);
+    return new LoadTestResult(this.timestampStart, this.timestampFinish, this.success, ImmutableList.copyOf(this.messages));
   }
 
   /**
@@ -165,9 +170,19 @@ public class LoadTest implements Callable<LoadTestResult> {
   /**
    * Immediately stop this test; marking it as failed
    */
-  public void abortTest() {
+  public void abortTest(final String message) {
     _logger.debug("Entering abortTest");
     this.success = false;
+
+
+    // requestSupplierException unit test case was failing because guava library crashes because of NPE
+    // when calling ImmutableList.copyOf(messages).
+    // check null because the detailed message may not be set in the generated exception in rare cases.
+    if (message != null) {
+      this.messages.add(message);
+    } else {
+      _logger.error("abort test called with no message");
+    }
     stopTest();
   }
 
@@ -200,4 +215,5 @@ public class LoadTest implements Callable<LoadTestResult> {
             + "shutdownImmediate=%s%n" + "]",
         this.requestManager, this.scheduler, this.client, this.shutdownImmediate);
   }
+  
 }

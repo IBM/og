@@ -11,6 +11,7 @@ package com.cleversafe.og.cli;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.security.Provider;
 import java.security.Security;
 import java.util.Collection;
@@ -40,15 +41,21 @@ import com.cleversafe.og.util.SizeUnit;
 import com.cleversafe.og.util.Version;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.Uninterruptibles;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
+import com.google.inject.spi.Message;
 import com.google.inject.CreationException;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.ConfigurationException;
 import com.google.inject.ProvisionException;
 import com.google.inject.Stage;
-import com.google.inject.spi.Message;
+
 import org.apache.security.juice.provider.JuiCEProviderOpenSSL;
 
 /**
@@ -65,9 +72,21 @@ public class ObjectGenerator {
   private static final String LINE_SEPARATOR =
       "-------------------------------------------------------------------------------";
 
+  private static final Gson gson = createGson();
+  private static Injector injector;
+  private static LoadTest test;
+  private static ObjectManager objectManager;
+  private static Statistics statistics;
+  private static OGConfig ogConfig;
+
+  private static long tStart;
+  private static long tStop;
+
+
   private ObjectGenerator() {}
 
   public static void main(final String[] args) {
+    tStart = System.currentTimeMillis();
     final OGGetOpt getopt = new OGGetOpt();
     final Cli cli = Application.cli("og", getopt, args);
     if (cli.shouldStop()) {
@@ -78,12 +97,17 @@ public class ObjectGenerator {
       } else if (cli.error()) {
         cli.printErrors();
         cli.printUsage();
-        Application.exit(Application.TEST_ERROR);
+        tStop = System.currentTimeMillis();
+        logSummary(tStart, tStop, Application.TEST_CONFIG_ERROR, ImmutableList.of("Invalid Arguments"));
+        Application.exit(Application.TEST_CONFIG_ERROR);
+
       }
-      Application.exit(0);
+      tStop = System.currentTimeMillis();
+      logSummary(tStart, tStop, Application.TEST_SUCCESS, ImmutableList.of("Test exited Normally"));
+      Application.exit(Application.TEST_SUCCESS);
     }
 
-    final Gson gson = createGson();
+
     final CountDownLatch shutdownLatch = new CountDownLatch(1);
 
     logBanner();
@@ -91,20 +115,19 @@ public class ObjectGenerator {
 
     try {
 
-      final File json = new File(getopt.getOGConfigFileName());
-      if (json == null) {
-        _consoleLogger.error("A json configuration file is required");
-        cli.printUsage();
-        Application.exit(Application.TEST_ERROR);
-      }
+     try {
+       wireDependencies(cli, getopt);
+     } catch (Exception e) {
+       _logger.error("Exception while setting up dependencies", e);
+       _consoleLogger.error("Test Error. See og.log for details");
+       logConsoleException(e);
+       logExceptionToFile(e);
+       tStop = System.currentTimeMillis();
+       logSummary(tStart, tStop, Application.TEST_CONFIG_ERROR, ImmutableList.of(String.format("Configuration error %s", e.getMessage())));
+       Application.exit(Application.TEST_CONFIG_ERROR);
+     }
 
-      final OGConfig ogConfig = Application.fromJson(json, OGConfig.class, gson);
-      _ogJsonLogger.info(gson.toJson(ogConfig));
 
-      final Injector injector = createInjector(ogConfig);
-      final LoadTest test = injector.getInstance(LoadTest.class);
-      final ObjectManager objectManager = injector.getInstance(ObjectManager.class);
-      final Statistics statistics = injector.getInstance(Statistics.class);
       OGLog4jShutdownCallbackRegistry.setOGShutdownHook((new ShutdownHook(test, shutdownLatch)));
 
       final Provider juiceProvider;
@@ -122,6 +145,7 @@ public class ObjectGenerator {
       shutdownLatch.countDown();
 
       // slight race here; if shutdown hook completes prior to the exit line below
+      // if the test completes whether it passes or fails, the summary is written in the test results callback
       if (!result.success) {
         Application.exit(Application.TEST_ERROR);
       }
@@ -130,10 +154,46 @@ public class ObjectGenerator {
       _consoleLogger.error("Test Error. See og.log for details");
       logConsoleException(e);
       logExceptionToFile(e);
+      tStop = System.currentTimeMillis();
+      logSummary(tStart, tStop, Application.TEST_ERROR, ImmutableList.of(String.format("Test error %s", e.getMessage())));
       Application.exit(Application.TEST_ERROR);
     }
 
-    Application.exit(0);
+    Application.exit(Application.TEST_SUCCESS);
+  }
+
+  /**
+   *
+   * @param cli CLI object created for this test
+   * @param getopt Getoptions object reference
+   *
+   *
+   * Note: If the dependency injection fails it would throw ConfigurationException or
+   * ProvisionException.  In other cases, it throws ConfigurationException.
+   *
+   */
+  private static void wireDependencies(Cli cli, OGGetOpt getopt) {
+
+    final File json = new File(getopt.getOGConfigFileName());
+    if (json == null) {
+      _consoleLogger.error("A json configuration file is required");
+      cli.printUsage();
+      throw new ConfigurationException(ImmutableSet.of(new Message("OG Configuration json file is required")));
+    }
+
+    try {
+      ogConfig = Application.fromJson(json, OGConfig.class, gson);
+      _ogJsonLogger.info(gson.toJson(ogConfig));
+    } catch (FileNotFoundException fe) {
+      throw new RuntimeException("OGConfig file not found");
+    }
+
+    // dependency injection
+    injector = createInjector(ogConfig);
+    test = injector.getInstance(LoadTest.class);
+    objectManager = injector.getInstance(ObjectManager.class);
+    statistics = injector.getInstance(Statistics.class);
+
   }
 
   public static LoadTestResult run(final LoadTest test, final ObjectManager objectManager,
@@ -153,8 +213,7 @@ public class ObjectGenerator {
 
     shutdownObjectManager(objectManager);
 
-    final Summary summary = new Summary(statistics, result.timestampStart, result.timestampFinish);
-    _summaryJsonLogger.info(gson.toJson(summary.getSummaryStats()));
+    final Summary summary = logSummary(statistics, result.timestampStart, result.timestampFinish, result);
 
     logSummaryBanner();
     _consoleLogger.info("{}", summary);
@@ -227,6 +286,23 @@ public class ObjectGenerator {
     final String banner = String.format(bannerFormat, LINE_SEPARATOR, LINE_SEPARATOR);
     _consoleLogger.info(banner);
   }
+
+  private static Summary logSummary(final Statistics stats, final long timestampStart, final long timestampFinish,
+                                       final LoadTestResult testResult) {
+    final Summary summary = new Summary(stats, timestampStart, timestampFinish,
+            testResult.success ? Application.TEST_SUCCESS : Application.TEST_ERROR,
+            testResult.success ? ImmutableList.of(Application.TEST_SUCCESS_MSG) : testResult.messages);
+    _summaryJsonLogger.info(gson.toJson(summary.getSummaryStats()));
+    return summary;
+  }
+
+  private static Summary logSummary(final long timestampStart, final long timestampFinish,
+                                    final int exitCode, ImmutableList<String> messages) {
+    final Summary summary = new Summary(new Statistics(), timestampStart, timestampFinish, exitCode, messages);
+    _summaryJsonLogger.info(gson.toJson(summary.getSummaryStats()));
+    return summary;
+  }
+
 
   private static class ShutdownHook extends Thread {
     private final LoadTest test;
