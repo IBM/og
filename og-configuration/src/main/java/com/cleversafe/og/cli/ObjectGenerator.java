@@ -79,14 +79,14 @@ public class ObjectGenerator {
   private static Statistics statistics;
   private static OGConfig ogConfig;
 
-  private static long tStart;
-  private static long tStop;
+  private static long timestampStart;
+  private static long timestampStop;
 
 
   private ObjectGenerator() {}
 
   public static void main(final String[] args) {
-    tStart = System.currentTimeMillis();
+    timestampStart = System.currentTimeMillis();
     final OGGetOpt getopt = new OGGetOpt();
     final Cli cli = Application.cli("og", getopt, args);
     if (cli.shouldStop()) {
@@ -97,13 +97,13 @@ public class ObjectGenerator {
       } else if (cli.error()) {
         cli.printErrors();
         cli.printUsage();
-        tStop = System.currentTimeMillis();
-        logSummary(tStart, tStop, Application.TEST_CONFIG_ERROR, ImmutableList.of("Invalid Arguments"));
+        timestampStop = System.currentTimeMillis();
+        logSummary(timestampStart, timestampStop, Application.TEST_CONFIG_ERROR, ImmutableList.of("Invalid Arguments"));
         Application.exit(Application.TEST_CONFIG_ERROR);
 
       }
-      tStop = System.currentTimeMillis();
-      logSummary(tStart, tStop, Application.TEST_SUCCESS, ImmutableList.of("Test exited Normally"));
+      timestampStop = System.currentTimeMillis();
+      logSummary(timestampStart, timestampStop, Application.TEST_SUCCESS, ImmutableList.of(Application.TEST_SUCCESS_MSG));
       Application.exit(Application.TEST_SUCCESS);
     }
 
@@ -122,8 +122,8 @@ public class ObjectGenerator {
        _consoleLogger.error("Test Error. See og.log for details");
        logConsoleException(e);
        logExceptionToFile(e);
-       tStop = System.currentTimeMillis();
-       logSummary(tStart, tStop, Application.TEST_CONFIG_ERROR, ImmutableList.of(String.format("Configuration error %s", e.getMessage())));
+       timestampStop = System.currentTimeMillis();
+       logSummary(timestampStart, timestampStop, Application.TEST_CONFIG_ERROR, ImmutableList.of(String.format("Configuration error %s", e.getMessage())));
        Application.exit(Application.TEST_CONFIG_ERROR);
      }
 
@@ -154,8 +154,8 @@ public class ObjectGenerator {
       _consoleLogger.error("Test Error. See og.log for details");
       logConsoleException(e);
       logExceptionToFile(e);
-      tStop = System.currentTimeMillis();
-      logSummary(tStart, tStop, Application.TEST_ERROR, ImmutableList.of(String.format("Test error %s", e.getMessage())));
+      timestampStop = System.currentTimeMillis();
+      logSummary(timestampStart, timestampStop, Application.TEST_ERROR, ImmutableList.of(String.format("Test error %s", e.getMessage())));
       Application.exit(Application.TEST_ERROR);
     }
 
