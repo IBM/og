@@ -36,7 +36,11 @@ import com.beust.jcommander.JCommander;
  */
 public class Application {
   private static final Logger _logger = LoggerFactory.getLogger(Application.class);
+  public static final int TEST_SUCCESS = 0;
   public static final int TEST_ERROR = 1;
+  public static final int TEST_CONFIG_ERROR = 2;
+
+  public static final String TEST_SUCCESS_MSG = "Test exited normally";
 
   private Application() {}
 

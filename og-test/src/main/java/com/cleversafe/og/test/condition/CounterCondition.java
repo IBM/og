@@ -68,7 +68,7 @@ public class CounterCondition implements TestCondition {
   public void update(final Pair<Request, Response> operation) {
     if (isTriggered()) {
       if (this.failureCondition) {
-        this.test.abortTest();
+        this.test.abortTest(String.format("Failed Condition: %s", toString()));
       } else {
         this.test.stopTest();
       }

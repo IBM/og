@@ -33,7 +33,7 @@ public class ConcurrentRequestCondition extends CounterCondition {
   public void update(final Request request) {
     if (isTriggered()) {
       if (this.failureCondition) {
-        this.test.abortTest();
+        this.test.abortTest(String.format("Failed Condition: %s", toString()));
       } else {
         this.test.stopTest();
       }

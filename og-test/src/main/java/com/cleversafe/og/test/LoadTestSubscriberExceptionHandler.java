@@ -37,7 +37,7 @@ public class LoadTestSubscriberExceptionHandler implements SubscriberExceptionHa
   public void handleException(final Throwable exception, final SubscriberExceptionContext context) {
     _logger.error("Exception while processing subscriber", exception);
     _exceptionLogger.error("Exception while processing subscriber", exception);
-    this.test.abortTest();
+    this.test.abortTest(String.format("%s %s", getClass().getSimpleName(), exception.getMessage()));
   }
 
   /**
