@@ -13,12 +13,12 @@ import com.beust.jcommander.converters.FileConverter;
 import com.beust.jcommander.converters.LongConverter;
 import com.beust.jcommander.converters.IntegerConverter;
 import com.cleversafe.og.cli.util.IntegerSetConverter;
-import com.google.common.base.Optional;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -61,7 +61,7 @@ public class ObjectFileGetOpt extends GetOpt {
 
     @Parameter(names = {"--container-suffixes"}, description = "List of container suffixes (comma delimited) to include an object in the\n" +
             "        output when using --filter", converter = IntegerSetConverter.class)
-    private Set<Integer> containerSuffixes;
+    private Set<Integer> containerSuffixes = new TreeSet<Integer>();
 
 
     @Parameter(names = {"--upgrade", "-u"}, description = "Upgrade an oom bin file to an og object file")

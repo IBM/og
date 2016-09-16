@@ -28,8 +28,6 @@ import java.io.OutputStreamWriter;
 import java.nio.ByteBuffer;
 import java.util.Set;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.primitives.Ints;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
