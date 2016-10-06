@@ -58,9 +58,10 @@ public class RequestRateScheduler implements Scheduler {
     final double requestsPerSecond = requestsPerSecond(rate, unit);
 
     _logger.debug("Calculated requests per second [{}]", requestsPerSecond);
-    final RateLimiter steady = RateLimiter.create(requestsPerSecond);
+
 
     if (DoubleMath.fuzzyEquals(rampup, 0.0, Math.pow(0.1, 6))) {
+      final RateLimiter steady = RateLimiter.create(requestsPerSecond);
       this.permits.set(steady);
     } else {
       // two RateLimiters (ramp, steady) are used rather than one because the RateLimiter class
@@ -80,6 +81,7 @@ public class RequestRateScheduler implements Scheduler {
           Uninterruptibles.sleepUninterruptibly(rampDuration, TimeUnit.NANOSECONDS);
 
           _logger.debug("Swapping RateLimiter implementation from ramp to steady", rampDuration);
+          final RateLimiter steady = RateLimiter.create(requestsPerSecond);
           RequestRateScheduler.this.permits.set(steady);
 
           _logger.info("Finished ramp");
