@@ -569,7 +569,7 @@ Container Create and Container List are supported for S3 only and the current ds
 requires the uri_root be set to "/".
 Multipart Write is also only supported for S3
 Operation mix is configured via _write_, _overwrite_, _read_, _metadata_, _delete_, _list_,
-_container_create_, _container_list_, _multipart_write keys respectively.
+_container_create_, _container_list_, _multipart_write_ keys respectively.
 
 Each operation type is configured via a configuration block. E.g. for write:
 
@@ -685,6 +685,36 @@ currently supported only for the List operation.
 ==== Operation Container
 OG supports the _container_ key at the operation level with some
 caveats as noted in the Container section.
+
+==== Operation Multipart Write
+Multipart write supports an additional part size parameter so that the user
+can define one or more part sizes as part of the object block to use in conjunction
+with filesize. The default part size is 5MiB and part size is defined in bytes in the config
+document.
+
+.Example Multipart Write using Multiple Part Sizes
+[source, json]
+"multipart_write": {
+        "weight": 100.0,
+        "object": {"part_size":{"selection":"random","choices":[5242880, 10485760]}}
+}
+
+.Example Multipart Write using a Single Part Size
+[source, json]
+"multipart_write": {
+        "weight": 100.0,
+        "object": {"part_size":5242880, 10485760}
+}
+
+Regarding the OG implementation of Multipart Write, there are some caveats. In the current
+implementation, OG will send as many INITIATE requests as it can, up to the thread count, until
+it receives an upload id response from one of the requests. At that point, it will begin
+sending PART requests for in process multipart sequences in order of INITIATE request responses.
+Once all parts are uploaded, a COMPLETE will be sent before any other PART or INITIATE requests are sent.
+
+For example, in a 100 thread test, up to 100 INITIATE requests will be sent. Once one request
+returns, it will begin sending parts for that request, up to 100 parts at a time. Once all those
+parts are in process or finished, it will begin sending parts for the other requests.
 
 === Filesize
 OG supports one or more filesize distributions for describing object file
