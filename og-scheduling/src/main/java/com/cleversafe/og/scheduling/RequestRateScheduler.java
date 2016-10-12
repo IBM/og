@@ -11,6 +11,7 @@ package com.cleversafe.og.scheduling;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.math.RoundingMode;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -64,12 +65,18 @@ public class RequestRateScheduler implements Scheduler {
       final RateLimiter steady = RateLimiter.create(requestsPerSecond);
       this.permits.set(steady);
     } else {
-      // two RateLimiters (ramp, steady) are used rather than one because the RateLimiter class
-      // includes undesirable code which cools down request rate if inactive, but only if configured
-      // with a rampup. Workaround is to configure one instance with rampup and another that uses a
-      // fixed ops.
-      final long rampDuration = (long) (rampup * rampupUnit.toNanos(1));
-      this.permits.set(RateLimiter.create(requestsPerSecond, rampDuration, TimeUnit.NANOSECONDS));
+      // the warmup Ratelimiter will not work if the permit request rate is slow enough to not being able to reach the
+      // threshold from left. The permits are accumulated faster than the request rate here.
+      // So the steady OPS will not be reached at all during warm up period.
+      // Approximate the warm-up period with steady ratelimiter and set the ops for the steady rate limiter
+      // based on the steady state ops, warm up duration.
+
+      // calculate the ops based on the ramp duration and steady state ops
+      final double slope  = requestsPerSecond / (rampupUnit.toSeconds((long)rampup));
+      final int rampStepWidth = calculateStepWidth(rate, rampup, rampupUnit);
+
+      this.permits.set(RateLimiter.create(slope *  rampStepWidth * 1));
+
       final Thread rampupThread = new Thread(new Runnable() {
         @Override
         public void run() {
@@ -77,10 +84,21 @@ public class RequestRateScheduler implements Scheduler {
           Uninterruptibles.awaitUninterruptibly(RequestRateScheduler.this.started);
 
           _logger.info("Starting ramp");
-          _logger.debug("Sleeping for [{}] nanoseconds of ramp activity", rampDuration);
-          Uninterruptibles.sleepUninterruptibly(rampDuration, TimeUnit.NANOSECONDS);
 
-          _logger.debug("Swapping RateLimiter implementation from ramp to steady", rampDuration);
+          double requestsPerSecondNow;
+          RateLimiter rampRateLimiter;
+          int rampStepNum = 1;
+          int rampSteps =  DoubleMath.roundToInt(((rampupUnit.toSeconds((long) rampup)) / rampStepWidth),
+                  RoundingMode.DOWN);
+          _logger.info("ramp profile rampStepWidth {}  NumRampSteps {} ", rampStepWidth, rampSteps);
+          while (rampStepNum <= rampSteps) {
+            Uninterruptibles.sleepUninterruptibly(rampStepWidth * 1000L, TimeUnit.MILLISECONDS);
+            rampStepNum++;
+            requestsPerSecondNow = slope *  rampStepWidth * rampStepNum;
+            _logger.debug("slope {} rampStep  {}  targetRequestPerSecond {} ", slope, rampStepNum, requestsPerSecondNow);
+            rampRateLimiter = RateLimiter.create(requestsPerSecondNow);
+            RequestRateScheduler.this.permits.set(rampRateLimiter);
+          }
           final RateLimiter steady = RateLimiter.create(requestsPerSecond);
           RequestRateScheduler.this.permits.set(steady);
 
@@ -109,4 +127,18 @@ public class RequestRateScheduler implements Scheduler {
     return String.format("RequestRateScheduler [rate=%s, unit=%s, rampup=%s, rampupUnit=%s]",
         this.rate, this.unit, this.rampup, this.rampupUnit);
   }
+
+  private int calculateStepWidth(double ops, double warmUp, TimeUnit rampupUnit) {
+
+    double warmUpSeconds = rampupUnit.toSeconds((long)warmUp);
+    double slope = ops / warmUpSeconds;
+
+    int width = 1;
+    if (slope < 1.0) {
+      width = DoubleMath.roundToInt((warmUpSeconds / ops), RoundingMode.DOWN);
+    }
+
+    return width;
+  }
+
 }
