@@ -1707,6 +1707,33 @@ authentication if absent.
 |No
 |"seconds"
 
+|status_codes
+|Object
+|No
+|{}
+|===
+
+
+
+==== Failing Conditions Configuration
+|===
+|Parameter|Type|Required|Default
+
+|operations
+|Integer
+|No
+|None
+
+|runtime
+|Decimal
+|No
+|None
+
+|runtime_unit
+|Enum (see <<Time Units>>)
+|No
+|"seconds"
+
 |concurrent_requests
 |Integer
 |No

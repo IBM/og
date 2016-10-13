@@ -74,7 +74,6 @@ public class OGModuleTest {
     stoppingConditions.operations = operations;
     stoppingConditions.runtime = runtime;
     stoppingConditions.runtimeUnit = runtimeUnit;
-    stoppingConditions.concurrentRequests = concurrentRequests;
     stoppingConditions.statusCodes = statusCodes;
 
     final FailingConditionsConfig failingConditions = new FailingConditionsConfig();
