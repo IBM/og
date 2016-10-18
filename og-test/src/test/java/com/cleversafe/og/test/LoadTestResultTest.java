@@ -1,9 +1,6 @@
-/*
- * Copyright (C) 2005-2015 Cleversafe, Inc. All rights reserved.
- * 
- * Contact Information: Cleversafe, Inc. 222 South Riverside Plaza Suite 1700 Chicago, IL 60606, USA
- * 
- * licensing@cleversafe.com
+/* Copyright (c) IBM Corporation 2016. All Rights Reserved.
+ * Project name: Object Generator
+ * This project is licensed under the Apache License 2.0, see LICENSE.
  */
 
 package com.cleversafe.og.test;
