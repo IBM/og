@@ -29,6 +29,7 @@
     <dependency>
       <groupId>com.cleversafe</groupId>
       <artifactId>og-supplier</artifactId>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 </project>
