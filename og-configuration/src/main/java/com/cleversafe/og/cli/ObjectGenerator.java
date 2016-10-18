@@ -12,8 +12,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.security.Provider;
-import java.security.Security;
 import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -56,7 +54,6 @@ import com.google.inject.ConfigurationException;
 import com.google.inject.ProvisionException;
 import com.google.inject.Stage;
 
-import org.apache.security.juice.provider.JuiCEProviderOpenSSL;
 
 /**
  * A cli for the Object Generator load tool
@@ -129,16 +126,6 @@ public class ObjectGenerator {
 
 
       OGLog4jShutdownCallbackRegistry.setOGShutdownHook((new ShutdownHook(test, shutdownLatch)));
-
-      final Provider juiceProvider;
-      try {
-        juiceProvider = JuiCEProviderOpenSSL.getInstance();
-        Security.removeProvider(JuiCEProviderOpenSSL.NAME);
-        Security.insertProviderAt(juiceProvider, 1);
-        _logger.info("Using the JuiCE provider");
-      } catch (final Exception e) {
-        _logger.warn("The JuiCE provider is not available on this platform.", e);
-      }
 
       final LoadTestResult result = run(test, objectManager, statistics, gson);
 
