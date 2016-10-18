@@ -86,10 +86,6 @@
      <version>1.0.0-SNAPSHOT</version>
     </dependency>
     <dependency>
-      <groupId>com.cleversafe</groupId>
-      <artifactId>apache-juice</artifactId>
-    </dependency>
-    <dependency>
       <groupId>com.beust</groupId>
       <artifactId>jcommander</artifactId>
       <scope>compile</scope>
