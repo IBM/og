@@ -36,25 +36,6 @@
     <module>og-supplier</module>
     <module>og-openstack</module>
   </modules>
-  <scm>
-    <url>http://git.cleversafe.net</url>
-  </scm>
-  <issueManagement>
-    <system>Rally</system>
-    <url>https://rally1.rallydev.com/</url>
-  </issueManagement>
-  <distributionManagement>
-    <repository>
-      <id>cleversafe.net</id>
-      <name>Cleversafe Internal Releases</name>
-      <url>http://maven.ad.cleversafe.com/artifactory/libs-staging-local</url>
-    </repository>
-    <snapshotRepository>
-      <id>cleversafe.snapshots</id>
-      <name>Cleversafe Internal Snapshots</name>
-      <url>http://maven.ad.cleversafe.com/artifactory/libs-snapshot-local</url>
-    </snapshotRepository>
-  </distributionManagement>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -305,40 +286,6 @@
       <scope>runtime</scope>
     </dependency>
   </dependencies>
-  <repositories>
-    <repository>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-      <id>central</id>
-      <name>Cleversafe Internal Releases</name>
-      <url>http://maven.ad.cleversafe.com/artifactory/releases/</url>
-    </repository>
-    <repository>
-      <releases>
-        <enabled>false</enabled>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-      <id>cleversafe.snapshots</id>
-      <name>Cleversafe Internal Snapshots</name>
-      <url>http://maven.ad.cleversafe.com/artifactory/snapshots/</url>
-    </repository>
-  </repositories>
-  <pluginRepositories>
-    <pluginRepository>
-      <releases>
-        <updatePolicy>never</updatePolicy>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-      <id>cleversafe.net</id>
-      <name>Cleversafe Internal Releases</name>
-      <url>http://maven.ad.cleversafe.com/artifactory/releases</url>
-    </pluginRepository>
-  </pluginRepositories>
   <build>
     <pluginManagement>
       <plugins>
