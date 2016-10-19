@@ -229,8 +229,6 @@ public class OGModule extends AbstractModule {
     checkArgument(stoppingConditionsConfig.operations >= 0, "operations must be >= 0 [%s]", stoppingConditionsConfig.operations);
     checkArgument(stoppingConditionsConfig.runtime >= 0.0, "runtime must be >= 0.0 [%s]", stoppingConditionsConfig.runtime);
     checkNotNull(stoppingConditionsConfig.runtimeUnit);
-    checkArgument(stoppingConditionsConfig.concurrentRequests >= 0, "concurrentRequests must be >= 0 [%s]",
-        stoppingConditionsConfig.concurrentRequests);
     checkNotNull(stoppingConditionsConfig.statusCodes);
     for (final Entry<Integer, Integer> sc : stoppingConditionsConfig.statusCodes.entrySet()) {
       checkArgument(sc.getValue() >= 0.0, "status code [%s] value must be >= 0.0 [%s]", sc.getKey(),
@@ -267,12 +265,6 @@ public class OGModule extends AbstractModule {
 
     if (stoppingConditionsConfig.runtime > 0) {
       conditions.add(new RuntimeCondition(test, stoppingConditionsConfig.runtime, stoppingConditionsConfig.runtimeUnit, false));
-    }
-
-    // maximum concurrent requests only makes sense in the context of an ops test, so check for that
-    if (stoppingConditionsConfig.concurrentRequests > 0 && concurrency.type == ConcurrencyType.OPS) {
-      conditions.add(
-          new ConcurrentRequestCondition(Operation.ALL, stoppingConditionsConfig.concurrentRequests, test, stats, false));
     }
 
     // Failing conditions
