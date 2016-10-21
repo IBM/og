@@ -45,6 +45,7 @@ import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.DefaultHostnameVerifier;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.conn.util.PublicSuffixMatcher;
@@ -294,7 +295,8 @@ public class ApacheClient implements Client {
         .setRetryHandler(new CustomHttpRequestRetryHandler(this.retryCount, this.requestSentRetry))
         .setRedirectStrategy(new CustomRedirectStrategy())
         .setDefaultRequestConfig(createRequestConfig()).evictExpiredConnections()
-        .evictIdleConnections(Long.valueOf(this.maxIdleTime), TimeUnit.MILLISECONDS).build();
+        .evictIdleConnections(Long.valueOf(this.maxIdleTime), TimeUnit.MILLISECONDS)
+        .setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE).build();
   }
 
   private HttpClientConnectionManager createConnectionManager() {
