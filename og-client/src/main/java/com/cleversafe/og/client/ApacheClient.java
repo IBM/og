@@ -45,6 +45,7 @@ import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.DefaultHostnameVerifier;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.conn.util.PublicSuffixMatcher;
@@ -332,7 +333,7 @@ public class ApacheClient implements Client {
       configuredCipherSuites = Iterables.toArray(this.cipherSuites, String.class);
     }
     final PublicSuffixMatcher suffixMatcher = PublicSuffixMatcherLoader.getDefault();
-    final HostnameVerifier hostnameVerifier = new DefaultHostnameVerifier(suffixMatcher);
+    final HostnameVerifier hostnameVerifier = NoopHostnameVerifier.INSTANCE;
 
     return new SSLConnectionSocketFactory(sslSocketFactory, configuredProtocols,
         configuredCipherSuites, hostnameVerifier);
