@@ -295,8 +295,7 @@ public class ApacheClient implements Client {
         .setRetryHandler(new CustomHttpRequestRetryHandler(this.retryCount, this.requestSentRetry))
         .setRedirectStrategy(new CustomRedirectStrategy())
         .setDefaultRequestConfig(createRequestConfig()).evictExpiredConnections()
-        .evictIdleConnections(Long.valueOf(this.maxIdleTime), TimeUnit.MILLISECONDS)
-        .setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE).build();
+        .evictIdleConnections(Long.valueOf(this.maxIdleTime), TimeUnit.MILLISECONDS).build();
   }
 
   private HttpClientConnectionManager createConnectionManager() {
@@ -334,7 +333,7 @@ public class ApacheClient implements Client {
       configuredCipherSuites = Iterables.toArray(this.cipherSuites, String.class);
     }
     final PublicSuffixMatcher suffixMatcher = PublicSuffixMatcherLoader.getDefault();
-    final HostnameVerifier hostnameVerifier = new DefaultHostnameVerifier(suffixMatcher);
+    final HostnameVerifier hostnameVerifier = NoopHostnameVerifier.INSTANCE;
 
     return new SSLConnectionSocketFactory(sslSocketFactory, configuredProtocols,
         configuredCipherSuites, hostnameVerifier);
