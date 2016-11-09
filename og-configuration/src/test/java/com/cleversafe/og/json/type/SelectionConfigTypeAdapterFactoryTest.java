@@ -16,6 +16,7 @@ import org.junit.Test;
 import com.cleversafe.og.json.ChoiceConfig;
 import com.cleversafe.og.json.SelectionConfig;
 import com.cleversafe.og.json.SelectionType;
+import com.cleversafe.og.util.json.type.CaseInsensitiveEnumTypeAdapterFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;

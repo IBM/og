@@ -42,6 +42,7 @@ public class RequestSupplier implements Supplier<Request> {
   private final Integer port;
   private final String uriRoot;
   private final Function<Map<String, String>, String> container;
+  private final String apiVersion;
   private final Function<Map<String, String>, String> object;
   private final Map<String, Function<Map<String, String>, String>> queryParameters;
   private final boolean trailingSlash;
@@ -75,8 +76,8 @@ public class RequestSupplier implements Supplier<Request> {
   // than separate fields
   public RequestSupplier(final Operation operation, final Function<Map<String, String>, String> id,
       final Method method, final Scheme scheme, final Function<Map<String, String>, String> host,
-      final Integer port, final String uriRoot,
-      final Function<Map<String, String>, String> container,
+      final Integer port, final String uriRoot, final Function<Map<String, String>, String> container,
+      final String apiVersion,
       final Function<Map<String, String>, String> object,
       final Map<String, Function<Map<String, String>, String>> queryParameters,
       final boolean trailingSlash, final Map<String, Function<Map<String, String>, String>> headers,
@@ -91,6 +92,7 @@ public class RequestSupplier implements Supplier<Request> {
     this.port = port;
     this.uriRoot = uriRoot;
     this.container = container;
+    this.apiVersion = apiVersion;
     this.object = object;
     this.queryParameters = ImmutableMap.copyOf(queryParameters);
     this.trailingSlash = trailingSlash;
@@ -114,6 +116,32 @@ public class RequestSupplier implements Supplier<Request> {
       function.apply(requestContext);
     }
 
+    if (this.container != null) {
+      // container-name is populated in the context now if it is available
+      // populate container name in context because Credential needs that to lookup
+      // storage account
+      // todo: Fix me. need to refactor this and handle ordering in the context
+      this.container.apply(requestContext);
+
+    }
+    if (credentials != null) {
+      Credential credential = this.credentials.apply(requestContext);
+      String username = credential.getUsername();
+      String password = credential.getPassword();
+      String keystoneToken = credential.getKeystoneToken();
+      String storageAccountName = credential.getStorageAccountName();
+
+      if(username != null)
+        requestContext.put(Context.X_OG_USERNAME, username);
+      if(password != null)
+        requestContext.put(Context.X_OG_PASSWORD, password);
+      if(keystoneToken != null)
+        requestContext.put(Context.X_OG_KEYSTONE_TOKEN, keystoneToken);
+      if(storageAccountName != null) {
+        requestContext.put(Context.X_OG_STORAGE_ACCOUNT_NAME, storageAccountName);
+      }
+
+    }
     final HttpRequest.Builder builder =
         new HttpRequest.Builder(this.method, getUrl(requestContext), this.operation);
 
@@ -124,20 +152,6 @@ public class RequestSupplier implements Supplier<Request> {
 
     if (this.id != null) {
       builder.withContext(Context.X_OG_REQUEST_ID, this.id.apply(requestContext));
-    }
-
-    if (credentials != null) {
-      Credential credential = this.credentials.apply(requestContext);
-      String username = credential.getUsername();
-      String password = credential.getPassword();
-      String keystoneToken = credential.getKeystoneToken();
-
-      if(username != null)
-        builder.withContext(Context.X_OG_USERNAME, username);
-      if(password != null)
-        builder.withContext(Context.X_OG_PASSWORD, password);
-      if(keystoneToken != null)
-        builder.withContext(Context.X_OG_KEYSTONE_TOKEN, keystoneToken);
     }
 
     for (final Map.Entry<String, String> entry : requestContext.entrySet()) {
@@ -163,7 +177,7 @@ public class RequestSupplier implements Supplier<Request> {
     final StringBuilder s = new StringBuilder().append(this.scheme).append("://");
     appendHost(s, context);
     appendPort(s);
-    appendPath(s, context);
+    appendPath(s, context, apiVersion);
     appendTrailingSlash(s);
     appendQueryParams(s, context);
 
@@ -178,8 +192,9 @@ public class RequestSupplier implements Supplier<Request> {
 
   private void appendHost(final StringBuilder s, final Map<String, String> context) {
     if (this.virtualHost) {
-      if(this.container != null) {
-        s.append(this.container.apply(context)).append(".");
+      String containerName = context.get(Context.X_OG_CONTAINER_NAME);
+      if (containerName != null) {
+        s.append(containerName).append(".");
       }
     }
 
@@ -192,15 +207,24 @@ public class RequestSupplier implements Supplier<Request> {
     }
   }
 
-  private void appendPath(final StringBuilder s, final Map<String, String> context) {
+  private void appendPath(final StringBuilder s, final Map<String, String> context, final String apiVersion) {
     if (!this.virtualHost) {
       s.append("/");
       if (this.uriRoot != null) {
         s.append(this.uriRoot).append("/");
       }
 
-      if (this.container != null) {
-        s.append(this.container.apply(context));
+      if (apiVersion != null) {
+        s.append(apiVersion).append("/");
+      }
+      String storageAccount = getStorageAccountPath(context, apiVersion);
+      if (storageAccount != null) {
+        s.append(getStorageAccountPath(context, apiVersion));
+      }
+
+      String containerName = context.get(Context.X_OG_CONTAINER_NAME);
+      if (containerName != null) {
+        s.append(containerName);
       }
     }
 
@@ -227,6 +251,21 @@ public class RequestSupplier implements Supplier<Request> {
     if (queryParams.length() > 0) {
       s.append("?").append(queryParams);
     }
+  }
+
+  private String getStorageAccountPath(final Map<String, String> context, final String apiVersion) {
+    String storageAccountName = context.get(Context.X_OG_STORAGE_ACCOUNT_NAME);
+    StringBuilder s = new StringBuilder();
+    if(storageAccountName != null) {
+      s.append(storageAccountName).append("/");
+    } else if (apiVersion != null && storageAccountName == null) {
+      // FIXME - this is a case to accomodate vault mode swift account. If the api version is present,
+      // the dsnet expects a storage account name. so pass a dummy account name when there is no authentication
+      s.append("dummyaccount").append("/");
+    } else {
+      return null;
+    }
+    return s.toString();
   }
 
   @Override

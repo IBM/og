@@ -14,5 +14,13 @@
       <groupId>com.cleversafe</groupId>
       <artifactId>og-object</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.cleversafe</groupId>
+      <artifactId>og-api</artifactId>
+    </dependency>
   </dependencies>
 </project>

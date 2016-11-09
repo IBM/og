@@ -3,7 +3,7 @@
  * This project is licensed under the Apache License 2.0, see LICENSE.
  */
 
-package com.cleversafe.og.json;
+package com.cleversafe.og.api;
 
 public enum AuthType {
   NONE, BASIC, AWSV2, AWSV4, KEYSTONE;

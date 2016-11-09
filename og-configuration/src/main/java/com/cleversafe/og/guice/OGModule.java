@@ -8,10 +8,8 @@ package com.cleversafe.og.guice;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +34,7 @@ import com.cleversafe.og.http.NoneAuth;
 import com.cleversafe.og.http.QueryParameters;
 import com.cleversafe.og.http.ResponseBodyConsumer;
 import com.cleversafe.og.http.Scheme;
-import com.cleversafe.og.json.AuthType;
+import com.cleversafe.og.api.AuthType;
 import com.cleversafe.og.json.ChoiceConfig;
 import com.cleversafe.og.json.ClientConfig;
 import com.cleversafe.og.json.ConcurrencyConfig;
@@ -64,6 +62,7 @@ import com.cleversafe.og.scheduling.Scheduler;
 import com.cleversafe.og.soh.SOHWriteResponseBodyConsumer;
 import com.cleversafe.og.statistic.Counter;
 import com.cleversafe.og.statistic.Statistics;
+import com.cleversafe.og.supplier.CredentialGetterFunction;
 import com.cleversafe.og.supplier.DeleteObjectNameFunction;
 import com.cleversafe.og.supplier.MetadataObjectNameFunction;
 import com.cleversafe.og.s3.MultipartRequestSupplier;
@@ -95,7 +94,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.EventBus;
-import com.google.common.io.Files;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provider;
 import com.google.inject.Provides;
@@ -592,12 +590,16 @@ public class OGModule extends AbstractModule {
           if (Integer.parseInt(suffix) == -1) {
             return container;
           } else {
+            String containerName = container.concat(suffix);
+            input.put(Context.X_OG_CONTAINER_NAME, containerName);
             return container.concat(suffix);
           }
         } else {
           if (suffixes != null) {
             suffix = suffixes.get().toString();
             input.put(Context.X_OG_CONTAINER_SUFFIX, suffix);
+            String containerName = container.concat(suffix);
+            input.put(Context.X_OG_CONTAINER_NAME, containerName);
             return container.concat(suffix);
           } else {
             input.put(Context.X_OG_CONTAINER_SUFFIX, "-1");
@@ -877,6 +879,18 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
+  @Named("api.version")
+  public String provideAPIVersion(final Api api) {
+
+    if (Api.OPENSTACK == api) {
+          return "v1";
+    }
+    return null;
+  }
+
+
+  @Provides
+  @Singleton
   @Named("overwrite.context")
   public List<Function<Map<String, String>, String>> provideOverwriteContext(
       final ObjectManager objectManager) {
@@ -886,6 +900,7 @@ public class OGModule extends AbstractModule {
         new DeleteObjectNameFunction(objectManager);
     return ImmutableList.of(function);
   }
+
 
   @Provides
   @Singleton
@@ -999,7 +1014,7 @@ public class OGModule extends AbstractModule {
   @Provides
   @Singleton
   @Named("credentials")
-  private Function<Map<String, String>, Credential> provideCredentials() throws Exception {
+  private Function<Map<String, String>, Credential> provideCredentials(final Api api) throws Exception {
     final List<Credential> credentialList = Lists.newArrayList();
 
     if (AuthType.NONE == this.config.authentication.type) {
@@ -1007,42 +1022,25 @@ public class OGModule extends AbstractModule {
     } else { //BASIC, AWSV2, AWSV4
       if (CredentialSource.FILE == this.config.authentication.credentialSource) {
         File credentialFile = new File(this.config.authentication.credentialFile);
-        Charset charset = Charset.forName("UTF-8");
-        try {
-          BufferedReader reader = Files.newReader(credentialFile, charset);
-          String credLine = null;
-          while ((credLine = reader.readLine()) != null) {
-            if (AuthType.KEYSTONE == this.config.authentication.type) {
-              Credential credential = new Credential(null, null, credLine);
-              credentialList.add(credential);
-            } else {
-              String[] splitCredLine = credLine.split(",");
-              if (splitCredLine.length != 2) {
-                throw new Exception("Invalid credentials '" + credLine + "' provided for '" +
-                    this.config.authentication.type + "' authentication");
-              }
-              Credential credential = new Credential(splitCredLine[0], splitCredLine[1], null);
-              credentialList.add(credential);
-            }
-          }
-        } catch (IOException e) {
-          throw new Exception("CredentialSource set to FILE, but unable to read " +
-              this.config.authentication.credentialFile);
-        }
+        return new CredentialGetterFunction(this.config.authentication.type, credentialFile, api);
+
       } else if (CredentialSource.CONFIG == this.config.authentication.credentialSource) {
+
         Credential credential = new Credential(this.config.authentication.username, this.config.authentication.password,
-            this.config.authentication.keystoneToken);
+            this.config.authentication.keystoneToken, this.config.authentication.account);
         credentialList.add(credential);
+
+        if (credentialList.size() == 0) {
+          throw new Exception("No credentials provided for " + this.config.authentication.type);
+        }
+        final Supplier<Credential> credentialSupplier = Suppliers.cycle(credentialList);
+        return MoreFunctions.forSupplier(credentialSupplier);
+
       } else {
         throw new IllegalArgumentException("Invalid CredentialSource: " + this.config.authentication.credentialSource);
       }
     }
 
-    if (credentialList.size() == 0) {
-      throw new Exception("No credentials provided for " + this.config.authentication.type);
-    }
-    final Supplier<Credential> credentialSupplier = Suppliers.cycle(credentialList);
-    return MoreFunctions.forSupplier(credentialSupplier);
   }
 
   private Function<Map<String, String>, String> createHeaderSuppliers(
@@ -1279,7 +1277,7 @@ public class OGModule extends AbstractModule {
   @Provides
   @Singleton
   public Client provideClient(final AuthType authType, final Map<AuthType, HttpAuth> authentication,
-      final Map<String, ResponseBodyConsumer> responseBodyConsumers) {
+                              final Map<String, ResponseBodyConsumer> responseBodyConsumers) {
     final ClientConfig clientConfig = this.config.client;
     Preconditions.checkArgument(
         authentication.get(authType) instanceof AWSV4Auth ? !clientConfig.chunkedEncoding : true,
@@ -1324,6 +1322,7 @@ public class OGModule extends AbstractModule {
       @Nullable @Named("port") final Integer port,
       @Nullable @Named("uri.root") final String uriRoot,
       @Named("write.container") final Function<Map<String, String>, String> container,
+      @Nullable @Named("api.version") final String apiVersion,
       @Nullable @WriteObjectName final Function<Map<String, String>, String> object,
       @WriteHeaders final Map<String, Function<Map<String, String>, String>> headers,
       @Named("write.context") final List<Function<Map<String, String>, String>> context,
@@ -1335,7 +1334,7 @@ public class OGModule extends AbstractModule {
         Collections.emptyMap();
 
     return createRequestSupplier(Operation.WRITE, id, Method.PUT, scheme, host, port, uriRoot,
-        container, object, queryParameters, headers, context, body, credentials, virtualHost);
+        container, apiVersion, object, queryParameters, headers, context, body, credentials, virtualHost);
   }
 
   @Provides
@@ -1347,6 +1346,7 @@ public class OGModule extends AbstractModule {
       @Nullable @Named("port") final Integer port,
       @Nullable @Named("uri.root") final String uriRoot,
       @Named("overwrite.container") final Function<Map<String, String>, String> container,
+      @Nullable @Named("api.version") final String apiVersion,
       @Nullable @OverwriteObjectName final Function<Map<String, String>, String> object,
       @OverwriteHeaders final Map<String, Function<Map<String, String>, String>> headers,
       @Named("overwrite.context") final List<Function<Map<String, String>, String>> context,
@@ -1363,7 +1363,7 @@ public class OGModule extends AbstractModule {
         Collections.emptyMap();
 
     return createRequestSupplier(Operation.OVERWRITE, id, Method.PUT, scheme, host, port, uriRoot,
-        container, object, queryParameters, headers, context, body, credentials, virtualHost);
+        container, apiVersion, object, queryParameters, headers, context, body, credentials, virtualHost);
   }
 
   @Provides
@@ -1375,6 +1375,7 @@ public class OGModule extends AbstractModule {
       @Nullable @Named("port") final Integer port,
       @Nullable @Named("uri.root") final String uriRoot,
       @Named("read.container") final Function<Map<String, String>, String> container,
+      @Nullable @Named("api.version") final String apiVersion,
       @Nullable @ReadObjectName final Function<Map<String, String>, String> object,
       @ReadHeaders final Map<String, Function<Map<String, String>, String>> headers,
       @Named("read.context") final List<Function<Map<String, String>, String>> context,
@@ -1388,7 +1389,7 @@ public class OGModule extends AbstractModule {
     final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
 
     return createRequestSupplier(Operation.READ, id, Method.GET, scheme, host, port, uriRoot,
-        container, object, queryParameters, headers, context, body, credentials, virtualHost);
+        container, apiVersion, object, queryParameters, headers, context, body, credentials, virtualHost);
   }
 
   @Provides
@@ -1400,6 +1401,7 @@ public class OGModule extends AbstractModule {
       @Nullable @Named("port") final Integer port,
       @Nullable @Named("uri.root") final String uriRoot,
       @Named("metadata.container") final Function<Map<String, String>, String> container,
+      @Nullable @Named("api.version") final String apiVersion,
       @Nullable @MetadataObjectName final Function<Map<String, String>, String> object,
       @MetadataHeaders final Map<String, Function<Map<String, String>, String>> headers,
       @Named("metadata.context") final List<Function<Map<String, String>, String>> context,
@@ -1413,7 +1415,7 @@ public class OGModule extends AbstractModule {
     final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
 
     return createRequestSupplier(Operation.METADATA, id, Method.HEAD, scheme, host, port, uriRoot,
-        container, object, queryParameters, headers, context, body, credentials, virtualHost);
+        container, apiVersion, object, queryParameters, headers, context, body, credentials, virtualHost);
   }
 
   @Provides
@@ -1425,6 +1427,7 @@ public class OGModule extends AbstractModule {
       @Nullable @Named("port") final Integer port,
       @Nullable @Named("uri.root") final String uriRoot,
       @Named("delete.container") final Function<Map<String, String>, String> container,
+      @Nullable @Named("api.version") final String apiVersion,
       @Nullable @DeleteObjectName final Function<Map<String, String>, String> object,
       @DeleteHeaders final Map<String, Function<Map<String, String>, String>> headers,
       @Named("delete.context") final List<Function<Map<String, String>, String>> context,
@@ -1438,7 +1441,7 @@ public class OGModule extends AbstractModule {
     final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
 
     return createRequestSupplier(Operation.DELETE, id, Method.DELETE, scheme, host, port, uriRoot,
-        container, object, queryParameters, headers, context, body, credentials, virtualHost);
+        container, apiVersion, object, queryParameters, headers, context, body, credentials, virtualHost);
   }
 
   @Provides
@@ -1451,6 +1454,7 @@ public class OGModule extends AbstractModule {
       @Nullable @Named("uri.root") final String uriRoot,
       @ListQueryParameters final Map<String, Function<Map<String, String>, String>> queryParameters,
       @Named("list.container") final Function<Map<String, String>, String> container,
+      @Nullable @Named("api.version") final String apiVersion,
       @ListHeaders final Map<String, Function<Map<String, String>, String>> headers,
       @Named("list.context") final List<Function<Map<String, String>, String>> context,
       @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
@@ -1460,7 +1464,7 @@ public class OGModule extends AbstractModule {
     final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
 
     return createRequestSupplier(Operation.LIST, id, Method.GET, scheme, host, port, uriRoot,
-        container, null, queryParameters, headers, context, body, credentials, virtualHost);
+        container, apiVersion, null, queryParameters, headers, context, body, credentials, virtualHost);
   }
 
   @Provides
@@ -1472,6 +1476,7 @@ public class OGModule extends AbstractModule {
       @Nullable @Named("port") final Integer port,
       @Nullable @Named("uri.root") final String uriRoot,
       @ContainerListHeaders final Map<String, Function<Map<String, String>, String>> headers,
+      @Nullable @Named("api.version") final String apiVersion,
       @Named("containerList.context") final List<Function<Map<String, String>, String>> context,
       @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
       @Named("virtualhost") final boolean virtualHost) throws Exception {
@@ -1484,7 +1489,7 @@ public class OGModule extends AbstractModule {
 
     // null container since request is on the service http://<accesser ip>/
     return createRequestSupplier(Operation.CONTAINER_LIST, id, Method.GET, scheme, host, port,
-        uriRoot, null, null, queryParameters, headers, context, body, credentials, virtualHost);
+        uriRoot, null, apiVersion, null, queryParameters, headers, context, body, credentials, virtualHost);
   }
 
   @Provides
@@ -1496,6 +1501,7 @@ public class OGModule extends AbstractModule {
       @Nullable @Named("port") final Integer port,
       @Nullable @Named("uri.root") final String uriRoot,
       @Named("containerCreate.container") final Function<Map<String, String>, String> container,
+      @Nullable @Named("api.version") final String apiVersion,
       @ContainerCreateHeaders final Map<String, Function<Map<String, String>, String>> headers,
       @Named("containerCreate.context") final List<Function<Map<String, String>, String>> context,
       @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
@@ -1508,13 +1514,14 @@ public class OGModule extends AbstractModule {
     final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
 
     return createRequestSupplier(Operation.CONTAINER_CREATE, id, Method.PUT, scheme, host, port,
-        uriRoot, container, null, queryParameters, headers, context, body, credentials, virtualHost);
+        uriRoot, container, apiVersion, null, queryParameters, headers, context, body, credentials, virtualHost);
   }
 
   private Supplier<Request> createRequestSupplier(final Operation operation,
       @Named("request.id") final Function<Map<String, String>, String> id, final Method method,
       final Scheme scheme, final Function<Map<String, String>, String> host, final Integer port,
       final String uriRoot, final Function<Map<String, String>, String> container,
+      final String apiVersion,
       final Function<Map<String, String>, String> object,
       final Map<String, Function<Map<String, String>, String>> queryParameters,
       final Map<String, Function<Map<String, String>, String>> headers,
@@ -1522,7 +1529,7 @@ public class OGModule extends AbstractModule {
       final Function<Map<String, String>, Body> body,
       final Function<Map<String, String>, Credential> credentials, final boolean virtualHost) {
 
-    return new RequestSupplier(operation, id, method, scheme, host, port, uriRoot, container,
+    return new RequestSupplier(operation, id, method, scheme, host, port, uriRoot, container, apiVersion,
         object, queryParameters, false, headers, context, credentials, body,
         virtualHost);
   }
@@ -1536,6 +1543,7 @@ public class OGModule extends AbstractModule {
       @Nullable @Named("port") final Integer port,
       @Nullable @Named("uri.root") final String uriRoot,
       @Named("multipartWrite.container") final Function<Map<String, String>, String> container,
+      @Nullable @Named("api.version") final String apiVersion,
       @Nullable @MultipartWriteObjectName final Function<Map<String, String>, String> object,
       @Named("multipartWrite.partSize") final Function<Map<String, String>, Long> partSize,
       @MultipartWriteHeaders final Map<String, Function<Map<String, String>, String>> headers,
@@ -1547,7 +1555,7 @@ public class OGModule extends AbstractModule {
     final Map<String, Function<Map<String, String>, String>> queryParameters =
         Collections.emptyMap();
 
-    return createMultipartRequestSupplier(id, scheme, host, port, uriRoot, container, object,
+    return createMultipartRequestSupplier(id, scheme, host, port, uriRoot, container, apiVersion, object,
         partSize, queryParameters, headers, context, body, credentials, virtualHost);
   }
 
@@ -1555,6 +1563,7 @@ public class OGModule extends AbstractModule {
       @Named("request.id") final Function<Map<String, String>, String> id,
       final Scheme scheme, final Function<Map<String, String>, String> host, final Integer port,
       final String uriRoot, final Function<Map<String, String>, String> container,
+      final String apiVersion,
       final Function<Map<String, String>, String> object,
       final Function<Map<String, String>, Long> partSize,
       final Map<String, Function<Map<String, String>, String>> queryParameters,
