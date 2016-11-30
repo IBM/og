@@ -17,8 +17,10 @@ public class Context {
   public static final String X_OG_SEQUENTIAL_OBJECT_NAME = "x-og-sequential-object-name";
   public static final String X_OG_OBJECT_SIZE = "x-og-object-size";
   public static final String X_OG_CONTAINER_SUFFIX = "x-og-container-suffix";
+  public static final String X_OG_CONTAINER_NAME = "x-og-container-name";
   public static final String X_OG_USERNAME = "x-og-username";
   public static final String X_OG_PASSWORD = "x-og-password";
+  public static final String X_OG_STORAGE_ACCOUNT_NAME = "x-og-storage-account-name";
   // FIXME refactor this into separate openstack guice module
   public static final String X_OG_KEYSTONE_TOKEN = "x-og-keystone-token";
   public static final String X_OG_RESPONSE_BODY_CONSUMER = "x-og-response-body-consumer";

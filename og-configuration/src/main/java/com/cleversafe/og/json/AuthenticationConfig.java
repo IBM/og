@@ -5,6 +5,8 @@
 
 package com.cleversafe.og.json;
 
+import com.cleversafe.og.api.AuthType;
+
 public class AuthenticationConfig {
   public AuthType type;
   public CredentialSource credentialSource;
@@ -12,6 +14,7 @@ public class AuthenticationConfig {
   public String password;
   public String keystoneToken;
   public String credentialFile;
+  public String account;
   public boolean awsChunked;
   public int awsCacheSize;
 
@@ -22,6 +25,7 @@ public class AuthenticationConfig {
     this.password = null;
     this.keystoneToken = null;
     this.credentialFile = null;
+    this.account = null;
     this.awsChunked = false;
     this.awsCacheSize = 0;
   }

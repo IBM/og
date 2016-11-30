@@ -3,7 +3,7 @@
  * This project is licensed under the Apache License 2.0, see LICENSE.
  */
 
-package com.cleversafe.og.json.type;
+package com.cleversafe.og.util.json.type;
 
 import java.io.IOException;
 import java.util.Locale;

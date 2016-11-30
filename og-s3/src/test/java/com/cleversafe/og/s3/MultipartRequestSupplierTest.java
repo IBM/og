@@ -202,7 +202,7 @@ public class MultipartRequestSupplierTest {
         };
     final Integer port = 8080;
     final Body bod = Bodies.random(objectSize);
-    final Credential creds = new Credential("admin", "password", null);
+    final Credential creds = new Credential("admin", "password", null, null);
 
     final Supplier<Body> bodySupplier = Suppliers.of(bod);
     final Supplier<Credential> credentialSupplier = Suppliers.of(creds);

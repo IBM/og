@@ -16,6 +16,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 import com.cleversafe.og.http.Credential;
+import com.cleversafe.og.util.Context;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -46,7 +47,7 @@ public class RequestSupplierTest {
         new URI("http://" + this.vaultName + "." + this.hostName + ":8080/" + this.objectName);
 
     final RequestSupplier request =
-        createRequestSupplier(true, this.vaultName, this.hostName, this.objectName, null, false);
+        createRequestSupplier(true, this.vaultName, this.hostName, null, this.objectName, null, false);
 
     final Request req = request.get();
 
@@ -64,7 +65,7 @@ public class RequestSupplierTest {
     final URI uri =
         new URI("http://" + this.vaultName + "." + this.hostName + ":8080/" + objectName);
     final RequestSupplier request =
-        createRequestSupplier(true, this.vaultName, this.hostName, objectName, null, false);
+        createRequestSupplier(true, this.vaultName, this.hostName, null, objectName, null, false);
 
     final Request req = request.get();
 
@@ -79,7 +80,7 @@ public class RequestSupplierTest {
 
     final String objectName = null;
     final URI uri = new URI("http://" + this.vaultName + "." + this.hostName + ":8080/");
-    final RequestSupplier request = createRequestSupplier(true, this.vaultName, this.hostName,
+    final RequestSupplier request = createRequestSupplier(true, this.vaultName, this.hostName, null,
         objectName, null, this.trailingSlash);
 
     final Request req = request.get();
@@ -97,7 +98,7 @@ public class RequestSupplierTest {
     final String objectName = null;
     final URI uri = new URI("http://" + this.vaultName + "." + this.hostName + ":8080");
     final RequestSupplier request =
-        createRequestSupplier(true, this.vaultName, this.hostName, objectName, null, false);
+        createRequestSupplier(true, this.vaultName, this.hostName, null, objectName, null, false);
 
     final Request req = request.get();
 
@@ -112,7 +113,7 @@ public class RequestSupplierTest {
 
     final String objectName = null;
     final URI uri = new URI("http://" + this.vaultName + "." + this.hostName + ":8080/");
-    final RequestSupplier request = createRequestSupplier(true, this.vaultName, this.hostName,
+    final RequestSupplier request = createRequestSupplier(true, this.vaultName, this.hostName, null,
         objectName, this.uriRoot, this.trailingSlash);
 
     final Request req = request.get();
@@ -129,7 +130,7 @@ public class RequestSupplierTest {
     final URI uri =
         new URI("http://" + this.hostName + ":8080/" + this.vaultName + "/" + this.objectName);
     final RequestSupplier request =
-        createRequestSupplier(false, this.vaultName, this.hostName, this.objectName, null, false);
+        createRequestSupplier(false, this.vaultName, this.hostName, null, this.objectName, null, false);
 
     final Request req = request.get();
 
@@ -144,7 +145,7 @@ public class RequestSupplierTest {
 
     final URI uri = new URI("http://" + this.hostName + ":8080/" + this.uriRoot + "/"
         + this.vaultName + "/" + this.objectName);
-    final RequestSupplier request = createRequestSupplier(false, this.vaultName, this.hostName,
+    final RequestSupplier request = createRequestSupplier(false, this.vaultName, this.hostName, null,
         this.objectName, this.uriRoot, false);
 
     final Request req = request.get();
@@ -161,7 +162,7 @@ public class RequestSupplierTest {
     final String objectName = null;
     final URI uri =
         new URI("http://" + this.hostName + ":8080/" + this.uriRoot + "/" + this.vaultName + "/");
-    final RequestSupplier request = createRequestSupplier(false, this.vaultName, this.hostName,
+    final RequestSupplier request = createRequestSupplier(false, this.vaultName, this.hostName, null,
         objectName, this.uriRoot, this.trailingSlash);
 
     final Request req = request.get();
@@ -179,7 +180,7 @@ public class RequestSupplierTest {
     final String objectName = null;
     final String uriRoot = null;
     final URI uri = new URI("http://" + this.hostName + ":8080/" + this.vaultName + "/");
-    final RequestSupplier request = createRequestSupplier(false, this.vaultName, this.hostName,
+    final RequestSupplier request = createRequestSupplier(false, this.vaultName, this.hostName, null,
         objectName, uriRoot, this.trailingSlash);
 
     final Request req = request.get();
@@ -212,12 +213,13 @@ public class RequestSupplierTest {
   // ------------------------HELPER METHODS--------------------------//
 
   private RequestSupplier createRequestSupplier(final boolean virtualHost, final String vaultName,
-      final String hostName, final String objectName, final String uriRoot,
+      final String hostName, final String apiVersion, final String objectName, final String uriRoot,
       final boolean trailingSlash) {
     final Method method = Method.PUT;
     final Operation operation = Operation.WRITE;
     final Scheme scheme = Scheme.HTTP;
     final Supplier<String> hostSupplier = Suppliers.of(hostName);
+    final Supplier<String> apiVersionSupplier = Suppliers.of("v1");
     final Function<Map<String, String>, String> host = MoreFunctions.forSupplier(hostSupplier);
     Function<Map<String, String>, String> object = null;
     if (objectName != null) {
@@ -229,6 +231,7 @@ public class RequestSupplierTest {
         }
       };
     }
+
     final Map<String, Function<Map<String, String>, String>> queryParameters = Maps.newHashMap();
     final Supplier<String> idSupplier = Suppliers.of("request.id");
     final Function<Map<String, String>, String> id = MoreFunctions.forSupplier(idSupplier);
@@ -238,12 +241,13 @@ public class RequestSupplierTest {
           @Override
           public String apply(final Map<String, String> input) {
             // TODO Auto-generated method stub
+            input.put(Context.X_OG_CONTAINER_NAME, vaultName);
             return vaultName;
           }
         };
     final Integer port = 8080;
     final Body bod = Bodies.random(10);
-    final Credential creds = new Credential("admin", "password", null);
+    final Credential creds = new Credential("admin", "password", null, null);
 
     final Supplier<Body> bodySupplier = Suppliers.of(bod);
     final Supplier<Credential> credentialSupplier = Suppliers.of(creds);
@@ -253,8 +257,8 @@ public class RequestSupplierTest {
 
     final List<Function<Map<String, String>, String>> context = Collections.emptyList();
 
-    return new RequestSupplier(operation, id, method, scheme, host, port, uriRoot, container,
-        object, queryParameters, trailingSlash, headers, context, credentials, body,
+    return new RequestSupplier(operation, id, method, scheme, host, port, uriRoot, container, apiVersion,
+            object, queryParameters, trailingSlash, headers, context, credentials, body,
         virtualHost);
   }
 }
