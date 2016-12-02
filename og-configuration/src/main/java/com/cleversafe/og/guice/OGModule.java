@@ -588,6 +588,8 @@ public class OGModule extends AbstractModule {
         String suffix = input.get(Context.X_OG_CONTAINER_SUFFIX);
         if (suffix != null) {
           if (Integer.parseInt(suffix) == -1) {
+            // use the container name provided without suffix
+            input.put(Context.X_OG_CONTAINER_NAME, container);
             return container;
           } else {
             String containerName = container.concat(suffix);
@@ -603,6 +605,8 @@ public class OGModule extends AbstractModule {
             return container.concat(suffix);
           } else {
             input.put(Context.X_OG_CONTAINER_SUFFIX, "-1");
+            // use the container name provided without suffix
+            input.put(Context.X_OG_CONTAINER_NAME, container);
             return container;
           }
         }
