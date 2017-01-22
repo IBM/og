@@ -21,18 +21,18 @@
   <modules>
     <module>og-api</module>
     <module>og-assembly</module>
+    <module>og-client</module>
     <module>og-configuration</module>
     <module>og-http</module>
     <module>og-object</module>
+    <module>og-openstack</module>
+    <module>og-s3</module>
     <module>og-scheduling</module>
     <module>og-soh</module>
     <module>og-statistic</module>
+    <module>og-supplier</module>
     <module>og-test</module>
     <module>og-util</module>
-    <module>og-s3</module>
-    <module>og-client</module>
-    <module>og-supplier</module>
-    <module>og-openstack</module>
   </modules>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
