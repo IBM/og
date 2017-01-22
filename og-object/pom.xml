@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <artifactId>og</artifactId>
-    <groupId>com.cleversafe</groupId>
+    <groupId>com.ibm</groupId>
     <version>1.0.0-SNAPSHOT</version>
   </parent>
   <artifactId>og-object</artifactId>
@@ -11,15 +11,15 @@
   <description>Object creation and management components</description>
   <dependencies>
     <dependency>
-      <groupId>com.cleversafe</groupId>
+      <groupId>com.ibm</groupId>
       <artifactId>og-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.cleversafe</groupId>
+      <groupId>com.ibm</groupId>
       <artifactId>og-util</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.cleversafe</groupId>
+      <groupId>com.ibm</groupId>
       <artifactId>og-http</artifactId>
     </dependency>
   </dependencies>

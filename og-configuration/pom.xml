@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <artifactId>og</artifactId>
-    <groupId>com.cleversafe</groupId>
+    <groupId>com.ibm</groupId>
     <version>1.0.0-SNAPSHOT</version>
   </parent>
   <artifactId>og-configuration</artifactId>
@@ -11,47 +11,47 @@
   <description>CLI and Configuration components</description>
   <dependencies>
     <dependency>
-      <groupId>com.cleversafe</groupId>
+      <groupId>com.ibm</groupId>
       <artifactId>og-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.cleversafe</groupId>
+      <groupId>com.ibm</groupId>
       <artifactId>og-client</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.cleversafe</groupId>
+      <groupId>com.ibm</groupId>
       <artifactId>og-http</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.cleversafe</groupId>
+      <groupId>com.ibm</groupId>
       <artifactId>og-object</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.cleversafe</groupId>
+      <groupId>com.ibm</groupId>
       <artifactId>og-scheduling</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.cleversafe</groupId>
+      <groupId>com.ibm</groupId>
       <artifactId>og-soh</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.cleversafe</groupId>
+      <groupId>com.ibm</groupId>
       <artifactId>og-s3</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.cleversafe</groupId>
+      <groupId>com.ibm</groupId>
       <artifactId>og-statistic</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.cleversafe</groupId>
+      <groupId>com.ibm</groupId>
       <artifactId>og-supplier</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.cleversafe</groupId>
+      <groupId>com.ibm</groupId>
       <artifactId>og-test</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.cleversafe</groupId>
+      <groupId>com.ibm</groupId>
       <artifactId>og-util</artifactId>
     </dependency>
     <dependency>
@@ -81,7 +81,7 @@
      <scope>compile</scope>
     </dependency>
     <dependency>
-     <groupId>com.cleversafe</groupId>
+     <groupId>com.ibm</groupId>
      <artifactId>og-openstack</artifactId>
      <version>1.0.0-SNAPSHOT</version>
     </dependency>

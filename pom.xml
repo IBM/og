@@ -1,23 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>com.cleversafe</groupId>
+  <groupId>com.ibm</groupId>
   <artifactId>og</artifactId>
   <version>1.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>OG</name>
   <description>Tool for load testing dsNet appliances</description>
-  <url>http://www.cleversafe.com</url>
+  <url>https://github.com/rveitchIBM/og/</url>
   <organization>
-    <name>Cleversafe, Inc.</name>
-    <url>http://www.cleversafe.com</url>
+    <name>IBM Corporation</name>
+    <url>http://www.ibm.com</url>
   </organization>
   <licenses>
     <license>
-      <name>Cleversafe Commercial</name>
-      <url>http://www.cleversafe.com</url>
-      <distribution>manual</distribution>
-      <comments>Cleversafe proprietary license</comments>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
     </license>
   </licenses>
   <modules>
@@ -44,62 +42,62 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <groupId>com.cleversafe</groupId>
+        <groupId>com.ibm</groupId>
         <artifactId>og-api</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.cleversafe</groupId>
+        <groupId>com.ibm</groupId>
         <artifactId>og-client</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.cleversafe</groupId>
+        <groupId>com.ibm</groupId>
         <artifactId>og-configuration</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.cleversafe</groupId>
+        <groupId>com.ibm</groupId>
         <artifactId>og-http</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.cleversafe</groupId>
+        <groupId>com.ibm</groupId>
         <artifactId>og-object</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.cleversafe</groupId>
+        <groupId>com.ibm</groupId>
         <artifactId>og-scheduling</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.cleversafe</groupId>
+        <groupId>com.ibm</groupId>
         <artifactId>og-soh</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.cleversafe</groupId>
+        <groupId>com.ibm</groupId>
         <artifactId>og-statistic</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.cleversafe</groupId>
+        <groupId>com.ibm</groupId>
         <artifactId>og-test</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.cleversafe</groupId>
+        <groupId>com.ibm</groupId>
         <artifactId>og-util</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.cleversafe</groupId>
+        <groupId>com.ibm</groupId>
         <artifactId>og-s3</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>com.cleversafe</groupId>
+        <groupId>com.ibm</groupId>
         <artifactId>og-supplier</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
