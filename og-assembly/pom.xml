@@ -62,7 +62,6 @@
     <dependency>
      <groupId>com.ibm</groupId>
      <artifactId>og-openstack</artifactId>
-     <version>1.0.0-SNAPSHOT</version>
     </dependency>
   </dependencies>
   <build>
