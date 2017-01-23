@@ -60,8 +60,8 @@
       <artifactId>og-supplier</artifactId>
     </dependency>
     <dependency>
-     <groupId>com.ibm</groupId>
-     <artifactId>og-openstack</artifactId>
+      <groupId>com.ibm</groupId>
+      <artifactId>og-openstack</artifactId>
     </dependency>
   </dependencies>
   <build>

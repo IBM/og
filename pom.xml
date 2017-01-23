@@ -12,9 +12,6 @@
     <name>IBM Corporation</name>
     <url>http://www.ibm.com</url>
   </organization>
-  <scm>
-    <connection>scm:git:git@github.com:rveitchIBM/og.git</connection>
-  </scm>
   <licenses>
     <license>
       <name>The Apache Software License, Version 2.0</name>
@@ -37,6 +34,9 @@
     <module>og-test</module>
     <module>og-util</module>
   </modules>
+  <scm>
+    <connection>scm:git:git@github.com:rveitchIBM/og.git</connection>
+  </scm>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -282,9 +282,9 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-        <groupId>org.slf4j</groupId>
-        <artifactId>jcl-over-slf4j</artifactId>
-        <scope>runtime</scope>
+      <groupId>org.slf4j</groupId>
+      <artifactId>jcl-over-slf4j</artifactId>
+      <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>com.lmax</groupId>

@@ -27,8 +27,8 @@
       <artifactId>httpclient</artifactId>
       <exclusions>
         <exclusion>
-          <groupId>commons-logging</groupId>
           <artifactId>commons-logging</artifactId>
+          <groupId>commons-logging</groupId>
         </exclusion>
       </exclusions>
     </dependency>
