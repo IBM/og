@@ -1,5 +1,5 @@
 = Object Generator
-v{display-version}, January 22nd, 2016
+v{display-version}, {build-date}
 :toc: right
 :sectlinks:
 :sectanchors:

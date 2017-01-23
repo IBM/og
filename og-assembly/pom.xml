@@ -101,6 +101,7 @@
           <backend>html</backend>
           <attributes>
             <display-version>${display.version}</display-version>
+            <build-date>${maven.build.timestamp}</build-date>
           </attributes>
         </configuration>
       </plugin>
