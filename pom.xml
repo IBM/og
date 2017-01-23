@@ -12,6 +12,9 @@
     <name>IBM Corporation</name>
     <url>http://www.ibm.com</url>
   </organization>
+  <scm>
+    <connection>scm:git:git@github.com:rveitchIBM/og.git</connection>
+  </scm>
   <licenses>
     <license>
       <name>The Apache Software License, Version 2.0</name>
