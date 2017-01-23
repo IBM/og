@@ -3,7 +3,7 @@
   <parent>
     <groupId>com.ibm</groupId>
     <artifactId>og</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
   </parent>
   <artifactId>og-openstack</artifactId>
   <name>OpenStack</name>
