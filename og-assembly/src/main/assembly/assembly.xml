@@ -16,7 +16,6 @@
     <fileSet>
       <directory>../</directory>
       <outputDirectory></outputDirectory>
-      <fileMode>0755</fileMode>
       <includes>
         <include>LICENSE</include>
       </includes>
