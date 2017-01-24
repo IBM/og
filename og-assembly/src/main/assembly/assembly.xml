@@ -14,6 +14,14 @@
   </dependencySets>
   <fileSets>
     <fileSet>
+      <directory>../</directory>
+      <outputDirectory></outputDirectory>
+      <fileMode>0755</fileMode>
+      <includes>
+        <include>LICENSE</include>
+      </includes>
+    </fileSet>
+    <fileSet>
       <directory>src/main/resources/bin</directory>
       <outputDirectory></outputDirectory>
       <fileMode>0755</fileMode>
