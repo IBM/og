@@ -18,6 +18,7 @@ public class OperationConfig {
   public Map<String, String> parameters;
   public BodySource body;
   public ContainerConfig container;
+  public MultipartConfig upload;
 
   public OperationConfig(final double weight) {
     this();
@@ -32,5 +33,6 @@ public class OperationConfig {
     this.parameters = Maps.newLinkedHashMap();
     this.body = BodySource.NONE;
     this.container = new ContainerConfig();
+    this.upload = new MultipartConfig();
   }
 }

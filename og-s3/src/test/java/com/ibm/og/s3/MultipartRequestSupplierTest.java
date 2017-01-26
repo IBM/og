@@ -216,7 +216,7 @@ public class MultipartRequestSupplierTest {
     final List<Function<Map<String, String>, String>> context = Collections.emptyList();
 
     return new MultipartRequestSupplier(id, scheme, host, port, uriRoot, container,
-        object, partSizes, queryParameters, trailingSlash, headers, context, credentials, body,
+        object, partSizes, 1, queryParameters, trailingSlash, headers, context, credentials, body,
         virtualHost);
   }
 

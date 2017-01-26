@@ -10,7 +10,6 @@ public class ObjectConfig {
   public SelectionType selection;
   public long minSuffix;
   public long maxSuffix;
-  public SelectionConfig<Long> partSize;
 
   public ObjectConfig() {
     this.prefix = "";
@@ -21,6 +20,5 @@ public class ObjectConfig {
     this.selection = null;
     this.minSuffix = 0;
     this.maxSuffix = Long.MAX_VALUE;
-    this.partSize = null;
   }
 }

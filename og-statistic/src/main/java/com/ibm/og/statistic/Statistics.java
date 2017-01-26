@@ -8,6 +8,8 @@ package com.ibm.og.statistic;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
@@ -115,7 +117,14 @@ public class Statistics {
     // do not record operations with 599 status after shutdown (known client aborts)
     if (this.running || response.getStatusCode() != 599) {
       updateCounter(operation, Counter.OPERATIONS, 1);
-      updateCounter(Operation.ALL, Counter.OPERATIONS, 1);
+      List<Operation> invalidCountOps = new ArrayList<Operation>();
+      invalidCountOps.add(Operation.MULTIPART_WRITE);
+      invalidCountOps.add(Operation.MULTIPART_WRITE_ABORT);
+      invalidCountOps.add(Operation.MULTIPART_WRITE_INITIATE);
+      invalidCountOps.add(Operation.MULTIPART_WRITE_PART);
+      if (!invalidCountOps.contains(operation)) {
+        updateCounter(Operation.ALL, Counter.OPERATIONS, 1);
+      }
 
       if (HttpUtil.SUCCESS_STATUS_CODES.contains(response.getStatusCode())) {
         final long bytes = getBytes(operation, request, response);
