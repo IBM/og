@@ -84,6 +84,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
   private AtomicInteger inProgressSessions;
   private Object lock_actionableMultipartSessions;
   private Object lock_blockedMultipartSessions;
+  private Object lock_blockingWaitNotify;
 
   /**
    * Creates an instance
@@ -141,6 +142,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     this.inProgressSessions = new AtomicInteger();
     this.lock_actionableMultipartSessions = new Object();
     this.lock_blockedMultipartSessions = new Object();
+    this.lock_blockingWaitNotify = new Object();
   }
 
   private enum MultipartRequest {
@@ -369,6 +371,9 @@ public class MultipartRequestSupplier implements Supplier<Request> {
       this.multipartRequestMap.put(responseUploadId, multipartInfo);
       synchronized (this.lock_actionableMultipartSessions) {
         this.actionableMultipartSessions.add(multipartInfo);
+        synchronized (this.lock_blockingWaitNotify) {
+          this.lock_blockingWaitNotify.notify();
+        }
       }
     } else if (multipartrequestOperation == MultipartRequest.PART.toString()) {
       multipartInfo = multipartRequestMap.get(requestUploadId);
@@ -380,6 +385,9 @@ public class MultipartRequestSupplier implements Supplier<Request> {
           if (multipartInfo.getNextMultipartRequest() == MultipartRequest.COMPLETE) {
             this.blockedMultipartSessions.remove(multipartInfo);
             this.actionableMultipartSessions.add(multipartInfo);
+            synchronized (this.lock_blockingWaitNotify) {
+              this.lock_blockingWaitNotify.notify();
+            }
           }
         }
       }
@@ -388,6 +396,9 @@ public class MultipartRequestSupplier implements Supplier<Request> {
       multipartInfo = multipartRequestMap.get(requestUploadId);
       multipartInfo.finishCompleteRequest();
       this.multipartRequestMap.remove(multipartInfo);
+      synchronized (this.lock_blockingWaitNotify) {
+        this.lock_blockingWaitNotify.notify();
+      }
     } else if (multipartrequestOperation == MultipartRequest.ABORT.toString()) {
       //TODO
     }
@@ -399,59 +410,68 @@ public class MultipartRequestSupplier implements Supplier<Request> {
 
     HttpRequest.Builder builder;
 
-    if(this.inProgressSessions.get() < this.targetSessions || ((this.actionableMultipartSessions.size() + this.blockedMultipartSessions.size()) < this.targetSessions)) {
-      this.inProgressSessions.getAndIncrement();
-      // populate the context map with any relevant metadata for this request
-      // based on what the current operation is
-      for (final Function<Map<String, String>, String> function : this.context) {
-        // return value for context functions is ignored
-        function.apply(requestContext);
-      }
-
-      // create the initiate request
-      builder = createInitiateRequest(requestContext);
-      builder.withQueryParameter(UPLOADS, "");
-    } else {
-      MultipartInfo activeMultipartInfo = getActiveMultipartOperation();
-      while(activeMultipartInfo == null) {
-        activeMultipartInfo = getActiveMultipartOperation();
-      }
-      MultipartRequest multipartRequest = activeMultipartInfo.getNextMultipartRequest();
-      switch(multipartRequest) {
-        case PART:
-          int partNumber = activeMultipartInfo.startPartRequest();
-          builder = createPartRequest(requestContext, partNumber,
-              activeMultipartInfo.uploadId, activeMultipartInfo.objectName,
-              activeMultipartInfo.getNextPartSize(), activeMultipartInfo.containerName,
-              activeMultipartInfo.bodyDataType);
-          builder.withQueryParameter(PART_NUMBER, String.valueOf(partNumber));
-          builder.withQueryParameter(UPLOAD_ID, activeMultipartInfo.uploadId);
-          break;
-        case COMPLETE:
-          builder = createCompleteRequest(requestContext, activeMultipartInfo.uploadId,
-              activeMultipartInfo.objectName, activeMultipartInfo.startCompleteRequest(),
-              activeMultipartInfo.containerName, activeMultipartInfo.containerSuffix);
-          builder.withQueryParameter(UPLOAD_ID, activeMultipartInfo.uploadId);
-          break;
-        case ABORT:
-          builder = createAbortRequest(requestContext, activeMultipartInfo.uploadId,
-              activeMultipartInfo.objectName, activeMultipartInfo.containerName);
-          builder.withQueryParameter(UPLOAD_ID, activeMultipartInfo.uploadId);
-          break;
-        default:
-          return null;
-      }
-
-      if (multipartRequest == MultipartRequest.COMPLETE) {
-        synchronized (this.lock_actionableMultipartSessions) {
-          this.actionableMultipartSessions.remove(activeMultipartInfo);
+    while(true) {
+      if(this.inProgressSessions.get() < this.targetSessions) {
+        this.inProgressSessions.getAndIncrement();
+        // populate the context map with any relevant metadata for this request
+        // based on what the current operation is
+        for (final Function<Map<String, String>, String> function : this.context) {
+          // return value for context functions is ignored
+          function.apply(requestContext);
         }
-      }
-      synchronized (this.lock_actionableMultipartSessions) {
-        synchronized (this.lock_blockedMultipartSessions) {
-          if(activeMultipartInfo.getNextMultipartRequest() == MultipartRequest.INTERNAL_PENDING) {
+
+        // create the initiate request
+        builder = createInitiateRequest(requestContext);
+        builder.withQueryParameter(UPLOADS, "");
+        break;
+      } else if (this.actionableMultipartSessions.size() > 0){
+        MultipartInfo activeMultipartInfo = getActiveMultipartOperation();
+        MultipartRequest multipartRequest = activeMultipartInfo.getNextMultipartRequest();
+        switch(multipartRequest) {
+          case PART:
+            int partNumber = activeMultipartInfo.startPartRequest();
+            builder = createPartRequest(requestContext, partNumber,
+                activeMultipartInfo.uploadId, activeMultipartInfo.objectName,
+                activeMultipartInfo.getNextPartSize(), activeMultipartInfo.containerName,
+                activeMultipartInfo.bodyDataType);
+            builder.withQueryParameter(PART_NUMBER, String.valueOf(partNumber));
+            builder.withQueryParameter(UPLOAD_ID, activeMultipartInfo.uploadId);
+            break;
+          case COMPLETE:
+            builder = createCompleteRequest(requestContext, activeMultipartInfo.uploadId,
+                activeMultipartInfo.objectName, activeMultipartInfo.startCompleteRequest(),
+                activeMultipartInfo.containerName, activeMultipartInfo.containerSuffix);
+            builder.withQueryParameter(UPLOAD_ID, activeMultipartInfo.uploadId);
+            break;
+          case ABORT:
+            builder = createAbortRequest(requestContext, activeMultipartInfo.uploadId,
+                activeMultipartInfo.objectName, activeMultipartInfo.containerName);
+            builder.withQueryParameter(UPLOAD_ID, activeMultipartInfo.uploadId);
+            break;
+          default:
+            return null;
+        }
+
+        if (multipartRequest == MultipartRequest.COMPLETE) {
+          synchronized (this.lock_actionableMultipartSessions) {
             this.actionableMultipartSessions.remove(activeMultipartInfo);
-            this.blockedMultipartSessions.add(activeMultipartInfo);
+          }
+        }
+        synchronized (this.lock_actionableMultipartSessions) {
+          synchronized (this.lock_blockedMultipartSessions) {
+            if(activeMultipartInfo.getNextMultipartRequest() == MultipartRequest.INTERNAL_PENDING) {
+              this.actionableMultipartSessions.remove(activeMultipartInfo);
+              this.blockedMultipartSessions.add(activeMultipartInfo);
+            }
+          }
+        }
+        break;
+      } else {
+        synchronized (this.lock_blockingWaitNotify) {
+          try {
+            this.lock_blockingWaitNotify.wait();
+          } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
           }
         }
       }
@@ -502,60 +522,6 @@ public class MultipartRequestSupplier implements Supplier<Request> {
         return null;
       }
     }
-//    Deque<MultipartInfo> noActionMultipart = new ConcurrentLinkedDeque<MultipartInfo>();
-//    MultipartInfo multipartToCheck;
-//    MultipartInfo multipartToReturn = null;
-//
-//    // check the "To Be Completed" list first
-//    // MultipartRequest.PART isn't possible here
-//    while(!this.toBeCompletedMultipartRequests.isEmpty()) {
-//      multipartToCheck = toBeCompletedMultipartRequests.pollFirst();
-//      MultipartRequest nextRequest = multipartToCheck.getNextMultipartRequest();
-//      // remove from queue if done
-//      if(nextRequest == MultipartRequest.INTERNAL_DONE) {
-//        continue;
-//        // any other state, take no action
-//      } else if(nextRequest != MultipartRequest.COMPLETE) {
-//        noActionMultipart.addFirst(multipartToCheck);
-//        // if complete, we have our action
-//      } else {
-//        multipartToReturn = multipartToCheck;
-//        break;
-//      }
-//    }
-//
-//    while(!noActionMultipart.isEmpty()) {
-//      this.toBeCompletedMultipartRequests.addFirst(noActionMultipart.pollFirst());
-//    }
-//
-//    if(multipartToReturn != null) {
-//      return multipartToReturn;
-//    }
-//
-//    // check the "In Progress" list
-//    while(!this.inProgressMultipartRequests.isEmpty()) {
-//      multipartToCheck = inProgressMultipartRequests.pollFirst();
-//      MultipartRequest nextRequest = multipartToCheck.getNextMultipartRequest();
-//      // if complete, we have our action
-//      // move it to the toBeCompletedQueue
-//      if(nextRequest == MultipartRequest.COMPLETE) {
-//        multipartToReturn = multipartToCheck;
-//        this.toBeCompletedMultipartRequests.addLast(multipartToCheck);
-//        break;
-//        // if part, we have our action
-//      } else if(nextRequest == MultipartRequest.PART) {
-//        multipartToReturn = multipartToCheck;
-//        this.inProgressMultipartRequests.addFirst(multipartToCheck);
-//        break;
-//        // if waiting for parts to complete, put on toBeCompletedQueue
-//      } else if(nextRequest == MultipartRequest.INTERNAL_PENDING) {
-//        this.toBeCompletedMultipartRequests.addLast(multipartToCheck);
-//        continue;
-//      }
-//    }
-//
-//    return multipartToReturn;
-
   }
 
   private HttpRequest.Builder createInitiateRequest(final Map<String, String> context) {
