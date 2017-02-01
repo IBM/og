@@ -288,10 +288,6 @@ public class OGModule extends AbstractModule {
       checkArgument(sc.getValue() >= 0.0, "status code [%s] value must be >= 0.0 [%s]", sc.getKey(),
           sc.getValue());
     }
-    if (this.config.concurrency.type == ConcurrencyType.THREADS) {
-      checkArgument(this.config.concurrency.count > this.config.multipartWrite.upload.targetSessions,
-              "thread count must be greater than target sessions for multipart");
-    }
 
     final List<TestCondition> conditions = Lists.newArrayList();
 
