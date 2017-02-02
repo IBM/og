@@ -7,7 +7,7 @@ package com.ibm.og.json;
 
 public class MultipartConfig {
   public SelectionConfig<Long> partSize;
-  public Integer targetSessions;
+  public int targetSessions;
 
   public MultipartConfig() {
     this.partSize = null;
