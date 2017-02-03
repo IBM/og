@@ -191,6 +191,7 @@ public class OGModule extends AbstractModule {
     bindConstant().annotatedWith(Names.named("multipartWrite.weight"))
         .to(this.config.multipartWrite.weight);
     bindConstant().annotatedWith(Names.named("virtualhost")).to(this.config.virtualHost);
+    bindConstant().annotatedWith(Names.named("multipartWrite.targetSessions")).to(this.config.multipartWrite.upload.targetSessions);
     bind(AuthType.class).toInstance(this.config.authentication.type);
     bind(DataType.class).toInstance(this.config.data);
     bind(String.class).annotatedWith(Names.named("authentication.username"))
@@ -674,9 +675,9 @@ public class OGModule extends AbstractModule {
       final OperationConfig operationConfig) {
     checkNotNull(operationConfig);
 
-    final SelectionConfig<Long> operationPartSize = operationConfig.object.partSize;
+    final SelectionConfig<Long> operationPartSize = operationConfig.upload.partSize;
     if (operationPartSize != null && !operationPartSize.choices.isEmpty()) {
-      return createPartSize(operationConfig.object.partSize);
+      return createPartSize(operationConfig.upload.partSize);
     }
 
     // default to 5242880 bytes
@@ -1605,25 +1606,26 @@ public class OGModule extends AbstractModule {
   @Singleton
   @Named("multipartWrite")
   public Supplier<Request> provideMultipartWrite(
-      @Named("request.id") final Function<Map<String, String>, String> id, final Api api,
-      final Scheme scheme, @MultipartWriteHost final Function<Map<String, String>, String> host,
-      @Nullable @Named("port") final Integer port,
-      @Nullable @Named("uri.root") final String uriRoot,
-      @Named("multipartWrite.container") final Function<Map<String, String>, String> container,
-      @Nullable @Named("api.version") final String apiVersion,
-      @Nullable @MultipartWriteObjectName final Function<Map<String, String>, String> object,
-      @Named("multipartWrite.partSize") final Function<Map<String, String>, Long> partSize,
-      @MultipartWriteHeaders final Map<String, Function<Map<String, String>, String>> headers,
-      @Named("multipartWrite.context") final List<Function<Map<String, String>, String>> context,
-      final Function<Map<String, String>, Body> body,
-      @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
-      @Named("virtualhost") final boolean virtualHost) {
+          @Named("request.id") final Function<Map<String, String>, String> id, final Api api,
+          final Scheme scheme, @MultipartWriteHost final Function<Map<String, String>, String> host,
+          @Nullable @Named("port") final Integer port,
+          @Nullable @Named("uri.root") final String uriRoot,
+          @Named("multipartWrite.container") final Function<Map<String, String>, String> container,
+          @Nullable @Named("api.version") final String apiVersion,
+          @Nullable @MultipartWriteObjectName final Function<Map<String, String>, String> object,
+          @Named("multipartWrite.partSize") final Function<Map<String, String>, Long> partSize,
+          @Named("multipartWrite.targetSessions") final int targetSessions,
+          @MultipartWriteHeaders final Map<String, Function<Map<String, String>, String>> headers,
+          @Named("multipartWrite.context") final List<Function<Map<String, String>, String>> context,
+          final Function<Map<String, String>, Body> body,
+          @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
+          @Named("virtualhost") final boolean virtualHost) {
 
     final Map<String, Function<Map<String, String>, String>> queryParameters =
         Collections.emptyMap();
 
-    return createMultipartRequestSupplier(id, scheme, host, port, uriRoot, container, apiVersion,
-        object, partSize, queryParameters, headers, context, body, credentials, virtualHost);
+    return createMultipartRequestSupplier(id, scheme, host, port, uriRoot, container, apiVersion, object,
+        partSize, targetSessions, queryParameters, headers, context, body, credentials, virtualHost);
   }
 
   private Supplier<Request> createMultipartRequestSupplier(
@@ -1632,6 +1634,7 @@ public class OGModule extends AbstractModule {
       final Function<Map<String, String>, String> container, final String apiVersion,
       final Function<Map<String, String>, String> object,
       final Function<Map<String, String>, Long> partSize,
+      final int targetSessions,
       final Map<String, Function<Map<String, String>, String>> queryParameters,
       final Map<String, Function<Map<String, String>, String>> headers,
       final List<Function<Map<String, String>, String>> context,
@@ -1639,6 +1642,6 @@ public class OGModule extends AbstractModule {
       final Function<Map<String, String>, Credential> credentials, final boolean virtualHost) {
 
     return new MultipartRequestSupplier(id, scheme, host, port, uriRoot, container, object,
-        partSize, queryParameters, false, headers, context, credentials, body, virtualHost);
+        partSize, targetSessions, queryParameters, false, headers, context, credentials, body, virtualHost);
   }
 }
