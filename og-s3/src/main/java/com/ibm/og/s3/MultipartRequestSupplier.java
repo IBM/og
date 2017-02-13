@@ -61,6 +61,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
   private final Function<Map<String, String>, String> container;
   private final Function<Map<String, String>, String> object;
   private final Function<Map<String, String>, Long> partSize;
+  private final Function<Map<String, String>, Integer> partsPerSession;
   private final int targetSessions;
   private final Map<String, Function<Map<String, String>, String>> queryParameters;
   private final boolean trailingSlash;
@@ -113,6 +114,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
       final Function<Map<String, String>, String> container,
       final Function<Map<String, String>, String> object,
       final Function<Map<String, String>, Long> partSize,
+      final Function<Map<String, String>, Integer> partsPerSession,
       final int targetSessions,
       final Map<String, Function<Map<String, String>, String>> queryParameters,
       final boolean trailingSlash, final Map<String, Function<Map<String, String>, String>> headers,
@@ -128,6 +130,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     this.container = container;
     this.object = object;
     this.partSize = partSize;
+    this.partsPerSession = partsPerSession;
     this.targetSessions = targetSessions;
     this.queryParameters = ImmutableMap.copyOf(queryParameters);
     this.trailingSlash = trailingSlash;
@@ -174,6 +177,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     String bodyDataType;
     long objectSize;
     long partSize;
+    int maxParts;
     long lastPartSize;
     String uploadId;
     Queue<PartInfo> partsInfo;
@@ -185,7 +189,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     boolean finishedCompleteRequest;
 
     public MultipartInfo(String containerName, String objectName, String uploadId,
-        long objectSize, long partSize, String containerSuffix, String bodyDataType) {
+        long objectSize, long partSize, int maxParts, String containerSuffix, String bodyDataType) {
       this.lockNextPartNumber = new ReentrantLock();
       this.lockInProgressPartRequests = new ReentrantLock();
       this.lockFinishedPartRequests = new ReentrantLock();
@@ -198,6 +202,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
       this.objectName = objectName;
       this.objectSize = objectSize;
       this.partSize = partSize; // bytes
+      this.maxParts = maxParts;
       this.uploadId = uploadId;
       this.nextPartNumber = 0;
       this.inProgressPartRequests = 0;
@@ -246,11 +251,13 @@ public class MultipartRequestSupplier implements Supplier<Request> {
       } else if((this.finishedPartRequests == this.partRequestsToSend) &&
           (this.finishedCompleteRequest == true) && (this.inProgressCompleteRequest == false)) {
         retVal = MultipartRequest.INTERNAL_DONE;
-        // haven't sent all the parts
-      } else if((this.inProgressPartRequests + this.finishedPartRequests) < this.partRequestsToSend) {
+        // haven't sent all the parts and haven't reached maxParts threshold
+      } else if(((this.inProgressPartRequests + this.finishedPartRequests) < this.partRequestsToSend) &&
+              (this.inProgressPartRequests < this.maxParts)){
         retVal = MultipartRequest.PART;
-        // all parts sent, but not finished
-      } else if((this.inProgressPartRequests + this.finishedPartRequests) == this.partRequestsToSend) {
+        // all parts sent, but not finished or inProgress parts is at max
+      } else if(((this.inProgressPartRequests + this.finishedPartRequests) == this.partRequestsToSend) ||
+              (this.inProgressPartRequests >= maxParts)) {
         retVal = MultipartRequest.INTERNAL_PENDING;
       } else {
         retVal = MultipartRequest.INTERNAL_ERROR;
@@ -374,6 +381,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     String requestObjectName = requestContext.get(Context.X_OG_OBJECT_NAME);
     String requestObjectSize = requestContext.get(Context.X_OG_OBJECT_SIZE);
     String requestPartSize = requestContext.get(Context.X_OG_MULTIPART_PART_SIZE);
+    String requestMaxParts = requestContext.get(Context.X_OG_MULTIPART_MAX_PARTS);
     String requestUploadId = requestContext.get(Context.X_OG_MULTIPART_UPLOAD_ID);
     String requestPartNumber = requestContext.get(Context.X_OG_MULTIPART_PART_NUMBER);
     String responseUploadId = responseContext.get(Context.X_OG_MULTIPART_UPLOAD_ID);
@@ -388,7 +396,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
         return;
       }
       multipartInfo = new MultipartInfo(requestContainerName, requestObjectName, responseUploadId,
-          Long.parseLong(requestObjectSize), Long.parseLong(requestPartSize), requestContainerSuffix, requestBodyDataType);
+          Long.parseLong(requestObjectSize), Long.parseLong(requestPartSize), Integer.parseInt(requestMaxParts), requestContainerSuffix, requestBodyDataType);
       this.multipartRequestMap.put(responseUploadId, multipartInfo);
       synchronized (this.lockActionableMultipartSessions) {
         this.actionableMultipartSessions.add(multipartInfo);
@@ -403,7 +411,9 @@ public class MultipartRequestSupplier implements Supplier<Request> {
           multipartInfo.finishPartRequest(new PartInfo(requestPartNumber, responsePartId));
           // multipart info only gets put on blocked when INTERNAL_PENDING is
           // observed on the get() call. Put it back in active when all parts are in
-          if (multipartInfo.getNextMultipartRequest() == MultipartRequest.COMPLETE) {
+          // or if active part uploads is now less than maxParts
+          MultipartRequest multipartRequest = multipartInfo.getNextMultipartRequest();
+          if (multipartRequest == MultipartRequest.COMPLETE || multipartRequest == MultipartRequest.PART) {
             this.blockedMultipartSessions.remove(multipartInfo);
             this.actionableMultipartSessions.add(multipartInfo);
             synchronized (this.lockBlockingWaitNotify) {
@@ -548,6 +558,8 @@ public class MultipartRequestSupplier implements Supplier<Request> {
   private HttpRequest.Builder createInitiateRequest(final Map<String, String> context) {
     Body fullBody = this.body.apply(context);
     Long partSize = this.partSize.apply(context); // bytes
+    Integer maxParts = this.partsPerSession.apply(context);
+
     String containerName = this.container.apply(context);
 
     final HttpRequest.Builder builder =
@@ -560,6 +572,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     builder.withContext(Context.X_OG_MULTIPART_REQUEST, MultipartRequest.INITIATE.toString());
     builder.withContext(Context.X_OG_MULTIPART_CONTAINER, containerName);
     builder.withContext(Context.X_OG_MULTIPART_PART_SIZE, partSize.toString());
+    builder.withContext(Context.X_OG_MULTIPART_MAX_PARTS, maxParts.toString());
 
     return builder;
   }

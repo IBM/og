@@ -223,10 +223,14 @@ public class MultipartRequestSupplierTest {
     final Supplier<Long> partSizeSupplier = Suppliers.of(partSize);
     final Function<Map<String, String>, Long> partSizes = MoreFunctions.forSupplier(partSizeSupplier);
 
+    final Integer partsPerSession = Integer.MAX_VALUE;
+    final Supplier<Integer> partsPerSessionSupplier = Suppliers.of(partsPerSession);
+    final Function<Map<String, String>, Integer> partsPerSessionFunc = MoreFunctions.forSupplier(partsPerSessionSupplier);
+
     final List<Function<Map<String, String>, String>> context = Collections.emptyList();
 
     return new MultipartRequestSupplier(id, scheme, host, port, uriRoot, container,
-        object, partSizes, targetSessions, queryParameters, trailingSlash, headers, context, credentials, body,
+        object, partSizes, partsPerSessionFunc, targetSessions, queryParameters, trailingSlash, headers, context, credentials, body,
         virtualHost);
   }
 
@@ -259,6 +263,7 @@ public class MultipartRequestSupplierTest {
     contextMap.put(Context.X_OG_OBJECT_NAME, this.objectName);
     contextMap.put(Context.X_OG_OBJECT_SIZE, String.valueOf(objectSize));
     contextMap.put(Context.X_OG_MULTIPART_PART_SIZE, String.valueOf(partSize));
+    contextMap.put(Context.X_OG_MULTIPART_MAX_PARTS, String.valueOf(Integer.MAX_VALUE));
     contextMap.put(Context.X_OG_MULTIPART_UPLOAD_ID, uploadIdA);
     contextMap.put(Context.X_OG_MULTIPART_PART_NUMBER, String.valueOf(0));
     contextMap.put(Context.X_OG_MULTIPART_REQUEST, "INITIATE");
@@ -395,6 +400,7 @@ public class MultipartRequestSupplierTest {
     contextMap.put(Context.X_OG_OBJECT_NAME, this.objectName);
     contextMap.put(Context.X_OG_OBJECT_SIZE, String.valueOf(objectSize));
     contextMap.put(Context.X_OG_MULTIPART_PART_SIZE, String.valueOf(partSize));
+    contextMap.put(Context.X_OG_MULTIPART_MAX_PARTS, String.valueOf(Integer.MAX_VALUE));
     contextMap.put(Context.X_OG_MULTIPART_UPLOAD_ID, uploadId);
     contextMap.put(Context.X_OG_MULTIPART_PART_NUMBER, String.valueOf(0));
     contextMap.put(Context.X_OG_MULTIPART_REQUEST, "INITIATE");
