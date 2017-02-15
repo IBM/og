@@ -31,6 +31,7 @@ public class Context {
   public static final String X_OG_MULTIPART_PART_SIZE = "x-og-multipart-part-size";
   public static final String X_OG_MULTIPART_CONTAINER = "x-og-multipart-container";
   public static final String X_OG_MULTIPART_BODY_DATA_TYPE = "x-og-multipart-body-data-type";
+  public static final String X_OG_MULTIPART_MAX_PARTS = "x-og-multipart-max-parts";
 
   private Context() {}
 }

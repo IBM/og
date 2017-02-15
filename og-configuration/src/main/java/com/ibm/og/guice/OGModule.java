@@ -718,6 +718,58 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
+  @Named("multipartWrite.partsPerSession")
+  public Function<Map<String, String>, Integer> provideMultipartWritePartsPerSession() {
+    return providePartsPerSession(this.config.multipartWrite);
+  }
+
+  private Function<Map<String, String>, Integer> providePartsPerSession(
+          final OperationConfig operationConfig) {
+    checkNotNull(operationConfig);
+
+    final SelectionConfig<Integer> operationPartsPerSession = operationConfig.upload.partsPerSession;
+    if (operationPartsPerSession != null && !operationPartsPerSession.choices.isEmpty()) {
+      return createPartsPerSession(operationConfig.upload.partsPerSession);
+    }
+
+    // default to Integer.MAX_VALUE parts per session
+    final List<Integer> partsPerSessionList = Lists.newArrayList();
+    partsPerSessionList.add(Integer.MAX_VALUE);
+    final Supplier<Integer> partSizeSupplier = Suppliers.cycle(partsPerSessionList);
+    return MoreFunctions.forSupplier(partSizeSupplier);
+  }
+
+  private Function<Map<String, String>, Integer> createPartsPerSession(final SelectionConfig<Integer> partsPerSession) {
+    checkNotNull(partsPerSession);
+    checkNotNull(partsPerSession.selection);
+    checkNotNull(partsPerSession.choices);
+    checkArgument(!partsPerSession.choices.isEmpty(), "must specify at least one part per session");
+    for (final ChoiceConfig<Integer> choice : partsPerSession.choices) {
+      checkNotNull(choice);
+      checkNotNull(choice.choice);
+      checkArgument(choice.choice >= 1,
+              "partsPerSession must be greater than or equal to 1");
+    }
+
+    if (SelectionType.ROUNDROBIN == partsPerSession.selection) {
+      final List<Integer> partsPerSessionList = Lists.newArrayList();
+      for (final ChoiceConfig<Integer> choice : partsPerSession.choices) {
+        partsPerSessionList.add(choice.choice);
+      }
+      final Supplier<Integer> partSizeSupplier = Suppliers.cycle(partsPerSessionList);
+      return MoreFunctions.forSupplier(partSizeSupplier);
+    }
+
+    final RandomSupplier.Builder<Integer> wrc = Suppliers.random();
+    for (final ChoiceConfig<Integer> choice : partsPerSession.choices) {
+      wrc.withChoice(choice.choice, choice.weight);
+    }
+    final Supplier<Integer> partSizeSupplier = wrc.build();
+    return MoreFunctions.forSupplier(partSizeSupplier);
+  }
+
+  @Provides
+  @Singleton
   @WriteObjectName
   public Function<Map<String, String>, String> provideWriteObjectName(final Api api) {
     if (Api.SOH == api) {
@@ -1614,6 +1666,7 @@ public class OGModule extends AbstractModule {
           @Nullable @Named("api.version") final String apiVersion,
           @Nullable @MultipartWriteObjectName final Function<Map<String, String>, String> object,
           @Named("multipartWrite.partSize") final Function<Map<String, String>, Long> partSize,
+          @Named("multipartWrite.partsPerSession") final Function<Map<String, String>, Integer> partsPerSession,
           @Named("multipartWrite.targetSessions") final int targetSessions,
           @MultipartWriteHeaders final Map<String, Function<Map<String, String>, String>> headers,
           @Named("multipartWrite.context") final List<Function<Map<String, String>, String>> context,
@@ -1625,7 +1678,7 @@ public class OGModule extends AbstractModule {
         Collections.emptyMap();
 
     return createMultipartRequestSupplier(id, scheme, host, port, uriRoot, container, apiVersion, object,
-        partSize, targetSessions, queryParameters, headers, context, body, credentials, virtualHost);
+        partSize, partsPerSession, targetSessions, queryParameters, headers, context, body, credentials, virtualHost);
   }
 
   private Supplier<Request> createMultipartRequestSupplier(
@@ -1634,6 +1687,7 @@ public class OGModule extends AbstractModule {
       final Function<Map<String, String>, String> container, final String apiVersion,
       final Function<Map<String, String>, String> object,
       final Function<Map<String, String>, Long> partSize,
+      final Function<Map<String, String>, Integer> partsPerSession,
       final int targetSessions,
       final Map<String, Function<Map<String, String>, String>> queryParameters,
       final Map<String, Function<Map<String, String>, String>> headers,
@@ -1642,6 +1696,6 @@ public class OGModule extends AbstractModule {
       final Function<Map<String, String>, Credential> credentials, final boolean virtualHost) {
 
     return new MultipartRequestSupplier(id, scheme, host, port, uriRoot, container, object,
-        partSize, targetSessions, queryParameters, false, headers, context, credentials, body, virtualHost);
+        partSize, partsPerSession, targetSessions, queryParameters, false, headers, context, credentials, body, virtualHost);
   }
 }
