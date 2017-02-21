@@ -381,7 +381,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
 
       // create the initiate request
       builder = createInitiateRequest(requestContext);
-      builder.withQueryParameter(UPLOADS, "");
+      builder.withQueryParameter(UPLOADS, null);
     } else {
       switch(activeMultipartInfo.getNextMultipartRequest()) {
         case PART:
