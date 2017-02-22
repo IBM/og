@@ -453,7 +453,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
 
         // create the initiate request
         builder = createInitiateRequest(requestContext);
-        builder.withQueryParameter(UPLOADS, "");
+        builder.withQueryParameter(UPLOADS, null);
         break;
       } else if (this.actionableMultipartSessions.size() > 0){
         MultipartInfo activeMultipartInfo = getActiveMultipartOperation();
