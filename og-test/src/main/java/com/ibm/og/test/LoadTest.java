@@ -94,10 +94,14 @@ public class LoadTest implements Callable<LoadTestResult> {
           if (LoadTest.this.running.get()) {
             final Request request = LoadTest.this.requestManager.get();
             _logger.trace("Created request {}", request);
-
-            final ListenableFuture<Response> future = LoadTest.this.client.execute(request);
-            LoadTest.this.eventBus.post(request);
-            addCallback(request, future);
+            // RequestManager.get() could block (in case of Multipart supplier) and when it returns the test may be stopped and client could be shutdown.
+            // We cannot submit a new request if client is shutdown. So check again to make sure that the test is
+            // still running.
+            if (LoadTest.this.running.get()) {
+              final ListenableFuture<Response> future = LoadTest.this.client.execute(request);
+              LoadTest.this.eventBus.post(request);
+              addCallback(request, future);
+            }
           }
         }
       } catch (final Exception e) {
