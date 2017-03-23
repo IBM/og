@@ -304,6 +304,7 @@ public class MultipartRequestSupplierTest {
     Assert.assertEquals("PART", reqContextB1.get(Context.X_OG_MULTIPART_REQUEST));
     Assert.assertEquals("1", reqContextB1.get(Context.X_OG_MULTIPART_PART_NUMBER));
     Assert.assertEquals(expectedPart1Size, reqB1.getBody().getSize());
+    Assert.assertEquals(String.valueOf(objectSize), reqB1.getContext().get(Context.X_OG_OBJECT_SIZE));
 
     Response respMockB1 = mock(Response.class);
     when(respMockB1.headers()).thenReturn(ImmutableMap.of("ETag", "tag1"));
@@ -314,6 +315,7 @@ public class MultipartRequestSupplierTest {
     Assert.assertEquals("PART", reqB2.getContext().get(Context.X_OG_MULTIPART_REQUEST));
     Assert.assertEquals("2", reqB2.getContext().get(Context.X_OG_MULTIPART_PART_NUMBER));
     Assert.assertEquals(expectedPart2Size, reqB2.getBody().getSize());
+    Assert.assertEquals(String.valueOf(objectSize), reqB2.getContext().get(Context.X_OG_OBJECT_SIZE));
 
     Response respMockB2 = mock(Response.class);
     when(respMockB2.headers()).thenReturn(ImmutableMap.of("ETag", "tag2"));
@@ -323,6 +325,7 @@ public class MultipartRequestSupplierTest {
     Assert.assertNotNull(reqB3);
     Assert.assertEquals("COMPLETE", reqB3.getContext().get(Context.X_OG_MULTIPART_REQUEST));
     Assert.assertEquals("<CompleteMultipartUpload><Part><PartNumber>1</PartNumber><ETag>tag1</ETag></Part><Part><PartNumber>2</PartNumber><ETag>tag2</ETag></Part></CompleteMultipartUpload>", reqB3.getBody().getContent());
+    Assert.assertEquals(String.valueOf(objectSize), reqB3.getContext().get(Context.X_OG_OBJECT_SIZE));
 
     // Respond to A INITIATE and complete sequence
     requestSupplier.update(Pair.of(reqMockA0, respMockA0));
@@ -333,6 +336,7 @@ public class MultipartRequestSupplierTest {
     Assert.assertEquals("PART", reqContext1.get(Context.X_OG_MULTIPART_REQUEST));
     Assert.assertEquals("1", reqContext1.get(Context.X_OG_MULTIPART_PART_NUMBER));
     Assert.assertEquals(expectedPart1Size, reqA1.getBody().getSize());
+    Assert.assertEquals(String.valueOf(objectSize), reqA1.getContext().get(Context.X_OG_OBJECT_SIZE));
 
     Response respMock1 = mock(Response.class);
     when(respMock1.headers()).thenReturn(ImmutableMap.of("ETag", "tag1"));
@@ -343,6 +347,7 @@ public class MultipartRequestSupplierTest {
     Assert.assertEquals("PART", reqA2.getContext().get(Context.X_OG_MULTIPART_REQUEST));
     Assert.assertEquals("2", reqA2.getContext().get(Context.X_OG_MULTIPART_PART_NUMBER));
     Assert.assertEquals(expectedPart2Size, reqA2.getBody().getSize());
+    Assert.assertEquals(String.valueOf(objectSize), reqA2.getContext().get(Context.X_OG_OBJECT_SIZE));
 
     Response respMockA2 = mock(Response.class);
     when(respMockA2.headers()).thenReturn(ImmutableMap.of("ETag", "tag2"));
@@ -352,6 +357,7 @@ public class MultipartRequestSupplierTest {
     Assert.assertNotNull(reqA3);
     Assert.assertEquals("COMPLETE", reqA3.getContext().get(Context.X_OG_MULTIPART_REQUEST));
     Assert.assertEquals("<CompleteMultipartUpload><Part><PartNumber>1</PartNumber><ETag>tag1</ETag></Part><Part><PartNumber>2</PartNumber><ETag>tag2</ETag></Part></CompleteMultipartUpload>", reqA3.getBody().getContent());
+    Assert.assertEquals(String.valueOf(objectSize), reqA3.getContext().get(Context.X_OG_OBJECT_SIZE));
   }
 
   private void genericMultipartSessions(int targetSessions) throws URISyntaxException {
