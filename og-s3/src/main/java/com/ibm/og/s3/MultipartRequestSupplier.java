@@ -231,7 +231,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
           case PART:
             int partNumber = session.startPartRequest();
             builder = createPartRequest(requestContext, partNumber,
-                    session.uploadId, session.objectName,
+                    session.uploadId, session.objectName, session.objectSize,
                     session.getNextPartSize(), session.containerName,
                     session.bodyDataType);
             builder.withQueryParameter(PART_NUMBER, String.valueOf(partNumber));
@@ -239,7 +239,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
             break;
           case COMPLETE:
             builder = createCompleteRequest(requestContext, session.uploadId,
-                    session.objectName, session.startCompleteRequest(),
+                    session.objectName, session.objectSize, session.startCompleteRequest(),
                     session.containerName, session.containerSuffix);
             builder.withQueryParameter(UPLOAD_ID, session.uploadId);
             // remove session from actionable list
@@ -615,7 +615,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
   }
 
   private HttpRequest.Builder createPartRequest(final Map<String, String> context,
-      int partNumber, String uploadId, String objectName, long partSize, String containerName, String bodyDataType) {
+      int partNumber, String uploadId, String objectName, long objectSize, long partSize, String containerName, String bodyDataType) {
     final HttpRequest.Builder builder =
         new HttpRequest.Builder(Method.PUT, getUrl(context, MultipartRequest.PART,
             partNumber, uploadId, objectName, containerName), Operation.MULTIPART_WRITE_PART);
@@ -632,13 +632,14 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     builder.withContext(Context.X_OG_MULTIPART_PART_NUMBER, String.valueOf(partNumber));
     builder.withContext(Context.X_OG_MULTIPART_UPLOAD_ID, uploadId);
     builder.withContext(Context.X_OG_OBJECT_NAME, objectName);
-    builder.withContext(Context.X_OG_OBJECT_SIZE, String.valueOf(partSize));
+    builder.withContext(Context.X_OG_MULTIPART_PART_SIZE, String.valueOf(partSize));
+    builder.withContext(Context.X_OG_OBJECT_SIZE, String.valueOf(objectSize));
 
     return builder;
   }
 
   private HttpRequest.Builder createCompleteRequest(final Map<String, String> context,
-      String uploadId, String objectName, String body, String containerName, String containerSuffix) {
+      String uploadId, String objectName, long objectSize, String body, String containerName, String containerSuffix) {
     final HttpRequest.Builder builder =
         new HttpRequest.Builder(Method.POST,
             getUrl(context, MultipartRequest.COMPLETE, NO_PART, uploadId, objectName,
@@ -649,7 +650,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     builder.withContext(Context.X_OG_MULTIPART_REQUEST, MultipartRequest.COMPLETE.toString());
     builder.withContext(Context.X_OG_MULTIPART_UPLOAD_ID, uploadId);
     builder.withContext(Context.X_OG_OBJECT_NAME, objectName);
-    builder.withContext(Context.X_OG_OBJECT_SIZE, String.valueOf(body.length()));
+    builder.withContext(Context.X_OG_OBJECT_SIZE, String.valueOf(objectSize));
     builder.withContext(Context.X_OG_CONTAINER_SUFFIX, containerSuffix);
 
     return builder;
