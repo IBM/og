@@ -96,11 +96,6 @@ public class SimpleRequestManager implements RequestManager {
         "containerCreate weight must be in range [0.0, 100.0] [%s]", containerCreateWeight);
     checkArgument(PERCENTAGE.contains(writeMultipartWeight),
         "writeMultipart weight must be in range [0.0, 100.0] [%s]", writeMultipartWeight);
-    final double sum = writeWeight + readWeight + deleteWeight +
-        metadataWeight + overwriteWeight + listWeight + containerListWeight +
-        containerCreateWeight + writeMultipartWeight;
-    checkArgument(DoubleMath.fuzzyEquals(sum, 100.0, ERR), "sum of weights must be 100.0 [%s]",
-        sum);
 
     final RandomSupplier.Builder<Supplier<Request>> wrc = Suppliers.random();
     if (writeWeight > 0.0) {
