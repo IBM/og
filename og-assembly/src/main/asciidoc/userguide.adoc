@@ -151,7 +151,7 @@ Otherwise, the following sections describe OG configuration in detail.
 
 [[cref1]]
 *_Note that the weights used for selection of choices are strictly weights. They are not
-       percentages. The examples shown here do not imply that weights should add upto
+       percentages. The examples shown here do not imply that weights should add up to
        100.0_*
 
 === Storage
@@ -602,7 +602,8 @@ The configuration block supports _weight_, _host_, _object_ and _header_ keys.
 The _weight_ configuration key determines the relative number of requests for
 each operation type. _<<cref1,See note about weights>>_.
 
-.100% Write Example
+.Operation weights Example
+The configuration below will produce two write operations for a single read operation.
 [source, json]
 ----
 "write": {"weight": 2.0},
