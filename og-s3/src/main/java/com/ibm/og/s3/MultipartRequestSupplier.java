@@ -230,17 +230,14 @@ public class MultipartRequestSupplier implements Supplier<Request> {
         switch (multipartRequest) {
           case PART:
             int partNumber = session.startPartRequest();
-            builder = createPartRequest(requestContext, partNumber,
-                    session.uploadId, session.objectName, session.objectSize,
-                    session.getNextPartSize(), session.containerName,
-                    session.bodyDataType);
+            builder = createPartRequest(requestContext, partNumber, session.uploadId, session.getNextPartSize(),
+                    session.bodyDataType, session.context);
             builder.withQueryParameter(PART_NUMBER, String.valueOf(partNumber));
             builder.withQueryParameter(UPLOAD_ID, session.uploadId);
             break;
           case COMPLETE:
             builder = createCompleteRequest(requestContext, session.uploadId,
-                    session.objectName, session.objectSize, session.startCompleteRequest(),
-                    session.containerName, session.containerSuffix);
+                    session.startCompleteRequest(), session.context);
             builder.withQueryParameter(UPLOAD_ID, session.uploadId);
             // remove session from actionable list
             actionableMultipartSessions.remove(session);
@@ -249,8 +246,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
             _logger.error("Not expecting INTERNAL_PENDING while creating a request");
             break;
           case ABORT:
-            builder = createAbortRequest(requestContext, session.uploadId,
-                    session.objectName, session.containerName);
+            builder = createAbortRequest(requestContext, session.uploadId, session.context);
             builder.withQueryParameter(UPLOAD_ID, session.uploadId);
             break;
         }
@@ -278,9 +274,11 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     boolean inProgressCompleteRequest;
     boolean finishedCompleteRequest;
     boolean inActionableSessions = false;
+    final Map<String, String> context;
 
     public MultipartInfo(String containerName, String objectName, String uploadId,
-        long objectSize, long partSize, int maxParts, String containerSuffix, String bodyDataType) {
+        long objectSize, long partSize, int maxParts, String containerSuffix, String bodyDataType,
+                         Map<String, String> requestContext) {
 
       this.stateLock = new ReentrantLock();
       this.containerName = containerName;
@@ -296,6 +294,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
       this.finishedPartRequests = 0;
       this.inProgressCompleteRequest = false;
       this.finishedCompleteRequest = false;
+      this.context = requestContext;
       this.partsInfo = new PriorityBlockingQueue<PartInfo>(200, new Comparator<PartInfo>() {
         @Override public int compare(PartInfo o1, PartInfo o2) {
           if(Integer.parseInt(o1.partNumber) < Integer.parseInt(o2.partNumber)) {
@@ -493,7 +492,8 @@ public class MultipartRequestSupplier implements Supplier<Request> {
         return;
       }
       multipartInfo = new MultipartInfo(requestContainerName, requestObjectName, responseUploadId,
-          Long.parseLong(requestObjectSize), Long.parseLong(requestPartSize), Integer.parseInt(requestMaxParts), requestContainerSuffix, requestBodyDataType);
+          Long.parseLong(requestObjectSize), Long.parseLong(requestPartSize), Integer.parseInt(requestMaxParts),
+              requestContainerSuffix, requestBodyDataType, requestContext);
       this.multipartRequestMap.put(responseUploadId, multipartInfo);
         // add MultipartInfo only if not added already to actionable multipart sessions list.
         if (!multipartInfo.getInActionableSessions()) {
@@ -615,10 +615,11 @@ public class MultipartRequestSupplier implements Supplier<Request> {
   }
 
   private HttpRequest.Builder createPartRequest(final Map<String, String> context,
-      int partNumber, String uploadId, String objectName, long objectSize, long partSize, String containerName, String bodyDataType) {
+      int partNumber, String uploadId, long partSize, String bodyDataType, final Map<String, String> multipartContext) {
     final HttpRequest.Builder builder =
         new HttpRequest.Builder(Method.PUT, getUrl(context, MultipartRequest.PART,
-            partNumber, uploadId, objectName, containerName), Operation.MULTIPART_WRITE_PART);
+            partNumber, uploadId, multipartContext.get(Context.X_OG_OBJECT_NAME),
+                multipartContext.get(Context.X_OG_MULTIPART_CONTAINER)), Operation.MULTIPART_WRITE_PART);
 
     if(bodyDataType.equals(DataType.RANDOM.toString())) {
       builder.withBody(Bodies.random(partSize));
@@ -627,43 +628,45 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     } else {
       builder.withBody(Bodies.random(partSize));
     }
-
-    builder.withContext(Context.X_OG_MULTIPART_REQUEST, MultipartRequest.PART.toString());
-    builder.withContext(Context.X_OG_MULTIPART_PART_NUMBER, String.valueOf(partNumber));
-    builder.withContext(Context.X_OG_MULTIPART_UPLOAD_ID, uploadId);
-    builder.withContext(Context.X_OG_OBJECT_NAME, objectName);
-    builder.withContext(Context.X_OG_MULTIPART_PART_SIZE, String.valueOf(partSize));
-    builder.withContext(Context.X_OG_OBJECT_SIZE, String.valueOf(objectSize));
+    // populate request context
+    for (final Map.Entry<String, String> entry : multipartContext.entrySet()) {
+      context.put(entry.getKey(), entry.getValue());
+    }
+    context.put(Context.X_OG_MULTIPART_REQUEST, MultipartRequest.PART.toString());
+    context.put(Context.X_OG_MULTIPART_PART_NUMBER, String.valueOf(partNumber));
+    context.put(Context.X_OG_MULTIPART_UPLOAD_ID, uploadId);
+    context.put(Context.X_OG_MULTIPART_PART_SIZE, String.valueOf(partSize));
 
     return builder;
   }
 
   private HttpRequest.Builder createCompleteRequest(final Map<String, String> context,
-      String uploadId, String objectName, long objectSize, String body, String containerName, String containerSuffix) {
+      String uploadId, String body, final Map<String, String> multipartContext) {
     final HttpRequest.Builder builder =
         new HttpRequest.Builder(Method.POST,
-            getUrl(context, MultipartRequest.COMPLETE, NO_PART, uploadId, objectName,
-                containerName), Operation.MULTIPART_WRITE_COMPLETE);
+            getUrl(context, MultipartRequest.COMPLETE, NO_PART, uploadId, multipartContext.get(Context.X_OG_OBJECT_NAME),
+                    multipartContext.get(Context.X_OG_MULTIPART_CONTAINER)), Operation.MULTIPART_WRITE_COMPLETE);
 
     builder.withBody(Bodies.custom(body.length(), body));
 
-    builder.withContext(Context.X_OG_MULTIPART_REQUEST, MultipartRequest.COMPLETE.toString());
-    builder.withContext(Context.X_OG_MULTIPART_UPLOAD_ID, uploadId);
-    builder.withContext(Context.X_OG_OBJECT_NAME, objectName);
-    builder.withContext(Context.X_OG_OBJECT_SIZE, String.valueOf(objectSize));
-    builder.withContext(Context.X_OG_CONTAINER_SUFFIX, containerSuffix);
+    // populate request context
+    for (final Map.Entry<String, String> entry : multipartContext.entrySet()) {
+      context.put(entry.getKey(), entry.getValue());
+    }
+    context.put(Context.X_OG_MULTIPART_REQUEST, MultipartRequest.COMPLETE.toString());
+    context.put(Context.X_OG_MULTIPART_UPLOAD_ID, uploadId);
 
     return builder;
   }
 
   private HttpRequest.Builder createAbortRequest(final Map<String, String> context, String uploadId,
-      String objectName, String containerName) {
+                                                 final Map<String, String> multipartContext) {
     final HttpRequest.Builder builder =
         new HttpRequest.Builder(Method.DELETE,
-            getUrl(context, MultipartRequest.ABORT, NO_PART, uploadId, objectName, containerName),
-            Operation.MULTIPART_WRITE_ABORT);
+            getUrl(context, MultipartRequest.ABORT, NO_PART, uploadId, multipartContext.get(Context.X_OG_OBJECT_NAME),
+                    multipartContext.get(Context.X_OG_MULTIPART_CONTAINER)), Operation.MULTIPART_WRITE_ABORT);
 
-    builder.withContext(Context.X_OG_OBJECT_NAME, objectName);
+    context.put(Context.X_OG_OBJECT_NAME, multipartContext.get(Context.X_OG_OBJECT_NAME));
 
     return builder;
   }
