@@ -29,8 +29,6 @@ import com.google.common.math.DoubleMath;
  */
 public class SimpleRequestManager implements RequestManager {
   private static final Logger _logger = LoggerFactory.getLogger(SimpleRequestManager.class);
-  private static final Range<Double> PERCENTAGE = Range.closed(0.0, 100.0);
-  private static final double ERR = Math.pow(0.1, 6);
   private final Supplier<Supplier<Request>> requestSupplier;
 
   /**
@@ -77,30 +75,6 @@ public class SimpleRequestManager implements RequestManager {
     checkNotNull(containerList);
     checkNotNull(containerCreate);
     checkNotNull(writeMultipart);
-
-    checkArgument(PERCENTAGE.contains(writeWeight),
-        "write weight must be in range [0.0, 100.0] [%s]", writeWeight);
-    checkArgument(PERCENTAGE.contains(overwriteWeight),
-        "overwrite weight must be in range [0.0, 100.0] [%s]", overwriteWeight);
-    checkArgument(PERCENTAGE.contains(readWeight), "read weight must be in range [0.0, 100.0] [%s]",
-        readWeight);
-    checkArgument(PERCENTAGE.contains(metadataWeight),
-        "delete weight must be in range [0.0, 100.0] [%s]", metadataWeight);
-    checkArgument(PERCENTAGE.contains(deleteWeight),
-        "delete weight must be in range [0.0, 100.0] [%s]", deleteWeight);
-    checkArgument(PERCENTAGE.contains(listWeight),
-        "list weight must be in range [0.0, 100.0] [%s]", listWeight);
-    checkArgument(PERCENTAGE.contains(containerListWeight),
-        "containerList weight must be in range [0.0, 100.0] [%s]", containerListWeight);
-    checkArgument(PERCENTAGE.contains(containerCreateWeight),
-        "containerCreate weight must be in range [0.0, 100.0] [%s]", containerCreateWeight);
-    checkArgument(PERCENTAGE.contains(writeMultipartWeight),
-        "writeMultipart weight must be in range [0.0, 100.0] [%s]", writeMultipartWeight);
-    final double sum = writeWeight + readWeight + deleteWeight +
-        metadataWeight + overwriteWeight + listWeight + containerListWeight +
-        containerCreateWeight + writeMultipartWeight;
-    checkArgument(DoubleMath.fuzzyEquals(sum, 100.0, ERR), "sum of weights must be 100.0 [%s]",
-        sum);
 
     final RandomSupplier.Builder<Supplier<Request>> wrc = Suppliers.random();
     if (writeWeight > 0.0) {
