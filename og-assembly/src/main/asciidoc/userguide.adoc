@@ -623,6 +623,9 @@ OG supports multiple object name configurations via the _object_ key:
 "object": {}
 ----
 
+Note that *object configuration property should be included under the Operation (write, read etc.) config*.
+If the object block is defined at root level, it will not have any effect.
+
 By default, OG will generate a unique, uuid-like object name for every write
 request. Overwrite, Read, Metadata, and Delete requests will select a random object name from
 objects which have already been written. List will use a random object name as its starting
