@@ -1,0 +1,5 @@
+Release 1.2.0
+New Features:
+  Enhanced Multipart writes functionality with ability to set maximum parallel sessions and maximum simultaenous parts per session
+Changes:
+  Remove constraint for i/o operation mix weights to sum to 100.0
