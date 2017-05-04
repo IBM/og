@@ -60,6 +60,20 @@ public class ObjectFileGetOpt extends GetOpt {
             "        output when using --filter", converter = IntegerSetConverter.class)
     private Set<Integer> containerSuffixes = new TreeSet<Integer>();
 
+    @Parameter(names={"--min-retention"},
+            description = "Minimum value for retention in seconds from epoch to include an object in the output when using\n" +
+                    "        --filter, in seconds from epoch (default: -1)", converter = LongConverter.class)
+    private long minRetention = -1;
+
+    @Parameter(names={"--max-retention"},
+            description = "Maximum value for retention in seconds from epoch to include an object in the output when using\n" +
+                    "        --filter, in seconds from epoch (default: -1)", converter = LongConverter.class)
+    private long maxRetention = Long.MAX_VALUE;
+
+    @Parameter(names={"--legal-hold", "-l"},
+            description = "Object has legal holds.  An object will be included in the output when using\n" +
+                    "        --filter, in seconds from epoch (default: false)")
+    private boolean legalholds = false;
 
     @Parameter(names = {"--upgrade", "-u"}, description = "Upgrade an oom bin file to an og object file")
     private boolean upgrade;
@@ -109,6 +123,12 @@ public class ObjectFileGetOpt extends GetOpt {
     public Set<Integer> getContainerSuffixes() {
         return containerSuffixes;
     }
+
+    public long getMinRetention() { return minRetention; }
+
+    public long getMaxRetention() { return maxRetention; }
+
+    public boolean getLegalholds() { return legalholds; }
 
     public boolean getUpgrade() {
         return upgrade;

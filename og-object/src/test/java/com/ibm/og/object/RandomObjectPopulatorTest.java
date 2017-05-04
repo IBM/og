@@ -285,7 +285,7 @@ public class RandomObjectPopulatorTest {
 
   protected ObjectMetadata generateId() {
     return LegacyObjectMetadata.fromMetadata(UUID.randomUUID().toString().replace("-", "") + "0000",
-        0, -1);
+        0, -1, (byte)0, -1);
   }
 
   @Ignore

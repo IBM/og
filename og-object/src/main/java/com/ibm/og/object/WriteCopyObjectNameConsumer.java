@@ -68,10 +68,12 @@ public class WriteCopyObjectNameConsumer extends AbstractObjectNameConsumer {
     final String objectString = getSourceObjectString(request, response);
     final long objectSize = getSourceObjectSize(request);
     final int containerSuffix = getSourceObjectContainerSuffix(request);
+    final byte numLegalHolds = getNumberOfLegalHolds(request, response);
+    final long retention = getObjectionRetention(request);
     if (objectString == null) {
       return null;
     } else {
-      return LegacyObjectMetadata.fromMetadata(objectString, objectSize, containerSuffix);
+      return LegacyObjectMetadata.fromMetadata(objectString, objectSize, containerSuffix, numLegalHolds, retention);
     }
   }
 

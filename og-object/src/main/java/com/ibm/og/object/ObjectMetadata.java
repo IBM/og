@@ -34,6 +34,18 @@ public interface ObjectMetadata extends Comparable<ObjectMetadata> {
   long getSize();
 
   /**
+   *  Gets the number of legal holds
+   *  @return the no. of legal holds
+   */
+  int getNumberOfLegalHolds();
+
+  /**
+   *  Gets the retention period
+   *  @return the retention period
+   */
+  long getRetention();
+
+  /**
    * Convert this instance's internal representation into bytes
    * 
    * @return this object name as bytes

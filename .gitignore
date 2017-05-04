@@ -17,6 +17,7 @@ target
 .metadata
 .repository
 .project
+.idea/*
 
 og-configuration/log/*
 og-configuration/object/*

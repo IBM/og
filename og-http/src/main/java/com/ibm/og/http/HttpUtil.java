@@ -53,6 +53,11 @@ public class HttpUtil {
         return Method.GET;
       case MULTIPART_WRITE_INITIATE:
       case MULTIPART_WRITE_COMPLETE:
+      case WRITE_LEGAL_HOLD:
+        return Method.POST;
+      case READ_LEGAL_HOLD:
+        return Method.GET;
+      case DELETE_LEGAL_HOLD:
         return Method.POST;
       case WRITE_COPY:
         return Method.PUT;

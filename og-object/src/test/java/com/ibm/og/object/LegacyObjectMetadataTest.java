@@ -31,28 +31,28 @@ public class LegacyObjectMetadataTest {
 
   @Test(expected = NullPointerException.class)
   public void fromMetadataNullObjectName() {
-    LegacyObjectMetadata.fromMetadata(null, 0, 0);
+    LegacyObjectMetadata.fromMetadata(null, 0, 0, (byte)-1, -1);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void fromMetadataShortObjectName() {
-    LegacyObjectMetadata.fromMetadata("", 0, 0);
+    LegacyObjectMetadata.fromMetadata("", 0, 0, (byte)-1, -1);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void fromMetadataInvalidContainerSuffix() {
-    LegacyObjectMetadata.fromMetadata(objectString(UUID.randomUUID()), 1, -2);
+    LegacyObjectMetadata.fromMetadata(objectString(UUID.randomUUID()), 1, -2, (byte)-1, -1);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void fromMetadataLongObjectName() {
     final String objectName = UUID.randomUUID().toString().replace("-", "") + "12345";
-    LegacyObjectMetadata.fromMetadata(objectName, 0, 0);
+    LegacyObjectMetadata.fromMetadata(objectName, 0, 0, (byte)-1, -1);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void fromMetadataNegativeObjectSize() {
-    LegacyObjectMetadata.fromMetadata(objectString(UUID.randomUUID()), -1, 0);
+    LegacyObjectMetadata.fromMetadata(objectString(UUID.randomUUID()), -1, 0, (byte)-1, -1);
   }
 
   @Test
@@ -78,7 +78,7 @@ public class LegacyObjectMetadataTest {
     final int containerSuffix = 0;
 
     final LegacyObjectMetadata objectMetadata =
-        LegacyObjectMetadata.fromMetadata(objectString, objectSize, containerSuffix);
+        LegacyObjectMetadata.fromMetadata(objectString, objectSize, containerSuffix, (byte)-1, -1);
 
     final String canonical = String.format("%s,%s,%s", objectMetadata.getName(),
         objectMetadata.getSize(), objectMetadata.getContainerSuffix());
@@ -92,7 +92,7 @@ public class LegacyObjectMetadataTest {
     final int containerSuffix = 0;
 
     assertThat(
-        LegacyObjectMetadata.fromMetadata(objectString, objectSize, containerSuffix).equals(null),
+        LegacyObjectMetadata.fromMetadata(objectString, objectSize, containerSuffix, (byte)-1, -1).equals(null),
         is(false));
   }
 
@@ -103,7 +103,7 @@ public class LegacyObjectMetadataTest {
     final int containerSuffix = 0;
 
     final LegacyObjectMetadata objectName =
-        LegacyObjectMetadata.fromMetadata(objectString, objectSize, containerSuffix);
+        LegacyObjectMetadata.fromMetadata(objectString, objectSize, containerSuffix, (byte)-1, -1);
 
     assertThat(objectName.equals("NOT_AN_OBJECT_NAME"), is(false));
   }

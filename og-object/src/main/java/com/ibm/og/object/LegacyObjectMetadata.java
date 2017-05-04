@@ -22,7 +22,10 @@ public class LegacyObjectMetadata implements ObjectMetadata {
   public static final int OBJECT_NAME_SIZE = 18;
   public static final int OBJECT_SIZE_SIZE = 8;
   public static final int OBJECT_SUFFIX_SIZE = 4;
-  public static final int OBJECT_SIZE = OBJECT_NAME_SIZE + OBJECT_SIZE_SIZE + OBJECT_SUFFIX_SIZE;
+  public static final int OBJECT_LEGAL_HOLDS_SIZE = 1;
+  public static final int OBJECT_RETENTION_SIZE = 8;
+  public static final int OBJECT_SIZE = OBJECT_NAME_SIZE + OBJECT_SIZE_SIZE + OBJECT_SUFFIX_SIZE +
+          OBJECT_LEGAL_HOLDS_SIZE + OBJECT_RETENTION_SIZE;
   private static final BaseEncoding ENCODING = BaseEncoding.base16().lowerCase();
   protected final ByteBuffer objectBuffer;
 
@@ -56,7 +59,7 @@ public class LegacyObjectMetadata implements ObjectMetadata {
    * @throws IllegalArgumentException if objectSize is negative
    */
   public static LegacyObjectMetadata fromMetadata(final String objectName, final long objectSize,
-      final int containerSuffix) {
+      final int containerSuffix, final byte numLegalHolds, final long retentionPeriod) {
     checkNotNull(objectName);
     // HACK; assume 1 char == 2 bytes for object name string length checking
     final int stringLength = 2 * OBJECT_NAME_SIZE;
@@ -65,11 +68,15 @@ public class LegacyObjectMetadata implements ObjectMetadata {
         objectName.length());
     checkArgument(objectSize >= 0, "objectSize must be >= 0 [%s]", objectSize);
     checkArgument(containerSuffix >= -1, "containerSuffix must be >= -1 [%s]", containerSuffix);
+    checkArgument(numLegalHolds >= -1, "numLegalHolds must be >= -1 [%s]", numLegalHolds);
+    checkArgument(retentionPeriod >= -1, "retentionPeriod must be >= -1 [%s]", retentionPeriod);
 
     final ByteBuffer objectBuffer = ByteBuffer.allocate(OBJECT_SIZE);
     objectBuffer.put(ENCODING.decode(objectName), 0, OBJECT_NAME_SIZE);
     objectBuffer.putLong(objectSize);
     objectBuffer.putInt(containerSuffix);
+    objectBuffer.put(numLegalHolds);
+    objectBuffer.putLong(retentionPeriod);
     return new LegacyObjectMetadata(objectBuffer);
   }
 
@@ -89,7 +96,19 @@ public class LegacyObjectMetadata implements ObjectMetadata {
   }
 
   @Override
+  public int getNumberOfLegalHolds() {
+    return this.objectBuffer.get(OBJECT_NAME_SIZE + OBJECT_SIZE_SIZE + OBJECT_SUFFIX_SIZE);
+  }
+
+  @Override
+  public long getRetention() {
+    long retention = this.objectBuffer.getLong(OBJECT_NAME_SIZE + OBJECT_SIZE_SIZE + OBJECT_SUFFIX_SIZE + OBJECT_LEGAL_HOLDS_SIZE);
+    return retention;
+  }
+
+  @Override
   public boolean equals(final Object obj) {
+    //todo: fix this. do we need to take into account object legal holds and retention for equality
     if (obj == null) {
       return false;
     }
@@ -99,12 +118,20 @@ public class LegacyObjectMetadata implements ObjectMetadata {
     }
 
     final ObjectMetadata other = (ObjectMetadata) obj;
-    return Arrays.equals(toBytes(), other.toBytes());
+    byte[] a1 = Arrays.copyOf(toBytes(), OBJECT_NAME_SIZE + OBJECT_SIZE_SIZE + OBJECT_SUFFIX_SIZE);
+    byte[] a2 = Arrays.copyOf(other.toBytes(), OBJECT_NAME_SIZE + OBJECT_SIZE_SIZE + OBJECT_SUFFIX_SIZE);
+    return  Arrays.equals(a1, a2);
+    //return Arrays.equals(toBytes(), other.toBytes());
+//    for (int i=0; i<OBJECT_NAME_SIZE + OBJECT_SIZE_SIZE + OBJECT_SIZE_SIZE; i++) {
+//      if (this.objectBuffer.)
+//    }
   }
 
   @Override
   public int hashCode() {
-    return Arrays.hashCode(toBytes());
+    byte[] b = Arrays.copyOf(toBytes(), OBJECT_NAME_SIZE + OBJECT_SIZE_SIZE + OBJECT_SUFFIX_SIZE);
+    int hashcode = Arrays.hashCode(b);
+    return hashcode;
   }
 
   @Override
@@ -133,10 +160,12 @@ public class LegacyObjectMetadata implements ObjectMetadata {
   @Override
   public byte[] toBytes() {
     return this.objectBuffer.array();
+    //return Arrays.copyOf(this.objectBuffer.array(), OBJECT_NAME_SIZE + OBJECT_SIZE_SIZE + OBJECT_SUFFIX_SIZE);
   }
 
   @Override
   public String toString() {
-    return String.format("LegacyObjectMetadata [name=%s, size=%s]", getName(), getSize());
+    return String.format("LegacyObjectMetadata [name=%s, size=%s legalholds=%s retention=%s]", getName(), getSize(),
+            getNumberOfLegalHolds(), getRetention());
   }
 }

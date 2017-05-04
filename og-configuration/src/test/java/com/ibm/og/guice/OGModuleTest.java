@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 import com.ibm.og.json.FailingConditionsConfig;
 import com.ibm.og.json.ConcurrencyConfig;
 import com.ibm.og.json.OGConfig;
+import com.ibm.og.json.RetentionConfig;
 import com.ibm.og.statistic.Statistics;
 import com.ibm.og.test.LoadTest;
 import org.junit.Before;
@@ -60,6 +61,15 @@ public class OGModuleTest {
         {1, 0.0, TimeUnit.SECONDS, 1, ImmutableMap.of(201, -1), IllegalArgumentException.class}};
   }
 
+  @DataProvider
+  public static Object[][] provideInvalidRetentiononfig() {
+    final Map<Integer, Integer> statusCodes = ImmutableMap.of();
+    RetentionConfig rc = new RetentionConfig(RetentionConfig.MAX_RETENTION_EXPIRY, TimeUnit.SECONDS);
+    return new Object[][] {
+            {rc}
+    };
+  }
+
   @Test
   @UseDataProvider("provideInvalidStoppingConditions")
   public void invalidStoppingConditions(final long operations, final double runtime,
@@ -83,5 +93,13 @@ public class OGModuleTest {
     this.thrown.expect(expectedException);
     module.provideTestConditions(this.test, this.eventBus, this.stats, this.concurrency,
         stoppingConditions, failingConditions);
+  }
+
+  @Test
+  @UseDataProvider("provideInvalidRetentiononfig")
+  public void invalidRentionConfig(final RetentionConfig rc) {
+    final OGModule module = new OGModule(this.config);
+    this.thrown.expect(IllegalArgumentException.class);
+    module.provideTestRetentionConfig(rc);
   }
 }

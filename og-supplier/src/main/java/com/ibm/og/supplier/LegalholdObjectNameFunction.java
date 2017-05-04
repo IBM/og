@@ -5,31 +5,34 @@
 
 package com.ibm.og.supplier;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import java.util.Map;
-
+import com.google.common.base.Function;
+import com.ibm.og.api.Operation;
 import com.ibm.og.object.ObjectManager;
 import com.ibm.og.object.ObjectMetadata;
 import com.ibm.og.util.Context;
-import com.google.common.base.Function;
+
+import java.util.Map;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * A function which generates object names for deletion from a provided {@code ObjectManager}
+ * A function which generates object names for read from a provided {@code ObjectManager}
  * 
  * @since 1.0
  */
-public class DeleteObjectNameFunction implements Function<Map<String, String>, String> {
+public class LegalholdObjectNameFunction implements Function<Map<String, String>, String> {
   private final ObjectManager objectManager;
+  private final String legalHoldName;
 
   /**
    * Creates an instance
-   * 
+   *
    * @param objectManager the object manager to draw object names from
    * @throws NullPointerException if objectManager is null
    */
-  public DeleteObjectNameFunction(final ObjectManager objectManager) {
+  public LegalholdObjectNameFunction(final ObjectManager objectManager, String legalholdName) {
     this.objectManager = checkNotNull(objectManager);
+    this.legalHoldName = legalholdName;
   }
 
   /**
@@ -45,16 +48,20 @@ public class DeleteObjectNameFunction implements Function<Map<String, String>, S
    */
   @Override
   public String apply(final Map<String, String> context) {
+    //final ObjectMetadata objectMetadata = this.objectManager.getOnce();
     final ObjectMetadata objectMetadata = this.objectManager.removeForUpdate();
     context.put(Context.X_OG_OBJECT_NAME, objectMetadata.getName());
     context.put(Context.X_OG_OBJECT_SIZE, String.valueOf(objectMetadata.getSize()));
     context.put(Context.X_OG_CONTAINER_SUFFIX, String.valueOf(objectMetadata.getContainerSuffix()));
+    context.put(Context.X_OG_LEGAL_HOLD_SUFFIX, String.valueOf(objectMetadata.getNumberOfLegalHolds()));
+    context.put(Context.X_OG_LEGAL_HOLD_PREFIX, this.legalHoldName);
+    context.put(Context.X_OG_OBJECT_RETENTION, String.valueOf(objectMetadata.getRetention()));
 
     return objectMetadata.getName();
   }
 
   @Override
   public String toString() {
-    return "DeleteObjectNameFunction []";
+    return "LegalholdObjectNameFunction []";
   }
 }

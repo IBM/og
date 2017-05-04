@@ -10,16 +10,22 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.LoadingCache;
+import com.google.common.io.BaseEncoding;
 import com.ibm.og.api.Body;
 import com.ibm.og.api.Method;
 import com.ibm.og.api.Operation;
 import com.ibm.og.api.Request;
+import com.ibm.og.http.MD5DigestLoader;
 import com.ibm.og.http.Credential;
 import com.ibm.og.http.HttpRequest;
 import com.ibm.og.http.Scheme;
+import com.ibm.og.object.RandomObjectPopulator;
 import com.ibm.og.util.Context;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -27,6 +33,8 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A supplier of requests
@@ -34,7 +42,8 @@ import com.google.common.collect.Maps;
  * @since 1.0
  */
 public class RequestSupplier implements Supplier<Request> {
-  private static final Joiner.MapJoiner PARAM_JOINER = Joiner.on('&').withKeyValueSeparator("=");
+  private static final Logger _logger = LoggerFactory.getLogger(RequestSupplier.class);
+  private static final Joiner.MapJoiner PARAM_JOINER = Joiner.on('&').withKeyValueSeparator("=").useForNull("");
   private final Function<Map<String, String>, String> id;
   private final Method method;
   private final Scheme scheme;
@@ -52,7 +61,13 @@ public class RequestSupplier implements Supplier<Request> {
   private final Function<Map<String, String>, Credential> credentials;
   private final Function<Map<String, String>, Body> body;
   private final boolean virtualHost;
+  private final Function<Map<String, String>, Long> retention;
+  private final Function<Map<String, String>, String> legalHold;
   private final Operation operation;
+  private final boolean contentMd5;
+  private final LoadingCache<Long, byte[]> md5ContentCache;
+
+
 
   /**
    * Creates an instance
@@ -85,7 +100,9 @@ public class RequestSupplier implements Supplier<Request> {
       final List<Function<Map<String, String>, String>> context,
       final List<Function<Map<String, String>, String>> sseSourceContext,
       final Function<Map<String, String>, Credential> credentials,
-      final Function<Map<String, String>, Body> body, final boolean virtualHost) {
+      final Function<Map<String, String>, Body> body, final boolean virtualHost,
+      final Function<Map<String, String>, Long> retention, final Function<Map<String, String>,String> legalHold,
+      final boolean contentMd5) {
 
     this.id = id;
     this.method = checkNotNull(method);
@@ -105,6 +122,10 @@ public class RequestSupplier implements Supplier<Request> {
     this.body = body;
     this.virtualHost = virtualHost;
     this.operation = operation;
+    this.retention = retention;
+    this.legalHold = legalHold;
+    this.contentMd5 = contentMd5;
+    this.md5ContentCache = CacheBuilder.newBuilder().maximumSize(100).build(new MD5DigestLoader());
 
     checkArgument(!(this.container == null && this.object != null));
   }
@@ -127,7 +148,7 @@ public class RequestSupplier implements Supplier<Request> {
       this.container.apply(requestContext);
 
     }
-    if (credentials != null) {
+    if (this.credentials != null) {
       Credential credential = this.credentials.apply(requestContext);
       String username = credential.getUsername();
       String password = credential.getPassword();
@@ -145,7 +166,6 @@ public class RequestSupplier implements Supplier<Request> {
       }
 
     }
-
     // populate the context map with any relevant metadata for this request
     if (this.sseSourceContext != null) {
       for (final Function<Map<String, String>, String> function : this.sseSourceContext) {
@@ -161,6 +181,17 @@ public class RequestSupplier implements Supplier<Request> {
       builder.withHeader(header.getKey(), header.getValue().apply(requestContext));
     }
 
+    if (this.retention != null) {
+      this.retention.apply(requestContext);
+      builder.withHeader(Context.X_OG_OBJECT_RETENTION, requestContext.get(Context.X_OG_OBJECT_RETENTION));
+    }
+
+    if (this.legalHold != null) {
+      //requestContext.put(Context.X_OG_LEGAL_HOLD, this.legalHold.apply(requestContext));
+      builder.withHeader(Context.X_OG_LEGAL_HOLD, this.legalHold.apply(requestContext));
+    }
+
+
     if (this.id != null) {
       builder.withContext(Context.X_OG_REQUEST_ID, this.id.apply(requestContext));
     }
@@ -169,9 +200,25 @@ public class RequestSupplier implements Supplier<Request> {
       builder.withContext(entry.getKey(), entry.getValue());
     }
 
+
     if (this.body != null) {
-      builder.withBody(this.body.apply(requestContext));
+      Body body = this.body.apply(requestContext);
+      builder.withBody(body);
+      if (this.retention != null || this.contentMd5) {
+        //todo: add check for legalhold
+        try {
+          Long size = body.getSize();
+          byte[] md5 = md5ContentCache.get(size);
+          String encodedMD5 = BaseEncoding.base64().encode(md5);
+          _logger.info("size {} b64md5 {}", size, encodedMD5);
+          builder.withHeader(Context.X_OG_CONTENT_MD5, BaseEncoding.base64().encode(md5));
+        } catch (Exception e) {
+            _logger.error(e.getMessage());
+        }
+      }
     }
+
+
 
     if (this.queryParameters != null) {
       for (final Map.Entry<String, Function<Map<String, String>, String>> queryParams : this.queryParameters
@@ -253,14 +300,29 @@ public class RequestSupplier implements Supplier<Request> {
   private void appendQueryParams(final StringBuilder s, final Map<String, String> context) {
     final Map<String, String> queryParamsMap = Maps.newHashMap();
 
+    StringBuilder sb = new StringBuilder();
+    int mapSize = this.queryParameters.size();
+    int counter = 0;
     for (final Map.Entry<String, Function<Map<String, String>, String>> queryParams : this.queryParameters
         .entrySet()) {
+      counter++;
       queryParamsMap.put(queryParams.getKey(), queryParams.getValue().apply(context));
+      sb.append(queryParams.getKey());
+      String value = queryParams.getValue().apply(context);
+      if (value != null) {
+        sb.append("=").append(value);
+      }
+      if (counter < mapSize) {
+        sb.append("&");
+      }
     }
 
-    final String queryParams = PARAM_JOINER.join(queryParamsMap);
-    if (queryParams.length() > 0) {
-      s.append("?").append(queryParams);
+//    final String queryParams = PARAM_JOINER.join(queryParamsMap);
+//    if (queryParams.length() > 0) {
+//      s.append("?").append(queryParams);
+//
+    if (sb.toString().length() != 0) {
+      s.append("?").append(sb.toString());
     }
   }
 

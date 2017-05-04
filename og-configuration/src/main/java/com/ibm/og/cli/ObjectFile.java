@@ -74,6 +74,9 @@ public class ObjectFile {
     final long maxFilesize = getopt.getMaxSize();
     final int minContainerSuffix = getopt.getMinSuffix();
     final int maxContainerSuffix = getopt.getMaxSuffix();
+    final long minRetention = getopt.getMinRetention();
+    final long maxRetention = getopt.getMaxRetention();
+    final boolean legalholds = getopt.getLegalholds();
 
     final Set<Integer> containerSuffixes = getopt.getContainerSuffixes();
 
@@ -89,7 +92,8 @@ public class ObjectFile {
         read(in, out);
       } else if (filter) {
         out = getOutputStream(split, splitSize, output);
-        filter(in, out, minFilesize, maxFilesize, minContainerSuffix, maxContainerSuffix, containerSuffixes);
+        filter(in, out, minFilesize, maxFilesize, minContainerSuffix, maxContainerSuffix, containerSuffixes,
+                legalholds, minRetention, maxRetention);
       } else if (upgrade) {
         out = getOutputStream(split, splitSize, output);
         upgrade(in, out);
@@ -149,12 +153,14 @@ public class ObjectFile {
     String line;
     while ((line = reader.readLine()) != null) {
       final String[] components = line.split(",");
-      checkArgument(components.length == 3, "Invalid record - %s", line);
+      checkArgument(components.length == 5, "Invalid record - %s", line);
       final String objectString = components[0].trim();
       final long objectSize = Long.parseLong(components[1].trim());
       final int containerSuffix = Integer.parseInt(components[2].trim());
+      final byte numLegalHolds = Byte.parseByte(components[3].trim());
+      final long retention = Long.parseLong(components[4].trim());
       final ObjectMetadata objectName =
-          LegacyObjectMetadata.fromMetadata(objectString, objectSize, containerSuffix);
+          LegacyObjectMetadata.fromMetadata(objectString, objectSize, containerSuffix, numLegalHolds, retention);
       out.write(objectName.toBytes());
     }
   }
@@ -169,8 +175,8 @@ public class ObjectFile {
       final byte[] buf = new byte[LegacyObjectMetadata.OBJECT_SIZE];
       while (readFully(in, buf)) {
         final ObjectMetadata objectName = LegacyObjectMetadata.fromBytes(buf);
-        writer.write(String.format("%s,%s,%s", objectName.getName(), objectName.getSize(),
-            objectName.getContainerSuffix()));
+        writer.write(String.format("%s,%s,%s,%s,%s", objectName.getName(), objectName.getSize(),
+            objectName.getContainerSuffix(), objectName.getNumberOfLegalHolds(), objectName.getRetention()));
         writer.newLine();
       }
     } finally {
@@ -181,7 +187,8 @@ public class ObjectFile {
   }
 
   public static void filter(final InputStream in, final OutputStream out, final long minFilesize,
-      final long maxFilesize, final int minContainerSuffix, final int maxContainerSuffix, final Set<Integer> containerSuffixes)
+      final long maxFilesize, final int minContainerSuffix, final int maxContainerSuffix,
+      final Set<Integer> containerSuffixes, final boolean legalhold, final long minRetention, final long maxRetention)
           throws IOException {
     checkNotNull(in);
     checkNotNull(out);
@@ -198,15 +205,22 @@ public class ObjectFile {
     final MutableObjectMetadata object = new MutableObjectMetadata();
     while (readFully(in, buf)) {
       object.setBytes(buf);
-      if ((object.getSize() >= minFilesize && object.getSize() <= maxFilesize)
-          && (object.getContainerSuffix() >= minContainerSuffix
-              && object.getContainerSuffix() <= maxContainerSuffix)) {
-        if(!containerSuffixes.isEmpty() && containerSuffixes.contains(object.getContainerSuffix())) {
-          out.write(object.toBytes());
-        } else if (containerSuffixes.isEmpty()) {
-          out.write(object.toBytes());
-        }
+      if (object.getSize() < minFilesize || object.getSize() > maxFilesize) {
+        continue;
       }
+      if (object.getContainerSuffix() < minContainerSuffix || object.getContainerSuffix() > maxContainerSuffix) {
+        continue;
+      }
+      if (!containerSuffixes.isEmpty() && !containerSuffixes.contains(object.getContainerSuffix())) {
+        continue;
+      }
+      if (object.getRetention() < minRetention || object.getRetention() > maxRetention) {
+        continue;
+      }
+      if (legalhold && object.getNumberOfLegalHolds() < 0) {
+        continue;
+      }
+      out.write(object.toBytes());
     }
   }
 

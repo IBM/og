@@ -24,9 +24,15 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
+import com.google.common.collect.ContiguousSet;
+import com.google.common.collect.DiscreteDomain;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Range;
+import com.google.common.collect.RangeSet;
+import com.google.common.collect.Sets;
+import com.google.common.collect.TreeRangeSet;
 import com.google.common.eventbus.EventBus;
 import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
@@ -95,14 +101,17 @@ import com.ibm.og.json.ContainerConfig;
 import com.ibm.og.json.CredentialSource;
 import com.ibm.og.json.FailingConditionsConfig;
 import com.ibm.og.json.FilesizeConfig;
+import com.ibm.og.json.LegalHold;
 import com.ibm.og.json.OGConfig;
 import com.ibm.og.json.ObjectConfig;
 import com.ibm.og.json.ObjectManagerConfig;
 import com.ibm.og.json.OperationConfig;
+import com.ibm.og.json.RetentionConfig;
 import com.ibm.og.json.SelectionConfig;
 import com.ibm.og.json.SelectionType;
 import com.ibm.og.json.StoppingConditionsConfig;
 import com.ibm.og.object.AbstractObjectNameConsumer;
+import com.ibm.og.object.DeleteObjectLegalHoldConsumer;
 import com.ibm.og.object.ListObjectNameConsumer;
 import com.ibm.og.object.MetadataObjectNameConsumer;
 import com.ibm.og.object.MultipartWriteObjectNameConsumer;
@@ -111,6 +120,8 @@ import com.ibm.og.object.OverwriteObjectNameConsumer;
 import com.ibm.og.object.RandomObjectPopulator;
 import com.ibm.og.object.ReadObjectNameConsumer;
 import com.ibm.og.object.WriteCopyObjectNameConsumer;
+import com.ibm.og.object.WriteLegalHoldObjectNameConsumer;
+import com.ibm.og.object.ReadObjectLegalHoldConsumer;
 import com.ibm.og.object.WriteObjectNameConsumer;
 import com.ibm.og.openstack.KeystoneAuth;
 import com.ibm.og.s3.MultipartRequestSupplier;
@@ -125,6 +136,7 @@ import com.ibm.og.statistic.Counter;
 import com.ibm.og.statistic.Statistics;
 import com.ibm.og.supplier.CredentialGetterFunction;
 import com.ibm.og.supplier.DeleteObjectNameFunction;
+import com.ibm.og.supplier.LegalholdObjectNameFunction;
 import com.ibm.og.supplier.MetadataObjectNameFunction;
 import com.ibm.og.supplier.RandomSupplier;
 import com.ibm.og.supplier.ReadObjectNameFunction;
@@ -188,6 +200,9 @@ public class OGModule extends AbstractModule {
     bindConstant().annotatedWith(Names.named("write.sseCDestination")).to(this.config.write.sseCDestination);
     bindConstant().annotatedWith(Names.named("overwrite.weight")).to(this.config.overwrite.weight);
     bindConstant().annotatedWith(Names.named("overwrite.sseCDestination")).to(this.config.read.sseCDestination);
+    bindConstant().annotatedWith(Names.named("write.contentMd5")).to(this.config.write.contentMd5);
+    bindConstant().annotatedWith(Names.named("overwrite.weight")).to(this.config.overwrite.weight);
+    bindConstant().annotatedWith(Names.named("overwrite.contentMd5")).to(this.config.overwrite.contentMd5);
     bindConstant().annotatedWith(Names.named("read.weight")).to(this.config.read.weight);
     bindConstant().annotatedWith(Names.named("read.sseCSource")).to(this.config.read.sseCSource);
     bindConstant().annotatedWith(Names.named("metadata.weight")).to(this.config.metadata.weight);
@@ -199,7 +214,7 @@ public class OGModule extends AbstractModule {
     bindConstant().annotatedWith(Names.named("containerCreate.weight"))
             .to(this.config.containerCreate.weight);
     bindConstant().annotatedWith(Names.named("multipartWrite.weight"))
-            .to(this.config.multipartWrite.weight);
+           .to(this.config.multipartWrite.weight);
     bindConstant().annotatedWith(Names.named("multipartWrite.sseCDestination"))
             .to(this.config.multipartWrite.sseCDestination);
     bindConstant().annotatedWith(Names.named("writeCopy.weight"))
@@ -208,6 +223,9 @@ public class OGModule extends AbstractModule {
             .to(this.config.writeCopy.sseCSource);
     bindConstant().annotatedWith(Names.named("writeCopy.sseCDestination"))
             .to(this.config.writeCopy.sseCDestination);
+    bindConstant().annotatedWith(Names.named("write_legalhold.weight")).to(this.config.writeLegalhold.weight);
+    bindConstant().annotatedWith(Names.named("read_legalhold.weight")).to(this.config.readLegalhold.weight);
+    bindConstant().annotatedWith(Names.named("delete_legalhold.weight")).to(this.config.deleteLegalhold.weight);
     bindConstant().annotatedWith(Names.named("virtualhost")).to(this.config.virtualHost);
     bindConstant().annotatedWith(Names.named("multipartWrite.targetSessions")).to(this.config.multipartWrite.upload.targetSessions);
     bind(AuthType.class).toInstance(this.config.authentication.type);
@@ -359,6 +377,22 @@ public class OGModule extends AbstractModule {
 
     return conditions;
   }
+
+  @Provides
+  @Singleton
+  public Long provideTestRetentionConfig(final RetentionConfig rc) {
+
+    final Map<String, String> context = Maps.newHashMap();
+    if (rc.expiry != null) {
+      SelectionConfig<RetentionConfig> rcSelection = new SelectionConfig<RetentionConfig>();
+      rcSelection.choices.add(new ChoiceConfig<RetentionConfig>(rc));
+      Function<Map<String, String>, Long> retentionFunction = this.provideRetention(rcSelection);
+      return retentionFunction.apply(context);
+    } else {
+      return -1L;
+    }
+  }
+
 
   @Provides
   @Singleton
@@ -856,17 +890,21 @@ public class OGModule extends AbstractModule {
   private Function<Map<String, String>, String> provideObject(
           final OperationConfig operationConfig) {
     checkNotNull(operationConfig);
-
+    //todo: legalholds changes
     final ObjectConfig objectConfig = checkNotNull(operationConfig.object);
     final String prefix = checkNotNull(objectConfig.prefix);
     final Supplier<Long> suffixes = createObjectSuffixes(objectConfig);
+    final Supplier<Long> legalHoldSuffixes = createLegalHoldSuffixes(operationConfig.object);
     return new Function<Map<String, String>, String>() {
       @Override
       public String apply(final Map<String, String> context) {
         final String objectName = prefix + suffixes.get();
         context.put(Context.X_OG_OBJECT_NAME, objectName);
         context.put(Context.X_OG_SEQUENTIAL_OBJECT_NAME, "true");
-
+        if (operationConfig.legalHold != null) {
+          context.put(Context.X_OG_LEGAL_HOLD_SUFFIX, legalHoldSuffixes.get().toString());
+          context.put(Context.X_OG_LEGAL_HOLD_PREFIX, operationConfig.legalHold.legalHoldPrefix);
+        }
         return objectName;
       }
     };
@@ -901,6 +939,14 @@ public class OGModule extends AbstractModule {
     }
   }
 
+  private Supplier<Long> createLegalHoldSuffixes(final ObjectConfig config) {
+    if (SelectionType.ROUNDROBIN == config.selection) {
+      return Suppliers.cycle(LegalHold.MIN_SUFFIX, LegalHold.MAX_SUFFIX);
+    } else {
+      return Suppliers.random(LegalHold.MIN_SUFFIX, LegalHold.MAX_SUFFIX);
+    }
+  }
+
   @Provides
   @Singleton
   public List<AbstractObjectNameConsumer> provideObjectNameConsumers(
@@ -914,6 +960,12 @@ public class OGModule extends AbstractModule {
     consumers.add(new ListObjectNameConsumer(objectManager, sc));
     consumers.add(new MultipartWriteObjectNameConsumer(objectManager, sc));
     consumers.add(new WriteCopyObjectNameConsumer(objectManager, sc));
+    consumers.add(new WriteLegalHoldObjectNameConsumer(objectManager, sc));
+    consumers.add(new ReadObjectLegalHoldConsumer(objectManager, sc));
+    Set<Integer> deleteLegalHoldsSc = Sets.newHashSet();
+    deleteLegalHoldsSc.addAll(sc);
+    deleteLegalHoldsSc.addAll(ContiguousSet.create(Range.closed(403,404), DiscreteDomain.integers()));
+    consumers.add(new DeleteObjectLegalHoldConsumer(objectManager, deleteLegalHoldsSc));
 
     for (final AbstractObjectNameConsumer consumer : consumers) {
       eventBus.register(consumer);
@@ -1135,6 +1187,28 @@ public class OGModule extends AbstractModule {
       function = provideSourceObject(operationConfig);
     } else {
       function = new SourceReadObjectNameFunction(objectManager);
+
+    }
+    return ImmutableList.of(function);
+  }
+
+  @Provides
+  @Named("write_legalhold.context")
+  public List<Function<Map<String, String>, String>> provideWriteLegalholdContext(
+          final ObjectManager objectManager) {
+    Function<Map<String, String>, String> function;
+
+    final OperationConfig operationConfig = checkNotNull(this.config.writeLegalhold);
+    if (operationConfig.object.selection != null) {
+      function = provideObject(operationConfig);
+    } else {
+      String legalHoldName;
+      if (this.config.writeLegalhold.legalHold != null && this.config.writeLegalhold.legalHold.legalHoldPrefix != null) {
+        legalHoldName = this.config.writeLegalhold.legalHold.legalHoldPrefix;
+      } else {
+        legalHoldName = "LegalHold";
+      }
+      function = new LegalholdObjectNameFunction(objectManager, legalHoldName);
     }
 
     return ImmutableList.of(function);
@@ -1234,6 +1308,228 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
+  @Named("write.retention")
+  private Function<Map<String, String>, Long> provideWriteRetention() {
+    //return null;
+    if (this.config.write.retention == null) {
+      return null;
+    }
+    final SelectionConfig<RetentionConfig> retentionConfig = this.config.write.retention;
+    final List<ChoiceConfig<RetentionConfig>> retentions = checkNotNull(retentionConfig.choices);
+    checkArgument(!retentions.isEmpty(), "retentions must not be empty");
+
+
+    for (final ChoiceConfig<RetentionConfig> choice: retentions) {
+      checkNotNull(choice);
+      checkNotNull(choice.choice);
+      checkArgument(choice.choice.expiry > 0, "Expiry must be greater than zero");
+    }
+    return provideRetention(retentionConfig);
+  }
+
+  @Provides
+  @Singleton
+  @Named("overwrite.retention")
+  private Function<Map<String, String>, Long> provideOverwriteRetention() {
+    //return null;
+    if (this.config.overwrite.retention == null) {
+      return null;
+    }
+    final SelectionConfig<RetentionConfig> retentionConfig = this.config.overwrite.retention;
+    final List<ChoiceConfig<RetentionConfig>> retentions = checkNotNull(retentionConfig.choices);
+    checkArgument(!retentions.isEmpty(), "retentions must not be empty");
+
+
+    for (final ChoiceConfig<RetentionConfig> choice: retentions) {
+      checkNotNull(choice);
+      checkNotNull(choice.choice);
+      checkArgument(choice.choice.expiry > 0, "Expiry must be greater than zero");
+    }
+    return provideRetention(retentionConfig);
+  }
+
+  @Provides
+  @Singleton
+  @Named("multipartWrite.retention")
+  private Function<Map<String, String>, Long> provideMultipartWriteRetention() {
+    //return null;
+    if (this.config.multipartWrite.retention == null) {
+      return null;
+    }
+    final SelectionConfig<RetentionConfig> retentionConfig = this.config.multipartWrite.retention;
+    final List<ChoiceConfig<RetentionConfig>> retentions = checkNotNull(retentionConfig.choices);
+    checkArgument(!retentions.isEmpty(), "retentions must not be empty");
+
+
+    for (final ChoiceConfig<RetentionConfig> choice: retentions) {
+      checkNotNull(choice);
+      checkNotNull(choice.choice);
+      checkArgument(choice.choice.expiry > 0, "Expiry must be greater than zero");
+    }
+    return provideRetention(retentionConfig);
+  }
+
+  @Provides
+  @Singleton
+  @Named("containerCreate.retention")
+  private Function<Map<String, String>, Long> provideContainerCreateRetention() {
+    //return null;
+    if (this.config.containerCreate.retention == null) {
+      return null;
+    }
+    final SelectionConfig<RetentionConfig> retentionConfig = this.config.containerCreate.retention;
+    final List<ChoiceConfig<RetentionConfig>> retentions = checkNotNull(retentionConfig.choices);
+    checkArgument(!retentions.isEmpty(), "retentions must not be empty");
+
+
+    for (final ChoiceConfig<RetentionConfig> choice: retentions) {
+      checkNotNull(choice);
+      checkNotNull(choice.choice);
+      checkArgument(choice.choice.expiry > 0, "Expiry must be greater than zero");
+    }
+    return provideRetention(retentionConfig);
+  }
+
+  private Function<Map<String, String>, Long> provideRetention(final SelectionConfig<RetentionConfig> retentions) {
+
+    final Supplier<RetentionConfig> retentionConfigSupplier;
+    final SelectionType selection = checkNotNull(retentions.selection);
+    if (SelectionType.ROUNDROBIN == selection) {
+      final List<RetentionConfig> retentionConfigList = Lists.newArrayList();
+      for (final ChoiceConfig<RetentionConfig> choice: retentions.choices) {
+        retentionConfigList.add(choice.choice);
+      }
+      retentionConfigSupplier = Suppliers.cycle(retentionConfigList);
+    } else {
+      final RandomSupplier.Builder<RetentionConfig> wrc = Suppliers.random();
+      for (final ChoiceConfig<RetentionConfig> choice : retentions.choices) {
+        wrc.withChoice(choice.choice, choice.weight);
+      }
+      retentionConfigSupplier = wrc.build();
+    }
+    return new Function<Map<String, String>, Long>() {
+
+      @Override
+      public Long apply(final Map<String, String> input) {
+
+        if (retentionConfigSupplier != null) {
+          RetentionConfig retentionConfig = retentionConfigSupplier.get();
+          Long expiryTime = retentionConfig.timeUnit.toSeconds(retentionConfig.expiry);
+          checkArgument((expiryTime + System.currentTimeMillis()/1000) <= RetentionConfig.MAX_RETENTION_EXPIRY,
+              "The expiry in [%s] seconds duration should be earlier than January 19, 2038 3:14:07 AM", expiryTime);
+          input.put(Context.X_OG_OBJECT_RETENTION, String.valueOf(expiryTime));
+          return expiryTime;
+        } else {
+          return new Long(0);
+        }
+      }
+    };
+  }
+
+  @Provides
+  @Singleton
+  @Named("write.legalHold")
+  public Function<Map<String, String>, String> provideLegalHold() {
+    return provideLegalHold(config.write.legalHold);
+  }
+
+  @Provides
+  @Singleton
+  @Named("add.legalHold")
+  public Function<Map<String, String>, String> provideAddLegalHold() {
+    return provideLegalHold(config.writeLegalhold.legalHold);
+  }
+
+  @Provides
+  @Singleton
+  @Named("delete.legalHold")
+  public Function<Map<String, String>, String> provideDeleteLegalHold() {
+    return provideLegalHold(config.deleteLegalhold.legalHold);
+  }
+
+  @Provides
+  @Singleton
+  @Named("delete_legalhold.context")
+  public List<Function<Map<String, String>, String>> provideDeleteLegalholdContext(
+          final ObjectManager objectManager) {
+    Function<Map<String, String>, String> function;
+
+    final OperationConfig operationConfig = checkNotNull(this.config.deleteLegalhold);
+    if (operationConfig.object.selection != null) {
+      function = provideObject(operationConfig);
+    } else {
+      String legalHoldName;
+      if (this.config.deleteLegalhold.legalHold != null && this.config.deleteLegalhold.legalHold.legalHoldPrefix != null) {
+        legalHoldName = this.config.deleteLegalhold.legalHold.legalHoldPrefix;
+      } else {
+        legalHoldName = "LegalHold";
+      }
+      function = new LegalholdObjectNameFunction(objectManager, legalHoldName);
+    }
+
+    return ImmutableList.of(function);
+  }
+
+  @Provides
+  @Singleton
+  @Named("overwrite.legalHold")
+  private Function<Map<String, String>, String> provideOverwriteLegalHold() {
+    //todo: what is the semantics here? can we overwrite object? it should not be
+    // allowed actually
+
+    return null;
+  }
+
+
+  @Provides
+  @Singleton
+  @Named("post.legalHold")
+  private Function<Map<String, String>, String> providePostLegalHold() {
+    provideLegalHold(null);
+
+    return null;
+  }
+
+  private Function<Map<String, String>, String> provideLegalHold(final LegalHold legalHold) {
+    if (legalHold == null) {
+      return null;
+    }
+    return new Function<Map<String, String>, String>() {
+      @Nullable
+      @Override
+      public String apply(@Nullable Map<String, String> context) {
+        // delete legalhold
+        if (context.get(Context.X_OG_LEGAL_HOLD_SUFFIX) != null) {
+          int suffix = Integer.parseInt(context.get(Context.X_OG_LEGAL_HOLD_SUFFIX));
+          if (legalHold.legalHoldPrefix != null && !legalHold.legalHoldPrefix.isEmpty()) {
+            context.put(Context.X_OG_LEGAL_HOLD_PREFIX, legalHold.legalHoldPrefix);
+          } else {
+            context.put(Context.X_OG_LEGAL_HOLD_PREFIX, "LegalHold");
+          }
+          String val = context.get(Context.X_OG_LEGAL_HOLD_PREFIX).concat(String.valueOf(suffix));
+          context.put(Context.X_OG_LEGAL_HOLD, val);
+          context.put(Context.X_OG_NUM_LEGAL_HOLDS, String.valueOf(suffix));
+          return val;
+        } else {
+          // add legalhold context
+          if (legalHold.legalHoldPrefix != null && !legalHold.legalHoldPrefix.isEmpty()) {
+            context.put(Context.X_OG_LEGAL_HOLD_PREFIX, legalHold.legalHoldPrefix);
+          } else {
+            context.put(Context.X_OG_LEGAL_HOLD_PREFIX, "LegalHold");
+          }
+          String val = legalHold.legalHoldPrefix.concat(String.valueOf(1));
+          context.put(Context.X_OG_LEGAL_HOLD, val);
+          context.put(Context.X_OG_NUM_LEGAL_HOLDS, String.valueOf(1));
+          return val;
+        }
+      }
+    };
+  }
+
+
+
+  @Provides
+  @Singleton
   @Named("credentials")
   private Function<Map<String, String>, Credential> provideCredentials(final Api api)
       throws Exception {
@@ -1326,6 +1622,49 @@ public class OGModule extends AbstractModule {
       queryParameters.put(e.getKey(), queryParameterFunction);
     }
 
+    return queryParameters;
+  }
+
+//  @Provides
+//  @Singleton
+//  @Named("legalhold.queryparameters")
+  private Map<String, Function<Map<String,String>, String>> provideLegalHoldQueryParameters(boolean remove) {
+    final Map<String, Function<Map<String, String>, String>> queryParameters;
+    queryParameters = Maps.newLinkedHashMap();
+    queryParameters.put(QueryParameters.LEGALHOLD_PARAMETER,
+            new Function<Map<String, String>, String>(){
+              @Override
+              public String apply(final Map<String, String> context) {
+                return null;
+              }
+            });
+
+    if (!remove) {
+      queryParameters.put(QueryParameters.LEGALHOLD_ADD_PARAMETER,
+              new Function<Map<String, String>, String>() {
+                @Override
+                public String apply(final Map<String, String> context) {
+                  // find the legal hold in the context
+                  String suffix = context.get(Context.X_OG_LEGAL_HOLD_SUFFIX);
+                  checkArgument(suffix != null, "legal hold suffix cannot be null");
+                  int newSuffix = Byte.valueOf(suffix) + 1;
+                  String prefix = context.get(Context.X_OG_LEGAL_HOLD_PREFIX);
+                  return prefix.concat(String.valueOf(newSuffix));
+                }
+              });
+    } else {
+      queryParameters.put(QueryParameters.LEGALHOLD_REMOVE_PARAMETER,
+              new Function<Map<String, String>, String>() {
+                @Override
+                public String apply(final Map<String, String> context) {
+                  // find the legal hold in the context
+                  String suffix = context.get(Context.X_OG_LEGAL_HOLD_SUFFIX);
+                  checkArgument(suffix != null, "legal hold suffix cannot be null");
+                  String prefix = context.get(Context.X_OG_LEGAL_HOLD_PREFIX);
+                  return prefix.concat(String.valueOf(suffix));
+                }
+              });
+    }
     return queryParameters;
   }
 
@@ -1600,8 +1939,10 @@ public class OGModule extends AbstractModule {
       final Function<Map<String, String>, Body> body,
       @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
       @Named("virtualhost") final boolean virtualHost,
-      @Named("write.sseCDestination") final boolean encryptDestinationObject) {
-
+      @Named("write.sseCDestination") final boolean encryptDestinationObject,
+      @Nullable @Named("write.retention") final Function<Map<String, String>, Long> retention,
+      @Nullable @Named("write.legalHold") final Function<Map<String, String>, String> legalHold,
+      @Nullable @Named("write.contentMd5") final boolean contentMd5) {
     if (encryptDestinationObject) {
       checkArgument(this.config.data == DataType.ZEROES, "If SSE-C is enabled, data must be ZEROES [%s]",
               this.config.data);
@@ -1623,7 +1964,7 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.WRITE, id, Method.PUT, scheme, host, port, uriRoot,
         container, apiVersion, object, queryParameters, headers, context, null, body, credentials,
-        virtualHost);
+        virtualHost, retention, legalHold, contentMd5);
   }
 
   @Provides
@@ -1703,7 +2044,7 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.WRITE_COPY, id, Method.PUT, scheme, host, port, uriRoot,
             container, apiVersion, writeObject, queryParameters, headers, context, sseReadContext, null, credentials,
-            virtualHost);
+            virtualHost, null, null, false);
   }
 
   @Provides
@@ -1723,7 +2064,9 @@ public class OGModule extends AbstractModule {
       @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
       @Named("virtualhost") final boolean virtualHost,
       @Named("overwrite.weight") final double overwriteWeight,
-      @Named("overwrite.sseCDestination") final boolean encryptDestinationObject) throws Exception {
+      @Named("overwrite.sseCDestination") final boolean encryptDestinationObject,
+      @Nullable @Named("overwrite.retention") final Function<Map<String, String>, Long> retention,
+      @Nullable @Named("overwrite.contentMd5") final boolean contentMd5) throws Exception {
 
     if (encryptDestinationObject) {
       checkArgument(this.config.data == DataType.ZEROES, "If SSE-C is enabled, data must be ZEROES [%s]",
@@ -1751,7 +2094,7 @@ public class OGModule extends AbstractModule {
     }
     return createRequestSupplier(Operation.OVERWRITE, id, Method.PUT, scheme, host, port, uriRoot,
         container, apiVersion, object, queryParameters, headers, context, null, body, credentials,
-        virtualHost);
+        virtualHost, retention, null, contentMd5);
   }
 
   @Provides
@@ -1791,8 +2134,99 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.READ, id, Method.GET, scheme, host, port, uriRoot,
         container, apiVersion, object, queryParameters, headers, context, null, body, credentials,
-        virtualHost);
+        virtualHost, null, null, false);
   }
+
+  @Provides
+  @Singleton
+  @Named("write_legalhold")
+  public Supplier<Request> provideWriteLegalhold(
+          @Named("request.id") final Function<Map<String, String>, String> id, final Scheme scheme,
+          @ReadHost final Function<Map<String, String>, String> host,
+          @Nullable @Named("port") final Integer port,
+          @Nullable @Named("uri.root") final String uriRoot,
+          @Named("read.container") final Function<Map<String, String>, String> container,
+          @Nullable @Named("api.version") final String apiVersion,
+          @Nullable @ReadObjectName final Function<Map<String, String>, String> object,
+          @ReadHeaders final Map<String, Function<Map<String, String>, String>> headers,
+          @Named("write_legalhold.context") final List<Function<Map<String, String>, String>> context,
+          @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
+          @Nullable @Named("add.legalHold") final Function<Map<String, String>, String> legalhold,
+          @Named("virtualhost") final boolean virtualHost) {
+
+    final Map<String, Function<Map<String, String>, String>> queryParameters =
+            provideLegalHoldQueryParameters(false);
+
+    final Supplier<Body> bodySupplier = Suppliers.of(Bodies.none());
+    final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
+
+    return createRequestSupplier(Operation.WRITE_LEGAL_HOLD, id, Method.POST, scheme, host, port, uriRoot,
+            container, apiVersion, object, queryParameters, headers, context, null, body, credentials,
+            virtualHost, null, legalhold, false);
+  }
+
+  @Provides
+  @Singleton
+  @Named("delete_legalhold")
+  public Supplier<Request> provideDeleteLegalhold(
+          @Named("request.id") final Function<Map<String, String>, String> id, final Scheme scheme,
+          @ReadHost final Function<Map<String, String>, String> host,
+          @Nullable @Named("port") final Integer port,
+          @Nullable @Named("uri.root") final String uriRoot,
+          @Named("read.container") final Function<Map<String, String>, String> container,
+          @Nullable @Named("api.version") final String apiVersion,
+          @Nullable @ReadObjectName final Function<Map<String, String>, String> object,
+          @ReadHeaders final Map<String, Function<Map<String, String>, String>> headers,
+          @Named("delete_legalhold.context") final List<Function<Map<String, String>, String>> context,
+          @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
+          @Nullable @Named("delete.legalHold") final Function<Map<String, String>, String> legalhold,
+          @Named("virtualhost") final boolean virtualHost) {
+
+    final Map<String, Function<Map<String, String>, String>> queryParameters =
+            provideLegalHoldQueryParameters(true);
+
+    final Supplier<Body> bodySupplier = Suppliers.of(Bodies.none());
+    final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
+
+    return createRequestSupplier(Operation.DELETE_LEGAL_HOLD, id, Method.POST, scheme, host, port, uriRoot,
+            container, apiVersion, object, queryParameters, headers, context, null, body, credentials,
+            virtualHost, null, legalhold, false);
+  }
+
+  @Provides
+  @Singleton
+  @Named("read_legalhold")
+  public Supplier<Request> provideReadLegalholds(
+          @Named("request.id") final Function<Map<String, String>, String> id, final Scheme scheme,
+          @ReadHost final Function<Map<String, String>, String> host,
+          @Nullable @Named("port") final Integer port,
+          @Nullable @Named("uri.root") final String uriRoot,
+          @Named("read.container") final Function<Map<String, String>, String> container,
+          @Nullable @Named("api.version") final String apiVersion,
+          @Nullable @ReadObjectName final Function<Map<String, String>, String> object,
+          @ReadHeaders final Map<String, Function<Map<String, String>, String>> headers,
+          @Named("read.context") final List<Function<Map<String, String>, String>> context,
+          @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
+          @Named("virtualhost") final boolean virtualHost) {
+
+    final Map<String, Function<Map<String, String>, String>> queryParameters = Maps.newHashMap();
+
+    final Supplier<Body> bodySupplier = Suppliers.of(Bodies.none());
+    final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
+
+    queryParameters.put("legalHold", new Function<Map<String, String>, String>(){
+      @Override
+      public String apply(final Map<String, String> context) {
+        return null;
+      }
+    });
+
+    return createRequestSupplier(Operation.READ_LEGAL_HOLD, id, Method.GET, scheme, host, port, uriRoot,
+            container, apiVersion, object, queryParameters, headers, context, null, body, credentials,
+            virtualHost, null, null, false);
+  }
+
+
 
   @Provides
   @Singleton
@@ -1830,7 +2264,7 @@ public class OGModule extends AbstractModule {
     }
     return createRequestSupplier(Operation.METADATA, id, Method.HEAD, scheme, host, port, uriRoot,
         container, apiVersion, object, queryParameters, headers, context, null, body, credentials,
-        virtualHost);
+        virtualHost, null, null, false);
   }
 
   @Provides
@@ -1857,7 +2291,7 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.DELETE, id, Method.DELETE, scheme, host, port, uriRoot,
         container, apiVersion, object, queryParameters, headers, context, null, body, credentials,
-        virtualHost);
+        virtualHost, null, null, false);
   }
 
   @Provides
@@ -1881,7 +2315,7 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.LIST, id, Method.GET, scheme, host, port, uriRoot,
         container, apiVersion, null, queryParameters, headers, context, null, body, credentials,
-        virtualHost);
+        virtualHost, null, null, false);
   }
 
   @Provides
@@ -1907,7 +2341,7 @@ public class OGModule extends AbstractModule {
     // null container since request is on the service http://<accesser ip>/
     return createRequestSupplier(Operation.CONTAINER_LIST, id, Method.GET, scheme, host, port,
         uriRoot, null, apiVersion, null, queryParameters, headers, context, null, body, credentials,
-        virtualHost);
+        virtualHost, null, null, false);
   }
 
   @Provides
@@ -1923,7 +2357,9 @@ public class OGModule extends AbstractModule {
       @ContainerCreateHeaders final Map<String, Function<Map<String, String>, String>> headers,
       @Named("containerCreate.context") final List<Function<Map<String, String>, String>> context,
       @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
-      @Named("virtualhost") final boolean virtualHost) throws Exception {
+      @Named("virtualhost") final boolean virtualHost,
+      @Nullable @Named("containerCreate.retention") final Function<Map<String, String>, Long> retention)
+      throws Exception {
 
     final Map<String, Function<Map<String, String>, String>> queryParameters =
         Collections.emptyMap();
@@ -1931,9 +2367,12 @@ public class OGModule extends AbstractModule {
     final Supplier<Body> bodySupplier = Suppliers.of(Bodies.none());
     final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
 
+    //todo: container creation operation only need the retention. Do we need to support
+    // the vault or container creation with retention in OG?
     return createRequestSupplier(Operation.CONTAINER_CREATE, id, Method.PUT, scheme, host, port,
         uriRoot, container, apiVersion, null, queryParameters, headers, context, null, body, credentials,
-        virtualHost);
+        virtualHost, retention, null, false);
+
   }
 
   private Supplier<Request> createRequestSupplier(final Operation operation,
@@ -1946,11 +2385,13 @@ public class OGModule extends AbstractModule {
       final List<Function<Map<String, String>, String>> context,
       final List<Function<Map<String, String>, String>> sseSourceContext,
       final Function<Map<String, String>, Body> body,
-      final Function<Map<String, String>, Credential> credentials, final boolean virtualHost) {
+      final Function<Map<String, String>, Credential> credentials, final Boolean virtualHost,
+      final Function<Map<String, String>, Long> retention, final Function<Map<String, String>, String> legalHold,
+      final boolean contentMd5) {
 
     return new RequestSupplier(operation, id, method, scheme, host, port, uriRoot, container,
         apiVersion, object, queryParameters, false, headers, context, sseSourceContext, credentials, body,
-        virtualHost);
+        virtualHost, retention, legalHold, contentMd5);
   }
 
   @Provides
@@ -1972,7 +2413,8 @@ public class OGModule extends AbstractModule {
           final Function<Map<String, String>, Body> body,
           @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
           @Named("virtualhost") final boolean virtualHost,
-          @Named("multipartWrite.sseCDestination") final boolean encryptDestinationObject) {
+          @Named("multipartWrite.sseCDestination") final boolean encryptDestinationObject,
+          @Nullable @Named("multipartWrite.retention") final Function<Map<String, String>, Long> retention) {
 
     final Map<String, Function<Map<String, String>, String>> queryParameters =
         Collections.emptyMap();

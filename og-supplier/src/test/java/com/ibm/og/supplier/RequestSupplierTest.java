@@ -259,6 +259,6 @@ public class RequestSupplierTest {
 
     return new RequestSupplier(operation, id, method, scheme, host, port, uriRoot, container, apiVersion,
             object, queryParameters, trailingSlash, headers, context, null, credentials, body,
-        virtualHost);
+        virtualHost, null, null, false);
   }
 }

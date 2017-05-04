@@ -43,9 +43,9 @@
       <artifactId>og-statistic</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.ibm</groupId>
-      <artifactId>og-supplier</artifactId>
-    </dependency>
+    <groupId>com.ibm</groupId>
+    <artifactId>og-supplier</artifactId>
+  </dependency>
     <dependency>
       <groupId>com.ibm</groupId>
       <artifactId>og-test</artifactId>
