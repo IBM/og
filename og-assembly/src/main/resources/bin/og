@@ -29,6 +29,11 @@ CLASS="com.ibm.og.cli.ObjectGenerator"
 
 mkdir -p ${TEST_PATH}
 
+if [ -d latest ];then
+   rm latest
+fi
+ln -s ${TEST_PATH} latest
+
 # TODO analyze which jvm parameters should be set
 VMOPTS="-XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:${TEST_PATH}/${GC_LOG} -XX:+UseParallelOldGC -XX:MaxGCPauseMillis=5000 -Xss256k -Xmx${MEMORY}m -Xms${MEMORY}m -XX:MaxDirectMemorySize=${MEMORY}m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=${TEST_PATH}/"
 SYSTEMOPTS="-DTEST_PATH=${TEST_PATH} -Dlog4j.configurationFile=og-log4j2.xml -DLog4jContextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector -Dlog4j.shutdownCallbackRegistry=com.ibm.og.cli.OGLog4jShutdownCallbackRegistry"
