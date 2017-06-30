@@ -48,6 +48,7 @@ public class RequestSupplier implements Supplier<Request> {
   private final boolean trailingSlash;
   private final Map<String, Function<Map<String, String>, String>> headers;
   private final List<Function<Map<String, String>, String>> context;
+  private final List<Function<Map<String, String>, String>> sseSourceContext;
   private final Function<Map<String, String>, Credential> credentials;
   private final Function<Map<String, String>, Body> body;
   private final boolean virtualHost;
@@ -82,6 +83,7 @@ public class RequestSupplier implements Supplier<Request> {
       final Map<String, Function<Map<String, String>, String>> queryParameters,
       final boolean trailingSlash, final Map<String, Function<Map<String, String>, String>> headers,
       final List<Function<Map<String, String>, String>> context,
+      final List<Function<Map<String, String>, String>> sseSourceContext,
       final Function<Map<String, String>, Credential> credentials,
       final Function<Map<String, String>, Body> body, final boolean virtualHost) {
 
@@ -98,6 +100,7 @@ public class RequestSupplier implements Supplier<Request> {
     this.trailingSlash = trailingSlash;
     this.headers = ImmutableMap.copyOf(headers);
     this.context = ImmutableList.copyOf(context);
+    this.sseSourceContext = sseSourceContext;
     this.credentials = credentials;
     this.body = body;
     this.virtualHost = virtualHost;
@@ -141,6 +144,14 @@ public class RequestSupplier implements Supplier<Request> {
         requestContext.put(Context.X_OG_STORAGE_ACCOUNT_NAME, storageAccountName);
       }
 
+    }
+
+    // populate the context map with any relevant metadata for this request
+    if (this.sseSourceContext != null) {
+      for (final Function<Map<String, String>, String> function : this.sseSourceContext) {
+        // return value for context functions is ignored
+        function.apply(requestContext);
+      }
     }
     final HttpRequest.Builder builder =
         new HttpRequest.Builder(this.method, getUrl(requestContext), this.operation);

@@ -49,22 +49,27 @@ public class SimpleRequestManager implements RequestManager {
    */
   @Inject
   @Singleton
-  public SimpleRequestManager(@Named("write") final Supplier<Request> write,
+  public SimpleRequestManager(
+      @Named("write") final Supplier<Request> write,
       @Named("write.weight") final double writeWeight,
       @Named("overwrite") final Supplier<Request> overwrite,
       @Named("overwrite.weight") final double overwriteWeight,
-      @Named("read.weight") final double readWeight, @Named("read") final Supplier<Request> read,
+      @Named("read") final Supplier<Request> read,
+      @Named("read.weight") final double readWeight,
       @Named("metadata") final Supplier<Request> metadata,
       @Named("metadata.weight") final double metadataWeight,
       @Named("delete") final Supplier<Request> delete,
       @Named("delete.weight") final double deleteWeight,
-      @Named("list") final Supplier<Request> list, @Named("list.weight") final double listWeight,
+      @Named("list") final Supplier<Request> list,
+      @Named("list.weight") final double listWeight,
       @Named("containerList") final Supplier<Request> containerList,
       @Named("containerList.weight") final double containerListWeight,
       @Named("containerCreate") final Supplier<Request> containerCreate,
       @Named("containerCreate.weight") final double containerCreateWeight,
       @Named("multipartWrite") final Supplier<Request> writeMultipart,
-      @Named("multipartWrite.weight") final double writeMultipartWeight){
+      @Named("multipartWrite.weight") final double writeMultipartWeight,
+      @Named("writeCopy") final Supplier<Request> writeCopy,
+      @Named("writeCopy.weight") final double writeCopyWeight){
 
     checkNotNull(write);
     checkNotNull(overwrite);
@@ -75,6 +80,7 @@ public class SimpleRequestManager implements RequestManager {
     checkNotNull(containerList);
     checkNotNull(containerCreate);
     checkNotNull(writeMultipart);
+    checkNotNull(writeCopy);
 
     final RandomSupplier.Builder<Supplier<Request>> wrc = Suppliers.random();
     if (writeWeight > 0.0) {
@@ -103,6 +109,9 @@ public class SimpleRequestManager implements RequestManager {
     }
     if (writeMultipartWeight > 0.0) {
       wrc.withChoice(writeMultipart, writeMultipartWeight);
+    }
+    if (writeCopyWeight > 0.0){
+      wrc.withChoice(writeCopy, writeCopyWeight);
     }
     this.requestSupplier = wrc.build();
   }

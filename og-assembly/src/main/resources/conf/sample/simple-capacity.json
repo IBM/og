@@ -3,7 +3,7 @@
   "api":"s3",
   "container":"<container name>",
   "write":{
-    "weight":100.0
+    "weight":1.0
   },
   "read":{
     "weight":0.0

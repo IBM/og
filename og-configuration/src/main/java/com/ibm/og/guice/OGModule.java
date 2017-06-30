@@ -28,6 +28,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.EventBus;
+import com.google.common.hash.Hashing;
+import com.google.common.io.BaseEncoding;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provider;
 import com.google.inject.Provides;
@@ -69,7 +71,9 @@ import com.ibm.og.guice.annotation.OverwriteObjectName;
 import com.ibm.og.guice.annotation.ReadHeaders;
 import com.ibm.og.guice.annotation.ReadHost;
 import com.ibm.og.guice.annotation.ReadObjectName;
+import com.ibm.og.guice.annotation.SourceReadObjectName;
 import com.ibm.og.guice.annotation.WriteHeaders;
+import com.ibm.og.guice.annotation.WriteCopyHeaders;
 import com.ibm.og.guice.annotation.WriteHost;
 import com.ibm.og.guice.annotation.WriteObjectName;
 import com.ibm.og.http.Api;
@@ -106,6 +110,7 @@ import com.ibm.og.object.ObjectManager;
 import com.ibm.og.object.OverwriteObjectNameConsumer;
 import com.ibm.og.object.RandomObjectPopulator;
 import com.ibm.og.object.ReadObjectNameConsumer;
+import com.ibm.og.object.WriteCopyObjectNameConsumer;
 import com.ibm.og.object.WriteObjectNameConsumer;
 import com.ibm.og.openstack.KeystoneAuth;
 import com.ibm.og.s3.MultipartRequestSupplier;
@@ -124,6 +129,7 @@ import com.ibm.og.supplier.MetadataObjectNameFunction;
 import com.ibm.og.supplier.RandomSupplier;
 import com.ibm.og.supplier.ReadObjectNameFunction;
 import com.ibm.og.supplier.RequestSupplier;
+import com.ibm.og.supplier.SourceReadObjectNameFunction;
 import com.ibm.og.supplier.Suppliers;
 import com.ibm.og.supplier.UUIDObjectNameFunction;
 import com.ibm.og.test.LoadTest;
@@ -154,7 +160,7 @@ public class OGModule extends AbstractModule {
   private static final String S3_MULTIPART = "s3.multipart";
   private final LoadTestSubscriberExceptionHandler handler;
   private final EventBus eventBus;
-
+  final byte[] aesKey = SSECustomerKey();
   /**
    * Creates an instance
    * 
@@ -179,17 +185,29 @@ public class OGModule extends AbstractModule {
       }
     });
     bindConstant().annotatedWith(Names.named("write.weight")).to(this.config.write.weight);
+    bindConstant().annotatedWith(Names.named("write.sseCSource")).to(this.config.write.sseCSource);
     bindConstant().annotatedWith(Names.named("overwrite.weight")).to(this.config.overwrite.weight);
+    bindConstant().annotatedWith(Names.named("overwrite.sseCSource")).to(this.config.read.sseCSource);
     bindConstant().annotatedWith(Names.named("read.weight")).to(this.config.read.weight);
+    bindConstant().annotatedWith(Names.named("read.sseCSource")).to(this.config.read.sseCSource);
     bindConstant().annotatedWith(Names.named("metadata.weight")).to(this.config.metadata.weight);
+    bindConstant().annotatedWith(Names.named("metadata.sseCSource")).to(this.config.metadata.sseCSource);
     bindConstant().annotatedWith(Names.named("delete.weight")).to(this.config.delete.weight);
     bindConstant().annotatedWith(Names.named("list.weight")).to(this.config.list.weight);
     bindConstant().annotatedWith(Names.named("containerList.weight"))
-        .to(this.config.containerList.weight);
+            .to(this.config.containerList.weight);
     bindConstant().annotatedWith(Names.named("containerCreate.weight"))
-        .to(this.config.containerCreate.weight);
+            .to(this.config.containerCreate.weight);
     bindConstant().annotatedWith(Names.named("multipartWrite.weight"))
-        .to(this.config.multipartWrite.weight);
+            .to(this.config.multipartWrite.weight);
+    bindConstant().annotatedWith(Names.named("multipartWrite.sseCSource"))
+            .to(this.config.multipartWrite.sseCSource);
+    bindConstant().annotatedWith(Names.named("writeCopy.weight"))
+            .to(this.config.writeCopy.weight);
+    bindConstant().annotatedWith(Names.named("writeCopy.sseCSource"))
+            .to(this.config.writeCopy.sseCSource);
+    bindConstant().annotatedWith(Names.named("writeCopy.sseCTarget"))
+            .to(this.config.writeCopy.sseCTarget);
     bindConstant().annotatedWith(Names.named("virtualhost")).to(this.config.virtualHost);
     bindConstant().annotatedWith(Names.named("multipartWrite.targetSessions")).to(this.config.multipartWrite.upload.targetSessions);
     bind(AuthType.class).toInstance(this.config.authentication.type);
@@ -545,6 +563,17 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
+  @Named("writeCopy.container")
+  public Function<Map<String, String>, String> provideWriteCopyContainer() {
+    if (this.config.write.container.prefix != null) {
+      return provideContainer(this.config.writeCopy.container);
+    } else {
+      return provideContainer(this.config.container);
+    }
+  }
+
+  @Provides
+  @Singleton
   @Named("overwrite.container")
   public Function<Map<String, String>, String> provideOverwriteContainer() throws Exception {
     if (this.config.overwrite.container.prefix != null) {
@@ -794,6 +823,13 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
+  @SourceReadObjectName
+  public Function<Map<String, String>, String> provideSSEReadObjectName() {
+    return MoreFunctions.keyLookup(Context.X_OG_SSE_SOURCE_OBJECT_NAME);
+  }
+
+  @Provides
+  @Singleton
   @MetadataObjectName
   public Function<Map<String, String>, String> provideMetadataObjectName() {
     return MoreFunctions.keyLookup(Context.X_OG_OBJECT_NAME);
@@ -814,7 +850,7 @@ public class OGModule extends AbstractModule {
   }
 
   private Function<Map<String, String>, String> provideObject(
-      final OperationConfig operationConfig) {
+          final OperationConfig operationConfig) {
     checkNotNull(operationConfig);
 
     final ObjectConfig objectConfig = checkNotNull(operationConfig.object);
@@ -832,6 +868,23 @@ public class OGModule extends AbstractModule {
     };
   }
 
+  private Function<Map<String, String>, String> provideSourceObject(
+          final OperationConfig operationConfig) {
+    checkNotNull(operationConfig);
+
+    final ObjectConfig objectConfig = checkNotNull(operationConfig.object);
+    final String prefix = checkNotNull(objectConfig.prefix);
+    final Supplier<Long> suffixes = createObjectSuffixes(objectConfig);
+    return new Function<Map<String, String>, String>() {
+      @Override
+      public String apply(final Map<String, String> context) {
+        final String objectName = prefix + suffixes.get();
+        context.put(Context.X_OG_SSE_SOURCE_OBJECT_NAME, objectName);
+        context.put(Context.X_OG_SEQUENTIAL_OBJECT_NAME, "true");
+        return objectName;
+      }
+    };
+  }
   private Supplier<Long> createObjectSuffixes(final ObjectConfig config) {
     checkArgument(config.minSuffix >= 0, "minSuffix must be > 0 [%s]", config.minSuffix);
     checkArgument(config.maxSuffix >= config.minSuffix,
@@ -856,6 +909,7 @@ public class OGModule extends AbstractModule {
     consumers.add(new OverwriteObjectNameConsumer(objectManager, sc));
     consumers.add(new ListObjectNameConsumer(objectManager, sc));
     consumers.add(new MultipartWriteObjectNameConsumer(objectManager, sc));
+    consumers.add(new WriteCopyObjectNameConsumer(objectManager, sc));
 
     for (final AbstractObjectNameConsumer consumer : consumers) {
       eventBus.register(consumer);
@@ -868,6 +922,13 @@ public class OGModule extends AbstractModule {
   @WriteHeaders
   public Map<String, Function<Map<String, String>, String>> provideWriteHeaders() {
     return provideHeaders(this.config.write.headers);
+  }
+
+  @Provides
+  @Singleton
+  @WriteCopyHeaders
+  public Map<String, Function<Map<String, String>, String>> provideWriteCopyHeaders() {
+    return provideHeaders(this.config.writeCopy.headers);
   }
 
   @Provides
@@ -987,6 +1048,37 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
+  @Named("writeCopy.context")
+  public List<Function<Map<String, String>, String>> provideWriteCopyContext(final Api api) {
+    final List<Function<Map<String, String>, String>> context = Lists.newArrayList();
+
+    final OperationConfig operationConfig = checkNotNull(this.config.writeCopy);
+    if (Api.SOH != api) {
+      if (operationConfig.object.selection != null) {
+        context.add(provideObject(operationConfig));
+      } else {
+        // default for writes
+        context.add(new UUIDObjectNameFunction());
+      }
+    }
+
+    // SOH needs to use a special response consumer to extract the returned object id
+    if (Api.SOH == api) {
+      context.add(new Function<Map<String, String>, String>() {
+        @Override
+        public String apply(final Map<String, String> input) {
+          input.put(Context.X_OG_RESPONSE_BODY_CONSUMER, SOH_PUT_OBJECT);
+
+          return null;
+        }
+      });
+    }
+
+    return ImmutableList.copyOf(context);
+  }
+
+  @Provides
+  @Singleton
   @Named("api.version")
   public String provideAPIVersion(final Api api) {
 
@@ -1022,6 +1114,23 @@ public class OGModule extends AbstractModule {
       function = provideObject(operationConfig);
     } else {
       function = new ReadObjectNameFunction(objectManager);
+    }
+
+    return ImmutableList.of(function);
+  }
+
+  @Provides
+  @Singleton
+  @Named("writeCopySource.context")
+  public List<Function<Map<String, String>, String>> provideSSeReadContext(
+          final ObjectManager objectManager) {
+    Function<Map<String, String>, String> function;
+
+    final OperationConfig operationConfig = checkNotNull(this.config.read);
+    if (operationConfig.object.selection != null) {
+      function = provideSourceObject(operationConfig);
+    } else {
+      function = new SourceReadObjectNameFunction(objectManager);
     }
 
     return ImmutableList.of(function);
@@ -1370,6 +1479,51 @@ public class OGModule extends AbstractModule {
     return checkNotNull(this.config.objectManager).objectFileIndex;
   }
 
+  private byte[] SSECustomerKey() {
+    byte[] aesKey = new byte[32];
+    for (int i=0; i<16; i++) {
+      aesKey[i*2] = (byte)0xCA;
+      aesKey[i*2+1] = (byte)0xFE;
+    }
+    return aesKey;
+  }
+
+  private Function<Map<String, String>, String> provideSSEEncryptionAlgorithm() {
+    return new Function<Map<String, String>, String>(){
+      @Override
+      public String apply(@Nullable final Map<String, String> input) {
+        return "AES256";
+      }
+    };
+  }
+
+  private Function<Map<String, String>, String> provideSSEEncryptionKey() {
+    Function<Map<String, String>, String> encryptionKey;
+    encryptionKey = new Function<Map<String, String>, String>(){
+      @Override
+      public String apply(@Nullable final Map<String, String> input) {
+        String b64Key = BaseEncoding.base64().encode(aesKey);
+        input.put("x-amz-server-side-encryption-customer-key", b64Key);
+        return b64Key;
+      }
+    };
+    return encryptionKey;
+  }
+
+  private Function<Map<String, String>, String> provideSSEKeyMD5() {
+    Function<Map<String, String>, String> customerKeyHash = new Function<Map<String, String>, String>(){
+      @Override
+      public String apply(@Nullable final Map<String, String> input) {
+        return BaseEncoding.base64().encode(Hashing.md5()
+                .newHasher()
+                .putBytes(aesKey)
+                .hash()
+                .asBytes());
+      }
+    };
+    return customerKeyHash;
+  }
+
   @Provides
   @Singleton
   public Scheduler provideScheduler(final ConcurrencyConfig concurrency, final EventBus eventBus) {
@@ -1441,14 +1595,111 @@ public class OGModule extends AbstractModule {
       @Named("write.context") final List<Function<Map<String, String>, String>> context,
       final Function<Map<String, String>, Body> body,
       @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
-      @Named("virtualhost") final boolean virtualHost) {
+      @Named("virtualhost") final boolean virtualHost,
+      @Named("write.sseCSource") final boolean encryptSource) {
 
+    if (encryptSource) {
+      checkArgument(this.config.data == DataType.ZEROES, "If SSE-C is enabled, data must be ZEROES [%s]",
+              this.config.data);
+    }
     final Map<String, Function<Map<String, String>, String>> queryParameters =
         Collections.emptyMap();
 
+    if (encryptSource) {
+      if (!headers.containsKey("x-amz-server-side-encryption-customer-algorithm")) {
+        headers.put("x-amz-server-side-encryption-customer-algorithm", provideSSEEncryptionAlgorithm());
+      }
+      if (!headers.containsKey("x-amz-server-side-encryption-customer-key")){
+        headers.put("x-amz-server-side-encryption-customer-key", provideSSEEncryptionKey());
+      }
+      if (!headers.containsKey("x-amz-server-side-encryption-customer-key-MD5")) {
+        headers.put("x-amz-server-side-encryption-customer-key-MD5", provideSSEKeyMD5());
+      }
+    }
+
     return createRequestSupplier(Operation.WRITE, id, Method.PUT, scheme, host, port, uriRoot,
-        container, apiVersion, object, queryParameters, headers, context, body, credentials,
+        container, apiVersion, object, queryParameters, headers, context, null, body, credentials,
         virtualHost);
+  }
+
+  @Provides
+  @Singleton
+  @Named("writeCopy")
+  public Supplier<Request> provideWriteCopy(
+          @Named("request.id") final Function<Map<String, String>, String> id, final Api api,
+          final Scheme scheme, @WriteHost final Function<Map<String, String>, String> host,
+          @Nullable @Named("port") final Integer port,
+          @Nullable @Named("uri.root") final String uriRoot,
+          @Named("writeCopy.container") final Function<Map<String, String>, String> container,
+          @Nullable @Named("api.version") final String apiVersion,
+          @Nullable @WriteObjectName final Function<Map<String, String>, String> writeObject,
+          @Named("writeCopySource.context") final List<Function<Map<String, String>, String>> sseReadContext,
+          @Nullable @SourceReadObjectName final Function<Map<String, String>, String> sseSourceReadObject,
+          @WriteCopyHeaders final Map<String, Function<Map<String, String>, String>> headers,
+          @Named("writeCopy.context") final List<Function<Map<String, String>, String>> context,
+          @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
+          @Named("virtualhost") final boolean virtualHost,
+          @Named("writeCopy.sseCSource") final boolean encryptSource,
+          @Named("writeCopy.sseCTarget") final boolean encryptTarget)
+  {
+    if (encryptSource || encryptTarget) {
+      checkArgument(this.config.data == DataType.ZEROES, "If SSE-C is enabled, data must be ZEROES [%s]",
+              this.config.data);
+    }
+
+    final Map<String, Function<Map<String, String>, String>> queryParameters =
+            Collections.emptyMap();
+
+    Function<Map<String, String>, String> copySource = new Function<Map<String, String>, String>(){
+      @Override
+      public String apply(@Nullable final Map<String, String> input) {
+
+        String objectName = sseSourceReadObject.apply(input);
+        String containerSuffix = input.get(Context.X_OG_SSE_SOURCE_OBJECT_CONTAINER_SUFFIX);
+        String containerName = input.get(Context.X_OG_CONTAINER_NAME);
+
+        //todo: update this to handle copy object API for openstack. Currently, only support s3 API
+        checkArgument(api == Api.S3, "WriteCopy operation is only supported for S3 API. Request API [%s]", api);
+        final String sourceUri;
+        if (containerSuffix != null && Integer.parseInt(containerSuffix) != -1) {
+          sourceUri =  "/" + containerName + containerSuffix + "/" + objectName;
+        } else {
+          sourceUri =  "/" + containerName + "/" + objectName;
+        }
+        input.put(Context.X_OG_SSE_SOURCE_URI, sourceUri);
+        return sourceUri;
+      }
+    };
+
+    if (encryptTarget) {
+
+      checkArgument(api == Api.S3, "WriteCopy operation is only supported for S3 API. Request API [%s]", api);
+      if (!headers.containsKey("x-amz-server-side-encryption-customer-algorithm")) {
+        headers.put("x-amz-server-side-encryption-customer-algorithm", provideSSEEncryptionAlgorithm());
+      }
+      if (!headers.containsKey("x-amz-server-side-encryption-customer-key")) {
+        headers.put("x-amz-server-side-encryption-customer-key", provideSSEEncryptionKey());
+      }
+      if (!headers.containsKey("x-amz-server-side-encryption-customer-key-MD5")) {
+        headers.put("x-amz-server-side-encryption-customer-key-MD5", provideSSEKeyMD5());
+      }
+    }
+    if (encryptSource) {
+      if (!headers.containsKey("x-amz-copy-source-server-side-encryption-customer-algorithm")) {
+        headers.put("x-amz-copy-source-server-side-encryption-customer-algorithm", provideSSEEncryptionAlgorithm());
+      }
+      if (!headers.containsKey("x-amz-copy-source-server-side-encryption-customer-key")){
+        headers.put("x-amz-copy-source-server-side-encryption-customer-key", provideSSEEncryptionKey());
+      }
+      if (!headers.containsKey("x-amz-copy-source-server-side-encryption-customer-key-MD5")) {
+        headers.put("x-amz-copy-source-server-side-encryption-customer-key-MD5", provideSSEKeyMD5());
+      }
+    }
+    headers.put("x-amz-copy-source", copySource);
+
+    return createRequestSupplier(Operation.WRITE_COPY, id, Method.PUT, scheme, host, port, uriRoot,
+            container, apiVersion, writeObject, queryParameters, headers, context, sseReadContext, null, credentials,
+            virtualHost);
   }
 
   @Provides
@@ -1467,7 +1718,14 @@ public class OGModule extends AbstractModule {
       @OverwriteBody final Function<Map<String, String>, Body> body,
       @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
       @Named("virtualhost") final boolean virtualHost,
-      @Named("overwrite.weight") final double overwriteWeight) throws Exception {
+      @Named("overwrite.weight") final double overwriteWeight,
+      @Named("overwrite.sseCSource") final boolean encryptSource) throws Exception {
+
+    if (encryptSource) {
+      checkArgument(this.config.data == DataType.ZEROES, "If SSE-C is enabled, data must be ZEROES [%s]",
+              this.config.data);
+    }
+
     // SOH needs to use a special response consumer to extract the returned object id
     if (Api.SOH == api && overwriteWeight > 0.0) {
       throw new Exception("Overwrites are not compatible with SOH");
@@ -1476,8 +1734,19 @@ public class OGModule extends AbstractModule {
     final Map<String, Function<Map<String, String>, String>> queryParameters =
         Collections.emptyMap();
 
+    if (encryptSource) {
+      if (!headers.containsKey("x-amz-server-side-encryption-customer-algorithm")) {
+        headers.put("x-amz-server-side-encryption-customer-algorithm", provideSSEEncryptionAlgorithm());
+      }
+      if (!headers.containsKey("x-amz-server-side-encryption-customer-key")){
+        headers.put("x-amz-server-side-encryption-customer-key", provideSSEEncryptionKey());
+      }
+      if (!headers.containsKey("x-amz-server-side-encryption-customer-key-MD5")) {
+        headers.put("x-amz-server-side-encryption-customer-key-MD5", provideSSEKeyMD5());
+      }
+    }
     return createRequestSupplier(Operation.OVERWRITE, id, Method.PUT, scheme, host, port, uriRoot,
-        container, apiVersion, object, queryParameters, headers, context, body, credentials,
+        container, apiVersion, object, queryParameters, headers, context, null, body, credentials,
         virtualHost);
   }
 
@@ -1495,16 +1764,29 @@ public class OGModule extends AbstractModule {
       @ReadHeaders final Map<String, Function<Map<String, String>, String>> headers,
       @Named("read.context") final List<Function<Map<String, String>, String>> context,
       @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
-      @Named("virtualhost") final boolean virtualHost) {
+      @Named("virtualhost") final boolean virtualHost,
+      @Named("read.sseCSource") final boolean encryptedSource) {
 
     final Map<String, Function<Map<String, String>, String>> queryParameters =
         Collections.emptyMap();
+
+    if (encryptedSource) {
+      if (!headers.containsKey("x-amz-server-side-encryption-customer-algorithm")) {
+        headers.put("x-amz-server-side-encryption-customer-algorithm", provideSSEEncryptionAlgorithm());
+      }
+      if (!headers.containsKey("x-amz-server-side-encryption-customer-key")){
+        headers.put("x-amz-server-side-encryption-customer-key", provideSSEEncryptionKey());
+      }
+      if (!headers.containsKey("x-amz-server-side-encryption-customer-key-MD5")) {
+        headers.put("x-amz-server-side-encryption-customer-key-MD5", provideSSEKeyMD5());
+      }
+    }
 
     final Supplier<Body> bodySupplier = Suppliers.of(Bodies.none());
     final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
 
     return createRequestSupplier(Operation.READ, id, Method.GET, scheme, host, port, uriRoot,
-        container, apiVersion, object, queryParameters, headers, context, body, credentials,
+        container, apiVersion, object, queryParameters, headers, context, null, body, credentials,
         virtualHost);
   }
 
@@ -1522,7 +1804,8 @@ public class OGModule extends AbstractModule {
       @MetadataHeaders final Map<String, Function<Map<String, String>, String>> headers,
       @Named("metadata.context") final List<Function<Map<String, String>, String>> context,
       @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
-      @Named("virtualhost") final boolean virtualHost) {
+      @Named("virtualhost") final boolean virtualHost,
+      @Named("metadata.sseCSource") final boolean encryptedSource) {
 
     final Map<String, Function<Map<String, String>, String>> queryParameters =
         Collections.emptyMap();
@@ -1530,8 +1813,19 @@ public class OGModule extends AbstractModule {
     final Supplier<Body> bodySupplier = Suppliers.of(Bodies.none());
     final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
 
+    if (encryptedSource) {
+      if (!headers.containsKey("x-amz-server-side-encryption-customer-algorithm")) {
+        headers.put("x-amz-server-side-encryption-customer-algorithm", provideSSEEncryptionAlgorithm());
+      }
+      if (!headers.containsKey("x-amz-server-side-encryption-customer-key")){
+        headers.put("x-amz-server-side-encryption-customer-key", provideSSEEncryptionKey());
+      }
+      if (!headers.containsKey("x-amz-server-side-encryption-customer-key-MD5")) {
+        headers.put("x-amz-server-side-encryption-customer-key-MD5", provideSSEKeyMD5());
+      }
+    }
     return createRequestSupplier(Operation.METADATA, id, Method.HEAD, scheme, host, port, uriRoot,
-        container, apiVersion, object, queryParameters, headers, context, body, credentials,
+        container, apiVersion, object, queryParameters, headers, context, null, body, credentials,
         virtualHost);
   }
 
@@ -1558,7 +1852,7 @@ public class OGModule extends AbstractModule {
     final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
 
     return createRequestSupplier(Operation.DELETE, id, Method.DELETE, scheme, host, port, uriRoot,
-        container, apiVersion, object, queryParameters, headers, context, body, credentials,
+        container, apiVersion, object, queryParameters, headers, context, null, body, credentials,
         virtualHost);
   }
 
@@ -1582,7 +1876,7 @@ public class OGModule extends AbstractModule {
     final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
 
     return createRequestSupplier(Operation.LIST, id, Method.GET, scheme, host, port, uriRoot,
-        container, apiVersion, null, queryParameters, headers, context, body, credentials,
+        container, apiVersion, null, queryParameters, headers, context, null, body, credentials,
         virtualHost);
   }
 
@@ -1608,7 +1902,7 @@ public class OGModule extends AbstractModule {
 
     // null container since request is on the service http://<accesser ip>/
     return createRequestSupplier(Operation.CONTAINER_LIST, id, Method.GET, scheme, host, port,
-        uriRoot, null, apiVersion, null, queryParameters, headers, context, body, credentials,
+        uriRoot, null, apiVersion, null, queryParameters, headers, context, null, body, credentials,
         virtualHost);
   }
 
@@ -1634,7 +1928,7 @@ public class OGModule extends AbstractModule {
     final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
 
     return createRequestSupplier(Operation.CONTAINER_CREATE, id, Method.PUT, scheme, host, port,
-        uriRoot, container, apiVersion, null, queryParameters, headers, context, body, credentials,
+        uriRoot, container, apiVersion, null, queryParameters, headers, context, null, body, credentials,
         virtualHost);
   }
 
@@ -1646,11 +1940,12 @@ public class OGModule extends AbstractModule {
       final Map<String, Function<Map<String, String>, String>> queryParameters,
       final Map<String, Function<Map<String, String>, String>> headers,
       final List<Function<Map<String, String>, String>> context,
+      final List<Function<Map<String, String>, String>> sseSourceContext,
       final Function<Map<String, String>, Body> body,
       final Function<Map<String, String>, Credential> credentials, final boolean virtualHost) {
 
     return new RequestSupplier(operation, id, method, scheme, host, port, uriRoot, container,
-        apiVersion, object, queryParameters, false, headers, context, credentials, body,
+        apiVersion, object, queryParameters, false, headers, context, sseSourceContext, credentials, body,
         virtualHost);
   }
 
@@ -1672,11 +1967,25 @@ public class OGModule extends AbstractModule {
           @Named("multipartWrite.context") final List<Function<Map<String, String>, String>> context,
           final Function<Map<String, String>, Body> body,
           @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
-          @Named("virtualhost") final boolean virtualHost) {
+          @Named("virtualhost") final boolean virtualHost,
+          @Named("multipartWrite.sseCSource") final boolean encyrptSource) {
 
     final Map<String, Function<Map<String, String>, String>> queryParameters =
         Collections.emptyMap();
 
+    if (encyrptSource) {
+      if (!headers.containsKey("x-amz-server-side-encryption-customer-algorithm")) {
+        headers.put("x-amz-server-side-encryption-customer-algorithm", provideSSEEncryptionAlgorithm());
+      }
+      if (!headers.containsKey("x-amz-server-side-encryption-customer-key")){
+        headers.put("x-amz-server-side-encryption-customer-key", provideSSEEncryptionKey());
+      }
+      if (!headers.containsKey("x-amz-server-side-encryption-customer-key-MD5")) {
+        headers.put("x-amz-server-side-encryption-customer-key-MD5", provideSSEKeyMD5());
+      }
+    }
+    //todo: Not sure if sending the above headers with multipart complete request will cause problems. As per the
+    // AWS s3 API guide they are not required for complete request.
     return createMultipartRequestSupplier(id, scheme, host, port, uriRoot, container, apiVersion, object,
         partSize, partsPerSession, targetSessions, queryParameters, headers, context, body, credentials, virtualHost);
   }

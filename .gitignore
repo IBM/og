@@ -23,3 +23,5 @@ og-configuration/object/*
 
 # OSX
 .DS_Store
+
+.idea/*

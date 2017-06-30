@@ -32,6 +32,12 @@ public class Context {
   public static final String X_OG_MULTIPART_CONTAINER = "x-og-multipart-container";
   public static final String X_OG_MULTIPART_BODY_DATA_TYPE = "x-og-multipart-body-data-type";
   public static final String X_OG_MULTIPART_MAX_PARTS = "x-og-multipart-max-parts";
+  // Put Copy Keys
+  public static final String X_OG_SSE_SOURCE_OBJECT_NAME = "x_og_sse_source_object_name";
+  public static final String X_OG_SSE_SOURCE_OBJECT_CONTAINER_SUFFIX = "x_og_sse_source_object_container_suffix";
+  public static final String X_OG_SSE_SOURCE_OBJECT_SIZE = "x_og_sse_source_object_size";
+  public static final String X_OG_SSE_SOURCE_URI = "x_og_sse_source_uri";
+
 
   private Context() {}
 }

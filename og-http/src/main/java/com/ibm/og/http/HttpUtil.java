@@ -54,6 +54,8 @@ public class HttpUtil {
       case MULTIPART_WRITE_INITIATE:
       case MULTIPART_WRITE_COMPLETE:
         return Method.POST;
+      case WRITE_COPY:
+        return Method.PUT;
       default:
         throw new IllegalArgumentException(String.format("Unrecognized operation [%s]", operation));
     }
