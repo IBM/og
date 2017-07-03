@@ -142,6 +142,8 @@ public class Statistics {
       return request.getBody().getSize();
     } else if (Operation.READ == operation) {
       return response.getBody().getSize();
+    } else if (Operation.MULTIPART_WRITE_PART == operation) {
+      return request.getBody().getSize();
     }
     return 0;
   }
