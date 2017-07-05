@@ -16,6 +16,7 @@ public class Context {
   // FIXME header to differentiate between objects which can be stored in the object manager
   public static final String X_OG_SEQUENTIAL_OBJECT_NAME = "x-og-sequential-object-name";
   public static final String X_OG_OBJECT_SIZE = "x-og-object-size";
+  public static final String X_OG_CONTAINER_PREFIX = "x-og-container-prefix";
   public static final String X_OG_CONTAINER_SUFFIX = "x-og-container-suffix";
   public static final String X_OG_CONTAINER_NAME = "x-og-container-name";
   public static final String X_OG_USERNAME = "x-og-username";

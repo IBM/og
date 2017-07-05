@@ -565,7 +565,7 @@ public class OGModule extends AbstractModule {
   @Singleton
   @Named("writeCopy.container")
   public Function<Map<String, String>, String> provideWriteCopyContainer() {
-    if (this.config.write.container.prefix != null) {
+    if (this.config.writeCopy.container.prefix != null) {
       return provideContainer(this.config.writeCopy.container);
     } else {
       return provideContainer(this.config.container);
@@ -668,10 +668,12 @@ public class OGModule extends AbstractModule {
         if (suffix != null) {
           if (Integer.parseInt(suffix) == -1) {
             // use the container name provided without suffix
+            input.put(Context.X_OG_CONTAINER_PREFIX, container);
             input.put(Context.X_OG_CONTAINER_NAME, container);
             return container;
           } else {
             final String containerName = container.concat(suffix);
+            input.put(Context.X_OG_CONTAINER_PREFIX, container);
             input.put(Context.X_OG_CONTAINER_NAME, containerName);
             return container.concat(suffix);
           }
@@ -680,11 +682,13 @@ public class OGModule extends AbstractModule {
             suffix = suffixes.get().toString();
             input.put(Context.X_OG_CONTAINER_SUFFIX, suffix);
             final String containerName = container.concat(suffix);
+            input.put(Context.X_OG_CONTAINER_PREFIX, container);
             input.put(Context.X_OG_CONTAINER_NAME, containerName);
             return container.concat(suffix);
           } else {
             input.put(Context.X_OG_CONTAINER_SUFFIX, "-1");
             // use the container name provided without suffix
+            input.put(Context.X_OG_CONTAINER_PREFIX, container);
             input.put(Context.X_OG_CONTAINER_NAME, container);
             return container;
           }
@@ -1656,15 +1660,15 @@ public class OGModule extends AbstractModule {
 
         String objectName = sseSourceReadObject.apply(input);
         String containerSuffix = input.get(Context.X_OG_SSE_SOURCE_OBJECT_CONTAINER_SUFFIX);
-        String containerName = input.get(Context.X_OG_CONTAINER_NAME);
+        String containerPrefix = input.get(Context.X_OG_CONTAINER_PREFIX);
 
         //todo: update this to handle copy object API for openstack. Currently, only support s3 API
         checkArgument(api == Api.S3, "WriteCopy operation is only supported for S3 API. Request API [%s]", api);
         final String sourceUri;
         if (containerSuffix != null && Integer.parseInt(containerSuffix) != -1) {
-          sourceUri =  "/" + containerName + containerSuffix + "/" + objectName;
+          sourceUri =  "/" + containerPrefix + containerSuffix + "/" + objectName;
         } else {
-          sourceUri =  "/" + containerName + "/" + objectName;
+          sourceUri =  "/" + containerPrefix + "/" + objectName;
         }
         input.put(Context.X_OG_SSE_SOURCE_URI, sourceUri);
         return sourceUri;
