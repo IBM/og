@@ -32,7 +32,9 @@ public class RequestLogEntry {
   public final String timeFinish;
   public final Method requestMethod;
   public final String requestUri;
+  public final String sourceUri;
   public final String objectId;
+  public final String sourceObjectId;
   public final int status;
   public final Long requestLength;
   public final Long responseLength;
@@ -109,6 +111,8 @@ public class RequestLogEntry {
     }
     this.objectLength = objectSize;
     this.objectName = operationObjectName;
+    this.sourceObjectId = request.getContext().get(Context.X_OG_SSE_SOURCE_OBJECT_NAME);
+    this.sourceUri = request.getContext().get(Context.X_OG_SSE_SOURCE_URI);
   }
 
   public static class RequestTimestamps {

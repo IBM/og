@@ -19,6 +19,8 @@ public class OperationConfig {
   public BodySource body;
   public ContainerConfig container;
   public MultipartConfig upload;
+  public boolean sseCSource;
+  public boolean sseCDestination;
 
   public OperationConfig(final double weight) {
     this();

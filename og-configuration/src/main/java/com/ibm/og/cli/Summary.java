@@ -70,6 +70,7 @@ public class Summary {
     final OperationStats multipartWriteInitiate;
     final OperationStats multipartWritePart;
     final OperationStats multipartWriteComplete;
+    final OperationStats writeCopy;
     final int exitCode;
     final ImmutableList<String> exitMessages;
 
@@ -90,6 +91,7 @@ public class Summary {
       this.multipartWriteInitiate = new OperationStats(stats, Operation.MULTIPART_WRITE_INITIATE);
       this.multipartWritePart = new OperationStats(stats, Operation.MULTIPART_WRITE_PART);
       this.multipartWriteComplete = new OperationStats(stats, Operation.MULTIPART_WRITE_COMPLETE);
+      this.writeCopy = new OperationStats(stats, Operation.WRITE_COPY);
       this.exitCode = exitCode;
       this.exitMessages = messages;
     }
@@ -97,12 +99,12 @@ public class Summary {
     @Override
     public String toString() {
       final String format = "Start: %s%nEnd: %s%nRuntime: %.2f "
-          + "Seconds%nOperations: %s%n%n%s%s%s%s%s%s%s%s%s%s%sExitCode: %s%nExitMessages:%s";
+          + "Seconds%nOperations: %s%n%n%s%s%s%s%s%s%s%s%s%s%s%sExitCode: %s%nExitMessages:%s";
       return String.format(Locale.US, format, FORMATTER.print(this.timestampStart),
           FORMATTER.print(this.timestampFinish), this.runtime, this.operations, this.write,
           this.read, this.delete, this.metadata, this.overwrite, this.list, this.containerList,
           this.containerCreate, this.multipartWriteInitiate, this.multipartWritePart, this.multipartWriteComplete,
-          this.exitCode, prettyExitMessages());
+          this.writeCopy, this.exitCode, prettyExitMessages());
     }
 
     class OperationStats {

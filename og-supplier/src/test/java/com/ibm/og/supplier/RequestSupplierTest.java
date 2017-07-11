@@ -258,7 +258,7 @@ public class RequestSupplierTest {
     final List<Function<Map<String, String>, String>> context = Collections.emptyList();
 
     return new RequestSupplier(operation, id, method, scheme, host, port, uriRoot, container, apiVersion,
-            object, queryParameters, trailingSlash, headers, context, credentials, body,
+            object, queryParameters, trailingSlash, headers, context, null, credentials, body,
         virtualHost);
   }
 }

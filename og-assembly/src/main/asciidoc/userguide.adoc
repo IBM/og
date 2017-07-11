@@ -151,8 +151,7 @@ Otherwise, the following sections describe OG configuration in detail.
 
 [[cref1]]
 *_Note that the weights used for selection of choices are strictly weights. They are not
-       percentages. The examples shown here do not imply that weights should add up to
-       100.0_*
+       percentages._*
 
 === Storage
 OG supports the following Storage APIs:
@@ -570,8 +569,8 @@ only for a specific operation type, see <<Operation Headers>>
   "custom_key_01": {
     "selection": "random",
     "choices": [
-      {"choice": "custom_value_01", "weight": 20.0},
-      {"choice": "custom_value_02", "weight": 75.0},
+      {"choice": "custom_value_01", "weight": 2.0},
+      {"choice": "custom_value_02", "weight": 7.0},
       {"choice": "custom_value_03", "weight": 5.0}
     ]
   },
@@ -580,9 +579,10 @@ only for a specific operation type, see <<Operation Headers>>
 ----
 _<<cref1,See note about weights>>_.
 
-=== Write, Overwrite, Read, Metadata, Delete, List, Container Create, Container List, Multipart Write Operations
+=== Write, Writecopy, Overwrite, Read, Metadata, Delete, List, Container Create, Container List, Multipart Write Operations
 Write, Read, Metadata, Delete, and List operations are supported for all Object Storage APIs.
-Overwrite is supported for S3 and OpenStack Swift
+Writecopy is only suppported for s3.
+Overwrite is supported for S3 and OpenStack Swift.
 Container Create and Container List are supported for S3 only and the current dsnet implementation
 requires the uri_root be set to "/".
 Multipart Write is also only supported for S3
@@ -627,7 +627,9 @@ Note that *object configuration property should be included under the Operation 
 If the object block is defined at root level, it will not have any effect.
 
 By default, OG will generate a unique, uuid-like object name for every write
-request. Overwrite, Read, Metadata, and Delete requests will select a random object name from
+request. Writecopy operation will select a random object name from objects which have already been written for source object.
+By default, the destination object name will be a unique, uuid-like object name.
+Overwrite, Read, Metadata, and Delete requests will select a random object name from
 objects which have already been written. List will use a random object name as its starting
 point and then provide the default number of entries for the associated API.
 See <<Object Management>>.
@@ -717,14 +719,14 @@ document.
 .Example Multipart Write using Multiple Part Sizes
 [source, json]
 "multipart_write": {
-        "weight": 100.0,
+        "weight": 1.0,
         "object": {"part_size":{"selection":"random","choices":[5242880, 10485760]}}
 }
 
 .Example Multipart Write using a Single Part Size
 [source, json]
 "multipart_write": {
-        "weight": 100.0,
+        "weight": 1.0,
         "object": {"part_size":5242880, 10485760}
 }
 
@@ -737,6 +739,47 @@ Once all parts are uploaded, a COMPLETE will be sent before any other PART or IN
 For example, in a 100 thread test, up to 100 INITIATE requests will be sent. Once one request
 returns, it will begin sending parts for that request, up to 100 parts at a time. Once all those
 parts are in process or finished, it will begin sending parts for the other requests.
+
+==== Operation ServerSide Encryption with Client Provided Key
+The uploaded object can be encrypted with server side encryption with client provided key. This can
+be indicated by setting sse_c_source property to true. In case of PUT COPY operation, the target object
+can be encrypted by setting sse_c_target property to true.
+
+OG uses predefined key for AES 256 encryption. This will be used as client encryption key unless
+relevant headers are provided in the config. The relevant headers for this are:
+
+* x-amz-server-side-encryption-customer-algorithm
+* x-amz-server-side-encryption-customer-key
+* x-amz-server-side-encryption-customer-key-MD5
+* x-amz-copy-source-server-side-encryption-customer-algorithm
+* x-amz-copy-source-server-side-encryption-customer-key
+* x-amz-copy-source-server-side-encryption-customer-key-MD5
+
+Please refer to AWS S3 API reference for further details about this header fields.
+
+An example write_copy operation is show below:
+----
+  "write_copy": {
+    "weight": 1.0,
+    "object": {
+      "prefix": "",
+      "min_suffix": 0,
+      "max_suffix": 9223372036854775807
+    },
+    "headers": {},
+    "parameters": {},
+    "body": "none",
+    "container": {
+      "selection": "random",
+      "min_suffix": -1,
+      "max_suffix": -1
+    },
+      "sse_c_source": true,
+      "sse_c_target": true
+  },
+----
+
+Refer to section <<operation_configuration>> in Appendix for further details about this configuration property.
 
 === Filesize
 OG supports one or more filesize distributions for describing object file
@@ -809,7 +852,7 @@ _<<cref1,See note about weights>>_.
         "spread": 2,
         "spread_unit": "kb"
       },
-      "weight": 80.0
+      "weight": 8.0
     },
     {
       "choice": {
@@ -817,7 +860,7 @@ _<<cref1,See note about weights>>_.
         "average": 100,
         "average_unit": "mb"
       },
-      "weight": 20.0
+      "weight": 1.0
     }
   ]
 }
@@ -1413,6 +1456,7 @@ mixed operation tests.
 |true
 |===
 
+[[operation_configuration]]
 ==== Operation Configuration
 |===
 |Parameter|Type|Required|Default
@@ -1436,6 +1480,16 @@ mixed operation tests.
 |Decimal
 |No
 |0.0
+
+|sse_c_source
+|boolean
+|No
+|false
+
+|sse_c_target
+|boolean
+|No
+|false
 |===
 
 ==== Object Configuration

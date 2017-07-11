@@ -16,6 +16,7 @@ public class Context {
   // FIXME header to differentiate between objects which can be stored in the object manager
   public static final String X_OG_SEQUENTIAL_OBJECT_NAME = "x-og-sequential-object-name";
   public static final String X_OG_OBJECT_SIZE = "x-og-object-size";
+  public static final String X_OG_CONTAINER_PREFIX = "x-og-container-prefix";
   public static final String X_OG_CONTAINER_SUFFIX = "x-og-container-suffix";
   public static final String X_OG_CONTAINER_NAME = "x-og-container-name";
   public static final String X_OG_USERNAME = "x-og-username";
@@ -32,6 +33,12 @@ public class Context {
   public static final String X_OG_MULTIPART_CONTAINER = "x-og-multipart-container";
   public static final String X_OG_MULTIPART_BODY_DATA_TYPE = "x-og-multipart-body-data-type";
   public static final String X_OG_MULTIPART_MAX_PARTS = "x-og-multipart-max-parts";
+  // Put Copy Keys
+  public static final String X_OG_SSE_SOURCE_OBJECT_NAME = "x_og_sse_source_object_name";
+  public static final String X_OG_SSE_SOURCE_OBJECT_CONTAINER_SUFFIX = "x_og_sse_source_object_container_suffix";
+  public static final String X_OG_SSE_SOURCE_OBJECT_SIZE = "x_og_sse_source_object_size";
+  public static final String X_OG_SSE_SOURCE_URI = "x_og_sse_source_uri";
+
 
   private Context() {}
 }
