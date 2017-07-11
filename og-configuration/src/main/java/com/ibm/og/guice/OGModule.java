@@ -185,9 +185,9 @@ public class OGModule extends AbstractModule {
       }
     });
     bindConstant().annotatedWith(Names.named("write.weight")).to(this.config.write.weight);
-    bindConstant().annotatedWith(Names.named("write.sseCSource")).to(this.config.write.sseCSource);
+    bindConstant().annotatedWith(Names.named("write.sseCDestination")).to(this.config.write.sseCDestination);
     bindConstant().annotatedWith(Names.named("overwrite.weight")).to(this.config.overwrite.weight);
-    bindConstant().annotatedWith(Names.named("overwrite.sseCSource")).to(this.config.read.sseCSource);
+    bindConstant().annotatedWith(Names.named("overwrite.sseCDestination")).to(this.config.read.sseCDestination);
     bindConstant().annotatedWith(Names.named("read.weight")).to(this.config.read.weight);
     bindConstant().annotatedWith(Names.named("read.sseCSource")).to(this.config.read.sseCSource);
     bindConstant().annotatedWith(Names.named("metadata.weight")).to(this.config.metadata.weight);
@@ -200,14 +200,14 @@ public class OGModule extends AbstractModule {
             .to(this.config.containerCreate.weight);
     bindConstant().annotatedWith(Names.named("multipartWrite.weight"))
             .to(this.config.multipartWrite.weight);
-    bindConstant().annotatedWith(Names.named("multipartWrite.sseCSource"))
-            .to(this.config.multipartWrite.sseCSource);
+    bindConstant().annotatedWith(Names.named("multipartWrite.sseCDestination"))
+            .to(this.config.multipartWrite.sseCDestination);
     bindConstant().annotatedWith(Names.named("writeCopy.weight"))
             .to(this.config.writeCopy.weight);
     bindConstant().annotatedWith(Names.named("writeCopy.sseCSource"))
             .to(this.config.writeCopy.sseCSource);
-    bindConstant().annotatedWith(Names.named("writeCopy.sseCTarget"))
-            .to(this.config.writeCopy.sseCTarget);
+    bindConstant().annotatedWith(Names.named("writeCopy.sseCDestination"))
+            .to(this.config.writeCopy.sseCDestination);
     bindConstant().annotatedWith(Names.named("virtualhost")).to(this.config.virtualHost);
     bindConstant().annotatedWith(Names.named("multipartWrite.targetSessions")).to(this.config.multipartWrite.upload.targetSessions);
     bind(AuthType.class).toInstance(this.config.authentication.type);
@@ -1600,16 +1600,16 @@ public class OGModule extends AbstractModule {
       final Function<Map<String, String>, Body> body,
       @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
       @Named("virtualhost") final boolean virtualHost,
-      @Named("write.sseCSource") final boolean encryptSource) {
+      @Named("write.sseCDestination") final boolean encryptDestinationObject) {
 
-    if (encryptSource) {
+    if (encryptDestinationObject) {
       checkArgument(this.config.data == DataType.ZEROES, "If SSE-C is enabled, data must be ZEROES [%s]",
               this.config.data);
     }
     final Map<String, Function<Map<String, String>, String>> queryParameters =
         Collections.emptyMap();
 
-    if (encryptSource) {
+    if (encryptDestinationObject) {
       if (!headers.containsKey("x-amz-server-side-encryption-customer-algorithm")) {
         headers.put("x-amz-server-side-encryption-customer-algorithm", provideSSEEncryptionAlgorithm());
       }
@@ -1643,10 +1643,10 @@ public class OGModule extends AbstractModule {
           @Named("writeCopy.context") final List<Function<Map<String, String>, String>> context,
           @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
           @Named("virtualhost") final boolean virtualHost,
-          @Named("writeCopy.sseCSource") final boolean encryptSource,
-          @Named("writeCopy.sseCTarget") final boolean encryptTarget)
+          @Named("writeCopy.sseCSource") final boolean encryptedSourceObject,
+          @Named("writeCopy.sseCDestination") final boolean encryptDestinationObject)
   {
-    if (encryptSource || encryptTarget) {
+    if (encryptedSourceObject || encryptDestinationObject) {
       checkArgument(this.config.data == DataType.ZEROES, "If SSE-C is enabled, data must be ZEROES [%s]",
               this.config.data);
     }
@@ -1675,7 +1675,7 @@ public class OGModule extends AbstractModule {
       }
     };
 
-    if (encryptTarget) {
+    if (encryptDestinationObject) {
 
       checkArgument(api == Api.S3, "WriteCopy operation is only supported for S3 API. Request API [%s]", api);
       if (!headers.containsKey("x-amz-server-side-encryption-customer-algorithm")) {
@@ -1688,7 +1688,7 @@ public class OGModule extends AbstractModule {
         headers.put("x-amz-server-side-encryption-customer-key-MD5", provideSSEKeyMD5());
       }
     }
-    if (encryptSource) {
+    if (encryptedSourceObject) {
       if (!headers.containsKey("x-amz-copy-source-server-side-encryption-customer-algorithm")) {
         headers.put("x-amz-copy-source-server-side-encryption-customer-algorithm", provideSSEEncryptionAlgorithm());
       }
@@ -1723,9 +1723,9 @@ public class OGModule extends AbstractModule {
       @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
       @Named("virtualhost") final boolean virtualHost,
       @Named("overwrite.weight") final double overwriteWeight,
-      @Named("overwrite.sseCSource") final boolean encryptSource) throws Exception {
+      @Named("overwrite.sseCDestination") final boolean encryptDestinationObject) throws Exception {
 
-    if (encryptSource) {
+    if (encryptDestinationObject) {
       checkArgument(this.config.data == DataType.ZEROES, "If SSE-C is enabled, data must be ZEROES [%s]",
               this.config.data);
     }
@@ -1738,7 +1738,7 @@ public class OGModule extends AbstractModule {
     final Map<String, Function<Map<String, String>, String>> queryParameters =
         Collections.emptyMap();
 
-    if (encryptSource) {
+    if (encryptDestinationObject) {
       if (!headers.containsKey("x-amz-server-side-encryption-customer-algorithm")) {
         headers.put("x-amz-server-side-encryption-customer-algorithm", provideSSEEncryptionAlgorithm());
       }
@@ -1769,12 +1769,12 @@ public class OGModule extends AbstractModule {
       @Named("read.context") final List<Function<Map<String, String>, String>> context,
       @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
       @Named("virtualhost") final boolean virtualHost,
-      @Named("read.sseCSource") final boolean encryptedSource) {
+      @Named("read.sseCSource") final boolean encryptedSourceObject) {
 
     final Map<String, Function<Map<String, String>, String>> queryParameters =
         Collections.emptyMap();
 
-    if (encryptedSource) {
+    if (encryptedSourceObject) {
       if (!headers.containsKey("x-amz-server-side-encryption-customer-algorithm")) {
         headers.put("x-amz-server-side-encryption-customer-algorithm", provideSSEEncryptionAlgorithm());
       }
@@ -1809,7 +1809,7 @@ public class OGModule extends AbstractModule {
       @Named("metadata.context") final List<Function<Map<String, String>, String>> context,
       @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
       @Named("virtualhost") final boolean virtualHost,
-      @Named("metadata.sseCSource") final boolean encryptedSource) {
+      @Named("metadata.sseCSource") final boolean encryptedSourceObject) {
 
     final Map<String, Function<Map<String, String>, String>> queryParameters =
         Collections.emptyMap();
@@ -1817,7 +1817,7 @@ public class OGModule extends AbstractModule {
     final Supplier<Body> bodySupplier = Suppliers.of(Bodies.none());
     final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
 
-    if (encryptedSource) {
+    if (encryptedSourceObject) {
       if (!headers.containsKey("x-amz-server-side-encryption-customer-algorithm")) {
         headers.put("x-amz-server-side-encryption-customer-algorithm", provideSSEEncryptionAlgorithm());
       }
@@ -1972,12 +1972,12 @@ public class OGModule extends AbstractModule {
           final Function<Map<String, String>, Body> body,
           @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
           @Named("virtualhost") final boolean virtualHost,
-          @Named("multipartWrite.sseCSource") final boolean encyrptSource) {
+          @Named("multipartWrite.sseCDestination") final boolean encryptDestinationObject) {
 
     final Map<String, Function<Map<String, String>, String>> queryParameters =
         Collections.emptyMap();
 
-    if (encyrptSource) {
+    if (encryptDestinationObject) {
       if (!headers.containsKey("x-amz-server-side-encryption-customer-algorithm")) {
         headers.put("x-amz-server-side-encryption-customer-algorithm", provideSSEEncryptionAlgorithm());
       }
