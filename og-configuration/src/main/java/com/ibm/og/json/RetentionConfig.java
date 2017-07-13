@@ -1,10 +1,12 @@
+/* Copyright (c) IBM Corporation 2016. All Rights Reserved.
+ * Project name: Object Generator
+ * This project is licensed under the Apache License 2.0, see LICENSE.
+ */
+
 package com.ibm.og.json;
 
 import java.util.concurrent.TimeUnit;
 
-/**
- * Created by nlahmed on 5/9/17.
- */
 public class RetentionConfig {
     public final Long expiry;
     public final TimeUnit timeUnit;

@@ -803,6 +803,9 @@ LegalHold.
 Retention add a time expiry to an object. The object will be protected until the
 retention time expires.
 
+The expiry value of -1 is a special value. In this case, no retention is set. The object retention is set to the default
+retention of the vault.
+
 ----
     "retention": {
       "selection": "random",

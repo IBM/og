@@ -6,6 +6,9 @@
 package com.ibm.og.object;
 
 import com.ibm.og.api.Operation;
+import com.ibm.og.api.Request;
+import com.ibm.og.api.Response;
+import com.ibm.og.util.Context;
 
 import java.util.Set;
 
@@ -29,13 +32,33 @@ public class WriteLegalHoldObjectNameConsumer extends AbstractObjectNameConsumer
 
   @Override
   protected void updateObjectManager(final ObjectMetadata objectName) {
-//    this.objectManager.getComplete(objectName);
-//    this.objectManager.removeObject(objectName);
     this.objectManager.updateObject(objectName);
   }
 
   @Override
+  protected byte getNumberOfLegalHolds(final Request request, final Response response) {
+    final String nHolds = request.getContext().get(Context.X_OG_NUM_LEGAL_HOLDS);
+
+    if (nHolds == null) {
+      return 0;
+    } else {
+      if (response.getStatusCode() != 200) {
+        return Byte.valueOf(nHolds);
+      }
+      else {
+        if (Byte.valueOf(nHolds) >= 0) {
+          byte reducedHolds = Byte.valueOf(nHolds);
+          reducedHolds += (byte) 1;
+          return reducedHolds;
+        } else {
+          return Byte.valueOf(nHolds);
+        }
+      }
+    }
+  }
+
+  @Override
   public String toString() {
-    return "WriteObjectNameConsumer []";
+    return "WriteLegalHoldObjectNameConsumer []";
   }
 }

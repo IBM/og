@@ -183,7 +183,9 @@ public class RequestSupplier implements Supplier<Request> {
 
     if (this.retention != null) {
       this.retention.apply(requestContext);
-      builder.withHeader(Context.X_OG_OBJECT_RETENTION, requestContext.get(Context.X_OG_OBJECT_RETENTION));
+      if (requestContext.get(Context.X_OG_OBJECT_RETENTION) != null) {
+        builder.withHeader(Context.X_OG_OBJECT_RETENTION, requestContext.get(Context.X_OG_OBJECT_RETENTION));
+      }
     }
 
     if (this.legalHold != null) {
@@ -204,13 +206,10 @@ public class RequestSupplier implements Supplier<Request> {
     if (this.body != null) {
       Body body = this.body.apply(requestContext);
       builder.withBody(body);
-      if (this.retention != null || this.contentMd5) {
-        //todo: add check for legalhold
+      if (this.retention != null || this.legalHold != null || this.contentMd5) {
         try {
           Long size = body.getSize();
           byte[] md5 = md5ContentCache.get(size);
-          String encodedMD5 = BaseEncoding.base64().encode(md5);
-          _logger.info("size {} b64md5 {}", size, encodedMD5);
           builder.withHeader(Context.X_OG_CONTENT_MD5, BaseEncoding.base64().encode(md5));
         } catch (Exception e) {
             _logger.error(e.getMessage());

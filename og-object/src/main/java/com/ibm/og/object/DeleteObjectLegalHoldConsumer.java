@@ -34,9 +34,7 @@ public class DeleteObjectLegalHoldConsumer extends AbstractObjectNameConsumer {
 
   @Override
   protected void updateObjectManager(final ObjectMetadata objectName) {
-    //this.objectManager.add(objectName);
     this.objectManager.updateObject(objectName);
-    _logger.info("consume object objectName");
   }
 
   @Override
@@ -46,10 +44,10 @@ public class DeleteObjectLegalHoldConsumer extends AbstractObjectNameConsumer {
     if (nHolds == null) {
       return 0;
     } else {
-      if (response.getStatusCode() == 404) {
+      if (response.getStatusCode() != 200) {
         return Byte.valueOf(nHolds);
       }
-      else if (response.getStatusCode() == 200) {
+      else {
         if (Byte.valueOf(nHolds) > 0) {
           byte reducedHolds = Byte.valueOf(nHolds);
           reducedHolds -= (byte) 1;
@@ -57,14 +55,12 @@ public class DeleteObjectLegalHoldConsumer extends AbstractObjectNameConsumer {
         } else {
           return Byte.valueOf(nHolds);
         }
-      } else {
-        return Byte.valueOf(nHolds);
       }
     }
   }
 
   @Override
   public String toString() {
-    return "ReadObjectNameConsumer []";
+    return "DeleteObjectLegalHoldConsumer []";
   }
 }

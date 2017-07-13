@@ -890,7 +890,6 @@ public class OGModule extends AbstractModule {
   private Function<Map<String, String>, String> provideObject(
           final OperationConfig operationConfig) {
     checkNotNull(operationConfig);
-    //todo: legalholds changes
     final ObjectConfig objectConfig = checkNotNull(operationConfig.object);
     final String prefix = checkNotNull(objectConfig.prefix);
     final Supplier<Long> suffixes = createObjectSuffixes(objectConfig);
@@ -960,12 +959,16 @@ public class OGModule extends AbstractModule {
     consumers.add(new ListObjectNameConsumer(objectManager, sc));
     consumers.add(new MultipartWriteObjectNameConsumer(objectManager, sc));
     consumers.add(new WriteCopyObjectNameConsumer(objectManager, sc));
-    consumers.add(new WriteLegalHoldObjectNameConsumer(objectManager, sc));
-    consumers.add(new ReadObjectLegalHoldConsumer(objectManager, sc));
-    Set<Integer> deleteLegalHoldsSc = Sets.newHashSet();
-    deleteLegalHoldsSc.addAll(sc);
-    deleteLegalHoldsSc.addAll(ContiguousSet.create(Range.closed(403,404), DiscreteDomain.integers()));
-    consumers.add(new DeleteObjectLegalHoldConsumer(objectManager, deleteLegalHoldsSc));
+    // add status code range (400, 451) for legalhold operations.
+    // while doing legalhold operation object is temporarily removed and stored in
+    // a separate cache. After the response is received object state is updated and the object is added
+    // back in the object manager
+    Set<Integer> legalHoldsSc = Sets.newHashSet();
+    legalHoldsSc.addAll(sc);
+    legalHoldsSc.addAll(ContiguousSet.create(Range.closed(400,451), DiscreteDomain.integers()));
+    consumers.add(new WriteLegalHoldObjectNameConsumer(objectManager, legalHoldsSc));
+    consumers.add(new ReadObjectLegalHoldConsumer(objectManager, legalHoldsSc));
+    consumers.add(new DeleteObjectLegalHoldConsumer(objectManager, legalHoldsSc));
 
     for (final AbstractObjectNameConsumer consumer : consumers) {
       eventBus.register(consumer);
@@ -1310,7 +1313,6 @@ public class OGModule extends AbstractModule {
   @Singleton
   @Named("write.retention")
   private Function<Map<String, String>, Long> provideWriteRetention() {
-    //return null;
     if (this.config.write.retention == null) {
       return null;
     }
@@ -1322,7 +1324,7 @@ public class OGModule extends AbstractModule {
     for (final ChoiceConfig<RetentionConfig> choice: retentions) {
       checkNotNull(choice);
       checkNotNull(choice.choice);
-      checkArgument(choice.choice.expiry > 0, "Expiry must be greater than zero");
+      checkArgument(choice.choice.expiry >= -1, "Expiry must be greater than or equal to -1");
     }
     return provideRetention(retentionConfig);
   }
@@ -1343,7 +1345,7 @@ public class OGModule extends AbstractModule {
     for (final ChoiceConfig<RetentionConfig> choice: retentions) {
       checkNotNull(choice);
       checkNotNull(choice.choice);
-      checkArgument(choice.choice.expiry > 0, "Expiry must be greater than zero");
+      checkArgument(choice.choice.expiry >= -1, "Expiry must be greater than or equal to -1");
     }
     return provideRetention(retentionConfig);
   }
@@ -1364,7 +1366,7 @@ public class OGModule extends AbstractModule {
     for (final ChoiceConfig<RetentionConfig> choice: retentions) {
       checkNotNull(choice);
       checkNotNull(choice.choice);
-      checkArgument(choice.choice.expiry > 0, "Expiry must be greater than zero");
+      checkArgument(choice.choice.expiry >= -1, "Expiry must be greater than or equal to -1");
     }
     return provideRetention(retentionConfig);
   }
@@ -1385,25 +1387,26 @@ public class OGModule extends AbstractModule {
     for (final ChoiceConfig<RetentionConfig> choice: retentions) {
       checkNotNull(choice);
       checkNotNull(choice.choice);
-      checkArgument(choice.choice.expiry > 0, "Expiry must be greater than zero");
+      checkArgument(choice.choice.expiry >= -1, "Expiry must be greater than or equal to -1");
     }
     return provideRetention(retentionConfig);
   }
 
   private Function<Map<String, String>, Long> provideRetention(final SelectionConfig<RetentionConfig> retentions) {
-
     final Supplier<RetentionConfig> retentionConfigSupplier;
     final SelectionType selection = checkNotNull(retentions.selection);
+
+    // if retentions list is empty return null
+    if (retentions.choices.isEmpty()) {
+      return null;
+    }
     if (SelectionType.ROUNDROBIN == selection) {
       final List<RetentionConfig> retentionConfigList = Lists.newArrayList();
-      for (final ChoiceConfig<RetentionConfig> choice: retentions.choices) {
-        retentionConfigList.add(choice.choice);
-      }
       retentionConfigSupplier = Suppliers.cycle(retentionConfigList);
     } else {
       final RandomSupplier.Builder<RetentionConfig> wrc = Suppliers.random();
       for (final ChoiceConfig<RetentionConfig> choice : retentions.choices) {
-        wrc.withChoice(choice.choice, choice.weight);
+          wrc.withChoice(choice.choice, choice.weight);
       }
       retentionConfigSupplier = wrc.build();
     }
@@ -1411,16 +1414,15 @@ public class OGModule extends AbstractModule {
 
       @Override
       public Long apply(final Map<String, String> input) {
-
-        if (retentionConfigSupplier != null) {
-          RetentionConfig retentionConfig = retentionConfigSupplier.get();
+        RetentionConfig retentionConfig = retentionConfigSupplier.get();
+        if (retentionConfig.expiry != -1L) {
           Long expiryTime = retentionConfig.timeUnit.toSeconds(retentionConfig.expiry);
-          checkArgument((expiryTime + System.currentTimeMillis()/1000) <= RetentionConfig.MAX_RETENTION_EXPIRY,
-              "The expiry in [%s] seconds duration should be earlier than January 19, 2038 3:14:07 AM", expiryTime);
+          checkArgument((expiryTime + System.currentTimeMillis() / 1000) <= RetentionConfig.MAX_RETENTION_EXPIRY,
+                  "The expiry in [%s] seconds duration should be earlier than January 19, 2038 3:14:07 AM", expiryTime);
           input.put(Context.X_OG_OBJECT_RETENTION, String.valueOf(expiryTime));
           return expiryTime;
         } else {
-          return new Long(0);
+          return -1L;
         }
       }
     };
@@ -1474,21 +1476,9 @@ public class OGModule extends AbstractModule {
   @Singleton
   @Named("overwrite.legalHold")
   private Function<Map<String, String>, String> provideOverwriteLegalHold() {
-    //todo: what is the semantics here? can we overwrite object? it should not be
-    // allowed actually
-
-    return null;
+    return provideLegalHold(config.overwrite.legalHold);
   }
 
-
-  @Provides
-  @Singleton
-  @Named("post.legalHold")
-  private Function<Map<String, String>, String> providePostLegalHold() {
-    provideLegalHold(null);
-
-    return null;
-  }
 
   private Function<Map<String, String>, String> provideLegalHold(final LegalHold legalHold) {
     if (legalHold == null) {
@@ -1517,7 +1507,7 @@ public class OGModule extends AbstractModule {
           } else {
             context.put(Context.X_OG_LEGAL_HOLD_PREFIX, "LegalHold");
           }
-          String val = legalHold.legalHoldPrefix.concat(String.valueOf(1));
+          String val = context.get(Context.X_OG_LEGAL_HOLD_PREFIX).concat(String.valueOf(1));
           context.put(Context.X_OG_LEGAL_HOLD, val);
           context.put(Context.X_OG_NUM_LEGAL_HOLDS, String.valueOf(1));
           return val;
@@ -1625,9 +1615,7 @@ public class OGModule extends AbstractModule {
     return queryParameters;
   }
 
-//  @Provides
-//  @Singleton
-//  @Named("legalhold.queryparameters")
+
   private Map<String, Function<Map<String,String>, String>> provideLegalHoldQueryParameters(boolean remove) {
     final Map<String, Function<Map<String, String>, String>> queryParameters;
     queryParameters = Maps.newLinkedHashMap();
@@ -1943,8 +1931,14 @@ public class OGModule extends AbstractModule {
       @Nullable @Named("write.retention") final Function<Map<String, String>, Long> retention,
       @Nullable @Named("write.legalHold") final Function<Map<String, String>, String> legalHold,
       @Nullable @Named("write.contentMd5") final boolean contentMd5) {
+
     if (encryptDestinationObject) {
       checkArgument(this.config.data == DataType.ZEROES, "If SSE-C is enabled, data must be ZEROES [%s]",
+              this.config.data);
+    }
+
+    if (contentMd5) {
+      checkArgument(this.config.data == DataType.ZEROES, "If contentMD5 is set, data must be ZEROES [%s]",
               this.config.data);
     }
     final Map<String, Function<Map<String, String>, String>> queryParameters =
@@ -2066,6 +2060,7 @@ public class OGModule extends AbstractModule {
       @Named("overwrite.weight") final double overwriteWeight,
       @Named("overwrite.sseCDestination") final boolean encryptDestinationObject,
       @Nullable @Named("overwrite.retention") final Function<Map<String, String>, Long> retention,
+      @Nullable @Named("overwrite.legalHold") final Function<Map<String, String>, String> legalHold,
       @Nullable @Named("overwrite.contentMd5") final boolean contentMd5) throws Exception {
 
     if (encryptDestinationObject) {
@@ -2076,6 +2071,11 @@ public class OGModule extends AbstractModule {
     // SOH needs to use a special response consumer to extract the returned object id
     if (Api.SOH == api && overwriteWeight > 0.0) {
       throw new Exception("Overwrites are not compatible with SOH");
+    }
+
+    if (contentMd5) {
+      checkArgument(this.config.data == DataType.ZEROES, "If contentMD5 is set, data must be ZEROES [%s]",
+              this.config.data);
     }
 
     final Map<String, Function<Map<String, String>, String>> queryParameters =
@@ -2094,7 +2094,7 @@ public class OGModule extends AbstractModule {
     }
     return createRequestSupplier(Operation.OVERWRITE, id, Method.PUT, scheme, host, port, uriRoot,
         container, apiVersion, object, queryParameters, headers, context, null, body, credentials,
-        virtualHost, retention, null, contentMd5);
+        virtualHost, retention, legalHold, contentMd5);
   }
 
   @Provides
@@ -2368,7 +2368,7 @@ public class OGModule extends AbstractModule {
     final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
 
     //todo: container creation operation only need the retention. Do we need to support
-    // the vault or container creation with retention in OG?
+    // the vault or container creation with retention in OG when worm feature is supported in container mode
     return createRequestSupplier(Operation.CONTAINER_CREATE, id, Method.PUT, scheme, host, port,
         uriRoot, container, apiVersion, null, queryParameters, headers, context, null, body, credentials,
         virtualHost, retention, null, false);
@@ -2413,8 +2413,7 @@ public class OGModule extends AbstractModule {
           final Function<Map<String, String>, Body> body,
           @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
           @Named("virtualhost") final boolean virtualHost,
-          @Named("multipartWrite.sseCDestination") final boolean encryptDestinationObject,
-          @Nullable @Named("multipartWrite.retention") final Function<Map<String, String>, Long> retention) {
+          @Named("multipartWrite.sseCDestination") final boolean encryptDestinationObject) {
 
     final Map<String, Function<Map<String, String>, String>> queryParameters =
         Collections.emptyMap();
@@ -2432,6 +2431,7 @@ public class OGModule extends AbstractModule {
     }
     //todo: Not sure if sending the above headers with multipart complete request will cause problems. As per the
     // AWS s3 API guide they are not required for complete request.
+
     return createMultipartRequestSupplier(id, scheme, host, port, uriRoot, container, apiVersion, object,
         partSize, partsPerSession, targetSessions, queryParameters, headers, context, body, credentials, virtualHost);
   }

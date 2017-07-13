@@ -48,7 +48,6 @@ public class LegalholdObjectNameFunction implements Function<Map<String, String>
    */
   @Override
   public String apply(final Map<String, String> context) {
-    //final ObjectMetadata objectMetadata = this.objectManager.getOnce();
     final ObjectMetadata objectMetadata = this.objectManager.removeForUpdate();
     context.put(Context.X_OG_OBJECT_NAME, objectMetadata.getName());
     context.put(Context.X_OG_OBJECT_SIZE, String.valueOf(objectMetadata.getSize()));
