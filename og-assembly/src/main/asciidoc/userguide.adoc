@@ -743,7 +743,7 @@ parts are in process or finished, it will begin sending parts for the other requ
 ==== Operation ServerSide Encryption with Client Provided Key
 The uploaded object can be encrypted with server side encryption with client provided key. This can
 be indicated by setting sse_c_source property to true. In case of PUT COPY operation, the target object
-can be encrypted by setting sse_c_target property to true.
+can be encrypted by setting sse_c_destination property to true.
 
 OG uses predefined key for AES 256 encryption. This will be used as client encryption key unless
 relevant headers are provided in the config. The relevant headers for this are:
@@ -775,7 +775,7 @@ An example write_copy operation is show below:
       "max_suffix": -1
     },
       "sse_c_source": true,
-      "sse_c_target": true
+      "sse_c_destination": true
   },
 ----
 
@@ -1486,7 +1486,7 @@ mixed operation tests.
 |No
 |false
 
-|sse_c_target
+|sse_c_destination
 |boolean
 |No
 |false
