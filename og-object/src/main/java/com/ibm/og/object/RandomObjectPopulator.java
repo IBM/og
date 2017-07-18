@@ -22,6 +22,7 @@ import java.io.RandomAccessFile;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Random;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.UUID;
@@ -37,6 +38,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import com.google.common.util.concurrent.Uninterruptibles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,8 +62,10 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
   private final RandomAccessConcurrentHashSet<ObjectMetadata> objects =
       new RandomAccessConcurrentHashSet<ObjectMetadata>();
   private final ReadWriteLock objectsLock = new ReentrantReadWriteLock(true);
-  private final SortedMap<ObjectMetadata, Integer> currentlyReading =
-      Collections.synchronizedSortedMap(new TreeMap<ObjectMetadata, Integer>());
+  private final SortedMap<String, Integer> currentlyReading =
+      Collections.synchronizedSortedMap(new TreeMap<String, Integer>());
+  private final SortedMap<String, ObjectMetadata> currentlyUpdating =
+          Collections.synchronizedSortedMap(new TreeMap<String, ObjectMetadata>());
   private final ReadWriteLock readingLock = new ReentrantReadWriteLock(true);
   private final ReadWriteLock persistLock = new ReentrantReadWriteLock(true);
   private final File saveFile;
@@ -218,19 +222,76 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
         checkForNull(id);
         boolean unavailable;
         this.readingLock.readLock().lock();
-        unavailable = this.currentlyReading.containsKey(id);
+        unavailable = this.currentlyReading.containsKey(id.getName());
         this.readingLock.readLock().unlock();
         if (unavailable) {
           this.objects.put(id);
           id = null;
         }
       }
-      _logger.trace("Removing object: {}", id);
+      _logger.debug("Removing object: {}", id);
       return id;
     } finally {
       this.persistLock.readLock().unlock();
     }
   }
+
+  @Override
+  public ObjectMetadata removeForUpdate() {
+    this.persistLock.readLock().lock();
+    try {
+      ObjectMetadata id = null;
+      while (id == null) {
+        this.objectsLock.writeLock().lock();
+        id = this.objects.removeRandom();
+        this.objectsLock.writeLock().unlock();
+        checkForNull(id);
+        boolean unavailable;
+        this.readingLock.readLock().lock();
+        unavailable = this.currentlyReading.containsKey(id.getName());
+        this.readingLock.readLock().unlock();
+        if (unavailable) {
+          this.objects.put(id);
+          id = null;
+        }
+      }
+      _logger.debug("Removing object: {}", id);
+      this.currentlyUpdating.put(id.getName(), id);
+      return id;
+    } finally {
+      this.persistLock.readLock().unlock();
+    }
+  }
+  @Override
+  public ObjectMetadata removeObject(ObjectMetadata objectMetadata) {
+    this.persistLock.readLock().lock();
+    try {
+      ObjectMetadata id = null;
+      while (id == null) {
+        this.objectsLock.writeLock().lock();
+        id = this.objects.remove(objectMetadata);
+        this.objectsLock.writeLock().unlock();
+        checkForNull(id);
+        boolean unavailable;
+        this.readingLock.readLock().lock();
+        unavailable = this.currentlyReading.containsKey(id.getName());
+        this.readingLock.readLock().unlock();
+        if (unavailable) {
+          _logger.info("object {} is available already in currently reading. so skipping", id.getName());
+          this.objects.put(id);
+          id = null;
+        }
+      }
+      _logger.trace("Removing object: {}", id);
+      this.currentlyUpdating.put(id.getName(), id);
+      return id;
+    } finally {
+      this.persistLock.readLock().unlock();
+    }
+
+  }
+
+
 
   private void checkForNull(final ObjectMetadata id) {
     if (id == null) {
@@ -257,13 +318,13 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
 
     int count = 0;
     this.readingLock.writeLock().lock();
-    if (this.currentlyReading.containsKey(id)) {
+    if (this.currentlyReading.containsKey(id.getName())) {
       // The only reason to have both locked simultaneously is to prevent an id from being
       // selected for deletion before it has been added to currentlyReading
       this.objectsLock.readLock().unlock();
-      count = this.currentlyReading.get(id).intValue();
+      count = this.currentlyReading.get(id.getName()).intValue();
     }
-    this.currentlyReading.put(id, Integer.valueOf(count + 1));
+    this.currentlyReading.put(id.getName(), Integer.valueOf(count + 1));
     if (count == 0) {
       this.objectsLock.readLock().unlock();
     }
@@ -274,13 +335,54 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
   }
 
   @Override
+  public ObjectMetadata getOnce() {
+    if (this.testEnded) {
+      throw new RuntimeException("Test already ended");
+    }
+
+    ObjectMetadata id = null;
+    while (id == null) {
+      this.objectsLock.readLock().lock();
+      id = this.objects.getRandom();
+      try {
+        checkForNull(id);
+      } catch (final ObjectManagerException e) {
+        this.objectsLock.readLock().unlock();
+        throw e;
+      }
+
+      this.readingLock.writeLock().lock();
+      if (this.currentlyReading.containsKey(id.getName())) {
+        // The only reason to have both locked simultaneously is to prevent an id from being
+        // selected for deletion before it has been added to currentlyReading
+        _logger.debug("object {} already found in currently reading",id.getName());
+        id = null;
+        Uninterruptibles.sleepUninterruptibly(20, TimeUnit.MILLISECONDS);
+      } else {
+        // The only reason to have both locked simultaneously is to prevent an id from being
+        // selected for deletion before it has been added to currentlyReading
+        this.currentlyReading.put(id.getName(),1);
+        _logger.debug("adding object {} to currently reading",id.getName());
+      }
+      this.readingLock.writeLock().unlock();
+      this.objectsLock.readLock().unlock();
+    }
+    _logger.trace("Getting currently not read object : {}", id);
+    return id;
+  }
+
+  @Override
   public void getComplete(final ObjectMetadata id) {
     this.readingLock.writeLock().lock();
-    final int count = this.currentlyReading.get(id).intValue();
+    Integer c = this.currentlyReading.get(id.getName());
+    _logger.debug("id {} count {}", id, c);
+    final int count = this.currentlyReading.get(id.getName()).intValue();
     if (count > 1) {
-      this.currentlyReading.put(id, Integer.valueOf(count - 1));
+      this.currentlyReading.put(id.getName(), Integer.valueOf(count - 1));
+      _logger.debug("decrementing {} from currentlyReading", id.getName());
     } else {
-      this.currentlyReading.remove(id);
+      _logger.debug("removing {} from currentlyReading", id.getName());
+      this.currentlyReading.remove(id.getName());
     }
     this.readingLock.writeLock().unlock();
     _logger.trace("Returning read object: {}", id);
@@ -289,7 +391,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
 
   @Override
   public void add(final ObjectMetadata id) {
-    _logger.trace("Adding object: {}", id);
+    _logger.debug("Adding object: {}", id);
     this.persistLock.readLock().lock();
     try {
       this.objects.put(id);
@@ -298,6 +400,36 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
     }
   }
 
+  @Override
+  public void updateObject(final ObjectMetadata id) {
+    _logger.debug("Adding Updated object: {}", id);
+    this.persistLock.readLock().lock();
+    try {
+      this.currentlyUpdating.remove(id.getName());
+      this.objects.put(id);
+    } finally {
+      this.persistLock.readLock().unlock();
+    }
+  }
+
+  @Override
+  public void removeUpdatedObject(final ObjectMetadata id) {
+    _logger.debug("Removing Updated object: {}", id);
+    this.persistLock.readLock().lock();
+    try {
+      this.currentlyUpdating.remove(id.getName());
+    } finally {
+      this.persistLock.readLock().unlock();
+    }
+  }
+
+  @Override
+  public int getCurrentlyUpdatingCount() {
+    this.persistLock.readLock().lock();
+    int size = this.currentlyUpdating.size();
+    this.persistLock.readLock().unlock();
+    return size;
+  }
   private void persistIds() throws IOException {
     _logger.info("persisting objects");
     this.persistLock.writeLock().lock();
@@ -373,6 +505,10 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
         String.format("Writing state file: %d objects into ", this.objects.size()) + this.saveFile);
     for (final Iterator<ObjectMetadata> iterator = this.objects.iterator(); iterator.hasNext();) {
       out.write(iterator.next().toBytes());
+    }
+    Set<String> ids = this.currentlyUpdating.keySet();
+    for (String id : ids) {
+      out.write(this.currentlyUpdating.get(id).toBytes());
     }
     out.close();
     this.persistLock.writeLock().unlock();

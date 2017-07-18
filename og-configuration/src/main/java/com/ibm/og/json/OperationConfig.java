@@ -9,6 +9,7 @@ import java.util.Map;
 
 import com.ibm.og.api.BodySource;
 import com.google.common.collect.Maps;
+import com.ibm.og.json.LegalHold;
 
 public class OperationConfig {
   public double weight;
@@ -21,6 +22,9 @@ public class OperationConfig {
   public MultipartConfig upload;
   public boolean sseCSource;
   public boolean sseCDestination;
+  public LegalHold legalHold;
+  public SelectionConfig<RetentionConfig> retention;
+  public boolean contentMd5;
 
   public OperationConfig(final double weight) {
     this();
@@ -36,5 +40,8 @@ public class OperationConfig {
     this.body = BodySource.NONE;
     this.container = new ContainerConfig();
     this.upload = new MultipartConfig();
+    this.legalHold = null;
+    this.retention = null;
+    this.contentMd5 = false;
   }
 }

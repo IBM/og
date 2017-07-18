@@ -579,10 +579,15 @@ only for a specific operation type, see <<Operation Headers>>
 ----
 _<<cref1,See note about weights>>_.
 
-=== Write, Writecopy, Overwrite, Read, Metadata, Delete, List, Container Create, Container List, Multipart Write Operations
+=== Write, Overwrite, Read, Metadata, Delete, List, Container Create, Container List, Multipart Write Operations, Write Legalhold, Delete Legalhold, Read Legalhold
+
 Write, Read, Metadata, Delete, and List operations are supported for all Object Storage APIs.
+Write operation supports adding LegalHold and retention to the object.
 Writecopy is only suppported for s3.
-Overwrite is supported for S3 and OpenStack Swift.
+Overwrite is supported for S3 and OpenStack Swift
+Write Legalhold operation will add a Legalhold to an existing object.
+Delete Legalhold operation will remove Legalhold on an object.
+Read Legalhold operation will list the legalholds on an object
 Container Create and Container List are supported for S3 only and the current dsnet implementation
 requires the uri_root be set to "/".
 Multipart Write is also only supported for S3
@@ -780,6 +785,41 @@ An example write_copy operation is show below:
 ----
 
 Refer to section <<operation_configuration>> in Appendix for further details about this configuration property.
+
+=== Operation LegalHold
+When Legalhold is set on the object, the object is protected and cannot be modified until
+the legalhold is removed from the object.
+
+If a legalhold prefix is specified, that will be used. Otherwise, the prefix is
+LegalHold.
+
+----
+    "legal_hold": {
+      "legal_hold_prefix": "MyLegalHold"
+    }
+----
+
+=== Operation Retention
+Retention add a time expiry to an object. The object will be protected until the
+retention time expires.
+
+The expiry value of -1 is a special value. In this case, no retention is set. The object retention is set to the default
+retention of the vault.
+
+----
+    "retention": {
+      "selection": "random",
+      "choices": [
+        {
+          "choice": {
+            "expiry": 86400,
+            "time_unit": "seconds"
+          },
+          "weight": 1.0
+        }
+      ]
+    }
+----
 
 === Filesize
 OG supports one or more filesize distributions for describing object file
@@ -1490,6 +1530,17 @@ mixed operation tests.
 |boolean
 |No
 |false
+
+|Retention
+|Complex
+|No
+|None
+
+|LegalHold
+|Complex
+|No
+|None
+
 |===
 
 ==== Object Configuration

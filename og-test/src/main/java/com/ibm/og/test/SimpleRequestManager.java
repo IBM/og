@@ -69,7 +69,13 @@ public class SimpleRequestManager implements RequestManager {
       @Named("multipartWrite") final Supplier<Request> writeMultipart,
       @Named("multipartWrite.weight") final double writeMultipartWeight,
       @Named("writeCopy") final Supplier<Request> writeCopy,
-      @Named("writeCopy.weight") final double writeCopyWeight){
+      @Named("writeCopy.weight") final double writeCopyWeight,
+      @Named("write_legalhold") final Supplier<Request> writeLegalHold,
+      @Named("write_legalhold.weight") final double writeLegalHoldWeight,
+      @Named("read_legalhold") final Supplier<Request> readLegalhold,
+      @Named("read_legalhold.weight") final double readLegalholdWeight,
+      @Named("delete_legalhold") final Supplier<Request> deleteLegalhold,
+      @Named("delete_legalhold.weight") final double deleteLegalholdWeight){
 
     checkNotNull(write);
     checkNotNull(overwrite);
@@ -113,6 +119,16 @@ public class SimpleRequestManager implements RequestManager {
     if (writeCopyWeight > 0.0){
       wrc.withChoice(writeCopy, writeCopyWeight);
     }
+    if (writeLegalHoldWeight > 0.0) {
+      wrc.withChoice(writeLegalHold, writeLegalHoldWeight);
+    }
+    if (readLegalholdWeight > 0.0) {
+      wrc.withChoice(readLegalhold, readLegalholdWeight);
+    }
+    if (deleteLegalholdWeight > 0.0) {
+      wrc.withChoice(deleteLegalhold, deleteLegalholdWeight);
+    }
+
     this.requestSupplier = wrc.build();
   }
 
