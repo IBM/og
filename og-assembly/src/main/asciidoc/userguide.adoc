@@ -724,15 +724,34 @@ document.
 .Example Multipart Write using Multiple Part Sizes
 [source, json]
 "multipart_write": {
-        "weight": 1.0,
-        "object": {"part_size":{"selection":"random","choices":[5242880, 10485760]}}
-}
+    "upload": {
+        "part_size": {
+            "choices": [
+                {
+                    "choice": 5242880,
+                    "weight": 1
+                },
+                {
+                    "choice": 10242880,
+                    "weight": 2
+                }
+            ],
+            "selection": "random"
+        },
+        "parts_per_session": {
+            "choices": [],
+            "selection": "random"
+        },
+        "target_sessions": 1
+    },
+    "weight": 100
+},
 
 .Example Multipart Write using a Single Part Size
 [source, json]
 "multipart_write": {
         "weight": 1.0,
-        "object": {"part_size":5242880}
+        "part_size": 5242880
 }
 
 Regarding the OG implementation of Multipart Write, there are some caveats. In the current
@@ -790,12 +809,15 @@ Refer to section <<operation_configuration>> in Appendix for further details abo
 When Legalhold is set on the object, the object is protected and cannot be modified until
 the legalhold is removed from the object.
 
-If a legalhold prefix is specified, that will be used. Otherwise, the prefix is
-LegalHold.
+If a legalhold prefix is specified, that will be used. Otherwise, the default prefix is
+"LegalHold".  The percentage field indicates percent times the legal_hold operation is supplied.
+The percentage value for write operation can be between 0 and 100. For write_legalhold and delete_legalhold operations
+percentage must be 100.00.
 
 ----
     "legal_hold": {
-      "legal_hold_prefix": "MyLegalHold"
+      "legal_hold_prefix": "MyLegalHold",
+      "percentage" : 50.00
     }
 ----
 
