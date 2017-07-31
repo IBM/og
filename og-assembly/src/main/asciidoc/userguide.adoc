@@ -823,7 +823,7 @@ retention of the vault.
 
 === Filesize
 OG supports one or more filesize distributions for describing desired body lengths of
-generated objects. Filesize configuration block can be added to _write_, _overwrite_ and _multi_write_ 
+generated objects. Filesize configuration block can be added to _write_, _overwrite_ and _multipart_write_ 
 operations to override global configuration. If multiple filesize distributions are
 configured, round robin, random and weighted random selection are supported.
 
