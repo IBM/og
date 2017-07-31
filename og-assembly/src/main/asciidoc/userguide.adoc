@@ -732,7 +732,7 @@ document.
 [source, json]
 "multipart_write": {
         "weight": 1.0,
-        "object": {"part_size":5242880, 10485760}
+        "object": {"part_size":5242880}
 }
 
 Regarding the OG implementation of Multipart Write, there are some caveats. In the current
@@ -822,8 +822,9 @@ retention of the vault.
 ----
 
 === Filesize
-OG supports one or more filesize distributions for describing object file
-sizes to be written for write requests. If multiple filesize distributions are
+OG supports one or more filesize distributions for describing desired body lengths of
+generated objects. Filesize configuration block can be added to _write_, _overwrite_ and _multipart_write_ 
+operations to override global configuration. If multiple filesize distributions are
 configured, round robin, random and weighted random selection are supported.
 
 Each file size distribution supports _distribution_, _average_, _average_unit_,
@@ -854,6 +855,20 @@ See <<Filesize Units>> for details. Units are case insensitive.
   "spread_unit": "kb"
 }
 ----
+
+.Example Multipart Write Operation using its own Filesize Distribution
+[source, json]
+"multipart_write": {
+  "weight": 1.0,
+  "object": {"part_size":5242880},
+  "filesize": {
+    "distribution": "uniform",
+    "average": 10,
+    "average_unit": "mb",
+    "spread": 5,
+    "spread_unit": "mb"
+  }
+}
 
 .Multiple Filesize Distributions Round Robin Example
 [source, json]
