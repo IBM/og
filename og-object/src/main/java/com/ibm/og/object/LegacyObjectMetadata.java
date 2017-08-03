@@ -23,7 +23,7 @@ public class LegacyObjectMetadata implements ObjectMetadata {
   public static final int OBJECT_SIZE_SIZE = 8;
   public static final int OBJECT_SUFFIX_SIZE = 4;
   public static final int OBJECT_LEGAL_HOLDS_SIZE = 1;
-  public static final int OBJECT_RETENTION_SIZE = 8;
+  public static final int OBJECT_RETENTION_SIZE = 4;
   public static final int OBJECT_SIZE = OBJECT_NAME_SIZE + OBJECT_SIZE_SIZE + OBJECT_SUFFIX_SIZE +
           OBJECT_LEGAL_HOLDS_SIZE + OBJECT_RETENTION_SIZE;
   private static final BaseEncoding ENCODING = BaseEncoding.base16().lowerCase();
@@ -59,7 +59,7 @@ public class LegacyObjectMetadata implements ObjectMetadata {
    * @throws IllegalArgumentException if objectSize is negative
    */
   public static LegacyObjectMetadata fromMetadata(final String objectName, final long objectSize,
-      final int containerSuffix, final byte numLegalHolds, final long retentionPeriod) {
+      final int containerSuffix, final byte numLegalHolds, final int retentionPeriod) {
     checkNotNull(objectName);
     // HACK; assume 1 char == 2 bytes for object name string length checking
     final int stringLength = 2 * OBJECT_NAME_SIZE;
@@ -76,7 +76,7 @@ public class LegacyObjectMetadata implements ObjectMetadata {
     objectBuffer.putLong(objectSize);
     objectBuffer.putInt(containerSuffix);
     objectBuffer.put(numLegalHolds);
-    objectBuffer.putLong(retentionPeriod);
+    objectBuffer.putInt(retentionPeriod);
     return new LegacyObjectMetadata(objectBuffer);
   }
 
@@ -101,8 +101,8 @@ public class LegacyObjectMetadata implements ObjectMetadata {
   }
 
   @Override
-  public long getRetention() {
-    long retention = this.objectBuffer.getLong(OBJECT_NAME_SIZE + OBJECT_SIZE_SIZE + OBJECT_SUFFIX_SIZE + OBJECT_LEGAL_HOLDS_SIZE);
+  public int getRetention() {
+    int retention = this.objectBuffer.getInt(OBJECT_NAME_SIZE + OBJECT_SIZE_SIZE + OBJECT_SUFFIX_SIZE + OBJECT_LEGAL_HOLDS_SIZE);
     return retention;
   }
 
@@ -121,10 +121,6 @@ public class LegacyObjectMetadata implements ObjectMetadata {
     byte[] a1 = Arrays.copyOf(toBytes(), OBJECT_NAME_SIZE + OBJECT_SIZE_SIZE + OBJECT_SUFFIX_SIZE);
     byte[] a2 = Arrays.copyOf(other.toBytes(), OBJECT_NAME_SIZE + OBJECT_SIZE_SIZE + OBJECT_SUFFIX_SIZE);
     return  Arrays.equals(a1, a2);
-    //return Arrays.equals(toBytes(), other.toBytes());
-//    for (int i=0; i<OBJECT_NAME_SIZE + OBJECT_SIZE_SIZE + OBJECT_SIZE_SIZE; i++) {
-//      if (this.objectBuffer.)
-//    }
   }
 
   @Override

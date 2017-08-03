@@ -129,31 +129,31 @@ public class ObjectFileTest {
   public static Object[][] provideInvalidFilter() {
     final InputStream in = new ByteArrayInputStream(new byte[] {});
     final OutputStream out = new ByteArrayOutputStream();
-    return new Object[][] {{null, out, 0, 0, 0, 0, new HashSet<Integer>(), false, -1L, -1L, NullPointerException.class},
-        {in, null, 0, 0, 0, 0, new HashSet<Integer>(), false, -1L, -1L, NullPointerException.class},
-        {in, out, -1, 0, 0, 0, new HashSet<Integer>(), false, -1L, 60L, IllegalArgumentException.class},
-        {in, out, 0, -1, 0, 0, new HashSet<Integer>(), false, -1L, 1610612735L, IllegalArgumentException.class},
-        {in, out, 10, 9, 0, 0, new HashSet<Integer>(), false, -1L, 3798720306000L, IllegalArgumentException.class},
-        {in, out, 0, 0, -2, 2, new HashSet<Integer>(), false, -1L, 3798720306000L, IllegalArgumentException.class},
-        {in, out, 0, 0, 4, 3, new HashSet<Integer>(), false, -1L, -1L, IllegalArgumentException.class}};
+    return new Object[][] {{null, out, 0, 0, 0, 0, new HashSet<Integer>(), 0, 100, -1L, -1L, NullPointerException.class},
+        {in, null, 0, 0, 0, 0, new HashSet<Integer>(), 0, 100,-1L, -1L, NullPointerException.class},
+        {in, out, -1, 0, 0, 0, new HashSet<Integer>(), 0, 100, -1L, 60L, IllegalArgumentException.class},
+        {in, out, 0, -1, 0, 0, new HashSet<Integer>(), 0, 100, -1L, 1610612735L, IllegalArgumentException.class},
+        {in, out, 10, 9, 0, 0, new HashSet<Integer>(), 0, 100, -1L, 3798720306000L, IllegalArgumentException.class},
+        {in, out, 0, 0, -2, 2, new HashSet<Integer>(), 0, 100, -1L, 3798720306000L, IllegalArgumentException.class},
+        {in, out, 0, 0, 4, 3, new HashSet<Integer>(), 0, 100, -1L, -1L, IllegalArgumentException.class}};
   }
 
   @Test
   @UseDataProvider("provideInvalidFilter")
   public void invalidFilter(final InputStream in, final OutputStream out, final long minFilesize,
       final long maxFilesize, final int minContainerSuffix, final int maxContainerSuffix, final Set<Integer> containerSuffixes,
-      final boolean legalholds, final long minRetention, final long maxRetention,  final Class<Exception> expectedException) throws IOException {
+      final int minLegalHolds, final int maxLegalHolds, final long minRetention, final long maxRetention,  final Class<Exception> expectedException) throws IOException {
     this.thrown.expect(expectedException);
     ObjectFile.filter(in, out, minFilesize, maxFilesize, minContainerSuffix, maxContainerSuffix, containerSuffixes,
-            legalholds, minRetention, maxRetention);
+            minLegalHolds, maxLegalHolds, minRetention, maxRetention);
   }
 
   @Test
   public void filter() throws IOException {
     final String s = UUID.randomUUID().toString().replace("-", "") + "0000";
-    final ObjectMetadata o1 = LegacyObjectMetadata.fromMetadata(s, 1, 1, (byte)-1, -1);
-    final ObjectMetadata o2 = LegacyObjectMetadata.fromMetadata(s, 2, 2, (byte)-1, -1);
-    final ObjectMetadata o3 = LegacyObjectMetadata.fromMetadata(s, 3, 3, (byte)-1, -1);
+    final ObjectMetadata o1 = LegacyObjectMetadata.fromMetadata(s, 1, 1, (byte)0, -1);
+    final ObjectMetadata o2 = LegacyObjectMetadata.fromMetadata(s, 2, 2, (byte)0, -1);
+    final ObjectMetadata o3 = LegacyObjectMetadata.fromMetadata(s, 3, 3, (byte)0, -1);
     final ByteArrayOutputStream source = new ByteArrayOutputStream();
     source.write(o1.toBytes());
     source.write(o2.toBytes());
@@ -162,7 +162,7 @@ public class ObjectFileTest {
     final ByteArrayInputStream in = new ByteArrayInputStream(source.toByteArray());
     final ByteArrayOutputStream out = new ByteArrayOutputStream();
     final Set<Integer> pointSuffixList = new HashSet<Integer>();
-    ObjectFile.filter(in, out, 1, 2, 2, 3, new HashSet<Integer>(), false, -1L, -1L);
+    ObjectFile.filter(in, out, 1, 2, 2, 3, new HashSet<Integer>(), 0, 100, -1L, -1L);
 
     assertThat(out.size(), is(LegacyObjectMetadata.OBJECT_SIZE));
     final ObjectMetadata filtered = LegacyObjectMetadata.fromBytes(out.toByteArray());
@@ -173,10 +173,10 @@ public class ObjectFileTest {
   @Test
   public void filter_retention() throws IOException {
     final String s = UUID.randomUUID().toString().replace("-", "") + "0000";
-    long retention = 70L * 365L* 24L* 3600L;
-    final ObjectMetadata o1 = LegacyObjectMetadata.fromMetadata(s, 1, 1, (byte)-1, -1L);
-    final ObjectMetadata o2 = LegacyObjectMetadata.fromMetadata(s, 2, 2, (byte)-1, 3600L);
-    final ObjectMetadata o3 = LegacyObjectMetadata.fromMetadata(s, 3, 3, (byte)-1, retention-100);
+    int retention = 30 * 365* 24* 3600;
+    final ObjectMetadata o1 = LegacyObjectMetadata.fromMetadata(s, 1, 1, (byte)0, -1);
+    final ObjectMetadata o2 = LegacyObjectMetadata.fromMetadata(s, 2, 2, (byte)0, 3600);
+    final ObjectMetadata o3 = LegacyObjectMetadata.fromMetadata(s, 3, 3, (byte)0, retention-100);
     final ByteArrayOutputStream source = new ByteArrayOutputStream();
     source.write(o1.toBytes());
     source.write(o2.toBytes());
@@ -185,7 +185,7 @@ public class ObjectFileTest {
     final ByteArrayInputStream in = new ByteArrayInputStream(source.toByteArray());
     final ByteArrayOutputStream out = new ByteArrayOutputStream();
     final Set<Integer> pointSuffixList = new HashSet<Integer>();
-    ObjectFile.filter(in, out, 1, 3, 1, 3, new HashSet<Integer>(), false, 3601L, retention);
+    ObjectFile.filter(in, out, 1, 3, 1, 3, new HashSet<Integer>(), 0, 100, 3601L, retention);
 
     assertThat(out.size(), is(LegacyObjectMetadata.OBJECT_SIZE));
     final ObjectMetadata filtered = LegacyObjectMetadata.fromBytes(out.toByteArray());
@@ -196,9 +196,9 @@ public class ObjectFileTest {
   @Test
   public void filter_legalhold() throws IOException {
     final String s = UUID.randomUUID().toString().replace("-", "") + "0000";
-    long retention = 70L * 365L* 24L* 3600L;
-    final ObjectMetadata o1 = LegacyObjectMetadata.fromMetadata(s, 1, 1, (byte)99, -1L);
-    final ObjectMetadata o2 = LegacyObjectMetadata.fromMetadata(s, 2, 2, (byte)-1, 3600L);
+    int retention = 20 * 365* 24* 3600;
+    final ObjectMetadata o1 = LegacyObjectMetadata.fromMetadata(s, 1, 1, (byte)99, -1);
+    final ObjectMetadata o2 = LegacyObjectMetadata.fromMetadata(s, 2, 2, (byte)-1, 3600);
     final ObjectMetadata o3 = LegacyObjectMetadata.fromMetadata(s, 3, 3, (byte)-1, retention-100);
     final ByteArrayOutputStream source = new ByteArrayOutputStream();
     source.write(o1.toBytes());
@@ -208,7 +208,7 @@ public class ObjectFileTest {
     final ByteArrayInputStream in = new ByteArrayInputStream(source.toByteArray());
     final ByteArrayOutputStream out = new ByteArrayOutputStream();
     final Set<Integer> pointSuffixList = new HashSet<Integer>();
-    ObjectFile.filter(in, out, 1, 3, 1, 3, new HashSet<Integer>(), true, -1L, -1L);
+    ObjectFile.filter(in, out, 1, 3, 1, 3, new HashSet<Integer>(), 0, 100, -1L, -1L);
 
     assertThat(out.size(), is(LegacyObjectMetadata.OBJECT_SIZE));
     final ObjectMetadata filtered = LegacyObjectMetadata.fromBytes(out.toByteArray());

@@ -43,7 +43,7 @@ public interface ObjectMetadata extends Comparable<ObjectMetadata> {
    *  Gets the retention period
    *  @return the retention period
    */
-  long getRetention();
+  int getRetention();
 
   /**
    * Convert this instance's internal representation into bytes

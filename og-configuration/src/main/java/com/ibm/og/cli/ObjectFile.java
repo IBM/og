@@ -74,9 +74,10 @@ public class ObjectFile {
     final long maxFilesize = getopt.getMaxSize();
     final int minContainerSuffix = getopt.getMinSuffix();
     final int maxContainerSuffix = getopt.getMaxSuffix();
-    final long minRetention = getopt.getMinRetention();
-    final long maxRetention = getopt.getMaxRetention();
-    final boolean legalholds = getopt.getLegalholds();
+    final int minRetention = getopt.getMinRetention();
+    final int maxRetention = getopt.getMaxRetention();
+    final int minLegalHolds = getopt.getMinLegalHolds();
+    final int maxLegalHolds = getopt.getMaxLegalHolds();
 
     final Set<Integer> containerSuffixes = getopt.getContainerSuffixes();
 
@@ -93,7 +94,7 @@ public class ObjectFile {
       } else if (filter) {
         out = getOutputStream(split, splitSize, output);
         filter(in, out, minFilesize, maxFilesize, minContainerSuffix, maxContainerSuffix, containerSuffixes,
-                legalholds, minRetention, maxRetention);
+                minLegalHolds, maxLegalHolds, minRetention, maxRetention);
       } else if (upgrade) {
         out = getOutputStream(split, splitSize, output);
         upgrade(in, out);
@@ -158,7 +159,7 @@ public class ObjectFile {
       final long objectSize = Long.parseLong(components[1].trim());
       final int containerSuffix = Integer.parseInt(components[2].trim());
       final byte numLegalHolds = Byte.parseByte(components[3].trim());
-      final long retention = Long.parseLong(components[4].trim());
+      final int retention = Integer.parseInt(components[4].trim());
       final ObjectMetadata objectName =
           LegacyObjectMetadata.fromMetadata(objectString, objectSize, containerSuffix, numLegalHolds, retention);
       out.write(objectName.toBytes());
@@ -188,7 +189,7 @@ public class ObjectFile {
 
   public static void filter(final InputStream in, final OutputStream out, final long minFilesize,
       final long maxFilesize, final int minContainerSuffix, final int maxContainerSuffix,
-      final Set<Integer> containerSuffixes, final boolean legalhold, final long minRetention, final long maxRetention)
+      final Set<Integer> containerSuffixes, final int minLegalholds, final int maxLegalHolds, final long minRetention, final long maxRetention)
           throws IOException {
     checkNotNull(in);
     checkNotNull(out);
@@ -200,6 +201,15 @@ public class ObjectFile {
     checkArgument(minContainerSuffix <= maxContainerSuffix,
         "minContainerSuffix must be <= maxContainerSuffix [%s, %s]", minContainerSuffix,
         maxContainerSuffix);
+    checkArgument(minContainerSuffix >= -1, "minContainerSuffix must be >= -1 [%s]",
+            minContainerSuffix);
+    checkArgument(minContainerSuffix >= -1, "minContainerSuffix must be >= -1 [%s]",
+            minContainerSuffix);
+    checkArgument(minLegalholds >= 0, "minLegalHolds must be >= 0 [%s]",
+            minLegalholds);
+    checkArgument(minLegalholds <= maxLegalHolds, "minLegalHolds must be <= maxLegalHolds [%s, %s]",
+            minLegalholds, maxLegalHolds);
+
 
     final byte[] buf = new byte[LegacyObjectMetadata.OBJECT_SIZE];
     final MutableObjectMetadata object = new MutableObjectMetadata();
@@ -217,7 +227,7 @@ public class ObjectFile {
       if (object.getRetention() < minRetention || object.getRetention() > maxRetention) {
         continue;
       }
-      if (legalhold && object.getNumberOfLegalHolds() < 0) {
+      if (object.getNumberOfLegalHolds() < minLegalholds || object.getNumberOfLegalHolds() > maxLegalHolds) {
         continue;
       }
       out.write(object.toBytes());
