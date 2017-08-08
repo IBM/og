@@ -62,7 +62,7 @@ public class RequestSupplier implements Supplier<Request> {
   private final Function<Map<String, String>, Body> body;
   private final boolean virtualHost;
   private final Function<Map<String, String>, Long> retention;
-  private final Function<Map<String, String>, String> legalHold;
+  private final Supplier<Function<Map<String, String>, String>> legalHold;
   private final Operation operation;
   private final boolean contentMd5;
   private final LoadingCache<Long, byte[]> md5ContentCache;
@@ -101,7 +101,7 @@ public class RequestSupplier implements Supplier<Request> {
       final List<Function<Map<String, String>, String>> sseSourceContext,
       final Function<Map<String, String>, Credential> credentials,
       final Function<Map<String, String>, Body> body, final boolean virtualHost,
-      final Function<Map<String, String>, Long> retention, final Function<Map<String, String>,String> legalHold,
+      final Function<Map<String, String>, Long> retention, final Supplier<Function<Map<String, String>, String>> legalHold,
       final boolean contentMd5) {
 
     this.id = id;
@@ -173,6 +173,15 @@ public class RequestSupplier implements Supplier<Request> {
         function.apply(requestContext);
       }
     }
+
+    Function<Map<String, String>, String> legalholdFunction;
+    if (this.legalHold != null) {
+      legalholdFunction = this.legalHold.get();
+      if (legalholdFunction != null) {
+        legalholdFunction.apply(requestContext);
+      }
+    }
+
     final HttpRequest.Builder builder =
         new HttpRequest.Builder(this.method, getUrl(requestContext), this.operation);
 
@@ -188,11 +197,9 @@ public class RequestSupplier implements Supplier<Request> {
       }
     }
 
-    if (this.legalHold != null) {
-      //requestContext.put(Context.X_OG_LEGAL_HOLD, this.legalHold.apply(requestContext));
-      builder.withHeader(Context.X_OG_LEGAL_HOLD, this.legalHold.apply(requestContext));
+    if (requestContext.get(Context.X_OG_LEGAL_HOLD) != null) {
+      builder.withHeader(Context.X_OG_LEGAL_HOLD, requestContext.get(Context.X_OG_LEGAL_HOLD));
     }
-
 
     if (this.id != null) {
       builder.withContext(Context.X_OG_REQUEST_ID, this.id.apply(requestContext));

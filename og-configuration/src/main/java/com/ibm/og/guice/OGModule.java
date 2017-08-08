@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -139,6 +140,7 @@ import com.ibm.og.supplier.CredentialGetterFunction;
 import com.ibm.og.supplier.DeleteObjectNameFunction;
 import com.ibm.og.supplier.LegalholdObjectNameFunction;
 import com.ibm.og.supplier.MetadataObjectNameFunction;
+import com.ibm.og.supplier.RandomPercentageSupplier;
 import com.ibm.og.supplier.RandomSupplier;
 import com.ibm.og.supplier.ReadObjectNameFunction;
 import com.ibm.og.supplier.RequestSupplier;
@@ -913,7 +915,6 @@ public class OGModule extends AbstractModule {
         context.put(Context.X_OG_SEQUENTIAL_OBJECT_NAME, "true");
         if (operationConfig.legalHold != null) {
           context.put(Context.X_OG_LEGAL_HOLD_SUFFIX, legalHoldSuffixes.get().toString());
-          context.put(Context.X_OG_LEGAL_HOLD_PREFIX, operationConfig.legalHold.legalHoldPrefix);
         }
         return objectName;
       }
@@ -1449,21 +1450,35 @@ public class OGModule extends AbstractModule {
   @Provides
   @Singleton
   @Named("write.legalHold")
-  public Function<Map<String, String>, String> provideLegalHold() {
+  public Supplier<Function<Map<String, String>, String>> provideLegalHold() {
     return provideLegalHold(this.config.write.legalHold);
   }
 
   @Provides
   @Singleton
   @Named("add.legalHold")
-  public Function<Map<String, String>, String> provideAddLegalHold() {
+  public Supplier<Function<Map<String, String>, String>> provideAddLegalHold() {
+    if (config.writeLegalhold.weight > 0.0) {
+      checkArgument(config.writeLegalhold.legalHold != null,
+              "legalhold must be specificied for write_legalhold operation");
+      checkArgument(config.writeLegalhold.legalHold.percentage == 100.00,
+              "legalhold percentage must be set to 100.00 percentage for write_legalhold operation");
+    }
+
     return provideLegalHold(this.config.writeLegalhold.legalHold);
   }
 
   @Provides
   @Singleton
   @Named("delete.legalHold")
-  public Function<Map<String, String>, String> provideDeleteLegalHold() {
+  public Supplier<Function<Map<String, String>, String>> provideDeleteLegalHold() {
+    if (config.deleteLegalhold.weight > 0.0) {
+      checkArgument(config.deleteLegalhold.legalHold != null,
+              "legalhold must be specificied for delete_legalhold operation");
+      checkArgument(config.deleteLegalhold.legalHold.percentage == 100.00,
+              "legalhold percentage must be set to 100.00 percentage for delete_legalhold operation");
+
+    }
     return provideLegalHold(this.config.deleteLegalhold.legalHold);
   }
 
@@ -1487,56 +1502,61 @@ public class OGModule extends AbstractModule {
       }
       function = new LegalholdObjectNameFunction(objectManager, legalHoldName);
     }
-
     return ImmutableList.of(function);
   }
 
   @Provides
   @Singleton
   @Named("overwrite.legalHold")
-  private Function<Map<String, String>, String> provideOverwriteLegalHold() {
-    return provideLegalHold(this.config.overwrite.legalHold);
+  private Supplier<Function<Map<String, String>, String>> provideOverwriteLegalHold() {
+    return provideLegalHold(config.overwrite.legalHold);
   }
 
 
-  private Function<Map<String, String>, String> provideLegalHold(final LegalHold legalHold) {
+  @Provides
+  private Supplier<Function<Map<String, String>, String>> provideLegalHold(final LegalHold legalHold) {
     if (legalHold == null) {
       return null;
     }
-    return new Function<Map<String, String>, String>() {
-      @Nullable
-      @Override
-      public String apply(@Nullable final Map<String, String> context) {
-        // delete legalhold
-        if (context.get(Context.X_OG_LEGAL_HOLD_SUFFIX) != null) {
-          final int suffix = Integer.parseInt(context.get(Context.X_OG_LEGAL_HOLD_SUFFIX));
-          if (legalHold.legalHoldPrefix != null && !legalHold.legalHoldPrefix.isEmpty()) {
-            context.put(Context.X_OG_LEGAL_HOLD_PREFIX, legalHold.legalHoldPrefix);
-          } else {
-            context.put(Context.X_OG_LEGAL_HOLD_PREFIX, "LegalHold");
-          }
-          final String val =
-              context.get(Context.X_OG_LEGAL_HOLD_PREFIX).concat(String.valueOf(suffix));
-          context.put(Context.X_OG_LEGAL_HOLD, val);
-          context.put(Context.X_OG_NUM_LEGAL_HOLDS, String.valueOf(suffix));
-          return val;
+    Function<Map<String, String>, String> f = new
+      Function<Map<String, String>, String>() {
+        @Nullable
+        @Override
+          public String apply(@Nullable Map<String, String> context) {
+      // delete legalhold
+      if (context.get(Context.X_OG_LEGAL_HOLD_SUFFIX) != null) {
+        int suffix = Integer.parseInt(context.get(Context.X_OG_LEGAL_HOLD_SUFFIX));
+        if (legalHold.legalHoldPrefix != null && !legalHold.legalHoldPrefix.isEmpty()) {
+          context.put(Context.X_OG_LEGAL_HOLD_PREFIX, legalHold.legalHoldPrefix);
         } else {
-          // add legalhold context
-          if (legalHold.legalHoldPrefix != null && !legalHold.legalHoldPrefix.isEmpty()) {
-            context.put(Context.X_OG_LEGAL_HOLD_PREFIX, legalHold.legalHoldPrefix);
-          } else {
-            context.put(Context.X_OG_LEGAL_HOLD_PREFIX, "LegalHold");
-          }
-          final String val = context.get(Context.X_OG_LEGAL_HOLD_PREFIX).concat(String.valueOf(1));
-          context.put(Context.X_OG_LEGAL_HOLD, val);
-          context.put(Context.X_OG_NUM_LEGAL_HOLDS, String.valueOf(1));
-          return val;
+          context.put(Context.X_OG_LEGAL_HOLD_PREFIX, "LegalHold");
         }
+        String val = context.get(Context.X_OG_LEGAL_HOLD_PREFIX).concat(String.valueOf(suffix));
+        context.put(Context.X_OG_LEGAL_HOLD, val);
+        context.put(Context.X_OG_NUM_LEGAL_HOLDS, String.valueOf(suffix));
+        return val;
+      } else {
+        // add legalhold context
+        if (legalHold.legalHoldPrefix != null && !legalHold.legalHoldPrefix.isEmpty()) {
+          context.put(Context.X_OG_LEGAL_HOLD_PREFIX, legalHold.legalHoldPrefix);
+        } else {
+          context.put(Context.X_OG_LEGAL_HOLD_PREFIX, "LegalHold");
+        }
+        String val = context.get(Context.X_OG_LEGAL_HOLD_PREFIX).concat(String.valueOf(1));
+        context.put(Context.X_OG_LEGAL_HOLD, val);
+        context.put(Context.X_OG_NUM_LEGAL_HOLDS, String.valueOf(1));
+        return val;
       }
-    };
+    }
+  };
+
+    Supplier<Function<Map<String, String>, String>> s =
+              new RandomPercentageSupplier.Builder<Function<Map<String, String>, String>>().
+                      withChoice(f, legalHold.percentage).
+                      withRandom(new Random()).build();
+    return s;
+
   }
-
-
 
   @Provides
   @Singleton
@@ -1979,7 +1999,7 @@ public class OGModule extends AbstractModule {
       @Named("virtualhost") final boolean virtualHost,
       @Named("write.sseCDestination") final boolean encryptDestinationObject,
       @Nullable @Named("write.retention") final Function<Map<String, String>, Long> retention,
-      @Nullable @Named("write.legalHold") final Function<Map<String, String>, String> legalHold,
+      @Nullable @Named("write.legalHold") final Supplier<Function<Map<String, String>, String>> legalHold,
       @Nullable @Named("write.contentMd5") final boolean contentMd5) {
 
     if (encryptDestinationObject) {
@@ -2119,7 +2139,7 @@ public class OGModule extends AbstractModule {
       @Named("overwrite.weight") final double overwriteWeight,
       @Named("overwrite.sseCDestination") final boolean encryptDestinationObject,
       @Nullable @Named("overwrite.retention") final Function<Map<String, String>, Long> retention,
-      @Nullable @Named("overwrite.legalHold") final Function<Map<String, String>, String> legalHold,
+      @Nullable @Named("overwrite.legalHold") final Supplier<Function<Map<String, String>, String>> legalHold,
       @Nullable @Named("overwrite.contentMd5") final boolean contentMd5) throws Exception {
 
     if (encryptDestinationObject) {
@@ -2202,18 +2222,18 @@ public class OGModule extends AbstractModule {
   @Singleton
   @Named("write_legalhold")
   public Supplier<Request> provideWriteLegalhold(
-      @Named("request.id") final Function<Map<String, String>, String> id, final Scheme scheme,
-      @ReadHost final Function<Map<String, String>, String> host,
-      @Nullable @Named("port") final Integer port,
-      @Nullable @Named("uri.root") final String uriRoot,
-      @Named("read.container") final Function<Map<String, String>, String> container,
-      @Nullable @Named("api.version") final String apiVersion,
-      @Nullable @ReadObjectName final Function<Map<String, String>, String> object,
-      @ReadHeaders final Map<String, Function<Map<String, String>, String>> headers,
-      @Named("write_legalhold.context") final List<Function<Map<String, String>, String>> context,
-      @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
-      @Nullable @Named("add.legalHold") final Function<Map<String, String>, String> legalhold,
-      @Named("virtualhost") final boolean virtualHost) {
+          @Named("request.id") final Function<Map<String, String>, String> id, final Scheme scheme,
+          @ReadHost final Function<Map<String, String>, String> host,
+          @Nullable @Named("port") final Integer port,
+          @Nullable @Named("uri.root") final String uriRoot,
+          @Named("read.container") final Function<Map<String, String>, String> container,
+          @Nullable @Named("api.version") final String apiVersion,
+          @Nullable @ReadObjectName final Function<Map<String, String>, String> object,
+          @ReadHeaders final Map<String, Function<Map<String, String>, String>> headers,
+          @Named("write_legalhold.context") final List<Function<Map<String, String>, String>> context,
+          @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
+          @Nullable @Named("add.legalHold") final Supplier<Function<Map<String, String>, String>> legalhold,
+          @Named("virtualhost") final boolean virtualHost) {
 
     final Map<String, Function<Map<String, String>, String>> queryParameters =
         provideLegalHoldQueryParameters(false);
@@ -2230,19 +2250,18 @@ public class OGModule extends AbstractModule {
   @Singleton
   @Named("delete_legalhold")
   public Supplier<Request> provideDeleteLegalhold(
-      @Named("request.id") final Function<Map<String, String>, String> id, final Scheme scheme,
-      @ReadHost final Function<Map<String, String>, String> host,
-      @Nullable @Named("port") final Integer port,
-      @Nullable @Named("uri.root") final String uriRoot,
-      @Named("read.container") final Function<Map<String, String>, String> container,
-      @Nullable @Named("api.version") final String apiVersion,
-      @Nullable @ReadObjectName final Function<Map<String, String>, String> object,
-      @ReadHeaders final Map<String, Function<Map<String, String>, String>> headers,
-      @Named("delete_legalhold.context") final List<Function<Map<String, String>, String>> context,
-      @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
-      @Nullable @Named("delete.legalHold") final Function<Map<String, String>, String> legalhold,
-      @Named("virtualhost") final boolean virtualHost) {
-
+          @Named("request.id") final Function<Map<String, String>, String> id, final Scheme scheme,
+          @ReadHost final Function<Map<String, String>, String> host,
+          @Nullable @Named("port") final Integer port,
+          @Nullable @Named("uri.root") final String uriRoot,
+          @Named("read.container") final Function<Map<String, String>, String> container,
+          @Nullable @Named("api.version") final String apiVersion,
+          @Nullable @ReadObjectName final Function<Map<String, String>, String> object,
+          @ReadHeaders final Map<String, Function<Map<String, String>, String>> headers,
+          @Named("delete_legalhold.context") final List<Function<Map<String, String>, String>> context,
+          @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
+          @Nullable @Named("delete.legalHold") final Supplier<Function<Map<String, String>, String>> legalhold,
+          @Named("virtualhost") final boolean virtualHost) {
     final Map<String, Function<Map<String, String>, String>> queryParameters =
         provideLegalHoldQueryParameters(true);
 
@@ -2449,8 +2468,8 @@ public class OGModule extends AbstractModule {
       final List<Function<Map<String, String>, String>> sseSourceContext,
       final Function<Map<String, String>, Body> body,
       final Function<Map<String, String>, Credential> credentials, final Boolean virtualHost,
-      final Function<Map<String, String>, Long> retention,
-      final Function<Map<String, String>, String> legalHold, final boolean contentMd5) {
+      final Function<Map<String, String>, Long> retention, final Supplier<Function<Map<String, String>, String>> legalHold,
+      final boolean contentMd5) {
 
     return new RequestSupplier(operation, id, method, scheme, host, port, uriRoot, container,
         apiVersion, object, queryParameters, false, headers, context, sseSourceContext, credentials,

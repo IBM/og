@@ -9,6 +9,7 @@ public class LegalHold {
     public String legalHoldPrefix = "";
     public static final Long MIN_SUFFIX = 1L;
     public static final Long MAX_SUFFIX = 100L;
+    public double percentage = 0.00;
 
     public LegalHold() {
         this.legalHoldPrefix = "";

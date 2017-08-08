@@ -53,7 +53,6 @@ public class LegalholdObjectNameFunction implements Function<Map<String, String>
     context.put(Context.X_OG_OBJECT_SIZE, String.valueOf(objectMetadata.getSize()));
     context.put(Context.X_OG_CONTAINER_SUFFIX, String.valueOf(objectMetadata.getContainerSuffix()));
     context.put(Context.X_OG_LEGAL_HOLD_SUFFIX, String.valueOf(objectMetadata.getNumberOfLegalHolds()));
-    context.put(Context.X_OG_LEGAL_HOLD_PREFIX, this.legalHoldName);
     context.put(Context.X_OG_OBJECT_RETENTION, String.valueOf(objectMetadata.getRetention()));
 
     return objectMetadata.getName();
