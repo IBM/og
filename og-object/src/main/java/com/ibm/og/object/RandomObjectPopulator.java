@@ -10,7 +10,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -19,6 +18,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Random;
@@ -38,6 +39,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.Uninterruptibles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,6 +49,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 @Singleton
 public class RandomObjectPopulator extends Thread implements ObjectManager {
   private static final Logger _logger = LoggerFactory.getLogger(RandomObjectPopulator.class);
+  public static final int OBJECT_SIZE_V1 = 30;
   public static final int OBJECT_SIZE = LegacyObjectMetadata.OBJECT_SIZE;
   private static final int MAX_PERSIST_ARG = 30 * 1000 * 60;
   public static final int MAX_OBJECT_ARG = 100 * (1048576 / OBJECT_SIZE);
@@ -57,6 +60,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
   private final Integer objectFileIndex;
   public static final String SUFFIX = ".object";
   private final Pattern filenamePattern;
+
 
   // object read from a file
   private final RandomAccessConcurrentHashSet<ObjectMetadata> objects =
@@ -175,13 +179,34 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
   private void loadObjects() {
     this.objects.clear();
     try {
-      final byte[] objectBytes = new byte[OBJECT_SIZE];
-
+      int actualObjectSize = OBJECT_SIZE;
       if (this.saveFile.exists()) {
         _logger.debug("loading objects from file: {}", this.saveFile);
         final InputStream input = new BufferedInputStream(new FileInputStream(this.saveFile));
-        while (input.read(objectBytes) == OBJECT_SIZE) {
-          final ObjectMetadata id = LegacyObjectMetadata.fromBytes(objectBytes);
+
+        int versionHeaderLength = 0;
+        ObjectFileVersion version = ObjectFileUtil.readObjectFileVersion(input);
+        if (version.getMajorVersion() == LegacyObjectMetadata.MAJOR_VERSION &&
+                version.getMinorVersion() == LegacyObjectMetadata.MINOR_VERSION) {
+          actualObjectSize = OBJECT_SIZE;
+          versionHeaderLength = ObjectFileVersion.VERSION_HEADER_LENGTH;
+        } else if (version.getMajorVersion() == 1 && version.getMinorVersion() == 0) {
+          actualObjectSize = OBJECT_SIZE_V1;
+        } else {
+          throw new IllegalArgumentException("Unsupported Object File version [%sd].[%s]".
+                  format(Byte.toString(version.getMajorVersion()), Byte.toString(version.getMinorVersion())));
+        }
+
+        input.skip(versionHeaderLength);
+
+        final byte[] objectBytes = new byte[OBJECT_SIZE];
+        final byte[] inputBytes = new byte[actualObjectSize];
+        ByteBuffer b2 = ByteBuffer.wrap(objectBytes);
+
+        ObjectMetadata id;
+        while (input.read(inputBytes) == actualObjectSize) {
+          id = ObjectFileUtil.getObjectFromInputBuffer(version.getMajorVersion(), version.getMinorVersion(),
+                  inputBytes, objectBytes);
           this.objects.put(id);
         }
         input.close();
@@ -436,6 +461,9 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
     final int toSave = this.objects.size();
     _logger.info("number of objects to persist {}", toSave);
     final OutputStream out = new BufferedOutputStream(new FileOutputStream(this.saveFile));
+    if (toSave > 0) {
+      ObjectFileUtil.writeObjectFileVersion(out);
+    }
     if (toSave > this.maxObjects) {
       for (int size = this.objects.size(); size > this.maxObjects; size = this.objects.size()) {
         final int numFiles = getIdFiles().length;
@@ -445,6 +473,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
           surplus = createFile(numFiles);
         }
         final OutputStream dos = new BufferedOutputStream(new FileOutputStream(surplus, true));
+        ObjectFileUtil.writeObjectFileVersion(dos);
         final int remaining = getRemaining(size, surplus);
         // While writing surplus, remove them from this.objects, to keep consistent with
         // this.savefile
@@ -469,20 +498,44 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
           break;
         }
         final int toTransfer = getTransferrable(size, surplus);
-        final DataInputStream in = new DataInputStream(new FileInputStream(surplus));
-        final long skip = surplus.length() - (toTransfer * OBJECT_SIZE);
+        final BufferedInputStream in = new BufferedInputStream(new FileInputStream(surplus));
+        // check the version of the file and calculate skip
+        long skip = 0;
+        byte[] readBuf = null;
+        int actualObjectSize = 0;
+        in.mark(ObjectFileVersion.VERSION_HEADER_LENGTH);
+        ObjectFileVersion version = ObjectFileUtil.readObjectFileVersion(in);
+
+        if (version.getMajorVersion() == 2 && version.getMinorVersion() == 0) {
+          skip = surplus.length() - (toTransfer * OBJECT_SIZE);
+          readBuf = new byte[OBJECT_SIZE];
+          actualObjectSize = OBJECT_SIZE;
+        } else if (version.getMajorVersion() == 1 && version.getMinorVersion() == 0) {
+          if (in.markSupported()) {
+            _logger.warn("Missing version in object file [%s].", surplus.getName());
+            readBuf = new byte[OBJECT_SIZE_V1];
+            actualObjectSize = OBJECT_SIZE_V1;
+          }
+          skip = surplus.length() - (toTransfer * OBJECT_SIZE_V1);
+        } else {
+          throw new IllegalArgumentException("Unsupported Object file version");
+        }
+
+        in.reset();
         in.skip(skip);
         final byte[] buf = new byte[OBJECT_SIZE];
+        ObjectMetadata sid;
         for (int i = 0; i < toTransfer; i++) {
-          if (in.read(buf) == OBJECT_SIZE) {
-            final ObjectMetadata sid = LegacyObjectMetadata.fromBytes(buf);
+          int readBytes = in.read(readBuf, 0, actualObjectSize);
+          if (readBytes == actualObjectSize) {
+            sid = ObjectFileUtil.getObjectFromInputBuffer(version.getMajorVersion(), version.getMinorVersion(),
+                    readBuf, buf);
             this.objects.put(sid);
           }
         }
         in.close();
-
         // If surplus is out of objects, delete it
-        if (skip == 0) {
+        if (skip == ObjectFileVersion.VERSION_HEADER_LENGTH) {
           surplus.delete();
         } else {
           // We borrowed from the end of the file so nothing is lost from truncating
@@ -498,7 +551,6 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
         }
       }
     }
-
     // Finally we save a number less than or equal to the maximum number of objects to our
     // savefile
     _logger.info(

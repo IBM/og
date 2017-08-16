@@ -18,13 +18,17 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 
+import com.google.common.io.BaseEncoding;
 import com.ibm.og.object.LegacyObjectMetadata;
+import com.ibm.og.object.ObjectFileUtil;
+import com.ibm.og.object.ObjectFileVersion;
 import com.ibm.og.object.ObjectMetadata;
 import org.junit.Before;
 import org.junit.Rule;
@@ -93,36 +97,110 @@ public class ObjectFileTest {
   @UseDataProvider("provideInvalidStreams")
   public void invalidWrite(final InputStream in, final OutputStream out) throws IOException {
     this.thrown.expect(NullPointerException.class);
-    ObjectFile.write(in, out);
+    ObjectFile.write(in, out, true);
   }
 
   @Test
   public void write() throws IOException {
     final String objectMetadata = UUID.randomUUID().toString().replace("-", "") + "0000,0,0,99,3600";
-    final InputStream in = new ByteArrayInputStream(objectMetadata.getBytes());
-    final ByteArrayOutputStream out = new ByteArrayOutputStream(LegacyObjectMetadata.OBJECT_SIZE);
-    ObjectFile.write(in, out);
-    final ObjectMetadata object = LegacyObjectMetadata.fromBytes(out.toByteArray());
+    String versionHeaderString = "VERSION:2.0\n";
+    final ByteBuffer inputByteBuffer = ByteBuffer.allocate(versionHeaderString.getBytes().length +
+           objectMetadata.getBytes().length);
+    inputByteBuffer.put(versionHeaderString.getBytes());
+    inputByteBuffer.put(objectMetadata.getBytes());
+    final InputStream in = new ByteArrayInputStream(inputByteBuffer.array());
+    final ByteArrayOutputStream out = new ByteArrayOutputStream(ObjectFileVersion.VERSION_HEADER_LENGTH +
+            LegacyObjectMetadata.OBJECT_SIZE);
+    ObjectFile.write(in, out, true);
+
+    ByteBuffer outputBuffer = ByteBuffer.wrap(out.toByteArray());
+    outputBuffer.position(ObjectFileVersion.VERSION_HEADER_LENGTH);
+    byte[] filteredBytes = new byte[LegacyObjectMetadata.OBJECT_SIZE];
+    outputBuffer.get(filteredBytes, 0, LegacyObjectMetadata.OBJECT_SIZE);
+
+    final ObjectMetadata object = LegacyObjectMetadata.fromBytes(filteredBytes);
     assertThat(objectMetadata, is(String.format("%s,%s,%s,%s,%s", object.getName(), object.getSize(),
         object.getContainerSuffix(), object.getNumberOfLegalHolds(), object.getRetention())));
+  }
+
+  @Test
+  public void writeV1() throws IOException {
+    final String objectName = UUID.randomUUID().toString().replace("-", "") + "0000";
+    final String objectMetadata = objectName + ",0,0";
+    //String versionHeaderString = "VERSION:2.0\n";
+    final ByteBuffer inputByteBuffer = ByteBuffer.allocate(objectMetadata.getBytes().length);
+    inputByteBuffer.put(objectMetadata.getBytes());
+    final InputStream in = new ByteArrayInputStream(inputByteBuffer.array());
+    final ByteArrayOutputStream out = new ByteArrayOutputStream(ObjectFileVersion.VERSION_HEADER_LENGTH +
+            LegacyObjectMetadata.OBJECT_SIZE);
+    ObjectFile.write(in, out, true);
+
+    ByteBuffer outputBuffer = ByteBuffer.wrap(out.toByteArray());
+    outputBuffer.position(ObjectFileVersion.VERSION_HEADER_LENGTH);
+    byte[] filteredBytes = new byte[LegacyObjectMetadata.OBJECT_SIZE];
+    outputBuffer.get(filteredBytes, 0, LegacyObjectMetadata.OBJECT_SIZE);
+
+    final ObjectMetadata object = LegacyObjectMetadata.fromBytes(filteredBytes);
+    final LegacyObjectMetadata expectedObject = LegacyObjectMetadata.fromMetadata(objectName, 0, 0, (byte)0, -1);
+    assertThat(String.format("%s,%s,%s,%s,%s", expectedObject.getName(), expectedObject.getSize(),
+            expectedObject.getContainerSuffix(), expectedObject.getNumberOfLegalHolds(), expectedObject.getRetention()),
+            is(String.format("%s,%s,%s,%s,%s", object.getName(), object.getSize(),
+            object.getContainerSuffix(), object.getNumberOfLegalHolds(), object.getRetention())));
   }
 
   @Test
   @UseDataProvider("provideInvalidStreams")
   public void invalidRead(final InputStream in, final OutputStream out) throws IOException {
     this.thrown.expect(NullPointerException.class);
-    ObjectFile.read(in, out);
+    ObjectFile.read(in, out, true);
   }
 
   @Test
   public void read() throws IOException {
     final String objectString = UUID.randomUUID().toString().replace("-", "") + "0000";
-    final LegacyObjectMetadata object = LegacyObjectMetadata.fromMetadata(objectString, 1024, 0, (byte)-1, -1);
-    final InputStream in = new ByteArrayInputStream(object.toBytes());
+    final LegacyObjectMetadata object = LegacyObjectMetadata.fromMetadata(objectString, 1024, 0, (byte)0, -1);
+    ByteBuffer inputBuffer = ByteBuffer.allocate(ObjectFileVersion.VERSION_HEADER_LENGTH + LegacyObjectMetadata.OBJECT_SIZE);
+    inputBuffer.put(ObjectFileVersion.fromMetadata((byte)2, (byte)0).getBytes());
+    inputBuffer.put(object.toBytes());
+    final InputStream in = new ByteArrayInputStream(inputBuffer.array());
+
     final ByteArrayOutputStream out = new ByteArrayOutputStream();
-    ObjectFile.read(in, out);
-    assertThat(new String(out.toByteArray()), is(String.format("%s,%s,%s,%s,%s%n", object.getName(),
+    ObjectFile.read(in, out, true);
+    ByteBuffer outBuffer = ByteBuffer.wrap(out.toByteArray());
+    outBuffer.position(ObjectFileVersion.VERSION_HEADER_LENGTH);
+    byte[] objectBuffer = new byte[LegacyObjectMetadata.OBJECT_SIZE];
+    outBuffer.get(objectBuffer, 0, LegacyObjectMetadata.OBJECT_SIZE);
+
+    assertThat(new String(out.toByteArray()), is(String.format("%s:%s.%s\n%s,%s,%s,%s,%s%n", "VERSION",
+          LegacyObjectMetadata.MAJOR_VERSION, LegacyObjectMetadata.MINOR_VERSION, object.getName(),
         object.getSize(), object.getContainerSuffix(), object.getNumberOfLegalHolds(), object.getRetention())));
+  }
+
+
+  @Test
+  public void readV1() throws IOException {
+    final BaseEncoding ENCODING = BaseEncoding.base16().lowerCase();
+    final String objectName = UUID.randomUUID().toString().replace("-", "") + "0000";
+    ByteBuffer inputBuffer = ByteBuffer.allocate(ObjectFileUtil.OBJECT_SIZE_V1_0);
+    inputBuffer.put(ENCODING.decode(objectName), 0, LegacyObjectMetadata.OBJECT_NAME_SIZE);
+    inputBuffer.putLong(0);
+    inputBuffer.putInt(0);
+
+    final InputStream in = new ByteArrayInputStream(inputBuffer.array());
+
+    final ByteArrayOutputStream out = new ByteArrayOutputStream();
+    ObjectFile.read(in, out, true);
+    ByteBuffer outBuffer = ByteBuffer.wrap(out.toByteArray());
+    outBuffer.position(ObjectFileVersion.VERSION_HEADER_LENGTH);
+    byte[] objectBuffer = new byte[LegacyObjectMetadata.OBJECT_SIZE];
+    outBuffer.get(objectBuffer, 0, LegacyObjectMetadata.OBJECT_SIZE);
+
+    final LegacyObjectMetadata expectedObject = LegacyObjectMetadata.fromMetadata(objectName, 0, 0, (byte)0, -1);
+
+    assertThat(new String(out.toByteArray()), is(String.format("%s:%s.%s\n%s,%s,%s,%s,%s%n", "VERSION",
+            LegacyObjectMetadata.MAJOR_VERSION, LegacyObjectMetadata.MINOR_VERSION, expectedObject.getName(),
+            expectedObject.getSize(), expectedObject.getContainerSuffix(), expectedObject.getNumberOfLegalHolds(),
+            expectedObject.getRetention())));
   }
 
   @DataProvider
@@ -145,7 +223,7 @@ public class ObjectFileTest {
       final int minLegalHolds, final int maxLegalHolds, final long minRetention, final long maxRetention,  final Class<Exception> expectedException) throws IOException {
     this.thrown.expect(expectedException);
     ObjectFile.filter(in, out, minFilesize, maxFilesize, minContainerSuffix, maxContainerSuffix, containerSuffixes,
-            minLegalHolds, maxLegalHolds, minRetention, maxRetention);
+            minLegalHolds, maxLegalHolds, minRetention, maxRetention, true);
   }
 
   @Test
@@ -155,6 +233,7 @@ public class ObjectFileTest {
     final ObjectMetadata o2 = LegacyObjectMetadata.fromMetadata(s, 2, 2, (byte)0, -1);
     final ObjectMetadata o3 = LegacyObjectMetadata.fromMetadata(s, 3, 3, (byte)0, -1);
     final ByteArrayOutputStream source = new ByteArrayOutputStream();
+    ObjectFileUtil.writeObjectFileVersion(source);
     source.write(o1.toBytes());
     source.write(o2.toBytes());
     source.write(o3.toBytes());
@@ -162,10 +241,14 @@ public class ObjectFileTest {
     final ByteArrayInputStream in = new ByteArrayInputStream(source.toByteArray());
     final ByteArrayOutputStream out = new ByteArrayOutputStream();
     final Set<Integer> pointSuffixList = new HashSet<Integer>();
-    ObjectFile.filter(in, out, 1, 2, 2, 3, new HashSet<Integer>(), 0, 100, -1L, -1L);
+    ObjectFile.filter(in, out, 1, 2, 2, 3, new HashSet<Integer>(), 0, 100, -1L, -1L, true);
+    assertThat(out.size(), is(ObjectFileVersion.VERSION_HEADER_LENGTH + LegacyObjectMetadata.OBJECT_SIZE));
 
-    assertThat(out.size(), is(LegacyObjectMetadata.OBJECT_SIZE));
-    final ObjectMetadata filtered = LegacyObjectMetadata.fromBytes(out.toByteArray());
+    ByteBuffer outputBuffer = ByteBuffer.wrap(out.toByteArray());
+    outputBuffer.position(ObjectFileVersion.VERSION_HEADER_LENGTH);
+    byte[] filteredBytes = new byte[LegacyObjectMetadata.OBJECT_SIZE];
+    outputBuffer.get(filteredBytes, 0, LegacyObjectMetadata.OBJECT_SIZE);
+    final ObjectMetadata filtered = LegacyObjectMetadata.fromBytes(filteredBytes);
     assertThat(filtered.getName(), is(s));
     assertThat(filtered.getSize(), is(2L));
   }
@@ -178,6 +261,7 @@ public class ObjectFileTest {
     final ObjectMetadata o2 = LegacyObjectMetadata.fromMetadata(s, 2, 2, (byte)0, 3600);
     final ObjectMetadata o3 = LegacyObjectMetadata.fromMetadata(s, 3, 3, (byte)0, retention-100);
     final ByteArrayOutputStream source = new ByteArrayOutputStream();
+    ObjectFileUtil.writeObjectFileVersion(source);
     source.write(o1.toBytes());
     source.write(o2.toBytes());
     source.write(o3.toBytes());
@@ -185,10 +269,14 @@ public class ObjectFileTest {
     final ByteArrayInputStream in = new ByteArrayInputStream(source.toByteArray());
     final ByteArrayOutputStream out = new ByteArrayOutputStream();
     final Set<Integer> pointSuffixList = new HashSet<Integer>();
-    ObjectFile.filter(in, out, 1, 3, 1, 3, new HashSet<Integer>(), 0, 100, 3601L, retention);
+    ObjectFile.filter(in, out, 1, 3, 1, 3, new HashSet<Integer>(), 0, 100, 3601L, retention, true);
 
-    assertThat(out.size(), is(LegacyObjectMetadata.OBJECT_SIZE));
-    final ObjectMetadata filtered = LegacyObjectMetadata.fromBytes(out.toByteArray());
+    assertThat(out.size(), is(ObjectFileVersion.VERSION_HEADER_LENGTH + LegacyObjectMetadata.OBJECT_SIZE));
+    ByteBuffer outputBuffer = ByteBuffer.wrap(out.toByteArray());
+    outputBuffer.position(ObjectFileVersion.VERSION_HEADER_LENGTH);
+    byte[] filteredBytes = new byte[LegacyObjectMetadata.OBJECT_SIZE];
+    outputBuffer.get(filteredBytes, 0, LegacyObjectMetadata.OBJECT_SIZE);
+    final ObjectMetadata filtered = LegacyObjectMetadata.fromBytes(filteredBytes);
     assertThat(filtered.getName(), is(s));
     assertThat(filtered.getSize(), is(3L));
   }
@@ -201,6 +289,7 @@ public class ObjectFileTest {
     final ObjectMetadata o2 = LegacyObjectMetadata.fromMetadata(s, 2, 2, (byte)-1, 3600);
     final ObjectMetadata o3 = LegacyObjectMetadata.fromMetadata(s, 3, 3, (byte)-1, retention-100);
     final ByteArrayOutputStream source = new ByteArrayOutputStream();
+    ObjectFileUtil.writeObjectFileVersion(source);
     source.write(o1.toBytes());
     source.write(o2.toBytes());
     source.write(o3.toBytes());
@@ -208,10 +297,14 @@ public class ObjectFileTest {
     final ByteArrayInputStream in = new ByteArrayInputStream(source.toByteArray());
     final ByteArrayOutputStream out = new ByteArrayOutputStream();
     final Set<Integer> pointSuffixList = new HashSet<Integer>();
-    ObjectFile.filter(in, out, 1, 3, 1, 3, new HashSet<Integer>(), 0, 100, -1L, -1L);
+    ObjectFile.filter(in, out, 1, 3, 1, 3, new HashSet<Integer>(), 0, 100, -1L, -1L, true);
+    assertThat(out.size(), is(ObjectFileVersion.VERSION_HEADER_LENGTH + LegacyObjectMetadata.OBJECT_SIZE));
 
-    assertThat(out.size(), is(LegacyObjectMetadata.OBJECT_SIZE));
-    final ObjectMetadata filtered = LegacyObjectMetadata.fromBytes(out.toByteArray());
+    ByteBuffer outputBuffer = ByteBuffer.wrap(out.toByteArray());
+    outputBuffer.position(ObjectFileVersion.VERSION_HEADER_LENGTH);
+    byte[] filteredBytes = new byte[LegacyObjectMetadata.OBJECT_SIZE];
+    outputBuffer.get(filteredBytes, 0, LegacyObjectMetadata.OBJECT_SIZE);
+    final ObjectMetadata filtered = LegacyObjectMetadata.fromBytes(filteredBytes);
     assertThat(filtered.getName(), is(s));
     assertThat(filtered.getSize(), is(1L));
   }
@@ -231,7 +324,7 @@ public class ObjectFileTest {
   @SuppressWarnings("resource")
   @UseDataProvider("provideInvalidObjectFileOutputStream")
   public void invalidObjectFileOutputStream(final String prefix, final int maxObjects,
-      final String suffix, final Class<Exception> expectedException) throws FileNotFoundException {
+      final String suffix, final Class<Exception> expectedException) throws FileNotFoundException, IOException {
     this.thrown.expect(expectedException);
     new ObjectFile.ObjectFileOutputStream(prefix, maxObjects, suffix);
   }

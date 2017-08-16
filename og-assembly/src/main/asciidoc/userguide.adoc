@@ -1156,6 +1156,12 @@ used:
 }
 ----
 
+
+With release 1.4.0, the binary file format for object files is changed. The binary file
+contains a version header VERSION:<major_version><minor_version>.  Two additional fields
+are also tracked - number of legalholds on the object and the retention time of the
+object.
+
 WARNING: Object files are not thread safe. Multiple instances of the OG tool
 should not share the same set of object files. Attempting to do so will result
 in object file corruption and/or a loss of object file metadata.
@@ -1225,6 +1231,7 @@ OG supports several configuration options for modifying object management
 behavior. These keys are for development use only and should not be modified
 for production testing. See <<Object Manager Configuration>>.
 
+
 ==== Environment Variables
 OG exposes several environment variables which can be used to modify functional
 and performance characteristics of the tool. They include:
@@ -1252,6 +1259,10 @@ OG also includes an _object-file_ shell script, which is used for reading and
 writing object files. A description of the usage of this script is outside the
 scope of this guide, and the script itself is rarely useful other than for
 development purposes.
+
+With release 1.4.0, the object-file is enhanced to support both pre-1.4.0 object files (1.0) and
+1.4.0 object files (v2.0).
+
 
 == Results
 For each OG test that is run, a test results directory is created with the
