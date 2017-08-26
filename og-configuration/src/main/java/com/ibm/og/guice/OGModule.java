@@ -113,6 +113,7 @@ import com.ibm.og.json.SelectionConfig;
 import com.ibm.og.json.SelectionType;
 import com.ibm.og.json.StoppingConditionsConfig;
 import com.ibm.og.object.AbstractObjectNameConsumer;
+import com.ibm.og.object.DeleteObjectConsumer;
 import com.ibm.og.object.DeleteObjectLegalHoldConsumer;
 import com.ibm.og.object.ListObjectNameConsumer;
 import com.ibm.og.object.MetadataObjectNameConsumer;
@@ -972,6 +973,7 @@ public class OGModule extends AbstractModule {
     consumers.add(new ListObjectNameConsumer(objectManager, sc));
     consumers.add(new MultipartWriteObjectNameConsumer(objectManager, sc));
     consumers.add(new WriteCopyObjectNameConsumer(objectManager, sc));
+    consumers.add(new DeleteObjectConsumer(objectManager, sc));
     // add status code range (400, 451) for legalhold operations.
     // while doing legalhold operation object is temporarily removed and stored in
     // a separate cache. After the response is received object state is updated and the object is

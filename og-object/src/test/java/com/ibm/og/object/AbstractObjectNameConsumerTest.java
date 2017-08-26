@@ -124,7 +124,7 @@ public abstract class AbstractObjectNameConsumerTest {
 
   @Test
   public void operationDoesNotMatchMethod() {
-    when(this.request.getMethod()).thenReturn(Method.DELETE);
+    when(this.request.getMethod()).thenReturn(Method.POST);
     this.objectNameConsumer.consume(this.operation);
     doVerifyNever();
   }
