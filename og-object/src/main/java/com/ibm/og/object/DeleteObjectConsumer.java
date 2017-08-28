@@ -29,14 +29,13 @@ public class DeleteObjectConsumer extends AbstractObjectNameConsumer {
    * @throws IllegalArgumentException if any status code in status codes is invalid
    */
   public DeleteObjectConsumer(final ObjectManager objectManager, final Set<Integer> statusCodes) {
-    super(objectManager, Operation.DELETE_LEGAL_HOLD, statusCodes);
+    super(objectManager, Operation.DELETE, statusCodes);
   }
 
   @Override
   protected void updateObjectManager(final ObjectMetadata objectName) {
-    //this.objectManager.add(objectName);
     this.objectManager.removeUpdatedObject(objectName);
-    _logger.info("consume object objectName");
+    _logger.trace("consume object objectName");
   }
 
   @Override
@@ -65,6 +64,6 @@ public class DeleteObjectConsumer extends AbstractObjectNameConsumer {
 
   @Override
   public String toString() {
-    return "ReadObjectNameConsumer []";
+    return "DeleteObjectNameConsumer []";
   }
 }
