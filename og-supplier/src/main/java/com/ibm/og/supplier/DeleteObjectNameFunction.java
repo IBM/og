@@ -45,7 +45,7 @@ public class DeleteObjectNameFunction implements Function<Map<String, String>, S
    */
   @Override
   public String apply(final Map<String, String> context) {
-    final ObjectMetadata objectMetadata = this.objectManager.removeForUpdate();
+    final ObjectMetadata objectMetadata = this.objectManager.remove();
     context.put(Context.X_OG_OBJECT_NAME, objectMetadata.getName());
     context.put(Context.X_OG_OBJECT_SIZE, String.valueOf(objectMetadata.getSize()));
     context.put(Context.X_OG_CONTAINER_SUFFIX, String.valueOf(objectMetadata.getContainerSuffix()));
