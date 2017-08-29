@@ -216,7 +216,7 @@ public class RequestSupplier implements Supplier<Request> {
     if (this.body != null) {
       Body body = this.body.apply(requestContext);
       builder.withBody(body);
-      if (this.retention != null || this.legalHold != null || this.contentMd5) {
+      if (this.contentMd5) {
         try {
           Long size = body.getSize();
           byte[] md5 = md5ContentCache.get(size);
