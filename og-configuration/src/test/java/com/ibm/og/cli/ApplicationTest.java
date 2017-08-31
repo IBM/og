@@ -119,7 +119,7 @@ public class ApplicationTest {
   public static Object[][] provideObjectFileCli() {
     return new Object[][] {
             // args, shouldStop, error, help, version
-            {new String[] {}, false, false, false, false},
+            {new String[] {}, true, true, false, false},
             {new String[] {"input-file"}, false, false, false, false},
             {new String[] {"--help"}, true, false, true, false},
             {new String[] {"--version"}, true, false, false, true}};
