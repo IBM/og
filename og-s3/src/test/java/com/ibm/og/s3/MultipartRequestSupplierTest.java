@@ -231,7 +231,7 @@ public class MultipartRequestSupplierTest {
 
     return new MultipartRequestSupplier(id, scheme, host, port, uriRoot, container,
         object, partSizes, partsPerSessionFunc, targetSessions, queryParameters, trailingSlash, headers, context, credentials, body,
-        virtualHost);
+        virtualHost, false);
   }
 
   private void genericMultipleSessions(int targetSessions, long objectSize, long expectedPart1Size, long expectedPart2Size) throws URISyntaxException {
