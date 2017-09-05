@@ -5,6 +5,9 @@
 
 package com.ibm.og.s3;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.LoadingCache;
+import com.google.common.io.BaseEncoding;
 import com.ibm.og.api.Body;
 import com.ibm.og.api.DataType;
 import com.ibm.og.api.Method;
@@ -14,6 +17,7 @@ import com.ibm.og.api.Response;
 import com.ibm.og.http.Bodies;
 import com.ibm.og.http.Credential;
 import com.ibm.og.http.HttpRequest;
+import com.ibm.og.http.MD5DigestLoader;
 import com.ibm.og.http.Scheme;
 import com.ibm.og.util.Context;
 import com.ibm.og.util.Pair;
@@ -72,6 +76,9 @@ public class MultipartRequestSupplier implements Supplier<Request> {
   private final Function<Map<String, String>, Credential> credentials;
   private final Function<Map<String, String>, Body> body;
   private final boolean virtualHost;
+  private final boolean contentMd5;
+  private final LoadingCache<Long, byte[]> md5ContentCache;
+
 
   // constants
   private final int NO_PART = -1;
@@ -117,7 +124,8 @@ public class MultipartRequestSupplier implements Supplier<Request> {
       final boolean trailingSlash, final Map<String, Function<Map<String, String>, String>> headers,
       final List<Function<Map<String, String>, String>> context,
       final Function<Map<String, String>, Credential> credentials,
-      final Function<Map<String, String>, Body> body, final boolean virtualHost) {
+      final Function<Map<String, String>, Body> body, final boolean virtualHost,
+      final boolean contentMd5) {
 
     this.id = id;
     this.scheme = checkNotNull(scheme);
@@ -136,10 +144,13 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     this.credentials = credentials;
     this.body = body;
     this.virtualHost = virtualHost;
+    this.contentMd5 = contentMd5;
     this.randomNumber = new Random();
     this.actionableMultipartSessions = Collections.synchronizedList(new ArrayList<MultipartInfo>());
     this.multipartRequestMap = new ConcurrentHashMap<String, MultipartInfo>();
     this.sessionManager = new MPSessionManager();
+    this.md5ContentCache = CacheBuilder.newBuilder().maximumSize(100).build(new MD5DigestLoader());
+
   }
 
   private enum MultipartRequest {
@@ -621,12 +632,26 @@ public class MultipartRequestSupplier implements Supplier<Request> {
             partNumber, uploadId, multipartContext.get(Context.X_OG_OBJECT_NAME),
                 multipartContext.get(Context.X_OG_MULTIPART_CONTAINER)), Operation.MULTIPART_WRITE_PART);
 
+    Body body;
     if(bodyDataType.equals(DataType.RANDOM.toString())) {
-      builder.withBody(Bodies.random(partSize));
+      body = Bodies.random(partSize);
+      builder.withBody(body);
     } else if(bodyDataType.equals(DataType.ZEROES.toString())) {
-      builder.withBody(Bodies.zeroes(partSize));
+      body = Bodies.zeroes(partSize);
+      builder.withBody(body);
     } else {
-      builder.withBody(Bodies.random(partSize));
+      body = Bodies.random(partSize);
+      builder.withBody(body);
+    }
+
+    if (this.contentMd5) {
+      try {
+        Long size = body.getSize();
+        byte[] md5 = md5ContentCache.get(size);
+        builder.withHeader(Context.X_OG_CONTENT_MD5, BaseEncoding.base64().encode(md5));
+      } catch (Exception e) {
+        _logger.error(e.getMessage());
+      }
     }
     // populate request context
     for (final Map.Entry<String, String> entry : multipartContext.entrySet()) {
