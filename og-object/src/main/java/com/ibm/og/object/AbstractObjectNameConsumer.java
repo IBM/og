@@ -84,16 +84,20 @@ public abstract class AbstractObjectNameConsumer {
       throw new IllegalStateException("Unable to determine object");
     }
 
-    final ObjectMetadata objectName = getObjectName(request, response);
-    updateObjectManager(objectName);
+    updateObjectManager(request, response);
+
   }
 
-  private ObjectMetadata getObjectName(final Request request, final Response response) {
+  protected ObjectMetadata getObjectName(final Request request, final Response response) {
     final String objectString = getObjectString(request, response);
     final long objectSize = getObjectSize(request);
     final int containerSuffix = getContainerSuffix(request);
-    return LegacyObjectMetadata.fromMetadata(objectString, objectSize, containerSuffix);
+    final byte numLegalHolds = getNumberOfLegalHolds(request, response);
+    final int retention = getObjectionRetention(request);
+    return LegacyObjectMetadata.fromMetadata(objectString, objectSize, containerSuffix, numLegalHolds, retention);
   }
+
+
 
   protected String getObjectString(final Request request, final Response response) {
     String objectString = request.getContext().get(Context.X_OG_OBJECT_NAME);
@@ -121,5 +125,30 @@ public abstract class AbstractObjectNameConsumer {
     }
   }
 
+  protected byte getNumberOfLegalHolds(final Request request, final Response response) {
+    final String nHolds = request.getContext().get(Context.X_OG_NUM_LEGAL_HOLDS);
+    if (nHolds == null) {
+      return 0;
+    } else {
+      return Byte.parseByte(nHolds);
+    }
+  }
+
+  //todo: check whether to use the retention in the request or response
+  protected int getObjectionRetention(final Request request) {
+    final String retention = request.getContext().get(Context.X_OG_OBJECT_RETENTION);
+    if (retention == null) {
+      return -1;
+    } else {
+      return Integer.parseInt(retention);
+    }
+  }
+
   protected abstract void updateObjectManager(ObjectMetadata objectName);
+
+  protected void updateObjectManager(final Request request, final Response response) {
+    final ObjectMetadata objectName = getObjectName(request, response);
+    updateObjectManager(objectName);
+  }
+
 }

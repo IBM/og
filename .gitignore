@@ -17,9 +17,12 @@ target
 .metadata
 .repository
 .project
+.idea/*
 
 og-configuration/log/*
 og-configuration/object/*
 
 # OSX
 .DS_Store
+
+.idea/*

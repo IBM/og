@@ -27,7 +27,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class ObjectFileGetOpt extends GetOpt {
 
-    @Parameter(names = {"--write", "-w"}, description = "Write plain text source and output in object file format")
+    @Parameter(names = {"--write", "-w"}, description = "Read plain text source and output in object file format")
     private boolean write;
 
     @Parameter(names = {"--read", "-r"}, description = "Read object source and output in plain text file format")
@@ -60,6 +60,25 @@ public class ObjectFileGetOpt extends GetOpt {
             "        output when using --filter", converter = IntegerSetConverter.class)
     private Set<Integer> containerSuffixes = new TreeSet<Integer>();
 
+    @Parameter(names={"--min-retention"},
+            description = "Minimum value for retention in seconds from epoch to include an object in the output when using\n" +
+                    "        --filter, in seconds from epoch (default: -1)", converter = IntegerConverter.class)
+    private int minRetention = -1;
+
+    @Parameter(names={"--max-retention"},
+            description = "Maximum value for retention in seconds from epoch to include an object in the output when using\n" +
+                    "        --filter, in seconds from epoch (default: -1)", converter = IntegerConverter.class)
+    private int maxRetention = Integer.MAX_VALUE;
+
+    @Parameter(names={"--min-legalholds"},
+            description = "Minumum number of legalholds the object has to include an object in the output when using\n" +
+                    "        --filter(default: 0)", converter = IntegerConverter.class)
+    private int minLegalHolds = 0;
+
+    @Parameter(names={"--max-legalholds"},
+            description = "Maximum number of legalholds the object has to include an object in the output when using\n" +
+                    "        --filter(default: 100)", converter = IntegerConverter.class)
+    private int maxLegalHolds = 100;
 
     @Parameter(names = {"--upgrade", "-u"}, description = "Upgrade an oom bin file to an og object file")
     private boolean upgrade;
@@ -75,7 +94,7 @@ public class ObjectFileGetOpt extends GetOpt {
     @Parameter(names= {"--output", "-o"}, description = "A relative or absolute path to an output file, rather than stdout")
     private String output;
 
-    @Parameter(description = "A relative or absolute path to an input file, rather than stdin")
+    @Parameter(description = "A relative or absolute paths to input files")
     private List<String> input = new ArrayList<String>(); // main parameter - currently only input file is expected.
 
     public boolean getWrite() {
@@ -110,6 +129,14 @@ public class ObjectFileGetOpt extends GetOpt {
         return containerSuffixes;
     }
 
+    public int getMinRetention() { return minRetention; }
+
+    public int getMaxRetention() { return maxRetention; }
+
+    public int getMinLegalHolds() { return minLegalHolds;}
+
+    public int getMaxLegalHolds() { return maxLegalHolds;}
+
     public boolean getUpgrade() {
         return upgrade;
     }
@@ -126,14 +153,19 @@ public class ObjectFileGetOpt extends GetOpt {
         return output;
     }
 
-    public File getInput() {
-        if(input != null && input.size() > 0) {
-            // pick the entry at first index, create a File object and return
-            File f = new FileConverter().convert(input.get(0));
-            return f;
-        } else {
-            return null;
+    public List<File> getInput() {
+        List<File> files = new ArrayList<File>();
+        if (input != null) {
+            for (String s:input) {
+                File f = new FileConverter().convert(s);
+                if (f.exists()) {
+                    files.add(f);
+                } else {
+                    throw new IllegalArgumentException(String.format("File[%s] does not exists", f.getName()));
+                }
+            }
         }
+        return files;
     }
 
     @Override
@@ -144,7 +176,7 @@ public class ObjectFileGetOpt extends GetOpt {
         }
         // if no input argument stdin is used so check for more than 1 argument
         checkNotNull(input);
-        checkArgument(input.size() <= 1, "Invalid command line arguments. Only one input file or stdin is expected");
+        checkArgument(input.size() >= 1, "Invalid command line arguments. Atleast one input file is expected");
         
         return true;
     }

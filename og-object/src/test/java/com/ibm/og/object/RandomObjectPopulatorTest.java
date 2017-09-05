@@ -5,8 +5,15 @@
 
 package com.ibm.og.object;
 
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -20,13 +27,18 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.google.common.io.BaseEncoding;
+import com.google.common.io.Files;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RandomObjectPopulatorTest {
+  private static final Logger _logger = LoggerFactory.getLogger(RandomObjectPopulatorTest.class);
   final String dirName = "RandomObjectPopulatorTest";
   static final String prefix = "id_";
   static final String suffix = ".object";
@@ -178,8 +190,8 @@ public class RandomObjectPopulatorTest {
     rop.shutdown();
     Assert.assertEquals(getIdFiles().length, 2);
     Assert.assertEquals(new File(prefix + 0 + suffix).length(),
-        RandomObjectPopulatorTest.MAX_OBJECTS * OBJECT_SIZE);
-    Assert.assertEquals(new File(prefix + 1 + suffix).length(), OBJECT_SIZE);
+        ObjectFileVersion.VERSION_HEADER_LENGTH + RandomObjectPopulatorTest.MAX_OBJECTS * OBJECT_SIZE);
+    Assert.assertEquals(new File(prefix + 1 + suffix).length(), ObjectFileVersion.VERSION_HEADER_LENGTH + OBJECT_SIZE);
   }
 
   @Test
@@ -199,9 +211,10 @@ public class RandomObjectPopulatorTest {
     Assert.assertEquals(getIdFiles().length, 5);
     for (int i = 0; i < 4; i++) {
       Assert.assertEquals(new File(prefix + i + suffix).length(),
-          RandomObjectPopulatorTest.MAX_OBJECTS * OBJECT_SIZE);
+          ObjectFileVersion.VERSION_HEADER_LENGTH + RandomObjectPopulatorTest.MAX_OBJECTS * OBJECT_SIZE);
     }
-    Assert.assertEquals(new File(prefix + 4 + suffix).length(), OBJECT_SIZE);
+    Assert.assertEquals(new File(prefix + 4 + suffix).length(),
+            ObjectFileVersion.VERSION_HEADER_LENGTH + OBJECT_SIZE);
   }
 
   @Test
@@ -225,14 +238,19 @@ public class RandomObjectPopulatorTest {
     rop.remove();
     rop.shutdown();
     Assert.assertEquals(getIdFiles().length, 2);
-    Assert.assertEquals(new File(prefix + 1 + suffix).length(), OBJECT_SIZE);
+    Assert.assertEquals(new File(prefix + 1 + suffix).length(),
+            ObjectFileVersion.VERSION_HEADER_LENGTH + OBJECT_SIZE);
     // Borrow last id from surplus file, causing that file to be deleted
     rop = new RandomObjectPopulator(this.vaultId, RandomObjectPopulatorTest.MAX_OBJECTS);
     rop.remove();
     rop.shutdown();
     Assert.assertEquals(getIdFiles().length, 1);
+    try {
+      Files.copy(new File(prefix + 0 + suffix), new File("/tmp/copy.object"));
+    } catch(Exception e) {
+    }
     Assert.assertEquals(new File(prefix + 0 + suffix).length(),
-        RandomObjectPopulatorTest.MAX_OBJECTS * OBJECT_SIZE);
+        ObjectFileVersion.VERSION_HEADER_LENGTH + RandomObjectPopulatorTest.MAX_OBJECTS * OBJECT_SIZE);
   }
 
   @Test
@@ -250,7 +268,7 @@ public class RandomObjectPopulatorTest {
     rop.shutdown();
     Assert.assertEquals(getIdFiles().length, 4);
     Assert.assertEquals(new File(prefix + 0 + suffix).length(),
-        RandomObjectPopulatorTest.MAX_OBJECTS * OBJECT_SIZE);
+            ObjectFileVersion.VERSION_HEADER_LENGTH + RandomObjectPopulatorTest.MAX_OBJECTS * OBJECT_SIZE);
   }
 
   @Test
@@ -285,7 +303,7 @@ public class RandomObjectPopulatorTest {
 
   protected ObjectMetadata generateId() {
     return LegacyObjectMetadata.fromMetadata(UUID.randomUUID().toString().replace("-", "") + "0000",
-        0, -1);
+        0, -1, (byte)0, -1);
   }
 
   @Ignore
@@ -404,6 +422,74 @@ public class RandomObjectPopulatorTest {
     Assert.assertFalse(f.accept(null, "testt" + suffix));
     Assert.assertFalse(f.accept(null, "testt0" + suffix));
   }
+
+  @Test
+  public void testWriteHeader() throws IOException {
+
+    final RandomObjectPopulator r = new RandomObjectPopulator(UUID.randomUUID(), "test");
+    ByteArrayOutputStream bos = new ByteArrayOutputStream(1000);
+    ObjectFileUtil.writeObjectFileVersion(bos);
+    ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
+    ObjectFileVersion version = ObjectFileUtil.readObjectFileVersion(bis);
+    Assert.assertTrue(version.getMajorVersion() == (byte)0x2);
+    Assert.assertTrue(version.getMinorVersion() == (byte)0x0);
+
+  }
+
+  @Test
+  public void testLoadSingleV1ObjectFile() throws IOException {
+
+    final OutputStream out = new BufferedOutputStream(new FileOutputStream( "id_0.object"));
+    final BaseEncoding ENCODING = BaseEncoding.base16().lowerCase();
+    for (int i = 0; i < 4; i++) {
+      ByteBuffer objectBuffer = ByteBuffer.allocate(30);
+      String objectId = UUID.randomUUID().toString().replace("-", "") + "0000";
+      objectBuffer.put(ENCODING.decode(objectId));
+      objectBuffer.putLong(99L);
+      objectBuffer.putInt(5000);
+      out.write(objectBuffer.array());
+    }
+    out.close();
+
+    RandomObjectPopulator rop =
+            new RandomObjectPopulator(this.vaultId, RandomObjectPopulatorTest.MAX_OBJECTS);
+    rop.shutdown();
+    Assert.assertTrue(rop.getSavedObjectCount() == 4);
+  }
+
+  @Test
+  public void testLoadMultipleV1ObjectFile() throws IOException {
+
+    OutputStream out = new BufferedOutputStream(new FileOutputStream( "id_0.object"));
+    final BaseEncoding ENCODING = BaseEncoding.base16().lowerCase();
+    for (int i = 0; i < MAX_OBJECTS; i++) {
+      ByteBuffer objectBuffer = ByteBuffer.allocate(30);
+      String objectId = UUID.randomUUID().toString().replace("-", "") + "0000";
+      objectBuffer.put(ENCODING.decode(objectId));
+      objectBuffer.putLong(99L);
+      objectBuffer.putInt(5000);
+      out.write(objectBuffer.array());
+    }
+    out.close();
+
+    out = new BufferedOutputStream(new FileOutputStream( "id_1.object"));
+    for (int i = 0; i < 3; i++) {
+      ByteBuffer objectBuffer = ByteBuffer.allocate(30);
+      String objectId = UUID.randomUUID().toString().replace("-", "") + "0000";
+      objectBuffer.put(ENCODING.decode(objectId));
+      objectBuffer.putLong(100L);
+      objectBuffer.putInt(10000);
+      out.write(objectBuffer.array());
+    }
+    out.close();
+    RandomObjectPopulator rop =
+            new RandomObjectPopulator(this.vaultId, RandomObjectPopulatorTest.MAX_OBJECTS);
+    rop.remove();
+    rop.shutdown();
+    Assert.assertTrue(rop.getSavedObjectCount() == 6);
+
+  }
+
   // @Test
   // public void testInvalidRetention() throws InterruptedException, ExecutionException, IOException
   // {

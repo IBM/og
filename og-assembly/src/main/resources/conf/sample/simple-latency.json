@@ -3,22 +3,22 @@
   "api":"soh",
   "container":"<dsnet vault>",
   "write":{
-    "weight":50.0
+    "weight":1.0
   },
   "read":{
-    "weight":50.0
+    "weight":2.0
   },
   "delete":{
     "weight":0.0
   },
   "filesize":[
     {
-      "weight":80,
+      "weight":8,
       "average":5,
       "average_unit":"kilobytes"
     },
     {
-      "weight":20,
+      "weight":2,
       "distribution":"uniform",
       "average":10,
       "average_unit":"kilobytes",

@@ -29,6 +29,10 @@ public class OGConfig {
   public OperationConfig containerList;
   public OperationConfig containerCreate;
   public OperationConfig multipartWrite;
+  public OperationConfig writeCopy;
+  public OperationConfig writeLegalhold;
+  public OperationConfig deleteLegalhold;
+  public OperationConfig readLegalhold;
   public SelectionConfig<FilesizeConfig> filesize;
   public DataType data;
   public ConcurrencyConfig concurrency;
@@ -57,6 +61,10 @@ public class OGConfig {
     this.containerList = new OperationConfig();
     this.containerCreate = new OperationConfig();
     this.multipartWrite = new OperationConfig();
+    this.writeCopy = new OperationConfig();
+    this.writeLegalhold = new OperationConfig();
+    this.deleteLegalhold = new OperationConfig();
+    this.readLegalhold = new OperationConfig();
     this.filesize = null;
     this.data = DataType.RANDOM;
     this.concurrency = null;
