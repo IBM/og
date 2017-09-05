@@ -226,6 +226,7 @@ public class OGModule extends AbstractModule {
         .to(this.config.multipartWrite.weight);
     bindConstant().annotatedWith(Names.named("multipartWrite.sseCDestination"))
         .to(this.config.multipartWrite.sseCDestination);
+    bindConstant().annotatedWith(Names.named("multipartWrite.contentMd5")).to(this.config.multipartWrite.contentMd5);
     bindConstant().annotatedWith(Names.named("writeCopy.weight")).to(this.config.writeCopy.weight);
     bindConstant().annotatedWith(Names.named("writeCopy.sseCSource"))
         .to(this.config.writeCopy.sseCSource);
@@ -2497,7 +2498,18 @@ public class OGModule extends AbstractModule {
       @MultiPartWriteBody final Function<Map<String, String>, Body> body,
       @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
       @Named("virtualhost") final boolean virtualHost,
-      @Named("multipartWrite.sseCDestination") final boolean encryptDestinationObject) {
+      @Named("multipartWrite.sseCDestination") final boolean encryptDestinationObject,
+      @Nullable @Named("multipartWrite.contentMd5") final boolean contentMd5) {
+
+    if (encryptDestinationObject) {
+      checkArgument(this.config.data == DataType.ZEROES,
+              "If SSE-C is enabled, data must be ZEROES [%s]", this.config.data);
+    }
+
+    if (contentMd5) {
+      checkArgument(this.config.data == DataType.ZEROES,
+              "If contentMD5 is set, data must be ZEROES [%s]", this.config.data);
+    }
 
     final Map<String, Function<Map<String, String>, String>> queryParameters =
         Collections.emptyMap();
@@ -2520,7 +2532,7 @@ public class OGModule extends AbstractModule {
 
     return createMultipartRequestSupplier(id, scheme, host, port, uriRoot, container, apiVersion,
         object, partSize, partsPerSession, targetSessions, queryParameters, headers, context, body,
-        credentials, virtualHost);
+        credentials, virtualHost, contentMd5);
   }
 
   private Supplier<Request> createMultipartRequestSupplier(
@@ -2534,10 +2546,11 @@ public class OGModule extends AbstractModule {
       final Map<String, Function<Map<String, String>, String>> headers,
       final List<Function<Map<String, String>, String>> context,
       final Function<Map<String, String>, Body> body,
-      final Function<Map<String, String>, Credential> credentials, final boolean virtualHost) {
+      final Function<Map<String, String>, Credential> credentials, final boolean virtualHost,
+      final boolean contentMd5) {
 
     return new MultipartRequestSupplier(id, scheme, host, port, uriRoot, container, object,
         partSize, partsPerSession, targetSessions, queryParameters, false, headers, context,
-        credentials, body, virtualHost);
+        credentials, body, virtualHost, contentMd5);
   }
 }
