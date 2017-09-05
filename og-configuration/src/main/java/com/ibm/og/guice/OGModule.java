@@ -1,4 +1,5 @@
-/* Copyright (c) IBM Corporation 2016. All Rights Reserved.
+/*
+ * Copyright (c) IBM Corporation 2016. All Rights Reserved.
  * Project name: Object Generator
  * This project is licensed under the Apache License 2.0, see LICENSE.
  */
@@ -14,6 +15,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -24,10 +26,16 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
+import com.google.common.collect.ContiguousSet;
+import com.google.common.collect.DiscreteDomain;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Range;
+import com.google.common.collect.Sets;
 import com.google.common.eventbus.EventBus;
+import com.google.common.hash.Hashing;
+import com.google.common.io.BaseEncoding;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provider;
 import com.google.inject.Provides;
@@ -59,6 +67,7 @@ import com.ibm.og.guice.annotation.ListQueryParameters;
 import com.ibm.og.guice.annotation.MetadataHeaders;
 import com.ibm.og.guice.annotation.MetadataHost;
 import com.ibm.og.guice.annotation.MetadataObjectName;
+import com.ibm.og.guice.annotation.MultiPartWriteBody;
 import com.ibm.og.guice.annotation.MultipartWriteHeaders;
 import com.ibm.og.guice.annotation.MultipartWriteHost;
 import com.ibm.og.guice.annotation.MultipartWriteObjectName;
@@ -69,6 +78,9 @@ import com.ibm.og.guice.annotation.OverwriteObjectName;
 import com.ibm.og.guice.annotation.ReadHeaders;
 import com.ibm.og.guice.annotation.ReadHost;
 import com.ibm.og.guice.annotation.ReadObjectName;
+import com.ibm.og.guice.annotation.SourceReadObjectName;
+import com.ibm.og.guice.annotation.WriteBody;
+import com.ibm.og.guice.annotation.WriteCopyHeaders;
 import com.ibm.og.guice.annotation.WriteHeaders;
 import com.ibm.og.guice.annotation.WriteHost;
 import com.ibm.og.guice.annotation.WriteObjectName;
@@ -91,21 +103,28 @@ import com.ibm.og.json.ContainerConfig;
 import com.ibm.og.json.CredentialSource;
 import com.ibm.og.json.FailingConditionsConfig;
 import com.ibm.og.json.FilesizeConfig;
+import com.ibm.og.json.LegalHold;
 import com.ibm.og.json.OGConfig;
 import com.ibm.og.json.ObjectConfig;
 import com.ibm.og.json.ObjectManagerConfig;
 import com.ibm.og.json.OperationConfig;
+import com.ibm.og.json.RetentionConfig;
 import com.ibm.og.json.SelectionConfig;
 import com.ibm.og.json.SelectionType;
 import com.ibm.og.json.StoppingConditionsConfig;
 import com.ibm.og.object.AbstractObjectNameConsumer;
+import com.ibm.og.object.DeleteObjectConsumer;
+import com.ibm.og.object.DeleteObjectLegalHoldConsumer;
 import com.ibm.og.object.ListObjectNameConsumer;
 import com.ibm.og.object.MetadataObjectNameConsumer;
 import com.ibm.og.object.MultipartWriteObjectNameConsumer;
 import com.ibm.og.object.ObjectManager;
 import com.ibm.og.object.OverwriteObjectNameConsumer;
 import com.ibm.og.object.RandomObjectPopulator;
+import com.ibm.og.object.ReadObjectLegalHoldConsumer;
 import com.ibm.og.object.ReadObjectNameConsumer;
+import com.ibm.og.object.WriteCopyObjectNameConsumer;
+import com.ibm.og.object.WriteLegalHoldObjectNameConsumer;
 import com.ibm.og.object.WriteObjectNameConsumer;
 import com.ibm.og.openstack.KeystoneAuth;
 import com.ibm.og.s3.MultipartRequestSupplier;
@@ -120,10 +139,13 @@ import com.ibm.og.statistic.Counter;
 import com.ibm.og.statistic.Statistics;
 import com.ibm.og.supplier.CredentialGetterFunction;
 import com.ibm.og.supplier.DeleteObjectNameFunction;
+import com.ibm.og.supplier.LegalholdObjectNameFunction;
 import com.ibm.og.supplier.MetadataObjectNameFunction;
+import com.ibm.og.supplier.RandomPercentageSupplier;
 import com.ibm.og.supplier.RandomSupplier;
 import com.ibm.og.supplier.ReadObjectNameFunction;
 import com.ibm.og.supplier.RequestSupplier;
+import com.ibm.og.supplier.SourceReadObjectNameFunction;
 import com.ibm.og.supplier.Suppliers;
 import com.ibm.og.supplier.UUIDObjectNameFunction;
 import com.ibm.og.test.LoadTest;
@@ -154,6 +176,7 @@ public class OGModule extends AbstractModule {
   private static final String S3_MULTIPART = "s3.multipart";
   private final LoadTestSubscriberExceptionHandler handler;
   private final EventBus eventBus;
+  final byte[] aesKey = SSECustomerKey();
 
   /**
    * Creates an instance
@@ -179,9 +202,20 @@ public class OGModule extends AbstractModule {
       }
     });
     bindConstant().annotatedWith(Names.named("write.weight")).to(this.config.write.weight);
+    bindConstant().annotatedWith(Names.named("write.sseCDestination"))
+        .to(this.config.write.sseCDestination);
     bindConstant().annotatedWith(Names.named("overwrite.weight")).to(this.config.overwrite.weight);
+    bindConstant().annotatedWith(Names.named("overwrite.sseCDestination"))
+        .to(this.config.read.sseCDestination);
+    bindConstant().annotatedWith(Names.named("write.contentMd5")).to(this.config.write.contentMd5);
+    bindConstant().annotatedWith(Names.named("overwrite.weight")).to(this.config.overwrite.weight);
+    bindConstant().annotatedWith(Names.named("overwrite.contentMd5"))
+        .to(this.config.overwrite.contentMd5);
     bindConstant().annotatedWith(Names.named("read.weight")).to(this.config.read.weight);
+    bindConstant().annotatedWith(Names.named("read.sseCSource")).to(this.config.read.sseCSource);
     bindConstant().annotatedWith(Names.named("metadata.weight")).to(this.config.metadata.weight);
+    bindConstant().annotatedWith(Names.named("metadata.sseCSource"))
+        .to(this.config.metadata.sseCSource);
     bindConstant().annotatedWith(Names.named("delete.weight")).to(this.config.delete.weight);
     bindConstant().annotatedWith(Names.named("list.weight")).to(this.config.list.weight);
     bindConstant().annotatedWith(Names.named("containerList.weight"))
@@ -190,8 +224,22 @@ public class OGModule extends AbstractModule {
         .to(this.config.containerCreate.weight);
     bindConstant().annotatedWith(Names.named("multipartWrite.weight"))
         .to(this.config.multipartWrite.weight);
+    bindConstant().annotatedWith(Names.named("multipartWrite.sseCDestination"))
+        .to(this.config.multipartWrite.sseCDestination);
+    bindConstant().annotatedWith(Names.named("writeCopy.weight")).to(this.config.writeCopy.weight);
+    bindConstant().annotatedWith(Names.named("writeCopy.sseCSource"))
+        .to(this.config.writeCopy.sseCSource);
+    bindConstant().annotatedWith(Names.named("writeCopy.sseCDestination"))
+        .to(this.config.writeCopy.sseCDestination);
+    bindConstant().annotatedWith(Names.named("write_legalhold.weight"))
+        .to(this.config.writeLegalhold.weight);
+    bindConstant().annotatedWith(Names.named("read_legalhold.weight"))
+        .to(this.config.readLegalhold.weight);
+    bindConstant().annotatedWith(Names.named("delete_legalhold.weight"))
+        .to(this.config.deleteLegalhold.weight);
     bindConstant().annotatedWith(Names.named("virtualhost")).to(this.config.virtualHost);
-    bindConstant().annotatedWith(Names.named("multipartWrite.targetSessions")).to(this.config.multipartWrite.upload.targetSessions);
+    bindConstant().annotatedWith(Names.named("multipartWrite.targetSessions"))
+        .to(this.config.multipartWrite.upload.targetSessions);
     bind(AuthType.class).toInstance(this.config.authentication.type);
     bind(DataType.class).toInstance(this.config.data);
     bind(String.class).annotatedWith(Names.named("authentication.username"))
@@ -341,6 +389,23 @@ public class OGModule extends AbstractModule {
 
     return conditions;
   }
+
+  @Provides
+  @Singleton
+  public Long provideTestRetentionConfig(final RetentionConfig rc) {
+
+    final Map<String, String> context = Maps.newHashMap();
+    if (rc.expiry != null) {
+      final SelectionConfig<RetentionConfig> rcSelection = new SelectionConfig<RetentionConfig>();
+      rcSelection.choices.add(new ChoiceConfig<RetentionConfig>(rc));
+      final Function<Map<String, String>, Long> retentionFunction =
+          this.provideRetention(rcSelection);
+      return retentionFunction.apply(context);
+    } else {
+      return -1L;
+    }
+  }
+
 
   @Provides
   @Singleton
@@ -545,6 +610,17 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
+  @Named("writeCopy.container")
+  public Function<Map<String, String>, String> provideWriteCopyContainer() {
+    if (this.config.writeCopy.container.prefix != null) {
+      return provideContainer(this.config.writeCopy.container);
+    } else {
+      return provideContainer(this.config.container);
+    }
+  }
+
+  @Provides
+  @Singleton
   @Named("overwrite.container")
   public Function<Map<String, String>, String> provideOverwriteContainer() throws Exception {
     if (this.config.overwrite.container.prefix != null) {
@@ -639,10 +715,12 @@ public class OGModule extends AbstractModule {
         if (suffix != null) {
           if (Integer.parseInt(suffix) == -1) {
             // use the container name provided without suffix
+            input.put(Context.X_OG_CONTAINER_PREFIX, container);
             input.put(Context.X_OG_CONTAINER_NAME, container);
             return container;
           } else {
             final String containerName = container.concat(suffix);
+            input.put(Context.X_OG_CONTAINER_PREFIX, container);
             input.put(Context.X_OG_CONTAINER_NAME, containerName);
             return container.concat(suffix);
           }
@@ -651,11 +729,13 @@ public class OGModule extends AbstractModule {
             suffix = suffixes.get().toString();
             input.put(Context.X_OG_CONTAINER_SUFFIX, suffix);
             final String containerName = container.concat(suffix);
+            input.put(Context.X_OG_CONTAINER_PREFIX, container);
             input.put(Context.X_OG_CONTAINER_NAME, containerName);
             return container.concat(suffix);
           } else {
             input.put(Context.X_OG_CONTAINER_SUFFIX, "-1");
             // use the container name provided without suffix
+            input.put(Context.X_OG_CONTAINER_PREFIX, container);
             input.put(Context.X_OG_CONTAINER_NAME, container);
             return container;
           }
@@ -724,10 +804,11 @@ public class OGModule extends AbstractModule {
   }
 
   private Function<Map<String, String>, Integer> providePartsPerSession(
-          final OperationConfig operationConfig) {
+      final OperationConfig operationConfig) {
     checkNotNull(operationConfig);
 
-    final SelectionConfig<Integer> operationPartsPerSession = operationConfig.upload.partsPerSession;
+    final SelectionConfig<Integer> operationPartsPerSession =
+        operationConfig.upload.partsPerSession;
     if (operationPartsPerSession != null && !operationPartsPerSession.choices.isEmpty()) {
       return createPartsPerSession(operationConfig.upload.partsPerSession);
     }
@@ -739,7 +820,8 @@ public class OGModule extends AbstractModule {
     return MoreFunctions.forSupplier(partSizeSupplier);
   }
 
-  private Function<Map<String, String>, Integer> createPartsPerSession(final SelectionConfig<Integer> partsPerSession) {
+  private Function<Map<String, String>, Integer> createPartsPerSession(
+      final SelectionConfig<Integer> partsPerSession) {
     checkNotNull(partsPerSession);
     checkNotNull(partsPerSession.selection);
     checkNotNull(partsPerSession.choices);
@@ -747,8 +829,7 @@ public class OGModule extends AbstractModule {
     for (final ChoiceConfig<Integer> choice : partsPerSession.choices) {
       checkNotNull(choice);
       checkNotNull(choice.choice);
-      checkArgument(choice.choice >= 1,
-              "partsPerSession must be greater than or equal to 1");
+      checkArgument(choice.choice >= 1, "partsPerSession must be greater than or equal to 1");
     }
 
     if (SelectionType.ROUNDROBIN == partsPerSession.selection) {
@@ -794,6 +875,13 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
+  @SourceReadObjectName
+  public Function<Map<String, String>, String> provideSSEReadObjectName() {
+    return MoreFunctions.keyLookup(Context.X_OG_SSE_SOURCE_OBJECT_NAME);
+  }
+
+  @Provides
+  @Singleton
   @MetadataObjectName
   public Function<Map<String, String>, String> provideMetadataObjectName() {
     return MoreFunctions.keyLookup(Context.X_OG_OBJECT_NAME);
@@ -816,6 +904,27 @@ public class OGModule extends AbstractModule {
   private Function<Map<String, String>, String> provideObject(
       final OperationConfig operationConfig) {
     checkNotNull(operationConfig);
+    final ObjectConfig objectConfig = checkNotNull(operationConfig.object);
+    final String prefix = checkNotNull(objectConfig.prefix);
+    final Supplier<Long> suffixes = createObjectSuffixes(objectConfig);
+    final Supplier<Long> legalHoldSuffixes = createLegalHoldSuffixes(operationConfig.object);
+    return new Function<Map<String, String>, String>() {
+      @Override
+      public String apply(final Map<String, String> context) {
+        final String objectName = prefix + suffixes.get();
+        context.put(Context.X_OG_OBJECT_NAME, objectName);
+        context.put(Context.X_OG_SEQUENTIAL_OBJECT_NAME, "true");
+        if (operationConfig.legalHold != null) {
+          context.put(Context.X_OG_LEGAL_HOLD_SUFFIX, legalHoldSuffixes.get().toString());
+        }
+        return objectName;
+      }
+    };
+  }
+
+  private Function<Map<String, String>, String> provideSourceObject(
+      final OperationConfig operationConfig) {
+    checkNotNull(operationConfig);
 
     final ObjectConfig objectConfig = checkNotNull(operationConfig.object);
     final String prefix = checkNotNull(objectConfig.prefix);
@@ -824,9 +933,8 @@ public class OGModule extends AbstractModule {
       @Override
       public String apply(final Map<String, String> context) {
         final String objectName = prefix + suffixes.get();
-        context.put(Context.X_OG_OBJECT_NAME, objectName);
+        context.put(Context.X_OG_SSE_SOURCE_OBJECT_NAME, objectName);
         context.put(Context.X_OG_SEQUENTIAL_OBJECT_NAME, "true");
-
         return objectName;
       }
     };
@@ -844,6 +952,14 @@ public class OGModule extends AbstractModule {
     }
   }
 
+  private Supplier<Long> createLegalHoldSuffixes(final ObjectConfig config) {
+    if (SelectionType.ROUNDROBIN == config.selection) {
+      return Suppliers.cycle(LegalHold.MIN_SUFFIX, LegalHold.MAX_SUFFIX);
+    } else {
+      return Suppliers.random(LegalHold.MIN_SUFFIX, LegalHold.MAX_SUFFIX);
+    }
+  }
+
   @Provides
   @Singleton
   public List<AbstractObjectNameConsumer> provideObjectNameConsumers(
@@ -856,6 +972,19 @@ public class OGModule extends AbstractModule {
     consumers.add(new OverwriteObjectNameConsumer(objectManager, sc));
     consumers.add(new ListObjectNameConsumer(objectManager, sc));
     consumers.add(new MultipartWriteObjectNameConsumer(objectManager, sc));
+    consumers.add(new WriteCopyObjectNameConsumer(objectManager, sc));
+    consumers.add(new DeleteObjectConsumer(objectManager, sc));
+    // add status code range (400, 451) for legalhold operations.
+    // while doing legalhold operation object is temporarily removed and stored in
+    // a separate cache. After the response is received object state is updated and the object is
+    // added
+    // back in the object manager
+    final Set<Integer> legalHoldsSc = Sets.newHashSet();
+    legalHoldsSc.addAll(sc);
+    legalHoldsSc.addAll(ContiguousSet.create(Range.closed(400, 451), DiscreteDomain.integers()));
+    consumers.add(new WriteLegalHoldObjectNameConsumer(objectManager, legalHoldsSc));
+    consumers.add(new ReadObjectLegalHoldConsumer(objectManager, legalHoldsSc));
+    consumers.add(new DeleteObjectLegalHoldConsumer(objectManager, legalHoldsSc));
 
     for (final AbstractObjectNameConsumer consumer : consumers) {
       eventBus.register(consumer);
@@ -868,6 +997,13 @@ public class OGModule extends AbstractModule {
   @WriteHeaders
   public Map<String, Function<Map<String, String>, String>> provideWriteHeaders() {
     return provideHeaders(this.config.write.headers);
+  }
+
+  @Provides
+  @Singleton
+  @WriteCopyHeaders
+  public Map<String, Function<Map<String, String>, String>> provideWriteCopyHeaders() {
+    return provideHeaders(this.config.writeCopy.headers);
   }
 
   @Provides
@@ -987,6 +1123,37 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
+  @Named("writeCopy.context")
+  public List<Function<Map<String, String>, String>> provideWriteCopyContext(final Api api) {
+    final List<Function<Map<String, String>, String>> context = Lists.newArrayList();
+
+    final OperationConfig operationConfig = checkNotNull(this.config.writeCopy);
+    if (Api.SOH != api) {
+      if (operationConfig.object.selection != null) {
+        context.add(provideObject(operationConfig));
+      } else {
+        // default for writes
+        context.add(new UUIDObjectNameFunction());
+      }
+    }
+
+    // SOH needs to use a special response consumer to extract the returned object id
+    if (Api.SOH == api) {
+      context.add(new Function<Map<String, String>, String>() {
+        @Override
+        public String apply(final Map<String, String> input) {
+          input.put(Context.X_OG_RESPONSE_BODY_CONSUMER, SOH_PUT_OBJECT);
+
+          return null;
+        }
+      });
+    }
+
+    return ImmutableList.copyOf(context);
+  }
+
+  @Provides
+  @Singleton
   @Named("api.version")
   public String provideAPIVersion(final Api api) {
 
@@ -1022,6 +1189,46 @@ public class OGModule extends AbstractModule {
       function = provideObject(operationConfig);
     } else {
       function = new ReadObjectNameFunction(objectManager);
+    }
+
+    return ImmutableList.of(function);
+  }
+
+  @Provides
+  @Singleton
+  @Named("writeCopySource.context")
+  public List<Function<Map<String, String>, String>> provideSSeReadContext(
+      final ObjectManager objectManager) {
+    Function<Map<String, String>, String> function;
+
+    final OperationConfig operationConfig = checkNotNull(this.config.read);
+    if (operationConfig.object.selection != null) {
+      function = provideSourceObject(operationConfig);
+    } else {
+      function = new SourceReadObjectNameFunction(objectManager);
+
+    }
+    return ImmutableList.of(function);
+  }
+
+  @Provides
+  @Named("write_legalhold.context")
+  public List<Function<Map<String, String>, String>> provideWriteLegalholdContext(
+      final ObjectManager objectManager) {
+    Function<Map<String, String>, String> function;
+
+    final OperationConfig operationConfig = checkNotNull(this.config.writeLegalhold);
+    if (operationConfig.object.selection != null) {
+      function = provideObject(operationConfig);
+    } else {
+      String legalHoldName;
+      if (this.config.writeLegalhold.legalHold != null
+          && this.config.writeLegalhold.legalHold.legalHoldPrefix != null) {
+        legalHoldName = this.config.writeLegalhold.legalHold.legalHoldPrefix;
+      } else {
+        legalHoldName = "LegalHold";
+      }
+      function = new LegalholdObjectNameFunction(objectManager, legalHoldName);
     }
 
     return ImmutableList.of(function);
@@ -1121,6 +1328,240 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
+  @Named("write.retention")
+  private Function<Map<String, String>, Long> provideWriteRetention() {
+    if (this.config.write.retention == null) {
+      return null;
+    }
+    final SelectionConfig<RetentionConfig> retentionConfig = this.config.write.retention;
+    final List<ChoiceConfig<RetentionConfig>> retentions = checkNotNull(retentionConfig.choices);
+    checkArgument(!retentions.isEmpty(), "retentions must not be empty");
+
+
+    for (final ChoiceConfig<RetentionConfig> choice : retentions) {
+      checkNotNull(choice);
+      checkNotNull(choice.choice);
+      checkArgument(choice.choice.expiry >= -1, "Expiry must be greater than or equal to -1");
+    }
+    return provideRetention(retentionConfig);
+  }
+
+  @Provides
+  @Singleton
+  @Named("overwrite.retention")
+  private Function<Map<String, String>, Long> provideOverwriteRetention() {
+    // return null;
+    if (this.config.overwrite.retention == null) {
+      return null;
+    }
+    final SelectionConfig<RetentionConfig> retentionConfig = this.config.overwrite.retention;
+    final List<ChoiceConfig<RetentionConfig>> retentions = checkNotNull(retentionConfig.choices);
+    checkArgument(!retentions.isEmpty(), "retentions must not be empty");
+
+
+    for (final ChoiceConfig<RetentionConfig> choice : retentions) {
+      checkNotNull(choice);
+      checkNotNull(choice.choice);
+      checkArgument(choice.choice.expiry >= -1, "Expiry must be greater than or equal to -1");
+    }
+    return provideRetention(retentionConfig);
+  }
+
+  @Provides
+  @Singleton
+  @Named("multipartWrite.retention")
+  private Function<Map<String, String>, Long> provideMultipartWriteRetention() {
+    // return null;
+    if (this.config.multipartWrite.retention == null) {
+      return null;
+    }
+    final SelectionConfig<RetentionConfig> retentionConfig = this.config.multipartWrite.retention;
+    final List<ChoiceConfig<RetentionConfig>> retentions = checkNotNull(retentionConfig.choices);
+    checkArgument(!retentions.isEmpty(), "retentions must not be empty");
+
+
+    for (final ChoiceConfig<RetentionConfig> choice : retentions) {
+      checkNotNull(choice);
+      checkNotNull(choice.choice);
+      checkArgument(choice.choice.expiry >= -1, "Expiry must be greater than or equal to -1");
+    }
+    return provideRetention(retentionConfig);
+  }
+
+  @Provides
+  @Singleton
+  @Named("containerCreate.retention")
+  private Function<Map<String, String>, Long> provideContainerCreateRetention() {
+    // return null;
+    if (this.config.containerCreate.retention == null) {
+      return null;
+    }
+    final SelectionConfig<RetentionConfig> retentionConfig = this.config.containerCreate.retention;
+    final List<ChoiceConfig<RetentionConfig>> retentions = checkNotNull(retentionConfig.choices);
+    checkArgument(!retentions.isEmpty(), "retentions must not be empty");
+
+
+    for (final ChoiceConfig<RetentionConfig> choice : retentions) {
+      checkNotNull(choice);
+      checkNotNull(choice.choice);
+      checkArgument(choice.choice.expiry >= -1, "Expiry must be greater than or equal to -1");
+    }
+    return provideRetention(retentionConfig);
+  }
+
+  private Function<Map<String, String>, Long> provideRetention(
+      final SelectionConfig<RetentionConfig> retentions) {
+    final Supplier<RetentionConfig> retentionConfigSupplier;
+    final SelectionType selection = checkNotNull(retentions.selection);
+
+    // if retentions list is empty return null
+    if (retentions.choices.isEmpty()) {
+      return null;
+    }
+    if (SelectionType.ROUNDROBIN == selection) {
+      final List<RetentionConfig> retentionConfigList = Lists.newArrayList();
+      retentionConfigSupplier = Suppliers.cycle(retentionConfigList);
+    } else {
+      final RandomSupplier.Builder<RetentionConfig> wrc = Suppliers.random();
+      for (final ChoiceConfig<RetentionConfig> choice : retentions.choices) {
+        wrc.withChoice(choice.choice, choice.weight);
+      }
+      retentionConfigSupplier = wrc.build();
+    }
+    return new Function<Map<String, String>, Long>() {
+
+      @Override
+      public Long apply(final Map<String, String> input) {
+        final RetentionConfig retentionConfig = retentionConfigSupplier.get();
+        if (retentionConfig.expiry != -1L) {
+          final Long expiryTime = retentionConfig.timeUnit.toSeconds(retentionConfig.expiry);
+          checkArgument(
+              (expiryTime
+                  + System.currentTimeMillis() / 1000) <= RetentionConfig.MAX_RETENTION_EXPIRY,
+              "The expiry in [%s] seconds duration should be earlier than January 19, 2038 3:14:07 AM",
+              expiryTime);
+          input.put(Context.X_OG_OBJECT_RETENTION, String.valueOf(expiryTime));
+          return expiryTime;
+        } else {
+          return -1L;
+        }
+      }
+    };
+  }
+
+  @Provides
+  @Singleton
+  @Named("write.legalHold")
+  public Supplier<Function<Map<String, String>, String>> provideLegalHold() {
+    return provideLegalHold(this.config.write.legalHold);
+  }
+
+  @Provides
+  @Singleton
+  @Named("add.legalHold")
+  public Supplier<Function<Map<String, String>, String>> provideAddLegalHold() {
+    if (config.writeLegalhold.weight > 0.0) {
+      checkArgument(config.writeLegalhold.legalHold != null,
+              "legalhold must be specificied for write_legalhold operation");
+      checkArgument(config.writeLegalhold.legalHold.percentage == 100.00,
+              "legalhold percentage must be set to 100.00 percentage for write_legalhold operation");
+    }
+
+    return provideLegalHold(this.config.writeLegalhold.legalHold);
+  }
+
+  @Provides
+  @Singleton
+  @Named("delete.legalHold")
+  public Supplier<Function<Map<String, String>, String>> provideDeleteLegalHold() {
+    if (config.deleteLegalhold.weight > 0.0) {
+      checkArgument(config.deleteLegalhold.legalHold != null,
+              "legalhold must be specificied for delete_legalhold operation");
+      checkArgument(config.deleteLegalhold.legalHold.percentage == 100.00,
+              "legalhold percentage must be set to 100.00 percentage for delete_legalhold operation");
+
+    }
+    return provideLegalHold(this.config.deleteLegalhold.legalHold);
+  }
+
+  @Provides
+  @Singleton
+  @Named("delete_legalhold.context")
+  public List<Function<Map<String, String>, String>> provideDeleteLegalholdContext(
+      final ObjectManager objectManager) {
+    Function<Map<String, String>, String> function;
+
+    final OperationConfig operationConfig = checkNotNull(this.config.deleteLegalhold);
+    if (operationConfig.object.selection != null) {
+      function = provideObject(operationConfig);
+    } else {
+      String legalHoldName;
+      if (this.config.deleteLegalhold.legalHold != null
+          && this.config.deleteLegalhold.legalHold.legalHoldPrefix != null) {
+        legalHoldName = this.config.deleteLegalhold.legalHold.legalHoldPrefix;
+      } else {
+        legalHoldName = "LegalHold";
+      }
+      function = new LegalholdObjectNameFunction(objectManager, legalHoldName);
+    }
+    return ImmutableList.of(function);
+  }
+
+  @Provides
+  @Singleton
+  @Named("overwrite.legalHold")
+  private Supplier<Function<Map<String, String>, String>> provideOverwriteLegalHold() {
+    return provideLegalHold(config.overwrite.legalHold);
+  }
+
+
+  @Provides
+  private Supplier<Function<Map<String, String>, String>> provideLegalHold(final LegalHold legalHold) {
+    if (legalHold == null) {
+      return null;
+    }
+    Function<Map<String, String>, String> f = new
+      Function<Map<String, String>, String>() {
+        @Nullable
+        @Override
+          public String apply(@Nullable Map<String, String> context) {
+      // delete legalhold
+      if (context.get(Context.X_OG_LEGAL_HOLD_SUFFIX) != null) {
+        int suffix = Integer.parseInt(context.get(Context.X_OG_LEGAL_HOLD_SUFFIX));
+        if (legalHold.legalHoldPrefix != null && !legalHold.legalHoldPrefix.isEmpty()) {
+          context.put(Context.X_OG_LEGAL_HOLD_PREFIX, legalHold.legalHoldPrefix);
+        } else {
+          context.put(Context.X_OG_LEGAL_HOLD_PREFIX, "LegalHold");
+        }
+        String val = context.get(Context.X_OG_LEGAL_HOLD_PREFIX).concat(String.valueOf(suffix));
+        context.put(Context.X_OG_LEGAL_HOLD, val);
+        context.put(Context.X_OG_NUM_LEGAL_HOLDS, String.valueOf(suffix));
+        return val;
+      } else {
+        // add legalhold context
+        if (legalHold.legalHoldPrefix != null && !legalHold.legalHoldPrefix.isEmpty()) {
+          context.put(Context.X_OG_LEGAL_HOLD_PREFIX, legalHold.legalHoldPrefix);
+        } else {
+          context.put(Context.X_OG_LEGAL_HOLD_PREFIX, "LegalHold");
+        }
+        String val = context.get(Context.X_OG_LEGAL_HOLD_PREFIX).concat(String.valueOf(1));
+        context.put(Context.X_OG_LEGAL_HOLD, val);
+        context.put(Context.X_OG_NUM_LEGAL_HOLDS, String.valueOf(1));
+        return val;
+      }
+    }
+  };
+
+    Supplier<Function<Map<String, String>, String>> s =
+              new RandomPercentageSupplier.Builder<Function<Map<String, String>, String>>().
+                      withChoice(f, legalHold.percentage).
+                      withRandom(new Random()).build();
+    return s;
+
+  }
+
+  @Provides
+  @Singleton
   @Named("credentials")
   private Function<Map<String, String>, Credential> provideCredentials(final Api api)
       throws Exception {
@@ -1216,11 +1657,56 @@ public class OGModule extends AbstractModule {
     return queryParameters;
   }
 
+
+  private Map<String, Function<Map<String, String>, String>> provideLegalHoldQueryParameters(
+      final boolean remove) {
+    final Map<String, Function<Map<String, String>, String>> queryParameters;
+    queryParameters = Maps.newLinkedHashMap();
+    queryParameters.put(QueryParameters.LEGALHOLD_PARAMETER,
+        new Function<Map<String, String>, String>() {
+          @Override
+          public String apply(final Map<String, String> context) {
+            return null;
+          }
+        });
+
+    if (!remove) {
+      queryParameters.put(QueryParameters.LEGALHOLD_ADD_PARAMETER,
+          new Function<Map<String, String>, String>() {
+            @Override
+            public String apply(final Map<String, String> context) {
+              // find the legal hold in the context
+              final String suffix = context.get(Context.X_OG_LEGAL_HOLD_SUFFIX);
+              checkArgument(suffix != null, "legal hold suffix cannot be null");
+              final int newSuffix = Byte.valueOf(suffix) + 1;
+              final String prefix = context.get(Context.X_OG_LEGAL_HOLD_PREFIX);
+              return prefix.concat(String.valueOf(newSuffix));
+            }
+          });
+    } else {
+      queryParameters.put(QueryParameters.LEGALHOLD_REMOVE_PARAMETER,
+          new Function<Map<String, String>, String>() {
+            @Override
+            public String apply(final Map<String, String> context) {
+              // find the legal hold in the context
+              final String suffix = context.get(Context.X_OG_LEGAL_HOLD_SUFFIX);
+              checkArgument(suffix != null, "legal hold suffix cannot be null");
+              final String prefix = context.get(Context.X_OG_LEGAL_HOLD_PREFIX);
+              return prefix.concat(String.valueOf(suffix));
+            }
+          });
+    }
+    return queryParameters;
+  }
+
   @Provides
   @Singleton
   public Function<Map<String, String>, Body> provideBody() {
-    final SelectionConfig<FilesizeConfig> filesizeConfig =
-        checkNotNull(this.config.filesize, "filesize must not be null");
+    return createBodySupplier(checkNotNull(this.config.filesize, "filesize must not be null"));
+  }
+
+  private Function<Map<String, String>, Body> createBodySupplier(
+      final SelectionConfig<FilesizeConfig> filesizeConfig) {
     final SelectionType filesizeSelection = checkNotNull(filesizeConfig.selection);
     final List<ChoiceConfig<FilesizeConfig>> filesizes = checkNotNull(filesizeConfig.choices);
     checkArgument(!filesizes.isEmpty(), "filesize must not be empty");
@@ -1240,6 +1726,17 @@ public class OGModule extends AbstractModule {
     return createBodySupplier(wrc.build());
   }
 
+  @Provides
+  @Singleton
+  @WriteBody
+  public Function<Map<String, String>, Body> provideWriteBody() {
+    final SelectionConfig<FilesizeConfig> filesize = this.config.write.filesize;
+    if (filesize != null) {
+      return createBodySupplier(filesize);
+    } else {
+      return createBodySupplier(checkNotNull(this.config.filesize, "filesize must not be null"));
+    }
+  }
 
   @Provides
   @Singleton
@@ -1248,7 +1745,24 @@ public class OGModule extends AbstractModule {
     if (this.config.overwrite.body == BodySource.EXISTING) {
       return createBodySupplier();
     } else {
-      return provideBody();
+      final SelectionConfig<FilesizeConfig> filesize = this.config.overwrite.filesize;
+      if (filesize != null) {
+        return createBodySupplier(filesize);
+      } else {
+        return createBodySupplier(checkNotNull(this.config.filesize, "filesize must not be null"));
+      }
+    }
+  }
+
+  @Provides
+  @Singleton
+  @MultiPartWriteBody
+  public Function<Map<String, String>, Body> provideMultiPartWriteBody() {
+    final SelectionConfig<FilesizeConfig> filesize = this.config.multipartWrite.filesize;
+    if (filesize != null) {
+      return createBodySupplier(filesize);
+    } else {
+      return createBodySupplier(checkNotNull(this.config.filesize, "filesize must not be null"));
     }
   }
 
@@ -1370,6 +1884,49 @@ public class OGModule extends AbstractModule {
     return checkNotNull(this.config.objectManager).objectFileIndex;
   }
 
+  private byte[] SSECustomerKey() {
+    final byte[] aesKey = new byte[32];
+    for (int i = 0; i < 16; i++) {
+      aesKey[i * 2] = (byte) 0xCA;
+      aesKey[i * 2 + 1] = (byte) 0xFE;
+    }
+    return aesKey;
+  }
+
+  private Function<Map<String, String>, String> provideSSEEncryptionAlgorithm() {
+    return new Function<Map<String, String>, String>() {
+      @Override
+      public String apply(@Nullable final Map<String, String> input) {
+        return "AES256";
+      }
+    };
+  }
+
+  private Function<Map<String, String>, String> provideSSEEncryptionKey() {
+    Function<Map<String, String>, String> encryptionKey;
+    encryptionKey = new Function<Map<String, String>, String>() {
+      @Override
+      public String apply(@Nullable final Map<String, String> input) {
+        final String b64Key = BaseEncoding.base64().encode(OGModule.this.aesKey);
+        input.put("x-amz-server-side-encryption-customer-key", b64Key);
+        return b64Key;
+      }
+    };
+    return encryptionKey;
+  }
+
+  private Function<Map<String, String>, String> provideSSEKeyMD5() {
+    final Function<Map<String, String>, String> customerKeyHash =
+        new Function<Map<String, String>, String>() {
+          @Override
+          public String apply(@Nullable final Map<String, String> input) {
+            return BaseEncoding.base64()
+                .encode(Hashing.md5().newHasher().putBytes(OGModule.this.aesKey).hash().asBytes());
+          }
+        };
+    return customerKeyHash;
+  }
+
   @Provides
   @Singleton
   public Scheduler provideScheduler(final ConcurrencyConfig concurrency, final EventBus eventBus) {
@@ -1439,16 +1996,130 @@ public class OGModule extends AbstractModule {
       @Nullable @WriteObjectName final Function<Map<String, String>, String> object,
       @WriteHeaders final Map<String, Function<Map<String, String>, String>> headers,
       @Named("write.context") final List<Function<Map<String, String>, String>> context,
-      final Function<Map<String, String>, Body> body,
+      @WriteBody final Function<Map<String, String>, Body> body,
       @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
-      @Named("virtualhost") final boolean virtualHost) {
+      @Named("virtualhost") final boolean virtualHost,
+      @Named("write.sseCDestination") final boolean encryptDestinationObject,
+      @Nullable @Named("write.retention") final Function<Map<String, String>, Long> retention,
+      @Nullable @Named("write.legalHold") final Supplier<Function<Map<String, String>, String>> legalHold,
+      @Nullable @Named("write.contentMd5") final boolean contentMd5) {
+
+    if (encryptDestinationObject) {
+      checkArgument(this.config.data == DataType.ZEROES,
+          "If SSE-C is enabled, data must be ZEROES [%s]", this.config.data);
+    }
+
+    if (contentMd5) {
+      checkArgument(this.config.data == DataType.ZEROES,
+          "If contentMD5 is set, data must be ZEROES [%s]", this.config.data);
+    }
+    final Map<String, Function<Map<String, String>, String>> queryParameters =
+        Collections.emptyMap();
+
+    if (encryptDestinationObject) {
+      if (!headers.containsKey("x-amz-server-side-encryption-customer-algorithm")) {
+        headers.put("x-amz-server-side-encryption-customer-algorithm",
+            provideSSEEncryptionAlgorithm());
+      }
+      if (!headers.containsKey("x-amz-server-side-encryption-customer-key")) {
+        headers.put("x-amz-server-side-encryption-customer-key", provideSSEEncryptionKey());
+      }
+      if (!headers.containsKey("x-amz-server-side-encryption-customer-key-MD5")) {
+        headers.put("x-amz-server-side-encryption-customer-key-MD5", provideSSEKeyMD5());
+      }
+    }
+
+    return createRequestSupplier(Operation.WRITE, id, Method.PUT, scheme, host, port, uriRoot,
+        container, apiVersion, object, queryParameters, headers, context, null, body, credentials,
+        virtualHost, retention, legalHold, contentMd5);
+  }
+
+  @Provides
+  @Singleton
+  @Named("writeCopy")
+  public Supplier<Request> provideWriteCopy(
+      @Named("request.id") final Function<Map<String, String>, String> id, final Api api,
+      final Scheme scheme, @WriteHost final Function<Map<String, String>, String> host,
+      @Nullable @Named("port") final Integer port,
+      @Nullable @Named("uri.root") final String uriRoot,
+      @Named("writeCopy.container") final Function<Map<String, String>, String> container,
+      @Nullable @Named("api.version") final String apiVersion,
+      @Nullable @WriteObjectName final Function<Map<String, String>, String> writeObject,
+      @Named("writeCopySource.context") final List<Function<Map<String, String>, String>> sseReadContext,
+      @Nullable @SourceReadObjectName final Function<Map<String, String>, String> sseSourceReadObject,
+      @WriteCopyHeaders final Map<String, Function<Map<String, String>, String>> headers,
+      @Named("writeCopy.context") final List<Function<Map<String, String>, String>> context,
+      @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
+      @Named("virtualhost") final boolean virtualHost,
+      @Named("writeCopy.sseCSource") final boolean encryptedSourceObject,
+      @Named("writeCopy.sseCDestination") final boolean encryptDestinationObject) {
+    if (encryptedSourceObject || encryptDestinationObject) {
+      checkArgument(this.config.data == DataType.ZEROES,
+          "If SSE-C is enabled, data must be ZEROES [%s]", this.config.data);
+    }
 
     final Map<String, Function<Map<String, String>, String>> queryParameters =
         Collections.emptyMap();
 
-    return createRequestSupplier(Operation.WRITE, id, Method.PUT, scheme, host, port, uriRoot,
-        container, apiVersion, object, queryParameters, headers, context, body, credentials,
-        virtualHost);
+    final Function<Map<String, String>, String> copySource =
+        new Function<Map<String, String>, String>() {
+          @Override
+          public String apply(@Nullable final Map<String, String> input) {
+
+            final String objectName = sseSourceReadObject.apply(input);
+            final String containerSuffix =
+                input.get(Context.X_OG_SSE_SOURCE_OBJECT_CONTAINER_SUFFIX);
+            final String containerPrefix = input.get(Context.X_OG_CONTAINER_PREFIX);
+
+            // todo: update this to handle copy object API for openstack. Currently, only support s3
+            // API
+            checkArgument(api == Api.S3,
+                "WriteCopy operation is only supported for S3 API. Request API [%s]", api);
+            final String sourceUri;
+            if (containerSuffix != null && Integer.parseInt(containerSuffix) != -1) {
+              sourceUri = "/" + containerPrefix + containerSuffix + "/" + objectName;
+            } else {
+              sourceUri = "/" + containerPrefix + "/" + objectName;
+            }
+            input.put(Context.X_OG_SSE_SOURCE_URI, sourceUri);
+            return sourceUri;
+          }
+        };
+
+    if (encryptDestinationObject) {
+
+      checkArgument(api == Api.S3,
+          "WriteCopy operation is only supported for S3 API. Request API [%s]", api);
+      if (!headers.containsKey("x-amz-server-side-encryption-customer-algorithm")) {
+        headers.put("x-amz-server-side-encryption-customer-algorithm",
+            provideSSEEncryptionAlgorithm());
+      }
+      if (!headers.containsKey("x-amz-server-side-encryption-customer-key")) {
+        headers.put("x-amz-server-side-encryption-customer-key", provideSSEEncryptionKey());
+      }
+      if (!headers.containsKey("x-amz-server-side-encryption-customer-key-MD5")) {
+        headers.put("x-amz-server-side-encryption-customer-key-MD5", provideSSEKeyMD5());
+      }
+    }
+    if (encryptedSourceObject) {
+      if (!headers.containsKey("x-amz-copy-source-server-side-encryption-customer-algorithm")) {
+        headers.put("x-amz-copy-source-server-side-encryption-customer-algorithm",
+            provideSSEEncryptionAlgorithm());
+      }
+      if (!headers.containsKey("x-amz-copy-source-server-side-encryption-customer-key")) {
+        headers.put("x-amz-copy-source-server-side-encryption-customer-key",
+            provideSSEEncryptionKey());
+      }
+      if (!headers.containsKey("x-amz-copy-source-server-side-encryption-customer-key-MD5")) {
+        headers.put("x-amz-copy-source-server-side-encryption-customer-key-MD5",
+            provideSSEKeyMD5());
+      }
+    }
+    headers.put("x-amz-copy-source", copySource);
+
+    return createRequestSupplier(Operation.WRITE_COPY, id, Method.PUT, scheme, host, port, uriRoot,
+        container, apiVersion, writeObject, queryParameters, headers, context, sseReadContext, null,
+        credentials, virtualHost, null, null, false);
   }
 
   @Provides
@@ -1467,18 +2138,45 @@ public class OGModule extends AbstractModule {
       @OverwriteBody final Function<Map<String, String>, Body> body,
       @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
       @Named("virtualhost") final boolean virtualHost,
-      @Named("overwrite.weight") final double overwriteWeight) throws Exception {
+      @Named("overwrite.weight") final double overwriteWeight,
+      @Named("overwrite.sseCDestination") final boolean encryptDestinationObject,
+      @Nullable @Named("overwrite.retention") final Function<Map<String, String>, Long> retention,
+      @Nullable @Named("overwrite.legalHold") final Supplier<Function<Map<String, String>, String>> legalHold,
+      @Nullable @Named("overwrite.contentMd5") final boolean contentMd5) throws Exception {
+
+    if (encryptDestinationObject) {
+      checkArgument(this.config.data == DataType.ZEROES,
+          "If SSE-C is enabled, data must be ZEROES [%s]", this.config.data);
+    }
+
     // SOH needs to use a special response consumer to extract the returned object id
     if (Api.SOH == api && overwriteWeight > 0.0) {
       throw new Exception("Overwrites are not compatible with SOH");
     }
 
+    if (contentMd5) {
+      checkArgument(this.config.data == DataType.ZEROES,
+          "If contentMD5 is set, data must be ZEROES [%s]", this.config.data);
+    }
+
     final Map<String, Function<Map<String, String>, String>> queryParameters =
         Collections.emptyMap();
 
+    if (encryptDestinationObject) {
+      if (!headers.containsKey("x-amz-server-side-encryption-customer-algorithm")) {
+        headers.put("x-amz-server-side-encryption-customer-algorithm",
+            provideSSEEncryptionAlgorithm());
+      }
+      if (!headers.containsKey("x-amz-server-side-encryption-customer-key")) {
+        headers.put("x-amz-server-side-encryption-customer-key", provideSSEEncryptionKey());
+      }
+      if (!headers.containsKey("x-amz-server-side-encryption-customer-key-MD5")) {
+        headers.put("x-amz-server-side-encryption-customer-key-MD5", provideSSEKeyMD5());
+      }
+    }
     return createRequestSupplier(Operation.OVERWRITE, id, Method.PUT, scheme, host, port, uriRoot,
-        container, apiVersion, object, queryParameters, headers, context, body, credentials,
-        virtualHost);
+        container, apiVersion, object, queryParameters, headers, context, null, body, credentials,
+        virtualHost, retention, legalHold, contentMd5);
   }
 
   @Provides
@@ -1495,18 +2193,122 @@ public class OGModule extends AbstractModule {
       @ReadHeaders final Map<String, Function<Map<String, String>, String>> headers,
       @Named("read.context") final List<Function<Map<String, String>, String>> context,
       @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
-      @Named("virtualhost") final boolean virtualHost) {
+      @Named("virtualhost") final boolean virtualHost,
+      @Named("read.sseCSource") final boolean encryptedSourceObject) {
 
     final Map<String, Function<Map<String, String>, String>> queryParameters =
         Collections.emptyMap();
+
+    if (encryptedSourceObject) {
+      if (!headers.containsKey("x-amz-server-side-encryption-customer-algorithm")) {
+        headers.put("x-amz-server-side-encryption-customer-algorithm",
+            provideSSEEncryptionAlgorithm());
+      }
+      if (!headers.containsKey("x-amz-server-side-encryption-customer-key")) {
+        headers.put("x-amz-server-side-encryption-customer-key", provideSSEEncryptionKey());
+      }
+      if (!headers.containsKey("x-amz-server-side-encryption-customer-key-MD5")) {
+        headers.put("x-amz-server-side-encryption-customer-key-MD5", provideSSEKeyMD5());
+      }
+    }
 
     final Supplier<Body> bodySupplier = Suppliers.of(Bodies.none());
     final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
 
     return createRequestSupplier(Operation.READ, id, Method.GET, scheme, host, port, uriRoot,
-        container, apiVersion, object, queryParameters, headers, context, body, credentials,
-        virtualHost);
+        container, apiVersion, object, queryParameters, headers, context, null, body, credentials,
+        virtualHost, null, null, false);
   }
+
+  @Provides
+  @Singleton
+  @Named("write_legalhold")
+  public Supplier<Request> provideWriteLegalhold(
+          @Named("request.id") final Function<Map<String, String>, String> id, final Scheme scheme,
+          @ReadHost final Function<Map<String, String>, String> host,
+          @Nullable @Named("port") final Integer port,
+          @Nullable @Named("uri.root") final String uriRoot,
+          @Named("read.container") final Function<Map<String, String>, String> container,
+          @Nullable @Named("api.version") final String apiVersion,
+          @Nullable @ReadObjectName final Function<Map<String, String>, String> object,
+          @ReadHeaders final Map<String, Function<Map<String, String>, String>> headers,
+          @Named("write_legalhold.context") final List<Function<Map<String, String>, String>> context,
+          @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
+          @Nullable @Named("add.legalHold") final Supplier<Function<Map<String, String>, String>> legalhold,
+          @Named("virtualhost") final boolean virtualHost) {
+
+    final Map<String, Function<Map<String, String>, String>> queryParameters =
+        provideLegalHoldQueryParameters(false);
+
+    final Supplier<Body> bodySupplier = Suppliers.of(Bodies.none());
+    final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
+
+    return createRequestSupplier(Operation.WRITE_LEGAL_HOLD, id, Method.POST, scheme, host, port,
+        uriRoot, container, apiVersion, object, queryParameters, headers, context, null, body,
+        credentials, virtualHost, null, legalhold, false);
+  }
+
+  @Provides
+  @Singleton
+  @Named("delete_legalhold")
+  public Supplier<Request> provideDeleteLegalhold(
+          @Named("request.id") final Function<Map<String, String>, String> id, final Scheme scheme,
+          @ReadHost final Function<Map<String, String>, String> host,
+          @Nullable @Named("port") final Integer port,
+          @Nullable @Named("uri.root") final String uriRoot,
+          @Named("read.container") final Function<Map<String, String>, String> container,
+          @Nullable @Named("api.version") final String apiVersion,
+          @Nullable @ReadObjectName final Function<Map<String, String>, String> object,
+          @ReadHeaders final Map<String, Function<Map<String, String>, String>> headers,
+          @Named("delete_legalhold.context") final List<Function<Map<String, String>, String>> context,
+          @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
+          @Nullable @Named("delete.legalHold") final Supplier<Function<Map<String, String>, String>> legalhold,
+          @Named("virtualhost") final boolean virtualHost) {
+    final Map<String, Function<Map<String, String>, String>> queryParameters =
+        provideLegalHoldQueryParameters(true);
+
+    final Supplier<Body> bodySupplier = Suppliers.of(Bodies.none());
+    final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
+
+    return createRequestSupplier(Operation.DELETE_LEGAL_HOLD, id, Method.POST, scheme, host, port,
+        uriRoot, container, apiVersion, object, queryParameters, headers, context, null, body,
+        credentials, virtualHost, null, legalhold, false);
+  }
+
+  @Provides
+  @Singleton
+  @Named("read_legalhold")
+  public Supplier<Request> provideReadLegalholds(
+      @Named("request.id") final Function<Map<String, String>, String> id, final Scheme scheme,
+      @ReadHost final Function<Map<String, String>, String> host,
+      @Nullable @Named("port") final Integer port,
+      @Nullable @Named("uri.root") final String uriRoot,
+      @Named("read.container") final Function<Map<String, String>, String> container,
+      @Nullable @Named("api.version") final String apiVersion,
+      @Nullable @ReadObjectName final Function<Map<String, String>, String> object,
+      @ReadHeaders final Map<String, Function<Map<String, String>, String>> headers,
+      @Named("read.context") final List<Function<Map<String, String>, String>> context,
+      @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
+      @Named("virtualhost") final boolean virtualHost) {
+
+    final Map<String, Function<Map<String, String>, String>> queryParameters = Maps.newHashMap();
+
+    final Supplier<Body> bodySupplier = Suppliers.of(Bodies.none());
+    final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
+
+    queryParameters.put("legalHold", new Function<Map<String, String>, String>() {
+      @Override
+      public String apply(final Map<String, String> context) {
+        return null;
+      }
+    });
+
+    return createRequestSupplier(Operation.READ_LEGAL_HOLD, id, Method.GET, scheme, host, port,
+        uriRoot, container, apiVersion, object, queryParameters, headers, context, null, body,
+        credentials, virtualHost, null, null, false);
+  }
+
+
 
   @Provides
   @Singleton
@@ -1522,7 +2324,8 @@ public class OGModule extends AbstractModule {
       @MetadataHeaders final Map<String, Function<Map<String, String>, String>> headers,
       @Named("metadata.context") final List<Function<Map<String, String>, String>> context,
       @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
-      @Named("virtualhost") final boolean virtualHost) {
+      @Named("virtualhost") final boolean virtualHost,
+      @Named("metadata.sseCSource") final boolean encryptedSourceObject) {
 
     final Map<String, Function<Map<String, String>, String>> queryParameters =
         Collections.emptyMap();
@@ -1530,9 +2333,21 @@ public class OGModule extends AbstractModule {
     final Supplier<Body> bodySupplier = Suppliers.of(Bodies.none());
     final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
 
+    if (encryptedSourceObject) {
+      if (!headers.containsKey("x-amz-server-side-encryption-customer-algorithm")) {
+        headers.put("x-amz-server-side-encryption-customer-algorithm",
+            provideSSEEncryptionAlgorithm());
+      }
+      if (!headers.containsKey("x-amz-server-side-encryption-customer-key")) {
+        headers.put("x-amz-server-side-encryption-customer-key", provideSSEEncryptionKey());
+      }
+      if (!headers.containsKey("x-amz-server-side-encryption-customer-key-MD5")) {
+        headers.put("x-amz-server-side-encryption-customer-key-MD5", provideSSEKeyMD5());
+      }
+    }
     return createRequestSupplier(Operation.METADATA, id, Method.HEAD, scheme, host, port, uriRoot,
-        container, apiVersion, object, queryParameters, headers, context, body, credentials,
-        virtualHost);
+        container, apiVersion, object, queryParameters, headers, context, null, body, credentials,
+        virtualHost, null, null, false);
   }
 
   @Provides
@@ -1558,8 +2373,8 @@ public class OGModule extends AbstractModule {
     final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
 
     return createRequestSupplier(Operation.DELETE, id, Method.DELETE, scheme, host, port, uriRoot,
-        container, apiVersion, object, queryParameters, headers, context, body, credentials,
-        virtualHost);
+        container, apiVersion, object, queryParameters, headers, context, null, body, credentials,
+        virtualHost, null, null, false);
   }
 
   @Provides
@@ -1582,8 +2397,8 @@ public class OGModule extends AbstractModule {
     final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
 
     return createRequestSupplier(Operation.LIST, id, Method.GET, scheme, host, port, uriRoot,
-        container, apiVersion, null, queryParameters, headers, context, body, credentials,
-        virtualHost);
+        container, apiVersion, null, queryParameters, headers, context, null, body, credentials,
+        virtualHost, null, null, false);
   }
 
   @Provides
@@ -1608,8 +2423,8 @@ public class OGModule extends AbstractModule {
 
     // null container since request is on the service http://<accesser ip>/
     return createRequestSupplier(Operation.CONTAINER_LIST, id, Method.GET, scheme, host, port,
-        uriRoot, null, apiVersion, null, queryParameters, headers, context, body, credentials,
-        virtualHost);
+        uriRoot, null, apiVersion, null, queryParameters, headers, context, null, body, credentials,
+        virtualHost, null, null, false);
   }
 
   @Provides
@@ -1625,7 +2440,9 @@ public class OGModule extends AbstractModule {
       @ContainerCreateHeaders final Map<String, Function<Map<String, String>, String>> headers,
       @Named("containerCreate.context") final List<Function<Map<String, String>, String>> context,
       @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
-      @Named("virtualhost") final boolean virtualHost) throws Exception {
+      @Named("virtualhost") final boolean virtualHost,
+      @Nullable @Named("containerCreate.retention") final Function<Map<String, String>, Long> retention)
+      throws Exception {
 
     final Map<String, Function<Map<String, String>, String>> queryParameters =
         Collections.emptyMap();
@@ -1633,9 +2450,13 @@ public class OGModule extends AbstractModule {
     final Supplier<Body> bodySupplier = Suppliers.of(Bodies.none());
     final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
 
+    // todo: container creation operation only need the retention. Do we need to support
+    // the vault or container creation with retention in OG when worm feature is supported in
+    // container mode
     return createRequestSupplier(Operation.CONTAINER_CREATE, id, Method.PUT, scheme, host, port,
-        uriRoot, container, apiVersion, null, queryParameters, headers, context, body, credentials,
-        virtualHost);
+        uriRoot, container, apiVersion, null, queryParameters, headers, context, null, body,
+        credentials, virtualHost, retention, null, false);
+
   }
 
   private Supplier<Request> createRequestSupplier(final Operation operation,
@@ -1646,39 +2467,60 @@ public class OGModule extends AbstractModule {
       final Map<String, Function<Map<String, String>, String>> queryParameters,
       final Map<String, Function<Map<String, String>, String>> headers,
       final List<Function<Map<String, String>, String>> context,
+      final List<Function<Map<String, String>, String>> sseSourceContext,
       final Function<Map<String, String>, Body> body,
-      final Function<Map<String, String>, Credential> credentials, final boolean virtualHost) {
+      final Function<Map<String, String>, Credential> credentials, final Boolean virtualHost,
+      final Function<Map<String, String>, Long> retention, final Supplier<Function<Map<String, String>, String>> legalHold,
+      final boolean contentMd5) {
 
     return new RequestSupplier(operation, id, method, scheme, host, port, uriRoot, container,
-        apiVersion, object, queryParameters, false, headers, context, credentials, body,
-        virtualHost);
+        apiVersion, object, queryParameters, false, headers, context, sseSourceContext, credentials,
+        body, virtualHost, retention, legalHold, contentMd5);
   }
 
   @Provides
   @Singleton
   @Named("multipartWrite")
   public Supplier<Request> provideMultipartWrite(
-          @Named("request.id") final Function<Map<String, String>, String> id, final Api api,
-          final Scheme scheme, @MultipartWriteHost final Function<Map<String, String>, String> host,
-          @Nullable @Named("port") final Integer port,
-          @Nullable @Named("uri.root") final String uriRoot,
-          @Named("multipartWrite.container") final Function<Map<String, String>, String> container,
-          @Nullable @Named("api.version") final String apiVersion,
-          @Nullable @MultipartWriteObjectName final Function<Map<String, String>, String> object,
-          @Named("multipartWrite.partSize") final Function<Map<String, String>, Long> partSize,
-          @Named("multipartWrite.partsPerSession") final Function<Map<String, String>, Integer> partsPerSession,
-          @Named("multipartWrite.targetSessions") final int targetSessions,
-          @MultipartWriteHeaders final Map<String, Function<Map<String, String>, String>> headers,
-          @Named("multipartWrite.context") final List<Function<Map<String, String>, String>> context,
-          final Function<Map<String, String>, Body> body,
-          @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
-          @Named("virtualhost") final boolean virtualHost) {
+      @Named("request.id") final Function<Map<String, String>, String> id, final Api api,
+      final Scheme scheme, @MultipartWriteHost final Function<Map<String, String>, String> host,
+      @Nullable @Named("port") final Integer port,
+      @Nullable @Named("uri.root") final String uriRoot,
+      @Named("multipartWrite.container") final Function<Map<String, String>, String> container,
+      @Nullable @Named("api.version") final String apiVersion,
+      @Nullable @MultipartWriteObjectName final Function<Map<String, String>, String> object,
+      @Named("multipartWrite.partSize") final Function<Map<String, String>, Long> partSize,
+      @Named("multipartWrite.partsPerSession") final Function<Map<String, String>, Integer> partsPerSession,
+      @Named("multipartWrite.targetSessions") final int targetSessions,
+      @MultipartWriteHeaders final Map<String, Function<Map<String, String>, String>> headers,
+      @Named("multipartWrite.context") final List<Function<Map<String, String>, String>> context,
+      @MultiPartWriteBody final Function<Map<String, String>, Body> body,
+      @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
+      @Named("virtualhost") final boolean virtualHost,
+      @Named("multipartWrite.sseCDestination") final boolean encryptDestinationObject) {
 
     final Map<String, Function<Map<String, String>, String>> queryParameters =
         Collections.emptyMap();
 
-    return createMultipartRequestSupplier(id, scheme, host, port, uriRoot, container, apiVersion, object,
-        partSize, partsPerSession, targetSessions, queryParameters, headers, context, body, credentials, virtualHost);
+    if (encryptDestinationObject) {
+      if (!headers.containsKey("x-amz-server-side-encryption-customer-algorithm")) {
+        headers.put("x-amz-server-side-encryption-customer-algorithm",
+            provideSSEEncryptionAlgorithm());
+      }
+      if (!headers.containsKey("x-amz-server-side-encryption-customer-key")) {
+        headers.put("x-amz-server-side-encryption-customer-key", provideSSEEncryptionKey());
+      }
+      if (!headers.containsKey("x-amz-server-side-encryption-customer-key-MD5")) {
+        headers.put("x-amz-server-side-encryption-customer-key-MD5", provideSSEKeyMD5());
+      }
+    }
+    // todo: Not sure if sending the above headers with multipart complete request will cause
+    // problems. As per the
+    // AWS s3 API guide they are not required for complete request.
+
+    return createMultipartRequestSupplier(id, scheme, host, port, uriRoot, container, apiVersion,
+        object, partSize, partsPerSession, targetSessions, queryParameters, headers, context, body,
+        credentials, virtualHost);
   }
 
   private Supplier<Request> createMultipartRequestSupplier(
@@ -1687,8 +2529,7 @@ public class OGModule extends AbstractModule {
       final Function<Map<String, String>, String> container, final String apiVersion,
       final Function<Map<String, String>, String> object,
       final Function<Map<String, String>, Long> partSize,
-      final Function<Map<String, String>, Integer> partsPerSession,
-      final int targetSessions,
+      final Function<Map<String, String>, Integer> partsPerSession, final int targetSessions,
       final Map<String, Function<Map<String, String>, String>> queryParameters,
       final Map<String, Function<Map<String, String>, String>> headers,
       final List<Function<Map<String, String>, String>> context,
@@ -1696,6 +2537,7 @@ public class OGModule extends AbstractModule {
       final Function<Map<String, String>, Credential> credentials, final boolean virtualHost) {
 
     return new MultipartRequestSupplier(id, scheme, host, port, uriRoot, container, object,
-        partSize, partsPerSession, targetSessions, queryParameters, false, headers, context, credentials, body, virtualHost);
+        partSize, partsPerSession, targetSessions, queryParameters, false, headers, context,
+        credentials, body, virtualHost);
   }
 }

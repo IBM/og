@@ -96,5 +96,21 @@ public class SummaryTest {
     assertThat(summaryStats.metadata.operations, is(0L));
     assertThat(summaryStats.metadata.statusCodes.size(), is(0));
     assertThat(summaryStats.metadata.statusCodes.size(), is(0));
+
+    assertThat(summaryStats.readLegalHold.operation, is(Operation.READ_LEGAL_HOLD));
+    assertThat(summaryStats.readLegalHold.operations, is(0L));
+    assertThat(summaryStats.readLegalHold.statusCodes.size(), is(0));
+    assertThat(summaryStats.readLegalHold.statusCodes.size(), is(0));
+
+    assertThat(summaryStats.writeLegalHold.operation, is(Operation.WRITE_LEGAL_HOLD));
+    assertThat(summaryStats.writeLegalHold.operations, is(0L));
+    assertThat(summaryStats.writeLegalHold.statusCodes.size(), is(0));
+    assertThat(summaryStats.writeLegalHold.statusCodes.size(), is(0));
+
+    assertThat(summaryStats.writeLegalHold.operation, is(Operation.WRITE_LEGAL_HOLD));
+    assertThat(summaryStats.writeLegalHold.operations, is(0L));
+    assertThat(summaryStats.writeLegalHold.statusCodes.size(), is(0));
+    assertThat(summaryStats.writeLegalHold.statusCodes.size(), is(0));
+
   }
 }

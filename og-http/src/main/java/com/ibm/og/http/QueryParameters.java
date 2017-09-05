@@ -17,5 +17,15 @@ public class QueryParameters {
     // OpenStack related query parameters
     public static final String OPENSTACK_MARKER = "marker";
 
+    // Legalhold related query parameter
+    public static final String LEGALHOLD_PARAMETER = "legalHold";
+
+    // Legalhold related query parameter for adding legalhold
+    public static final String LEGALHOLD_ADD_PARAMETER = "add";
+
+    // Legalhold related query parameter for deleting legalhold
+    public static final String LEGALHOLD_REMOVE_PARAMETER = "remove";
+
+
     private QueryParameters() {}
 }

@@ -32,7 +32,9 @@ public class RequestLogEntry {
   public final String timeFinish;
   public final Method requestMethod;
   public final String requestUri;
+  public final String sourceUri;
   public final String objectId;
+  public final String sourceObjectId;
   public final int status;
   public final Long requestLength;
   public final Long responseLength;
@@ -44,6 +46,9 @@ public class RequestLogEntry {
   public final Long originalObjectLength;
   public final Long objectLength;
   public final String objectName;
+  public final String retention;
+  public final String legalHold;
+
 
   private static final DateTimeFormatter FORMATTER =
       DateTimeFormat.forPattern("dd/MMM/yyyy:HH:mm:ss Z").withLocale(Locale.US);
@@ -109,6 +114,10 @@ public class RequestLogEntry {
     }
     this.objectLength = objectSize;
     this.objectName = operationObjectName;
+    this.sourceObjectId = request.getContext().get(Context.X_OG_SSE_SOURCE_OBJECT_NAME);
+    this.sourceUri = request.getContext().get(Context.X_OG_SSE_SOURCE_URI);
+    this.retention = request.getContext().get(Context.X_OG_OBJECT_RETENTION);
+    this.legalHold = request.getContext().get(Context.X_OG_LEGAL_HOLD);
   }
 
   public static class RequestTimestamps {
