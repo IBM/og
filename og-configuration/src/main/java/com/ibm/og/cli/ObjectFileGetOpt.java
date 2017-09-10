@@ -27,7 +27,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class ObjectFileGetOpt extends GetOpt {
 
-    @Parameter(names = {"--write", "-w"}, description = "Write plain text source and output in object file format")
+    @Parameter(names = {"--write", "-w"}, description = "Read plain text source and output in object file format")
     private boolean write;
 
     @Parameter(names = {"--read", "-r"}, description = "Read object source and output in plain text file format")
@@ -94,7 +94,7 @@ public class ObjectFileGetOpt extends GetOpt {
     @Parameter(names= {"--output", "-o"}, description = "A relative or absolute path to an output file, rather than stdout")
     private String output;
 
-    @Parameter(description = "A relative or absolute path to an input file, rather than stdin")
+    @Parameter(description = "A relative or absolute paths to input files")
     private List<String> input = new ArrayList<String>(); // main parameter - currently only input file is expected.
 
     public boolean getWrite() {
@@ -153,14 +153,19 @@ public class ObjectFileGetOpt extends GetOpt {
         return output;
     }
 
-    public File getInput() {
-        if(input != null && input.size() > 0) {
-            // pick the entry at first index, create a File object and return
-            File f = new FileConverter().convert(input.get(0));
-            return f;
-        } else {
-            return null;
+    public List<File> getInput() {
+        List<File> files = new ArrayList<File>();
+        if (input != null) {
+            for (String s:input) {
+                File f = new FileConverter().convert(s);
+                if (f.exists()) {
+                    files.add(f);
+                } else {
+                    throw new IllegalArgumentException(String.format("File[%s] does not exists", f.getName()));
+                }
+            }
         }
+        return files;
     }
 
     @Override
@@ -171,7 +176,7 @@ public class ObjectFileGetOpt extends GetOpt {
         }
         // if no input argument stdin is used so check for more than 1 argument
         checkNotNull(input);
-        checkArgument(input.size() <= 1, "Invalid command line arguments. Only one input file or stdin is expected");
+        checkArgument(input.size() >= 1, "Invalid command line arguments. Atleast one input file is expected");
         
         return true;
     }

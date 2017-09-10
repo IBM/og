@@ -233,9 +233,9 @@ public class MultipartRequestSupplierTest {
 
     final List<Function<Map<String, String>, String>> context = Collections.emptyList();
 
-    return new MultipartRequestSupplier(id, scheme, host, port, uriRoot, container, object,
-        partSizes, partsPerSessionFunc, targetSessions, queryParameters, trailingSlash, headers,
-        context, credentials, body, virtualHost);
+    return new MultipartRequestSupplier(id, scheme, host, port, uriRoot, container,
+        object, partSizes, partsPerSessionFunc, targetSessions, queryParameters, trailingSlash, headers, context,
+        credentials, body, virtualHost, false);
   }
 
   private void genericMultipleSessions(final int targetSessions, final long objectSize,

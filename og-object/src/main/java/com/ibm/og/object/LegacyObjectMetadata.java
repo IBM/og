@@ -28,6 +28,9 @@ public class LegacyObjectMetadata implements ObjectMetadata {
           OBJECT_LEGAL_HOLDS_SIZE + OBJECT_RETENTION_SIZE;
   private static final BaseEncoding ENCODING = BaseEncoding.base16().lowerCase();
   protected final ByteBuffer objectBuffer;
+  public static final byte MAJOR_VERSION = (byte)2;
+  public static final byte MINOR_VERSION = (byte)0;
+
 
   protected LegacyObjectMetadata(final ByteBuffer objectBuffer) {
     this.objectBuffer = objectBuffer;
