@@ -473,7 +473,10 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
           surplus = createFile(numFiles);
         }
         final OutputStream dos = new BufferedOutputStream(new FileOutputStream(surplus, true));
-        ObjectFileUtil.writeObjectFileVersion(dos);
+        // write header if only if it is a new file
+        if (surplus.length() == 0) {
+          ObjectFileUtil.writeObjectFileVersion(dos);
+        }
         final int remaining = getRemaining(size, surplus);
         // While writing surplus, remove them from this.objects, to keep consistent with
         // this.savefile
