@@ -1,3 +1,9 @@
+Release 1.4.1
+Changes:
+Fix defect in ObjectManager. When a partially written object file is used, the version header was appended
+to it. This caused object to be interpreted incorrectly and corrupted. The version header is added only for
+a new object file.
+
 Release 1.4.0
 New Features:
 Support WORM operations
