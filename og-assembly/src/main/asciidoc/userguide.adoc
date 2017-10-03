@@ -821,6 +821,87 @@ percentage must be 100.00.
     }
 ----
 
+==== Operation write_legalhold
+
+This operation is used to a legalhold to an existing object.
+
+An example write_legalhold operation is listed below.
+----
+  "write_legalhold": {
+    "weight": 100.0,
+    "object": {
+      "prefix": "",
+      "min_suffix": 0,
+      "max_suffix": 9223372036854775807
+    },
+    "headers": {},
+    "parameters": {},
+    "body": "none",
+    "container": {
+      "selection": "random",
+      "min_suffix": -1,
+      "max_suffix": -1
+    },
+    "legal_hold": {
+        "legal_hold_prefix": "",
+        "percentage": 100.00
+    }
+  }
+----
+
+==== Operation Delete LegalHold
+This operation is used to delete a legalhold on the object.
+
+ An example delete_legalhold operation is listed below.
+ ----
+  "delete_legalhold": {
+     "weight": 100.0,
+     "object": {
+       "prefix": "",
+       "min_suffix": 0,
+       "max_suffix": 9223372036854775807
+     },
+     "headers": {},
+     "parameters": {},
+     "body": "none",
+     "container": {
+       "selection": "random",
+       "min_suffix": -1,
+       "max_suffix": -1
+     },
+      "legal_hold": {
+          "percentage": 100.00
+     }
+   }
+ ----
+
+==== Operation Read LegalHold
+This operation returns the list of legalholds on the object.
+
+An example read_legalhold operation is listed below.
+
+----
+  "read_legalhold": {
+    "weight": 100.0,
+    "object": {
+      "prefix": "",
+      "min_suffix": 0,
+      "max_suffix": 9223372036854775807
+    },
+    "headers": {},
+    "parameters": {},
+    "body": "none",
+    "container": {
+      "selection": "random",
+      "min_suffix": -1,
+      "max_suffix": -1
+    }
+  }
+----
+
+
+
+
 === Operation Retention
 Retention add a time expiry to an object. The object will be protected until the
 retention time expires.
@@ -844,7 +925,7 @@ retention of the vault.
 ----
 
 === Filesize
-OG supports one or more filesize distributions for describing desired body lengths of
+OG supports one or more filesize disqtributions for describing desired body lengths of
 generated objects. Filesize configuration block can be added to _write_, _overwrite_ and _multipart_write_ 
 operations to override global configuration. If multiple filesize distributions are
 configured, round robin, random and weighted random selection are supported.
@@ -1588,6 +1669,11 @@ mixed operation tests.
 |Complex
 |No
 |None
+
+|content_md5
+|boolean
+|No
+|false
 
 |===
 
