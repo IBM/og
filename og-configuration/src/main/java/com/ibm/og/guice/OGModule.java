@@ -974,7 +974,8 @@ public class OGModule extends AbstractModule {
     consumers.add(new ListObjectNameConsumer(objectManager, sc));
     consumers.add(new MultipartWriteObjectNameConsumer(objectManager, sc));
     consumers.add(new WriteCopyObjectNameConsumer(objectManager, sc));
-    consumers.add(new DeleteObjectConsumer(objectManager, sc));
+    Set<Integer> deleteStatusCodes = HttpUtil.DELETE_HANDLING_STATUS_CODES;
+    consumers.add(new DeleteObjectConsumer(objectManager, deleteStatusCodes));
     // add status code range (400, 451) for legalhold operations.
     // while doing legalhold operation object is temporarily removed and stored in
     // a separate cache. After the response is received object state is updated and the object is

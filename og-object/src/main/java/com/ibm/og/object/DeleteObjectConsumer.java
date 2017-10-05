@@ -39,28 +39,15 @@ public class DeleteObjectConsumer extends AbstractObjectNameConsumer {
   }
 
   @Override
-  protected byte getNumberOfLegalHolds(final Request request, final Response response) {
-    final String nHolds = request.getContext().get(Context.X_OG_NUM_LEGAL_HOLDS);
-
-    if (nHolds == null) {
-      return 0;
-    } else {
-      if (response.getStatusCode() == 404) {
-        return Byte.valueOf(nHolds);
-      }
-      else if (response.getStatusCode() == 200) {
-        if (Byte.valueOf(nHolds) > 0) {
-          byte reducedHolds = Byte.valueOf(nHolds);
-          reducedHolds -= (byte) 1;
-          return reducedHolds;
-        } else {
-          return Byte.valueOf(nHolds);
-        }
-      } else {
-        return Byte.valueOf(nHolds);
-      }
+  protected void updateObjectManager(final Request request, final Response response) {
+    // remove the object permanently unless the status code is 451
+    ObjectMetadata object = getObjectName(request, response);
+    updateObjectManager(object);
+    if (response.getStatusCode() == 451) {
+      this.objectManager.add(object);
     }
   }
+
 
   @Override
   public String toString() {

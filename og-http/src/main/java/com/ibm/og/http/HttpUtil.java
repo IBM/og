@@ -26,6 +26,8 @@ public class HttpUtil {
       ContiguousSet.create(Range.closed(100, 599), DiscreteDomain.integers());
   public static final Set<Integer> SUCCESS_STATUS_CODES =
       ContiguousSet.create(Range.closed(200, 299), DiscreteDomain.integers());
+  public static final Set<Integer> DELETE_HANDLING_STATUS_CODES =
+          ContiguousSet.create(Range.closed(451, 451), DiscreteDomain.integers());
 
   private HttpUtil() {}
 

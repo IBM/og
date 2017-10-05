@@ -439,7 +439,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
 
   @Override
   public void removeUpdatedObject(final ObjectMetadata id) {
-    _logger.debug("Removing Updated object: {}", id);
+    _logger.trace("Removing Updated object from currentlyUpdating cache: {}", id);
     this.persistLock.readLock().lock();
     try {
       this.currentlyUpdating.remove(id.getName());
@@ -560,10 +560,6 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
         String.format("Writing state file: %d objects into ", this.objects.size()) + this.saveFile);
     for (final Iterator<ObjectMetadata> iterator = this.objects.iterator(); iterator.hasNext();) {
       out.write(iterator.next().toBytes());
-    }
-    Set<String> ids = this.currentlyUpdating.keySet();
-    for (String id : ids) {
-      out.write(this.currentlyUpdating.get(id).toBytes());
     }
     out.close();
     this.persistLock.writeLock().unlock();
