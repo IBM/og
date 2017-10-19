@@ -43,7 +43,10 @@ public class DeleteObjectConsumer extends AbstractObjectNameConsumer {
     // remove the object permanently unless the status code is 451
     ObjectMetadata object = getObjectName(request, response);
     updateObjectManager(object);
-    if (response.getStatusCode() == 451) {
+    // response code 599 is returned when apache client is shutdown. The object might have been
+    // possibly deleted. So do not add object to the object store
+    if (response.getStatusCode() != 204 && response.getStatusCode() != 599) {
+      _logger.trace("adding object {}", object);
       this.objectManager.add(object);
     }
   }
