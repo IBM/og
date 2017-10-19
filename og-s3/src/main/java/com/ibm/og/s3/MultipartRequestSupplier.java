@@ -5,8 +5,12 @@
 
 package com.ibm.og.s3;
 
+import com.google.common.base.Charsets;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.LoadingCache;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
 import com.ibm.og.api.Body;
 import com.ibm.og.api.DataType;
@@ -699,8 +703,14 @@ public class MultipartRequestSupplier implements Supplier<Request> {
             getUrl(context, MultipartRequest.COMPLETE, NO_PART, uploadId, multipartContext.get(Context.X_OG_OBJECT_NAME),
                     multipartContext.get(Context.X_OG_MULTIPART_CONTAINER)), Operation.MULTIPART_WRITE_COMPLETE);
 
+    // calculate md5 for the body
+    HashFunction hf = Hashing.md5();
+    HashCode hc = hf.newHasher()
+            .putString(body, Charsets.UTF_8)
+            .hash();
     builder.withBody(Bodies.custom(body.length(), body));
-
+    byte[] md5 = hc.asBytes();
+    builder.withHeader(Context.X_OG_CONTENT_MD5, BaseEncoding.base64().encode(md5));
     // populate request context
     for (final Map.Entry<String, String> entry : multipartContext.entrySet()) {
       context.put(entry.getKey(), entry.getValue());
