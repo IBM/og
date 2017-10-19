@@ -979,8 +979,7 @@ public class OGModule extends AbstractModule {
     // add status code range (400, 451) for legalhold operations.
     // while doing legalhold operation object is temporarily removed and stored in
     // a separate cache. After the response is received object state is updated and the object is
-    // added
-    // back in the object manager
+    // added back in the object manager
     final Set<Integer> legalHoldsSc = Sets.newHashSet();
     legalHoldsSc.addAll(sc);
     legalHoldsSc.addAll(ContiguousSet.create(Range.closed(400, 451), DiscreteDomain.integers()));
