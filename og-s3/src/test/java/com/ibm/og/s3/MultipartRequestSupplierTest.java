@@ -307,6 +307,7 @@ public class MultipartRequestSupplierTest {
     Assert.assertEquals(String.valueOf(objectSize), reqB1.getContext().get(Context.X_OG_OBJECT_SIZE));
 
     Response respMockB1 = mock(Response.class);
+    when(respMockB1.getStatusCode()).thenReturn(200);
     when(respMockB1.headers()).thenReturn(ImmutableMap.of("ETag", "tag1"));
     requestSupplier.update(Pair.of(reqB1, respMockB1));
 
@@ -318,6 +319,7 @@ public class MultipartRequestSupplierTest {
     Assert.assertEquals(String.valueOf(objectSize), reqB2.getContext().get(Context.X_OG_OBJECT_SIZE));
 
     Response respMockB2 = mock(Response.class);
+    when(respMockB2.getStatusCode()).thenReturn(200);
     when(respMockB2.headers()).thenReturn(ImmutableMap.of("ETag", "tag2"));
     requestSupplier.update(Pair.of(reqB2, respMockB2));
 
@@ -339,6 +341,7 @@ public class MultipartRequestSupplierTest {
     Assert.assertEquals(String.valueOf(objectSize), reqA1.getContext().get(Context.X_OG_OBJECT_SIZE));
 
     Response respMock1 = mock(Response.class);
+    when(respMock1.getStatusCode()).thenReturn(200);
     when(respMock1.headers()).thenReturn(ImmutableMap.of("ETag", "tag1"));
     requestSupplier.update(Pair.of(reqA1, respMock1));
 
@@ -350,6 +353,7 @@ public class MultipartRequestSupplierTest {
     Assert.assertEquals(String.valueOf(objectSize), reqA2.getContext().get(Context.X_OG_OBJECT_SIZE));
 
     Response respMockA2 = mock(Response.class);
+    when(respMockA2.getStatusCode()).thenReturn(200);
     when(respMockA2.headers()).thenReturn(ImmutableMap.of("ETag", "tag2"));
     requestSupplier.update(Pair.of(reqA2, respMockA2));
 
@@ -422,6 +426,7 @@ public class MultipartRequestSupplierTest {
     Assert.assertEquals(expectedPart1Size, req1.getBody().getSize());
 
     Response respMock1 = mock(Response.class);
+    when(respMock1.getStatusCode()).thenReturn(200);
     when(respMock1.headers()).thenReturn(ImmutableMap.of("ETag", "tag1"));
     requestSupplier.update(Pair.of(req1, respMock1));
 
@@ -432,6 +437,7 @@ public class MultipartRequestSupplierTest {
     Assert.assertEquals(expectedPart2Size, req2.getBody().getSize());
 
     Response respMock2 = mock(Response.class);
+    when(respMock2.getStatusCode()).thenReturn(200);
     when(respMock2.headers()).thenReturn(ImmutableMap.of("ETag", "tag2"));
     requestSupplier.update(Pair.of(req2, respMock2));
 

@@ -209,6 +209,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
                   inputBytes, objectBytes);
           this.objects.put(id);
         }
+        _logger.info("No. of objects loaded {}", this.objects.size());
         input.close();
       }
     } catch (final Exception e) {
@@ -462,22 +463,27 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
     _logger.info("number of objects to persist {}", toSave);
     final OutputStream out = new BufferedOutputStream(new FileOutputStream(this.saveFile));
     if (toSave > 0) {
+      _logger.info("writing version to file {}", this.saveFile);
       ObjectFileUtil.writeObjectFileVersion(out);
     }
+    _logger.info("toSave {} maxObjects {}", toSave, this.maxObjects);
     if (toSave > this.maxObjects) {
       for (int size = this.objects.size(); size > this.maxObjects; size = this.objects.size()) {
         final int numFiles = getIdFiles().length;
         File surplus = createFile(numFiles - 1);
         if (surplus.equals(this.saveFile) || (surplus.length() / OBJECT_SIZE) >= this.maxObjects) {
           // Create a new file
+          _logger.info("surplus file {}", surplus.getName());
           surplus = createFile(numFiles);
         }
         final OutputStream dos = new BufferedOutputStream(new FileOutputStream(surplus, true));
         // write header if only if it is a new file
         if (surplus.length() == 0) {
+          _logger.info("writing version in surplus file {}", surplus.getName());
           ObjectFileUtil.writeObjectFileVersion(dos);
         }
         final int remaining = getRemaining(size, surplus);
+        _logger.info("remaining objects {}", remaining);
         // While writing surplus, remove them from this.objects, to keep consistent with
         // this.savefile
         final Iterator<ObjectMetadata> iterator = this.objects.iterator();
@@ -498,9 +504,12 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
         // Need to ensure last file is not current file
         // If it is, don't borrow at all
         if (this.saveFile.equals(surplus)) {
+          _logger.info("toSave < maxObjects. Surplus is same as saveFile. break..");
           break;
         }
         final int toTransfer = getTransferrable(size, surplus);
+        _logger.info("to borrow {} objects ", toTransfer);
+
         final BufferedInputStream in = new BufferedInputStream(new FileInputStream(surplus));
         // check the version of the file and calculate skip
         long skip = 0;
@@ -508,12 +517,17 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
         int actualObjectSize = 0;
         in.mark(ObjectFileVersion.VERSION_HEADER_LENGTH);
         ObjectFileVersion version = ObjectFileUtil.readObjectFileVersion(in);
+        _logger.info("MajorVersion {} Minor Version {}", version.getMajorVersion(), version.getMinorVersion());
 
         if (version.getMajorVersion() == 2 && version.getMinorVersion() == 0) {
+          _logger.info("borrowing from object file {} of length {} version 2.0 ", surplus.getName(),
+                  surplus.length());
           skip = surplus.length() - (toTransfer * OBJECT_SIZE);
           readBuf = new byte[OBJECT_SIZE];
           actualObjectSize = OBJECT_SIZE;
         } else if (version.getMajorVersion() == 1 && version.getMinorVersion() == 0) {
+          _logger.info("borrowing from object file {} of length {} version 1.0 ", surplus.getName(),
+                  surplus.length());
           if (in.markSupported()) {
             _logger.warn("Missing version in object file [%s].", surplus.getName());
             readBuf = new byte[OBJECT_SIZE_V1];
@@ -525,6 +539,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
         }
 
         in.reset();
+        _logger.info("skip object file length {}", skip);
         in.skip(skip);
         final byte[] buf = new byte[OBJECT_SIZE];
         ObjectMetadata sid;
@@ -539,11 +554,13 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
         in.close();
         // If surplus is out of objects, delete it
         if (skip == ObjectFileVersion.VERSION_HEADER_LENGTH) {
+          _logger.info("deleting surplus file {}", surplus.getName());
           surplus.delete();
         } else {
           // We borrowed from the end of the file so nothing is lost from truncating
           RandomAccessFile truncater = null;
           try {
+            _logger.info("truncating surplus file to {} ", surplus.getName(), skip);
             truncater = new RandomAccessFile(surplus, "rwd");
             truncater.setLength(skip);
           } finally {
