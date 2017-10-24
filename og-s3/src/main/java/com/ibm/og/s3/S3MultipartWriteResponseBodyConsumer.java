@@ -53,7 +53,7 @@ public class S3MultipartWriteResponseBodyConsumer implements ResponseBodyConsume
         document = documentBuilder.parse(response);
       }
     } catch (SAXException e) {
-      throw new RuntimeException(e);
+      //throw new RuntimeException(e);
     }
 
     if(document != null) {
@@ -68,7 +68,7 @@ public class S3MultipartWriteResponseBodyConsumer implements ResponseBodyConsume
       if (errorBodyList != null) {
         if(errorBodyList.getLength() > 0) {
           String errorBody = errorBodyList.item(0).getTextContent();
-          throw new RuntimeException(errorBody);
+          //throw new RuntimeException(errorBody);
         }
       }
     }

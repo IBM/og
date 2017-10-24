@@ -268,6 +268,8 @@ public class MultipartRequestSupplier implements Supplier<Request> {
       }
       return builder;
     }
+
+
   }
 
   private class MultipartInfo {
@@ -288,6 +290,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     int finishedPartRequests;
     boolean inProgressCompleteRequest;
     boolean finishedCompleteRequest;
+    boolean abortSession;
     boolean inActionableSessions = false;
     final Map<String, String> context;
 
@@ -309,6 +312,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
       this.finishedPartRequests = 0;
       this.inProgressCompleteRequest = false;
       this.finishedCompleteRequest = false;
+      this.abortSession = false;
       this.context = requestContext;
       this.partsInfo = new PriorityBlockingQueue<PartInfo>(200, new Comparator<PartInfo>() {
         @Override public int compare(PartInfo o1, PartInfo o2) {
@@ -343,7 +347,10 @@ public class MultipartRequestSupplier implements Supplier<Request> {
         _logger.debug("pts [{}] ipr [{}] fpr [{}] fcR [{}] ipCR [{}] ", this.partRequestsToSend,
                 this.inProgressPartRequests, this.finishedPartRequests, this.finishedCompleteRequest,
                 this.inProgressCompleteRequest);
-        if ((this.inProgressPartRequests == 0) &&
+        if (this.abortSession) {
+          _logger.debug("abort upload [{}]", this.uploadId);
+          retVal = MultipartRequest.ABORT;
+        } else if ((this.inProgressPartRequests == 0) &&
                 (!this.finishedCompleteRequest) &&
                 (!this.inProgressCompleteRequest) &&
                 (this.finishedPartRequests == this.partRequestsToSend)) {
@@ -439,6 +446,17 @@ public class MultipartRequestSupplier implements Supplier<Request> {
       }
     }
 
+    public void setAbortSession() {
+      stateLock.lock();
+      try {
+        this.abortSession = true;
+      }
+      finally {
+        stateLock.unlock();
+      }
+    }
+
+
     private String generateCompleteRequestBody() {
       String completeMultipartUploadBeginElement = "<CompleteMultipartUpload>";
       String completeMultipartUploadEndElement = "</CompleteMultipartUpload>";
@@ -518,26 +536,35 @@ public class MultipartRequestSupplier implements Supplier<Request> {
         }
     } else if (multipartrequestOperation.equals(MultipartRequest.PART.toString())) {
         multipartInfo = multipartRequestMap.get(requestUploadId);
-          multipartInfo.finishPartRequest(new PartInfo(requestPartNumber, responsePartId));
-          // multipart info only gets put on blocked when INTERNAL_PENDING is
-          // observed on the get() call. Put it back in active when all parts are in
-          // or if active part uploads is now less than maxParts
-          MultipartRequest multipartRequest = multipartInfo.getNextMultipartRequest();
-          if (multipartRequest == MultipartRequest.COMPLETE || multipartRequest == MultipartRequest.PART) {
-            if (!multipartInfo.getInActionableSessions()) {
-              this.actionableMultipartSessions.add(multipartInfo);
-              multipartInfo.setInActionableSessions(true);
-              _logger.debug("Added active Multipart session. count is [{}]", this.actionableMultipartSessions.size());
-            }
+        // if the part was not uploaded correctly send the abort request
+        if (response.getStatusCode() != 200) {
+          // set abort session
+          multipartInfo.setAbortSession();
+        }
+        multipartInfo.finishPartRequest(new PartInfo(requestPartNumber, responsePartId));
+        // multipart info only gets put on blocked when INTERNAL_PENDING is
+        // observed on the get() call. Put it back in active when all parts are in
+        // or if active part uploads is now less than maxParts
+        MultipartRequest multipartRequest = multipartInfo.getNextMultipartRequest();
+        if (multipartRequest == MultipartRequest.COMPLETE || multipartRequest == MultipartRequest.PART) {
+          if (!multipartInfo.getInActionableSessions()) {
+            this.actionableMultipartSessions.add(multipartInfo);
+            multipartInfo.setInActionableSessions(true);
+            _logger.debug("Added active Multipart session. count is [{}]", this.actionableMultipartSessions.size());
           }
+        }
     } else if (multipartrequestOperation.equals(MultipartRequest.COMPLETE.toString())) {
-      this.sessionManager.inProgressSessions.getAndDecrement();
-      multipartInfo = multipartRequestMap.get(requestUploadId);
-      multipartInfo.finishCompleteRequest();
-      this.multipartRequestMap.remove(multipartInfo);
+        this.sessionManager.inProgressSessions.getAndDecrement();
+        multipartInfo = multipartRequestMap.get(requestUploadId);
+        multipartInfo.finishCompleteRequest();
+        this.multipartRequestMap.remove(multipartInfo);
     } else if (multipartrequestOperation.equals(MultipartRequest.ABORT.toString())) {
-      //TODO
-      _logger.warn("multipart request operation ABORT - to be implemented");
+        //TODO
+        // log abort request status and free up session
+        this.sessionManager.inProgressSessions.getAndDecrement();
+        multipartInfo = multipartRequestMap.get(requestUploadId);
+        this.multipartRequestMap.remove(multipartInfo);
+        _logger.warn("multipart request operation ABORT - to be implemented");
     }
 
     sessionManager.sessionsLock.lock();
@@ -702,6 +729,8 @@ public class MultipartRequestSupplier implements Supplier<Request> {
                     multipartContext.get(Context.X_OG_MULTIPART_CONTAINER)), Operation.MULTIPART_WRITE_ABORT);
 
     context.put(Context.X_OG_OBJECT_NAME, multipartContext.get(Context.X_OG_OBJECT_NAME));
+    context.put(Context.X_OG_MULTIPART_REQUEST, MultipartRequest.ABORT.toString());
+    context.put(Context.X_OG_MULTIPART_UPLOAD_ID, uploadId);
 
     return builder;
   }
