@@ -776,7 +776,7 @@ public class OGModule extends AbstractModule {
     for (final ChoiceConfig<Long> choice : partSize.choices) {
       checkNotNull(choice);
       checkNotNull(choice.choice);
-      checkArgument(choice.choice >= 1000,
+      checkArgument(choice.choice >= 5242880,
           "partSize must be greater than or equal to 5242880 bytes (5 MiB)");
     }
 
