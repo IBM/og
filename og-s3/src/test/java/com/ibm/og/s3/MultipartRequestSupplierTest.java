@@ -156,7 +156,7 @@ public class MultipartRequestSupplierTest {
   }
 
   @Test
-  // Test behavior for 2 sessions - one with abort and one with complete
+  // Test behavior for 2 sessions with uneven part sizes
   public void testMultipleSessionsWithUnevenParts() throws URISyntaxException {
     int targetSessions = 2; // don't change this
     long objectSize = (long)(5242880*1.5);
@@ -166,7 +166,7 @@ public class MultipartRequestSupplierTest {
   }
 
   @Test
-  // Test behavior for 2 sessions with uneven part sizes
+  // Test behavior for 2 sessions - one with abort and one with complete
   public void testMultipleSessionsWithAbortComplete() throws URISyntaxException {
     int targetSessions = 2; // don't change this
     long objectSize = (long)(5242880*1.5);
