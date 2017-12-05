@@ -1203,6 +1203,28 @@ NOTE: OG uses a special reserved status code *599* to indicate a failed or
 aborted request. This special status code can also be used as a status code
 stopping condition.
 
+=== Secure HTTP connections
+Secure http connections can be used with HTTPS scheme with SSL/TLS for OG operations.
+To do this the following configuration needs to be set in addition to other
+properties.
+
+- https scheme
+- trust self signed certificate if needed in client configuration
+- Optionally specify a list of cipher algorithms to use in client configuration
+
+
+.sample configuration
+[source, json]
+----
+{
+  "scheme": "https",
+  "client": {
+    "cipher_suites": ["TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA"],
+    "trust_self_signed_certificates": true,
+  }
+}
+----
+
 === Object Management
 OG tracks the state of objects written to containers. The OG object manager
 writes metadata about the objects into a set of binary files called "object
