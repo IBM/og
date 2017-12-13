@@ -850,6 +850,87 @@ percentage must be 100.00.
     }
 ----
 
+==== Operation write_legalhold
+
+This operation is used to a legalhold to an existing object.
+
+An example write_legalhold operation is listed below.
+----
+  "write_legalhold": {
+    "weight": 100.0,
+    "object": {
+      "prefix": "",
+      "min_suffix": 0,
+      "max_suffix": 9223372036854775807
+    },
+    "headers": {},
+    "parameters": {},
+    "body": "none",
+    "container": {
+      "selection": "random",
+      "min_suffix": -1,
+      "max_suffix": -1
+    },
+    "legal_hold": {
+        "legal_hold_prefix": "",
+        "percentage": 100.00
+    }
+  }
+----
+
+==== Operation Delete LegalHold
+This operation is used to delete a legalhold on the object.
+
+ An example delete_legalhold operation is listed below.
+ ----
+  "delete_legalhold": {
+     "weight": 100.0,
+     "object": {
+       "prefix": "",
+       "min_suffix": 0,
+       "max_suffix": 9223372036854775807
+     },
+     "headers": {},
+     "parameters": {},
+     "body": "none",
+     "container": {
+       "selection": "random",
+       "min_suffix": -1,
+       "max_suffix": -1
+     },
+      "legal_hold": {
+          "percentage": 100.00
+     }
+   }
+ ----
+
+==== Operation Read LegalHold
+This operation returns the list of legalholds on the object.
+
+An example read_legalhold operation is listed below.
+
+----
+  "read_legalhold": {
+    "weight": 100.0,
+    "object": {
+      "prefix": "",
+      "min_suffix": 0,
+      "max_suffix": 9223372036854775807
+    },
+    "headers": {},
+    "parameters": {},
+    "body": "none",
+    "container": {
+      "selection": "random",
+      "min_suffix": -1,
+      "max_suffix": -1
+    }
+  }
+----
+
+
+
+
 === Operation Retention
 Retention add a time expiry to an object. The object will be protected until the
 retention time expires.
@@ -1150,6 +1231,28 @@ of status codes of a given number have been received.
 NOTE: OG uses a special reserved status code *599* to indicate a failed or
 aborted request. This special status code can also be used as a status code
 stopping condition.
+
+=== Secure HTTP connections
+Secure http connections can be used with HTTPS scheme with SSL/TLS for OG operations.
+To do this the following configuration needs to be set in addition to other
+properties.
+
+- https scheme
+- trust self signed certificate if needed in client configuration
+- Optionally specify a list of cipher algorithms to use in client configuration
+
+
+.sample configuration
+[source, json]
+----
+{
+  "scheme": "https",
+  "client": {
+    "cipher_suites": ["TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA"],
+    "trust_self_signed_certificates": true,
+  }
+}
+----
 
 === Object Management
 OG tracks the state of objects written to containers. The OG object manager
@@ -1617,6 +1720,11 @@ mixed operation tests.
 |Complex
 |No
 |None
+
+|content_md5
+|boolean
+|No
+|false
 
 |===
 

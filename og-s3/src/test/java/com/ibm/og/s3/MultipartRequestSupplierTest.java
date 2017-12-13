@@ -166,6 +166,15 @@ public class MultipartRequestSupplierTest {
     genericMultipleSessions(targetSessions, objectSize, expectedPart1Size, expectedPart2Size);
   }
 
+  @Test
+  // Test behavior for 2 sessions - one with abort and one with complete
+  public void testMultipleSessionsWithAbortComplete() throws URISyntaxException {
+    int targetSessions = 2; // don't change this
+    long objectSize = (long)(5242880*1.5);
+    long expectedPart1Size = 5242880;
+    long expectedPart2Size = 5242880/2;
+    twoSessionsWithAbortComplete(targetSessions, objectSize, expectedPart1Size, expectedPart2Size);
+  }
   private static class SupplierFunction<O, T> implements Function<O, T> {
 
     private final Supplier<T> supplier;
@@ -315,6 +324,7 @@ public class MultipartRequestSupplierTest {
         reqB1.getContext().get(Context.X_OG_OBJECT_SIZE));
 
     final Response respMockB1 = mock(Response.class);
+    when(respMockB1.getStatusCode()).thenReturn(200);
     when(respMockB1.headers()).thenReturn(ImmutableMap.of("ETag", "tag1"));
     requestSupplier.update(Pair.of(reqB1, respMockB1));
 
@@ -327,6 +337,7 @@ public class MultipartRequestSupplierTest {
         reqB2.getContext().get(Context.X_OG_OBJECT_SIZE));
 
     final Response respMockB2 = mock(Response.class);
+    when(respMockB2.getStatusCode()).thenReturn(200);
     when(respMockB2.headers()).thenReturn(ImmutableMap.of("ETag", "tag2"));
     requestSupplier.update(Pair.of(reqB2, respMockB2));
 
@@ -352,6 +363,7 @@ public class MultipartRequestSupplierTest {
         reqA1.getContext().get(Context.X_OG_OBJECT_SIZE));
 
     final Response respMock1 = mock(Response.class);
+    when(respMock1.getStatusCode()).thenReturn(200);
     when(respMock1.headers()).thenReturn(ImmutableMap.of("ETag", "tag1"));
     requestSupplier.update(Pair.of(reqA1, respMock1));
 
@@ -364,6 +376,7 @@ public class MultipartRequestSupplierTest {
         reqA2.getContext().get(Context.X_OG_OBJECT_SIZE));
 
     final Response respMockA2 = mock(Response.class);
+    when(respMockA2.getStatusCode()).thenReturn(200);
     when(respMockA2.headers()).thenReturn(ImmutableMap.of("ETag", "tag2"));
     requestSupplier.update(Pair.of(reqA2, respMockA2));
 
@@ -441,6 +454,7 @@ public class MultipartRequestSupplierTest {
     Assert.assertEquals(expectedPart1Size, req1.getBody().getSize());
 
     final Response respMock1 = mock(Response.class);
+    when(respMock1.getStatusCode()).thenReturn(200);
     when(respMock1.headers()).thenReturn(ImmutableMap.of("ETag", "tag1"));
     requestSupplier.update(Pair.of(req1, respMock1));
 
@@ -451,6 +465,7 @@ public class MultipartRequestSupplierTest {
     Assert.assertEquals(expectedPart2Size, req2.getBody().getSize());
 
     final Response respMock2 = mock(Response.class);
+    when(respMock2.getStatusCode()).thenReturn(200);
     when(respMock2.headers()).thenReturn(ImmutableMap.of("ETag", "tag2"));
     requestSupplier.update(Pair.of(req2, respMock2));
 
@@ -461,4 +476,130 @@ public class MultipartRequestSupplierTest {
         "<CompleteMultipartUpload><Part><PartNumber>1</PartNumber><ETag>tag1</ETag></Part><Part><PartNumber>2</PartNumber><ETag>tag2</ETag></Part></CompleteMultipartUpload>",
         req3.getBody().getContent());
   }
+
+  private void twoSessionsWithAbortComplete(int targetSessions, long objectSize, long expectedPart1Size,
+                                         long expectedPart2Size) throws URISyntaxException {
+    final URI uri =
+            new URI("http://" + this.vaultName + "." + this.hostName + ":8080/" + this.objectName + "?uploads");
+
+    final String uploadIdA = "abc";
+    final String uploadIdB = "xyz";
+    final MultipartRequestSupplier requestSupplier =
+            createRequestSupplier(true, this.vaultName, this.hostName, this.objectName, objectSize, null,
+                    targetSessions, false);
+
+    Request reqA0 = requestSupplier.get();
+
+    Assert.assertNotNull(reqA0);
+    Assert.assertEquals(Method.POST, reqA0.getMethod());
+    Assert.assertEquals(uri, reqA0.getUri());
+    Assert.assertEquals("INITIATE", reqA0.getContext().get(Context.X_OG_MULTIPART_REQUEST));
+
+    Response respMockA0 = mock(Response.class);
+    when(respMockA0.getStatusCode()).thenReturn(200);
+    when(respMockA0.getContext()).thenReturn(ImmutableMap.of(Context.X_OG_MULTIPART_UPLOAD_ID, "abcd"));
+    when(respMockA0.headers()).thenReturn(ImmutableMap.of("ETag", "tag0"));
+
+    Request reqMockA0 = mock(Request.class);
+    Map<String, String> contextMap = new HashMap<String, String>();
+    contextMap.put(Context.X_OG_MULTIPART_BODY_DATA_TYPE, "ZEROES");
+    contextMap.put(Context.X_OG_MULTIPART_CONTAINER, this.vaultName);
+    contextMap.put(Context.X_OG_CONTAINER_SUFFIX, String.valueOf(-1));
+    contextMap.put(Context.X_OG_OBJECT_NAME, this.objectName);
+    contextMap.put(Context.X_OG_OBJECT_SIZE, String.valueOf(objectSize));
+    contextMap.put(Context.X_OG_MULTIPART_PART_SIZE, String.valueOf(partSize));
+    contextMap.put(Context.X_OG_MULTIPART_MAX_PARTS, String.valueOf(Integer.MAX_VALUE));
+    contextMap.put(Context.X_OG_MULTIPART_UPLOAD_ID, uploadIdA);
+    contextMap.put(Context.X_OG_MULTIPART_PART_NUMBER, String.valueOf(0));
+    contextMap.put(Context.X_OG_MULTIPART_REQUEST, "INITIATE");
+    when(reqMockA0.getContext()).thenReturn(contextMap);
+
+    // Do full B session before responding to A
+    // Only way to test this since operations on sessions are random
+    Request reqB0 = requestSupplier.get();
+
+    Assert.assertNotNull(reqB0);
+    Assert.assertEquals(Method.POST, reqB0.getMethod());
+    Assert.assertEquals(uri, reqB0.getUri());
+    Assert.assertEquals("INITIATE", reqB0.getContext().get(Context.X_OG_MULTIPART_REQUEST));
+
+    Response respMockB0 = mock(Response.class);
+    when(respMockB0.getStatusCode()).thenReturn(200);
+    when(respMockB0.getContext()).thenReturn(ImmutableMap.of(Context.X_OG_MULTIPART_UPLOAD_ID, "abcd"));
+    when(respMockB0.headers()).thenReturn(ImmutableMap.of("ETag", "tag0"));
+
+    Request reqMockB0 = mock(Request.class);
+    Map<String, String> contextMapB = new HashMap<String, String>();
+    contextMap.put(Context.X_OG_MULTIPART_BODY_DATA_TYPE, "ZEROES");
+    contextMap.put(Context.X_OG_MULTIPART_CONTAINER, this.vaultName);
+    contextMap.put(Context.X_OG_CONTAINER_SUFFIX, String.valueOf(-1));
+    contextMap.put(Context.X_OG_OBJECT_NAME, this.objectName);
+    contextMap.put(Context.X_OG_OBJECT_SIZE, String.valueOf(objectSize));
+    contextMap.put(Context.X_OG_MULTIPART_PART_SIZE, String.valueOf(partSize));
+    contextMap.put(Context.X_OG_MULTIPART_UPLOAD_ID, uploadIdB);
+    contextMap.put(Context.X_OG_MULTIPART_PART_NUMBER, String.valueOf(0));
+    contextMap.put(Context.X_OG_MULTIPART_REQUEST, "INITIATE");
+    when(reqMockB0.getContext()).thenReturn(contextMap);
+
+    requestSupplier.update(Pair.of(reqMockB0, respMockB0));
+    Request reqB1 = requestSupplier.get();
+    Map<String, String> reqContextB1 = reqB1.getContext();
+
+    Assert.assertNotNull(reqB1);
+    Assert.assertEquals("PART", reqContextB1.get(Context.X_OG_MULTIPART_REQUEST));
+    Assert.assertEquals("1", reqContextB1.get(Context.X_OG_MULTIPART_PART_NUMBER));
+    Assert.assertEquals(expectedPart1Size, reqB1.getBody().getSize());
+    Assert.assertEquals(String.valueOf(objectSize), reqB1.getContext().get(Context.X_OG_OBJECT_SIZE));
+
+    Response respMockB1 = mock(Response.class);
+    when(respMockB1.getStatusCode()).thenReturn(507);
+    when(respMockB1.headers()).thenReturn(ImmutableMap.of("ETag", "tag1"));
+    requestSupplier.update(Pair.of(reqB1, respMockB1));
+
+    Request reqB2 = requestSupplier.get();
+    Assert.assertNotNull(reqB2);
+    Assert.assertEquals("ABORT", reqB2.getContext().get(Context.X_OG_MULTIPART_REQUEST));
+    Assert.assertEquals(0, reqB2.getBody().getSize());
+
+
+    // Respond to A INITIATE and complete sequence
+    requestSupplier.update(Pair.of(reqMockA0, respMockA0));
+    Request reqA1 = requestSupplier.get();
+    Map<String, String> reqContext1 = reqA1.getContext();
+
+    Assert.assertNotNull(reqA1);
+    Assert.assertEquals("PART", reqContext1.get(Context.X_OG_MULTIPART_REQUEST));
+    Assert.assertEquals("1", reqContext1.get(Context.X_OG_MULTIPART_PART_NUMBER));
+    Assert.assertEquals(expectedPart1Size, reqA1.getBody().getSize());
+    Assert.assertEquals(String.valueOf(objectSize), reqA1.getContext().get(Context.X_OG_OBJECT_SIZE));
+
+    Response respMock1 = mock(Response.class);
+    when(respMock1.getStatusCode()).thenReturn(200);
+    when(respMock1.headers()).thenReturn(ImmutableMap.of("ETag", "tag1"));
+    requestSupplier.update(Pair.of(reqA1, respMock1));
+
+    Request reqA2 = requestSupplier.get();
+    Assert.assertNotNull(reqA2);
+    Assert.assertEquals("PART", reqA2.getContext().get(Context.X_OG_MULTIPART_REQUEST));
+    Assert.assertEquals("2", reqA2.getContext().get(Context.X_OG_MULTIPART_PART_NUMBER));
+    Assert.assertEquals(expectedPart2Size, reqA2.getBody().getSize());
+    Assert.assertEquals(String.valueOf(objectSize), reqA2.getContext().get(Context.X_OG_OBJECT_SIZE));
+
+    Response respMockA2 = mock(Response.class);
+    when(respMockA2.getStatusCode()).thenReturn(200);
+    when(respMockA2.headers()).thenReturn(ImmutableMap.of("ETag", "tag2"));
+    requestSupplier.update(Pair.of(reqA2, respMockA2));
+
+    Request reqA3 = requestSupplier.get();
+    Assert.assertNotNull(reqA3);
+    Assert.assertEquals("COMPLETE", reqA3.getContext().get(Context.X_OG_MULTIPART_REQUEST));
+    Assert.assertEquals("<CompleteMultipartUpload><Part><PartNumber>1</PartNumber><ETag>tag1</ETag></Part><Part><PartNumber>2</PartNumber><ETag>tag2</ETag></Part></CompleteMultipartUpload>", reqA3.getBody().getContent());
+    Assert.assertEquals(String.valueOf(objectSize), reqA3.getContext().get(Context.X_OG_OBJECT_SIZE));
+
+    Response respMockB2 = mock(Response.class);
+    when(respMockB2.getStatusCode()).thenReturn(204);
+    when(respMockB2.headers()).thenReturn(ImmutableMap.of("ETag", "tag2"));
+    requestSupplier.update(Pair.of(reqB2, respMockB2));
+  }
+
 }
