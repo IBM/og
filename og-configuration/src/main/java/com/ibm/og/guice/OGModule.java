@@ -91,6 +91,7 @@ import com.ibm.og.http.Credential;
 import com.ibm.og.http.Headers;
 import com.ibm.og.http.HttpAuth;
 import com.ibm.og.http.HttpUtil;
+import com.ibm.og.http.IAMTokenAuth;
 import com.ibm.og.http.NoneAuth;
 import com.ibm.og.http.QueryParameters;
 import com.ibm.og.http.ResponseBodyConsumer;
@@ -273,6 +274,7 @@ public class OGModule extends AbstractModule {
     httpAuthBinder.addBinding(AuthType.AWSV2).to(AWSV2Auth.class);
     httpAuthBinder.addBinding(AuthType.AWSV4).to(AWSV4Auth.class);
     httpAuthBinder.addBinding(AuthType.KEYSTONE).to(KeystoneAuth.class);
+    httpAuthBinder.addBinding(AuthType.IAM).to(IAMTokenAuth.class);
 
     final MapBinder<String, ResponseBodyConsumer> responseBodyConsumers =
         MapBinder.newMapBinder(binder(), String.class, ResponseBodyConsumer.class);
@@ -1579,7 +1581,8 @@ public class OGModule extends AbstractModule {
 
         final Credential credential =
             new Credential(this.config.authentication.username, this.config.authentication.password,
-                this.config.authentication.keystoneToken, this.config.authentication.account);
+                this.config.authentication.keystoneToken, this.config.authentication.iamToken,
+                this.config.authentication.account);
         credentialList.add(credential);
 
         if (credentialList.size() == 0) {

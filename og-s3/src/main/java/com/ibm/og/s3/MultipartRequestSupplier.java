@@ -614,6 +614,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
         String username = credential.getUsername();
         String password = credential.getPassword();
         String keystoneToken = credential.getKeystoneToken();
+        String IAMToken = credential.getIAMToken();
 
         if (username != null)
           builder.withContext(Context.X_OG_USERNAME, username);
@@ -621,6 +622,8 @@ public class MultipartRequestSupplier implements Supplier<Request> {
           builder.withContext(Context.X_OG_PASSWORD, password);
         if (keystoneToken != null)
           builder.withContext(Context.X_OG_KEYSTONE_TOKEN, keystoneToken);
+        if (IAMToken != null)
+          builder.withContext(Context.X_OG_IAM_TOKEN, IAMToken);
       }
 
       for (final Map.Entry<String, String> entry : requestContext.entrySet()) {
