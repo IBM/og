@@ -139,7 +139,10 @@ public class ObjectGenerator {
       logConsoleException(e);
       logExceptionToFile(e);
       timestampStop = System.currentTimeMillis();
-      logSummary(timestampStart, timestampStop, Application.TEST_ERROR, ImmutableList.of(String.format("Test error %s", e.getMessage())));
+      logSummary(timestampStart, timestampStop, Application.TEST_ERROR,
+              ImmutableList.of(String.format("Test error %s", e.getMessage())));
+      _logger.warn("countdown shutdown latch in exception block");
+      shutdownLatch.countDown();
       Application.exit(Application.TEST_ERROR);
     }
 
