@@ -49,6 +49,7 @@ public class Context {
   public static final String X_OG_LEGAL_HOLD = "Retention-Legal-Hold-ID";
   public static final String X_OG_NUM_LEGAL_HOLDS = "x-og-num-legal-holds";
   public static final String X_OG_OBJECT_RETENTION = "Retention-Period";
+  public static final String X_OG_OBJECT_RETENTION_EXT = "Additional-Retention-Period";
   public static final String X_OG_CONTENT_MD5 = "Content-MD5";
 
   private Context() {}

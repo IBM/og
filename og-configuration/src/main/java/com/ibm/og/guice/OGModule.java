@@ -116,6 +116,7 @@ import com.ibm.og.json.StoppingConditionsConfig;
 import com.ibm.og.object.AbstractObjectNameConsumer;
 import com.ibm.og.object.DeleteObjectConsumer;
 import com.ibm.og.object.DeleteObjectLegalHoldConsumer;
+import com.ibm.og.object.ExtendRetentionObjectNameConsumer;
 import com.ibm.og.object.ListObjectNameConsumer;
 import com.ibm.og.object.MetadataObjectNameConsumer;
 import com.ibm.og.object.MultipartWriteObjectNameConsumer;
@@ -142,6 +143,7 @@ import com.ibm.og.supplier.CredentialGetterFunction;
 import com.ibm.og.supplier.DeleteObjectNameFunction;
 import com.ibm.og.supplier.LegalholdObjectNameFunction;
 import com.ibm.og.supplier.MetadataObjectNameFunction;
+import com.ibm.og.supplier.ObjectRetentionExtensionFunction;
 import com.ibm.og.supplier.RandomPercentageSupplier;
 import com.ibm.og.supplier.RandomSupplier;
 import com.ibm.og.supplier.ReadObjectNameFunction;
@@ -239,6 +241,8 @@ public class OGModule extends AbstractModule {
         .to(this.config.readLegalhold.weight);
     bindConstant().annotatedWith(Names.named("delete_legalhold.weight"))
         .to(this.config.deleteLegalhold.weight);
+    bindConstant().annotatedWith(Names.named("extend_retention.weight"))
+        .to(this.config.extendRetention.weight);
     bindConstant().annotatedWith(Names.named("virtualhost")).to(this.config.virtualHost);
     bindConstant().annotatedWith(Names.named("multipartWrite.targetSessions"))
         .to(this.config.multipartWrite.upload.targetSessions);
@@ -393,8 +397,6 @@ public class OGModule extends AbstractModule {
     return conditions;
   }
 
-  @Provides
-  @Singleton
   public Long provideTestRetentionConfig(final RetentionConfig rc) {
 
     final Map<String, String> context = Maps.newHashMap();
@@ -406,6 +408,21 @@ public class OGModule extends AbstractModule {
       return retentionFunction.apply(context);
     } else {
       return -1L;
+    }
+  }
+
+  public Long provideTestRetentionExtensionConfig(final long currentRetention, final RetentionConfig rc) {
+
+    final Map<String, String> context = Maps.newHashMap();
+    context.put(Context.X_OG_OBJECT_RETENTION, Long.toString(currentRetention));
+    if (rc.expiry != null) {
+      final SelectionConfig<RetentionConfig> rcSelection = new SelectionConfig<RetentionConfig>();
+      rcSelection.choices.add(new ChoiceConfig<RetentionConfig>(rc));
+      final Function<Map<String, String>, Long> retentionFunction =
+              this.provideRetentionExtension(rcSelection);
+      return retentionFunction.apply(context);
+    } else {
+       return Long.parseLong(context.get(Context.X_OG_OBJECT_RETENTION));
     }
   }
 
@@ -988,7 +1005,11 @@ public class OGModule extends AbstractModule {
     consumers.add(new WriteLegalHoldObjectNameConsumer(objectManager, legalHoldsSc));
     consumers.add(new ReadObjectLegalHoldConsumer(objectManager, legalHoldsSc));
     consumers.add(new DeleteObjectLegalHoldConsumer(objectManager, legalHoldsSc));
-
+    // object retention extension consumer
+    final Set<Integer> retentionExtensionSc = Sets.newHashSet();
+    retentionExtensionSc.addAll(sc);
+    retentionExtensionSc.addAll(ContiguousSet.create(Range.closed(400, 451), DiscreteDomain.integers()));
+    consumers.add(new ExtendRetentionObjectNameConsumer(objectManager, legalHoldsSc));
     for (final AbstractObjectNameConsumer consumer : consumers) {
       eventBus.register(consumer);
     }
@@ -1238,6 +1259,16 @@ public class OGModule extends AbstractModule {
   }
 
   @Provides
+  @Named("retention_extension.context")
+  public List<Function<Map<String, String>, String>> provideRetentionExtensionContext(
+          final ObjectManager objectManager) {
+    Function<Map<String, String>, String> function = new
+            ObjectRetentionExtensionFunction(objectManager);
+
+    return ImmutableList.of(function);
+  }
+
+  @Provides
   @Singleton
   @Named("metadata.context")
   public List<Function<Map<String, String>, String>> provideMetadataContext(
@@ -1372,6 +1403,26 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
+  @Named("extend.retention")
+  private Function<Map<String, String>, Long> provideRetentionExtension() {
+    if (this.config.extendRetention.retention == null) {
+      return null;
+    }
+    final SelectionConfig<RetentionConfig> retentionConfig = this.config.extendRetention.retention;
+    final List<ChoiceConfig<RetentionConfig>> retentions = checkNotNull(retentionConfig.choices);
+    checkArgument(!retentions.isEmpty(), "retention extensions must not be empty");
+
+
+    for (final ChoiceConfig<RetentionConfig> choice : retentions) {
+      checkNotNull(choice);
+      checkNotNull(choice.choice);
+      checkArgument(choice.choice.expiry >= -1, "Expiry must be greater than or equal to -1");
+    }
+    return provideRetentionExtension(retentionConfig);
+  }
+
+  @Provides
+  @Singleton
   @Named("multipartWrite.retention")
   private Function<Map<String, String>, Long> provideMultipartWriteRetention() {
     // return null;
@@ -1413,7 +1464,7 @@ public class OGModule extends AbstractModule {
   }
 
   private Function<Map<String, String>, Long> provideRetention(
-      final SelectionConfig<RetentionConfig> retentions) {
+    final SelectionConfig<RetentionConfig> retentions) {
     final Supplier<RetentionConfig> retentionConfigSupplier;
     final SelectionType selection = checkNotNull(retentions.selection);
 
@@ -1446,8 +1497,47 @@ public class OGModule extends AbstractModule {
           input.put(Context.X_OG_OBJECT_RETENTION, String.valueOf(expiryTime));
           return expiryTime;
         } else {
-          return -1L;
+          return 0L;
         }
+      }
+    };
+  }
+
+  private Function<Map<String, String>, Long> provideRetentionExtension(
+          final SelectionConfig<RetentionConfig> retentions) {
+    final Supplier<RetentionConfig> retentionConfigSupplier;
+    final SelectionType selection = checkNotNull(retentions.selection);
+
+    // if retentions list is empty return null
+    if (retentions.choices.isEmpty()) {
+      return null;
+    }
+    if (SelectionType.ROUNDROBIN == selection) {
+      final List<RetentionConfig> retentionConfigList = Lists.newArrayList();
+      retentionConfigSupplier = Suppliers.cycle(retentionConfigList);
+    } else {
+      final RandomSupplier.Builder<RetentionConfig> wrc = Suppliers.random();
+      for (final ChoiceConfig<RetentionConfig> choice : retentions.choices) {
+        wrc.withChoice(choice.choice, choice.weight);
+      }
+      retentionConfigSupplier = wrc.build();
+    }
+    return new Function<Map<String, String>, Long>() {
+      @Override
+      public Long apply(final Map<String, String> input) {
+        final RetentionConfig retentionConfig = retentionConfigSupplier.get();
+        checkArgument(retentionConfig.expiry > 0, "Retention extension must be positive");
+        long retention = Long.parseLong(input.get(Context.X_OG_OBJECT_RETENTION));
+
+        final Long extention = retentionConfig.timeUnit.toSeconds(retentionConfig.expiry);
+          checkArgument(
+                  (retention + extention +
+                          + System.currentTimeMillis() / 1000) <= RetentionConfig.MAX_RETENTION_EXPIRY,
+                  "The expiry in [%s] seconds duration should be earlier than January 19, 2038 3:14:07 AM",
+                  retention);
+          input.put(Context.X_OG_OBJECT_RETENTION, String.valueOf(retention));
+          input.put(Context.X_OG_OBJECT_RETENTION_EXT, String.valueOf(extention));
+          return retention;
       }
     };
   }
@@ -1700,6 +1790,20 @@ public class OGModule extends AbstractModule {
             }
           });
     }
+    return queryParameters;
+  }
+
+  private Map<String, Function<Map<String, String>, String>> provideRetentionExtensionQueryParameters() {
+    final Map<String, Function<Map<String, String>, String>> queryParameters;
+    queryParameters = Maps.newLinkedHashMap();
+    queryParameters.put(QueryParameters.OBJECT_RETENTION_EXTENSION_PARAMETER,
+            new Function<Map<String, String>, String>() {
+              @Override
+              public String apply(final Map<String, String> context) {
+                return null;
+              }
+            });
+
     return queryParameters;
   }
 
@@ -2038,6 +2142,35 @@ public class OGModule extends AbstractModule {
         virtualHost, retention, legalHold, contentMd5);
   }
 
+
+  @Provides
+  @Singleton
+  @Named("extend_retention")
+  public Supplier<Request> provideExtendRetention(
+          @Named("request.id") final Function<Map<String, String>, String> id, final Scheme scheme,
+          @ReadHost final Function<Map<String, String>, String> host,
+          @Nullable @Named("port") final Integer port,
+          @Nullable @Named("uri.root") final String uriRoot,
+          @Named("read.container") final Function<Map<String, String>, String> container,
+          @Nullable @Named("api.version") final String apiVersion,
+          @Nullable @ReadObjectName final Function<Map<String, String>, String> object,
+          @WriteHeaders final Map<String, Function<Map<String, String>, String>> headers,
+          @Named("retention_extension.context") final List<Function<Map<String, String>, String>> context,
+          @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
+          @Nullable @Named("extend.retention") final Function<Map<String, String>, Long> retentionExtension,
+          @Named("virtualhost") final boolean virtualHost) {
+
+    final Map<String, Function<Map<String, String>, String>> queryParameters =
+            provideRetentionExtensionQueryParameters();
+
+    final Supplier<Body> bodySupplier = Suppliers.of(Bodies.none());
+    final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
+
+    return createRequestSupplier(Operation.EXTEND_RETENTION, id, Method.POST, scheme, host, port,
+            uriRoot, container, apiVersion, object, queryParameters, headers, context, null, body,
+            credentials, virtualHost, retentionExtension, null, false);
+  }
+
   @Provides
   @Singleton
   @Named("writeCopy")
@@ -2242,15 +2375,17 @@ public class OGModule extends AbstractModule {
           @Named("virtualhost") final boolean virtualHost) {
 
     final Map<String, Function<Map<String, String>, String>> queryParameters =
-        provideLegalHoldQueryParameters(false);
+            provideLegalHoldQueryParameters(false);
 
     final Supplier<Body> bodySupplier = Suppliers.of(Bodies.none());
     final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
 
     return createRequestSupplier(Operation.WRITE_LEGAL_HOLD, id, Method.POST, scheme, host, port,
-        uriRoot, container, apiVersion, object, queryParameters, headers, context, null, body,
-        credentials, virtualHost, null, legalhold, false);
+            uriRoot, container, apiVersion, object, queryParameters, headers, context, null, body,
+            credentials, virtualHost, null, legalhold, false);
   }
+
+
 
   @Provides
   @Singleton
@@ -2481,6 +2616,8 @@ public class OGModule extends AbstractModule {
         apiVersion, object, queryParameters, false, headers, context, sseSourceContext, credentials,
         body, virtualHost, retention, legalHold, contentMd5);
   }
+
+
 
   @Provides
   @Singleton
