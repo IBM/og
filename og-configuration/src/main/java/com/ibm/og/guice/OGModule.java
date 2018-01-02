@@ -91,6 +91,7 @@ import com.ibm.og.http.Credential;
 import com.ibm.og.http.Headers;
 import com.ibm.og.http.HttpAuth;
 import com.ibm.og.http.HttpUtil;
+import com.ibm.og.http.IAMTokenAuth;
 import com.ibm.og.http.NoneAuth;
 import com.ibm.og.http.QueryParameters;
 import com.ibm.og.http.ResponseBodyConsumer;
@@ -226,6 +227,7 @@ public class OGModule extends AbstractModule {
         .to(this.config.multipartWrite.weight);
     bindConstant().annotatedWith(Names.named("multipartWrite.sseCDestination"))
         .to(this.config.multipartWrite.sseCDestination);
+    bindConstant().annotatedWith(Names.named("multipartWrite.contentMd5")).to(this.config.multipartWrite.contentMd5);
     bindConstant().annotatedWith(Names.named("writeCopy.weight")).to(this.config.writeCopy.weight);
     bindConstant().annotatedWith(Names.named("writeCopy.sseCSource"))
         .to(this.config.writeCopy.sseCSource);
@@ -272,6 +274,7 @@ public class OGModule extends AbstractModule {
     httpAuthBinder.addBinding(AuthType.AWSV2).to(AWSV2Auth.class);
     httpAuthBinder.addBinding(AuthType.AWSV4).to(AWSV4Auth.class);
     httpAuthBinder.addBinding(AuthType.KEYSTONE).to(KeystoneAuth.class);
+    httpAuthBinder.addBinding(AuthType.IAM).to(IAMTokenAuth.class);
 
     final MapBinder<String, ResponseBodyConsumer> responseBodyConsumers =
         MapBinder.newMapBinder(binder(), String.class, ResponseBodyConsumer.class);
@@ -973,12 +976,12 @@ public class OGModule extends AbstractModule {
     consumers.add(new ListObjectNameConsumer(objectManager, sc));
     consumers.add(new MultipartWriteObjectNameConsumer(objectManager, sc));
     consumers.add(new WriteCopyObjectNameConsumer(objectManager, sc));
-    consumers.add(new DeleteObjectConsumer(objectManager, sc));
+    Set<Integer> deleteStatusCodes = HttpUtil.DELETE_HANDLING_STATUS_CODES;
+    consumers.add(new DeleteObjectConsumer(objectManager, deleteStatusCodes));
     // add status code range (400, 451) for legalhold operations.
     // while doing legalhold operation object is temporarily removed and stored in
     // a separate cache. After the response is received object state is updated and the object is
-    // added
-    // back in the object manager
+    // added back in the object manager
     final Set<Integer> legalHoldsSc = Sets.newHashSet();
     legalHoldsSc.addAll(sc);
     legalHoldsSc.addAll(ContiguousSet.create(Range.closed(400, 451), DiscreteDomain.integers()));
@@ -1578,7 +1581,8 @@ public class OGModule extends AbstractModule {
 
         final Credential credential =
             new Credential(this.config.authentication.username, this.config.authentication.password,
-                this.config.authentication.keystoneToken, this.config.authentication.account);
+                this.config.authentication.keystoneToken, this.config.authentication.iamToken,
+                this.config.authentication.account);
         credentialList.add(credential);
 
         if (credentialList.size() == 0) {
@@ -2497,7 +2501,18 @@ public class OGModule extends AbstractModule {
       @MultiPartWriteBody final Function<Map<String, String>, Body> body,
       @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
       @Named("virtualhost") final boolean virtualHost,
-      @Named("multipartWrite.sseCDestination") final boolean encryptDestinationObject) {
+      @Named("multipartWrite.sseCDestination") final boolean encryptDestinationObject,
+      @Nullable @Named("multipartWrite.contentMd5") final boolean contentMd5) {
+
+    if (encryptDestinationObject) {
+      checkArgument(this.config.data == DataType.ZEROES,
+              "If SSE-C is enabled, data must be ZEROES [%s]", this.config.data);
+    }
+
+    if (contentMd5) {
+      checkArgument(this.config.data == DataType.ZEROES,
+              "If contentMD5 is set, data must be ZEROES [%s]", this.config.data);
+    }
 
     final Map<String, Function<Map<String, String>, String>> queryParameters =
         Collections.emptyMap();
@@ -2520,7 +2535,7 @@ public class OGModule extends AbstractModule {
 
     return createMultipartRequestSupplier(id, scheme, host, port, uriRoot, container, apiVersion,
         object, partSize, partsPerSession, targetSessions, queryParameters, headers, context, body,
-        credentials, virtualHost);
+        credentials, virtualHost, contentMd5);
   }
 
   private Supplier<Request> createMultipartRequestSupplier(
@@ -2534,10 +2549,11 @@ public class OGModule extends AbstractModule {
       final Map<String, Function<Map<String, String>, String>> headers,
       final List<Function<Map<String, String>, String>> context,
       final Function<Map<String, String>, Body> body,
-      final Function<Map<String, String>, Credential> credentials, final boolean virtualHost) {
+      final Function<Map<String, String>, Credential> credentials, final boolean virtualHost,
+      final boolean contentMd5) {
 
     return new MultipartRequestSupplier(id, scheme, host, port, uriRoot, container, object,
         partSize, partsPerSession, targetSessions, queryParameters, false, headers, context,
-        credentials, body, virtualHost);
+        credentials, body, virtualHost, contentMd5);
   }
 }

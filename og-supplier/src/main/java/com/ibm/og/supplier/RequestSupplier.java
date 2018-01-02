@@ -153,6 +153,7 @@ public class RequestSupplier implements Supplier<Request> {
       String username = credential.getUsername();
       String password = credential.getPassword();
       String keystoneToken = credential.getKeystoneToken();
+      String IAMToken = credential.getIAMToken();
       String storageAccountName = credential.getStorageAccountName();
 
       if(username != null)
@@ -161,6 +162,8 @@ public class RequestSupplier implements Supplier<Request> {
         requestContext.put(Context.X_OG_PASSWORD, password);
       if(keystoneToken != null)
         requestContext.put(Context.X_OG_KEYSTONE_TOKEN, keystoneToken);
+      if(IAMToken != null)
+        requestContext.put(Context.X_OG_IAM_TOKEN, IAMToken);
       if(storageAccountName != null) {
         requestContext.put(Context.X_OG_STORAGE_ACCOUNT_NAME, storageAccountName);
       }
