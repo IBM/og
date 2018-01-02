@@ -9,6 +9,8 @@ import com.ibm.og.http.ResponseBodyConsumer;
 import com.ibm.og.util.Context;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
@@ -31,6 +33,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @since 1.0
  */
 public class S3MultipartWriteResponseBodyConsumer implements ResponseBodyConsumer {
+  private static final Logger _logger = LoggerFactory.getLogger(S3MultipartWriteResponseBodyConsumer.class);
+
   @Override
   public Map<String, String> consume(final int statusCode, final InputStream response)
       throws IOException {
@@ -53,7 +57,7 @@ public class S3MultipartWriteResponseBodyConsumer implements ResponseBodyConsume
         document = documentBuilder.parse(response);
       }
     } catch (SAXException e) {
-      throw new RuntimeException(e);
+        _logger.error(e.getMessage());
     }
 
     if(document != null) {
@@ -68,7 +72,7 @@ public class S3MultipartWriteResponseBodyConsumer implements ResponseBodyConsume
       if (errorBodyList != null) {
         if(errorBodyList.getLength() > 0) {
           String errorBody = errorBodyList.item(0).getTextContent();
-          throw new RuntimeException(errorBody);
+          _logger.error(errorBody);
         }
       }
     }

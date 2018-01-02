@@ -13,6 +13,7 @@ public class AuthenticationConfig {
   public String username;
   public String password;
   public String keystoneToken;
+  public String iamToken;
   public String credentialFile;
   public String account;
   public boolean awsChunked;
@@ -24,6 +25,7 @@ public class AuthenticationConfig {
     this.username = null;
     this.password = null;
     this.keystoneToken = null;
+    this.iamToken = null;
     this.credentialFile = null;
     this.account = null;
     this.awsChunked = false;
