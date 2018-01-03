@@ -1,3 +1,8 @@
+Release 1.5.0
+Changes:
+Added IAM authentication mode. HTTPS scheme is required for this feature.
+Valid tokens have to be provided to OG since automatic token refreshing is not yet supported.
+
 Release 1.4.2
 Changes:
 Add content-md5 header in Multipart Complete request.
