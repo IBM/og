@@ -119,7 +119,6 @@ public class Statistics {
       updateCounter(operation, Counter.OPERATIONS, 1);
       List<Operation> invalidCountOps = new ArrayList<Operation>();
       invalidCountOps.add(Operation.MULTIPART_WRITE);
-      invalidCountOps.add(Operation.MULTIPART_WRITE_ABORT);
       invalidCountOps.add(Operation.MULTIPART_WRITE_INITIATE);
       invalidCountOps.add(Operation.MULTIPART_WRITE_PART);
       if (!invalidCountOps.contains(operation)) {

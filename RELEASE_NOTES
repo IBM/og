@@ -1,3 +1,23 @@
+Release 1.5.0
+Changes:
+Added IAM authentication mode. HTTPS scheme is required for this feature.
+Valid tokens have to be provided to OG since automatic token refreshing is not yet supported.
+
+Release 1.4.2
+Changes:
+Add content-md5 header in Multipart Complete request.
+Send Multipart Abort if part upload returns error
+Do not remove object from ObjectManager if DELETE response code is not 204.
+Fix Object name corruption while borrowing objects from other object file during object file persistence.
+Add deleted_object_length for DELETE operation in request.log
+Update userguide: content_md5, write_legalhold, delete_legalhold, read_legalhold operations, secure connections.
+
+Release 1.4.1
+Changes:
+Fix defect in ObjectManager. When a partially written object file is used, the version header was appended
+to it. This caused object to be interpreted incorrectly and corrupted. The version header is added only for
+a new object file.
+
 Release 1.4.0
 New Features:
 Support WORM operations

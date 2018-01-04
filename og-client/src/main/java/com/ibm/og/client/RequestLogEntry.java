@@ -48,6 +48,7 @@ public class RequestLogEntry {
   public final String objectName;
   public final String retention;
   public final String legalHold;
+  public String deletedObjectLength;
 
 
   private static final DateTimeFormatter FORMATTER =
@@ -90,6 +91,9 @@ public class RequestLogEntry {
     if (DataType.NONE != request.getBody().getDataType()) {
       objectSize = request.getBody().getSize();
     }
+    if (request.getOperation() == Operation.DELETE) {
+      this.deletedObjectLength = request.getContext().get(Context.X_OG_OBJECT_SIZE);
+    }
 
     this.status = response.getStatusCode();
     // TODO requestLength will not equal objectLength with AWSv4 request overhead
@@ -118,6 +122,7 @@ public class RequestLogEntry {
     this.sourceUri = request.getContext().get(Context.X_OG_SSE_SOURCE_URI);
     this.retention = request.getContext().get(Context.X_OG_OBJECT_RETENTION);
     this.legalHold = request.getContext().get(Context.X_OG_LEGAL_HOLD);
+
   }
 
   public static class RequestTimestamps {
