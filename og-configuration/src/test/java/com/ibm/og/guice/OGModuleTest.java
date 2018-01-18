@@ -7,6 +7,7 @@ package com.ibm.og.guice;
 
 import static org.mockito.Mockito.mock;
 
+import java.sql.Time;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -62,11 +63,31 @@ public class OGModuleTest {
   }
 
   @DataProvider
-  public static Object[][] provideInvalidRetentiononfig() {
+  public static Object[][] provideInvalidRetentionConfig() {
     final Map<Integer, Integer> statusCodes = ImmutableMap.of();
     RetentionConfig rc = new RetentionConfig(RetentionConfig.MAX_RETENTION_EXPIRY, TimeUnit.SECONDS);
     return new Object[][] {
             {rc}
+    };
+  }
+
+  @DataProvider
+  public static Object[][] provideInvalidRetentionExtensionConfig() {
+    final Map<Integer, Integer> statusCodes = ImmutableMap.of();
+    RetentionConfig rc = new RetentionConfig(RetentionConfig.MAX_RETENTION_EXPIRY-1000, TimeUnit.SECONDS);
+    return new Object[][] {
+            {86400L, rc}
+    };
+  }
+
+  @DataProvider
+  public static Object[][] providevalidRetentionExtensionConfig() {
+    final Map<Integer, Integer> statusCodes = ImmutableMap.of();
+    RetentionConfig rc = new RetentionConfig(86400L, TimeUnit.SECONDS);
+    return new Object[][] {
+            {86400L, new RetentionConfig(86400L, TimeUnit.SECONDS)},
+            // 15 years from now
+            {200000L, new RetentionConfig(473040000L, TimeUnit.SECONDS)}
     };
   }
 
@@ -96,10 +117,25 @@ public class OGModuleTest {
   }
 
   @Test
-  @UseDataProvider("provideInvalidRetentiononfig")
+  @UseDataProvider("provideInvalidRetentionConfig")
   public void invalidRentionConfig(final RetentionConfig rc) {
     final OGModule module = new OGModule(this.config);
     this.thrown.expect(IllegalArgumentException.class);
     module.provideTestRetentionConfig(rc);
+  }
+
+  @Test
+  @UseDataProvider("provideInvalidRetentionExtensionConfig")
+  public void invalidRentionExtensionConfig(final long currentRetention, final RetentionConfig rc) {
+    final OGModule module = new OGModule(this.config);
+    this.thrown.expect(IllegalArgumentException.class);
+    module.provideTestRetentionExtensionConfig(currentRetention, rc);
+  }
+
+  @Test
+  @UseDataProvider("providevalidRetentionExtensionConfig")
+  public void validRentionExtensionConfig(final long currentRetention, final RetentionConfig rc) {
+    final OGModule module = new OGModule(this.config);
+    module.provideTestRetentionExtensionConfig(currentRetention, rc);
   }
 }
