@@ -5,6 +5,13 @@
 
 package com.ibm.og.s3;
 
+import com.google.common.base.Charsets;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.LoadingCache;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
+import com.google.common.io.BaseEncoding;
 import com.ibm.og.api.Body;
 import com.ibm.og.api.DataType;
 import com.ibm.og.api.Method;
@@ -14,6 +21,7 @@ import com.ibm.og.api.Response;
 import com.ibm.og.http.Bodies;
 import com.ibm.og.http.Credential;
 import com.ibm.og.http.HttpRequest;
+import com.ibm.og.http.MD5DigestLoader;
 import com.ibm.og.http.Scheme;
 import com.ibm.og.util.Context;
 import com.ibm.og.util.Pair;
@@ -37,6 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -72,6 +81,9 @@ public class MultipartRequestSupplier implements Supplier<Request> {
   private final Function<Map<String, String>, Credential> credentials;
   private final Function<Map<String, String>, Body> body;
   private final boolean virtualHost;
+  private final boolean contentMd5;
+  private final LoadingCache<Long, byte[]> md5ContentCache;
+
 
   // constants
   private final int NO_PART = -1;
@@ -117,7 +129,8 @@ public class MultipartRequestSupplier implements Supplier<Request> {
       final boolean trailingSlash, final Map<String, Function<Map<String, String>, String>> headers,
       final List<Function<Map<String, String>, String>> context,
       final Function<Map<String, String>, Credential> credentials,
-      final Function<Map<String, String>, Body> body, final boolean virtualHost) {
+      final Function<Map<String, String>, Body> body, final boolean virtualHost,
+      final boolean contentMd5) {
 
     this.id = id;
     this.scheme = checkNotNull(scheme);
@@ -136,10 +149,13 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     this.credentials = credentials;
     this.body = body;
     this.virtualHost = virtualHost;
+    this.contentMd5 = contentMd5;
     this.randomNumber = new Random();
     this.actionableMultipartSessions = Collections.synchronizedList(new ArrayList<MultipartInfo>());
     this.multipartRequestMap = new ConcurrentHashMap<String, MultipartInfo>();
     this.sessionManager = new MPSessionManager();
+    this.md5ContentCache = CacheBuilder.newBuilder().maximumSize(100).build(new MD5DigestLoader());
+
   }
 
   private enum MultipartRequest {
@@ -173,6 +189,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
 
         try {
           while (!done) {
+            _logger.trace("inProgess sessions [{}]", this.inProgressSessions.get());
             if (this.inProgressSessions.get() < targetSessions) {
               // return null to start a new session
               session = null;
@@ -184,14 +201,14 @@ public class MultipartRequestSupplier implements Supplier<Request> {
                       session.getNextMultipartRequest() == MultipartRequest.INTERNAL_ERROR) {
                 actionableMultipartSessions.remove(session);
                 session.setInActionableSessions(false);
-                _logger.debug("Removed active Multipart session. count now is [{}]", actionableMultipartSessions.size());
+                _logger.trace("Removed active Multipart session. count now is [{}]", actionableMultipartSessions.size());
                 continue;
               }
               if (session.getNextMultipartRequest() == MultipartRequest.COMPLETE) {
                 // if it is a complete request remove the session from the actionable list
                 actionableMultipartSessions.remove(session);
                 session.setInActionableSessions(false);
-                _logger.debug("Removed active Multipart session. count now is [{}]", actionableMultipartSessions.size());
+                _logger.trace("Removed active Multipart session. count now is [{}]", actionableMultipartSessions.size());
               }
               done = true;
             } else {
@@ -248,11 +265,14 @@ public class MultipartRequestSupplier implements Supplier<Request> {
           case ABORT:
             builder = createAbortRequest(requestContext, session.uploadId, session.context);
             builder.withQueryParameter(UPLOAD_ID, session.uploadId);
+            actionableMultipartSessions.remove(session);
             break;
         }
       }
       return builder;
     }
+
+
   }
 
   private class MultipartInfo {
@@ -273,8 +293,10 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     int finishedPartRequests;
     boolean inProgressCompleteRequest;
     boolean finishedCompleteRequest;
+    boolean abortSession;
     boolean inActionableSessions = false;
     final Map<String, String> context;
+    final String id = UUID.randomUUID().toString();
 
     public MultipartInfo(String containerName, String objectName, String uploadId,
         long objectSize, long partSize, int maxParts, String containerSuffix, String bodyDataType,
@@ -294,6 +316,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
       this.finishedPartRequests = 0;
       this.inProgressCompleteRequest = false;
       this.finishedCompleteRequest = false;
+      this.abortSession = false;
       this.context = requestContext;
       this.partsInfo = new PriorityBlockingQueue<PartInfo>(200, new Comparator<PartInfo>() {
         @Override public int compare(PartInfo o1, PartInfo o2) {
@@ -325,10 +348,13 @@ public class MultipartRequestSupplier implements Supplier<Request> {
       MultipartRequest retVal;
       stateLock.lock();
       try {
-        _logger.debug("pts [{}] ipr [{}] fpr [{}] fcR [{}] ipCR [{}] ", this.partRequestsToSend,
+        _logger.debug("session [{}] pts [{}] ipr [{}] fpr [{}] fcR [{}] ipCR [{}] ", this.id, this.partRequestsToSend,
                 this.inProgressPartRequests, this.finishedPartRequests, this.finishedCompleteRequest,
                 this.inProgressCompleteRequest);
-        if ((this.inProgressPartRequests == 0) &&
+        if (this.abortSession) {
+          _logger.debug("abort upload [{}]", this.uploadId);
+          retVal = MultipartRequest.ABORT;
+        } else if ((this.inProgressPartRequests == 0) &&
                 (!this.finishedCompleteRequest) &&
                 (!this.inProgressCompleteRequest) &&
                 (this.finishedPartRequests == this.partRequestsToSend)) {
@@ -424,6 +450,26 @@ public class MultipartRequestSupplier implements Supplier<Request> {
       }
     }
 
+    public void setAbortSession() {
+      stateLock.lock();
+      try {
+        this.abortSession = true;
+      }
+      finally {
+        stateLock.unlock();
+      }
+    }
+
+    public boolean sessionAborted() {
+      stateLock.lock();
+      try {
+        return this.abortSession;
+      }
+      finally {
+        stateLock.unlock();
+      }
+    }
+
     private String generateCompleteRequestBody() {
       String completeMultipartUploadBeginElement = "<CompleteMultipartUpload>";
       String completeMultipartUploadEndElement = "</CompleteMultipartUpload>";
@@ -503,26 +549,36 @@ public class MultipartRequestSupplier implements Supplier<Request> {
         }
     } else if (multipartrequestOperation.equals(MultipartRequest.PART.toString())) {
         multipartInfo = multipartRequestMap.get(requestUploadId);
-          multipartInfo.finishPartRequest(new PartInfo(requestPartNumber, responsePartId));
-          // multipart info only gets put on blocked when INTERNAL_PENDING is
-          // observed on the get() call. Put it back in active when all parts are in
-          // or if active part uploads is now less than maxParts
-          MultipartRequest multipartRequest = multipartInfo.getNextMultipartRequest();
-          if (multipartRequest == MultipartRequest.COMPLETE || multipartRequest == MultipartRequest.PART) {
-            if (!multipartInfo.getInActionableSessions()) {
-              this.actionableMultipartSessions.add(multipartInfo);
-              multipartInfo.setInActionableSessions(true);
-              _logger.debug("Added active Multipart session. count is [{}]", this.actionableMultipartSessions.size());
-            }
-          }
+        // if the part was not uploaded correctly send the abort request
+        if (response.getStatusCode() != 200 && !multipartInfo.sessionAborted()) {
+          // set abort session
+          multipartInfo.setAbortSession();
+        }
+      multipartInfo.finishPartRequest(new PartInfo(requestPartNumber, responsePartId));
+      // multipart info only gets put on blocked when INTERNAL_PENDING is
+      // observed on the get() call. Put it back in active when all parts are in
+      // or if active part uploads is now less than maxParts
+      MultipartRequest multipartRequest = multipartInfo.getNextMultipartRequest();
+      if (multipartRequest == MultipartRequest.COMPLETE || multipartRequest == MultipartRequest.PART ||
+              multipartRequest == MultipartRequest.ABORT) {
+        if (!multipartInfo.getInActionableSessions()) {
+          this.actionableMultipartSessions.add(multipartInfo);
+          multipartInfo.setInActionableSessions(true);
+          _logger.debug("Added active Multipart session. count is [{}]", this.actionableMultipartSessions.size());
+        }
+      }
+
     } else if (multipartrequestOperation.equals(MultipartRequest.COMPLETE.toString())) {
+        this.sessionManager.inProgressSessions.getAndDecrement();
+        multipartInfo = multipartRequestMap.get(requestUploadId);
+        multipartInfo.finishCompleteRequest();
+        this.multipartRequestMap.remove(multipartInfo);
+    } else if (multipartrequestOperation.equals(MultipartRequest.ABORT.toString())) {
+      // log abort request status and free up session
       this.sessionManager.inProgressSessions.getAndDecrement();
       multipartInfo = multipartRequestMap.get(requestUploadId);
-      multipartInfo.finishCompleteRequest();
+      _logger.debug("Abort session [{}] response [{}]", multipartInfo.id, response.getStatusCode());
       this.multipartRequestMap.remove(multipartInfo);
-    } else if (multipartrequestOperation.equals(MultipartRequest.ABORT.toString())) {
-      //TODO
-      _logger.warn("multipart request operation ABORT - to be implemented");
     }
 
     sessionManager.sessionsLock.lock();
@@ -558,6 +614,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
         String username = credential.getUsername();
         String password = credential.getPassword();
         String keystoneToken = credential.getKeystoneToken();
+        String IAMToken = credential.getIAMToken();
 
         if (username != null)
           builder.withContext(Context.X_OG_USERNAME, username);
@@ -565,6 +622,8 @@ public class MultipartRequestSupplier implements Supplier<Request> {
           builder.withContext(Context.X_OG_PASSWORD, password);
         if (keystoneToken != null)
           builder.withContext(Context.X_OG_KEYSTONE_TOKEN, keystoneToken);
+        if (IAMToken != null)
+          builder.withContext(Context.X_OG_IAM_TOKEN, IAMToken);
       }
 
       for (final Map.Entry<String, String> entry : requestContext.entrySet()) {
@@ -621,12 +680,26 @@ public class MultipartRequestSupplier implements Supplier<Request> {
             partNumber, uploadId, multipartContext.get(Context.X_OG_OBJECT_NAME),
                 multipartContext.get(Context.X_OG_MULTIPART_CONTAINER)), Operation.MULTIPART_WRITE_PART);
 
+    Body body;
     if(bodyDataType.equals(DataType.RANDOM.toString())) {
-      builder.withBody(Bodies.random(partSize));
+      body = Bodies.random(partSize);
+      builder.withBody(body);
     } else if(bodyDataType.equals(DataType.ZEROES.toString())) {
-      builder.withBody(Bodies.zeroes(partSize));
+      body = Bodies.zeroes(partSize);
+      builder.withBody(body);
     } else {
-      builder.withBody(Bodies.random(partSize));
+      body = Bodies.random(partSize);
+      builder.withBody(body);
+    }
+
+    if (this.contentMd5) {
+      try {
+        Long size = body.getSize();
+        byte[] md5 = md5ContentCache.get(size);
+        builder.withHeader(Context.X_OG_CONTENT_MD5, BaseEncoding.base64().encode(md5));
+      } catch (Exception e) {
+        _logger.error(e.getMessage());
+      }
     }
     // populate request context
     for (final Map.Entry<String, String> entry : multipartContext.entrySet()) {
@@ -647,8 +720,14 @@ public class MultipartRequestSupplier implements Supplier<Request> {
             getUrl(context, MultipartRequest.COMPLETE, NO_PART, uploadId, multipartContext.get(Context.X_OG_OBJECT_NAME),
                     multipartContext.get(Context.X_OG_MULTIPART_CONTAINER)), Operation.MULTIPART_WRITE_COMPLETE);
 
+    // calculate md5 for the body
+    HashFunction hf = Hashing.md5();
+    HashCode hc = hf.newHasher()
+            .putString(body, Charsets.UTF_8)
+            .hash();
     builder.withBody(Bodies.custom(body.length(), body));
-
+    byte[] md5 = hc.asBytes();
+    builder.withHeader(Context.X_OG_CONTENT_MD5, BaseEncoding.base64().encode(md5));
     // populate request context
     for (final Map.Entry<String, String> entry : multipartContext.entrySet()) {
       context.put(entry.getKey(), entry.getValue());
@@ -667,6 +746,8 @@ public class MultipartRequestSupplier implements Supplier<Request> {
                     multipartContext.get(Context.X_OG_MULTIPART_CONTAINER)), Operation.MULTIPART_WRITE_ABORT);
 
     context.put(Context.X_OG_OBJECT_NAME, multipartContext.get(Context.X_OG_OBJECT_NAME));
+    context.put(Context.X_OG_MULTIPART_REQUEST, MultipartRequest.ABORT.toString());
+    context.put(Context.X_OG_MULTIPART_UPLOAD_ID, uploadId);
 
     return builder;
   }

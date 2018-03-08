@@ -118,15 +118,18 @@ public class CredentialGetterFunction implements Function<Map<String, String>, C
 
         Credential credential = null;
         if (AuthType.KEYSTONE == authType) {
-            credential = new Credential(null, null, account.getToken(), accountName);
+            credential = new Credential(null, null, account.getToken(), null, accountName);
+        } else if (AuthType.IAM == authType) {
+            // TODO with full iam_token available, parse the structure
+            credential = new Credential(null, null, null, account.getToken(), null);
         } else if (AuthType.AWSV2 == authType || AuthType.AWSV4 == authType) {
             if (api == Api.OPENSTACK) {
-                credential = new Credential(account.getAccessKey(), account.getSecretKey(), null, accountName);
+                credential = new Credential(account.getAccessKey(), account.getSecretKey(), null, null, accountName);
             } else {
-                credential = new Credential(account.getAccessKey(), account.getSecretKey(), null, null);
+                credential = new Credential(account.getAccessKey(), account.getSecretKey(), null, null, null);
             }
         } else if (AuthType.BASIC == authType) {
-            credential = new Credential(account.getBasicAuthUsername(), account.getBasicAuthPassword(), null, accountName);
+            credential = new Credential(account.getBasicAuthUsername(), account.getBasicAuthPassword(), null, null, accountName);
         }
         return credential;
    }

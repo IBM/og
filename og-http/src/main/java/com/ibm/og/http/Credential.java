@@ -9,38 +9,45 @@ public class Credential {
     private String username;
     private String password;
     private String keystoneToken;
+    private String IAMToken;
     private String storageAccountName;
 
     public Credential() {
         this.username = null;
         this.password = null;
         this.keystoneToken = null;
+        this.IAMToken = null;
         this.storageAccountName = null;
     }
 
 
 
-    public Credential(String username, String password, String keystoneToken, String storageAccountName) {
+    public Credential(String username, String password, String keystoneToken, String IAMToken, String storageAccountName) {
         this.username = username;
         this.password = password;
         this.keystoneToken = keystoneToken;
+        this.IAMToken = IAMToken;
         this.storageAccountName = storageAccountName;
     }
 
     public String getUsername() {
-        return username;
+        return this.username;
     }
 
     public String getPassword() {
-        return password;
+        return this.password;
     }
 
     public String getKeystoneToken() {
-        return keystoneToken;
+        return this.keystoneToken;
+    }
+
+    public String getIAMToken() {
+        return this.IAMToken;
     }
 
     public String getStorageAccountName() {
-        return storageAccountName;
+        return this.storageAccountName;
     }
 
 

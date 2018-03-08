@@ -7,6 +7,7 @@
     <Property name="exception.log">exception.log</Property>
     <Property name="og.json">og.json</Property>
     <Property name="summary.json">summary.json</Property>
+    <Property name="log.level">${sys:LOG_LEVEL}</Property>
   </Properties>
   <Appenders>
     <Console name="Console" target="SYSTEM_OUT">
@@ -53,7 +54,7 @@
     <Logger name="org.apache.http" level="info" />
     <Logger name="org.apache.http.wire" level="error" />
     <Logger name="org.apache.http.headers" level="error" />
-    <Root level="info">
+    <Root level="${log.level}">
       <AppenderRef ref="OGLog" />
     </Root>
   </Loggers>

@@ -6,5 +6,5 @@
 package com.ibm.og.api;
 
 public enum AuthType {
-  NONE, BASIC, AWSV2, AWSV4, KEYSTONE;
+  NONE, BASIC, AWSV2, AWSV4, KEYSTONE, IAM;
 }
