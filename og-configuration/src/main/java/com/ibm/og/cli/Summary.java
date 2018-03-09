@@ -75,6 +75,7 @@ public class Summary {
     final OperationStats writeLegalHold;
     final OperationStats readLegalHold;
     final OperationStats deleteLegalHold;
+    final OperationStats extendRetention;
     final int exitCode;
     final ImmutableList<String> exitMessages;
 
@@ -100,6 +101,7 @@ public class Summary {
       this.writeLegalHold = new OperationStats(stats, Operation.WRITE_LEGAL_HOLD);
       this.readLegalHold = new OperationStats(stats, Operation.READ_LEGAL_HOLD);
       this.deleteLegalHold = new OperationStats(stats, Operation.DELETE_LEGAL_HOLD);
+      this.extendRetention = new OperationStats(stats, Operation.EXTEND_RETENTION);
       this.exitCode = exitCode;
       this.exitMessages = messages;
     }
@@ -107,13 +109,77 @@ public class Summary {
     @Override
     public String toString() {
       final String format = "Start: %s%nEnd: %s%nRuntime: %.2f "
-          + "Seconds%nOperations: %s%n%n%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%sExitCode: %s%nExitMessages:%s";
+          + "Seconds%nOperations: %s%n%n%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%sExitCode: %s%nExitMessages:%s";
       return String.format(Locale.US, format, FORMATTER.print(this.timestampStart),
           FORMATTER.print(this.timestampFinish), this.runtime, this.operations, this.write,
           this.read, this.delete, this.metadata, this.overwrite, this.list, this.containerList,
           this.containerCreate, this.multipartWriteInitiate, this.multipartWritePart, this.multipartWriteComplete,
           this.multipartWriteAbort,this.writeCopy, this.writeLegalHold, this.readLegalHold, this.deleteLegalHold,
-          this.exitCode, prettyExitMessages());
+          this.extendRetention, this.exitCode, prettyExitMessages());
+    }
+
+    public String condensedSummary() {
+      StringBuilder sb = new StringBuilder();
+      sb.append("Start: ").append(this.timestampStart).append("\n");
+      sb.append("End: ").append(this.timestampFinish).append("\n");
+      sb.append("Runtime: ").append(this.runtime).append("\n");
+      sb.append("Operations: ").append(this.operations).append("\n\n");
+
+      if (this.write.operations > 0) {
+        sb.append(this.write).append("\n");
+      }
+      if (this.read.operations > 0) {
+        sb.append(this.read).append("\n");
+      }
+      if (this.delete.operations > 0) {
+        sb.append(this.delete).append("\n");
+      }
+      if (this.metadata.operations > 0) {
+        sb.append(this.metadata).append("\n");
+      }
+      if (this.overwrite.operations > 0) {
+        sb.append(this.overwrite).append("\n");
+      }
+      if (this.list.operations > 0) {
+        sb.append(this.list).append("\n");
+      }
+      if (this.containerList.operations > 0) {
+        sb.append(this.containerList).append("\n");
+      }
+      if (this.containerCreate.operations > 0) {
+        sb.append(this.containerCreate).append("\n");
+      }
+      if (this.multipartWriteInitiate.operations > 0) {
+        sb.append(this.multipartWriteInitiate).append("\n");
+      }
+      if (this.multipartWritePart.operations > 0) {
+        sb.append(this.multipartWritePart).append("\n");
+      }
+      if (this.multipartWriteComplete.operations > 0) {
+        sb.append(this.multipartWriteComplete).append("\n");
+      }
+      if (this.multipartWriteAbort.operations > 0) {
+        sb.append(this.multipartWriteAbort).append("\n");
+      }
+      if (this.writeCopy.operations > 0) {
+        sb.append(this.writeCopy).append("\n");
+      }
+      if (this.writeLegalHold.operations > 0) {
+        sb.append(this.writeLegalHold).append("\n");
+      }
+      if (this.readLegalHold.operations > 0) {
+        sb.append(this.readLegalHold).append("\n");
+      }
+      if (this.deleteLegalHold.operations > 0) {
+        sb.append(this.deleteLegalHold).append("\n");
+      }
+      if (this.extendRetention.operations > 0) {
+        sb.append(this.extendRetention).append("\n");
+      }
+      sb.append("ExitCode: ").append(this.exitCode).append("\n");
+      sb.append("ExitMessages:").append(prettyExitMessages());
+
+      return sb.toString();
     }
 
     class OperationStats {

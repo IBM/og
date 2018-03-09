@@ -33,6 +33,7 @@ public class OGConfig {
   public OperationConfig writeLegalhold;
   public OperationConfig deleteLegalhold;
   public OperationConfig readLegalhold;
+  public OperationConfig extendRetention;
   public SelectionConfig<FilesizeConfig> filesize;
   public DataType data;
   public ConcurrencyConfig concurrency;
@@ -65,6 +66,7 @@ public class OGConfig {
     this.writeLegalhold = new OperationConfig();
     this.deleteLegalhold = new OperationConfig();
     this.readLegalhold = new OperationConfig();
+    this.extendRetention = new OperationConfig();
     this.filesize = null;
     this.data = DataType.RANDOM;
     this.concurrency = null;

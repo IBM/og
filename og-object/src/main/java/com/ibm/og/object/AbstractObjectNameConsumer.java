@@ -93,7 +93,7 @@ public abstract class AbstractObjectNameConsumer {
     final long objectSize = getObjectSize(request);
     final int containerSuffix = getContainerSuffix(request);
     final byte numLegalHolds = getNumberOfLegalHolds(request, response);
-    final int retention = getObjectionRetention(request);
+    final int retention = getObjectRetention(request, response);
     return LegacyObjectMetadata.fromMetadata(objectString, objectSize, containerSuffix, numLegalHolds, retention);
   }
 
@@ -135,10 +135,10 @@ public abstract class AbstractObjectNameConsumer {
   }
 
   //todo: check whether to use the retention in the request or response
-  protected int getObjectionRetention(final Request request) {
+  protected int getObjectRetention(final Request request, final Response response) {
     final String retention = request.getContext().get(Context.X_OG_OBJECT_RETENTION);
     if (retention == null) {
-      return -1;
+      return 0;
     } else {
       return Integer.parseInt(retention);
     }

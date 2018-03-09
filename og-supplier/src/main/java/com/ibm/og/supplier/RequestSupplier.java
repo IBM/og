@@ -101,7 +101,8 @@ public class RequestSupplier implements Supplier<Request> {
       final List<Function<Map<String, String>, String>> sseSourceContext,
       final Function<Map<String, String>, Credential> credentials,
       final Function<Map<String, String>, Body> body, final boolean virtualHost,
-      final Function<Map<String, String>, Long> retention, final Supplier<Function<Map<String, String>, String>> legalHold,
+      final Function<Map<String, String>, Long> retention,
+      final Supplier<Function<Map<String, String>, String>> legalHold,
       final boolean contentMd5) {
 
     this.id = id;
@@ -134,7 +135,7 @@ public class RequestSupplier implements Supplier<Request> {
   public Request get() {
     final Map<String, String> requestContext = Maps.newHashMap();
 
-    // populate the context map with any relevant metadata for this request
+    // populate the request context map with any relevant metadata for this request
     for (final Function<Map<String, String>, String> function : this.context) {
       // return value for context functions is ignored
       function.apply(requestContext);
@@ -195,9 +196,17 @@ public class RequestSupplier implements Supplier<Request> {
 
     if (this.retention != null) {
       this.retention.apply(requestContext);
-      if (requestContext.get(Context.X_OG_OBJECT_RETENTION) != null) {
-        builder.withHeader(Context.X_OG_OBJECT_RETENTION, requestContext.get(Context.X_OG_OBJECT_RETENTION));
+      // retention is going to either object retention or object retention extension
+      if (this.operation != Operation.EXTEND_RETENTION) {
+        if (requestContext.get(Context.X_OG_OBJECT_RETENTION) != null) {
+          builder.withHeader(Context.X_OG_OBJECT_RETENTION, requestContext.get(Context.X_OG_OBJECT_RETENTION));
+        }
+      } else {
+        if (requestContext.get(Context.X_OG_OBJECT_RETENTION_EXT) != null) {
+          builder.withHeader(Context.X_OG_OBJECT_RETENTION_EXT, requestContext.get(Context.X_OG_OBJECT_RETENTION_EXT));
+        }
       }
+
     }
 
     if (requestContext.get(Context.X_OG_LEGAL_HOLD) != null) {
