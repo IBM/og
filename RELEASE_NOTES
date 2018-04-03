@@ -1,6 +1,12 @@
+Release 1.6.1
+New Features:
+Add Object prefix configuration in retention extenstion
+
 Release 1.6.0
 New Features:
 Add Retention Extension support
+Changes:
+Prune summary output in console log
 
 Release 1.5.0
 Changes:

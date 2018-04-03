@@ -1262,8 +1262,15 @@ public class OGModule extends AbstractModule {
   @Named("retention_extension.context")
   public List<Function<Map<String, String>, String>> provideRetentionExtensionContext(
           final ObjectManager objectManager) {
-    Function<Map<String, String>, String> function = new
-            ObjectRetentionExtensionFunction(objectManager);
+
+    Function<Map<String, String>, String> function;
+
+    final OperationConfig operationConfig = checkNotNull(this.config.extendRetention);
+    if (operationConfig.object.selection != null) {
+      function = provideObject(operationConfig);
+    } else {
+      function = new ObjectRetentionExtensionFunction(objectManager);
+    }
 
     return ImmutableList.of(function);
   }
@@ -1527,7 +1534,14 @@ public class OGModule extends AbstractModule {
       public Long apply(final Map<String, String> input) {
         final RetentionConfig retentionConfig = retentionConfigSupplier.get();
         checkArgument(retentionConfig.expiry > 0, "Retention extension must be positive");
-        long retention = Long.parseLong(input.get(Context.X_OG_OBJECT_RETENTION));
+        long retention;
+        try {
+          retention = Long.parseLong(input.get(Context.X_OG_OBJECT_RETENTION));
+        } catch (NumberFormatException nfe) {
+            // this can happen if an object name is generated with given prefix, suffix without
+            // being
+            retention = 0;
+        }
 
         final Long extention = retentionConfig.timeUnit.toSeconds(retentionConfig.expiry);
           checkArgument(
