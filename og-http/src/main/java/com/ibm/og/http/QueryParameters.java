@@ -26,6 +26,9 @@ public class QueryParameters {
     // Legalhold related query parameter for deleting legalhold
     public static final String LEGALHOLD_REMOVE_PARAMETER = "remove";
 
+    // Object retention extension
+    public static final String OBJECT_RETENTION_EXTENSION_PARAMETER = "extendRetention";
+
 
     private QueryParameters() {}
 }

@@ -69,7 +69,7 @@ public class WriteCopyObjectNameConsumer extends AbstractObjectNameConsumer {
     final long objectSize = getSourceObjectSize(request);
     final int containerSuffix = getSourceObjectContainerSuffix(request);
     final byte numLegalHolds = getNumberOfLegalHolds(request, response);
-    final int retention = getObjectionRetention(request);
+    final int retention = getObjectRetention(request, response);
     if (objectString == null) {
       return null;
     } else {
