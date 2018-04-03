@@ -203,7 +203,7 @@ public class ObjectGenerator {
     final Summary summary = logSummary(statistics, result.timestampStart, result.timestampFinish, result);
 
     logSummaryBanner();
-    _consoleLogger.info("{}", summary);
+    _consoleLogger.info("{}", summary.getSummaryStats().condensedSummary());
 
     return result;
   }
