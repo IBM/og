@@ -258,6 +258,8 @@ public class OGModule extends AbstractModule {
         .to(this.config.authentication.awsChunked);
     bindConstant().annotatedWith(Names.named("authentication.awsCacheSize"))
         .to(this.config.authentication.awsCacheSize);
+    //TODO: ObjectRestore: bindings for objectRestore weight etc.
+
     // FIXME create something like MoreProviders.notNull as a variant of Providers.of which does a
     // null check at creation time, with a custom error message; replace all uses of this pattern
     bind(ConcurrencyConfig.class).toProvider(new Provider<ConcurrencyConfig>() {
@@ -715,6 +717,19 @@ public class OGModule extends AbstractModule {
   public Function<Map<String, String>, String> provideMultipartWriteContainer() {
     if (this.config.multipartWrite.container.prefix != null) {
       return provideContainer(this.config.multipartWrite.container);
+    } else {
+      return provideContainer(this.config.container);
+    }
+  }
+
+
+  @Provides
+  @Singleton
+  @Named("objectRestore.container")
+  public Function<Map<String, String>, String> provideObjectRestoreContainer() throws Exception {
+    if (this.config.objectRestore.container.prefix != null) {
+      checkContainerObjectConfig(this.config.read);
+      return provideContainer(this.config.read.container);
     } else {
       return provideContainer(this.config.container);
     }
@@ -2186,6 +2201,34 @@ public class OGModule extends AbstractModule {
           @Named("retention_extension.context") final List<Function<Map<String, String>, String>> context,
           @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
           @Nullable @Named("extend.retention") final Function<Map<String, String>, Long> retentionExtension,
+          @Named("virtualhost") final boolean virtualHost) {
+
+    final Map<String, Function<Map<String, String>, String>> queryParameters =
+            provideRetentionExtensionQueryParameters();
+
+    final Supplier<Body> bodySupplier = Suppliers.of(Bodies.none());
+    final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
+
+    return createRequestSupplier(Operation.EXTEND_RETENTION, id, Method.POST, scheme, host, port,
+            uriRoot, container, apiVersion, object, queryParameters, headers, context, null, body,
+            credentials, virtualHost, retentionExtension, null, false);
+  }
+
+  @Provides
+  @Singleton
+  @Named("object_restore")
+  public Supplier<Request> provideObjectRestore(
+          @Named("request.id") final Function<Map<String, String>, String> id, final Scheme scheme,
+          @ReadHost final Function<Map<String, String>, String> host,
+          @Nullable @Named("port") final Integer port,
+          @Nullable @Named("uri.root") final String uriRoot,
+          @Named("objectrestore.container") final Function<Map<String, String>, String> container,
+          @Nullable @Named("api.version") final String apiVersion,
+          @Nullable @ReadObjectName final Function<Map<String, String>, String> object,
+          @objectRestoreHeaders final Map<String, Function<Map<String, String>, String>> headers,
+          @Named("object_restore.context") final List<Function<Map<String, String>, String>> context,
+          @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
+          @Nullable @Named("object_restore") final Function<Map<String, String>, Long> retentionExtension,
           @Named("virtualhost") final boolean virtualHost) {
 
     final Map<String, Function<Map<String, String>, String>> queryParameters =

@@ -25,6 +25,7 @@ public class OperationConfig {
   public boolean sseCDestination;
   public LegalHold legalHold;
   public SelectionConfig<RetentionConfig> retention;
+  public ObjectRestoreConfig objectRestoreConfig;
   public boolean contentMd5;
 
   public OperationConfig(final double weight) {
