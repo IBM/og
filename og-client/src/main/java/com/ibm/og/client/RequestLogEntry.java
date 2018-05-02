@@ -98,6 +98,11 @@ public class RequestLogEntry {
     this.status = response.getStatusCode();
     // TODO requestLength will not equal objectLength with AWSv4 request overhead
     this.requestLength = objectSize;
+
+    if (request.getOperation() == Operation.METADATA) {
+      objectSize = Long.parseLong(request.getContext().get(Context.X_OG_OBJECT_SIZE));
+    }
+
     if (response.getBody().getDataType() != DataType.NONE) {
       this.responseLength = response.getBody().getSize();
     } else {
