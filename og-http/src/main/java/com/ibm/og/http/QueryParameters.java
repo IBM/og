@@ -29,6 +29,9 @@ public class QueryParameters {
     // Object retention extension
     public static final String OBJECT_RETENTION_EXTENSION_PARAMETER = "extendRetention";
 
+    // S3 bucket list api v2
+    public static final String S3_START_AFTER = "start-after";
+
 
     private QueryParameters() {}
 }

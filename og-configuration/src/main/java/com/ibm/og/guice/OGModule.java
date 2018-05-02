@@ -1734,8 +1734,22 @@ public class OGModule extends AbstractModule {
     queryParameters = provideQueryParameters(this.config.list.parameters);
 
     if (api == Api.S3) {
-      queryParameters.put(QueryParameters.S3_MARKER,
-          MoreFunctions.keyLookup(Context.X_OG_OBJECT_NAME));
+      if ((this.config.list.parameters != null && this.config.list.parameters.containsKey("list-type"))) {
+        String version = this.config.list.parameters.get("list-type");
+        if (version.equals("2")) {
+          queryParameters.put(QueryParameters.S3_START_AFTER,
+                  MoreFunctions.keyLookup(Context.X_OG_OBJECT_NAME));
+        } else if (version.equals("1")) {
+          queryParameters.put(QueryParameters.S3_MARKER,
+                  MoreFunctions.keyLookup(Context.X_OG_OBJECT_NAME));
+        } else {
+            throw new IllegalArgumentException(
+                  String.format("unacceptable listing api version [%s]", version));
+        }
+      } else {
+          queryParameters.put(QueryParameters.S3_MARKER,
+                MoreFunctions.keyLookup(Context.X_OG_OBJECT_NAME));
+      }
     } else if (api == Api.OPENSTACK) {
       queryParameters.put(QueryParameters.OPENSTACK_MARKER,
           MoreFunctions.keyLookup(Context.X_OG_OBJECT_NAME));

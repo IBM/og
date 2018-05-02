@@ -751,6 +751,7 @@ currently supported only for the List operation.
   }
 }
 ----
+For s3 bucket listing, add parameter list-type=2. Refer to AWS s3 bucket listing api documentation for additional details.
 
 ==== Operation Container
 OG supports the _container_ key at the operation level with some
