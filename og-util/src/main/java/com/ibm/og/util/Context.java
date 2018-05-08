@@ -52,5 +52,7 @@ public class Context {
   public static final String X_OG_OBJECT_RETENTION_EXT = "Additional-Retention-Period";
   public static final String X_OG_CONTENT_MD5 = "Content-MD5";
 
+  public static final String X_OG_OBJECT_RESTORE_PERIOD = "x-og-object-restore-period";
+
   private Context() {}
 }

@@ -22,10 +22,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nullable;
 import javax.inject.Named;
 
-import com.google.common.base.CharMatcher;
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
+import com.google.common.base.*;
 import com.google.common.collect.ContiguousSet;
 import com.google.common.collect.DiscreteDomain;
 import com.google.common.collect.ImmutableList;
@@ -34,6 +31,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Range;
 import com.google.common.collect.Sets;
 import com.google.common.eventbus.EventBus;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
 import com.google.inject.AbstractModule;
@@ -71,6 +70,7 @@ import com.ibm.og.guice.annotation.MultiPartWriteBody;
 import com.ibm.og.guice.annotation.MultipartWriteHeaders;
 import com.ibm.og.guice.annotation.MultipartWriteHost;
 import com.ibm.og.guice.annotation.MultipartWriteObjectName;
+import com.ibm.og.guice.annotation.ObjectRestoreHeaders;
 import com.ibm.og.guice.annotation.OverwriteBody;
 import com.ibm.og.guice.annotation.OverwriteHeaders;
 import com.ibm.og.guice.annotation.OverwriteHost;
@@ -258,7 +258,7 @@ public class OGModule extends AbstractModule {
         .to(this.config.authentication.awsChunked);
     bindConstant().annotatedWith(Names.named("authentication.awsCacheSize"))
         .to(this.config.authentication.awsCacheSize);
-    //TODO: ObjectRestore: bindings for objectRestore weight etc.
+    bindConstant().annotatedWith(Names.named("objectRestore.weight")).to(this.config.objectRestore.weight);
 
     // FIXME create something like MoreProviders.notNull as a variant of Providers.of which does a
     // null check at creation time, with a custom error message; replace all uses of this pattern
@@ -728,8 +728,8 @@ public class OGModule extends AbstractModule {
   @Named("objectRestore.container")
   public Function<Map<String, String>, String> provideObjectRestoreContainer() throws Exception {
     if (this.config.objectRestore.container.prefix != null) {
-      checkContainerObjectConfig(this.config.read);
-      return provideContainer(this.config.read.container);
+      checkContainerObjectConfig(this.config.objectRestore);
+      return provideContainer(this.config.objectRestore.container);
     } else {
       return provideContainer(this.config.container);
     }
@@ -738,6 +738,7 @@ public class OGModule extends AbstractModule {
   public Function<Map<String, String>, String> provideContainer(
       final ContainerConfig containerConfig) {
     final String container = checkNotNull(containerConfig.prefix);
+    final Integer objectRestorePeriod = containerConfig.objectRestorePeriod;
     checkArgument(container.length() > 0, "container must not be empty string");
 
     final Supplier<Integer> suffixes = createContainerSuffixes(containerConfig);
@@ -752,11 +753,13 @@ public class OGModule extends AbstractModule {
             // use the container name provided without suffix
             input.put(Context.X_OG_CONTAINER_PREFIX, container);
             input.put(Context.X_OG_CONTAINER_NAME, container);
+            input.put(Context.X_OG_OBJECT_RESTORE_PERIOD, objectRestorePeriod.toString());
             return container;
           } else {
             final String containerName = container.concat(suffix);
             input.put(Context.X_OG_CONTAINER_PREFIX, container);
             input.put(Context.X_OG_CONTAINER_NAME, containerName);
+            input.put(Context.X_OG_OBJECT_RESTORE_PERIOD, objectRestorePeriod.toString());
             return container.concat(suffix);
           }
         } else {
@@ -1113,6 +1116,13 @@ public class OGModule extends AbstractModule {
     return provideHeaders(this.config.multipartWrite.headers);
   }
 
+  @Provides
+  @Singleton
+  @ObjectRestoreHeaders
+  public Map<String, Function<Map<String, String>, String>> provideObjectRestoreHeaders() {
+    return provideHeaders(this.config.objectRestore.headers);
+  }
+
   private Map<String, Function<Map<String, String>, String>> provideHeaders(
       final Map<String, SelectionConfig<String>> operationHeaders) {
     checkNotNull(operationHeaders);
@@ -1285,6 +1295,23 @@ public class OGModule extends AbstractModule {
       function = provideObject(operationConfig);
     } else {
       function = new ObjectRetentionExtensionFunction(objectManager);
+    }
+
+    return ImmutableList.of(function);
+  }
+
+  @Provides
+  @Named("objectRestore.context")
+  public List<Function<Map<String, String>, String>> provideObjectRestoreContext(
+          final ObjectManager objectManager) {
+
+    Function<Map<String, String>, String> function;
+
+    final OperationConfig operationConfig = checkNotNull(this.config.objectRestore);
+    if (operationConfig.object.selection != null) {
+      function = provideObject(operationConfig);
+    } else {
+      function = new ReadObjectNameFunction(objectManager);
     }
 
     return ImmutableList.of(function);
@@ -1877,6 +1904,35 @@ public class OGModule extends AbstractModule {
     return createBodySupplier(wrc.build());
   }
 
+
+  private Function<Map<String, String>, Body> createObjectRestoreBodySupplier() {
+    return new Function<Map<String, String>, Body>() {
+      public Body apply(Map<String, String> input) {
+        String body;
+        StringBuilder sb = new StringBuilder();
+        sb.append("<RestoreRequest>");
+        sb.append("<Days>");
+        sb.append(input.get(Context.X_OG_OBJECT_RESTORE_PERIOD));
+        sb.append("</Days>");
+        sb.append("<GlacierJobParameters>");
+        sb.append("<Tier>Bulk</Tier>");
+        sb.append("</GlacierJobParameters>");
+        sb.append("</RestoreRequest>");
+
+        body = sb.toString();
+        // calculate md5 for the body
+        HashFunction hf = Hashing.md5();
+        HashCode hc = hf.newHasher()
+                .putString(body, Charsets.UTF_8)
+                .hash();
+        String md5 = hc.toString();
+        input.put(Context.X_OG_CONTENT_MD5, md5);
+
+        return(Bodies.custom(body.length(), body));
+      }
+    };
+  }
+
   @Provides
   @Singleton
   @WriteBody
@@ -2216,30 +2272,35 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @Named("object_restore")
+  @Named("objectRestore")
   public Supplier<Request> provideObjectRestore(
           @Named("request.id") final Function<Map<String, String>, String> id, final Scheme scheme,
           @ReadHost final Function<Map<String, String>, String> host,
           @Nullable @Named("port") final Integer port,
           @Nullable @Named("uri.root") final String uriRoot,
-          @Named("objectrestore.container") final Function<Map<String, String>, String> container,
+          @Named("objectRestore.container") final Function<Map<String, String>, String> container,
           @Nullable @Named("api.version") final String apiVersion,
           @Nullable @ReadObjectName final Function<Map<String, String>, String> object,
-          @objectRestoreHeaders final Map<String, Function<Map<String, String>, String>> headers,
-          @Named("object_restore.context") final List<Function<Map<String, String>, String>> context,
+          @ObjectRestoreHeaders final Map<String, Function<Map<String, String>, String>> headers,
+          @Named("objectRestore.context") final List<Function<Map<String, String>, String>> context,
           @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
-          @Nullable @Named("object_restore") final Function<Map<String, String>, Long> retentionExtension,
           @Named("virtualhost") final boolean virtualHost) {
 
-    final Map<String, Function<Map<String, String>, String>> queryParameters =
-            provideRetentionExtensionQueryParameters();
+    final Function<Map<String, String>, Body> body = createObjectRestoreBodySupplier();
 
-    final Supplier<Body> bodySupplier = Suppliers.of(Bodies.none());
-    final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
+    final Map<String, Function<Map<String, String>, String>> queryParameters = Maps.newLinkedHashMap();
 
-    return createRequestSupplier(Operation.EXTEND_RETENTION, id, Method.POST, scheme, host, port,
+    queryParameters.put(QueryParameters.OBJECT_RESTORE_PARAMETER,
+            new Function<Map<String, String>, String>() {
+              @Override
+              public String apply(final Map<String, String> context) {
+                return null;
+              }
+            });
+
+    return createRequestSupplier(Operation.OBJECT_RESTORE, id, Method.POST, scheme, host, port,
             uriRoot, container, apiVersion, object, queryParameters, headers, context, null, body,
-            credentials, virtualHost, retentionExtension, null, false);
+            credentials, virtualHost, null, null, false);
   }
 
   @Provides

@@ -228,7 +228,13 @@ public class RequestSupplier implements Supplier<Request> {
       if (this.contentMd5) {
         try {
           Long size = body.getSize();
-          byte[] md5 = md5ContentCache.get(size);
+          byte[] md5;
+          if (this.operation == Operation.OBJECT_RESTORE) {
+            md5 = requestContext.get(Context.X_OG_CONTENT_MD5).getBytes();
+          }
+          else {
+            md5 = md5ContentCache.get(size);
+          }
           builder.withHeader(Context.X_OG_CONTENT_MD5, BaseEncoding.base64().encode(md5));
         } catch (Exception e) {
             _logger.error(e.getMessage());

@@ -32,6 +32,9 @@ public class QueryParameters {
     // S3 bucket list api v2
     public static final String S3_START_AFTER = "start-after";
 
+    // Object Restore
+    public static final String OBJECT_RESTORE_PARAMETER = "restore";
+
 
     private QueryParameters() {}
 }

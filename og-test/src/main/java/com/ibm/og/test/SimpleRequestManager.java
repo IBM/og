@@ -77,7 +77,9 @@ public class SimpleRequestManager implements RequestManager {
       @Named("delete_legalhold") final Supplier<Request> deleteLegalhold,
       @Named("delete_legalhold.weight") final double deleteLegalholdWeight,
       @Named("extend_retention") final Supplier<Request> extendRetention,
-      @Named("extend_retention.weight") final double extendRetentionWeight){
+      @Named("extend_retention.weight") final double extendRetentionWeight,
+      @Named("objectRestore") final Supplier<Request> objectRestore,
+      @Named("objectRestore.weight") final double objectRestoreWeight){
 
 
     checkNotNull(write);
@@ -133,6 +135,9 @@ public class SimpleRequestManager implements RequestManager {
     }
     if (extendRetentionWeight > 0.0) {
       wrc.withChoice(extendRetention, extendRetentionWeight);
+    }
+    if (objectRestoreWeight > 0.0) {
+      wrc.withChoice(objectRestore, objectRestoreWeight);
     }
 
     this.requestSupplier = wrc.build();

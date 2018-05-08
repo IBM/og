@@ -25,8 +25,8 @@ public class OperationConfig {
   public boolean sseCDestination;
   public LegalHold legalHold;
   public SelectionConfig<RetentionConfig> retention;
-  public ObjectRestoreConfig objectRestoreConfig;
   public boolean contentMd5;
+  public int objectRestorePeriod;
 
   public OperationConfig(final double weight) {
     this();
@@ -46,5 +46,6 @@ public class OperationConfig {
     this.legalHold = null;
     this.retention = null;
     this.contentMd5 = false;
+    this.objectRestorePeriod = 1;
   }
 }
