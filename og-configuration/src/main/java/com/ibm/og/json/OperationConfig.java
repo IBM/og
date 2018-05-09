@@ -26,7 +26,7 @@ public class OperationConfig {
   public LegalHold legalHold;
   public SelectionConfig<RetentionConfig> retention;
   public boolean contentMd5;
-  public int objectRestorePeriod;
+  public Integer objectRestorePeriod;
 
   public OperationConfig(final double weight) {
     this();

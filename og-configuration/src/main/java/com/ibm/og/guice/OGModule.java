@@ -738,7 +738,6 @@ public class OGModule extends AbstractModule {
   public Function<Map<String, String>, String> provideContainer(
       final ContainerConfig containerConfig) {
     final String container = checkNotNull(containerConfig.prefix);
-    final Integer objectRestorePeriod = containerConfig.objectRestorePeriod;
     checkArgument(container.length() > 0, "container must not be empty string");
 
     final Supplier<Integer> suffixes = createContainerSuffixes(containerConfig);
@@ -753,13 +752,11 @@ public class OGModule extends AbstractModule {
             // use the container name provided without suffix
             input.put(Context.X_OG_CONTAINER_PREFIX, container);
             input.put(Context.X_OG_CONTAINER_NAME, container);
-            input.put(Context.X_OG_OBJECT_RESTORE_PERIOD, objectRestorePeriod.toString());
             return container;
           } else {
             final String containerName = container.concat(suffix);
             input.put(Context.X_OG_CONTAINER_PREFIX, container);
             input.put(Context.X_OG_CONTAINER_NAME, containerName);
-            input.put(Context.X_OG_OBJECT_RESTORE_PERIOD, objectRestorePeriod.toString());
             return container.concat(suffix);
           }
         } else {
@@ -780,6 +777,20 @@ public class OGModule extends AbstractModule {
         }
       }
     };
+  }
+
+  @Provides
+  @Singleton
+  @Named("objectRestore.objectRestorePeriod")
+  public Function<Map<String, String>, String> provideObjectRestorePeriod(final OperationConfig config) throws Exception {
+    return (new Function<Map<String, String>, String>() {
+      OperationConfig restoreOperationConfig = config;
+      @Override
+      public String apply(final Map<String, String> input) {
+        input.put(Context.X_OG_OBJECT_RESTORE_PERIOD, this.restoreOperationConfig.objectRestorePeriod.toString());
+        return this.restoreOperationConfig.objectRestorePeriod.toString();
+      }
+    });
   }
 
   @Provides
@@ -1314,7 +1325,15 @@ public class OGModule extends AbstractModule {
       function = new ReadObjectNameFunction(objectManager);
     }
 
-    return ImmutableList.of(function);
+
+    Function <Map<String, String>, String> functionObjectRestorePeriod = null;
+    try {
+      functionObjectRestorePeriod = provideObjectRestorePeriod(operationConfig);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
+    return ImmutableList.of(function, functionObjectRestorePeriod);
   }
 
   @Provides
@@ -1920,14 +1939,6 @@ public class OGModule extends AbstractModule {
         sb.append("</RestoreRequest>");
 
         body = sb.toString();
-        // calculate md5 for the body
-        HashFunction hf = Hashing.md5();
-        HashCode hc = hf.newHasher()
-                .putString(body, Charsets.UTF_8)
-                .hash();
-        String md5 = hc.toString();
-        input.put(Context.X_OG_CONTENT_MD5, md5);
-
         return(Bodies.custom(body.length(), body));
       }
     };

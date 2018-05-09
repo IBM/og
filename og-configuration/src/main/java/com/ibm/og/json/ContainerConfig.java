@@ -14,7 +14,6 @@ public class ContainerConfig {
   public int minSuffix;
   public int maxSuffix;
   public List<Double> weights;
-  public int objectRestorePeriod;
 
   public ContainerConfig(final String container) {
     this();
@@ -27,6 +26,5 @@ public class ContainerConfig {
     this.minSuffix = NONE;
     this.maxSuffix = NONE;
     this.weights = null;
-    this.objectRestorePeriod = -1;
   }
 }
