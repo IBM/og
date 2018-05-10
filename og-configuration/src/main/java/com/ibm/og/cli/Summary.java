@@ -77,8 +77,8 @@ public class Summary {
     final OperationStats deleteLegalHold;
     final OperationStats extendRetention;
     final OperationStats objectRestore;
-    final OperationStats putBucketLifecycle;
-    final OperationStats getBucketLifecycle;
+    final OperationStats putContainerLifecycle;
+    final OperationStats getContainerLifecycle;
     final int exitCode;
     final ImmutableList<String> exitMessages;
 
@@ -106,8 +106,8 @@ public class Summary {
       this.deleteLegalHold = new OperationStats(stats, Operation.DELETE_LEGAL_HOLD);
       this.extendRetention = new OperationStats(stats, Operation.EXTEND_RETENTION);
       this.objectRestore = new OperationStats(stats, Operation.OBJECT_RESTORE);
-      this.putBucketLifecycle = new OperationStats(stats, Operation.PUT_BUCKET_LIFECYCLE);
-      this.getBucketLifecycle = new OperationStats(stats, Operation.GET_BUCKET_LIFECYCLE);
+      this.putContainerLifecycle = new OperationStats(stats, Operation.PUT_CONTAINER_LIFECYCLE);
+      this.getContainerLifecycle = new OperationStats(stats, Operation.GET_CONTAINER_LIFECYCLE);
       this.exitCode = exitCode;
       this.exitMessages = messages;
     }
@@ -121,7 +121,7 @@ public class Summary {
           this.read, this.delete, this.metadata, this.overwrite, this.list, this.containerList,
           this.containerCreate, this.multipartWriteInitiate, this.multipartWritePart, this.multipartWriteComplete,
           this.multipartWriteAbort,this.writeCopy, this.writeLegalHold, this.readLegalHold, this.deleteLegalHold,
-          this.extendRetention, this.objectRestore, this.putBucketLifecycle, this.getBucketLifecycle, this.exitCode,
+          this.extendRetention, this.objectRestore, this.putContainerLifecycle, this.getContainerLifecycle, this.exitCode,
               prettyExitMessages());
     }
 
@@ -186,11 +186,11 @@ public class Summary {
       if (this.objectRestore.operations > 0) {
         sb.append(this.objectRestore).append("\n");
       }
-      if (this.putBucketLifecycle.operations > 0) {
-        sb.append(this.putBucketLifecycle).append("\n");
+      if (this.putContainerLifecycle.operations > 0) {
+        sb.append(this.putContainerLifecycle).append("\n");
       }
-      if (this.getBucketLifecycle.operations > 0) {
-        sb.append(this.getBucketLifecycle).append("\n");
+      if (this.getContainerLifecycle.operations > 0) {
+        sb.append(this.getContainerLifecycle).append("\n");
       }
       sb.append("ExitCode: ").append(this.exitCode).append("\n");
       sb.append("ExitMessages:").append(prettyExitMessages());

@@ -22,7 +22,10 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nullable;
 import javax.inject.Named;
 
-import com.google.common.base.*;
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ContiguousSet;
 import com.google.common.collect.DiscreteDomain;
 import com.google.common.collect.ImmutableList;
@@ -31,8 +34,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Range;
 import com.google.common.collect.Sets;
 import com.google.common.eventbus.EventBus;
-import com.google.common.hash.HashCode;
-import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
 import com.google.inject.AbstractModule;
@@ -60,7 +61,7 @@ import com.ibm.og.guice.annotation.ContainerListHost;
 import com.ibm.og.guice.annotation.DeleteHeaders;
 import com.ibm.og.guice.annotation.DeleteHost;
 import com.ibm.og.guice.annotation.DeleteObjectName;
-import com.ibm.og.guice.annotation.GetBucketLifecycleHeaders;
+import com.ibm.og.guice.annotation.GetContainerLifecycleHeaders;
 import com.ibm.og.guice.annotation.ListHeaders;
 import com.ibm.og.guice.annotation.ListHost;
 import com.ibm.og.guice.annotation.ListQueryParameters;
@@ -76,7 +77,7 @@ import com.ibm.og.guice.annotation.OverwriteBody;
 import com.ibm.og.guice.annotation.OverwriteHeaders;
 import com.ibm.og.guice.annotation.OverwriteHost;
 import com.ibm.og.guice.annotation.OverwriteObjectName;
-import com.ibm.og.guice.annotation.PutBucketLifecycleHeaders;
+import com.ibm.og.guice.annotation.PutContainerLifecycleHeaders;
 import com.ibm.og.guice.annotation.ReadHeaders;
 import com.ibm.og.guice.annotation.ReadHost;
 import com.ibm.og.guice.annotation.ReadObjectName;
@@ -261,9 +262,9 @@ public class OGModule extends AbstractModule {
     bindConstant().annotatedWith(Names.named("authentication.awsCacheSize"))
         .to(this.config.authentication.awsCacheSize);
     bindConstant().annotatedWith(Names.named("objectRestore.weight")).to(this.config.objectRestore.weight);
-    bindConstant().annotatedWith(Names.named("putBucketLifecycle.weight")).to(this.config.putBucketLifecycle.weight);
-    bindConstant().annotatedWith(Names.named("putBucketLifecycle.contentMd5")).to(this.config.putBucketLifecycle.contentMd5);
-    bindConstant().annotatedWith(Names.named("getBucketLifecycle.weight")).to(this.config.getBucketLifecycle.weight);
+    bindConstant().annotatedWith(Names.named("putContainerLifecycle.weight")).to(this.config.putContainerLifecycle.weight);
+    bindConstant().annotatedWith(Names.named("putContainerLifecycle.contentMd5")).to(this.config.putContainerLifecycle.contentMd5);
+    bindConstant().annotatedWith(Names.named("getContainerLifecycle.weight")).to(this.config.getContainerLifecycle.weight);
 
     // FIXME create something like MoreProviders.notNull as a variant of Providers.of which does a
     // null check at creation time, with a custom error message; replace all uses of this pattern
@@ -742,10 +743,10 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @Named("putBucketLifecycle.container")
-  public Function<Map<String, String>, String> providePutBucketLifecycleContainer() {
-    if (this.config.putBucketLifecycle.container.prefix != null) {
-      return provideContainer(this.config.putBucketLifecycle.container);
+  @Named("putContainerLifecycle.container")
+  public Function<Map<String, String>, String> providePutContainerLifecycleContainer() {
+    if (this.config.putContainerLifecycle.container.prefix != null) {
+      return provideContainer(this.config.putContainerLifecycle.container);
     } else {
       return provideContainer(this.config.container);
     }
@@ -753,10 +754,10 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @Named("getBucketLifecycle.container")
-  public Function<Map<String, String>, String> provideGetBucketLifecycleContainer() {
-    if (this.config.getBucketLifecycle.container.prefix != null) {
-      return provideContainer(this.config.getBucketLifecycle.container);
+  @Named("getContainerLifecycle.container")
+  public Function<Map<String, String>, String> provideGetContainerLifecycleContainer() {
+    if (this.config.getContainerLifecycle.container.prefix != null) {
+      return provideContainer(this.config.getContainerLifecycle.container);
     } else {
       return provideContainer(this.config.container);
     }
@@ -822,7 +823,7 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @Named("putBucketLifecycle.archiveTransitionPeriod")
+  @Named("putContainerLifecycle.archiveTransitionPeriod")
   public Function<Map<String, String>, String> provideArchiveTransitionPeriod(final OperationConfig config) throws Exception {
     return (new Function<Map<String, String>, String>() {
       OperationConfig archiveTransitionPeriodConfig = config;
@@ -1177,16 +1178,16 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @PutBucketLifecycleHeaders
-  public Map<String, Function<Map<String, String>, String>> providePutBucketLifecycleHeaders() {
-    return provideHeaders(this.config.putBucketLifecycle.headers);
+  @PutContainerLifecycleHeaders
+  public Map<String, Function<Map<String, String>, String>> providePutContainerLifecycleHeaders() {
+    return provideHeaders(this.config.putContainerLifecycle.headers);
   }
 
   @Provides
   @Singleton
-  @GetBucketLifecycleHeaders
+  @GetContainerLifecycleHeaders
   public Map<String, Function<Map<String, String>, String>> provideGetBucketLifecycleHeaders() {
-    return provideHeaders(this.config.getBucketLifecycle.headers);
+    return provideHeaders(this.config.getContainerLifecycle.headers);
   }
 
   private Map<String, Function<Map<String, String>, String>> provideHeaders(
@@ -1393,10 +1394,10 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @Named("putBucketLifecycle.context")
-  public List<Function<Map<String, String>, String>> providePutBucketLifecycleContext() {
+  @Named("putContainerLifecycle.context")
+  public List<Function<Map<String, String>, String>> providePutContainerLifecycleContext() {
 
-    final OperationConfig operationConfig = checkNotNull(this.config.putBucketLifecycle);
+    final OperationConfig operationConfig = checkNotNull(this.config.putContainerLifecycle);
     Function <Map<String, String>, String> function = null;
     try {
       function = provideArchiveTransitionPeriod(operationConfig);
@@ -1410,8 +1411,8 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @Named("getBucketLifecycle.context")
-  public List<Function<Map<String, String>, String>> provideGetBucketLifecycleContext(
+  @Named("getContainerLifecycle.context")
+  public List<Function<Map<String, String>, String>> provideGetContainerLifecycleContext(
           final ObjectManager objectManager) {
     final List<Function<Map<String, String>, String>> context = Lists.newArrayList();
 
@@ -2027,7 +2028,7 @@ public class OGModule extends AbstractModule {
     };
   }
 
-  private Function<Map<String, String>, Body> createPutBucketLifecycleBodySupplier() {
+  private Function<Map<String, String>, Body> createPutContainerLifecycleBodySupplier() {
     return new Function<Map<String, String>, Body>() {
       public Body apply(Map<String, String> input) {
         String body;
@@ -2424,21 +2425,21 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @Named("putBucketLifecycle")
-  public Supplier<Request> providePutBucketLifecycle(
+  @Named("putContainerLifecycle")
+  public Supplier<Request> providePutContainerLifecycle(
           @Named("request.id") final Function<Map<String, String>, String> id, final Scheme scheme,
           @ReadHost final Function<Map<String, String>, String> host,
           @Nullable @Named("port") final Integer port,
           @Nullable @Named("uri.root") final String uriRoot,
-          @Named("putBucketLifecycle.container") final Function<Map<String, String>, String> container,
+          @Named("putContainerLifecycle.container") final Function<Map<String, String>, String> container,
           @Nullable @Named("api.version") final String apiVersion,
-          @PutBucketLifecycleHeaders final Map<String, Function<Map<String, String>, String>> headers,
-          @Named("putBucketLifecycle.context") final List<Function<Map<String, String>, String>> context,
+          @PutContainerLifecycleHeaders final Map<String, Function<Map<String, String>, String>> headers,
+          @Named("putContainerLifecycle.context") final List<Function<Map<String, String>, String>> context,
           @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
           @Named("virtualhost") final boolean virtualHost,
-          @Nullable @Named("putBucketLifecycle.contentMd5") final boolean contentMd5) {
+          @Nullable @Named("putContainerLifecycle.contentMd5") final boolean contentMd5) {
 
-    final Function<Map<String, String>, Body> body = createPutBucketLifecycleBodySupplier();
+    final Function<Map<String, String>, Body> body = createPutContainerLifecycleBodySupplier();
 
     final Map<String, Function<Map<String, String>, String>> queryParameters = Maps.newLinkedHashMap();
 
@@ -2450,23 +2451,23 @@ public class OGModule extends AbstractModule {
               }
             });
 
-    return createRequestSupplier(Operation.PUT_BUCKET_LIFECYCLE, id, Method.PUT, scheme, host, port,
+    return createRequestSupplier(Operation.PUT_CONTAINER_LIFECYCLE, id, Method.PUT, scheme, host, port,
             uriRoot, container, apiVersion, null, queryParameters, headers, context, null, body,
             credentials, virtualHost, null, null, contentMd5);
   }
 
   @Provides
   @Singleton
-  @Named("getBucketLifecycle")
-  public Supplier<Request> provideGetBucketLifecycle(
+  @Named("getContainerLifecycle")
+  public Supplier<Request> provideGetContainerLifecycle(
           @Named("request.id") final Function<Map<String, String>, String> id, final Scheme scheme,
           @ReadHost final Function<Map<String, String>, String> host,
           @Nullable @Named("port") final Integer port,
           @Nullable @Named("uri.root") final String uriRoot,
-          @Named("getBucketLifecycle.container") final Function<Map<String, String>, String> container,
+          @Named("getContainerLifecycle.container") final Function<Map<String, String>, String> container,
           @Nullable @Named("api.version") final String apiVersion,
-          @PutBucketLifecycleHeaders final Map<String, Function<Map<String, String>, String>> headers,
-          @Named("getBucketLifecycle.context") final List<Function<Map<String, String>, String>> context,
+          @PutContainerLifecycleHeaders final Map<String, Function<Map<String, String>, String>> headers,
+          @Named("getContainerLifecycle.context") final List<Function<Map<String, String>, String>> context,
           @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
           @Named("virtualhost") final boolean virtualHost) {
 
@@ -2481,7 +2482,7 @@ public class OGModule extends AbstractModule {
               }
             });
 
-    return createRequestSupplier(Operation.GET_BUCKET_LIFECYCLE, id, Method.GET, scheme, host, port,
+    return createRequestSupplier(Operation.GET_CONTAINER_LIFECYCLE, id, Method.GET, scheme, host, port,
             uriRoot, container, apiVersion, null, queryParameters, headers, context, null,
             null, credentials, virtualHost, null, null, false);
   }

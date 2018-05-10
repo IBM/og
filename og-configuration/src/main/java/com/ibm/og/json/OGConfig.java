@@ -35,8 +35,8 @@ public class OGConfig {
   public OperationConfig readLegalhold;
   public OperationConfig extendRetention;
   public OperationConfig objectRestore;
-  public OperationConfig putBucketLifecycle;
-  public OperationConfig getBucketLifecycle;
+  public OperationConfig putContainerLifecycle;
+  public OperationConfig getContainerLifecycle;
   public SelectionConfig<FilesizeConfig> filesize;
   public DataType data;
   public ConcurrencyConfig concurrency;
@@ -71,8 +71,8 @@ public class OGConfig {
     this.readLegalhold = new OperationConfig();
     this.extendRetention = new OperationConfig();
     this.objectRestore = new OperationConfig();
-    this.putBucketLifecycle = new OperationConfig();
-    this.getBucketLifecycle = new OperationConfig();
+    this.putContainerLifecycle = new OperationConfig();
+    this.getContainerLifecycle = new OperationConfig();
     this.filesize = null;
     this.data = DataType.RANDOM;
     this.concurrency = null;

@@ -80,10 +80,10 @@ public class SimpleRequestManager implements RequestManager {
       @Named("extend_retention.weight") final double extendRetentionWeight,
       @Named("objectRestore") final Supplier<Request> objectRestore,
       @Named("objectRestore.weight") final double objectRestoreWeight,
-      @Named("putBucketLifecycle") final Supplier<Request> putBucketLifecycle,
-      @Named("putBucketLifecycle.weight") final double putBucketLifecycleWeight,
-      @Named("getBucketLifecycle") final Supplier<Request> getBucketLifecycle,
-      @Named("getBucketLifecycle.weight") final double getBucketLifecycleWeight){
+      @Named("putContainerLifecycle") final Supplier<Request> putContainerLifecycle,
+      @Named("putContainerLifecycle.weight") final double putContainerLifecycleWeight,
+      @Named("getContainerLifecycle") final Supplier<Request> getContainerLifecycle,
+      @Named("getContainerLifecycle.weight") final double getContainerLifecycleWeight){
 
 
     checkNotNull(write);
@@ -143,11 +143,11 @@ public class SimpleRequestManager implements RequestManager {
     if (objectRestoreWeight > 0.0) {
       wrc.withChoice(objectRestore, objectRestoreWeight);
     }
-    if (putBucketLifecycleWeight > 0.0) {
-      wrc.withChoice(putBucketLifecycle, putBucketLifecycleWeight);
+    if (putContainerLifecycleWeight > 0.0) {
+      wrc.withChoice(putContainerLifecycle, putContainerLifecycleWeight);
     }
-    if (getBucketLifecycleWeight > 0.0) {
-      wrc.withChoice(getBucketLifecycle, getBucketLifecycleWeight);
+    if (getContainerLifecycleWeight > 0.0) {
+      wrc.withChoice(getContainerLifecycle, getContainerLifecycleWeight);
     }
 
     this.requestSupplier = wrc.build();

@@ -232,7 +232,7 @@ public class RequestSupplier implements Supplier<Request> {
         try {
           Long size = body.getSize();
           byte[] md5;
-          if (this.operation == Operation.PUT_BUCKET_LIFECYCLE) {
+          if (this.operation == Operation.PUT_CONTAINER_LIFECYCLE) {
             builder.withHeader(Context.X_OG_CONTENT_MD5, BaseEncoding.base64().encode(Hashing.md5()
                             .newHasher()
                             .putString(body.getContent(), Charsets.UTF_8).hash().asBytes()));

@@ -1,4 +1,4 @@
-/* Copyright (c) IBM Corporation 2016. All Rights Reserved.
+/* Copyright (c) IBM Corporation 2018. All Rights Reserved.
  * Project name: Object Generator
  * This project is licensed under the Apache License 2.0, see LICENSE.
  */
@@ -18,5 +18,5 @@ import com.google.inject.BindingAnnotation;
 @BindingAnnotation
 @Target({FIELD, PARAMETER, METHOD})
 @Retention(RUNTIME)
-public @interface GetBucketLifecycleHeaders {
+public @interface PutContainerLifecycleHeaders {
 }
