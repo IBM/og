@@ -27,6 +27,7 @@ public class OperationConfig {
   public SelectionConfig<RetentionConfig> retention;
   public boolean contentMd5;
   public Integer objectRestorePeriod;
+  public Integer archiveTransitionPeriod;
 
   public OperationConfig(final double weight) {
     this();
@@ -47,5 +48,6 @@ public class OperationConfig {
     this.retention = null;
     this.contentMd5 = false;
     this.objectRestorePeriod = 1;
+    this.archiveTransitionPeriod = 1;
   }
 }

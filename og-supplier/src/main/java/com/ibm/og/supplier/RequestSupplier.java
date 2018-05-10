@@ -10,12 +10,15 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Charsets;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.LoadingCache;
+import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
 import com.ibm.og.api.Body;
 import com.ibm.og.api.Method;
@@ -229,13 +232,16 @@ public class RequestSupplier implements Supplier<Request> {
         try {
           Long size = body.getSize();
           byte[] md5;
-          if (this.operation == Operation.OBJECT_RESTORE) {
-            md5 = requestContext.get(Context.X_OG_CONTENT_MD5).getBytes();
+          if (this.operation == Operation.PUT_BUCKET_LIFECYCLE) {
+            builder.withHeader(Context.X_OG_CONTENT_MD5, BaseEncoding.base64().encode(Hashing.md5()
+                            .newHasher()
+                            .putString(body.getContent(), Charsets.UTF_8).hash().asBytes()));
           }
           else {
             md5 = md5ContentCache.get(size);
+            builder.withHeader(Context.X_OG_CONTENT_MD5, BaseEncoding.base64().encode(md5));
           }
-          builder.withHeader(Context.X_OG_CONTENT_MD5, BaseEncoding.base64().encode(md5));
+
         } catch (Exception e) {
             _logger.error(e.getMessage());
         }

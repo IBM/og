@@ -76,6 +76,9 @@ public class Summary {
     final OperationStats readLegalHold;
     final OperationStats deleteLegalHold;
     final OperationStats extendRetention;
+    final OperationStats objectRestore;
+    final OperationStats putBucketLifecycle;
+    final OperationStats getBucketLifecycle;
     final int exitCode;
     final ImmutableList<String> exitMessages;
 
@@ -102,6 +105,9 @@ public class Summary {
       this.readLegalHold = new OperationStats(stats, Operation.READ_LEGAL_HOLD);
       this.deleteLegalHold = new OperationStats(stats, Operation.DELETE_LEGAL_HOLD);
       this.extendRetention = new OperationStats(stats, Operation.EXTEND_RETENTION);
+      this.objectRestore = new OperationStats(stats, Operation.OBJECT_RESTORE);
+      this.putBucketLifecycle = new OperationStats(stats, Operation.PUT_BUCKET_LIFECYCLE);
+      this.getBucketLifecycle = new OperationStats(stats, Operation.GET_BUCKET_LIFECYCLE);
       this.exitCode = exitCode;
       this.exitMessages = messages;
     }
@@ -115,7 +121,8 @@ public class Summary {
           this.read, this.delete, this.metadata, this.overwrite, this.list, this.containerList,
           this.containerCreate, this.multipartWriteInitiate, this.multipartWritePart, this.multipartWriteComplete,
           this.multipartWriteAbort,this.writeCopy, this.writeLegalHold, this.readLegalHold, this.deleteLegalHold,
-          this.extendRetention, this.exitCode, prettyExitMessages());
+          this.extendRetention, this.objectRestore, this.putBucketLifecycle, this.getBucketLifecycle, this.exitCode,
+              prettyExitMessages());
     }
 
     public String condensedSummary() {
@@ -175,6 +182,15 @@ public class Summary {
       }
       if (this.extendRetention.operations > 0) {
         sb.append(this.extendRetention).append("\n");
+      }
+      if (this.objectRestore.operations > 0) {
+        sb.append(this.objectRestore).append("\n");
+      }
+      if (this.putBucketLifecycle.operations > 0) {
+        sb.append(this.putBucketLifecycle).append("\n");
+      }
+      if (this.getBucketLifecycle.operations > 0) {
+        sb.append(this.getBucketLifecycle).append("\n");
       }
       sb.append("ExitCode: ").append(this.exitCode).append("\n");
       sb.append("ExitMessages:").append(prettyExitMessages());

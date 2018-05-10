@@ -35,6 +35,8 @@ public class QueryParameters {
     // Object Restore
     public static final String OBJECT_RESTORE_PARAMETER = "restore";
 
+    //Put and Get Bucket Lifecycle
+    public static final String BUCKET_LIFECYCLE_PARAMETER = "lifecycle";
 
     private QueryParameters() {}
 }

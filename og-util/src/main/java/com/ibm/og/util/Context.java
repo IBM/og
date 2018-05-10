@@ -53,6 +53,7 @@ public class Context {
   public static final String X_OG_CONTENT_MD5 = "Content-MD5";
 
   public static final String X_OG_OBJECT_RESTORE_PERIOD = "x-og-object-restore-period";
+  public static final String X_OG_ARCHIVE_TRANSITION_PERIOD = "x-og-archive-transition-period";
 
   private Context() {}
 }
