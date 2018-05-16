@@ -263,7 +263,6 @@ public class OGModule extends AbstractModule {
         .to(this.config.authentication.awsCacheSize);
     bindConstant().annotatedWith(Names.named("objectRestore.weight")).to(this.config.objectRestore.weight);
     bindConstant().annotatedWith(Names.named("putContainerLifecycle.weight")).to(this.config.putContainerLifecycle.weight);
-    bindConstant().annotatedWith(Names.named("putContainerLifecycle.contentMd5")).to(this.config.putContainerLifecycle.contentMd5);
     bindConstant().annotatedWith(Names.named("getContainerLifecycle.weight")).to(this.config.getContainerLifecycle.weight);
 
     // FIXME create something like MoreProviders.notNull as a variant of Providers.of which does a
@@ -2436,8 +2435,7 @@ public class OGModule extends AbstractModule {
           @PutContainerLifecycleHeaders final Map<String, Function<Map<String, String>, String>> headers,
           @Named("putContainerLifecycle.context") final List<Function<Map<String, String>, String>> context,
           @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
-          @Named("virtualhost") final boolean virtualHost,
-          @Nullable @Named("putContainerLifecycle.contentMd5") final boolean contentMd5) {
+          @Named("virtualhost") final boolean virtualHost) {
 
     final Function<Map<String, String>, Body> body = createPutContainerLifecycleBodySupplier();
 
@@ -2453,7 +2451,7 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.PUT_CONTAINER_LIFECYCLE, id, Method.PUT, scheme, host, port,
             uriRoot, container, apiVersion, null, queryParameters, headers, context, null, body,
-            credentials, virtualHost, null, null, contentMd5);
+            credentials, virtualHost, null, null, true);
   }
 
   @Provides
