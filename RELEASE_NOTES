@@ -1,3 +1,9 @@
+Release_1.8.0
+New Features:
+Add support for F1240 Archive Tier Support
+Changes:
+Fixed request log to print correct scheme (HTTP/HTTPS) based on setting in config file
+
 Release_1.7.0
 New Features:
 Add support for s3 listing v2
