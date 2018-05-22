@@ -3,6 +3,7 @@ New Features:
 Add support for F1240 Archive Tier Support
 Changes:
 Fixed request log to print correct scheme (HTTP/HTTPS) based on setting in config file
+Add units for client read, write throughput and connect, so timeout
 
 Release_1.7.0
 New Features:
