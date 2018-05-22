@@ -1916,12 +1916,12 @@ authentication if absent.
 |connect_timeout
 |Integer
 |No
-|0
+|0; in milliseconds
 
 |so_timeout
 |Integer
 |No
-|0
+|0; in milliseconds
 
 |so_reuse_address
 |Boolean
@@ -2046,12 +2046,12 @@ authentication if absent.
 |write_throughput
 |Integer
 |No
-|0
+|0; in bytes per second
 
 |read_throughput
 |Integer
 |No
-|0
+|0; in bytes per second
 |===
 
 ==== Stopping Conditions Configuration
