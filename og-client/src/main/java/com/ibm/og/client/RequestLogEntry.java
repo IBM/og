@@ -66,7 +66,7 @@ public class RequestLogEntry {
   public RequestLogEntry(final Request request, final Response response, final String userAgent,
                          final RequestTimestamps timestamps) {
     this.operation = request.getOperation().toString();
-    this.type = HTTP_TYPE;
+    this.type = request.getUri().getScheme();
     final URI uri = request.getUri();
     // FIXME reliably get localaddress? Name should be clientName? Do we even need this field?
     this.serverName = null;

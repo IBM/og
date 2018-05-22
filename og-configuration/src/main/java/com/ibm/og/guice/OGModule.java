@@ -61,6 +61,7 @@ import com.ibm.og.guice.annotation.ContainerListHost;
 import com.ibm.og.guice.annotation.DeleteHeaders;
 import com.ibm.og.guice.annotation.DeleteHost;
 import com.ibm.og.guice.annotation.DeleteObjectName;
+import com.ibm.og.guice.annotation.GetContainerLifecycleHeaders;
 import com.ibm.og.guice.annotation.ListHeaders;
 import com.ibm.og.guice.annotation.ListHost;
 import com.ibm.og.guice.annotation.ListQueryParameters;
@@ -71,10 +72,12 @@ import com.ibm.og.guice.annotation.MultiPartWriteBody;
 import com.ibm.og.guice.annotation.MultipartWriteHeaders;
 import com.ibm.og.guice.annotation.MultipartWriteHost;
 import com.ibm.og.guice.annotation.MultipartWriteObjectName;
+import com.ibm.og.guice.annotation.ObjectRestoreHeaders;
 import com.ibm.og.guice.annotation.OverwriteBody;
 import com.ibm.og.guice.annotation.OverwriteHeaders;
 import com.ibm.og.guice.annotation.OverwriteHost;
 import com.ibm.og.guice.annotation.OverwriteObjectName;
+import com.ibm.og.guice.annotation.PutContainerLifecycleHeaders;
 import com.ibm.og.guice.annotation.ReadHeaders;
 import com.ibm.og.guice.annotation.ReadHost;
 import com.ibm.og.guice.annotation.ReadObjectName;
@@ -258,6 +261,10 @@ public class OGModule extends AbstractModule {
         .to(this.config.authentication.awsChunked);
     bindConstant().annotatedWith(Names.named("authentication.awsCacheSize"))
         .to(this.config.authentication.awsCacheSize);
+    bindConstant().annotatedWith(Names.named("objectRestore.weight")).to(this.config.objectRestore.weight);
+    bindConstant().annotatedWith(Names.named("putContainerLifecycle.weight")).to(this.config.putContainerLifecycle.weight);
+    bindConstant().annotatedWith(Names.named("getContainerLifecycle.weight")).to(this.config.getContainerLifecycle.weight);
+
     // FIXME create something like MoreProviders.notNull as a variant of Providers.of which does a
     // null check at creation time, with a custom error message; replace all uses of this pattern
     bind(ConcurrencyConfig.class).toProvider(new Provider<ConcurrencyConfig>() {
@@ -720,6 +727,41 @@ public class OGModule extends AbstractModule {
     }
   }
 
+
+  @Provides
+  @Singleton
+  @Named("objectRestore.container")
+  public Function<Map<String, String>, String> provideObjectRestoreContainer() throws Exception {
+    if (this.config.objectRestore.container.prefix != null) {
+      checkContainerObjectConfig(this.config.objectRestore);
+      return provideContainer(this.config.objectRestore.container);
+    } else {
+      return provideContainer(this.config.container);
+    }
+  }
+
+  @Provides
+  @Singleton
+  @Named("putContainerLifecycle.container")
+  public Function<Map<String, String>, String> providePutContainerLifecycleContainer() {
+    if (this.config.putContainerLifecycle.container.prefix != null) {
+      return provideContainer(this.config.putContainerLifecycle.container);
+    } else {
+      return provideContainer(this.config.container);
+    }
+  }
+
+  @Provides
+  @Singleton
+  @Named("getContainerLifecycle.container")
+  public Function<Map<String, String>, String> provideGetContainerLifecycleContainer() {
+    if (this.config.getContainerLifecycle.container.prefix != null) {
+      return provideContainer(this.config.getContainerLifecycle.container);
+    } else {
+      return provideContainer(this.config.container);
+    }
+  }
+
   public Function<Map<String, String>, String> provideContainer(
       final ContainerConfig containerConfig) {
     final String container = checkNotNull(containerConfig.prefix);
@@ -762,6 +804,34 @@ public class OGModule extends AbstractModule {
         }
       }
     };
+  }
+
+  @Provides
+  @Singleton
+  @Named("objectRestore.objectRestorePeriod")
+  public Function<Map<String, String>, String> provideObjectRestorePeriod(final OperationConfig config) throws Exception {
+    return (new Function<Map<String, String>, String>() {
+      OperationConfig restoreOperationConfig = config;
+      @Override
+      public String apply(final Map<String, String> input) {
+        input.put(Context.X_OG_OBJECT_RESTORE_PERIOD, this.restoreOperationConfig.objectRestorePeriod.toString());
+        return this.restoreOperationConfig.objectRestorePeriod.toString();
+      }
+    });
+  }
+
+  @Provides
+  @Singleton
+  @Named("putContainerLifecycle.archiveTransitionPeriod")
+  public Function<Map<String, String>, String> provideArchiveTransitionPeriod(final OperationConfig config) throws Exception {
+    return (new Function<Map<String, String>, String>() {
+      OperationConfig archiveTransitionPeriodConfig = config;
+      @Override
+      public String apply(final Map<String, String> input) {
+        input.put(Context.X_OG_ARCHIVE_TRANSITION_PERIOD, this.archiveTransitionPeriodConfig.archiveTransitionPeriod.toString());
+        return this.archiveTransitionPeriodConfig.archiveTransitionPeriod.toString();
+      }
+    });
   }
 
   @Provides
@@ -1098,6 +1168,27 @@ public class OGModule extends AbstractModule {
     return provideHeaders(this.config.multipartWrite.headers);
   }
 
+  @Provides
+  @Singleton
+  @ObjectRestoreHeaders
+  public Map<String, Function<Map<String, String>, String>> provideObjectRestoreHeaders() {
+    return provideHeaders(this.config.objectRestore.headers);
+  }
+
+  @Provides
+  @Singleton
+  @PutContainerLifecycleHeaders
+  public Map<String, Function<Map<String, String>, String>> providePutContainerLifecycleHeaders() {
+    return provideHeaders(this.config.putContainerLifecycle.headers);
+  }
+
+  @Provides
+  @Singleton
+  @GetContainerLifecycleHeaders
+  public Map<String, Function<Map<String, String>, String>> provideGetBucketLifecycleHeaders() {
+    return provideHeaders(this.config.getContainerLifecycle.headers);
+  }
+
   private Map<String, Function<Map<String, String>, String>> provideHeaders(
       final Map<String, SelectionConfig<String>> operationHeaders) {
     checkNotNull(operationHeaders);
@@ -1273,6 +1364,59 @@ public class OGModule extends AbstractModule {
     }
 
     return ImmutableList.of(function);
+  }
+
+  @Provides
+  @Named("objectRestore.context")
+  public List<Function<Map<String, String>, String>> provideObjectRestoreContext(
+          final ObjectManager objectManager) {
+
+    Function<Map<String, String>, String> function;
+
+    final OperationConfig operationConfig = checkNotNull(this.config.objectRestore);
+    if (operationConfig.object.selection != null) {
+      function = provideObject(operationConfig);
+    } else {
+      function = new ReadObjectNameFunction(objectManager);
+    }
+
+
+    Function <Map<String, String>, String> functionObjectRestorePeriod = null;
+    try {
+      functionObjectRestorePeriod = provideObjectRestorePeriod(operationConfig);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
+    return ImmutableList.of(function, functionObjectRestorePeriod);
+  }
+
+  @Provides
+  @Singleton
+  @Named("putContainerLifecycle.context")
+  public List<Function<Map<String, String>, String>> providePutContainerLifecycleContext() {
+
+    final OperationConfig operationConfig = checkNotNull(this.config.putContainerLifecycle);
+    Function <Map<String, String>, String> function = null;
+    try {
+      function = provideArchiveTransitionPeriod(operationConfig);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
+    // return an empty context
+    return ImmutableList.of(function);
+  }
+
+  @Provides
+  @Singleton
+  @Named("getContainerLifecycle.context")
+  public List<Function<Map<String, String>, String>> provideGetContainerLifecycleContext(
+          final ObjectManager objectManager) {
+    final List<Function<Map<String, String>, String>> context = Lists.newArrayList();
+
+    // return an empty context
+    return ImmutableList.copyOf(context);
   }
 
   @Provides
@@ -1862,6 +2006,52 @@ public class OGModule extends AbstractModule {
     return createBodySupplier(wrc.build());
   }
 
+
+  private Function<Map<String, String>, Body> createObjectRestoreBodySupplier() {
+    return new Function<Map<String, String>, Body>() {
+      public Body apply(Map<String, String> input) {
+        String body;
+        StringBuilder sb = new StringBuilder();
+        sb.append("<RestoreRequest>");
+        sb.append("<Days>");
+        sb.append(input.get(Context.X_OG_OBJECT_RESTORE_PERIOD));
+        sb.append("</Days>");
+        sb.append("<GlacierJobParameters>");
+        sb.append("<Tier>Bulk</Tier>");
+        sb.append("</GlacierJobParameters>");
+        sb.append("</RestoreRequest>");
+
+        body = sb.toString();
+        return(Bodies.custom(body.length(), body));
+      }
+    };
+  }
+
+  private Function<Map<String, String>, Body> createPutContainerLifecycleBodySupplier() {
+    return new Function<Map<String, String>, Body>() {
+      public Body apply(Map<String, String> input) {
+        String body;
+        StringBuilder sb = new StringBuilder();
+        sb.append("<LifecycleConfiguration>");
+        sb.append("<Rule>");
+        sb.append("<ID>id1</ID>");
+        sb.append("<Status>Enabled</Status>");
+        sb.append("<Filter><Prefix/></Filter>");
+        sb.append("<Transition>");
+        sb.append("<Days>");
+        sb.append(input.get(Context.X_OG_ARCHIVE_TRANSITION_PERIOD));
+        sb.append("</Days>");
+        sb.append("<StorageClass>GLACIER</StorageClass>");
+        sb.append("</Transition>");
+        sb.append("</Rule>");
+        sb.append("</LifecycleConfiguration>");
+
+        body = sb.toString();
+        return(Bodies.custom(body.length(), body));
+      }
+    };
+  }
+
   @Provides
   @Singleton
   @WriteBody
@@ -2197,6 +2387,102 @@ public class OGModule extends AbstractModule {
     return createRequestSupplier(Operation.EXTEND_RETENTION, id, Method.POST, scheme, host, port,
             uriRoot, container, apiVersion, object, queryParameters, headers, context, null, body,
             credentials, virtualHost, retentionExtension, null, false);
+  }
+
+  @Provides
+  @Singleton
+  @Named("objectRestore")
+  public Supplier<Request> provideObjectRestore(
+          @Named("request.id") final Function<Map<String, String>, String> id, final Scheme scheme,
+          @ReadHost final Function<Map<String, String>, String> host,
+          @Nullable @Named("port") final Integer port,
+          @Nullable @Named("uri.root") final String uriRoot,
+          @Named("objectRestore.container") final Function<Map<String, String>, String> container,
+          @Nullable @Named("api.version") final String apiVersion,
+          @Nullable @ReadObjectName final Function<Map<String, String>, String> object,
+          @ObjectRestoreHeaders final Map<String, Function<Map<String, String>, String>> headers,
+          @Named("objectRestore.context") final List<Function<Map<String, String>, String>> context,
+          @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
+          @Named("virtualhost") final boolean virtualHost) {
+
+    final Function<Map<String, String>, Body> body = createObjectRestoreBodySupplier();
+
+    final Map<String, Function<Map<String, String>, String>> queryParameters = Maps.newLinkedHashMap();
+
+    queryParameters.put(QueryParameters.OBJECT_RESTORE_PARAMETER,
+            new Function<Map<String, String>, String>() {
+              @Override
+              public String apply(final Map<String, String> context) {
+                return null;
+              }
+            });
+
+    return createRequestSupplier(Operation.OBJECT_RESTORE, id, Method.POST, scheme, host, port,
+            uriRoot, container, apiVersion, object, queryParameters, headers, context, null, body,
+            credentials, virtualHost, null, null, false);
+  }
+
+  @Provides
+  @Singleton
+  @Named("putContainerLifecycle")
+  public Supplier<Request> providePutContainerLifecycle(
+          @Named("request.id") final Function<Map<String, String>, String> id, final Scheme scheme,
+          @ReadHost final Function<Map<String, String>, String> host,
+          @Nullable @Named("port") final Integer port,
+          @Nullable @Named("uri.root") final String uriRoot,
+          @Named("putContainerLifecycle.container") final Function<Map<String, String>, String> container,
+          @Nullable @Named("api.version") final String apiVersion,
+          @PutContainerLifecycleHeaders final Map<String, Function<Map<String, String>, String>> headers,
+          @Named("putContainerLifecycle.context") final List<Function<Map<String, String>, String>> context,
+          @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
+          @Named("virtualhost") final boolean virtualHost) {
+
+    final Function<Map<String, String>, Body> body = createPutContainerLifecycleBodySupplier();
+
+    final Map<String, Function<Map<String, String>, String>> queryParameters = Maps.newLinkedHashMap();
+
+    queryParameters.put(QueryParameters.BUCKET_LIFECYCLE_PARAMETER,
+            new Function<Map<String, String>, String>() {
+              @Override
+              public String apply(final Map<String, String> context) {
+                return null;
+              }
+            });
+
+    return createRequestSupplier(Operation.PUT_CONTAINER_LIFECYCLE, id, Method.PUT, scheme, host, port,
+            uriRoot, container, apiVersion, null, queryParameters, headers, context, null, body,
+            credentials, virtualHost, null, null, true);
+  }
+
+  @Provides
+  @Singleton
+  @Named("getContainerLifecycle")
+  public Supplier<Request> provideGetContainerLifecycle(
+          @Named("request.id") final Function<Map<String, String>, String> id, final Scheme scheme,
+          @ReadHost final Function<Map<String, String>, String> host,
+          @Nullable @Named("port") final Integer port,
+          @Nullable @Named("uri.root") final String uriRoot,
+          @Named("getContainerLifecycle.container") final Function<Map<String, String>, String> container,
+          @Nullable @Named("api.version") final String apiVersion,
+          @PutContainerLifecycleHeaders final Map<String, Function<Map<String, String>, String>> headers,
+          @Named("getContainerLifecycle.context") final List<Function<Map<String, String>, String>> context,
+          @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
+          @Named("virtualhost") final boolean virtualHost) {
+
+
+    final Map<String, Function<Map<String, String>, String>> queryParameters = Maps.newLinkedHashMap();
+
+    queryParameters.put(QueryParameters.BUCKET_LIFECYCLE_PARAMETER,
+            new Function<Map<String, String>, String>() {
+              @Override
+              public String apply(final Map<String, String> context) {
+                return null;
+              }
+            });
+
+    return createRequestSupplier(Operation.GET_CONTAINER_LIFECYCLE, id, Method.GET, scheme, host, port,
+            uriRoot, container, apiVersion, null, queryParameters, headers, context, null,
+            null, credentials, virtualHost, null, null, false);
   }
 
   @Provides

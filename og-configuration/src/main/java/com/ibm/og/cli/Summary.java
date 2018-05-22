@@ -76,6 +76,9 @@ public class Summary {
     final OperationStats readLegalHold;
     final OperationStats deleteLegalHold;
     final OperationStats extendRetention;
+    final OperationStats objectRestore;
+    final OperationStats putContainerLifecycle;
+    final OperationStats getContainerLifecycle;
     final int exitCode;
     final ImmutableList<String> exitMessages;
 
@@ -102,6 +105,9 @@ public class Summary {
       this.readLegalHold = new OperationStats(stats, Operation.READ_LEGAL_HOLD);
       this.deleteLegalHold = new OperationStats(stats, Operation.DELETE_LEGAL_HOLD);
       this.extendRetention = new OperationStats(stats, Operation.EXTEND_RETENTION);
+      this.objectRestore = new OperationStats(stats, Operation.OBJECT_RESTORE);
+      this.putContainerLifecycle = new OperationStats(stats, Operation.PUT_CONTAINER_LIFECYCLE);
+      this.getContainerLifecycle = new OperationStats(stats, Operation.GET_CONTAINER_LIFECYCLE);
       this.exitCode = exitCode;
       this.exitMessages = messages;
     }
@@ -115,7 +121,8 @@ public class Summary {
           this.read, this.delete, this.metadata, this.overwrite, this.list, this.containerList,
           this.containerCreate, this.multipartWriteInitiate, this.multipartWritePart, this.multipartWriteComplete,
           this.multipartWriteAbort,this.writeCopy, this.writeLegalHold, this.readLegalHold, this.deleteLegalHold,
-          this.extendRetention, this.exitCode, prettyExitMessages());
+          this.extendRetention, this.objectRestore, this.putContainerLifecycle, this.getContainerLifecycle, this.exitCode,
+              prettyExitMessages());
     }
 
     public String condensedSummary() {
@@ -175,6 +182,15 @@ public class Summary {
       }
       if (this.extendRetention.operations > 0) {
         sb.append(this.extendRetention).append("\n");
+      }
+      if (this.objectRestore.operations > 0) {
+        sb.append(this.objectRestore).append("\n");
+      }
+      if (this.putContainerLifecycle.operations > 0) {
+        sb.append(this.putContainerLifecycle).append("\n");
+      }
+      if (this.getContainerLifecycle.operations > 0) {
+        sb.append(this.getContainerLifecycle).append("\n");
       }
       sb.append("ExitCode: ").append(this.exitCode).append("\n");
       sb.append("ExitMessages:").append(prettyExitMessages());
