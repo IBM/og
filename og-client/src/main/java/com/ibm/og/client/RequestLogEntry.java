@@ -92,7 +92,9 @@ public class RequestLogEntry {
       objectSize = request.getBody().getSize();
     }
     if (request.getOperation() == Operation.DELETE) {
-      this.deletedObjectLength = request.getContext().get(Context.X_OG_OBJECT_SIZE);
+      if (request.getContext().get(Context.X_OG_OBJECT_SIZE) != null) {
+        this.deletedObjectLength = request.getContext().get(Context.X_OG_OBJECT_SIZE);
+      }
     }
 
     this.status = response.getStatusCode();
@@ -100,7 +102,9 @@ public class RequestLogEntry {
     this.requestLength = objectSize;
 
     if (request.getOperation() == Operation.METADATA) {
-      objectSize = Long.parseLong(request.getContext().get(Context.X_OG_OBJECT_SIZE));
+      if (request.getContext().get(Context.X_OG_OBJECT_SIZE) != null) {
+        objectSize = Long.parseLong(request.getContext().get(Context.X_OG_OBJECT_SIZE));
+      }
     }
 
     if (response.getBody().getDataType() != DataType.NONE) {
