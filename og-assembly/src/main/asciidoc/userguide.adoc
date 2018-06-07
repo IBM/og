@@ -608,8 +608,7 @@ only for a specific operation type, see <<Operation Headers>>
 ----
 _<<cref1,See note about weights>>_.
 
-=== Write, Overwrite, Read, Metadata, Delete, List, Container Create, Container List, Multipart Write Operations,
-Write Legalhold, Delete Legalhold, Read Legalhold, Extend Retention.
+=== OG Operations ===
 
 Write, Read, Metadata, Delete, and List operations are supported for all Object Storage APIs.
 
@@ -627,13 +626,17 @@ Read Legalhold operation will list the legalholds on an object.
 
 Extend Retention operation adds additional time to the existing retention time of the object.
 
+Object Restore, Put and Get container lifecycle operations are supported for S3 only.
+
 Container Create and Container List are supported for S3 only and the current dsnet implementation
 requires the uri_root be set to "/".
 
 Multipart Write is also only supported for S3.
 
 Operation mix is configured via _write_, _overwrite_, _read_, _metadata_, _delete_, _list_,
-_container_create_, _container_list_, _multipart_write_ keys respectively.
+_container_create_, _container_list_, _multipart_write_, _write_legalhold_, _read_legalhold_,
+_delete_legalhold_, _extend_retention_, _object_restore, _put_container_lifecycle_,
+_get_container_lifecycle_ keys respectively.
 
 Each operation type is configured via a configuration block. E.g. for write:
 
@@ -988,6 +991,37 @@ retention must be in the future time.
       ]
     }
 ----
+
+==== Operation Object Restore ====
+Object Restore operation restores an object in the glacier storage state to active state.
+
+----
+    "object_restore": {
+      "weight": 10,
+      "object_restore_period": 1
+    }
+----
+
+==== Operation Put Container Lifecycle Configuration ====
+This operation adds a lifecycle configuration to the bucket. The new objects will transition to glacier state
+after the specified number of days in archive_transition_period. The unit of archive_transition_period is days.
+
+----
+    "put_container_lifecycle": {
+      "weight": 0,
+      "archive_transition_period": 1
+    }
+----
+
+==== Operation Get Container Lifecycle configuration ====
+This operation retrieves the configured lifecycle configuration on the bucket.
+
+----
+    "get_container_lifecycle": {
+      "weight": 0
+    }
+----
+
 === Filesize
 OG supports one or more filesize distributions for describing desired body lengths of
 generated objects. Filesize configuration block can be added to _write_, _overwrite_ and _multipart_write_ 
