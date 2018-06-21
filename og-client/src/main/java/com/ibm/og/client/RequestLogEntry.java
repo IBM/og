@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.ibm.og.api.*;
 import com.ibm.og.util.Context;
+import org.apache.http.HttpHeaders;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
@@ -104,6 +105,9 @@ public class RequestLogEntry {
     if (request.getOperation() == Operation.METADATA) {
       if (request.getContext().get(Context.X_OG_OBJECT_SIZE) != null) {
         objectSize = Long.parseLong(request.getContext().get(Context.X_OG_OBJECT_SIZE));
+      }
+      else {
+        objectSize = Long.parseLong(response.headers().get(HttpHeaders.CONTENT_LENGTH));
       }
     }
 
