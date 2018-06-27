@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.ibm.og.api.*;
 import com.ibm.og.util.Context;
+import org.apache.http.HttpHeaders;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
@@ -92,7 +93,9 @@ public class RequestLogEntry {
       objectSize = request.getBody().getSize();
     }
     if (request.getOperation() == Operation.DELETE) {
-      this.deletedObjectLength = request.getContext().get(Context.X_OG_OBJECT_SIZE);
+      if (request.getContext().get(Context.X_OG_OBJECT_SIZE) != null) {
+        this.deletedObjectLength = request.getContext().get(Context.X_OG_OBJECT_SIZE);
+      }
     }
 
     this.status = response.getStatusCode();
@@ -100,7 +103,12 @@ public class RequestLogEntry {
     this.requestLength = objectSize;
 
     if (request.getOperation() == Operation.METADATA) {
-      objectSize = Long.parseLong(request.getContext().get(Context.X_OG_OBJECT_SIZE));
+      if (request.getContext().get(Context.X_OG_OBJECT_SIZE) != null) {
+        objectSize = Long.parseLong(request.getContext().get(Context.X_OG_OBJECT_SIZE));
+      }
+      else {
+        objectSize = Long.parseLong(response.headers().get(HttpHeaders.CONTENT_LENGTH));
+      }
     }
 
     if (response.getBody().getDataType() != DataType.NONE) {
