@@ -55,5 +55,7 @@ public class Context {
   public static final String X_OG_OBJECT_RESTORE_PERIOD = "x-og-object-restore-period";
   public static final String X_OG_ARCHIVE_TRANSITION_PERIOD = "x-og-archive-transition-period";
 
+  public static final String X_OG_LIST_MAX_KEYS = "x-og-list-max-keys";
+
   private Context() {}
 }
