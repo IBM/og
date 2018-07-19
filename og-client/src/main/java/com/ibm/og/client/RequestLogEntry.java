@@ -50,6 +50,7 @@ public class RequestLogEntry {
   public final String retention;
   public final String legalHold;
   public String deletedObjectLength;
+  public String maxKeys;
 
 
   private static final DateTimeFormatter FORMATTER =
@@ -79,7 +80,7 @@ public class RequestLogEntry {
     this.timeFinish = RequestLogEntry.FORMATTER.print(this.timestampFinish);
     this.requestMethod = request.getMethod();
 
-    this.requestUri = uri.getPath() + (uri.getQuery() != null ? uri.getQuery() : "");
+    this.requestUri = uri.toString();
 
     String operationObjectName = request.getContext().get(Context.X_OG_OBJECT_NAME);
     // SOH writes
@@ -128,6 +129,10 @@ public class RequestLogEntry {
       this.originalObjectLength = Long.parseLong(request.getContext().get(Context.X_OG_OBJECT_SIZE));
     } else {
       this.originalObjectLength = null;
+    }
+
+    if (request.getOperation() == Operation.LIST) {
+      this.maxKeys = request.getContext().get(Context.X_OG_LIST_MAX_KEYS);
     }
     this.objectLength = objectSize;
     this.objectName = operationObjectName;

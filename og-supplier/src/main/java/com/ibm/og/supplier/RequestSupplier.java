@@ -173,6 +173,8 @@ public class RequestSupplier implements Supplier<Request> {
       }
 
     }
+
+
     // populate the context map with any relevant metadata for this request
     if (this.sseSourceContext != null) {
       for (final Function<Map<String, String>, String> function : this.sseSourceContext) {
@@ -253,7 +255,12 @@ public class RequestSupplier implements Supplier<Request> {
     if (this.queryParameters != null) {
       for (final Map.Entry<String, Function<Map<String, String>, String>> queryParams : this.queryParameters
           .entrySet()) {
-        builder.withQueryParameter(queryParams.getKey(), queryParams.getValue().apply(requestContext));
+        String paramKey = queryParams.getKey();
+        String paramValue = queryParams.getValue().apply(requestContext);
+        builder.withQueryParameter(paramKey, paramValue);
+        if (this.operation == Operation.LIST && paramKey.equals("max-keys")) {
+          builder.withContext(Context.X_OG_LIST_MAX_KEYS, paramValue);
+        }
       }
     }
 
