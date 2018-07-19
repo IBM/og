@@ -1,3 +1,7 @@
+Release 1.8.2
+Changes:
+Add max_keys in the s3 list request to request log entry
+
 Release_1.8.1
 Changes:
 Add null check for DETELE and METADATA object size when logging to request log file
