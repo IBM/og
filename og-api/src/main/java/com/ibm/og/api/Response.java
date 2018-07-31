@@ -17,4 +17,6 @@ public interface Response extends Message {
    * @return the status code for this response
    */
   int getStatusCode();
+
+  RequestTimestamps getRequestTimestamps();
 }
