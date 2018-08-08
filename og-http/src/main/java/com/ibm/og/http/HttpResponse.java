@@ -14,6 +14,7 @@ import com.ibm.og.api.Body;
 import com.ibm.og.api.Response;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.ibm.og.api.RequestTimestamps;
 
 /**
  * A defacto implementation of the {@code Response} interface
@@ -25,6 +26,7 @@ public class HttpResponse implements Response {
   private final Map<String, String> responseHeaders;
   private final Body body;
   private final Map<String, String> context;
+  private final RequestTimestamps timestamps;
 
   private HttpResponse(final Builder builder) {
     this.statusCode = builder.statusCode;
@@ -33,6 +35,7 @@ public class HttpResponse implements Response {
     this.responseHeaders = ImmutableMap.copyOf(builder.responseHeaders);
     this.body = checkNotNull(builder.body);
     this.context = ImmutableMap.copyOf(builder.context);
+    this.timestamps = builder.requestTimestamps;
   }
 
   @Override
@@ -56,6 +59,11 @@ public class HttpResponse implements Response {
   }
 
   @Override
+  public RequestTimestamps getRequestTimestamps() {
+    return this.timestamps;
+  }
+
+  @Override
   public String toString() {
     return String.format(
         "HttpResponse [%n" + "statusCode=%s,%n" + "headers=%s%n" + "body=%s%n" + "context=%s%n]",
@@ -70,6 +78,7 @@ public class HttpResponse implements Response {
     private final Map<String, String> responseHeaders;
     private Body body;
     private final Map<String, String> context;
+    private RequestTimestamps requestTimestamps;
 
     /**
      * Constructs a builder
@@ -117,6 +126,11 @@ public class HttpResponse implements Response {
      */
     public Builder withContext(final String key, final String value) {
       this.context.put(key, value);
+      return this;
+    }
+
+    public Builder withRequestTimestamps(final RequestTimestamps timestamps) {
+      this.requestTimestamps = timestamps;
       return this;
     }
 

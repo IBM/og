@@ -1199,7 +1199,7 @@ public class OGModule extends AbstractModule {
 
     final Map<String, Function<Map<String, String>, String>> headers = Maps.newLinkedHashMap();
     for (final Map.Entry<String, SelectionConfig<String>> e : configHeaders.entrySet()) {
-      headers.put(e.getKey(), createHeaderSuppliers(e.getValue()));
+      headers.put(e.getKey(), createSelectionConfigSupplier(e.getValue()));
     }
 
     return headers;
@@ -1847,25 +1847,28 @@ public class OGModule extends AbstractModule {
 
   }
 
-  private Function<Map<String, String>, String> createHeaderSuppliers(
-      final SelectionConfig<String> selectionConfig) {
-    // FIXME create generalized process for creating random or roundrobin suppliers regardless
-    // of config type
+  // TODO use this for creation of any supplier based on SelectionConfig.
+  // Appropriate exception must be raised based on the context - i.e host, headers etc.
+  private Function<Map<String, String>, String> createSelectionConfigSupplier(
+          final SelectionConfig<String> selectionConfig) {
+    checkNotNull(selectionConfig);
+    checkNotNull(selectionConfig.selection);
+    checkNotNull(selectionConfig.choices);
     if (SelectionType.ROUNDROBIN == selectionConfig.selection) {
       final List<String> choiceList = Lists.newArrayList();
       for (final ChoiceConfig<String> choice : selectionConfig.choices) {
         choiceList.add(choice.choice);
       }
-      final Supplier<String> headerSupplier = Suppliers.cycle(choiceList);
-      return MoreFunctions.forSupplier(headerSupplier);
+      final Supplier<String> configSupplier = Suppliers.cycle(choiceList);
+      return MoreFunctions.forSupplier(configSupplier);
     }
 
     final RandomSupplier.Builder<String> wrc = Suppliers.random();
     for (final ChoiceConfig<String> choice : selectionConfig.choices) {
       wrc.withChoice(choice.choice, choice.weight);
     }
-    final Supplier<String> headerSupplier = wrc.build();
-    return MoreFunctions.forSupplier(headerSupplier);
+    final Supplier<String> supplier = wrc.build();
+    return MoreFunctions.forSupplier(supplier);
   }
 
   @Provides
@@ -1874,8 +1877,13 @@ public class OGModule extends AbstractModule {
   public Map<String, Function<Map<String, String>, String>> provideListQueryParameters(
       final Api api) {
     final Map<String, Function<Map<String, String>, String>> queryParameters;
+    final Function<Map<String, String>, String> maxKeysParameters;
 
     queryParameters = provideQueryParameters(this.config.list.parameters);
+    if (this.config.list.listMaxKeys != null) {
+      maxKeysParameters = createSelectionConfigSupplier(this.config.list.listMaxKeys);
+      queryParameters.put(QueryParameters.S3_LIST_MAX_KEYS, maxKeysParameters);
+    }
 
     if (api == Api.S3) {
       if ((this.config.list.parameters != null && this.config.list.parameters.containsKey("list-type"))) {

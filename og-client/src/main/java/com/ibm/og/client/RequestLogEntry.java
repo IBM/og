@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.ibm.og.api.*;
 import com.ibm.og.util.Context;
+import com.ibm.og.api.RequestTimestamps;
 import org.apache.http.HttpHeaders;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -141,18 +142,6 @@ public class RequestLogEntry {
     this.retention = request.getContext().get(Context.X_OG_OBJECT_RETENTION);
     this.legalHold = request.getContext().get(Context.X_OG_LEGAL_HOLD);
 
-  }
-
-  public static class RequestTimestamps {
-    public long startMillis;
-    public long start;
-    public long requestContentStart;
-    public long requestContentFinish;
-    public long responseContentStart;
-    public long responseContentFirstBytes;
-    public long responseContentFinish;
-    public long finish;
-    public long finishMillis;
   }
 
   public static class RequestStats {

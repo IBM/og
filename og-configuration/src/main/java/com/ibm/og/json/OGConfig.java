@@ -47,6 +47,7 @@ public class OGConfig {
   public ObjectManagerConfig objectManager;
   public boolean shutdownImmediate;
   public boolean virtualHost;
+  public Integer statsLogInterval;
 
   public OGConfig() {
     this.scheme = Scheme.HTTP;
@@ -83,5 +84,7 @@ public class OGConfig {
     this.objectManager = new ObjectManagerConfig();
     this.shutdownImmediate = true;
     this.virtualHost = false;
+    this.statsLogInterval = 300; //seconds
+
   }
 }

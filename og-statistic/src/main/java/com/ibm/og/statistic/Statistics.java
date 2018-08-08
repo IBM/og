@@ -15,6 +15,7 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import com.ibm.og.api.RequestTimestamps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -127,7 +128,9 @@ public class Statistics {
 
       if (HttpUtil.SUCCESS_STATUS_CODES.contains(response.getStatusCode())) {
         final long bytes = getBytes(operation, request, response);
+        final long latency = getLatency(operation, request, response);
         updateCounter(operation, Counter.BYTES, bytes);
+        updateCounter(operation, Counter.LATENCY, latency);
         updateCounter(Operation.ALL, Counter.BYTES, bytes);
       }
       updateStatusCode(operation, response.getStatusCode());
@@ -145,6 +148,11 @@ public class Statistics {
       return request.getBody().getSize();
     }
     return 0;
+  }
+
+  private long getLatency(final Operation operation, final Request request, final Response response) {
+    RequestTimestamps timestamps =  response.getRequestTimestamps();
+    return timestamps.finishMillis - timestamps.startMillis;
   }
 
   private void updateCounter(final Operation operation, final Counter counter, final long value) {

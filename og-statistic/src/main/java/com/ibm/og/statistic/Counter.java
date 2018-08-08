@@ -11,5 +11,5 @@ package com.ibm.og.statistic;
  * @since 1.0
  */
 public enum Counter {
-  OPERATIONS, ACTIVE_OPERATIONS, BYTES;
+  OPERATIONS, ACTIVE_OPERATIONS, BYTES, LATENCY;
 }

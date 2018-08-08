@@ -10,6 +10,7 @@ import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.ibm.og.api.RequestTimestamps;
 import com.ibm.og.http.Bodies;
 import com.ibm.og.statistic.Statistics;
 import com.ibm.og.test.LoadTest;
@@ -68,8 +69,12 @@ public class StatusCodeConditionTest {
     when(request.getOperation()).thenReturn(Operation.WRITE);
 
     final Response response = mock(Response.class);
+    RequestTimestamps timestamps = new RequestTimestamps();
+    timestamps.startMillis = System.currentTimeMillis();
+    timestamps.finishMillis = timestamps.startMillis + 17;
     when(response.getBody()).thenReturn(Bodies.none());
     when(response.getStatusCode()).thenReturn(200);
+    when(response.getRequestTimestamps()).thenReturn(timestamps);
 
     final Pair<Request, Response> operation = Pair.of(request, response);
 
