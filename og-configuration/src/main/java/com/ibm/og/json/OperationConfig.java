@@ -18,6 +18,7 @@ public class OperationConfig {
   public SelectionConfig<FilesizeConfig> filesize;
   public Map<String, SelectionConfig<String>> headers;
   public Map<String, String> parameters;
+  public SelectionConfig<String> listMaxKeys;
   public BodySource body;
   public ContainerConfig container;
   public MultipartConfig upload;
