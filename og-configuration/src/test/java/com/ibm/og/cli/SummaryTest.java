@@ -14,6 +14,7 @@ import java.net.URISyntaxException;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.collect.ImmutableList;
+import com.ibm.og.api.RequestTimestamps;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -59,8 +60,12 @@ public class SummaryTest {
     final Statistics stats = new Statistics();
     final Request request =
         new HttpRequest.Builder(Method.GET, new URI("http://127.0.0.1"), Operation.READ).build();
+    RequestTimestamps timestamps = new RequestTimestamps();
+    timestamps.startMillis = System.currentTimeMillis();
+    timestamps.finishMillis = timestamps.startMillis + 17;
     final Response response =
-        new HttpResponse.Builder().withStatusCode(200).withBody(Bodies.zeroes(1024)).build();
+        new HttpResponse.Builder().withStatusCode(200).withBody(Bodies.zeroes(1024)).withRequestTimestamps(timestamps)
+                .build();
     stats.update(Pair.of(request, response));
     final long timestampStart = System.nanoTime();
     final long timestampFinish = timestampStart + 100;

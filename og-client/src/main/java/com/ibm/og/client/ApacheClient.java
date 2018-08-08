@@ -72,7 +72,7 @@ import com.ibm.og.api.Client;
 import com.ibm.og.api.DataType;
 import com.ibm.og.api.Request;
 import com.ibm.og.api.Response;
-import com.ibm.og.client.RequestLogEntry.RequestTimestamps;
+import com.ibm.og.api.RequestTimestamps;
 import com.ibm.og.http.Bodies;
 import com.ibm.og.http.Headers;
 import com.ibm.og.http.HttpAuth;
@@ -541,10 +541,14 @@ public class ApacheClient implements Client {
         }
         responseBuilder.withStatusCode(599);
       }
-      response = responseBuilder.build();
-      _logger.trace("Received response {}", response);
+
+
       this.timestamps.finish = System.nanoTime();
       this.timestamps.finishMillis = System.currentTimeMillis();
+
+      responseBuilder.withRequestTimestamps(this.timestamps);
+      response = responseBuilder.build();
+      _logger.trace("Received response {}", response);
 
       // do not log requests with 599 response after client shutdown (known aborted requests)
       if (ApacheClient.this.running || response.getStatusCode() != 599) {
@@ -552,6 +556,7 @@ public class ApacheClient implements Client {
             ApacheClient.this.userAgent, this.timestamps);
         _requestLogger.info(ApacheClient.this.gson.toJson(entry));
       }
+
       return response;
     }
 
@@ -1107,4 +1112,5 @@ public class ApacheClient implements Client {
       return new ApacheClient(this);
     }
   }
+
 }

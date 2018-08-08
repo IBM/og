@@ -1423,6 +1423,10 @@ to termination. This option is configured via the _shutdown_immediate_ key.
 "shutdown_immediate": false
 ----
 
+==== Stats Logging Interval
+OG dumps the stats periodically in the console as well as og log. The interval period
+ can be configured with _stats_log_interval_ key. The default value is 300 seconds.
+
 ==== Client Behavior
 OG supports a large number of TCP and HTTP tuning parameters which affect
 client execution behavior. For a complete list, see <<Client Configuration>>.
@@ -1743,6 +1747,13 @@ mixed operation tests.
 |Boolean
 |No
 |true
+
+|stats_log_interval
+|Integer (seconds)
+|No
+|300 seconds
+
+
 |===
 
 [[operation_configuration]]
