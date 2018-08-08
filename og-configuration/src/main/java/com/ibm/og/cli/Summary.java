@@ -125,7 +125,7 @@ public class Summary {
               prettyExitMessages());
     }
 
-    public String condensedSummary() {
+    public String condensedStats() {
       StringBuilder sb = new StringBuilder();
       sb.append("Start: ").append(this.timestampStart).append("\n");
       sb.append("End: ").append(this.timestampFinish).append("\n");
@@ -192,6 +192,12 @@ public class Summary {
       if (this.getContainerLifecycle.operations > 0) {
         sb.append(this.getContainerLifecycle).append("\n");
       }
+      return sb.toString();
+    }
+
+    public String condensedSummary() {
+
+      StringBuilder sb = new StringBuilder(condensedStats());
       sb.append("ExitCode: ").append(this.exitCode).append("\n");
       sb.append("ExitMessages:").append(prettyExitMessages());
 
@@ -202,20 +208,23 @@ public class Summary {
       final transient Operation operation;
       final long operations;
       final long bytes;
+      final long latencies;
       final Map<Integer, Long> statusCodes;
+
 
       private OperationStats(final Statistics stats, final Operation operation) {
         this.operation = operation;
         this.operations = stats.get(operation, Counter.OPERATIONS);
         this.bytes = stats.get(operation, Counter.BYTES);
+        this.latencies = stats.get(operation, Counter.LATENCY);
         this.statusCodes = ImmutableSortedMap.copyOf(stats.statusCodes(operation));
       }
 
       @Override
       public String toString() {
         return String.format(
-            "[%s]%n" + "Operations: %s%n" + "%s%n" + "%s%n" + "%s%n" + "Status Codes:%n%s%n",
-            this.operation, this.operations, formatBytes(), formatThroughput(), formatOPS(),
+            "[%s]%n" + "Operations: %s%n" + "%s%n" + "%s%n" + "%s%n" + "%s%n" +  "Status Codes:%n%s%n",
+            this.operation, this.operations, formatBytes(), formatThroughput(), formatOPS(), formatAverageLatency(),
             formatStatusCodes());
       }
 
@@ -245,6 +254,14 @@ public class Summary {
         return String.format("OPS: %.2f", operationsPerSecond);
       }
 
+      private String formatAverageLatency() {
+        double averageLatency = 0.0;
+        if (this.operations > 0) {
+          averageLatency = this.latencies / this.operations;
+        }
+        return String.format("Avg Latency: %.2f %s", averageLatency, "ms");
+      }
+
       private String formatStatusCodes() {
         if (this.statusCodes.isEmpty()) {
           return String.format("N/A%n");
@@ -271,8 +288,10 @@ public class Summary {
     }
     private String prettyExitMessages() {
       StringBuilder sb = new StringBuilder();
-      for(String s: exitMessages) {
-        sb.append(String.format("%n%s", s));
+      if (exitMessages != null) {
+        for (String s : exitMessages) {
+          sb.append(String.format("%n%s", s));
+        }
       }
       return sb.toString();
     }

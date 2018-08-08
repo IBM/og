@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.ibm.og.api.*;
 import com.ibm.og.util.Context;
+import com.ibm.og.api.RequestTimestamps;
 import org.apache.http.HttpHeaders;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -50,6 +51,7 @@ public class RequestLogEntry {
   public final String retention;
   public final String legalHold;
   public String deletedObjectLength;
+  public String maxKeys;
 
 
   private static final DateTimeFormatter FORMATTER =
@@ -79,7 +81,7 @@ public class RequestLogEntry {
     this.timeFinish = RequestLogEntry.FORMATTER.print(this.timestampFinish);
     this.requestMethod = request.getMethod();
 
-    this.requestUri = uri.getPath() + (uri.getQuery() != null ? uri.getQuery() : "");
+    this.requestUri = uri.toString();
 
     String operationObjectName = request.getContext().get(Context.X_OG_OBJECT_NAME);
     // SOH writes
@@ -129,6 +131,10 @@ public class RequestLogEntry {
     } else {
       this.originalObjectLength = null;
     }
+
+    if (request.getOperation() == Operation.LIST) {
+      this.maxKeys = request.getContext().get(Context.X_OG_LIST_MAX_KEYS);
+    }
     this.objectLength = objectSize;
     this.objectName = operationObjectName;
     this.sourceObjectId = request.getContext().get(Context.X_OG_SSE_SOURCE_OBJECT_NAME);
@@ -136,18 +142,6 @@ public class RequestLogEntry {
     this.retention = request.getContext().get(Context.X_OG_OBJECT_RETENTION);
     this.legalHold = request.getContext().get(Context.X_OG_LEGAL_HOLD);
 
-  }
-
-  public static class RequestTimestamps {
-    public long startMillis;
-    public long start;
-    public long requestContentStart;
-    public long requestContentFinish;
-    public long responseContentStart;
-    public long responseContentFirstBytes;
-    public long responseContentFinish;
-    public long finish;
-    public long finishMillis;
   }
 
   public static class RequestStats {

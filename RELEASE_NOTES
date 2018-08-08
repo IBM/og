@@ -1,3 +1,13 @@
+Release 1.8.3
+Changes:
+Add max_keys attribute to list operation. Multiple weighted max_keys count can be specified for list operation
+Add interval logging to console and og log.
+Update userguide - list operation, stats_log_interval, corrected object file default location
+
+Release 1.8.2
+Changes:
+Add max_keys in the s3 list request to request log entry
+
 Release_1.8.1
 Changes:
 Add null check for DETELE and METADATA object size when logging to request log file

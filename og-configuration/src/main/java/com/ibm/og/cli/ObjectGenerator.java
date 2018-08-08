@@ -5,7 +5,9 @@
 
 package com.ibm.og.cli;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.lang.Thread.interrupted;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -14,6 +16,9 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.util.concurrent.ListenableFuture;
+import com.ibm.og.api.Request;
+import com.ibm.og.api.Response;
 import com.ibm.og.json.OGConfig;
 import com.ibm.og.json.type.FilesizeConfigTypeAdapterFactory;
 import com.ibm.og.test.condition.LoadTestResult;
@@ -72,6 +77,7 @@ public class ObjectGenerator {
   private static ObjectManager objectManager;
   private static Statistics statistics;
   private static OGConfig ogConfig;
+  private static Thread statsLogger;
 
   private static long timestampStart;
   private static long timestampStop;
@@ -123,10 +129,14 @@ public class ObjectGenerator {
 
 
       OGLog4jShutdownCallbackRegistry.setOGShutdownHook((new ShutdownHook(test, shutdownLatch)));
-
+      // start log dump thread
+      statsLogger = new Thread(new StatsLogger(), "stats-logger");
+      statsLogger.start();
       final LoadTestResult result = run(test, objectManager, statistics, gson);
 
       shutdownLatch.countDown();
+
+      statsLogger.interrupt();
 
       // slight race here; if shutdown hook completes prior to the exit line below
       // if the test completes whether it passes or fails, the summary is written in the test results callback
@@ -136,6 +146,7 @@ public class ObjectGenerator {
     } catch (final Exception e) {
       _logger.error("Exception while configuring and running test", e);
       _consoleLogger.error("Test Error. See og.log for details");
+      statsLogger.interrupt();
       logConsoleException(e);
       logExceptionToFile(e);
       timestampStop = System.currentTimeMillis();
@@ -170,6 +181,8 @@ public class ObjectGenerator {
 
     try {
       ogConfig = Application.fromJson(json, OGConfig.class, gson);
+      checkArgument(ogConfig.statsLogInterval > 0, "stats_log_interval must be >= 0 [%s]",
+              ogConfig.statsLogInterval);
       _ogJsonLogger.info(gson.toJson(ogConfig));
     } catch (FileNotFoundException fe) {
       throw new RuntimeException("OGConfig file not found");
@@ -274,6 +287,12 @@ public class ObjectGenerator {
     _consoleLogger.info(banner);
   }
 
+  private static void logStatsBanner() {
+    final String bannerFormat = "%s%nOG Stats%n%s";
+    final String banner = String.format(bannerFormat, LINE_SEPARATOR, LINE_SEPARATOR);
+    _consoleLogger.info(banner);
+  }
+
   private static Summary logSummary(final Statistics stats, final long timestampStart, final long timestampFinish,
                                        final LoadTestResult testResult) {
     final Summary summary = new Summary(stats, timestampStart, timestampFinish,
@@ -290,6 +309,13 @@ public class ObjectGenerator {
     return summary;
   }
 
+  private static Summary dumpSummaryStats(final Statistics stats, final long timestampStart, final long timestampFinish,
+                                    final int testStatus) {
+    final Summary summary = new Summary(stats, timestampStart, timestampFinish, testStatus, null);
+    _consoleLogger.info("{}", summary.getSummaryStats().condensedStats());
+    _logger.info("{}", summary.getSummaryStats().condensedStats());
+    return summary;
+  }
 
   private static class ShutdownHook extends Thread {
     private final LoadTest test;
@@ -310,4 +336,24 @@ public class ObjectGenerator {
       _logger.debug("Shutdown lock released, exiting og shutdown hook");
     }
   }
+
+  private static class StatsLogger implements Runnable {
+    @Override
+    public void run() {
+      boolean running = true;
+      while (!interrupted()) {
+        timestampStop = System.currentTimeMillis();
+        logStatsBanner();
+        dumpSummaryStats(statistics, timestampStart, timestampStop, Application.TEST_SUCCESS);
+        try {
+          Thread.sleep(ogConfig.statsLogInterval * 1000);
+        } catch(InterruptedException ie) {
+          Thread.currentThread().interrupt();
+          _logger.info("StatsLogger thread interrupted");
+        }
+      }
+      _logger.info("StatsLogger Thread done after interruption");
+    }
+  }
+
 }

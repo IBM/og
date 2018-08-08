@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 import java.util.Map.Entry;
 
+import com.ibm.og.api.RequestTimestamps;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -43,6 +44,9 @@ public class StatisticsTest {
   @Before
   public void before() {
     this.stats = new Statistics();
+    RequestTimestamps timestamps = new RequestTimestamps();
+    timestamps.startMillis = System.currentTimeMillis();
+    timestamps.finishMillis = timestamps.startMillis + 17;
     this.request = mock(Request.class);
     when(this.request.getMethod()).thenReturn(Method.PUT);
     when(this.request.getOperation()).thenReturn(Operation.WRITE);
@@ -50,6 +54,7 @@ public class StatisticsTest {
     this.response = mock(Response.class);
     when(this.response.getStatusCode()).thenReturn(201);
     when(this.response.getBody()).thenReturn(Bodies.none());
+    when(this.response.getRequestTimestamps()).thenReturn(timestamps);
     this.operation = Pair.of(this.request, this.response);
   }
 

@@ -18,6 +18,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.concurrent.TimeUnit;
 
+import com.ibm.og.api.RequestTimestamps;
 import com.ibm.og.test.condition.CounterCondition;
 import org.junit.Before;
 import org.junit.Rule;
@@ -64,8 +65,11 @@ public class LoadTestTest {
   public void before() throws URISyntaxException {
     this.request = new HttpRequest.Builder(Method.PUT, new URI("http://127.0.0.1"), Operation.WRITE)
         .withContext(Context.X_OG_REQUEST_ID, "1").build();
+    RequestTimestamps timestamps = new RequestTimestamps();
+    timestamps.startMillis = System.currentTimeMillis();
+    timestamps.finishMillis = timestamps.startMillis + 17;
     this.response = new HttpResponse.Builder().withStatusCode(200)
-        .withContext(Context.X_OG_REQUEST_ID, "1").build();
+        .withContext(Context.X_OG_REQUEST_ID, "1").withRequestTimestamps(timestamps).build();
 
     this.requestManager = mock(RequestManager.class);
     when(this.requestManager.get()).thenReturn(this.request);
