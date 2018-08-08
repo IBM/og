@@ -1022,6 +1022,32 @@ This operation retrieves the configured lifecycle configuration on the bucket.
     }
 ----
 
+==== Operation List configuration ====
+This operation fetches the list of object names in the bucket. The general operation configuration
+properties weight, headers, parameters, container are applicable to this operation.
+
+list_max_keys has been added to supported weight choice of max_keys for the operation.
+Random and round robin selection configuration is supported.
+----
+    "list_max_keys": {
+      "selection": "random",
+      "choices": [
+          {
+            "choice": "50",
+            "weight": 1.0
+          },
+          {
+            "choice": "100",
+            "weight": 5.0
+          },
+          {
+            "choice": "1000",
+            "weight": 10.0
+          }
+      ]
+    }
+----
+
 === Filesize
 OG supports one or more filesize distributions for describing desired body lengths of
 generated objects. Filesize configuration block can be added to _write_, _overwrite_ and _multipart_write_ 
@@ -1331,8 +1357,8 @@ location to store object files is configured via _object_file_location_ and
 _object_file_name_ keys.
 
 _object_file_location_ specifies which directory the object file(s) should be
-written to. The default location is in the *object* sub-directory of the OG
-distribution.
+written to. The default location is in the *object* sub-directory of the directory where
+OG is launched from.
 
 _object_file_name_ specifies a file prefix to use when writing object files.
 Every object file that is written will contain a numeric component to the file
