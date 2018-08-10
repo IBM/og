@@ -68,7 +68,7 @@ public class ConcurrentRequestSchedulerTest {
       public void run() {
         Uninterruptibles.sleepUninterruptibly(10, TimeUnit.MILLISECONDS);
         running.set(false);
-        scheduler.complete(Pair.of(mock(Request.class), mock(Response.class)));
+        scheduler.complete();
       }
     }).start();
 
