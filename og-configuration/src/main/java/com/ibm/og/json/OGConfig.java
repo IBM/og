@@ -84,7 +84,7 @@ public class OGConfig {
     this.objectManager = new ObjectManagerConfig();
     this.shutdownImmediate = true;
     this.virtualHost = false;
-    this.statsLogInterval = 300; //seconds
+    this.statsLogInterval = -1; //seconds
 
   }
 }
