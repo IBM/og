@@ -79,6 +79,8 @@ public class Summary {
     final OperationStats objectRestore;
     final OperationStats putContainerLifecycle;
     final OperationStats getContainerLifecycle;
+    final OperationStats putContainerProtection;
+    final OperationStats getContainerProtection;
     final int exitCode;
     final ImmutableList<String> exitMessages;
 
@@ -108,6 +110,8 @@ public class Summary {
       this.objectRestore = new OperationStats(stats, Operation.OBJECT_RESTORE);
       this.putContainerLifecycle = new OperationStats(stats, Operation.PUT_CONTAINER_LIFECYCLE);
       this.getContainerLifecycle = new OperationStats(stats, Operation.GET_CONTAINER_LIFECYCLE);
+      this.putContainerProtection = new OperationStats(stats, Operation.PUT_CONTAINER_PROTECTION);
+      this.getContainerProtection = new OperationStats(stats, Operation.GET_CONTAINER_PROTECTION);
       this.exitCode = exitCode;
       this.exitMessages = messages;
     }
@@ -191,6 +195,12 @@ public class Summary {
       }
       if (this.getContainerLifecycle.operations > 0) {
         sb.append(this.getContainerLifecycle).append("\n");
+      }
+      if (this.putContainerProtection.operations > 0) {
+        sb.append(this.putContainerProtection).append("\n");
+      }
+      if (this.getContainerProtection.operations > 0) {
+        sb.append(this.getContainerProtection).append("\n");
       }
       return sb.toString();
     }

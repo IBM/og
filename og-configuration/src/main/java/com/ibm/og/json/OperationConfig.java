@@ -29,6 +29,10 @@ public class OperationConfig {
   public boolean contentMd5;
   public Integer objectRestorePeriod;
   public Integer archiveTransitionPeriod;
+  public SelectionConfig<RetentionConfig> containerMinimumRetention;
+  public SelectionConfig<RetentionConfig> containerMaximumRetention;
+  public SelectionConfig<RetentionConfig> containerDefaultRetention;
+
 
   public OperationConfig(final double weight) {
     this();
