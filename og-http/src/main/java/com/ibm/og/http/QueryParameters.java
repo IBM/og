@@ -38,5 +38,8 @@ public class QueryParameters {
     //Put and Get Bucket Lifecycle
     public static final String BUCKET_LIFECYCLE_PARAMETER = "lifecycle";
 
+    //Put and Get Bucket protection
+    public static final String BUCKET_PROTECTION_PARAMETER = "protection";
+
     private QueryParameters() {}
 }
