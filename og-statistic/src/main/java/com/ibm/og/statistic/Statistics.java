@@ -139,6 +139,10 @@ public class Statistics {
     _logger.trace("Statistics operation updated: {}, {}", request, response);
   }
 
+  public void setOperation(final Operation operation) {
+
+  }
+
   private long getBytes(final Operation operation, final Request request, final Response response) {
     if (Operation.WRITE == operation) {
       return request.getBody().getSize();

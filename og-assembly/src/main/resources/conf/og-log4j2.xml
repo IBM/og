@@ -7,6 +7,7 @@
     <Property name="exception.log">exception.log</Property>
     <Property name="og.json">og.json</Property>
     <Property name="summary.json">summary.json</Property>
+    <Property name="og_interval.json">og_interval.json</Property>
     <Property name="log.level">${sys:LOG_LEVEL}</Property>
   </Properties>
   <Appenders>
@@ -34,6 +35,9 @@
     <File name="SummaryJson" append="false" fileName="${test_path}/${summary.json}">
       <PatternLayout pattern="%m%n" />
     </File>
+    <File name="OGIntervalJson" append="false" fileName="${test_path}/${og_interval.json}">
+      <PatternLayout pattern="%m%n" />
+    </File>
   </Appenders>
   <Loggers>
     <Logger name="ConsoleLogger" level="info">
@@ -50,6 +54,9 @@
     </Logger>
     <Logger name="SummaryJsonLogger" level="info" additivity="false">
       <AppenderRef ref="SummaryJson" />
+    </Logger>
+    <Logger name="OgStatsLogger" level="info" additivity="false">
+      <AppenderRef ref="OGIntervalJson" />
     </Logger>
     <Logger name="org.apache.http" level="info" />
     <Logger name="org.apache.http.wire" level="error" />
