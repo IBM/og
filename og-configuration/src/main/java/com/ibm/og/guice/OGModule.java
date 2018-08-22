@@ -1599,7 +1599,6 @@ public class OGModule extends AbstractModule {
     for (final ChoiceConfig<RetentionConfig> choice : retentions) {
       checkNotNull(choice);
       checkNotNull(choice.choice);
-      checkArgument(choice.choice.expiry >= -1, "Expiry must be greater than or equal to -1");
     }
     return provideRetention(retentionConfig);
   }
@@ -1620,7 +1619,6 @@ public class OGModule extends AbstractModule {
     for (final ChoiceConfig<RetentionConfig> choice : retentions) {
       checkNotNull(choice);
       checkNotNull(choice.choice);
-      checkArgument(choice.choice.expiry >= -1, "Expiry must be greater than or equal to -1");
     }
     return provideRetention(retentionConfig);
   }
@@ -1661,7 +1659,6 @@ public class OGModule extends AbstractModule {
     for (final ChoiceConfig<RetentionConfig> choice : retentions) {
       checkNotNull(choice);
       checkNotNull(choice.choice);
-      checkArgument(choice.choice.expiry >= -1, "Expiry must be greater than or equal to -1");
     }
     return provideRetention(retentionConfig);
   }
@@ -1766,7 +1763,14 @@ public class OGModule extends AbstractModule {
       @Override
       public Long apply(final Map<String, String> input) {
         final RetentionConfig retentionConfig = retentionConfigSupplier.get();
-        if (retentionConfig.expiry != -1L) {
+        if (retentionConfig.expiry == -255) {
+          return 0L; // no retention
+        }
+        else if (retentionConfig.expiry == -1L ||  retentionConfig.expiry == -2L) {
+          input.put(Context.X_OG_OBJECT_RETENTION, String.valueOf(retentionConfig.expiry));
+          return retentionConfig.expiry;
+        }
+        else if (retentionConfig.expiry > 0) {
           final Long expiryTime = retentionConfig.timeUnit.toSeconds(retentionConfig.expiry);
           checkArgument(
               (expiryTime
