@@ -772,7 +772,7 @@ public class OGModule extends AbstractModule {
   @Named("putContainerProtection.container")
   public Function<Map<String, String>, String> providePutContainerProtectionContainer() {
     if (this.config.putContainerProtection.container.prefix != null) {
-      return provideContainer(this.config.putContainerLifecycle.container);
+      return provideContainer(this.config.putContainerProtection.container);
     } else {
       return provideContainer(this.config.container);
     }
@@ -1467,9 +1467,18 @@ public class OGModule extends AbstractModule {
   public List<Function<Map<String, String>, String>> providePutContainerProtectionContext() {
 
     final List<Function<Map<String, String>, String>> context = Lists.newArrayList();
-    context.add(provideContainerProtectionMinimumRetention());
-    context.add(provideContainerProtectionMaximumRetention());
-    context.add(provideContainerProtectionDefaultRetention());
+    Function<Map<String, String>, String> f = provideContainerProtectionMinimumRetention();
+    if (f != null) {
+      context.add(f);
+    }
+    f = provideContainerProtectionMaximumRetention();
+    if (f != null) {
+      context.add(f);
+    }
+    f = provideContainerProtectionDefaultRetention();
+    if (f != null) {
+      context.add(f);
+    }
     return ImmutableList.copyOf(context);
   }
 
@@ -1680,7 +1689,9 @@ public class OGModule extends AbstractModule {
 
   @Named("containerProtectionMinimum.retention")
   private Function<Map<String, String>, String> provideContainerProtectionMinimumRetention() {
-    checkNotNull(this.config.putContainerProtection.containerMinimumRetention);
+    if (this.config.putContainerProtection.containerMinimumRetention == null) {
+      return null;
+    }
     final SelectionConfig<RetentionConfig> retentionConfig =
             this.config.putContainerProtection.containerMinimumRetention;
     final List<ChoiceConfig<RetentionConfig>> retentions = checkNotNull(retentionConfig.choices);
@@ -1696,7 +1707,9 @@ public class OGModule extends AbstractModule {
 
   @Named("containerProtectionMaximum.retention")
   private Function<Map<String, String>, String> provideContainerProtectionMaximumRetention() {
-    checkNotNull(this.config.putContainerProtection.containerMaximumRetention);
+    if (this.config.putContainerProtection.containerMaximumRetention == null) {
+      return null;
+    }
     final SelectionConfig<RetentionConfig> retentionConfig =
             this.config.putContainerProtection.containerMaximumRetention;
     final List<ChoiceConfig<RetentionConfig>> retentions = checkNotNull(retentionConfig.choices);
@@ -1713,7 +1726,9 @@ public class OGModule extends AbstractModule {
 
   @Named("containerProtectionDefault.retention")
   private Function<Map<String, String>, String> provideContainerProtectionDefaultRetention() {
-    checkNotNull(this.config.putContainerProtection.containerDefaultRetention);
+    if (this.config.putContainerProtection.containerDefaultRetention == null) {
+      return null;
+    }
     final SelectionConfig<RetentionConfig> retentionConfig =
             this.config.putContainerProtection.containerDefaultRetention;
     final List<ChoiceConfig<RetentionConfig>> retentions = checkNotNull(retentionConfig.choices);
