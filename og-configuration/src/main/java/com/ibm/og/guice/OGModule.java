@@ -1199,7 +1199,7 @@ public class OGModule extends AbstractModule {
 
     final Map<String, Function<Map<String, String>, String>> headers = Maps.newLinkedHashMap();
     for (final Map.Entry<String, SelectionConfig<String>> e : configHeaders.entrySet()) {
-      headers.put(e.getKey(), createHeaderSuppliers(e.getValue()));
+      headers.put(e.getKey(), createSelectionConfigSupplier(e.getValue()));
     }
 
     return headers;
@@ -1847,25 +1847,25 @@ public class OGModule extends AbstractModule {
 
   }
 
-  private Function<Map<String, String>, String> createHeaderSuppliers(
-      final SelectionConfig<String> selectionConfig) {
-    // FIXME create generalized process for creating random or roundrobin suppliers regardless
-    // of config type
+
+  private Function<Map<String, String>, String> createSelectionConfigSupplier(
+          final SelectionConfig<String> selectionConfig) {
+
     if (SelectionType.ROUNDROBIN == selectionConfig.selection) {
       final List<String> choiceList = Lists.newArrayList();
       for (final ChoiceConfig<String> choice : selectionConfig.choices) {
         choiceList.add(choice.choice);
       }
-      final Supplier<String> headerSupplier = Suppliers.cycle(choiceList);
-      return MoreFunctions.forSupplier(headerSupplier);
+      final Supplier<String> configSupplier = Suppliers.cycle(choiceList);
+      return MoreFunctions.forSupplier(configSupplier);
     }
 
     final RandomSupplier.Builder<String> wrc = Suppliers.random();
     for (final ChoiceConfig<String> choice : selectionConfig.choices) {
       wrc.withChoice(choice.choice, choice.weight);
     }
-    final Supplier<String> headerSupplier = wrc.build();
-    return MoreFunctions.forSupplier(headerSupplier);
+    final Supplier<String> configSupplier = wrc.build();
+    return MoreFunctions.forSupplier(configSupplier);
   }
 
   @Provides
@@ -1876,6 +1876,14 @@ public class OGModule extends AbstractModule {
     final Map<String, Function<Map<String, String>, String>> queryParameters;
 
     queryParameters = provideQueryParameters(this.config.list.parameters);
+
+    final Map<String, Function<Map<String, String>, String>> weightedQueryParameters =
+            provideWeightedQueryParameters(this.config.list.weightedParameters);
+
+    for (final Map.Entry<String, Function<Map<String, String>, String>> qp : weightedQueryParameters
+            .entrySet()) {
+      queryParameters.put(qp.getKey(), qp.getValue());
+    }
 
     if (api == Api.S3) {
       if ((this.config.list.parameters != null && this.config.list.parameters.containsKey("list-type"))) {
@@ -1920,6 +1928,20 @@ public class OGModule extends AbstractModule {
       queryParameters.put(e.getKey(), queryParameterFunction);
     }
 
+    return queryParameters;
+  }
+
+
+  Map<String, Function<Map<String, String>, String>> provideWeightedQueryParameters(
+          final Map<String, SelectionConfig<String>> operationQueryParameters) {
+    final Map<String, Function<Map<String, String>, String>> queryParameters = Maps.newHashMap();
+
+    for (final Map.Entry<String, SelectionConfig<String>> e : operationQueryParameters.entrySet()) {
+
+      final SelectionConfig<String> queryParamValue = e.getValue();
+      Function<Map<String, String>, String> queryParameterSupplier = createSelectionConfigSupplier(queryParamValue);
+      queryParameters.put(e.getKey(), queryParameterSupplier);
+    };
     return queryParameters;
   }
 
@@ -2339,8 +2361,7 @@ public class OGModule extends AbstractModule {
       checkArgument(this.config.data == DataType.ZEROES,
           "If contentMD5 is set, data must be ZEROES [%s]", this.config.data);
     }
-    final Map<String, Function<Map<String, String>, String>> queryParameters =
-        Collections.emptyMap();
+    final Map<String, Function<Map<String, String>, String>> queryParameters = Collections.emptyMap();
 
     if (encryptDestinationObject) {
       if (!headers.containsKey("x-amz-server-side-encryption-customer-algorithm")) {
@@ -2408,7 +2429,6 @@ public class OGModule extends AbstractModule {
     final Function<Map<String, String>, Body> body = createObjectRestoreBodySupplier();
 
     final Map<String, Function<Map<String, String>, String>> queryParameters = Maps.newLinkedHashMap();
-
     queryParameters.put(QueryParameters.OBJECT_RESTORE_PARAMETER,
             new Function<Map<String, String>, String>() {
               @Override
@@ -2440,7 +2460,6 @@ public class OGModule extends AbstractModule {
     final Function<Map<String, String>, Body> body = createPutContainerLifecycleBodySupplier();
 
     final Map<String, Function<Map<String, String>, String>> queryParameters = Maps.newLinkedHashMap();
-
     queryParameters.put(QueryParameters.BUCKET_LIFECYCLE_PARAMETER,
             new Function<Map<String, String>, String>() {
               @Override
@@ -2471,7 +2490,6 @@ public class OGModule extends AbstractModule {
 
 
     final Map<String, Function<Map<String, String>, String>> queryParameters = Maps.newLinkedHashMap();
-
     queryParameters.put(QueryParameters.BUCKET_LIFECYCLE_PARAMETER,
             new Function<Map<String, String>, String>() {
               @Override
@@ -2745,7 +2763,6 @@ public class OGModule extends AbstractModule {
       @Named("virtualhost") final boolean virtualHost) {
 
     final Map<String, Function<Map<String, String>, String>> queryParameters = Maps.newHashMap();
-
     final Supplier<Body> bodySupplier = Suppliers.of(Bodies.none());
     final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
 
@@ -2899,6 +2916,9 @@ public class OGModule extends AbstractModule {
 
     final Map<String, Function<Map<String, String>, String>> queryParameters =
         Collections.emptyMap();
+
+    final Map<String, Function<Map<String, String>, String>> weightedQueryParameters =
+            Collections.emptyMap();
 
     final Supplier<Body> bodySupplier = Suppliers.of(Bodies.none());
     final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
