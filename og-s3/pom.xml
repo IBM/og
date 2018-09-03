@@ -4,7 +4,7 @@
   <parent>
     <artifactId>og</artifactId>
     <groupId>com.ibm</groupId>
-    <version>1.8.3</version>
+    <version>1.8.3-SNAPSHOT</version>
   </parent>
   <artifactId>og-s3</artifactId>
   <name>S3</name>

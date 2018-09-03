@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.ibm</groupId>
   <artifactId>og</artifactId>
-  <version>1.8.3</version>
+  <version>1.8.3-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>OG</name>
   <description>Tool for load testing dsNet appliances</description>
