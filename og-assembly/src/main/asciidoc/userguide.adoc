@@ -1452,7 +1452,7 @@ to termination. This option is configured via the _shutdown_immediate_ key.
 ==== Stats Logging Interval
 OG dumps the stats periodically in the console as well as og log. The interval period
  can be configured with _stats_log_interval_ key. The default value is -1, which disables
- interval stats.
+ interval stats. *The stats_log_interval must be atleast 10 seconds*.
 
 The interval stats are logged on the console as well as og_interval.json file.
 

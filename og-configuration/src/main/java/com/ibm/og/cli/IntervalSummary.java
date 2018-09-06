@@ -37,10 +37,8 @@ public class IntervalSummary {
     Summary.SummaryOperationStats intervalStats = new Summary.SummaryOperationStats(timestampStart, timestampFinish);
     for(Operation operation: Operation.values()) {
       if (operation != Operation.ALL && operation != Operation.MULTIPART_WRITE) {
-//        if (stats.get(operation, Counter.OPERATIONS) > 0) {
           addOperationIntervalStats(operation, stats, intervalStats, timestampStart, timestampFinish);
         }
-//      }
     }
 
     return  intervalStats;
@@ -77,7 +75,7 @@ public class IntervalSummary {
     }
 
     OperationStats operationIntervalStat = new OperationStats(operation, operations, bytes, latencies,
-            statusCodes, timestampFinish - timestampStart);
+            statusCodes, timestampStart, timestampFinish);
     this.prevStats.setOperation(currentOperationStats);
     return operationIntervalStat;
   }

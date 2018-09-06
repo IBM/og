@@ -277,6 +277,10 @@ public class OGModule extends AbstractModule {
     bind(FailingConditionsConfig.class).toInstance(this.config.failingConditions);
     bindConstant().annotatedWith(Names.named("shutdownImmediate"))
         .to(this.config.shutdownImmediate);
+    bindConstant().annotatedWith(Names.named("statsLogInterval"))
+            .to(this.config.statsLogInterval);
+    checkArgument((this.config.statsLogInterval == -1 || this.config.statsLogInterval >= 10),
+            "Stats Log Interval must be greater than or equal to 10 seconds");
 
     final MapBinder<AuthType, HttpAuth> httpAuthBinder =
         MapBinder.newMapBinder(binder(), AuthType.class, HttpAuth.class);

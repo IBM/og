@@ -118,6 +118,8 @@ public class Statistics {
     // do not record operations with 599 status after shutdown (known client aborts)
     if (this.running || response.getStatusCode() != 599) {
       updateCounter(operation, Counter.OPERATIONS, 1);
+      final long latency = getLatency(operation, request, response);
+      updateCounter(operation, Counter.LATENCY, latency);
       List<Operation> invalidCountOps = new ArrayList<Operation>();
       invalidCountOps.add(Operation.MULTIPART_WRITE);
       invalidCountOps.add(Operation.MULTIPART_WRITE_INITIATE);
@@ -128,9 +130,7 @@ public class Statistics {
 
       if (HttpUtil.SUCCESS_STATUS_CODES.contains(response.getStatusCode())) {
         final long bytes = getBytes(operation, request, response);
-        final long latency = getLatency(operation, request, response);
         updateCounter(operation, Counter.BYTES, bytes);
-        updateCounter(operation, Counter.LATENCY, latency);
         updateCounter(Operation.ALL, Counter.BYTES, bytes);
       }
       updateStatusCode(operation, response.getStatusCode());
