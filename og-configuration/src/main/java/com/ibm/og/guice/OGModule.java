@@ -1227,7 +1227,7 @@ public class OGModule extends AbstractModule {
   @Singleton
   @GetContainerProtectionHeaders
   public Map<String, Function<Map<String, String>, String>> provideGetContainerProtectionHeaders() {
-    return provideHeaders(this.config.getContainerLifecycle.headers);
+    return provideHeaders(this.config.getContainerProtection.headers);
   }
 
 
