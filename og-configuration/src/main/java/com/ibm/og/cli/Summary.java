@@ -66,7 +66,6 @@ public class Summary {
     this.summaryStats = new SummaryStats(stats, timestampStart, timestampFinish, exitCode, messages);
   }
 
-
   static class SummaryOperationStats {
     long timestampStart;
     long timestampFinish;
@@ -286,6 +285,12 @@ public class Summary {
       if (this.getContainerLifecycle.operations > 0) {
         sb.append(this.getContainerLifecycle).append("\n");
       }
+      if (this.putContainerProtection.operations > 0) {
+        sb.append(this.putContainerProtection).append("\n");
+      }
+      if (this.getContainerProtection.operations > 0) {
+        sb.append(this.getContainerProtection).append("\n");
+      }
       return sb.toString();
     }
 
@@ -345,26 +350,6 @@ public class Summary {
 
 
   }
- //  static class IntervalStatsGsonSerializer implements JsonSerializer<IntervalStats> {
-//    public JsonElement serialize(IntervalStats src, Type typeOfSrc, JsonSerializationContext context) {
-//
-//      //return new JsonPrimitive(src.toString());
-//      final Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
-//              .registerTypeAdapterFactory(new CaseInsensitiveEnumTypeAdapterFactory())
-//              .create();
-//      JsonObject stats = new JsonObject();
-//      JsonObject timeStampStartInterval = new JsonObject();
-//      stats.add("timestampStart", new JsonPrimitive(src.getTimestampStartInterval()));
-//      stats.add("timestampFinish", new JsonPrimitive(src.getTimestampFinishInterval()));
-//      for (Map.Entry<Operation, SummaryStats.OperationStats> entry: src.intervalStats.entrySet()) {
-//        if (entry.getKey() != null){
-//          stats.add(entry.getKey().toString(), new JsonPrimitive(gson.toJson(src.intervalStats.get(entry.getKey()))));
-//        }
-//      }
-//      return stats;
-//    }
-//
-//  }
 
   /**
    * Creates and returns a version of this summary suitable for serializing to json
