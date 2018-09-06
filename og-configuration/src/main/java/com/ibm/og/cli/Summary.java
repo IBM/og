@@ -8,34 +8,16 @@ package com.ibm.og.cli;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.lang.reflect.Type;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
-import com.google.gson.FieldNamingPolicy;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
-import com.ibm.og.util.json.type.CaseInsensitiveEnumTypeAdapterFactory;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 import com.ibm.og.statistic.Counter;
 import com.ibm.og.statistic.Statistics;
 import com.ibm.og.api.Operation;
-import com.ibm.og.util.Pair;
-import com.ibm.og.util.SizeUnit;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedMap;
 
 /**
  * A statistics summary block
@@ -91,6 +73,8 @@ public class Summary {
     OperationStats objectRestore;
     OperationStats putContainerLifecycle;
     OperationStats getContainerLifecycle;
+    OperationStats putContainerProtection;
+    OperationStats getContainerProtection;
 
     protected SummaryOperationStats(final long timestampStart, final long timestampFinish) {
       this.timestampStart = timestampStart;
@@ -124,7 +108,8 @@ public class Summary {
       this.objectRestore = new OperationStats(stats, Operation.OBJECT_RESTORE, timestampStart, timestampFinish);
       this.putContainerLifecycle = new OperationStats(stats, Operation.PUT_CONTAINER_LIFECYCLE, timestampStart, timestampFinish);
       this.getContainerLifecycle = new OperationStats(stats, Operation.GET_CONTAINER_LIFECYCLE, timestampStart, timestampFinish);
-
+      this.putContainerProtection = new OperationStats(stats, Operation.PUT_CONTAINER_PROTECTION, timestampStart, timestampFinish);
+      this.getContainerProtection = new OperationStats(stats, Operation.GET_CONTAINER_PROTECTION, timestampStart, timestampFinish);
     }
 
     public OperationStats getOperation(Operation operation) {

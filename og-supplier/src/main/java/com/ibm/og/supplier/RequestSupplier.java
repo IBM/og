@@ -257,11 +257,16 @@ public class RequestSupplier implements Supplier<Request> {
       if (queryParameters != null) {
         String[] params = queryParameters.split("&");
         for (String s: params) {
+          String[] keyValue = s.split("=");
           String key = s.split("=")[0];
-          String value = s.split("=")[1];
-          builder.withQueryParameter(key, value);
+          if (keyValue.length > 1) {
+            String value = s.split("=")[1];
+            builder.withQueryParameter(keyValue[0], keyValue[1]);
+          } else {
+            builder.withQueryParameter(keyValue[0], "");
+          }
           if (this.operation == Operation.LIST && key.equals(QueryParameters.S3_LIST_MAX_KEYS)) {
-            builder.withContext(Context.X_OG_LIST_MAX_KEYS, value);
+            builder.withContext(Context.X_OG_LIST_MAX_KEYS, keyValue[1]);
           }
         }
       }
