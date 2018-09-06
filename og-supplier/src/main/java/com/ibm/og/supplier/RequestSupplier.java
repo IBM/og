@@ -10,8 +10,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.Charset;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -27,8 +25,8 @@ import com.ibm.og.api.Request;
 import com.ibm.og.http.MD5DigestLoader;
 import com.ibm.og.http.Credential;
 import com.ibm.og.http.HttpRequest;
+import com.ibm.og.http.QueryParameters;
 import com.ibm.og.http.Scheme;
-import com.ibm.og.object.RandomObjectPopulator;
 import com.ibm.og.util.Context;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -191,8 +189,9 @@ public class RequestSupplier implements Supplier<Request> {
       }
     }
 
+    URI uri = getUrl(requestContext);
     final HttpRequest.Builder builder =
-        new HttpRequest.Builder(this.method, getUrl(requestContext), this.operation);
+        new HttpRequest.Builder(this.method, uri, this.operation);
 
     for (final Map.Entry<String, Function<Map<String, String>, String>> header : this.headers
         .entrySet()) {
@@ -250,19 +249,21 @@ public class RequestSupplier implements Supplier<Request> {
       }
     }
 
-
-
-    if (this.queryParameters != null) {
-      for (final Map.Entry<String, Function<Map<String, String>, String>> queryParams : this.queryParameters
-          .entrySet()) {
-        String paramKey = queryParams.getKey();
-        String paramValue = queryParams.getValue().apply(requestContext);
-        builder.withQueryParameter(paramKey, paramValue);
-        if (this.operation == Operation.LIST && paramKey.equals("max-keys")) {
-          builder.withContext(Context.X_OG_LIST_MAX_KEYS, paramValue);
+      // use the query string already constructed in getUrl() to set query parameters. otherwise, the supplier function
+      // for query parameters would be called twice and url and the queryparameter list passed to the builder will
+      // not match
+      String queryParameters = uri.getQuery();
+      if (queryParameters != null) {
+        String[] params = queryParameters.split("&");
+        for (String s: params) {
+          String key = s.split("=")[0];
+          String value = s.split("=")[1];
+          builder.withQueryParameter(key, value);
+          if (this.operation == Operation.LIST && key.equals(QueryParameters.S3_LIST_MAX_KEYS)) {
+            builder.withContext(Context.X_OG_LIST_MAX_KEYS, value);
+          }
         }
       }
-    }
 
     return builder.build();
   }
@@ -354,10 +355,6 @@ public class RequestSupplier implements Supplier<Request> {
       }
     }
 
-//    final String queryParams = PARAM_JOINER.join(queryParamsMap);
-//    if (queryParams.length() > 0) {
-//      s.append("?").append(queryParams);
-//
     if (sb.toString().length() != 0) {
       s.append("?").append(sb.toString());
     }

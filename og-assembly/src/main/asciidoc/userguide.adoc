@@ -756,6 +756,34 @@ currently supported only for the List operation.
 ----
 For s3 bucket listing, add parameter list-type=2. Refer to AWS s3 bucket listing api documentation for additional details.
 
+Additionally, for *list* operation, a new attribute weighted_parameters is added. This gives an ability to specify mutiple chocies
+for the parameters values. For example, this can be used to specify multiple max-keys values.
+
+.Weighted Query Parameters for List Operation.
+[source, json]
+----
+"list": {
+  "parameters": {
+    "custom_key_01": "custom_value_01",
+    "custom_key_02": "custom_value_02"
+  }
+  "weighted_parameters": {
+    "max-keys": {
+    "selection": "random",
+      "choices": [
+        {
+          "weight": 2,
+          "choice": 20
+          },
+          {
+            "weight": 2,
+            "choice": 100
+          }
+        ]
+  }
+}
+----
+
 ==== Operation Container
 OG supports the _container_ key at the operation level with some
 caveats as noted in the Container section.
