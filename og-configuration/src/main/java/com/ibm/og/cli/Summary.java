@@ -8,12 +8,24 @@ package com.ibm.og.cli;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.lang.reflect.Type;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
+import com.google.gson.FieldNamingPolicy;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
+import com.ibm.og.util.json.type.CaseInsensitiveEnumTypeAdapterFactory;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
@@ -54,75 +66,158 @@ public class Summary {
     this.summaryStats = new SummaryStats(stats, timestampStart, timestampFinish, exitCode, messages);
   }
 
-  static class SummaryStats {
-    final long timestampStart;
-    final long timestampFinish;
-    final double runtime;
-    final long operations;
-    final OperationStats write;
-    final OperationStats read;
-    final OperationStats delete;
-    final OperationStats metadata;
-    final OperationStats overwrite;
-    final OperationStats list;
-    final OperationStats containerList;
-    final OperationStats containerCreate;
-    final OperationStats multipartWriteInitiate;
-    final OperationStats multipartWritePart;
-    final OperationStats multipartWriteComplete;
-    final OperationStats multipartWriteAbort;
-    final OperationStats writeCopy;
-    final OperationStats writeLegalHold;
-    final OperationStats readLegalHold;
-    final OperationStats deleteLegalHold;
-    final OperationStats extendRetention;
-    final OperationStats objectRestore;
-    final OperationStats putContainerLifecycle;
-    final OperationStats getContainerLifecycle;
-    final int exitCode;
-    final ImmutableList<String> exitMessages;
 
-    private SummaryStats(final Statistics stats, final long timestampStart,
-        final long timestampFinish, final int exitCode, final ImmutableList<String> messages) {
+  static class SummaryOperationStats {
+    long timestampStart;
+    long timestampFinish;
+    double runtime;
+    long operations;
+    OperationStats write;
+    OperationStats read;
+    OperationStats delete;
+    OperationStats metadata;
+    OperationStats overwrite;
+    OperationStats list;
+    OperationStats containerList;
+    OperationStats containerCreate;
+    OperationStats multipartWriteInitiate;
+    OperationStats multipartWritePart;
+    OperationStats multipartWriteComplete;
+    OperationStats multipartWriteAbort;
+    OperationStats writeCopy;
+    OperationStats writeLegalHold;
+    OperationStats readLegalHold;
+    OperationStats deleteLegalHold;
+    OperationStats extendRetention;
+    OperationStats objectRestore;
+    OperationStats putContainerLifecycle;
+    OperationStats getContainerLifecycle;
+
+    protected SummaryOperationStats(final long timestampStart, final long timestampFinish) {
+      this.timestampStart = timestampStart;
+      this.timestampFinish = timestampFinish;
+      this.runtime = ((double) (timestampFinish - timestampStart)) / TimeUnit.SECONDS.toMillis(1);
+    }
+
+    protected SummaryOperationStats(final Statistics stats, final long timestampStart,
+                                    final long timestampFinish) {
       this.timestampStart = timestampStart;
       this.timestampFinish = timestampFinish;
       this.runtime = ((double) (timestampFinish - timestampStart)) / TimeUnit.SECONDS.toMillis(1);
       this.operations = stats.get(Operation.ALL, Counter.OPERATIONS);
-      this.write = new OperationStats(stats, Operation.WRITE);
-      this.read = new OperationStats(stats, Operation.READ);
-      this.delete = new OperationStats(stats, Operation.DELETE);
-      this.metadata = new OperationStats(stats, Operation.METADATA);
-      this.overwrite = new OperationStats(stats, Operation.OVERWRITE);
-      this.list = new OperationStats(stats, Operation.LIST);
-      this.containerList = new OperationStats(stats, Operation.CONTAINER_LIST);
-      this.containerCreate = new OperationStats(stats, Operation.CONTAINER_CREATE);
-      this.multipartWriteInitiate = new OperationStats(stats, Operation.MULTIPART_WRITE_INITIATE);
-      this.multipartWritePart = new OperationStats(stats, Operation.MULTIPART_WRITE_PART);
-      this.multipartWriteComplete = new OperationStats(stats, Operation.MULTIPART_WRITE_COMPLETE);
-      this.multipartWriteAbort = new OperationStats(stats, Operation.MULTIPART_WRITE_ABORT);
-      this.writeCopy = new OperationStats(stats, Operation.WRITE_COPY);
-      this.writeLegalHold = new OperationStats(stats, Operation.WRITE_LEGAL_HOLD);
-      this.readLegalHold = new OperationStats(stats, Operation.READ_LEGAL_HOLD);
-      this.deleteLegalHold = new OperationStats(stats, Operation.DELETE_LEGAL_HOLD);
-      this.extendRetention = new OperationStats(stats, Operation.EXTEND_RETENTION);
-      this.objectRestore = new OperationStats(stats, Operation.OBJECT_RESTORE);
-      this.putContainerLifecycle = new OperationStats(stats, Operation.PUT_CONTAINER_LIFECYCLE);
-      this.getContainerLifecycle = new OperationStats(stats, Operation.GET_CONTAINER_LIFECYCLE);
-      this.exitCode = exitCode;
-      this.exitMessages = messages;
+      this.write = new OperationStats(stats, Operation.WRITE, timestampStart, timestampFinish);
+      this.read = new OperationStats(stats, Operation.READ, timestampStart, timestampFinish);
+      this.delete = new OperationStats(stats, Operation.DELETE, timestampStart, timestampFinish);
+      this.metadata = new OperationStats(stats, Operation.METADATA, timestampStart, timestampFinish);
+      this.overwrite = new OperationStats(stats, Operation.OVERWRITE, timestampStart, timestampFinish);
+      this.list = new OperationStats(stats, Operation.LIST, timestampStart, timestampFinish);
+      this.containerList = new OperationStats(stats, Operation.CONTAINER_LIST, timestampStart, timestampFinish);
+      this.containerCreate = new OperationStats(stats, Operation.CONTAINER_CREATE, timestampStart, timestampFinish);
+      this.multipartWriteInitiate = new OperationStats(stats, Operation.MULTIPART_WRITE_INITIATE, timestampStart, timestampFinish);
+      this.multipartWritePart = new OperationStats(stats, Operation.MULTIPART_WRITE_PART, timestampStart, timestampFinish);
+      this.multipartWriteComplete = new OperationStats(stats, Operation.MULTIPART_WRITE_COMPLETE, timestampStart, timestampFinish);
+      this.multipartWriteAbort = new OperationStats(stats, Operation.MULTIPART_WRITE_ABORT, timestampStart, timestampFinish);
+      this.writeCopy = new OperationStats(stats, Operation.WRITE_COPY, timestampStart, timestampFinish);
+      this.writeLegalHold = new OperationStats(stats, Operation.WRITE_LEGAL_HOLD, timestampStart, timestampFinish);
+      this.readLegalHold = new OperationStats(stats, Operation.READ_LEGAL_HOLD, timestampStart, timestampFinish);
+      this.deleteLegalHold = new OperationStats(stats, Operation.DELETE_LEGAL_HOLD, timestampStart, timestampFinish);
+      this.extendRetention = new OperationStats(stats, Operation.EXTEND_RETENTION, timestampStart, timestampFinish);
+      this.objectRestore = new OperationStats(stats, Operation.OBJECT_RESTORE, timestampStart, timestampFinish);
+      this.putContainerLifecycle = new OperationStats(stats, Operation.PUT_CONTAINER_LIFECYCLE, timestampStart, timestampFinish);
+      this.getContainerLifecycle = new OperationStats(stats, Operation.GET_CONTAINER_LIFECYCLE, timestampStart, timestampFinish);
+
     }
 
-    @Override
-    public String toString() {
-      final String format = "Start: %s%nEnd: %s%nRuntime: %.2f "
-          + "Seconds%nOperations: %s%n%n%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%sExitCode: %s%nExitMessages:%s";
-      return String.format(Locale.US, format, FORMATTER.print(this.timestampStart),
-          FORMATTER.print(this.timestampFinish), this.runtime, this.operations, this.write,
-          this.read, this.delete, this.metadata, this.overwrite, this.list, this.containerList,
-          this.containerCreate, this.multipartWriteInitiate, this.multipartWritePart, this.multipartWriteComplete,
-          this.multipartWriteAbort,this.writeCopy, this.writeLegalHold, this.readLegalHold, this.deleteLegalHold,
-          this.extendRetention, this.objectRestore, this.putContainerLifecycle, this.getContainerLifecycle, this.exitCode,
-              prettyExitMessages());
+    public OperationStats getOperation(Operation operation) {
+      if (operation == Operation.WRITE) {
+        return this.write;
+      } else if (operation == Operation.READ) {
+        return this.read;
+      } else if (operation == Operation.DELETE) {
+        return this.delete;
+      } else if (operation == Operation.METADATA) {
+        return this.metadata;
+      } else if (operation == Operation.OVERWRITE) {
+        return this.overwrite;
+      } else if (operation == Operation.LIST) {
+        return this.list;
+      } else if (operation == Operation.CONTAINER_LIST) {
+        return this.containerList;
+      } else if (operation == Operation.CONTAINER_CREATE) {
+        return this.containerCreate;
+      } else if (operation == Operation.MULTIPART_WRITE_INITIATE) {
+        return this.multipartWriteInitiate;
+      } else if (operation == Operation.MULTIPART_WRITE_PART) {
+        return this.multipartWritePart;
+      } else if (operation == Operation.MULTIPART_WRITE_COMPLETE) {
+        return this.multipartWriteComplete;
+      } else if (operation == Operation.MULTIPART_WRITE_ABORT) {
+        return this.multipartWriteAbort;
+      } else if (operation == Operation.WRITE_COPY) {
+        return this.writeCopy;
+      } else if (operation == Operation.WRITE_LEGAL_HOLD) {
+        return this.writeLegalHold;
+      } else if (operation == Operation.READ_LEGAL_HOLD) {
+        return this.readLegalHold;
+      } else if (operation == Operation.DELETE_LEGAL_HOLD) {
+        return this.deleteLegalHold;
+      } else if (operation == Operation.EXTEND_RETENTION) {
+        return this.extendRetention;
+      } else if (operation == Operation.OBJECT_RESTORE) {
+        return this.objectRestore;
+      } else if (operation == Operation.PUT_CONTAINER_LIFECYCLE) {
+        return this.putContainerLifecycle;
+      } else if (operation == Operation.GET_CONTAINER_LIFECYCLE) {
+        return this.getContainerLifecycle;
+      }
+        return null;
+
+    }
+
+    public void setOperation(OperationStats operationStat) {
+      Operation operation = operationStat.operation;
+      this.operations += operationStat.operations;
+      if (operation == Operation.WRITE) {
+        this.write = operationStat;
+      } else if (operation == Operation.READ) {
+        this.read = operationStat;
+      } else if (operation == Operation.DELETE) {
+        this.delete = operationStat;
+      } else if (operation == Operation.METADATA) {
+        this.metadata = operationStat;
+      } else if (operation == Operation.OVERWRITE) {
+        this.overwrite = operationStat;
+      } else if (operation == Operation.LIST) {
+        this.list = operationStat;
+      } else if (operation == Operation.CONTAINER_LIST) {
+        this.containerList = operationStat;
+      } else if (operation == Operation.CONTAINER_CREATE) {
+        this.containerCreate = operationStat;
+      } else if (operation == Operation.MULTIPART_WRITE_INITIATE) {
+        this.multipartWriteInitiate = operationStat;
+      } else if (operation == Operation.MULTIPART_WRITE_PART) {
+        this.multipartWritePart = operationStat;
+      } else if (operation == Operation.MULTIPART_WRITE_COMPLETE) {
+        this.multipartWriteComplete = operationStat;
+      } else if (operation == Operation.MULTIPART_WRITE_ABORT) {
+        this.multipartWriteAbort = operationStat;
+      } else if (operation == Operation.WRITE_COPY) {
+        this.writeCopy = operationStat;
+      } else if (operation == Operation.WRITE_LEGAL_HOLD) {
+        this.writeLegalHold = operationStat;
+      } else if (operation == Operation.READ_LEGAL_HOLD) {
+        this.readLegalHold = operationStat;
+      } else if (operation == Operation.DELETE_LEGAL_HOLD) {
+        this.deleteLegalHold = operationStat;
+      } else if (operation == Operation.EXTEND_RETENTION) {
+        this.extendRetention = operationStat;
+      } else if (operation == Operation.OBJECT_RESTORE) {
+        this.objectRestore = operationStat;
+      } else if (operation == Operation.PUT_CONTAINER_LIFECYCLE) {
+        this.putContainerLifecycle = operationStat;
+      } else if (operation == Operation.GET_CONTAINER_LIFECYCLE) {
+        this.getContainerLifecycle = operationStat;
+      }
     }
 
     public String condensedStats() {
@@ -131,7 +226,6 @@ public class Summary {
       sb.append("End: ").append(this.timestampFinish).append("\n");
       sb.append("Runtime: ").append(this.runtime).append("\n");
       sb.append("Operations: ").append(this.operations).append("\n\n");
-
       if (this.write.operations > 0) {
         sb.append(this.write).append("\n");
       }
@@ -195,6 +289,26 @@ public class Summary {
       return sb.toString();
     }
 
+    @Override
+    public String toString() {
+      return condensedStats();
+    }
+
+  }
+
+  static class SummaryStats extends SummaryOperationStats {
+
+    final int exitCode;
+    final ImmutableList<String> exitMessages;
+
+    SummaryStats(final Statistics stats, final long timestampStart,
+                 final long timestampFinish, final int exitCode, final ImmutableList<String> messages) {
+      super(stats, timestampStart, timestampFinish);
+
+      this.exitCode = exitCode;
+      this.exitMessages = messages;
+    }
+
     public String condensedSummary() {
 
       StringBuilder sb = new StringBuilder(condensedStats());
@@ -204,88 +318,6 @@ public class Summary {
       return sb.toString();
     }
 
-    class OperationStats {
-      final transient Operation operation;
-      final long operations;
-      final long bytes;
-      final long latencies;
-      final Map<Integer, Long> statusCodes;
-
-
-      private OperationStats(final Statistics stats, final Operation operation) {
-        this.operation = operation;
-        this.operations = stats.get(operation, Counter.OPERATIONS);
-        this.bytes = stats.get(operation, Counter.BYTES);
-        this.latencies = stats.get(operation, Counter.LATENCY);
-        this.statusCodes = ImmutableSortedMap.copyOf(stats.statusCodes(operation));
-      }
-
-      @Override
-      public String toString() {
-        return String.format(
-            "[%s]%n" + "Operations: %s%n" + "%s%n" + "%s%n" + "%s%n" + "%s%n" +  "Status Codes:%n%s%n",
-            this.operation, this.operations, formatBytes(), formatThroughput(), formatOPS(), formatAverageLatency(),
-            formatStatusCodes());
-      }
-
-      // determine whether to display byte total in gb, mb, kb or bytes
-      private String formatBytes() {
-        final Pair<Double, SizeUnit> displaySize = displaySize(this.bytes);
-        String displayUnit = displaySize.getValue().toString().toLowerCase();
-        // capitalize
-        displayUnit = displayUnit.substring(0, 1).toUpperCase() + displayUnit.substring(1);
-        return String.format("%s: %.2f", displayUnit, displaySize.getKey());
-      }
-
-      private String formatThroughput() {
-        final double bytesPerSecond = this.bytes / SummaryStats.this.runtime;
-        final Pair<Double, SizeUnit> displaySize = displaySize(bytesPerSecond);
-        String displayUnit;
-        if (displaySize.getValue() != SizeUnit.BYTES) {
-          displayUnit = String.format("%sB/s", displaySize.getValue().toString().substring(0, 1));
-        } else {
-          displayUnit = "B/s";
-        }
-        return String.format("Throughput: %.2f %s", displaySize.getKey(), displayUnit);
-      }
-
-      private String formatOPS() {
-        final double operationsPerSecond = this.operations / SummaryStats.this.runtime;
-        return String.format("OPS: %.2f", operationsPerSecond);
-      }
-
-      private String formatAverageLatency() {
-        double averageLatency = 0.0;
-        if (this.operations > 0) {
-          averageLatency = this.latencies / this.operations;
-        }
-        return String.format("Avg Latency: %.2f %s", averageLatency, "ms");
-      }
-
-      private String formatStatusCodes() {
-        if (this.statusCodes.isEmpty()) {
-          return String.format("N/A%n");
-        }
-
-        final StringBuilder s = new StringBuilder();
-        for (final Entry<Integer, Long> sc : this.statusCodes.entrySet()) {
-          s.append(String.format("%s: %s%n", sc.getKey(), sc.getValue()));
-        }
-        return s.toString();
-      }
-
-      private Pair<Double, SizeUnit> displaySize(final double bytes) {
-        final List<SizeUnit> units = ImmutableList.of(SizeUnit.TERABYTES, SizeUnit.GIGABYTES,
-            SizeUnit.MEGABYTES, SizeUnit.KILOBYTES);
-        for (final SizeUnit unit : units) {
-          final double size = bytes / unit.toBytes(1);
-          if (size >= 1.0) {
-            return Pair.of(size, unit);
-          }
-        }
-        return Pair.of(bytes, SizeUnit.BYTES);
-      }
-    }
     private String prettyExitMessages() {
       StringBuilder sb = new StringBuilder();
       if (exitMessages != null) {
@@ -296,7 +328,43 @@ public class Summary {
       return sb.toString();
     }
 
+
+
+    @Override
+    public String toString() {
+      final String format = "Start: %s%nEnd: %s%nRuntime: %.2f "
+              + "Seconds%nOperations: %s%n%n%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%sExitCode: %s%nExitMessages:%s";
+      return String.format(Locale.US, format, FORMATTER.print(this.timestampStart),
+              FORMATTER.print(this.timestampFinish), this.runtime, this.operations, this.write,
+              this.read, this.delete, this.metadata, this.overwrite, this.list, this.containerList,
+              this.containerCreate, this.multipartWriteInitiate, this.multipartWritePart, this.multipartWriteComplete,
+              this.multipartWriteAbort,this.writeCopy, this.writeLegalHold, this.readLegalHold, this.deleteLegalHold,
+              this.extendRetention, this.objectRestore, this.putContainerLifecycle, this.getContainerLifecycle, this.exitCode,
+              prettyExitMessages());
+    }
+
+
   }
+ //  static class IntervalStatsGsonSerializer implements JsonSerializer<IntervalStats> {
+//    public JsonElement serialize(IntervalStats src, Type typeOfSrc, JsonSerializationContext context) {
+//
+//      //return new JsonPrimitive(src.toString());
+//      final Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+//              .registerTypeAdapterFactory(new CaseInsensitiveEnumTypeAdapterFactory())
+//              .create();
+//      JsonObject stats = new JsonObject();
+//      JsonObject timeStampStartInterval = new JsonObject();
+//      stats.add("timestampStart", new JsonPrimitive(src.getTimestampStartInterval()));
+//      stats.add("timestampFinish", new JsonPrimitive(src.getTimestampFinishInterval()));
+//      for (Map.Entry<Operation, SummaryStats.OperationStats> entry: src.intervalStats.entrySet()) {
+//        if (entry.getKey() != null){
+//          stats.add(entry.getKey().toString(), new JsonPrimitive(gson.toJson(src.intervalStats.get(entry.getKey()))));
+//        }
+//      }
+//      return stats;
+//    }
+//
+//  }
 
   /**
    * Creates and returns a version of this summary suitable for serializing to json
