@@ -18,7 +18,7 @@ public class OperationConfig {
   public SelectionConfig<FilesizeConfig> filesize;
   public Map<String, SelectionConfig<String>> headers;
   public Map<String, String> parameters;
-  public SelectionConfig<String> listMaxKeys;
+  public Map<String, SelectionConfig<String>> weightedParameters;
   public BodySource body;
   public ContainerConfig container;
   public MultipartConfig upload;
@@ -46,6 +46,7 @@ public class OperationConfig {
     this.filesize = null;
     this.headers = Maps.newLinkedHashMap();
     this.parameters = Maps.newLinkedHashMap();
+    this.weightedParameters = Maps.newLinkedHashMap();
     this.body = BodySource.NONE;
     this.container = new ContainerConfig();
     this.upload = new MultipartConfig();

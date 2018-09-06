@@ -282,6 +282,10 @@ public class OGModule extends AbstractModule {
     bind(FailingConditionsConfig.class).toInstance(this.config.failingConditions);
     bindConstant().annotatedWith(Names.named("shutdownImmediate"))
         .to(this.config.shutdownImmediate);
+    bindConstant().annotatedWith(Names.named("statsLogInterval"))
+            .to(this.config.statsLogInterval);
+    checkArgument((this.config.statsLogInterval == -1 || this.config.statsLogInterval >= 10),
+            "Stats Log Interval must be greater than or equal to 10 seconds");
 
     final MapBinder<AuthType, HttpAuth> httpAuthBinder =
         MapBinder.newMapBinder(binder(), AuthType.class, HttpAuth.class);
@@ -2006,13 +2010,10 @@ public class OGModule extends AbstractModule {
 
   }
 
-  // TODO use this for creation of any supplier based on SelectionConfig.
-  // Appropriate exception must be raised based on the context - i.e host, headers etc.
+
   private Function<Map<String, String>, String> createSelectionConfigSupplier(
           final SelectionConfig<String> selectionConfig) {
-    checkNotNull(selectionConfig);
-    checkNotNull(selectionConfig.selection);
-    checkNotNull(selectionConfig.choices);
+
     if (SelectionType.ROUNDROBIN == selectionConfig.selection) {
       final List<String> choiceList = Lists.newArrayList();
       for (final ChoiceConfig<String> choice : selectionConfig.choices) {
@@ -2026,8 +2027,8 @@ public class OGModule extends AbstractModule {
     for (final ChoiceConfig<String> choice : selectionConfig.choices) {
       wrc.withChoice(choice.choice, choice.weight);
     }
-    final Supplier<String> supplier = wrc.build();
-    return MoreFunctions.forSupplier(supplier);
+    final Supplier<String> configSupplier = wrc.build();
+    return MoreFunctions.forSupplier(configSupplier);
   }
 
   @Provides
@@ -2036,12 +2037,15 @@ public class OGModule extends AbstractModule {
   public Map<String, Function<Map<String, String>, String>> provideListQueryParameters(
       final Api api) {
     final Map<String, Function<Map<String, String>, String>> queryParameters;
-    final Function<Map<String, String>, String> maxKeysParameters;
 
     queryParameters = provideQueryParameters(this.config.list.parameters);
-    if (this.config.list.listMaxKeys != null) {
-      maxKeysParameters = createSelectionConfigSupplier(this.config.list.listMaxKeys);
-      queryParameters.put(QueryParameters.S3_LIST_MAX_KEYS, maxKeysParameters);
+
+    final Map<String, Function<Map<String, String>, String>> weightedQueryParameters =
+            provideWeightedQueryParameters(this.config.list.weightedParameters);
+
+    for (final Map.Entry<String, Function<Map<String, String>, String>> qp : weightedQueryParameters
+            .entrySet()) {
+      queryParameters.put(qp.getKey(), qp.getValue());
     }
 
     if (api == Api.S3) {
@@ -2087,6 +2091,20 @@ public class OGModule extends AbstractModule {
       queryParameters.put(e.getKey(), queryParameterFunction);
     }
 
+    return queryParameters;
+  }
+
+
+  Map<String, Function<Map<String, String>, String>> provideWeightedQueryParameters(
+          final Map<String, SelectionConfig<String>> operationQueryParameters) {
+    final Map<String, Function<Map<String, String>, String>> queryParameters = Maps.newHashMap();
+
+    for (final Map.Entry<String, SelectionConfig<String>> e : operationQueryParameters.entrySet()) {
+
+      final SelectionConfig<String> queryParamValue = e.getValue();
+      Function<Map<String, String>, String> queryParameterSupplier = createSelectionConfigSupplier(queryParamValue);
+      queryParameters.put(e.getKey(), queryParameterSupplier);
+    };
     return queryParameters;
   }
 
@@ -2530,8 +2548,7 @@ public class OGModule extends AbstractModule {
       checkArgument(this.config.data == DataType.ZEROES,
           "If contentMD5 is set, data must be ZEROES [%s]", this.config.data);
     }
-    final Map<String, Function<Map<String, String>, String>> queryParameters =
-        Collections.emptyMap();
+    final Map<String, Function<Map<String, String>, String>> queryParameters = Collections.emptyMap();
 
     if (encryptDestinationObject) {
       if (!headers.containsKey("x-amz-server-side-encryption-customer-algorithm")) {
@@ -2599,7 +2616,6 @@ public class OGModule extends AbstractModule {
     final Function<Map<String, String>, Body> body = createObjectRestoreBodySupplier();
 
     final Map<String, Function<Map<String, String>, String>> queryParameters = Maps.newLinkedHashMap();
-
     queryParameters.put(QueryParameters.OBJECT_RESTORE_PARAMETER,
             new Function<Map<String, String>, String>() {
               @Override
@@ -2631,7 +2647,6 @@ public class OGModule extends AbstractModule {
     final Function<Map<String, String>, Body> body = createPutContainerLifecycleBodySupplier();
 
     final Map<String, Function<Map<String, String>, String>> queryParameters = Maps.newLinkedHashMap();
-
     queryParameters.put(QueryParameters.BUCKET_LIFECYCLE_PARAMETER,
             new Function<Map<String, String>, String>() {
               @Override
@@ -2694,7 +2709,6 @@ public class OGModule extends AbstractModule {
 
 
     final Map<String, Function<Map<String, String>, String>> queryParameters = Maps.newLinkedHashMap();
-
     queryParameters.put(QueryParameters.BUCKET_LIFECYCLE_PARAMETER,
             new Function<Map<String, String>, String>() {
               @Override
@@ -2998,7 +3012,6 @@ public class OGModule extends AbstractModule {
       @Named("virtualhost") final boolean virtualHost) {
 
     final Map<String, Function<Map<String, String>, String>> queryParameters = Maps.newHashMap();
-
     final Supplier<Body> bodySupplier = Suppliers.of(Bodies.none());
     final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
 
