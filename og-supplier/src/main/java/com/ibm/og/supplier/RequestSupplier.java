@@ -10,8 +10,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.Charset;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -29,7 +27,6 @@ import com.ibm.og.http.Credential;
 import com.ibm.og.http.HttpRequest;
 import com.ibm.og.http.QueryParameters;
 import com.ibm.og.http.Scheme;
-import com.ibm.og.object.RandomObjectPopulator;
 import com.ibm.og.util.Context;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;

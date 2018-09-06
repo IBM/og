@@ -2917,9 +2917,6 @@ public class OGModule extends AbstractModule {
     final Map<String, Function<Map<String, String>, String>> queryParameters =
         Collections.emptyMap();
 
-    final Map<String, Function<Map<String, String>, String>> weightedQueryParameters =
-            Collections.emptyMap();
-
     final Supplier<Body> bodySupplier = Suppliers.of(Bodies.none());
     final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
 
