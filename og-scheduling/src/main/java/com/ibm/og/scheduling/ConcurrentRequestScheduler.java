@@ -96,12 +96,12 @@ public class ConcurrentRequestScheduler implements Scheduler {
   }
 
   /**
-   * {@inheritDoc}
-   * 
    * Informs this scheduler that it should allow the calling thread on {@link #schedule} to proceed
+   * 
+   * @param operation the operation for the completed request
    */
-  @Override
-  public void complete() {
+  @Subscribe
+  public void complete(final Pair<Request, Response> operation) {
     this.permits.release();
   }
 

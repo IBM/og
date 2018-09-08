@@ -120,11 +120,6 @@ public class RequestRateScheduler implements Scheduler {
   }
 
   @Override
-  public void complete() {
-    // nothing to do for this scheduler type
-  }
-
-  @Override
   public String toString() {
     return String.format("RequestRateScheduler [rate=%s, unit=%s, rampup=%s, rampupUnit=%s]",
         this.rate, this.unit, this.rampup, this.rampupUnit);

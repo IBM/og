@@ -205,7 +205,6 @@ public class LoadTest implements Callable<LoadTestResult> {
       private void postOperation(final Response response) {
         LoadTest.this.eventBus.post(response);
         LoadTest.this.eventBus.post(Pair.of(request, response));
-        LoadTest.this.scheduler.complete();
       }
     });
   }

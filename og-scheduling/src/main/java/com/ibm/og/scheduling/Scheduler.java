@@ -15,8 +15,4 @@ public interface Scheduler {
    * Blocks until permitted to continue
    */
   void schedule();
-  /**
-   * Signals request completion
-   */
-  void complete();
 }
