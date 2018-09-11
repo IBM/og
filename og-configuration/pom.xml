@@ -55,6 +55,10 @@
       <artifactId>og-util</artifactId>
     </dependency>
     <dependency>
+      <groupId>com.ibm</groupId>
+      <artifactId>og-json</artifactId>
+    </dependency>
+    <dependency>
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
     </dependency>

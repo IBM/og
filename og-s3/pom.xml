@@ -29,7 +29,11 @@
     <dependency>
       <groupId>com.ibm</groupId>
       <artifactId>og-supplier</artifactId>
-      <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>com.ibm</groupId>
+      <artifactId>og-json</artifactId>
+    </dependency>
+
   </dependencies>
 </project>

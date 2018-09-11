@@ -52,6 +52,12 @@ public class RequestLogEntry {
   public final String legalHold;
   public String deletedObjectLength;
   public String maxKeys;
+  public String listSessionId;
+  public String listRequestNum;
+  public String listMaxRequests;
+  public String listPrefix;
+  public String listDelimiter;
+  public String listContentSize;
 
 
   private static final DateTimeFormatter FORMATTER =
@@ -134,7 +140,14 @@ public class RequestLogEntry {
 
     if (request.getOperation() == Operation.LIST) {
       this.maxKeys = request.getContext().get(Context.X_OG_LIST_MAX_KEYS);
+      this.listSessionId = request.getContext().get(Context.X_OG_LIST_SESSION_ID);
+      this.listRequestNum = request.getContext().get(Context.X_OG_LIST_REQ_NUM);
+      this.listMaxRequests = request.getContext().get(Context.X_OG_LIST_MAX_REQS);
+      this.listPrefix = request.getContext().get(Context.X_OG_LIST_PREFIX);
+      this.listDelimiter = request.getContext().get(Context.X_OG_LIST_DELIMITER);
+      this.listContentSize = response.getContext().get(Context.X_OG_NUM_LIST_CONTENTS);
     }
+
     this.objectLength = objectSize;
     this.objectName = operationObjectName;
     this.sourceObjectId = request.getContext().get(Context.X_OG_SSE_SOURCE_OBJECT_NAME);

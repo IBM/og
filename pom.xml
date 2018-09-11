@@ -33,6 +33,7 @@
     <module>og-supplier</module>
     <module>og-test</module>
     <module>og-util</module>
+    <module>og-json</module>
   </modules>
   <scm>
     <connection>scm:git:git@github.com:rveitchIBM/og.git</connection>
@@ -107,6 +108,11 @@
       <dependency>
         <groupId>com.ibm</groupId>
         <artifactId>og-util</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.ibm</groupId>
+        <artifactId>og-json</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
