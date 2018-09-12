@@ -83,7 +83,11 @@ public class SimpleRequestManager implements RequestManager {
       @Named("putContainerLifecycle") final Supplier<Request> putContainerLifecycle,
       @Named("putContainerLifecycle.weight") final double putContainerLifecycleWeight,
       @Named("getContainerLifecycle") final Supplier<Request> getContainerLifecycle,
-      @Named("getContainerLifecycle.weight") final double getContainerLifecycleWeight){
+      @Named("getContainerLifecycle.weight") final double getContainerLifecycleWeight,
+      @Named("getContainerProtection") final Supplier<Request> getContainerProtection,
+      @Named("getContainerProtection.weight") final double getContainerProtectionWeight,
+      @Named("putContainerProtection") final Supplier<Request> putContainerProtection,
+      @Named("putContainerProtection.weight") final double putContainerProtectionWeight){
 
 
     checkNotNull(write);
@@ -96,6 +100,15 @@ public class SimpleRequestManager implements RequestManager {
     checkNotNull(containerCreate);
     checkNotNull(writeMultipart);
     checkNotNull(writeCopy);
+    checkNotNull(writeLegalHold);
+    checkNotNull(readLegalhold);
+    checkNotNull(deleteLegalhold);
+    checkNotNull(extendRetention);
+    checkNotNull(objectRestore);
+    checkNotNull(putContainerLifecycle);
+    checkNotNull(getContainerLifecycle);
+    checkNotNull(putContainerProtection);
+    checkNotNull(getContainerProtection);
 
     final RandomSupplier.Builder<Supplier<Request>> wrc = Suppliers.random();
     if (writeWeight > 0.0) {
@@ -148,6 +161,12 @@ public class SimpleRequestManager implements RequestManager {
     }
     if (getContainerLifecycleWeight > 0.0) {
       wrc.withChoice(getContainerLifecycle, getContainerLifecycleWeight);
+    }
+    if (putContainerProtectionWeight > 0.0) {
+      wrc.withChoice(putContainerProtection, putContainerProtectionWeight);
+    }
+    if (getContainerProtectionWeight > 0.0) {
+      wrc.withChoice(getContainerProtection, getContainerProtectionWeight);
     }
 
     this.requestSupplier = wrc.build();
