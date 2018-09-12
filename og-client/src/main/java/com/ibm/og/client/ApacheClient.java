@@ -445,9 +445,9 @@ public class ApacheClient implements Client {
   }
 
   @Override
-  public ListenableFuture<Boolean> shutdown(final boolean immediate) {
+  public ListenableFuture<Boolean> shutdown(final boolean immediate, final int timeout) {
     final SettableFuture<Boolean> future = SettableFuture.create();
-    final Thread t = new Thread(getShutdownRunnable(future, immediate));
+    final Thread t = new Thread(getShutdownRunnable(future, immediate, timeout));
     t.setName("client-shutdown");
     this.running = false;
     t.start();
@@ -455,7 +455,7 @@ public class ApacheClient implements Client {
   }
 
   private Runnable getShutdownRunnable(final SettableFuture<Boolean> future,
-      final boolean immediate) {
+      final boolean immediate, final int timeout) {
     return new Runnable() {
       @Override
       public void run() {
@@ -463,7 +463,7 @@ public class ApacheClient implements Client {
           closeSockets();
         }
 
-        shutdownClient();
+        shutdownClient(timeout);
         future.set(true);
       }
 
@@ -477,11 +477,11 @@ public class ApacheClient implements Client {
         }
       }
 
-      private void shutdownClient() {
+      private void shutdownClient(final int timeout) {
         _logger.info("Issuing client shutdown");
         ApacheClient.this.executorService.shutdown();
         while (!ApacheClient.this.executorService.isTerminated()) {
-          awaitShutdown(1, TimeUnit.HOURS);
+          awaitShutdown(timeout, TimeUnit.SECONDS);
         }
         _logger.info("Client is shutdown");
         _logger.info("Number of requests aborted at shutdown [{}]",

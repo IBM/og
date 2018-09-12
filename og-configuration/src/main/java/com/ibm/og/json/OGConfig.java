@@ -46,6 +46,7 @@ public class OGConfig {
   public FailingConditionsConfig failingConditions;
   public ObjectManagerConfig objectManager;
   public boolean shutdownImmediate;
+  public int shutdownTimeout;
   public boolean virtualHost;
   public Integer statsLogInterval;
 
@@ -83,6 +84,7 @@ public class OGConfig {
     this.failingConditions = new FailingConditionsConfig();
     this.objectManager = new ObjectManagerConfig();
     this.shutdownImmediate = true;
+    this.shutdownTimeout = 3600;
     this.virtualHost = false;
     this.statsLogInterval = -1; //seconds
 

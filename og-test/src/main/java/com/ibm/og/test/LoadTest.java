@@ -49,6 +49,7 @@ public class LoadTest implements Callable<LoadTestResult> {
   private final Thread schedulerThread;
   private final EventBus eventBus;
   private final boolean shutdownImmediate;
+  private final int shutdownTimeout;
   private final AtomicBoolean running;
   private long timestampStart;
   private long timestampFinish;
@@ -63,14 +64,16 @@ public class LoadTest implements Callable<LoadTestResult> {
    * @param client a request executor
    * @param scheduler a scheduler which determines request rate
    * @param eventBus an event bus for notifying components of events in the system
-   * @param shutdownImmediate if true, abort all in-progress requests at shutdown, else wait until
-   *        all current requests finish and shutdown gracefully
+   * @param shutdownImmediate if true, abort all in-progress requests at shutdown,
+   *        else wait for all current requests to finish and shutdown
+   * @param shutdownTimeout time in seconds to wait for requests to gracefully complete
    * @throws NullPointerException if requestSupplier, client, scheduler, or eventBus are null
    */
   @Inject
   public LoadTest(final RequestManager requestManager, final Client client,
       final Scheduler scheduler, final EventBus eventBus,
-      @Named("shutdownImmediate") final boolean shutdownImmediate) {
+      @Named("shutdownImmediate") final boolean shutdownImmediate,
+      @Named("shutdownTimeout") final int shutdownTimeout) {
     this.requestManager = checkNotNull(requestManager);
     this.client = checkNotNull(client);
     this.scheduler = checkNotNull(scheduler);
@@ -78,6 +81,7 @@ public class LoadTest implements Callable<LoadTestResult> {
     this.schedulerThread.setDaemon(true);
     this.eventBus = checkNotNull(eventBus);
     this.shutdownImmediate = shutdownImmediate;
+    this.shutdownTimeout = shutdownTimeout;
     this.running = new AtomicBoolean(true);
     this.success = true;
     this.completed = new CountDownLatch(1);
@@ -157,8 +161,8 @@ public class LoadTest implements Callable<LoadTestResult> {
             LoadTest.this.eventBus.post(TestState.STOPPING);
 
             _logger.debug("Waiting on client shutdown future");
-            Uninterruptibles
-                .getUninterruptibly(LoadTest.this.client.shutdown(LoadTest.this.shutdownImmediate));
+            Uninterruptibles.getUninterruptibly(LoadTest.this.client.shutdown(LoadTest.this.shutdownImmediate,
+                                                                              LoadTest.this.shutdownTimeout));
           } catch (final Exception e) {
             _logger.error("Exception while attempting to shutdown client", e);
           }
@@ -214,8 +218,8 @@ public class LoadTest implements Callable<LoadTestResult> {
   public String toString() {
     return String.format(
         "LoadTest [%n" + "requestManager=%s,%n" + "scheduler=%s,%n" + "client=%s,%n"
-            + "shutdownImmediate=%s%n" + "]",
-        this.requestManager, this.scheduler, this.client, this.shutdownImmediate);
+            + "shutdownImmediate=%s,%n" + "shutdownTimeout=%s%n" + "]",
+        this.requestManager, this.scheduler, this.client, this.shutdownImmediate, this.shutdownTimeout);
   }
   
 }

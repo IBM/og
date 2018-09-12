@@ -83,7 +83,7 @@ public class LoadTestTest {
     this.handler = new LoadTestSubscriberExceptionHandler();
     this.eventBus = new EventBus(this.handler);
     this.stats = new Statistics();
-    this.test = new LoadTest(this.requestManager, this.client, this.scheduler, this.eventBus, true);
+    this.test = new LoadTest(this.requestManager, this.client, this.scheduler, this.eventBus, true, 0);
     this.handler.setLoadTest(this.test);
 
     final TestCondition condition =
@@ -110,7 +110,7 @@ public class LoadTestTest {
   public void invalidLoadTest(final RequestManager requestManager, final Client client,
       final Scheduler scheduler, final EventBus eventBus) {
     this.thrown.expect(NullPointerException.class);
-    new LoadTest(requestManager, client, scheduler, eventBus, true);
+    new LoadTest(requestManager, client, scheduler, eventBus, true, 0);
   }
 
   @Test
@@ -118,7 +118,7 @@ public class LoadTestTest {
     when(this.requestManager.get()).thenThrow(
             new IllegalStateException("RequestsupplierException test - throw IllegalStateException for testing"));
     assertThat(this.test.call().success, is(false));
-    verify(this.client, times(1)).shutdown(true);
+    verify(this.client, times(1)).shutdown(true, 0);
   }
 
   @Test
@@ -137,6 +137,6 @@ public class LoadTestTest {
     assertThat(this.test.call().success, is(true));
     assertThat(this.stats.get(Operation.WRITE, Counter.OPERATIONS), greaterThanOrEqualTo(5L));
     verify(this.client, atLeast(5)).execute(this.request);
-    verify(this.client, times(1)).shutdown(true);
+    verify(this.client, times(1)).shutdown(true, 0);
   }
 }

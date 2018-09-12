@@ -275,8 +275,8 @@ public class OGModule extends AbstractModule {
     });
     bind(StoppingConditionsConfig.class).toInstance(this.config.stoppingConditions);
     bind(FailingConditionsConfig.class).toInstance(this.config.failingConditions);
-    bindConstant().annotatedWith(Names.named("shutdownImmediate"))
-        .to(this.config.shutdownImmediate);
+    bindConstant().annotatedWith(Names.named("shutdownImmediate")).to(this.config.shutdownImmediate);
+    bindConstant().annotatedWith(Names.named("shutdownTimeout")).to(this.config.shutdownTimeout);
 
     final MapBinder<AuthType, HttpAuth> httpAuthBinder =
         MapBinder.newMapBinder(binder(), AuthType.class, HttpAuth.class);
