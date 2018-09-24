@@ -478,25 +478,28 @@ public class ApacheClient implements Client {
       }
 
       private void shutdownClient(final int timeout) {
-        _logger.info("Issuing client shutdown");
-        ApacheClient.this.executorService.shutdown();
-        while (!ApacheClient.this.executorService.isTerminated()) {
-          awaitShutdown(timeout, TimeUnit.SECONDS);
+        try {
+          _logger.info("Issuing client shutdown");
+          ApacheClient.this.executorService.shutdown();
+          _logger.info("Awaiting client executor service termination for {} seconds", timeout);
+          final boolean result = ApacheClient.this.executorService.awaitTermination(timeout, TimeUnit.SECONDS);
+          _logger.info("Client executor service termination result [{}]",
+                  result ? "success" : "failure");
+          if (result == false) {
+            _logger.warn("Forcing connections to close");
+            closeSockets();
+            List<Runnable> tasks = ApacheClient.this.executorService.shutdownNow();
+            if (tasks.size() > 0) {
+              _logger.error("Cancelled {} scheduled client tasks", tasks.size());
+            }
+            _logger.info("Client is gracefully terminated [{}]", ApacheClient.this.executorService.isTerminated());
+          }
+        } catch (final InterruptedException e) {
+          _logger.error("Interrupted while waiting for client executor service termination", e);
         }
         _logger.info("Client is shutdown");
         _logger.info("Number of requests aborted at shutdown [{}]",
             ApacheClient.this.abortedRequestsAtShutdown.get());
-      }
-
-      private void awaitShutdown(final long timeout, final TimeUnit unit) {
-        try {
-          _logger.info("Awaiting client executor service termination for {} {}", timeout, unit);
-          final boolean result = ApacheClient.this.executorService.awaitTermination(timeout, unit);
-          _logger.info("Client executor service termination result [{}]",
-              result ? "success" : "failure");
-        } catch (final InterruptedException e) {
-          _logger.error("Interrupted while waiting for client executor service termination", e);
-        }
       }
     };
   }
