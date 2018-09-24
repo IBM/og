@@ -150,19 +150,22 @@ public class ObjectGenerator {
         Application.exit(Application.TEST_ERROR);
       }
     } catch (final Exception e) {
-      _logger.error("Exception while configuring and running test", e);
-      _consoleLogger.error("Test Error. See og.log for details");
-      if (ogConfig.statsLogInterval > 0 && statsLogger.isAlive()) {
-        statsLogger.interrupt();
+      try {
+        _logger.error("Exception while configuring and running test", e);
+        _consoleLogger.error("Test Error. See og.log for details");
+        if (ogConfig.statsLogInterval > 0 && statsLogger.isAlive()) {
+          statsLogger.interrupt();
+        }
+        logConsoleException(e);
+        logExceptionToFile(e);
+        timestampStop = System.currentTimeMillis();
+        logSummary(timestampStart, timestampStop, Application.TEST_ERROR,
+                ImmutableList.of(String.format("Test error %s", e.getMessage())));
+        _logger.warn("countdown shutdown latch in exception block");
+      } finally {
+        shutdownLatch.countDown();
+        Application.exit(Application.TEST_ERROR);
       }
-      logConsoleException(e);
-      logExceptionToFile(e);
-      timestampStop = System.currentTimeMillis();
-      logSummary(timestampStart, timestampStop, Application.TEST_ERROR,
-              ImmutableList.of(String.format("Test error %s", e.getMessage())));
-      _logger.warn("countdown shutdown latch in exception block");
-      shutdownLatch.countDown();
-      Application.exit(Application.TEST_ERROR);
     }
 
     Application.exit(Application.TEST_SUCCESS);
