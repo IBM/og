@@ -1872,6 +1872,14 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
+  @Named("multipartWrite.legalHold")
+  public Supplier<Function<Map<String, String>, String>> provideMultipartLegalHold() {
+    return provideLegalHold(this.config.multipartWrite.legalHold);
+  }
+
+
+  @Provides
+  @Singleton
   @Named("add.legalHold")
   public Supplier<Function<Map<String, String>, String>> provideAddLegalHold() {
     if (config.writeLegalhold.weight > 0.0) {
@@ -3218,6 +3226,8 @@ public class OGModule extends AbstractModule {
       @MultiPartWriteBody final Function<Map<String, String>, Body> body,
       @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
       @Named("virtualhost") final boolean virtualHost,
+      @Nullable @Named("multipartWrite.retention") final Function<Map<String, String>, Long> retention,
+      @Nullable @Named("multipartWrite.legalHold") final Supplier<Function<Map<String, String>, String>> legalHold,
       @Named("multipartWrite.sseCDestination") final boolean encryptDestinationObject,
       @Nullable @Named("multipartWrite.contentMd5") final boolean contentMd5) {
 
@@ -3252,7 +3262,7 @@ public class OGModule extends AbstractModule {
 
     return createMultipartRequestSupplier(id, scheme, host, port, uriRoot, container, apiVersion,
         object, partSize, partsPerSession, targetSessions, queryParameters, headers, context, body,
-        credentials, virtualHost, contentMd5);
+        retention, legalHold, credentials, virtualHost, contentMd5);
   }
 
   private Supplier<Request> createMultipartRequestSupplier(
@@ -3266,11 +3276,13 @@ public class OGModule extends AbstractModule {
       final Map<String, Function<Map<String, String>, String>> headers,
       final List<Function<Map<String, String>, String>> context,
       final Function<Map<String, String>, Body> body,
+      @Nullable @Named("write.retention") final Function<Map<String, String>, Long> retention,
+      @Nullable @Named("write.legalHold") final Supplier<Function<Map<String, String>, String>> legalHold,
       final Function<Map<String, String>, Credential> credentials, final boolean virtualHost,
       final boolean contentMd5) {
 
     return new MultipartRequestSupplier(id, scheme, host, port, uriRoot, container, object,
         partSize, partsPerSession, targetSessions, queryParameters, false, headers, context,
-        credentials, body, virtualHost, contentMd5);
+        credentials, body, virtualHost, retention, legalHold, contentMd5);
   }
 }

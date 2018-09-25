@@ -81,6 +81,8 @@ public class MultipartRequestSupplier implements Supplier<Request> {
   private final Function<Map<String, String>, Credential> credentials;
   private final Function<Map<String, String>, Body> body;
   private final boolean virtualHost;
+  private final Function<Map<String, String>, Long> retention;
+  private final Supplier<Function<Map<String, String>, String>> legalHold;
   private final boolean contentMd5;
   private final LoadingCache<Long, byte[]> md5ContentCache;
 
@@ -130,6 +132,8 @@ public class MultipartRequestSupplier implements Supplier<Request> {
       final List<Function<Map<String, String>, String>> context,
       final Function<Map<String, String>, Credential> credentials,
       final Function<Map<String, String>, Body> body, final boolean virtualHost,
+      final Function<Map<String, String>, Long> retention,
+      final Supplier<Function<Map<String, String>, String>> legalHold,
       final boolean contentMd5) {
 
     this.id = id;
@@ -149,6 +153,8 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     this.credentials = credentials;
     this.body = body;
     this.virtualHost = virtualHost;
+    this.retention = retention;
+    this.legalHold = legalHold;
     this.contentMd5 = contentMd5;
     this.randomNumber = new Random();
     this.actionableMultipartSessions = Collections.synchronizedList(new ArrayList<MultipartInfo>());
@@ -719,6 +725,22 @@ public class MultipartRequestSupplier implements Supplier<Request> {
         new HttpRequest.Builder(Method.POST,
             getUrl(context, MultipartRequest.COMPLETE, NO_PART, uploadId, multipartContext.get(Context.X_OG_OBJECT_NAME),
                     multipartContext.get(Context.X_OG_MULTIPART_CONTAINER)), Operation.MULTIPART_WRITE_COMPLETE);
+
+    if (this.retention != null) {
+      this.retention.apply(context);
+    }
+
+    Function<Map<String, String>, String> legalholdFunction;
+    if (this.legalHold != null) {
+      legalholdFunction = this.legalHold.get();
+      if (legalholdFunction != null) {
+        legalholdFunction.apply(context);
+      }
+    }
+
+    if (context.get(Context.X_OG_OBJECT_RETENTION) != null) {
+      builder.withHeader(Context.X_OG_OBJECT_RETENTION, context.get(Context.X_OG_OBJECT_RETENTION));
+    }
 
     // calculate md5 for the body
     HashFunction hf = Hashing.md5();
