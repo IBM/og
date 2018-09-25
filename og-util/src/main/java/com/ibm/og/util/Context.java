@@ -55,6 +55,12 @@ public class Context {
   public static final String X_OG_OBJECT_RESTORE_PERIOD = "x-og-object-restore-period";
   public static final String X_OG_ARCHIVE_TRANSITION_PERIOD = "x-og-archive-transition-period";
 
+  // container protection
+  public static final String X_OG_CONTAINER_MINIMUM_RETENTION_PERIOD = "x-og-container-minimum-retention-period";
+  public static final String X_OG_CONTAINER_MAXIMUM_RETENTION_PERIOD = "x-og-container-maximum-retention-period";
+  public static final String X_OG_CONTAINER_DEFAULT_RETENTION_PERIOD = "x-og-container-default-retention-period";
+
+
   public static final String X_OG_LIST_MAX_KEYS = "x-og-list-max-keys";
 
   private Context() {}

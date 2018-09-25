@@ -5,7 +5,6 @@
 
 package com.ibm.og.cli;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.Thread.interrupted;
 
@@ -68,10 +67,12 @@ public class ObjectGenerator {
   private static final Logger _ogJsonLogger = LoggerFactory.getLogger("OGJsonLogger");
   private static final Logger _summaryJsonLogger = LoggerFactory.getLogger("SummaryJsonLogger");
   private static final Logger _exceptionLogger = LoggerFactory.getLogger("ExceptionLogger");
+  private static final Logger _ogstatsLogger = LoggerFactory.getLogger("OgStatsLogger");
   private static final String LINE_SEPARATOR =
       "-------------------------------------------------------------------------------";
 
   private static final Gson gson = createGson();
+  private static final Gson intervalGson = createIntervalGson();
   private static Injector injector;
   private static LoadTest test;
   private static ObjectManager objectManager;
@@ -81,12 +82,14 @@ public class ObjectGenerator {
 
   private static long timestampStart;
   private static long timestampStop;
+  private static long timestampIntervalStart;
 
 
   private ObjectGenerator() {}
 
   public static void main(final String[] args) {
     timestampStart = System.currentTimeMillis();
+    timestampIntervalStart = timestampStart;
     final OGGetOpt getopt = new OGGetOpt();
     final Cli cli = Application.cli("og", getopt, args);
     if (cli.shouldStop()) {
@@ -127,16 +130,19 @@ public class ObjectGenerator {
        Application.exit(Application.TEST_CONFIG_ERROR);
      }
 
-
       OGLog4jShutdownCallbackRegistry.setOGShutdownHook((new ShutdownHook(test, shutdownLatch)));
       // start log dump thread
-      statsLogger = new Thread(new StatsLogger(), "stats-logger");
-      statsLogger.start();
+      if (ogConfig.statsLogInterval > 0) {
+        statsLogger = new Thread(new StatsLogger(), "stats-logger");
+        statsLogger.start();
+      }
       final LoadTestResult result = run(test, objectManager, statistics, gson);
 
       shutdownLatch.countDown();
 
-      statsLogger.interrupt();
+      if (ogConfig.statsLogInterval > 0 && statsLogger.isAlive()) {
+        statsLogger.interrupt();
+      }
 
       // slight race here; if shutdown hook completes prior to the exit line below
       // if the test completes whether it passes or fails, the summary is written in the test results callback
@@ -146,7 +152,9 @@ public class ObjectGenerator {
     } catch (final Exception e) {
       _logger.error("Exception while configuring and running test", e);
       _consoleLogger.error("Test Error. See og.log for details");
-      statsLogger.interrupt();
+      if (ogConfig.statsLogInterval > 0 && statsLogger.isAlive()) {
+        statsLogger.interrupt();
+      }
       logConsoleException(e);
       logExceptionToFile(e);
       timestampStop = System.currentTimeMillis();
@@ -181,8 +189,6 @@ public class ObjectGenerator {
 
     try {
       ogConfig = Application.fromJson(json, OGConfig.class, gson);
-      checkArgument(ogConfig.statsLogInterval > 0, "stats_log_interval must be >= 0 [%s]",
-              ogConfig.statsLogInterval);
       _ogJsonLogger.info(gson.toJson(ogConfig));
     } catch (FileNotFoundException fe) {
       throw new RuntimeException("OGConfig file not found");
@@ -249,17 +255,32 @@ public class ObjectGenerator {
 
   public static Gson createGson() {
     return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
-        .registerTypeAdapterFactory(new CaseInsensitiveEnumTypeAdapterFactory())
-        // SizeUnit and TimeUnit TypeAdapters must be registered after
-        // CaseInsensitiveEnumTypeAdapterFactory in order to override the registration
-        .registerTypeHierarchyAdapter(SizeUnit.class, new SizeUnitTypeAdapter().nullSafe())
-        .registerTypeHierarchyAdapter(TimeUnit.class, new TimeUnitTypeAdapter().nullSafe())
-        .registerTypeAdapterFactory(new OperationConfigTypeAdapterFactory())
-        .registerTypeAdapterFactory(new SelectionConfigTypeAdapterFactory())
-        .registerTypeAdapterFactory(new ChoiceConfigTypeAdapterFactory())
-        .registerTypeAdapterFactory(new FilesizeConfigTypeAdapterFactory())
-        .registerTypeAdapterFactory(new ContainerConfigTypeAdapterFactory()).setPrettyPrinting()
-        .create();
+            .registerTypeAdapterFactory(new CaseInsensitiveEnumTypeAdapterFactory())
+            // SizeUnit and TimeUnit TypeAdapters must be registered after
+            // CaseInsensitiveEnumTypeAdapterFactory in order to override the registration
+            .registerTypeHierarchyAdapter(SizeUnit.class, new SizeUnitTypeAdapter().nullSafe())
+            .registerTypeHierarchyAdapter(TimeUnit.class, new TimeUnitTypeAdapter().nullSafe())
+            .registerTypeAdapterFactory(new OperationConfigTypeAdapterFactory())
+            .registerTypeAdapterFactory(new SelectionConfigTypeAdapterFactory())
+            .registerTypeAdapterFactory(new ChoiceConfigTypeAdapterFactory())
+            .registerTypeAdapterFactory(new FilesizeConfigTypeAdapterFactory())
+            .registerTypeAdapterFactory(new ContainerConfigTypeAdapterFactory()).setPrettyPrinting()
+            .create();
+  }
+
+  public static Gson createIntervalGson() {
+    return new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+            .registerTypeAdapterFactory(new CaseInsensitiveEnumTypeAdapterFactory())
+            // SizeUnit and TimeUnit TypeAdapters must be registered after
+            // CaseInsensitiveEnumTypeAdapterFactory in order to override the registration
+            .registerTypeHierarchyAdapter(SizeUnit.class, new SizeUnitTypeAdapter().nullSafe())
+            .registerTypeHierarchyAdapter(TimeUnit.class, new TimeUnitTypeAdapter().nullSafe())
+            .registerTypeAdapterFactory(new OperationConfigTypeAdapterFactory())
+            .registerTypeAdapterFactory(new SelectionConfigTypeAdapterFactory())
+            .registerTypeAdapterFactory(new ChoiceConfigTypeAdapterFactory())
+            .registerTypeAdapterFactory(new FilesizeConfigTypeAdapterFactory())
+            .registerTypeAdapterFactory(new ContainerConfigTypeAdapterFactory())
+            .create();
   }
 
   public static Injector createInjector(final OGConfig ogConfig) {
@@ -287,8 +308,8 @@ public class ObjectGenerator {
     _consoleLogger.info(banner);
   }
 
-  private static void logStatsBanner() {
-    final String bannerFormat = "%s%nOG Stats%n%s";
+  private static void logIntervalStatsBanner() {
+    final String bannerFormat = "%s%nIntervalStats%n%s";
     final String banner = String.format(bannerFormat, LINE_SEPARATOR, LINE_SEPARATOR);
     _consoleLogger.info(banner);
   }
@@ -309,12 +330,13 @@ public class ObjectGenerator {
     return summary;
   }
 
-  private static Summary dumpSummaryStats(final Statistics stats, final long timestampStart, final long timestampFinish,
-                                    final int testStatus) {
-    final Summary summary = new Summary(stats, timestampStart, timestampFinish, testStatus, null);
-    _consoleLogger.info("{}", summary.getSummaryStats().condensedStats());
-    _logger.info("{}", summary.getSummaryStats().condensedStats());
-    return summary;
+  private static void dumpSummaryStats(Gson gson, Summary.SummaryOperationStats intervalStats, final long timestampStart, final long timestampFinish,
+                                                        final int testStatus) {
+    logIntervalStatsBanner();
+    _ogstatsLogger.info(intervalGson.toJson(intervalStats));
+    //_consoleLogger.info(gson.toJson(intervalStats));
+    _consoleLogger.info("{}", intervalStats.toString());
+
   }
 
   private static class ShutdownHook extends Thread {
@@ -338,13 +360,19 @@ public class ObjectGenerator {
   }
 
   private static class StatsLogger implements Runnable {
+    IntervalSummary intervalSummary;
     @Override
     public void run() {
       boolean running = true;
       while (!interrupted()) {
         timestampStop = System.currentTimeMillis();
-        logStatsBanner();
-        dumpSummaryStats(statistics, timestampStart, timestampStop, Application.TEST_SUCCESS);
+        if (intervalSummary == null) {
+          intervalSummary = new IntervalSummary(statistics, timestampIntervalStart, timestampStop);
+        } else {
+          Summary.SummaryOperationStats istats = intervalSummary.intervalStats(statistics, timestampIntervalStart, timestampStop);
+          dumpSummaryStats(gson, istats, timestampStart, timestampStop, Application.TEST_SUCCESS);
+          timestampIntervalStart = System.currentTimeMillis();
+        }
         try {
           Thread.sleep(ogConfig.statsLogInterval * 1000);
         } catch(InterruptedException ie) {
