@@ -4,7 +4,7 @@
   <parent>
     <artifactId>og</artifactId>
     <groupId>com.ibm</groupId>
-    <version>1.8.3-SNAPSHOT</version>
+    <version>1.8.3</version>
   </parent>
   <artifactId>og-openstack</artifactId>
   <name>OpenStack</name>
