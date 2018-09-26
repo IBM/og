@@ -636,7 +636,7 @@ Multipart Write is also only supported for S3.
 Operation mix is configured via _write_, _overwrite_, _read_, _metadata_, _delete_, _list_,
 _container_create_, _container_list_, _multipart_write_, _write_legalhold_, _read_legalhold_,
 _delete_legalhold_, _extend_retention_, _object_restore, _put_container_lifecycle_,
-_get_container_lifecycle_ keys respectively.
+_get_container_lifecycle_,  _put_container_protection_, _get_container_protection_ keys respectively.
 
 Each operation type is configured via a configuration block. E.g. for write:
 
@@ -755,6 +755,34 @@ currently supported only for the List operation.
 }
 ----
 For s3 bucket listing, add parameter list-type=2. Refer to AWS s3 bucket listing api documentation for additional details.
+
+Additionally, for *list* operation, a new attribute weighted_parameters is added. This gives an ability to specify mutiple chocies
+for the parameters values. For example, this can be used to specify multiple max-keys values.
+
+.Weighted Query Parameters for List Operation.
+[source, json]
+----
+"list": {
+  "parameters": {
+    "custom_key_01": "custom_value_01",
+    "custom_key_02": "custom_value_02"
+  }
+  "weighted_parameters": {
+    "max-keys": {
+    "selection": "random",
+      "choices": [
+        {
+          "weight": 2,
+          "choice": 20
+          },
+          {
+            "weight": 2,
+            "choice": 100
+          }
+        ]
+  }
+}
+----
 
 ==== Operation Container
 OG supports the _container_ key at the operation level with some
@@ -1022,10 +1050,161 @@ This operation retrieves the configured lifecycle configuration on the bucket.
     }
 ----
 
+==== Operation Put Container Protection Configuration
+This operation puts container protection configuration for the bucket. The input consists of container information,
+default, minimum and maximum retention for the container. The time unit for the retention in days.
+
+----
+  "put_container_protection": {
+    "weight": 50.0,
+    "object": {
+      "prefix": "",
+      "min_suffix": 0,
+      "max_suffix": 9223372036854775807
+    },
+    "headers": {},
+    "parameters": {},
+    "body": "none",
+    "container": {
+      "prefix" : "pcontainer",
+      "selection": "roundrobin",
+      "min_suffix": 0,
+      "max_suffix": 4
+    },
+    "container_minimum_retention": {
+      "selection": "random",
+        "choices": [
+            {
+                "choice": {
+                    "expiry": 50,
+                    "time_unit": "days"
+                },
+                "weight": 1.0
+            },
+            {
+                "choice": {
+                    "expiry": 70,
+                    "time_unit": "days"
+                },
+                "weight": 1.0
+            },
+            {
+                "choice": {
+                    "expiry": 90,
+                    "time_unit": "days"
+                },
+                "weight": 1.0
+            }
+        ]
+   },
+    "container_default_retention": {
+      "selection": "random",
+        "choices": [
+            {
+                "choice": {
+                    "expiry": 200,
+                    "time_unit": "days"
+                },
+                "weight": 1.0
+            },
+            {
+                "choice": {
+                    "expiry": 250,
+                    "time_unit": "days"
+                },
+                "weight": 1.0
+            },
+            {
+                "choice": {
+                    "expiry": 245,
+                    "time_unit": "days"
+                },
+                "weight": 1.0
+            }
+        ]
+   },
+    "container_maximum_retention": {
+      "selection": "random",
+        "choices": [
+            {
+                "choice": {
+                    "expiry": 301,
+                    "time_unit": "days"
+                },
+                "weight": 1.0
+            },
+            {
+                "choice": {
+                    "expiry": 350,
+                    "time_unit": "days"
+                },
+                "weight": 1.0
+            },
+            {
+                "choice": {
+                    "expiry": 400,
+                    "time_unit": "days"
+                },
+                "weight": 1.0
+            }
+        ]
+   }
+  }
+----
+
+==== Operation Get Container Protection ====
+The Get Container Protection operation retrieves the container protection details on the bucket.
+
+----
+
+  "get_container_protection": {
+    "weight": 50.0,
+    "object": {
+      "prefix": "",
+      "min_suffix": 0,
+      "max_suffix": 9223372036854775807
+    },
+    "headers": {},
+    "parameters": {},
+    "body": "none",
+    "container": {
+      "prefix" : "pcontainer",
+      "selection": "random",
+      "min_suffix": 0,
+      "max_suffix": 4
+    }
+  },
+
+----
+
 ==== Operation List configuration ====
 This operation fetches the list of object names in the bucket. The general operation configuration
 properties weight, headers, parameters, container are applicable to this operation.
 
+*weighted_parameters* property is added in the list configuration. Now a weighted choice of
+values can be specified for a single parameter.
+
+----
+  "list": {
+    "weight": 0,
+    "parameters": {},
+    "weighted_parameters": {
+          "max-keys": {
+          "selection": "random",
+          "choices": [
+            {
+              "choice": "100",
+              "weight": 1.0
+            },
+            {
+              "choice": "1000",
+              "weight": 5.0
+            },
+          ]
+       }
+  }
+
+----
 list_max_keys has been added to supported weight choice of max_keys for the operation.
 Random and round robin selection configuration is supported.
 ----
@@ -1451,7 +1630,10 @@ to termination. This option is configured via the _shutdown_immediate_ key.
 
 ==== Stats Logging Interval
 OG dumps the stats periodically in the console as well as og log. The interval period
- can be configured with _stats_log_interval_ key. The default value is 300 seconds.
+ can be configured with _stats_log_interval_ key. The default value is -1, which disables
+ interval stats. *The stats_log_interval must be atleast 10 seconds*.
+
+The interval stats are logged on the console as well as og_interval.json file.
 
 ==== Client Behavior
 OG supports a large number of TCP and HTTP tuning parameters which affect
@@ -1777,7 +1959,7 @@ mixed operation tests.
 |stats_log_interval
 |Integer (seconds)
 |No
-|300 seconds
+|-1
 
 
 |===

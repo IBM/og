@@ -1,8 +1,14 @@
 Release 1.8.3
 Changes:
-Add max_keys attribute to list operation. Multiple weighted max_keys count can be specified for list operation
-Add interval logging to console and og log.
-Update userguide - list operation, stats_log_interval, corrected object file default location
+Add weighted_parameters to the list operation. Query Parameters with weighted choice of values can be specified. For example, multiple max_keys count can be specified for the list operation.
+
+Add interval logging to console and og log. stats_log_interval property can be added at the at the og configuration top level. The minimum value should be 10 seconds. By default, interval logging is disabled.
+
+Update Apache http client library to 4.5.6
+
+Fix apache client thread pool size increase without bounds
+
+Add PUT and GET container protection operations
 
 Release 1.8.2
 Changes:

@@ -62,6 +62,7 @@ import com.ibm.og.guice.annotation.DeleteHeaders;
 import com.ibm.og.guice.annotation.DeleteHost;
 import com.ibm.og.guice.annotation.DeleteObjectName;
 import com.ibm.og.guice.annotation.GetContainerLifecycleHeaders;
+import com.ibm.og.guice.annotation.GetContainerProtectionHeaders;
 import com.ibm.og.guice.annotation.ListHeaders;
 import com.ibm.og.guice.annotation.ListHost;
 import com.ibm.og.guice.annotation.ListQueryParameters;
@@ -78,6 +79,7 @@ import com.ibm.og.guice.annotation.OverwriteHeaders;
 import com.ibm.og.guice.annotation.OverwriteHost;
 import com.ibm.og.guice.annotation.OverwriteObjectName;
 import com.ibm.og.guice.annotation.PutContainerLifecycleHeaders;
+import com.ibm.og.guice.annotation.PutContainerProtectionHeaders;
 import com.ibm.og.guice.annotation.ReadHeaders;
 import com.ibm.og.guice.annotation.ReadHost;
 import com.ibm.og.guice.annotation.ReadObjectName;
@@ -264,6 +266,9 @@ public class OGModule extends AbstractModule {
     bindConstant().annotatedWith(Names.named("objectRestore.weight")).to(this.config.objectRestore.weight);
     bindConstant().annotatedWith(Names.named("putContainerLifecycle.weight")).to(this.config.putContainerLifecycle.weight);
     bindConstant().annotatedWith(Names.named("getContainerLifecycle.weight")).to(this.config.getContainerLifecycle.weight);
+    bindConstant().annotatedWith(Names.named("putContainerProtection.weight")).to(this.config.putContainerProtection.weight);
+    bindConstant().annotatedWith(Names.named("getContainerProtection.weight")).to(this.config.getContainerProtection.weight);
+
 
     // FIXME create something like MoreProviders.notNull as a variant of Providers.of which does a
     // null check at creation time, with a custom error message; replace all uses of this pattern
@@ -277,6 +282,10 @@ public class OGModule extends AbstractModule {
     bind(FailingConditionsConfig.class).toInstance(this.config.failingConditions);
     bindConstant().annotatedWith(Names.named("shutdownImmediate"))
         .to(this.config.shutdownImmediate);
+    bindConstant().annotatedWith(Names.named("statsLogInterval"))
+            .to(this.config.statsLogInterval);
+    checkArgument((this.config.statsLogInterval == -1 || this.config.statsLogInterval >= 10),
+            "Stats Log Interval must be greater than or equal to 10 seconds");
 
     final MapBinder<AuthType, HttpAuth> httpAuthBinder =
         MapBinder.newMapBinder(binder(), AuthType.class, HttpAuth.class);
@@ -762,6 +771,28 @@ public class OGModule extends AbstractModule {
     }
   }
 
+  @Provides
+  @Singleton
+  @Named("putContainerProtection.container")
+  public Function<Map<String, String>, String> providePutContainerProtectionContainer() {
+    if (this.config.putContainerProtection.container.prefix != null) {
+      return provideContainer(this.config.putContainerProtection.container);
+    } else {
+      return provideContainer(this.config.container);
+    }
+  }
+
+  @Provides
+  @Singleton
+  @Named("getContainerProtection.container")
+  public Function<Map<String, String>, String> provideGetContainerProtectionContainer() {
+    if (this.config.getContainerProtection.container.prefix != null) {
+      return provideContainer(this.config.getContainerProtection.container);
+    } else {
+      return provideContainer(this.config.container);
+    }
+  }
+
   public Function<Map<String, String>, String> provideContainer(
       final ContainerConfig containerConfig) {
     final String container = checkNotNull(containerConfig.prefix);
@@ -1189,6 +1220,21 @@ public class OGModule extends AbstractModule {
     return provideHeaders(this.config.getContainerLifecycle.headers);
   }
 
+  @Provides
+  @Singleton
+  @PutContainerProtectionHeaders
+  public Map<String, Function<Map<String, String>, String>> providePutContainerProtectionHeaders() {
+    return provideHeaders(this.config.putContainerProtection.headers);
+  }
+
+  @Provides
+  @Singleton
+  @GetContainerProtectionHeaders
+  public Map<String, Function<Map<String, String>, String>> provideGetContainerProtectionHeaders() {
+    return provideHeaders(this.config.getContainerProtection.headers);
+  }
+
+
   private Map<String, Function<Map<String, String>, String>> provideHeaders(
       final Map<String, SelectionConfig<String>> operationHeaders) {
     checkNotNull(operationHeaders);
@@ -1421,6 +1467,37 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
+  @Named("putContainerProtection.context")
+  public List<Function<Map<String, String>, String>> providePutContainerProtectionContext() {
+
+    final List<Function<Map<String, String>, String>> context = Lists.newArrayList();
+    Function<Map<String, String>, String> f = provideContainerProtectionMinimumRetention();
+    if (f != null) {
+      context.add(f);
+    }
+    f = provideContainerProtectionMaximumRetention();
+    if (f != null) {
+      context.add(f);
+    }
+    f = provideContainerProtectionDefaultRetention();
+    if (f != null) {
+      context.add(f);
+    }
+    return ImmutableList.copyOf(context);
+  }
+
+  @Provides
+  @Singleton
+  @Named("getContainerProtection.context")
+  public List<Function<Map<String, String>, String>> provideGetContainerProtectionContext(
+          final ObjectManager objectManager) {
+    final List<Function<Map<String, String>, String>> context = Lists.newArrayList();
+    // return an empty context
+    return ImmutableList.copyOf(context);
+  }
+
+  @Provides
+  @Singleton
   @Named("metadata.context")
   public List<Function<Map<String, String>, String>> provideMetadataContext(
       final ObjectManager objectManager) {
@@ -1526,7 +1603,6 @@ public class OGModule extends AbstractModule {
     for (final ChoiceConfig<RetentionConfig> choice : retentions) {
       checkNotNull(choice);
       checkNotNull(choice.choice);
-      checkArgument(choice.choice.expiry >= -1, "Expiry must be greater than or equal to -1");
     }
     return provideRetention(retentionConfig);
   }
@@ -1547,7 +1623,6 @@ public class OGModule extends AbstractModule {
     for (final ChoiceConfig<RetentionConfig> choice : retentions) {
       checkNotNull(choice);
       checkNotNull(choice.choice);
-      checkArgument(choice.choice.expiry >= -1, "Expiry must be greater than or equal to -1");
     }
     return provideRetention(retentionConfig);
   }
@@ -1588,7 +1663,6 @@ public class OGModule extends AbstractModule {
     for (final ChoiceConfig<RetentionConfig> choice : retentions) {
       checkNotNull(choice);
       checkNotNull(choice.choice);
-      checkArgument(choice.choice.expiry >= -1, "Expiry must be greater than or equal to -1");
     }
     return provideRetention(retentionConfig);
   }
@@ -1612,6 +1686,61 @@ public class OGModule extends AbstractModule {
       checkArgument(choice.choice.expiry >= -1, "Expiry must be greater than or equal to -1");
     }
     return provideRetention(retentionConfig);
+  }
+
+  @Named("containerProtectionMinimum.retention")
+  private Function<Map<String, String>, String> provideContainerProtectionMinimumRetention() {
+    if (this.config.putContainerProtection.containerMinimumRetention == null) {
+      return null;
+    }
+    final SelectionConfig<RetentionConfig> retentionConfig =
+            this.config.putContainerProtection.containerMinimumRetention;
+    final List<ChoiceConfig<RetentionConfig>> retentions = checkNotNull(retentionConfig.choices);
+    checkArgument(!retentions.isEmpty(), "container protection minimum retention must not be empty");
+
+    for (final ChoiceConfig<RetentionConfig> choice : retentions) {
+      checkNotNull(choice);
+      checkNotNull(choice.choice);
+      checkArgument(choice.choice.expiry >= 0, "Container Minimum Retention Value must be greater than or equal to 0");
+    }
+    return provideContainerRetention(retentionConfig, Context.X_OG_CONTAINER_MINIMUM_RETENTION_PERIOD);
+  }
+
+  @Named("containerProtectionMaximum.retention")
+  private Function<Map<String, String>, String> provideContainerProtectionMaximumRetention() {
+    if (this.config.putContainerProtection.containerMaximumRetention == null) {
+      return null;
+    }
+    final SelectionConfig<RetentionConfig> retentionConfig =
+            this.config.putContainerProtection.containerMaximumRetention;
+    final List<ChoiceConfig<RetentionConfig>> retentions = checkNotNull(retentionConfig.choices);
+    checkArgument(!retentions.isEmpty(), "container protection maximum retention must not be empty");
+
+    for (final ChoiceConfig<RetentionConfig> choice : retentions) {
+      checkNotNull(choice);
+      checkNotNull(choice.choice);
+      checkArgument(choice.choice.expiry >= 0, "Container Maximum Retention Value must be greater than or equal to 0");
+    }
+    return provideContainerRetention(retentionConfig, Context.X_OG_CONTAINER_MAXIMUM_RETENTION_PERIOD);
+  }
+
+
+  @Named("containerProtectionDefault.retention")
+  private Function<Map<String, String>, String> provideContainerProtectionDefaultRetention() {
+    if (this.config.putContainerProtection.containerDefaultRetention == null) {
+      return null;
+    }
+    final SelectionConfig<RetentionConfig> retentionConfig =
+            this.config.putContainerProtection.containerDefaultRetention;
+    final List<ChoiceConfig<RetentionConfig>> retentions = checkNotNull(retentionConfig.choices);
+    checkArgument(!retentions.isEmpty(), "container protection default retention must not be empty");
+
+    for (final ChoiceConfig<RetentionConfig> choice : retentions) {
+      checkNotNull(choice);
+      checkNotNull(choice.choice);
+      checkArgument(choice.choice.expiry >= 0, "Container Default Retention Value must be greater than or equal to 0");
+    }
+    return provideContainerRetention(retentionConfig, Context.X_OG_CONTAINER_DEFAULT_RETENTION_PERIOD);
   }
 
   private Function<Map<String, String>, Long> provideRetention(
@@ -1638,7 +1767,14 @@ public class OGModule extends AbstractModule {
       @Override
       public Long apply(final Map<String, String> input) {
         final RetentionConfig retentionConfig = retentionConfigSupplier.get();
-        if (retentionConfig.expiry != -1L) {
+        if (retentionConfig.expiry == -255) {
+          return 0L; // no retention
+        }
+        else if (retentionConfig.expiry == -1L ||  retentionConfig.expiry == -2L) {
+          input.put(Context.X_OG_OBJECT_RETENTION, String.valueOf(retentionConfig.expiry));
+          return retentionConfig.expiry;
+        }
+        else if (retentionConfig.expiry > 0) {
           final Long expiryTime = retentionConfig.timeUnit.toSeconds(retentionConfig.expiry);
           checkArgument(
               (expiryTime
@@ -1700,12 +1836,47 @@ public class OGModule extends AbstractModule {
     };
   }
 
+  private Function<Map<String, String>, String> provideContainerRetention(
+          final SelectionConfig<RetentionConfig> retentions, final String retentionType) {
+    final Supplier<RetentionConfig> retentionConfigSupplier;
+    final SelectionType selection = checkNotNull(retentions.selection);
+
+    if (SelectionType.ROUNDROBIN == selection) {
+      final List<RetentionConfig> retentionConfigList = Lists.newArrayList();
+      retentionConfigSupplier = Suppliers.cycle(retentionConfigList);
+    } else {
+      final RandomSupplier.Builder<RetentionConfig> wrc = Suppliers.random();
+      for (final ChoiceConfig<RetentionConfig> choice : retentions.choices) {
+        wrc.withChoice(choice.choice, choice.weight);
+      }
+      retentionConfigSupplier = wrc.build();
+    }
+    return new Function<Map<String, String>, String>() {
+
+      @Override
+      public String apply(final Map<String, String> input) {
+        final RetentionConfig retentionConfig = retentionConfigSupplier.get();
+        final Long expiryTime = retentionConfig.timeUnit.toDays(retentionConfig.expiry);
+        input.put(retentionType, String.valueOf(expiryTime));
+        return String.valueOf(expiryTime);
+      }
+    };
+  }
+
   @Provides
   @Singleton
   @Named("write.legalHold")
   public Supplier<Function<Map<String, String>, String>> provideLegalHold() {
     return provideLegalHold(this.config.write.legalHold);
   }
+
+  @Provides
+  @Singleton
+  @Named("multipartWrite.legalHold")
+  public Supplier<Function<Map<String, String>, String>> provideMultipartLegalHold() {
+    return provideLegalHold(this.config.multipartWrite.legalHold);
+  }
+
 
   @Provides
   @Singleton
@@ -1847,13 +2018,10 @@ public class OGModule extends AbstractModule {
 
   }
 
-  // TODO use this for creation of any supplier based on SelectionConfig.
-  // Appropriate exception must be raised based on the context - i.e host, headers etc.
+
   private Function<Map<String, String>, String> createSelectionConfigSupplier(
           final SelectionConfig<String> selectionConfig) {
-    checkNotNull(selectionConfig);
-    checkNotNull(selectionConfig.selection);
-    checkNotNull(selectionConfig.choices);
+
     if (SelectionType.ROUNDROBIN == selectionConfig.selection) {
       final List<String> choiceList = Lists.newArrayList();
       for (final ChoiceConfig<String> choice : selectionConfig.choices) {
@@ -1867,8 +2035,8 @@ public class OGModule extends AbstractModule {
     for (final ChoiceConfig<String> choice : selectionConfig.choices) {
       wrc.withChoice(choice.choice, choice.weight);
     }
-    final Supplier<String> supplier = wrc.build();
-    return MoreFunctions.forSupplier(supplier);
+    final Supplier<String> configSupplier = wrc.build();
+    return MoreFunctions.forSupplier(configSupplier);
   }
 
   @Provides
@@ -1877,12 +2045,15 @@ public class OGModule extends AbstractModule {
   public Map<String, Function<Map<String, String>, String>> provideListQueryParameters(
       final Api api) {
     final Map<String, Function<Map<String, String>, String>> queryParameters;
-    final Function<Map<String, String>, String> maxKeysParameters;
 
     queryParameters = provideQueryParameters(this.config.list.parameters);
-    if (this.config.list.listMaxKeys != null) {
-      maxKeysParameters = createSelectionConfigSupplier(this.config.list.listMaxKeys);
-      queryParameters.put(QueryParameters.S3_LIST_MAX_KEYS, maxKeysParameters);
+
+    final Map<String, Function<Map<String, String>, String>> weightedQueryParameters =
+            provideWeightedQueryParameters(this.config.list.weightedParameters);
+
+    for (final Map.Entry<String, Function<Map<String, String>, String>> qp : weightedQueryParameters
+            .entrySet()) {
+      queryParameters.put(qp.getKey(), qp.getValue());
     }
 
     if (api == Api.S3) {
@@ -1928,6 +2099,20 @@ public class OGModule extends AbstractModule {
       queryParameters.put(e.getKey(), queryParameterFunction);
     }
 
+    return queryParameters;
+  }
+
+
+  Map<String, Function<Map<String, String>, String>> provideWeightedQueryParameters(
+          final Map<String, SelectionConfig<String>> operationQueryParameters) {
+    final Map<String, Function<Map<String, String>, String>> queryParameters = Maps.newHashMap();
+
+    for (final Map.Entry<String, SelectionConfig<String>> e : operationQueryParameters.entrySet()) {
+
+      final SelectionConfig<String> queryParamValue = e.getValue();
+      Function<Map<String, String>, String> queryParameterSupplier = createSelectionConfigSupplier(queryParamValue);
+      queryParameters.put(e.getKey(), queryParameterSupplier);
+    };
     return queryParameters;
   }
 
@@ -2053,6 +2238,30 @@ public class OGModule extends AbstractModule {
         sb.append("</Transition>");
         sb.append("</Rule>");
         sb.append("</LifecycleConfiguration>");
+
+        body = sb.toString();
+        return(Bodies.custom(body.length(), body));
+      }
+    };
+  }
+
+  private Function<Map<String, String>, Body> createPutContainerProtectionSupplier() {
+    return new Function<Map<String, String>, Body>() {
+      public Body apply(Map<String, String> input) {
+        String body;
+        StringBuilder sb = new StringBuilder();
+        sb.append("<ProtectionConfiguration>");
+        sb.append("<Status>Compliance</Status>");
+        sb.append("<MinimumRetention><Days>");
+        sb.append(input.get(Context.X_OG_CONTAINER_MINIMUM_RETENTION_PERIOD));
+        sb.append("</Days></MinimumRetention>");
+        sb.append("<MaximumRetention><Days>");
+        sb.append(input.get(Context.X_OG_CONTAINER_MAXIMUM_RETENTION_PERIOD));
+        sb.append("</Days></MaximumRetention>");
+        sb.append("<DefaultRetention><Days>");
+        sb.append(input.get(Context.X_OG_CONTAINER_DEFAULT_RETENTION_PERIOD));
+        sb.append("</Days></DefaultRetention>");
+        sb.append("</ProtectionConfiguration>");
 
         body = sb.toString();
         return(Bodies.custom(body.length(), body));
@@ -2347,8 +2556,7 @@ public class OGModule extends AbstractModule {
       checkArgument(this.config.data == DataType.ZEROES,
           "If contentMD5 is set, data must be ZEROES [%s]", this.config.data);
     }
-    final Map<String, Function<Map<String, String>, String>> queryParameters =
-        Collections.emptyMap();
+    final Map<String, Function<Map<String, String>, String>> queryParameters = Collections.emptyMap();
 
     if (encryptDestinationObject) {
       if (!headers.containsKey("x-amz-server-side-encryption-customer-algorithm")) {
@@ -2416,7 +2624,6 @@ public class OGModule extends AbstractModule {
     final Function<Map<String, String>, Body> body = createObjectRestoreBodySupplier();
 
     final Map<String, Function<Map<String, String>, String>> queryParameters = Maps.newLinkedHashMap();
-
     queryParameters.put(QueryParameters.OBJECT_RESTORE_PARAMETER,
             new Function<Map<String, String>, String>() {
               @Override
@@ -2448,7 +2655,6 @@ public class OGModule extends AbstractModule {
     final Function<Map<String, String>, Body> body = createPutContainerLifecycleBodySupplier();
 
     final Map<String, Function<Map<String, String>, String>> queryParameters = Maps.newLinkedHashMap();
-
     queryParameters.put(QueryParameters.BUCKET_LIFECYCLE_PARAMETER,
             new Function<Map<String, String>, String>() {
               @Override
@@ -2464,6 +2670,38 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
+  @Named("putContainerProtection")
+  public Supplier<Request> providePutContainerProtection(
+          @Named("request.id") final Function<Map<String, String>, String> id, final Scheme scheme,
+          @ReadHost final Function<Map<String, String>, String> host,
+          @Nullable @Named("port") final Integer port,
+          @Nullable @Named("uri.root") final String uriRoot,
+          @Named("putContainerProtection.container") final Function<Map<String, String>, String> container,
+          @Nullable @Named("api.version") final String apiVersion,
+          @PutContainerProtectionHeaders final Map<String, Function<Map<String, String>, String>> headers,
+          @Named("putContainerProtection.context") final List<Function<Map<String, String>, String>> context,
+          @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
+          @Named("virtualhost") final boolean virtualHost) {
+
+    final Function<Map<String, String>, Body> body = createPutContainerProtectionSupplier();
+
+    final Map<String, Function<Map<String, String>, String>> queryParameters = Maps.newLinkedHashMap();
+
+    queryParameters.put(QueryParameters.BUCKET_PROTECTION_PARAMETER,
+            new Function<Map<String, String>, String>() {
+              @Override
+              public String apply(final Map<String, String> context) {
+                return null;
+              }
+            });
+
+    return createRequestSupplier(Operation.PUT_CONTAINER_PROTECTION, id, Method.PUT, scheme, host, port,
+            uriRoot, container, apiVersion, null, queryParameters, headers, context, null, body,
+            credentials, virtualHost, null, null, true);
+  }
+
+  @Provides
+  @Singleton
   @Named("getContainerLifecycle")
   public Supplier<Request> provideGetContainerLifecycle(
           @Named("request.id") final Function<Map<String, String>, String> id, final Scheme scheme,
@@ -2472,14 +2710,13 @@ public class OGModule extends AbstractModule {
           @Nullable @Named("uri.root") final String uriRoot,
           @Named("getContainerLifecycle.container") final Function<Map<String, String>, String> container,
           @Nullable @Named("api.version") final String apiVersion,
-          @PutContainerLifecycleHeaders final Map<String, Function<Map<String, String>, String>> headers,
+          @GetContainerLifecycleHeaders final Map<String, Function<Map<String, String>, String>> headers,
           @Named("getContainerLifecycle.context") final List<Function<Map<String, String>, String>> context,
           @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
           @Named("virtualhost") final boolean virtualHost) {
 
 
     final Map<String, Function<Map<String, String>, String>> queryParameters = Maps.newLinkedHashMap();
-
     queryParameters.put(QueryParameters.BUCKET_LIFECYCLE_PARAMETER,
             new Function<Map<String, String>, String>() {
               @Override
@@ -2493,6 +2730,36 @@ public class OGModule extends AbstractModule {
             null, credentials, virtualHost, null, null, false);
   }
 
+  @Provides
+  @Singleton
+  @Named("getContainerProtection")
+  public Supplier<Request> provideGetContainerProtection(
+          @Named("request.id") final Function<Map<String, String>, String> id, final Scheme scheme,
+          @ReadHost final Function<Map<String, String>, String> host,
+          @Nullable @Named("port") final Integer port,
+          @Nullable @Named("uri.root") final String uriRoot,
+          @Named("getContainerProtection.container") final Function<Map<String, String>, String> container,
+          @Nullable @Named("api.version") final String apiVersion,
+          @GetContainerProtectionHeaders final Map<String, Function<Map<String, String>, String>> headers,
+          @Named("getContainerProtection.context") final List<Function<Map<String, String>, String>> context,
+          @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
+          @Named("virtualhost") final boolean virtualHost) {
+
+
+    final Map<String, Function<Map<String, String>, String>> queryParameters = Maps.newLinkedHashMap();
+
+    queryParameters.put(QueryParameters.BUCKET_PROTECTION_PARAMETER,
+            new Function<Map<String, String>, String>() {
+              @Override
+              public String apply(final Map<String, String> context) {
+                return null;
+              }
+            });
+
+    return createRequestSupplier(Operation.GET_CONTAINER_PROTECTION, id, Method.GET, scheme, host, port,
+            uriRoot, container, apiVersion, null, queryParameters, headers, context, null,
+            null, credentials, virtualHost, null, null, false);
+  }
   @Provides
   @Singleton
   @Named("writeCopy")
@@ -2753,7 +3020,6 @@ public class OGModule extends AbstractModule {
       @Named("virtualhost") final boolean virtualHost) {
 
     final Map<String, Function<Map<String, String>, String>> queryParameters = Maps.newHashMap();
-
     final Supplier<Body> bodySupplier = Suppliers.of(Bodies.none());
     final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
 
@@ -2960,6 +3226,8 @@ public class OGModule extends AbstractModule {
       @MultiPartWriteBody final Function<Map<String, String>, Body> body,
       @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
       @Named("virtualhost") final boolean virtualHost,
+      @Nullable @Named("multipartWrite.retention") final Function<Map<String, String>, Long> retention,
+      @Nullable @Named("multipartWrite.legalHold") final Supplier<Function<Map<String, String>, String>> legalHold,
       @Named("multipartWrite.sseCDestination") final boolean encryptDestinationObject,
       @Nullable @Named("multipartWrite.contentMd5") final boolean contentMd5) {
 
@@ -2994,7 +3262,7 @@ public class OGModule extends AbstractModule {
 
     return createMultipartRequestSupplier(id, scheme, host, port, uriRoot, container, apiVersion,
         object, partSize, partsPerSession, targetSessions, queryParameters, headers, context, body,
-        credentials, virtualHost, contentMd5);
+        retention, legalHold, credentials, virtualHost, contentMd5);
   }
 
   private Supplier<Request> createMultipartRequestSupplier(
@@ -3008,11 +3276,13 @@ public class OGModule extends AbstractModule {
       final Map<String, Function<Map<String, String>, String>> headers,
       final List<Function<Map<String, String>, String>> context,
       final Function<Map<String, String>, Body> body,
+      @Nullable @Named("write.retention") final Function<Map<String, String>, Long> retention,
+      @Nullable @Named("write.legalHold") final Supplier<Function<Map<String, String>, String>> legalHold,
       final Function<Map<String, String>, Credential> credentials, final boolean virtualHost,
       final boolean contentMd5) {
 
     return new MultipartRequestSupplier(id, scheme, host, port, uriRoot, container, object,
         partSize, partsPerSession, targetSessions, queryParameters, false, headers, context,
-        credentials, body, virtualHost, contentMd5);
+        credentials, body, virtualHost, retention, legalHold, contentMd5);
   }
 }

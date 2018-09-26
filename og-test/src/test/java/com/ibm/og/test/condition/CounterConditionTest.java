@@ -10,6 +10,7 @@ import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.ibm.og.api.RequestTimestamps;
 import com.ibm.og.http.Bodies;
 import com.ibm.og.statistic.Counter;
 import com.ibm.og.statistic.Statistics;
@@ -67,8 +68,11 @@ public class CounterConditionTest {
     when(request.getOperation()).thenReturn(Operation.WRITE);
 
     final Response response = mock(Response.class);
+    RequestTimestamps requestTimestamps = new RequestTimestamps();
+    requestTimestamps.startMillis = System.currentTimeMillis();
+    requestTimestamps.finishMillis = requestTimestamps.startMillis + 100;
     when(response.getBody()).thenReturn(Bodies.none());
-
+    when(response.getRequestTimestamps()).thenReturn(requestTimestamps);
     final Pair<Request, Response> operation = Pair.of(request, response);
 
     final CounterCondition condition =
