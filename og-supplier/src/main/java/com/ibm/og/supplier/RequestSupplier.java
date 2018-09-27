@@ -142,6 +142,14 @@ public class RequestSupplier implements Supplier<Request> {
       function.apply(requestContext);
     }
 
+    // populate the context map with any relevant metadata for this request
+    if (this.sseSourceContext != null) {
+      for (final Function<Map<String, String>, String> function : this.sseSourceContext) {
+        // return value for context functions is ignored
+        function.apply(requestContext);
+      }
+    }
+
     if (this.container != null) {
       // container-name is populated in the context now if it is available
       // populate container name in context because Credential needs that to lookup
@@ -173,13 +181,7 @@ public class RequestSupplier implements Supplier<Request> {
     }
 
 
-    // populate the context map with any relevant metadata for this request
-    if (this.sseSourceContext != null) {
-      for (final Function<Map<String, String>, String> function : this.sseSourceContext) {
-        // return value for context functions is ignored
-        function.apply(requestContext);
-      }
-    }
+
 
     Function<Map<String, String>, String> legalholdFunction;
     if (this.legalHold != null) {
