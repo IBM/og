@@ -649,9 +649,21 @@ public class OGModule extends AbstractModule {
   @Named("writeCopy.container")
   public Function<Map<String, String>, String> provideWriteCopyContainer() {
     if (this.config.writeCopy.container.prefix != null) {
-      return provideContainer(this.config.writeCopy.container);
+      return provideTargetContainer(this.config.writeCopy.container);
     } else {
-      return provideContainer(this.config.container);
+      return provideTargetContainer(this.config.container);
+    }
+  }
+
+
+  @Provides
+  @Singleton
+  @Named("writeCopy.sourceContainer")
+  public Function<Map<String, String>, String> provideWriteCopySourceContainer() {
+    if (this.config.writeCopy.sourceContainer.prefix != null) {
+      return provideSourceContainer(this.config.writeCopy.sourceContainer);
+    } else {
+      return provideSourceContainer(this.config.container);
     }
   }
 
@@ -836,6 +848,102 @@ public class OGModule extends AbstractModule {
       }
     };
   }
+
+  public Function<Map<String, String>, String> provideTargetContainer(
+          final ContainerConfig containerConfig) {
+    final String container = checkNotNull(containerConfig.prefix);
+    checkArgument(container.length() > 0, "container must not be empty string");
+
+    final Supplier<Integer> suffixes = createContainerSuffixes(containerConfig);
+
+    return new Function<Map<String, String>, String>() {
+
+      @Override
+      public String apply(final Map<String, String> input) {
+        String suffix = input.get(Context.X_OG_SSE_SOURCE_OBJECT_CONTAINER_SUFFIX);
+        if (suffix != null) {
+          if (Integer.parseInt(suffix) == -1) {
+            // use the container name provided without suffix
+            input.put(Context.X_OG_CONTAINER_PREFIX, container);
+            input.put(Context.X_OG_CONTAINER_NAME, container);
+            //target container suffix
+            input.put(Context.X_OG_CONTAINER_SUFFIX, suffix);
+            return container;
+          } else {
+            final String containerName = container.concat(suffix);
+            input.put(Context.X_OG_CONTAINER_PREFIX, container);
+            input.put(Context.X_OG_CONTAINER_NAME, containerName);
+            //target container suffix
+            input.put(Context.X_OG_CONTAINER_SUFFIX, suffix);
+            return container.concat(suffix);
+          }
+        } else {
+          if (suffixes != null) {
+            suffix = suffixes.get().toString();
+            input.put(Context.X_OG_CONTAINER_SUFFIX, suffix);
+            final String containerName = container.concat(suffix);
+            input.put(Context.X_OG_CONTAINER_PREFIX, container);
+            input.put(Context.X_OG_CONTAINER_NAME, containerName);
+            return container.concat(suffix);
+          } else {
+            input.put(Context.X_OG_CONTAINER_SUFFIX, "-1");
+            // use the container name provided without suffix
+            input.put(Context.X_OG_CONTAINER_PREFIX, container);
+            input.put(Context.X_OG_CONTAINER_NAME, container);
+            return container;
+          }
+        }
+      }
+    };
+  }
+
+  public Function<Map<String, String>, String> provideSourceContainer(
+          final ContainerConfig containerConfig) {
+    final String container = checkNotNull(containerConfig.prefix);
+    checkArgument(container.length() > 0, "container must not be empty string");
+
+    final Supplier<Integer> suffixes = createContainerSuffixes(containerConfig);
+
+    return new Function<Map<String, String>, String>() {
+
+      @Override
+      public String apply(final Map<String, String> input) {
+        //source read object context function populates Context.X_OG_SSE_SOURCE_OBJECT_CONTAINER_SUFFIX
+        String suffix = input.get(Context.X_OG_SSE_SOURCE_OBJECT_CONTAINER_SUFFIX);
+        if (suffix != null) {
+          if (Integer.parseInt(suffix) == -1) {
+            // use the container name provided without suffix
+            input.put(Context.X_OG_SOURCE_CONTAINER_PREFIX, container);
+            input.put(Context.X_OG_SOURCE_CONTAINER_NAME, container);
+            input.put(Context.X_OG_SSE_SOURCE_OBJECT_CONTAINER_SUFFIX, "-1");
+            return container;
+          } else {
+            final String containerName = container.concat(suffix);
+            input.put(Context.X_OG_SOURCE_CONTAINER_PREFIX, container);
+            input.put(Context.X_OG_SOURCE_CONTAINER_NAME, containerName);
+            input.put(Context.X_OG_SSE_SOURCE_OBJECT_CONTAINER_SUFFIX, suffix);
+            return container.concat(suffix);
+          }
+        } else {
+          if (suffixes != null) {
+            suffix = suffixes.get().toString();
+            input.put(Context.X_OG_SSE_SOURCE_OBJECT_CONTAINER_SUFFIX, suffix);
+            final String containerName = container.concat(suffix);
+            input.put(Context.X_OG_SOURCE_CONTAINER_PREFIX, container);
+            input.put(Context.X_OG_SOURCE_CONTAINER_NAME, containerName);
+            return container.concat(suffix);
+          } else {
+            input.put(Context.X_OG_SSE_SOURCE_OBJECT_CONTAINER_SUFFIX, "-1");
+            // use the container name provided without suffix
+            input.put(Context.X_OG_SOURCE_CONTAINER_PREFIX, container);
+            input.put(Context.X_OG_SOURCE_CONTAINER_NAME, container);
+            return container;
+          }
+        }
+      }
+    };
+  }
+
 
   @Provides
   @Singleton
@@ -1047,7 +1155,7 @@ public class OGModule extends AbstractModule {
       final OperationConfig operationConfig) {
     checkNotNull(operationConfig);
 
-    final ObjectConfig objectConfig = checkNotNull(operationConfig.object);
+    final ObjectConfig objectConfig = checkNotNull(operationConfig.sourceObject);
     final String prefix = checkNotNull(objectConfig.prefix);
     final Supplier<Long> suffixes = createObjectSuffixes(objectConfig);
     return new Function<Map<String, String>, String>() {
@@ -1361,13 +1469,13 @@ public class OGModule extends AbstractModule {
   public List<Function<Map<String, String>, String>> provideSSeReadContext(
       final ObjectManager objectManager) {
     Function<Map<String, String>, String> function;
+    Function<Map<String, String>, String> sourceContainerfunction = null;
 
-    final OperationConfig operationConfig = checkNotNull(this.config.read);
-    if (operationConfig.object.selection != null) {
+    final OperationConfig operationConfig = checkNotNull(this.config.writeCopy);
+    if (operationConfig.sourceObject.selection != null) {
       function = provideSourceObject(operationConfig);
     } else {
       function = new SourceReadObjectNameFunction(objectManager);
-
     }
     return ImmutableList.of(function);
   }
@@ -1957,7 +2065,6 @@ public class OGModule extends AbstractModule {
         }
         String val = context.get(Context.X_OG_LEGAL_HOLD_PREFIX).concat(String.valueOf(suffix));
         context.put(Context.X_OG_LEGAL_HOLD, val);
-        context.put(Context.X_OG_NUM_LEGAL_HOLDS, String.valueOf(suffix));
         return val;
       } else {
         // add legalhold context
@@ -1968,7 +2075,7 @@ public class OGModule extends AbstractModule {
         }
         String val = context.get(Context.X_OG_LEGAL_HOLD_PREFIX).concat(String.valueOf(1));
         context.put(Context.X_OG_LEGAL_HOLD, val);
-        context.put(Context.X_OG_NUM_LEGAL_HOLDS, String.valueOf(1));
+        context.put(Context.X_OG_LEGAL_HOLD_SUFFIX, String.valueOf(1));
         return val;
       }
     }
@@ -2769,6 +2876,7 @@ public class OGModule extends AbstractModule {
       @Nullable @Named("port") final Integer port,
       @Nullable @Named("uri.root") final String uriRoot,
       @Named("writeCopy.container") final Function<Map<String, String>, String> container,
+      @Named("writeCopy.sourceContainer") final Function<Map<String, String>, String> sourceContainer,
       @Nullable @Named("api.version") final String apiVersion,
       @Nullable @WriteObjectName final Function<Map<String, String>, String> writeObject,
       @Named("writeCopySource.context") final List<Function<Map<String, String>, String>> sseReadContext,
@@ -2793,10 +2901,10 @@ public class OGModule extends AbstractModule {
           public String apply(@Nullable final Map<String, String> input) {
 
             final String objectName = sseSourceReadObject.apply(input);
+            sourceContainer.apply(input);
             final String containerSuffix =
                 input.get(Context.X_OG_SSE_SOURCE_OBJECT_CONTAINER_SUFFIX);
-            final String containerPrefix = input.get(Context.X_OG_CONTAINER_PREFIX);
-
+            final String containerPrefix = input.get(Context.X_OG_SOURCE_CONTAINER_PREFIX);
             // todo: update this to handle copy object API for openstack. Currently, only support s3
             // API
             checkArgument(api == Api.S3,

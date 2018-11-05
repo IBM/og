@@ -126,7 +126,7 @@ public abstract class AbstractObjectNameConsumer {
   }
 
   protected byte getNumberOfLegalHolds(final Request request, final Response response) {
-    final String nHolds = request.getContext().get(Context.X_OG_NUM_LEGAL_HOLDS);
+    final String nHolds = request.getContext().get(Context.X_OG_LEGAL_HOLD_SUFFIX);
     if (nHolds == null) {
       return 0;
     } else {
