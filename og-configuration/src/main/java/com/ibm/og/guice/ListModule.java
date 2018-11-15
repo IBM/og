@@ -152,6 +152,7 @@ public class ListModule extends AbstractModule {
             prefix = config.prefixString.substring(0, config.numChars);
             input.put(Context.X_OG_LIST_PREFIX, prefix);
           }
+          checkArgument(prefix.length() <= 16, "prefix length cannot be greater than 16 characters");
         }
         return prefix;
        }
@@ -184,7 +185,8 @@ public class ListModule extends AbstractModule {
         final ListDelimiterConfig delimiter = delimiterSupplier.get();
         if (!delimiter.delimiterCharacter.equals("-1")) {
             input.put(Context.X_OG_LIST_DELIMITER, delimiter.delimiterCharacter);
-          }
+            checkArgument(delimiter.delimiterCharacter.length() <= 1, "Delimiter length cannot be greater than 1 character");
+      }
         return delimiter.delimiterCharacter;
       }
     };
