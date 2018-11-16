@@ -95,6 +95,14 @@ public class S3ListResponseBodyConsumer implements ResponseBodyConsumer {
       } else {
         context.put(Context.X_OG_NUM_LIST_CONTENTS, "0");
       }
+
+      NodeList commonPrefixes = document.getElementsByTagName("CommonPrefixes");
+      if (commonPrefixes != null) {
+        Integer numCommonPrefixes = commonPrefixes.getLength();
+        context.put(Context.X_OG_NUM_LIST_COMMON_PREFIXES, numCommonPrefixes.toString());
+      } else {
+        context.put(Context.X_OG_NUM_LIST_COMMON_PREFIXES, "0");
+      }
     }
 
     return ImmutableMap.copyOf(context);

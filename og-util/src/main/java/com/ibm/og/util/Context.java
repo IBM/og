@@ -77,6 +77,7 @@ public class Context {
 
   public static final String X_OG_LIST_IS_TRUNCATED = "x-og-list-is-truncated";
   public static final String X_OG_NUM_LIST_CONTENTS = "x-og-list-num-contents";
+  public static final String X_OG_NUM_LIST_COMMON_PREFIXES = "x-og-list-num-common-prefixes";
 
   private Context() {}
 }

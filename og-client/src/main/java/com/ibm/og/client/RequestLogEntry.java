@@ -58,6 +58,7 @@ public class RequestLogEntry {
   public String listPrefix;
   public String listDelimiter;
   public String listContentSize;
+  public String listCommonPrefixesSize;
 
 
   private static final DateTimeFormatter FORMATTER =
@@ -146,6 +147,7 @@ public class RequestLogEntry {
       this.listPrefix = request.getContext().get(Context.X_OG_LIST_PREFIX);
       this.listDelimiter = request.getContext().get(Context.X_OG_LIST_DELIMITER);
       this.listContentSize = response.getContext().get(Context.X_OG_NUM_LIST_CONTENTS);
+      this.listCommonPrefixesSize = response.getContext().get(Context.X_OG_NUM_LIST_COMMON_PREFIXES);
     }
 
     this.objectLength = objectSize;
