@@ -54,6 +54,7 @@ public class RequestSupplier implements Supplier<Request> {
   private final Function<Map<String, String>, String> container;
   private final String apiVersion;
   private final Function<Map<String, String>, String> object;
+  private final Function<Map<String, String>, String> delimiter;
   private final Map<String, Function<Map<String, String>, String>> queryParameters;
   private final boolean trailingSlash;
   private final Map<String, Function<Map<String, String>, String>> headers;
@@ -104,7 +105,7 @@ public class RequestSupplier implements Supplier<Request> {
       final Function<Map<String, String>, Body> body, final boolean virtualHost,
       final Function<Map<String, String>, Long> retention,
       final Supplier<Function<Map<String, String>, String>> legalHold,
-      final boolean contentMd5) {
+      final boolean contentMd5, final Function<Map<String, String>, String> delimiter) {
 
     this.id = id;
     this.method = checkNotNull(method);
@@ -115,6 +116,7 @@ public class RequestSupplier implements Supplier<Request> {
     this.container = container;
     this.apiVersion = apiVersion;
     this.object = object;
+    this.delimiter = delimiter;
     this.queryParameters = ImmutableMap.copyOf(queryParameters);
     this.trailingSlash = trailingSlash;
     this.headers = ImmutableMap.copyOf(headers);
@@ -142,12 +144,8 @@ public class RequestSupplier implements Supplier<Request> {
       function.apply(requestContext);
     }
 
-    // populate the context map with any relevant metadata for this request
-    if (this.sseSourceContext != null) {
-      for (final Function<Map<String, String>, String> function : this.sseSourceContext) {
-        // return value for context functions is ignored
-        function.apply(requestContext);
-      }
+    if (this.delimiter != null) {
+      this.delimiter.apply(requestContext);
     }
 
     if (this.container != null) {
@@ -181,7 +179,13 @@ public class RequestSupplier implements Supplier<Request> {
     }
 
 
-
+    // populate the context map with any relevant metadata for this request
+    if (this.sseSourceContext != null) {
+      for (final Function<Map<String, String>, String> function : this.sseSourceContext) {
+        // return value for context functions is ignored
+        function.apply(requestContext);
+      }
+    }
 
     Function<Map<String, String>, String> legalholdFunction;
     if (this.legalHold != null) {

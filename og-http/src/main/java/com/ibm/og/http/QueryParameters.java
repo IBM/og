@@ -35,6 +35,8 @@ public class QueryParameters {
     // S3 bucket list max keys
     public static final String S3_LIST_MAX_KEYS = "max-keys";
 
+    // S3 bucket list continuation token
+    public static final String S3_LIST_CONTINUATION_TOKEN = "continuation-token";
     // Object Restore
     public static final String OBJECT_RESTORE_PARAMETER = "restore";
 

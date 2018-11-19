@@ -34,7 +34,11 @@ public class OperationConfig {
   public SelectionConfig<RetentionConfig> containerMinimumRetention;
   public SelectionConfig<RetentionConfig> containerMaximumRetention;
   public SelectionConfig<RetentionConfig> containerDefaultRetention;
-
+  public SelectionConfig<PrefixConfig> prefix;
+  public SelectionConfig<ObjectDelimiterConfig> delimiter; // for write operations
+  public SelectionConfig<ListDelimiterConfig> listDelimiter;
+  public SelectionConfig<ListSessionConfig> listSessionConfig;
+  public Integer minimumListSessions;
 
   public OperationConfig(final double weight) {
     this();
@@ -59,5 +63,11 @@ public class OperationConfig {
     this.contentMd5 = false;
     this.objectRestorePeriod = 1;
     this.archiveTransitionPeriod = 1;
+    this.prefix = null;
+    this.delimiter = null;
+    this.listDelimiter = null;
+    this.listSessionConfig = null;
+    this.minimumListSessions = 1;
+
   }
 }
