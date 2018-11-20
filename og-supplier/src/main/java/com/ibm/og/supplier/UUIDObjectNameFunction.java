@@ -48,7 +48,7 @@ public class UUIDObjectNameFunction implements Function<Map<String, String>, Str
       long lsl = uuid.getLeastSignificantBits();
       msl = msl & 0x7777777777777777L;
       lsl = lsl & 0x7777777777777777L;
-      UUID uuid2 = new UUID(lsl, msl);
+      UUID uuid2 = new UUID(msl, lsl);
       final String objectName = uuid2.toString().replace("-", "") + "0000";
       context.put(Context.X_OG_OBJECT_NAME, objectName);
 
