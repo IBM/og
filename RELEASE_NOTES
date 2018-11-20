@@ -1,3 +1,14 @@
+Release 1.8.4
+Changes:
+Add source_container and source_object properties in WriteCopy operation
+Support Indefinite retention (retention period -2)
+List operation changes:
+  Add prefix property - A weighted choice list of prefixes
+  Add delimiter property - A weighted choice list of delimiter character
+Octal Object naming mode -  Generated object name contains characters in octal character set [0 -7]
+Set Delimiter character in object name for Write, MultipartWrite and WriteCopy operations
+UserGuide updates
+
 Release 1.8.3
 Changes:
 Add weighted_parameters to the list operation. Query Parameters with weighted choice of values can be specified. For example, multiple max_keys count can be specified for the list operation.
