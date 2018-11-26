@@ -1278,7 +1278,9 @@ Random and round robin selection configuration is supported.
 ----
 
 *list_session_config* property defines the type of list operations. A list session
-is a set of related list requests. This is a *mandatory* property for the list operation.
+is a set of related list requests. If this value is not specified, the default list_session_config
+is used. The default list_session_config has random selection of UNCHAINED list requests with random
+markers.
 
 There are 2 types of list_sessions. _UNCHAINED_ and _CHAINED_. The UNCHAINED session is
 a single list operation request. In CHAINED session each subsequent list request

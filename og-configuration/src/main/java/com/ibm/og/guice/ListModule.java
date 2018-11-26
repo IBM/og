@@ -290,7 +290,7 @@ public class ListModule extends AbstractModule {
   public Function<Map<String, String>, ListSessionConfig> provideListType(final SelectionConfig<String> listTypeConfig) {
 
     if (this.config.list.listSessionConfig == null) {
-      return null;
+
     }
 
     Function<Map<String, String>, ListSessionConfig> listTypeSupplier = createListSessionConfigSupplier(
@@ -350,7 +350,7 @@ public class ListModule extends AbstractModule {
           @Nullable @Named("api.version") final String apiVersion,
           @ListHeaders final Map<String, Function<Map<String, String>, String>> headers,
           @Named("list.context") final List<Function<Map<String, String>, String>> context,
-          @Named("listSession.Supplier") final Function<Map<String, String>, ListSessionConfig> listTypeSupplier,
+          @Nullable @Named("listSession.Supplier") final Function<Map<String, String>, ListSessionConfig> listTypeSupplier,
           @Nullable @Named("list.prefix") final Function<Map<String, String>, String> prefixSupplier,
           @Nullable @Named("list.delimiter") final Function<Map<String, String>, String> delimiterSupplier,
           @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,

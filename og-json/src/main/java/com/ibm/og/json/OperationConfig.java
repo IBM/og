@@ -66,7 +66,13 @@ public class OperationConfig {
     this.prefix = null;
     this.delimiter = null;
     this.listDelimiter = null;
-    this.listSessionConfig = null;
+    this.listSessionConfig = new SelectionConfig<ListSessionConfig>();
+    this.listSessionConfig.selection = SelectionType.RANDOM;
+    ListSessionConfig listSession = new ListSessionConfig();
+    listSession.maxChainedRequests = 1;
+    listSession.requestType = "UNCHAINED";
+    listSession.startFromBeginning = false;
+    this.listSessionConfig.choices.add(0, new ChoiceConfig<ListSessionConfig>(listSession));
     this.minimumListSessions = 1;
 
   }
