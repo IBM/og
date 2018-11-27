@@ -9,10 +9,12 @@ package com.ibm.og.guice;
 import com.google.common.base.Function;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
+import com.ibm.og.json.ChoiceConfig;
 import com.ibm.og.json.ContainerConfig;
 import com.ibm.og.json.LegalHold;
 import com.ibm.og.json.ObjectConfig;
 import com.ibm.og.json.OperationConfig;
+import com.ibm.og.json.SelectionConfig;
 import com.ibm.og.json.SelectionType;
 import com.ibm.og.supplier.RandomSupplier;
 import com.ibm.og.supplier.Suppliers;
@@ -32,26 +34,73 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class ModuleUtils {
 
-  public static Function<Map<String, String>, String> provideObject(
-          final OperationConfig operationConfig) {
-    checkNotNull(operationConfig);
-    final ObjectConfig objectConfig = checkNotNull(operationConfig.object);
-    final String prefix = checkNotNull(objectConfig.prefix);
-    final Supplier<Long> suffixes = createObjectSuffixes(objectConfig);
-    final Supplier<Long> legalHoldSuffixes = createLegalHoldSuffixes(operationConfig.object);
+  public static Function<Map<String, String>, String> getObjectSelectionSupplierFunction(ObjectConfig objectConfig) {
+    final ObjectConfig config = objectConfig;
     return new Function<Map<String, String>, String>() {
+      final Supplier<Long> suffixes = createObjectSuffixes(config);
+      final Supplier<Long> legalHoldSuffixes = createLegalHoldSuffixes(config);
+
       @Override
       public String apply(final Map<String, String> context) {
+        final String prefix = checkNotNull(config.prefix);
         final String objectName = prefix + suffixes.get();
         context.put(Context.X_OG_OBJECT_NAME, objectName);
         context.put(Context.X_OG_SEQUENTIAL_OBJECT_NAME, "true");
-        if (operationConfig.legalHold != null) {
+        if (context.containsKey(Context.X_OG_LEGAL_HOLD_REQUIRED)) {
           context.put(Context.X_OG_LEGAL_HOLD_SUFFIX, legalHoldSuffixes.get().toString());
         }
         return objectName;
       }
     };
   }
+
+  public static  Supplier<Function<Map<String, String>, String>> provideObjectConfig(SelectionConfig<ObjectConfig> objectConfigs) {
+    final Supplier<Function<Map<String, String>, String>> objectConfigSupplier;
+    final SelectionType selection = checkNotNull(objectConfigs.selection);
+
+    if (objectConfigs.choices.isEmpty()) {
+      return null;
+    }
+    if (SelectionType.ROUNDROBIN == selection) {
+      final List<Function<Map<String, String>, String>>  objectConfigList = Lists.newArrayList();
+      for(ChoiceConfig<ObjectConfig> choice: objectConfigs.choices) {
+        objectConfigList.add(getObjectSelectionSupplierFunction(choice.choice));
+      }
+      objectConfigSupplier = Suppliers.cycle(objectConfigList);
+    } else {
+      final RandomSupplier.Builder<Function<Map<String, String>, String>> wrc = Suppliers.random();
+      for (final ChoiceConfig<ObjectConfig> choice: objectConfigs.choices) {
+        wrc.withChoice(getObjectSelectionSupplierFunction(choice.choice), choice.weight);
+      }
+      objectConfigSupplier = wrc.build();
+    }
+    return objectConfigSupplier;
+
+  }
+
+  public static Function<Map<String, String>, String> provideObject(
+          final OperationConfig operationConfig) {
+    checkNotNull(operationConfig);
+    final SelectionConfig<ObjectConfig> objectConfigChoices = checkNotNull(operationConfig.object);
+    final Supplier<Function<Map<String, String>, String>> objectConfigSupplier = provideObjectConfig(operationConfig.object);
+
+    return new Function<Map<String, String>, String>() {
+      @Override
+      public String apply(final Map<String, String> context) {
+        if (operationConfig.legalHold != null) {
+          context.put(Context.X_OG_LEGAL_HOLD_REQUIRED, "true");
+        }
+        final String objectName = objectConfigSupplier.get().apply(context);
+        //final String prefix = checkNotNull(objectConfig.prefix);
+
+        //final String objectName = prefix + suffixes.get();
+        //context.put(Context.X_OG_OBJECT_NAME, objectName);
+        //context.put(Context.X_OG_SEQUENTIAL_OBJECT_NAME, "true");
+        return objectName;
+      }
+    };
+  }
+
 
   private static Supplier<Long> createObjectSuffixes(final ObjectConfig config) {
     checkArgument(config.minSuffix >= 0, "minSuffix must be > 0 [%s]", config.minSuffix);
