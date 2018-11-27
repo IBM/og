@@ -214,11 +214,10 @@ public class OGModule extends AbstractModule {
     bindConstant().annotatedWith(Names.named("write.weight")).to(this.config.write.weight);
     bindConstant().annotatedWith(Names.named("write.sseCDestination"))
         .to(this.config.write.sseCDestination);
-    bindConstant().annotatedWith(Names.named("overwrite.weight")).to(this.config.overwrite.weight);
-    bindConstant().annotatedWith(Names.named("overwrite.sseCDestination"))
-        .to(this.config.read.sseCDestination);
     bindConstant().annotatedWith(Names.named("write.contentMd5")).to(this.config.write.contentMd5);
     bindConstant().annotatedWith(Names.named("overwrite.weight")).to(this.config.overwrite.weight);
+    bindConstant().annotatedWith(Names.named("overwrite.sseCDestination"))
+        .to(this.config.overwrite.sseCDestination);
     bindConstant().annotatedWith(Names.named("overwrite.contentMd5"))
         .to(this.config.overwrite.contentMd5);
     bindConstant().annotatedWith(Names.named("read.weight")).to(this.config.read.weight);
