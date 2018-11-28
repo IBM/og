@@ -1702,6 +1702,9 @@ public class OGModule extends AbstractModule {
     }
     if (SelectionType.ROUNDROBIN == selection) {
       final List<ObjectDelimiterConfig> delimiterConfigList = Lists.newArrayList();
+      for (final ChoiceConfig<ObjectDelimiterConfig> choice : delimiters.choices) {
+        delimiterConfigList.add(choice.choice);
+      }
       delimiterConfigSupplier = Suppliers.cycle(delimiterConfigList);
     } else {
       final RandomSupplier.Builder<ObjectDelimiterConfig> wrc = Suppliers.random();
@@ -1939,6 +1942,9 @@ public class OGModule extends AbstractModule {
     }
     if (SelectionType.ROUNDROBIN == selection) {
       final List<RetentionConfig> retentionConfigList = Lists.newArrayList();
+      for (final ChoiceConfig<RetentionConfig> choice : retentions.choices) {
+        retentionConfigList.add(choice.choice);
+      }
       retentionConfigSupplier = Suppliers.cycle(retentionConfigList);
     } else {
       final RandomSupplier.Builder<RetentionConfig> wrc = Suppliers.random();
@@ -1986,6 +1992,9 @@ public class OGModule extends AbstractModule {
     }
     if (SelectionType.ROUNDROBIN == selection) {
       final List<RetentionConfig> retentionConfigList = Lists.newArrayList();
+      for (final ChoiceConfig<RetentionConfig> choice : retentions.choices) {
+        retentionConfigList.add(choice.choice);
+      }
       retentionConfigSupplier = Suppliers.cycle(retentionConfigList);
     } else {
       final RandomSupplier.Builder<RetentionConfig> wrc = Suppliers.random();
@@ -2028,6 +2037,9 @@ public class OGModule extends AbstractModule {
 
     if (SelectionType.ROUNDROBIN == selection) {
       final List<RetentionConfig> retentionConfigList = Lists.newArrayList();
+      for (final ChoiceConfig<RetentionConfig> choice : retentions.choices) {
+        retentionConfigList.add(choice.choice);
+      }
       retentionConfigSupplier = Suppliers.cycle(retentionConfigList);
     } else {
       final RandomSupplier.Builder<RetentionConfig> wrc = Suppliers.random();

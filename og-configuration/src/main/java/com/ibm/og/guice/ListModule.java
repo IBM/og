@@ -129,6 +129,9 @@ public class ListModule extends AbstractModule {
     }
     if (SelectionType.ROUNDROBIN == selection) {
       final List<PrefixConfig> prefixConfigList = Lists.newArrayList();
+      for (final ChoiceConfig<PrefixConfig> choice : prefixes.choices) {
+        prefixConfigList.add(choice.choice);
+      }
       prefixConfigSupplier = Suppliers.cycle(prefixConfigList);
     } else {
       final RandomSupplier.Builder<PrefixConfig> wrc = Suppliers.random();
@@ -170,6 +173,9 @@ public class ListModule extends AbstractModule {
     }
     if (SelectionType.ROUNDROBIN == selection) {
       final List<ListDelimiterConfig> delimiterList = Lists.newArrayList();
+      for (final ChoiceConfig<ListDelimiterConfig> choice : delimiters.choices) {
+        delimiterList.add(choice.choice);
+      }
       delimiterSupplier = Suppliers.cycle(delimiterList);
     } else {
       final RandomSupplier.Builder<ListDelimiterConfig> wrc = Suppliers.random();
