@@ -19,7 +19,7 @@ import com.google.common.collect.Maps;
 public class UUIDObjectNameFunctionTest {
   @Test
   public void uuidObjectNameSupplier() {
-    final Function<Map<String, String>, String> s = new UUIDObjectNameFunction();
+    final Function<Map<String, String>, String> s = new UUIDObjectNameFunction(false);
     final Map<String, String> context = Maps.newHashMap();
     assertThat(s.apply(context), is(not(s.apply(context))));
   }

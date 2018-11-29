@@ -72,7 +72,7 @@ public class LegacyObjectMetadata implements ObjectMetadata {
     checkArgument(objectSize >= 0, "objectSize must be >= 0 [%s]", objectSize);
     checkArgument(containerSuffix >= -1, "containerSuffix must be >= -1 [%s]", containerSuffix);
     checkArgument(numLegalHolds >= -1, "numLegalHolds must be >= -1 [%s]", numLegalHolds);
-    checkArgument(retentionPeriod >= -1, "retentionPeriod must be >= -1 [%s]", retentionPeriod);
+    checkArgument(retentionPeriod >= -2, "retentionPeriod must be >= -2 [%s]", retentionPeriod);
 
     final ByteBuffer objectBuffer = ByteBuffer.allocate(OBJECT_SIZE);
     objectBuffer.put(ENCODING.decode(objectName), 0, OBJECT_NAME_SIZE);
