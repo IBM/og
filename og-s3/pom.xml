@@ -4,7 +4,7 @@
   <parent>
     <artifactId>og</artifactId>
     <groupId>com.ibm</groupId>
-    <version>1.8.3</version>
+    <version>1.8.4</version>
   </parent>
   <artifactId>og-s3</artifactId>
   <name>S3</name>
@@ -29,7 +29,11 @@
     <dependency>
       <groupId>com.ibm</groupId>
       <artifactId>og-supplier</artifactId>
-      <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>com.ibm</groupId>
+      <artifactId>og-json</artifactId>
+    </dependency>
+
   </dependencies>
 </project>

@@ -65,7 +65,6 @@ import com.ibm.og.guice.annotation.GetContainerLifecycleHeaders;
 import com.ibm.og.guice.annotation.GetContainerProtectionHeaders;
 import com.ibm.og.guice.annotation.ListHeaders;
 import com.ibm.og.guice.annotation.ListHost;
-import com.ibm.og.guice.annotation.ListQueryParameters;
 import com.ibm.og.guice.annotation.MetadataHeaders;
 import com.ibm.og.guice.annotation.MetadataHost;
 import com.ibm.og.guice.annotation.MetadataObjectName;
@@ -107,6 +106,7 @@ import com.ibm.og.json.ConcurrencyConfig;
 import com.ibm.og.json.ConcurrencyType;
 import com.ibm.og.json.ContainerConfig;
 import com.ibm.og.json.CredentialSource;
+import com.ibm.og.json.ObjectDelimiterConfig;
 import com.ibm.og.json.FailingConditionsConfig;
 import com.ibm.og.json.FilesizeConfig;
 import com.ibm.og.json.LegalHold;
@@ -122,7 +122,6 @@ import com.ibm.og.object.AbstractObjectNameConsumer;
 import com.ibm.og.object.DeleteObjectConsumer;
 import com.ibm.og.object.DeleteObjectLegalHoldConsumer;
 import com.ibm.og.object.ExtendRetentionObjectNameConsumer;
-import com.ibm.og.object.ListObjectNameConsumer;
 import com.ibm.og.object.MetadataObjectNameConsumer;
 import com.ibm.og.object.MultipartWriteObjectNameConsumer;
 import com.ibm.og.object.ObjectManager;
@@ -135,6 +134,7 @@ import com.ibm.og.object.WriteLegalHoldObjectNameConsumer;
 import com.ibm.og.object.WriteObjectNameConsumer;
 import com.ibm.og.openstack.KeystoneAuth;
 import com.ibm.og.s3.MultipartRequestSupplier;
+import com.ibm.og.s3.S3ListResponseBodyConsumer;
 import com.ibm.og.s3.S3MultipartWriteResponseBodyConsumer;
 import com.ibm.og.s3.v2.AWSV2Auth;
 import com.ibm.og.s3.v4.AWSV4Auth;
@@ -175,13 +175,15 @@ import com.ibm.og.util.json.type.DistributionType;
 
 /**
  * A guice configuration module for wiring up all OG test components
- * 
+ *
  * @since 1.0
  */
+
 public class OGModule extends AbstractModule {
   private final OGConfig config;
   private static final String SOH_PUT_OBJECT = "soh.put_object";
   private static final String S3_MULTIPART = "s3.multipart";
+  private static final String S3_LIST = "s3.list";
   private final LoadTestSubscriberExceptionHandler handler;
   private final EventBus eventBus;
   final byte[] aesKey = SSECustomerKey();
@@ -212,11 +214,10 @@ public class OGModule extends AbstractModule {
     bindConstant().annotatedWith(Names.named("write.weight")).to(this.config.write.weight);
     bindConstant().annotatedWith(Names.named("write.sseCDestination"))
         .to(this.config.write.sseCDestination);
-    bindConstant().annotatedWith(Names.named("overwrite.weight")).to(this.config.overwrite.weight);
-    bindConstant().annotatedWith(Names.named("overwrite.sseCDestination"))
-        .to(this.config.read.sseCDestination);
     bindConstant().annotatedWith(Names.named("write.contentMd5")).to(this.config.write.contentMd5);
     bindConstant().annotatedWith(Names.named("overwrite.weight")).to(this.config.overwrite.weight);
+    bindConstant().annotatedWith(Names.named("overwrite.sseCDestination"))
+        .to(this.config.overwrite.sseCDestination);
     bindConstant().annotatedWith(Names.named("overwrite.contentMd5"))
         .to(this.config.overwrite.contentMd5);
     bindConstant().annotatedWith(Names.named("read.weight")).to(this.config.read.weight);
@@ -249,6 +250,7 @@ public class OGModule extends AbstractModule {
     bindConstant().annotatedWith(Names.named("extend_retention.weight"))
         .to(this.config.extendRetention.weight);
     bindConstant().annotatedWith(Names.named("virtualhost")).to(this.config.virtualHost);
+    bindConstant().annotatedWith(Names.named("octalNamingMode")).to(this.config.octalNamingMode);
     bindConstant().annotatedWith(Names.named("multipartWrite.targetSessions"))
         .to(this.config.multipartWrite.upload.targetSessions);
     bind(AuthType.class).toInstance(this.config.authentication.type);
@@ -300,6 +302,7 @@ public class OGModule extends AbstractModule {
         MapBinder.newMapBinder(binder(), String.class, ResponseBodyConsumer.class);
     responseBodyConsumers.addBinding(SOH_PUT_OBJECT).to(SOHWriteResponseBodyConsumer.class);
     responseBodyConsumers.addBinding(S3_MULTIPART).to(S3MultipartWriteResponseBodyConsumer.class);
+    responseBodyConsumers.addBinding(S3_LIST).to(S3ListResponseBodyConsumer.class);
 
     bind(RequestManager.class).to(SimpleRequestManager.class);
     bind(LoadTest.class).in(Singleton.class);
@@ -649,9 +652,21 @@ public class OGModule extends AbstractModule {
   @Named("writeCopy.container")
   public Function<Map<String, String>, String> provideWriteCopyContainer() {
     if (this.config.writeCopy.container.prefix != null) {
-      return provideContainer(this.config.writeCopy.container);
+      return provideTargetContainer(this.config.writeCopy.container);
     } else {
-      return provideContainer(this.config.container);
+      return provideTargetContainer(this.config.container);
+    }
+  }
+
+
+  @Provides
+  @Singleton
+  @Named("writeCopy.sourceContainer")
+  public Function<Map<String, String>, String> provideWriteCopySourceContainer() {
+    if (this.config.writeCopy.sourceContainer.prefix != null) {
+      return provideSourceContainer(this.config.writeCopy.sourceContainer);
+    } else {
+      return provideSourceContainer(this.config.container);
     }
   }
 
@@ -703,16 +718,6 @@ public class OGModule extends AbstractModule {
     }
   }
 
-  @Provides
-  @Singleton
-  @Named("list.container")
-  public Function<Map<String, String>, String> provideListContainer() {
-    if (this.config.list.container.prefix != null) {
-      return provideContainer(this.config.list.container);
-    } else {
-      return provideContainer(this.config.container);
-    }
-  }
 
   @Provides
   @Singleton
@@ -836,6 +841,102 @@ public class OGModule extends AbstractModule {
       }
     };
   }
+
+  public Function<Map<String, String>, String> provideTargetContainer(
+          final ContainerConfig containerConfig) {
+    final String container = checkNotNull(containerConfig.prefix);
+    checkArgument(container.length() > 0, "container must not be empty string");
+
+    final Supplier<Integer> suffixes = createContainerSuffixes(containerConfig);
+
+    return new Function<Map<String, String>, String>() {
+
+      @Override
+      public String apply(final Map<String, String> input) {
+        String suffix = input.get(Context.X_OG_SSE_SOURCE_OBJECT_CONTAINER_SUFFIX);
+        if (suffix != null) {
+          if (Integer.parseInt(suffix) == -1) {
+            // use the container name provided without suffix
+            input.put(Context.X_OG_CONTAINER_PREFIX, container);
+            input.put(Context.X_OG_CONTAINER_NAME, container);
+            //target container suffix
+            input.put(Context.X_OG_CONTAINER_SUFFIX, suffix);
+            return container;
+          } else {
+            final String containerName = container.concat(suffix);
+            input.put(Context.X_OG_CONTAINER_PREFIX, container);
+            input.put(Context.X_OG_CONTAINER_NAME, containerName);
+            //target container suffix
+            input.put(Context.X_OG_CONTAINER_SUFFIX, suffix);
+            return container.concat(suffix);
+          }
+        } else {
+          if (suffixes != null) {
+            suffix = suffixes.get().toString();
+            input.put(Context.X_OG_CONTAINER_SUFFIX, suffix);
+            final String containerName = container.concat(suffix);
+            input.put(Context.X_OG_CONTAINER_PREFIX, container);
+            input.put(Context.X_OG_CONTAINER_NAME, containerName);
+            return container.concat(suffix);
+          } else {
+            input.put(Context.X_OG_CONTAINER_SUFFIX, "-1");
+            // use the container name provided without suffix
+            input.put(Context.X_OG_CONTAINER_PREFIX, container);
+            input.put(Context.X_OG_CONTAINER_NAME, container);
+            return container;
+          }
+        }
+      }
+    };
+  }
+
+  public Function<Map<String, String>, String> provideSourceContainer(
+          final ContainerConfig containerConfig) {
+    final String container = checkNotNull(containerConfig.prefix);
+    checkArgument(container.length() > 0, "container must not be empty string");
+
+    final Supplier<Integer> suffixes = createContainerSuffixes(containerConfig);
+
+    return new Function<Map<String, String>, String>() {
+
+      @Override
+      public String apply(final Map<String, String> input) {
+        //source read object context function populates Context.X_OG_SSE_SOURCE_OBJECT_CONTAINER_SUFFIX
+        String suffix = input.get(Context.X_OG_SSE_SOURCE_OBJECT_CONTAINER_SUFFIX);
+        if (suffix != null) {
+          if (Integer.parseInt(suffix) == -1) {
+            // use the container name provided without suffix
+            input.put(Context.X_OG_SOURCE_CONTAINER_PREFIX, container);
+            input.put(Context.X_OG_SOURCE_CONTAINER_NAME, container);
+            input.put(Context.X_OG_SSE_SOURCE_OBJECT_CONTAINER_SUFFIX, "-1");
+            return container;
+          } else {
+            final String containerName = container.concat(suffix);
+            input.put(Context.X_OG_SOURCE_CONTAINER_PREFIX, container);
+            input.put(Context.X_OG_SOURCE_CONTAINER_NAME, containerName);
+            input.put(Context.X_OG_SSE_SOURCE_OBJECT_CONTAINER_SUFFIX, suffix);
+            return container.concat(suffix);
+          }
+        } else {
+          if (suffixes != null) {
+            suffix = suffixes.get().toString();
+            input.put(Context.X_OG_SSE_SOURCE_OBJECT_CONTAINER_SUFFIX, suffix);
+            final String containerName = container.concat(suffix);
+            input.put(Context.X_OG_SOURCE_CONTAINER_PREFIX, container);
+            input.put(Context.X_OG_SOURCE_CONTAINER_NAME, containerName);
+            return container.concat(suffix);
+          } else {
+            input.put(Context.X_OG_SSE_SOURCE_OBJECT_CONTAINER_SUFFIX, "-1");
+            // use the container name provided without suffix
+            input.put(Context.X_OG_SOURCE_CONTAINER_PREFIX, container);
+            input.put(Context.X_OG_SOURCE_CONTAINER_NAME, container);
+            return container;
+          }
+        }
+      }
+    };
+  }
+
 
   @Provides
   @Singleton
@@ -1047,7 +1148,7 @@ public class OGModule extends AbstractModule {
       final OperationConfig operationConfig) {
     checkNotNull(operationConfig);
 
-    final ObjectConfig objectConfig = checkNotNull(operationConfig.object);
+    final ObjectConfig objectConfig = checkNotNull(operationConfig.sourceObject);
     final String prefix = checkNotNull(objectConfig.prefix);
     final Supplier<Long> suffixes = createObjectSuffixes(objectConfig);
     return new Function<Map<String, String>, String>() {
@@ -1091,7 +1192,6 @@ public class OGModule extends AbstractModule {
     consumers.add(new ReadObjectNameConsumer(objectManager, sc));
     consumers.add(new MetadataObjectNameConsumer(objectManager, sc));
     consumers.add(new OverwriteObjectNameConsumer(objectManager, sc));
-    consumers.add(new ListObjectNameConsumer(objectManager, sc));
     consumers.add(new MultipartWriteObjectNameConsumer(objectManager, sc));
     consumers.add(new WriteCopyObjectNameConsumer(objectManager, sc));
     Set<Integer> deleteStatusCodes = HttpUtil.DELETE_HANDLING_STATUS_CODES;
@@ -1263,7 +1363,7 @@ public class OGModule extends AbstractModule {
         context.add(provideObject(operationConfig));
       } else {
         // default for writes
-        context.add(new UUIDObjectNameFunction());
+        context.add(new UUIDObjectNameFunction(this.config.octalNamingMode));
       }
     }
 
@@ -1294,7 +1394,7 @@ public class OGModule extends AbstractModule {
         context.add(provideObject(operationConfig));
       } else {
         // default for writes
-        context.add(new UUIDObjectNameFunction());
+        context.add(new UUIDObjectNameFunction(this.config.octalNamingMode));
       }
     }
 
@@ -1311,6 +1411,25 @@ public class OGModule extends AbstractModule {
     }
 
     return ImmutableList.copyOf(context);
+  }
+
+  @Provides
+  @Singleton
+  @Named("writeCopy.delimiter")
+  public Function<Map<String, String>, String> provideWriteCopyDelimiter(final SelectionConfig<ObjectDelimiterConfig> listDelimiterConfig) {
+    if (this.config.write.delimiter == null) {
+      return null;
+    }
+    final SelectionConfig<ObjectDelimiterConfig> delimiterConfig = this.config.write.delimiter;
+    final List<ChoiceConfig<ObjectDelimiterConfig>> delimiters = checkNotNull(delimiterConfig.choices);
+    checkArgument(!delimiters.isEmpty(), "delimiters must not be empty");
+
+
+    for (final ChoiceConfig<ObjectDelimiterConfig> choice : delimiters) {
+      checkNotNull(choice);
+      checkNotNull(choice.choice);
+    }
+    return provideDelimiter(delimiterConfig);
   }
 
   @Provides
@@ -1361,13 +1480,13 @@ public class OGModule extends AbstractModule {
   public List<Function<Map<String, String>, String>> provideSSeReadContext(
       final ObjectManager objectManager) {
     Function<Map<String, String>, String> function;
+    Function<Map<String, String>, String> sourceContainerfunction = null;
 
-    final OperationConfig operationConfig = checkNotNull(this.config.read);
-    if (operationConfig.object.selection != null) {
+    final OperationConfig operationConfig = checkNotNull(this.config.writeCopy);
+    if (operationConfig.sourceObject.selection != null) {
       function = provideSourceObject(operationConfig);
     } else {
       function = new SourceReadObjectNameFunction(objectManager);
-
     }
     return ImmutableList.of(function);
   }
@@ -1530,22 +1649,7 @@ public class OGModule extends AbstractModule {
     return ImmutableList.of(function);
   }
 
-  @Provides
-  @Singleton
-  @Named("list.context")
-  public List<Function<Map<String, String>, String>> provideListContext(
-      final ObjectManager objectManager) {
-    Function<Map<String, String>, String> function;
 
-    final OperationConfig operationConfig = checkNotNull(this.config.list);
-    if (operationConfig.object.selection != null) {
-      function = provideObject(operationConfig);
-    } else {
-      function = new ReadObjectNameFunction(objectManager);
-    }
-
-    return ImmutableList.of(function);
-  }
 
   @Provides
   @Singleton
@@ -1581,12 +1685,77 @@ public class OGModule extends AbstractModule {
         context.add(provideObject(operationConfig));
       } else {
         // default for writes
-        context.add(new UUIDObjectNameFunction());
+        context.add(new UUIDObjectNameFunction(this.config.octalNamingMode));
       }
     }
 
     return ImmutableList.copyOf(context);
   }
+
+  private Function<Map<String, String>, String> provideDelimiter(final SelectionConfig<ObjectDelimiterConfig> delimiters) {
+    final Supplier<ObjectDelimiterConfig> delimiterConfigSupplier;
+    final SelectionType selection = checkNotNull(delimiters.selection);
+
+    // if delimiters choices list is empty return null
+    if (delimiters.choices.isEmpty()) {
+      return null;
+    }
+    if (SelectionType.ROUNDROBIN == selection) {
+      final List<ObjectDelimiterConfig> delimiterConfigList = Lists.newArrayList();
+      for (final ChoiceConfig<ObjectDelimiterConfig> choice : delimiters.choices) {
+        delimiterConfigList.add(choice.choice);
+      }
+      delimiterConfigSupplier = Suppliers.cycle(delimiterConfigList);
+    } else {
+      final RandomSupplier.Builder<ObjectDelimiterConfig> wrc = Suppliers.random();
+      for (final ChoiceConfig<ObjectDelimiterConfig> choice : delimiters.choices) {
+        wrc.withChoice(choice.choice, choice.weight);
+      }
+      delimiterConfigSupplier = wrc.build();
+    }
+    return new Function<Map<String, String>, String>() {
+
+      @Override
+      public String apply(final Map<String, String> input) {
+        final ObjectDelimiterConfig config = delimiterConfigSupplier.get();
+        String objectName = input.get(Context.X_OG_OBJECT_NAME);
+        byte[] objectBytes = objectName.getBytes();
+        ObjectDelimiterConfig.DelimChar[] delimChars = config.delimChars;
+        for (ObjectDelimiterConfig.DelimChar c: delimChars) {
+          String d = c.value;
+          int[] positions = c.positions;
+          for (int pos: positions) {
+            //objectName[pos] = d;
+            objectBytes[pos] = d.getBytes()[0];
+          }
+        }
+        String newobjectName = new String(objectBytes);
+        input.put(Context.X_OG_OBJECT_NAME, newobjectName);
+        return newobjectName;
+      }
+    };
+
+  }
+
+  @Provides
+  @Singleton
+  @Named("write.delimiter")
+  public Function<Map<String, String>, String> provideListDelimiter(final SelectionConfig<ObjectDelimiterConfig> listDelimiterConfig) {
+    if (this.config.write.delimiter == null) {
+      return null;
+    }
+    final SelectionConfig<ObjectDelimiterConfig> delimiterConfig = this.config.write.delimiter;
+    final List<ChoiceConfig<ObjectDelimiterConfig>> delimiters = checkNotNull(delimiterConfig.choices);
+    checkArgument(!delimiters.isEmpty(), "delimiters must not be empty");
+
+
+    for (final ChoiceConfig<ObjectDelimiterConfig> choice : delimiters) {
+      checkNotNull(choice);
+      checkNotNull(choice.choice);
+    }
+    return provideDelimiter(delimiterConfig);
+  }
+
 
   @Provides
   @Singleton
@@ -1665,6 +1834,25 @@ public class OGModule extends AbstractModule {
       checkNotNull(choice.choice);
     }
     return provideRetention(retentionConfig);
+  }
+
+  @Provides
+  @Singleton
+  @Named("multipartWrite.delimiter")
+  public Function<Map<String, String>, String> provideMultipartWritetDelimiter(final SelectionConfig<ObjectDelimiterConfig> listDelimiterConfig) {
+    if (this.config.write.delimiter == null) {
+      return null;
+    }
+    final SelectionConfig<ObjectDelimiterConfig> delimiterConfig = this.config.write.delimiter;
+    final List<ChoiceConfig<ObjectDelimiterConfig>> delimiters = checkNotNull(delimiterConfig.choices);
+    checkArgument(!delimiters.isEmpty(), "delimiters must not be empty");
+
+
+    for (final ChoiceConfig<ObjectDelimiterConfig> choice : delimiters) {
+      checkNotNull(choice);
+      checkNotNull(choice.choice);
+    }
+    return provideDelimiter(delimiterConfig);
   }
 
   @Provides
@@ -1754,6 +1942,9 @@ public class OGModule extends AbstractModule {
     }
     if (SelectionType.ROUNDROBIN == selection) {
       final List<RetentionConfig> retentionConfigList = Lists.newArrayList();
+      for (final ChoiceConfig<RetentionConfig> choice : retentions.choices) {
+        retentionConfigList.add(choice.choice);
+      }
       retentionConfigSupplier = Suppliers.cycle(retentionConfigList);
     } else {
       final RandomSupplier.Builder<RetentionConfig> wrc = Suppliers.random();
@@ -1801,6 +1992,9 @@ public class OGModule extends AbstractModule {
     }
     if (SelectionType.ROUNDROBIN == selection) {
       final List<RetentionConfig> retentionConfigList = Lists.newArrayList();
+      for (final ChoiceConfig<RetentionConfig> choice : retentions.choices) {
+        retentionConfigList.add(choice.choice);
+      }
       retentionConfigSupplier = Suppliers.cycle(retentionConfigList);
     } else {
       final RandomSupplier.Builder<RetentionConfig> wrc = Suppliers.random();
@@ -1843,6 +2037,9 @@ public class OGModule extends AbstractModule {
 
     if (SelectionType.ROUNDROBIN == selection) {
       final List<RetentionConfig> retentionConfigList = Lists.newArrayList();
+      for (final ChoiceConfig<RetentionConfig> choice : retentions.choices) {
+        retentionConfigList.add(choice.choice);
+      }
       retentionConfigSupplier = Suppliers.cycle(retentionConfigList);
     } else {
       final RandomSupplier.Builder<RetentionConfig> wrc = Suppliers.random();
@@ -1957,7 +2154,6 @@ public class OGModule extends AbstractModule {
         }
         String val = context.get(Context.X_OG_LEGAL_HOLD_PREFIX).concat(String.valueOf(suffix));
         context.put(Context.X_OG_LEGAL_HOLD, val);
-        context.put(Context.X_OG_NUM_LEGAL_HOLDS, String.valueOf(suffix));
         return val;
       } else {
         // add legalhold context
@@ -1968,7 +2164,7 @@ public class OGModule extends AbstractModule {
         }
         String val = context.get(Context.X_OG_LEGAL_HOLD_PREFIX).concat(String.valueOf(1));
         context.put(Context.X_OG_LEGAL_HOLD, val);
-        context.put(Context.X_OG_NUM_LEGAL_HOLDS, String.valueOf(1));
+        context.put(Context.X_OG_LEGAL_HOLD_SUFFIX, String.valueOf(1));
         return val;
       }
     }
@@ -2038,84 +2234,6 @@ public class OGModule extends AbstractModule {
     final Supplier<String> configSupplier = wrc.build();
     return MoreFunctions.forSupplier(configSupplier);
   }
-
-  @Provides
-  @Singleton
-  @ListQueryParameters
-  public Map<String, Function<Map<String, String>, String>> provideListQueryParameters(
-      final Api api) {
-    final Map<String, Function<Map<String, String>, String>> queryParameters;
-
-    queryParameters = provideQueryParameters(this.config.list.parameters);
-
-    final Map<String, Function<Map<String, String>, String>> weightedQueryParameters =
-            provideWeightedQueryParameters(this.config.list.weightedParameters);
-
-    for (final Map.Entry<String, Function<Map<String, String>, String>> qp : weightedQueryParameters
-            .entrySet()) {
-      queryParameters.put(qp.getKey(), qp.getValue());
-    }
-
-    if (api == Api.S3) {
-      if ((this.config.list.parameters != null && this.config.list.parameters.containsKey("list-type"))) {
-        String version = this.config.list.parameters.get("list-type");
-        if (version.equals("2")) {
-          queryParameters.put(QueryParameters.S3_START_AFTER,
-                  MoreFunctions.keyLookup(Context.X_OG_OBJECT_NAME));
-        } else if (version.equals("1")) {
-          queryParameters.put(QueryParameters.S3_MARKER,
-                  MoreFunctions.keyLookup(Context.X_OG_OBJECT_NAME));
-        } else {
-            throw new IllegalArgumentException(
-                  String.format("unacceptable listing api version [%s]", version));
-        }
-      } else {
-          queryParameters.put(QueryParameters.S3_MARKER,
-                MoreFunctions.keyLookup(Context.X_OG_OBJECT_NAME));
-      }
-    } else if (api == Api.OPENSTACK) {
-      queryParameters.put(QueryParameters.OPENSTACK_MARKER,
-          MoreFunctions.keyLookup(Context.X_OG_OBJECT_NAME));
-    }
-
-    return queryParameters;
-  }
-
-  Map<String, Function<Map<String, String>, String>> provideQueryParameters(
-      final Map<String, String> operationQueryParameters) {
-    final Map<String, Function<Map<String, String>, String>> queryParameters = Maps.newHashMap();
-
-    for (final Map.Entry<String, String> e : operationQueryParameters.entrySet()) {
-      final Supplier<String> queryParameterSupplier = new Supplier<String>() {
-        final private String queryParamValue = e.getValue();
-
-        @Override
-        public String get() {
-          return this.queryParamValue;
-        }
-      };
-      final Function<Map<String, String>, String> queryParameterFunction =
-          MoreFunctions.forSupplier(queryParameterSupplier);
-      queryParameters.put(e.getKey(), queryParameterFunction);
-    }
-
-    return queryParameters;
-  }
-
-
-  Map<String, Function<Map<String, String>, String>> provideWeightedQueryParameters(
-          final Map<String, SelectionConfig<String>> operationQueryParameters) {
-    final Map<String, Function<Map<String, String>, String>> queryParameters = Maps.newHashMap();
-
-    for (final Map.Entry<String, SelectionConfig<String>> e : operationQueryParameters.entrySet()) {
-
-      final SelectionConfig<String> queryParamValue = e.getValue();
-      Function<Map<String, String>, String> queryParameterSupplier = createSelectionConfigSupplier(queryParamValue);
-      queryParameters.put(e.getKey(), queryParameterSupplier);
-    };
-    return queryParameters;
-  }
-
 
   private Map<String, Function<Map<String, String>, String>> provideLegalHoldQueryParameters(
       final boolean remove) {
@@ -2545,7 +2663,8 @@ public class OGModule extends AbstractModule {
       @Named("write.sseCDestination") final boolean encryptDestinationObject,
       @Nullable @Named("write.retention") final Function<Map<String, String>, Long> retention,
       @Nullable @Named("write.legalHold") final Supplier<Function<Map<String, String>, String>> legalHold,
-      @Nullable @Named("write.contentMd5") final boolean contentMd5) {
+      @Nullable @Named("write.contentMd5") final boolean contentMd5,
+      @Nullable @Named("write.delimiter") final Function<Map<String, String>, String> delimiter) {
 
     if (encryptDestinationObject) {
       checkArgument(this.config.data == DataType.ZEROES,
@@ -2573,7 +2692,7 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.WRITE, id, Method.PUT, scheme, host, port, uriRoot,
         container, apiVersion, object, queryParameters, headers, context, null, body, credentials,
-        virtualHost, retention, legalHold, contentMd5);
+        virtualHost, retention, legalHold, contentMd5, delimiter);
   }
 
 
@@ -2602,7 +2721,7 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.EXTEND_RETENTION, id, Method.POST, scheme, host, port,
             uriRoot, container, apiVersion, object, queryParameters, headers, context, null, body,
-            credentials, virtualHost, retentionExtension, null, false);
+            credentials, virtualHost, retentionExtension, null, false, null);
   }
 
   @Provides
@@ -2634,7 +2753,7 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.OBJECT_RESTORE, id, Method.POST, scheme, host, port,
             uriRoot, container, apiVersion, object, queryParameters, headers, context, null, body,
-            credentials, virtualHost, null, null, false);
+            credentials, virtualHost, null, null, false, null);
   }
 
   @Provides
@@ -2665,7 +2784,7 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.PUT_CONTAINER_LIFECYCLE, id, Method.PUT, scheme, host, port,
             uriRoot, container, apiVersion, null, queryParameters, headers, context, null, body,
-            credentials, virtualHost, null, null, true);
+            credentials, virtualHost, null, null, true, null);
   }
 
   @Provides
@@ -2697,7 +2816,7 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.PUT_CONTAINER_PROTECTION, id, Method.PUT, scheme, host, port,
             uriRoot, container, apiVersion, null, queryParameters, headers, context, null, body,
-            credentials, virtualHost, null, null, true);
+            credentials, virtualHost, null, null, true, null);
   }
 
   @Provides
@@ -2727,7 +2846,7 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.GET_CONTAINER_LIFECYCLE, id, Method.GET, scheme, host, port,
             uriRoot, container, apiVersion, null, queryParameters, headers, context, null,
-            null, credentials, virtualHost, null, null, false);
+            null, credentials, virtualHost, null, null, false, null);
   }
 
   @Provides
@@ -2758,7 +2877,7 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.GET_CONTAINER_PROTECTION, id, Method.GET, scheme, host, port,
             uriRoot, container, apiVersion, null, queryParameters, headers, context, null,
-            null, credentials, virtualHost, null, null, false);
+            null, credentials, virtualHost, null, null, false, null);
   }
   @Provides
   @Singleton
@@ -2769,6 +2888,7 @@ public class OGModule extends AbstractModule {
       @Nullable @Named("port") final Integer port,
       @Nullable @Named("uri.root") final String uriRoot,
       @Named("writeCopy.container") final Function<Map<String, String>, String> container,
+      @Named("writeCopy.sourceContainer") final Function<Map<String, String>, String> sourceContainer,
       @Nullable @Named("api.version") final String apiVersion,
       @Nullable @WriteObjectName final Function<Map<String, String>, String> writeObject,
       @Named("writeCopySource.context") final List<Function<Map<String, String>, String>> sseReadContext,
@@ -2778,7 +2898,8 @@ public class OGModule extends AbstractModule {
       @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
       @Named("virtualhost") final boolean virtualHost,
       @Named("writeCopy.sseCSource") final boolean encryptedSourceObject,
-      @Named("writeCopy.sseCDestination") final boolean encryptDestinationObject) {
+      @Named("writeCopy.sseCDestination") final boolean encryptDestinationObject,
+      @Nullable @Named("writeCopy.delimiter") final Function<Map<String, String>, String> delimiter) {
     if (encryptedSourceObject || encryptDestinationObject) {
       checkArgument(this.config.data == DataType.ZEROES,
           "If SSE-C is enabled, data must be ZEROES [%s]", this.config.data);
@@ -2793,10 +2914,10 @@ public class OGModule extends AbstractModule {
           public String apply(@Nullable final Map<String, String> input) {
 
             final String objectName = sseSourceReadObject.apply(input);
+            sourceContainer.apply(input);
             final String containerSuffix =
                 input.get(Context.X_OG_SSE_SOURCE_OBJECT_CONTAINER_SUFFIX);
-            final String containerPrefix = input.get(Context.X_OG_CONTAINER_PREFIX);
-
+            final String containerPrefix = input.get(Context.X_OG_SOURCE_CONTAINER_PREFIX);
             // todo: update this to handle copy object API for openstack. Currently, only support s3
             // API
             checkArgument(api == Api.S3,
@@ -2845,7 +2966,7 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.WRITE_COPY, id, Method.PUT, scheme, host, port, uriRoot,
         container, apiVersion, writeObject, queryParameters, headers, context, sseReadContext, null,
-        credentials, virtualHost, null, null, false);
+        credentials, virtualHost, null, null, false, delimiter);
   }
 
   @Provides
@@ -2902,7 +3023,7 @@ public class OGModule extends AbstractModule {
     }
     return createRequestSupplier(Operation.OVERWRITE, id, Method.PUT, scheme, host, port, uriRoot,
         container, apiVersion, object, queryParameters, headers, context, null, body, credentials,
-        virtualHost, retention, legalHold, contentMd5);
+        virtualHost, retention, legalHold, contentMd5, null);
   }
 
   @Provides
@@ -2943,7 +3064,7 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.READ, id, Method.GET, scheme, host, port, uriRoot,
         container, apiVersion, object, queryParameters, headers, context, null, body, credentials,
-        virtualHost, null, null, false);
+        virtualHost, null, null, false, null);
   }
 
   @Provides
@@ -2971,7 +3092,7 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.WRITE_LEGAL_HOLD, id, Method.POST, scheme, host, port,
             uriRoot, container, apiVersion, object, queryParameters, headers, context, null, body,
-            credentials, virtualHost, null, legalhold, false);
+            credentials, virtualHost, null, legalhold, false, null);
   }
 
 
@@ -3000,7 +3121,7 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.DELETE_LEGAL_HOLD, id, Method.POST, scheme, host, port,
         uriRoot, container, apiVersion, object, queryParameters, headers, context, null, body,
-        credentials, virtualHost, null, legalhold, false);
+        credentials, virtualHost, null, legalhold, false, null);
   }
 
   @Provides
@@ -3032,7 +3153,7 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.READ_LEGAL_HOLD, id, Method.GET, scheme, host, port,
         uriRoot, container, apiVersion, object, queryParameters, headers, context, null, body,
-        credentials, virtualHost, null, null, false);
+        credentials, virtualHost, null, null, false, null);
   }
 
 
@@ -3074,7 +3195,7 @@ public class OGModule extends AbstractModule {
     }
     return createRequestSupplier(Operation.METADATA, id, Method.HEAD, scheme, host, port, uriRoot,
         container, apiVersion, object, queryParameters, headers, context, null, body, credentials,
-        virtualHost, null, null, false);
+        virtualHost, null, null, false, null);
   }
 
   @Provides
@@ -3101,32 +3222,9 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.DELETE, id, Method.DELETE, scheme, host, port, uriRoot,
         container, apiVersion, object, queryParameters, headers, context, null, body, credentials,
-        virtualHost, null, null, false);
+        virtualHost, null, null, false, null);
   }
 
-  @Provides
-  @Singleton
-  @Named("list")
-  public Supplier<Request> provideList(
-      @Named("request.id") final Function<Map<String, String>, String> id, final Api api,
-      final Scheme scheme, @ListHost final Function<Map<String, String>, String> host,
-      @Nullable @Named("port") final Integer port,
-      @Nullable @Named("uri.root") final String uriRoot,
-      @ListQueryParameters final Map<String, Function<Map<String, String>, String>> queryParameters,
-      @Named("list.container") final Function<Map<String, String>, String> container,
-      @Nullable @Named("api.version") final String apiVersion,
-      @ListHeaders final Map<String, Function<Map<String, String>, String>> headers,
-      @Named("list.context") final List<Function<Map<String, String>, String>> context,
-      @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
-      @Named("virtualhost") final boolean virtualHost) throws Exception {
-
-    final Supplier<Body> bodySupplier = Suppliers.of(Bodies.none());
-    final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);
-
-    return createRequestSupplier(Operation.LIST, id, Method.GET, scheme, host, port, uriRoot,
-        container, apiVersion, null, queryParameters, headers, context, null, body, credentials,
-        virtualHost, null, null, false);
-  }
 
   @Provides
   @Singleton
@@ -3151,7 +3249,7 @@ public class OGModule extends AbstractModule {
     // null container since request is on the service http://<accesser ip>/
     return createRequestSupplier(Operation.CONTAINER_LIST, id, Method.GET, scheme, host, port,
         uriRoot, null, apiVersion, null, queryParameters, headers, context, null, body, credentials,
-        virtualHost, null, null, false);
+        virtualHost, null, null, false, null);
   }
 
   @Provides
@@ -3182,7 +3280,7 @@ public class OGModule extends AbstractModule {
     // container mode
     return createRequestSupplier(Operation.CONTAINER_CREATE, id, Method.PUT, scheme, host, port,
         uriRoot, container, apiVersion, null, queryParameters, headers, context, null, body,
-        credentials, virtualHost, retention, null, false);
+        credentials, virtualHost, retention, null, false, null);
 
   }
 
@@ -3198,12 +3296,14 @@ public class OGModule extends AbstractModule {
       final Function<Map<String, String>, Body> body,
       final Function<Map<String, String>, Credential> credentials, final Boolean virtualHost,
       final Function<Map<String, String>, Long> retention, final Supplier<Function<Map<String, String>, String>> legalHold,
-      final boolean contentMd5) {
+      final boolean contentMd5, final Function<Map<String, String>, String> delimiter) {
 
     return new RequestSupplier(operation, id, method, scheme, host, port, uriRoot, container,
         apiVersion, object, queryParameters, false, headers, context, sseSourceContext, credentials,
-        body, virtualHost, retention, legalHold, contentMd5);
+        body, virtualHost, retention, legalHold, contentMd5, delimiter);
   }
+
+
 
 
 
@@ -3229,7 +3329,8 @@ public class OGModule extends AbstractModule {
       @Nullable @Named("multipartWrite.retention") final Function<Map<String, String>, Long> retention,
       @Nullable @Named("multipartWrite.legalHold") final Supplier<Function<Map<String, String>, String>> legalHold,
       @Named("multipartWrite.sseCDestination") final boolean encryptDestinationObject,
-      @Nullable @Named("multipartWrite.contentMd5") final boolean contentMd5) {
+      @Nullable @Named("multipartWrite.contentMd5") final boolean contentMd5,
+      @Nullable @Named("multipartWrite.delimiter") final Function<Map<String, String>, String> delimiter) {
 
     if (encryptDestinationObject) {
       checkArgument(this.config.data == DataType.ZEROES,
@@ -3262,7 +3363,7 @@ public class OGModule extends AbstractModule {
 
     return createMultipartRequestSupplier(id, scheme, host, port, uriRoot, container, apiVersion,
         object, partSize, partsPerSession, targetSessions, queryParameters, headers, context, body,
-        retention, legalHold, credentials, virtualHost, contentMd5);
+        retention, legalHold, credentials, virtualHost, contentMd5, delimiter);
   }
 
   private Supplier<Request> createMultipartRequestSupplier(
@@ -3279,10 +3380,10 @@ public class OGModule extends AbstractModule {
       @Nullable @Named("write.retention") final Function<Map<String, String>, Long> retention,
       @Nullable @Named("write.legalHold") final Supplier<Function<Map<String, String>, String>> legalHold,
       final Function<Map<String, String>, Credential> credentials, final boolean virtualHost,
-      final boolean contentMd5) {
+      final boolean contentMd5, final Function<Map<String, String>, String> delimiter) {
 
     return new MultipartRequestSupplier(id, scheme, host, port, uriRoot, container, object,
         partSize, partsPerSession, targetSessions, queryParameters, false, headers, context,
-        credentials, body, virtualHost, retention, legalHold, contentMd5);
+        credentials, body, virtualHost, retention, legalHold, contentMd5, delimiter);
   }
 }

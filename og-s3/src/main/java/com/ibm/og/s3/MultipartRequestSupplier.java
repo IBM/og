@@ -78,6 +78,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
   private final boolean trailingSlash;
   private final Map<String, Function<Map<String, String>, String>> headers;
   private final List<Function<Map<String, String>, String>> context;
+  private final Function<Map<String, String>, String> delimiter;
   private final Function<Map<String, String>, Credential> credentials;
   private final Function<Map<String, String>, Body> body;
   private final boolean virtualHost;
@@ -134,7 +135,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
       final Function<Map<String, String>, Body> body, final boolean virtualHost,
       final Function<Map<String, String>, Long> retention,
       final Supplier<Function<Map<String, String>, String>> legalHold,
-      final boolean contentMd5) {
+      final boolean contentMd5, final Function<Map<String, String>, String> delimiter) {
 
     this.id = id;
     this.scheme = checkNotNull(scheme);
@@ -151,6 +152,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     this.headers = ImmutableMap.copyOf(headers);
     this.context = ImmutableList.copyOf(context);
     this.credentials = credentials;
+    this.delimiter = delimiter;
     this.body = body;
     this.virtualHost = virtualHost;
     this.retention = retention;
@@ -659,6 +661,9 @@ public class MultipartRequestSupplier implements Supplier<Request> {
   }
 
   private HttpRequest.Builder createInitiateRequest(final Map<String, String> context) {
+    if (this.delimiter != null) {
+      this.delimiter.apply(context);
+    }
     Body fullBody = this.body.apply(context);
     Long partSize = this.partSize.apply(context); // bytes
     Integer maxParts = this.partsPerSession.apply(context);

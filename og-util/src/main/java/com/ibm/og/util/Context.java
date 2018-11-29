@@ -38,6 +38,8 @@ public class Context {
   public static final String X_OG_SSE_SOURCE_OBJECT_NAME = "x_og_sse_source_object_name";
   public static final String X_OG_SSE_SOURCE_OBJECT_CONTAINER_SUFFIX =
       "x_og_sse_source_object_container_suffix";
+  public static final String X_OG_SOURCE_CONTAINER_NAME = "x_og_sse_source_object_container_name";
+  public static final String X_OG_SOURCE_CONTAINER_PREFIX = "x_og_sse_source_object_container_prefix";
   public static final String X_OG_SSE_SOURCE_OBJECT_SIZE = "x_og_sse_source_object_size";
   public static final String X_OG_SSE_SOURCE_URI = "x_og_sse_source_uri";
 
@@ -47,7 +49,6 @@ public class Context {
   public static final String X_OG_LEGAL_HOLD_PREFIX = "x-og-legalhold-prefix";
   public static final String X_OG_LEGAL_HOLD_SUFFIX = "x-og-legalhold-suffix";
   public static final String X_OG_LEGAL_HOLD = "Retention-Legal-Hold-ID";
-  public static final String X_OG_NUM_LEGAL_HOLDS = "x-og-num-legal-holds";
   public static final String X_OG_OBJECT_RETENTION = "Retention-Period";
   public static final String X_OG_OBJECT_RETENTION_EXT = "Additional-Retention-Period";
   public static final String X_OG_CONTENT_MD5 = "Content-MD5";
@@ -62,6 +63,21 @@ public class Context {
 
 
   public static final String X_OG_LIST_MAX_KEYS = "x-og-list-max-keys";
+  public static final String X_OG_LIST_SESSION_ID= "x-og-list-session-id";
+  public static final String X_OG_LIST_SESSION_TYPE= "x-og-list-session-type";
+  public static final String X_OG_LIST_START_AFTER = "x-og-list-start-after";
+  public static final String X_OG_LIST_NEXT_MARKER = "x-og-list-next-marker";
+  public static final String X_OG_LIST_NEXT_CONTINUATION_TOKEN = "x-og-list-next-continuation-token";
+  public static final String X_OG_LIST_PREFIX = "x-og-list-prefix";
+  public static final String X_OG_LIST_DELIMITER = "x-og-list-delimiter";
+
+  public static final String X_OG_LIST_REQ_NUM = "x-og-list-req-num";
+  public static final String X_OG_LIST_MAX_REQS = "x-og-list-max-reqs";
+
+
+  public static final String X_OG_LIST_IS_TRUNCATED = "x-og-list-is-truncated";
+  public static final String X_OG_NUM_LIST_CONTENTS = "x-og-list-num-contents";
+  public static final String X_OG_NUM_LIST_COMMON_PREFIXES = "x-og-list-num-common-prefixes";
 
   private Context() {}
 }

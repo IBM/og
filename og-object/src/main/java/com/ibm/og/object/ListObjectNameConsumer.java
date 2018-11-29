@@ -8,6 +8,8 @@ package com.ibm.og.object;
 import java.util.Set;
 
 import com.ibm.og.api.Operation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A {@code ObjectNameConsumer} implementation which consumes object names for list operations
@@ -15,6 +17,8 @@ import com.ibm.og.api.Operation;
  * @since 1.0
  */
 public class ListObjectNameConsumer extends AbstractObjectNameConsumer {
+
+    private static final Logger _logger = LoggerFactory.getLogger(ListObjectNameConsumer.class);
     /**
      * Constructs an instance
      *
@@ -28,6 +32,7 @@ public class ListObjectNameConsumer extends AbstractObjectNameConsumer {
 
     @Override
     protected void updateObjectManager(final ObjectMetadata objectName) {
+        _logger.trace("releasing object {}", objectName.getName());
         this.objectManager.getComplete(objectName);
     }
 

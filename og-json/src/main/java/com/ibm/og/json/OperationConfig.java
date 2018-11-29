@@ -15,12 +15,14 @@ public class OperationConfig {
   public double weight;
   public SelectionConfig<String> host;
   public ObjectConfig object;
+  public ObjectConfig sourceObject;
   public SelectionConfig<FilesizeConfig> filesize;
   public Map<String, SelectionConfig<String>> headers;
   public Map<String, String> parameters;
   public Map<String, SelectionConfig<String>> weightedParameters;
   public BodySource body;
   public ContainerConfig container;
+  public ContainerConfig sourceContainer;
   public MultipartConfig upload;
   public boolean sseCSource;
   public boolean sseCDestination;
@@ -32,7 +34,11 @@ public class OperationConfig {
   public SelectionConfig<RetentionConfig> containerMinimumRetention;
   public SelectionConfig<RetentionConfig> containerMaximumRetention;
   public SelectionConfig<RetentionConfig> containerDefaultRetention;
-
+  public SelectionConfig<PrefixConfig> prefix;
+  public SelectionConfig<ObjectDelimiterConfig> delimiter; // for write operations
+  public SelectionConfig<ListDelimiterConfig> listDelimiter;
+  public SelectionConfig<ListSessionConfig> listSessionConfig;
+  public Integer minimumListSessions;
 
   public OperationConfig(final double weight) {
     this();
@@ -43,17 +49,31 @@ public class OperationConfig {
     this.weight = 0.0;
     this.host = null;
     this.object = new ObjectConfig();
+    this.sourceObject = new ObjectConfig();
     this.filesize = null;
     this.headers = Maps.newLinkedHashMap();
     this.parameters = Maps.newLinkedHashMap();
     this.weightedParameters = Maps.newLinkedHashMap();
     this.body = BodySource.NONE;
     this.container = new ContainerConfig();
+    this.sourceContainer = new ContainerConfig();
     this.upload = new MultipartConfig();
     this.legalHold = null;
     this.retention = null;
     this.contentMd5 = false;
     this.objectRestorePeriod = 1;
     this.archiveTransitionPeriod = 1;
+    this.prefix = null;
+    this.delimiter = null;
+    this.listDelimiter = null;
+    this.listSessionConfig = new SelectionConfig<ListSessionConfig>();
+    this.listSessionConfig.selection = SelectionType.RANDOM;
+    ListSessionConfig listSession = new ListSessionConfig();
+    listSession.maxChainedRequests = 1;
+    listSession.requestType = "UNCHAINED";
+    listSession.startFromBeginning = false;
+    this.listSessionConfig.choices.add(0, new ChoiceConfig<ListSessionConfig>(listSession));
+    this.minimumListSessions = 1;
+
   }
 }
