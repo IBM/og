@@ -5,8 +5,13 @@ Support Indefinite retention (retention period -2)
 List operation changes:
   Add prefix property - A weighted choice list of prefixes
   Add delimiter property - A weighted choice list of delimiter character
-Octal Object naming mode -  Generated object name contains characters in octal character set [0 -7]
-Set Delimiter character in object name for Write, MultipartWrite and WriteCopy operations
+  See List configuration section in UserGuide
+Write, MultipartWrite, Overwrite operation changes:
+    Octal Object naming mode Option -  Generated object name contains characters in octal character set [0 -7]
+    Set Delimiter character in object name. See Operation Delimiter Character section in UserGuide
+
+Fix Overwrite operation sse-c property binding
+
 UserGuide updates
 
 Release 1.8.3
