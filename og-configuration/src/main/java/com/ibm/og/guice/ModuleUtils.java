@@ -35,6 +35,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class ModuleUtils {
 
   public static Function<Map<String, String>, String> getObjectSelectionSupplierFunction(ObjectConfig objectConfig) {
+    checkNotNull(objectConfig);
     final ObjectConfig config = objectConfig;
     return new Function<Map<String, String>, String>() {
       final Supplier<Long> suffixes = createObjectSuffixes(config);
@@ -59,8 +60,13 @@ public class ModuleUtils {
     final SelectionType selection = checkNotNull(objectConfigs.selection);
 
     if (objectConfigs.choices.isEmpty()) {
-      return null;
+      // no object configuration is specified in the operation config
+      final List<Function<Map<String, String>, String>>  objectConfigList = Lists.newArrayList();
+      ObjectConfig objectConfig = new ObjectConfig();
+      objectConfigList.add(getObjectSelectionSupplierFunction(objectConfig));
+      return Suppliers.cycle(objectConfigList);
     }
+
     if (SelectionType.ROUNDROBIN == selection) {
       final List<Function<Map<String, String>, String>>  objectConfigList = Lists.newArrayList();
       for(ChoiceConfig<ObjectConfig> choice: objectConfigs.choices) {

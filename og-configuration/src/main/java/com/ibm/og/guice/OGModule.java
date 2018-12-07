@@ -12,7 +12,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -632,7 +631,6 @@ public class OGModule extends AbstractModule {
   private void checkContainerObjectConfig(final OperationConfig operationConfig) throws Exception {
     if ((operationConfig.container.maxSuffix != -1 || operationConfig.container.minSuffix != -1)
         && operationConfig.object.choices.isEmpty()  && operationConfig.weight > 0.0) {
-        //TODO: fix the object choices check
       throw new Exception(
           "Must specify ObjectConfig prefix if using min/max suffix in container config");
     }
