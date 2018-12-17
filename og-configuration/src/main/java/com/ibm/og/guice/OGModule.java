@@ -630,7 +630,7 @@ public class OGModule extends AbstractModule {
 
   private void checkContainerObjectConfig(final OperationConfig operationConfig) throws Exception {
     if ((operationConfig.container.maxSuffix != -1 || operationConfig.container.minSuffix != -1)
-        && operationConfig.object.prefix == "" && operationConfig.weight > 0.0) {
+        && operationConfig.object.choices.isEmpty()  && operationConfig.weight > 0.0) {
       throw new Exception(
           "Must specify ObjectConfig prefix if using min/max suffix in container config");
     }
@@ -1123,26 +1123,6 @@ public class OGModule extends AbstractModule {
     return MoreFunctions.keyLookup(Context.X_OG_OBJECT_NAME);
   }
 
-  private Function<Map<String, String>, String> provideObject(
-      final OperationConfig operationConfig) {
-    checkNotNull(operationConfig);
-    final ObjectConfig objectConfig = checkNotNull(operationConfig.object);
-    final String prefix = checkNotNull(objectConfig.prefix);
-    final Supplier<Long> suffixes = createObjectSuffixes(objectConfig);
-    final Supplier<Long> legalHoldSuffixes = createLegalHoldSuffixes(operationConfig.object);
-    return new Function<Map<String, String>, String>() {
-      @Override
-      public String apply(final Map<String, String> context) {
-        final String objectName = prefix + suffixes.get();
-        context.put(Context.X_OG_OBJECT_NAME, objectName);
-        context.put(Context.X_OG_SEQUENTIAL_OBJECT_NAME, "true");
-        if (operationConfig.legalHold != null) {
-          context.put(Context.X_OG_LEGAL_HOLD_SUFFIX, legalHoldSuffixes.get().toString());
-        }
-        return objectName;
-      }
-    };
-  }
 
   private Function<Map<String, String>, String> provideSourceObject(
       final OperationConfig operationConfig) {
@@ -1360,7 +1340,7 @@ public class OGModule extends AbstractModule {
     final OperationConfig operationConfig = checkNotNull(this.config.write);
     if (Api.SOH != api) {
       if (operationConfig.object.selection != null) {
-        context.add(provideObject(operationConfig));
+        context.add(ModuleUtils.provideObject(operationConfig));
       } else {
         // default for writes
         context.add(new UUIDObjectNameFunction(this.config.octalNamingMode));
@@ -1391,7 +1371,7 @@ public class OGModule extends AbstractModule {
     final OperationConfig operationConfig = checkNotNull(this.config.writeCopy);
     if (Api.SOH != api) {
       if (operationConfig.object.selection != null) {
-        context.add(provideObject(operationConfig));
+        context.add(ModuleUtils.provideObject(operationConfig));
       } else {
         // default for writes
         context.add(new UUIDObjectNameFunction(this.config.octalNamingMode));
@@ -1466,7 +1446,7 @@ public class OGModule extends AbstractModule {
 
     final OperationConfig operationConfig = checkNotNull(this.config.read);
     if (operationConfig.object.selection != null) {
-      function = provideObject(operationConfig);
+      function = ModuleUtils.provideObject(operationConfig);
     } else {
       function = new ReadObjectNameFunction(objectManager);
     }
@@ -1499,7 +1479,7 @@ public class OGModule extends AbstractModule {
 
     final OperationConfig operationConfig = checkNotNull(this.config.writeLegalhold);
     if (operationConfig.object.selection != null) {
-      function = provideObject(operationConfig);
+      function = ModuleUtils.provideObject(operationConfig);
     } else {
       String legalHoldName;
       if (this.config.writeLegalhold.legalHold != null
@@ -1523,7 +1503,7 @@ public class OGModule extends AbstractModule {
 
     final OperationConfig operationConfig = checkNotNull(this.config.extendRetention);
     if (operationConfig.object.selection != null) {
-      function = provideObject(operationConfig);
+      function = ModuleUtils.provideObject(operationConfig);
     } else {
       function = new ObjectRetentionExtensionFunction(objectManager);
     }
@@ -1540,7 +1520,7 @@ public class OGModule extends AbstractModule {
 
     final OperationConfig operationConfig = checkNotNull(this.config.objectRestore);
     if (operationConfig.object.selection != null) {
-      function = provideObject(operationConfig);
+      function = ModuleUtils.provideObject(operationConfig);
     } else {
       function = new ReadObjectNameFunction(objectManager);
     }
@@ -1624,7 +1604,7 @@ public class OGModule extends AbstractModule {
 
     final OperationConfig operationConfig = checkNotNull(this.config.metadata);
     if (operationConfig.object.selection != null) {
-      function = provideObject(operationConfig);
+      function = ModuleUtils.provideObject(operationConfig);
     } else {
       function = new MetadataObjectNameFunction(objectManager);
     }
@@ -1641,7 +1621,7 @@ public class OGModule extends AbstractModule {
 
     final OperationConfig operationConfig = checkNotNull(this.config.delete);
     if (operationConfig.object.selection != null) {
-      function = provideObject(operationConfig);
+      function = ModuleUtils.provideObject(operationConfig);
     } else {
       function = new DeleteObjectNameFunction(objectManager);
     }
@@ -1682,7 +1662,7 @@ public class OGModule extends AbstractModule {
     final OperationConfig operationConfig = checkNotNull(this.config.multipartWrite);
     if (Api.SOH != api) {
       if (operationConfig.object.selection != null) {
-        context.add(provideObject(operationConfig));
+        context.add(ModuleUtils.provideObject(operationConfig));
       } else {
         // default for writes
         context.add(new UUIDObjectNameFunction(this.config.octalNamingMode));
@@ -2112,7 +2092,7 @@ public class OGModule extends AbstractModule {
 
     final OperationConfig operationConfig = checkNotNull(this.config.deleteLegalhold);
     if (operationConfig.object.selection != null) {
-      function = provideObject(operationConfig);
+      function = ModuleUtils.provideObject(operationConfig);
     } else {
       String legalHoldName;
       if (this.config.deleteLegalhold.legalHold != null

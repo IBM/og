@@ -676,7 +676,7 @@ Note that *object configuration property should be included under the Operation 
 If the object block is defined at root level, it will not have any effect.
 
 By default, OG will generate a unique, uuid-like object name for every write
-request. Writecopy operation will select a random object name from objects which have already been written for source object.
+request. By default, WriteCopy operation will select a random object name from objects which have already been written for source object.
 By default, the destination object name will be a unique, uuid-like object name.
 Overwrite, Read, Metadata, and Delete requests will select a random object name from
 objects which have already been written. List will use a random object name as its starting
@@ -685,8 +685,8 @@ See <<Object Management>>.
 
 To override this behavior, the _object_ configuration block can be configured
 to include _selection_, _prefix_, _min_suffix_ and _max_suffix_ keys. Random
-and round robin selection configuration is supported. The resulting object name
-will be of the form:
+and round robin selection configuration is supported. Also, a weighted choice of object configuration blocks can
+be specified. The resulting object name will be of the form:
 
 [source, bash]
 ----
@@ -723,6 +723,36 @@ configured in OG for use with the SOH API.
   "max_suffix": 100
 }
 ----
+.Choices of object configurations
+[source, json]
+----
+"object": {
+  "selection": "roundrobin",
+  "choices": [
+    {
+      "choice": {
+        "selection": "roundrobin",
+        "prefix": "my_object",
+        "min_suffix": 0,
+        "max_suffix": 100
+      },
+
+
+    },
+    {
+      "choice": {
+        "selection": "roundrobin",
+        "prefix": "my_object1",
+        "min_suffix": 0,
+        "max_suffix": 100
+      }
+    }
+  ]
+
+
+}
+----
+
 
 ==== Operation Headers
 OG supports custom headers for a particular operation type. Headers configured
