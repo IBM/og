@@ -14,7 +14,7 @@ import com.ibm.og.api.BodySource;
 public class OperationConfig {
   public double weight;
   public SelectionConfig<String> host;
-  public SelectionConfig<ObjectConfig> object;
+  public ObjectConfig object;
   public ObjectConfig sourceObject;
   public SelectionConfig<FilesizeConfig> filesize;
   public Map<String, SelectionConfig<String>> headers;
@@ -48,7 +48,7 @@ public class OperationConfig {
   public OperationConfig() {
     this.weight = 0.0;
     this.host = null;
-    this.object = new SelectionConfig<ObjectConfig>();
+    this.object = new ObjectConfig();
     this.sourceObject = new ObjectConfig();
     this.filesize = null;
     this.headers = Maps.newLinkedHashMap();

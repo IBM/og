@@ -46,7 +46,6 @@ public class Context {
 
   // worm feature
   // todo: should we use the prefix given in the config?
-  public static final String X_OG_LEGAL_HOLD_REQUIRED = "x-og-legalhold-required";
   public static final String X_OG_LEGAL_HOLD_PREFIX = "x-og-legalhold-prefix";
   public static final String X_OG_LEGAL_HOLD_SUFFIX = "x-og-legalhold-suffix";
   public static final String X_OG_LEGAL_HOLD = "Retention-Legal-Hold-ID";
