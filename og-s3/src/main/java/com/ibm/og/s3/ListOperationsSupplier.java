@@ -44,6 +44,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -212,55 +213,44 @@ public class ListOperationsSupplier implements Supplier<Request>{
   private void appendQueryParams(final StringBuilder s, final Map<String, String> context) {
     final Map<String, String> queryParamsMap = Maps.newHashMap();
 
-    StringBuilder sb = new StringBuilder();
-    int mapSize = this.queryParameters.size();
-    int counter = 0;
     for (final Map.Entry<String, Function<Map<String, String>, String>> queryParam : this.queryParameters
             .entrySet()) {
-      counter++;
       String key = queryParam.getKey();
       String value = queryParam.getValue().apply(context);
       queryParamsMap.put(key, value);
-      sb.append(key);
       if (key.equals("max-keys")) {
         context.put(Context.X_OG_LIST_MAX_KEYS, value);
       }
-      if (value != null) {
-        sb.append("=").append(value);
-      }
-      if (counter < mapSize) {
-        sb.append("&");
-      }
     }
-
     // if the context has next continuation token add it to the parameter
     String contToken = context.get(Context.X_OG_LIST_NEXT_CONTINUATION_TOKEN);
     if (contToken != null) {
-      sb.append("&continuation-token=").append(contToken);
+      queryParamsMap.put("continuation-token", contToken);
     }
 
     String marker = context.get(Context.X_OG_LIST_NEXT_MARKER);
     if (marker != null) {
-      sb.append("&marker=").append(marker);
+      queryParamsMap.put("marker", marker);
     }
 
     String startAfter = context.get(Context.X_OG_LIST_START_AFTER);
     if (startAfter != null) {
-      sb.append("&start-after=").append(startAfter);
+      queryParamsMap.put("start-after", startAfter);
     }
 
     String prefix = context.get(Context.X_OG_LIST_PREFIX);
     if (prefix != null) {
-      sb.append("&prefix=").append(prefix);
+      queryParamsMap.put("prefix", prefix);
     }
 
     String delimiter = context.get(Context.X_OG_LIST_DELIMITER);
     if (delimiter != null) {
-      sb.append("&delimiter=").append(delimiter);
+      queryParamsMap.put("delimiter", delimiter);
     }
 
-    if (sb.toString().length() != 0) {
-      s.append("?").append(sb.toString());
+    String qpString = PARAM_JOINER.join(queryParamsMap);
+    if (qpString.length() > 0) {
+      s.append("?").append(qpString);
     }
   }
 
