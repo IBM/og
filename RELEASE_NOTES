@@ -1,3 +1,7 @@
+Release 1.8.5:
+Changes:
+CSAFE-48868: fix aws list url breaking aws signature
+
 Release 1.8.4
 Changes:
 Add source_container and source_object properties in WriteCopy operation
