@@ -51,6 +51,7 @@ public class OGConfig {
   public int shutdownTimeout;
   public boolean virtualHost;
   public Integer statsLogInterval;
+  public boolean octalNamingMode;
 
   public OGConfig() {
     this.scheme = Scheme.HTTP;
@@ -91,6 +92,7 @@ public class OGConfig {
     this.shutdownTimeout = 3600;
     this.virtualHost = false;
     this.statsLogInterval = -1; //seconds
+    this.octalNamingMode = false;
 
   }
 }

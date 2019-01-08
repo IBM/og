@@ -4,7 +4,7 @@
   <parent>
     <artifactId>og</artifactId>
     <groupId>com.ibm</groupId>
-    <version>1.8.3-SNAPSHOT</version>
+    <version>1.8.5</version>
   </parent>
   <artifactId>og-configuration</artifactId>
   <name>Configuration</name>
@@ -53,6 +53,10 @@
     <dependency>
       <groupId>com.ibm</groupId>
       <artifactId>og-util</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.ibm</groupId>
+      <artifactId>og-json</artifactId>
     </dependency>
     <dependency>
       <groupId>com.google.code.gson</groupId>

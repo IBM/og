@@ -244,7 +244,7 @@ public class MultipartRequestSupplierTest {
 
     return new MultipartRequestSupplier(id, scheme, host, port, uriRoot, container,
         object, partSizes, partsPerSessionFunc, targetSessions, queryParameters, trailingSlash, headers, context,
-        credentials, body, virtualHost, false);
+        credentials, body, virtualHost, null, null, false, null);
   }
 
   private void genericMultipleSessions(final int targetSessions, final long objectSize,

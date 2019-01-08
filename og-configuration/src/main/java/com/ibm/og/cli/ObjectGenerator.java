@@ -18,6 +18,7 @@ import java.util.concurrent.TimeUnit;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.ibm.og.api.Request;
 import com.ibm.og.api.Response;
+import com.ibm.og.guice.ListModule;
 import com.ibm.og.json.OGConfig;
 import com.ibm.og.json.type.FilesizeConfigTypeAdapterFactory;
 import com.ibm.og.test.condition.LoadTestResult;
@@ -287,7 +288,7 @@ public class ObjectGenerator {
   }
 
   public static Injector createInjector(final OGConfig ogConfig) {
-    return Guice.createInjector(Stage.PRODUCTION, new OGModule(ogConfig));
+    return Guice.createInjector(Stage.PRODUCTION, new OGModule(ogConfig), new ListModule(ogConfig));
   }
 
   public static void shutdownObjectManager(final ObjectManager objectManager) {

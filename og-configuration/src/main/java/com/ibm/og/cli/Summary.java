@@ -153,7 +153,11 @@ public class Summary {
         return this.putContainerLifecycle;
       } else if (operation == Operation.GET_CONTAINER_LIFECYCLE) {
         return this.getContainerLifecycle;
-      }
+      } else if (operation == Operation.PUT_CONTAINER_PROTECTION) {
+        return this.putContainerProtection;
+    } else if (operation == Operation.GET_CONTAINER_PROTECTION) {
+        return this.getContainerProtection;
+    }
         return null;
 
     }
@@ -201,6 +205,10 @@ public class Summary {
         this.putContainerLifecycle = operationStat;
       } else if (operation == Operation.GET_CONTAINER_LIFECYCLE) {
         this.getContainerLifecycle = operationStat;
+      } else if (operation == Operation.PUT_CONTAINER_PROTECTION) {
+        this.putContainerProtection = operationStat;
+      } else if (operation == Operation.GET_CONTAINER_PROTECTION) {
+          this.getContainerProtection = operationStat;
       }
     }
 

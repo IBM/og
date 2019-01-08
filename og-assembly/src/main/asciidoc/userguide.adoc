@@ -636,7 +636,7 @@ Multipart Write is also only supported for S3.
 Operation mix is configured via _write_, _overwrite_, _read_, _metadata_, _delete_, _list_,
 _container_create_, _container_list_, _multipart_write_, _write_legalhold_, _read_legalhold_,
 _delete_legalhold_, _extend_retention_, _object_restore, _put_container_lifecycle_,
-_get_container_lifecycle_ keys respectively.
+_get_container_lifecycle_,  _put_container_protection_, _get_container_protection_ keys respectively.
 
 Each operation type is configured via a configuration block. E.g. for write:
 
@@ -787,6 +787,56 @@ for the parameters values. For example, this can be used to specify multiple max
 ==== Operation Container
 OG supports the _container_ key at the operation level with some
 caveats as noted in the Container section.
+
+=== Operation Delimiter Character
+OG Supports the _delimiter_ key at the operation level with operations _write_,
+_multipart_write_ and _write_copy_ operations.
+It is a weighted choice of delimiter characters that can be used for at the specified
+position in the object name string.  See below for a sample.
+
+Each choice can have list of delimiter characters. The selection can be random or round robin.
+
+----
+ "delimiter": {
+    "selection": "random",
+    "choices": [
+      {
+        "choice": {
+          "delim_chars": [
+            {
+              "positions": [
+                5,
+                7
+              ],
+              "value": "a"
+            },
+            {
+              "value": "b",
+              "positions": [
+                10
+              ]
+            }
+          ]
+        },
+        "weight": 5
+      },
+      {
+        "choice": {
+          "delim_chars": [
+            {
+              "positions": [
+                14
+              ],
+              "value": "b"
+            }
+          ]
+        },
+        "weight": 30
+      }
+    ]
+  }
+----
+
 
 ==== Operation Multipart Write
 Multipart write supports an additional part size parameter so that the user
@@ -1050,10 +1100,161 @@ This operation retrieves the configured lifecycle configuration on the bucket.
     }
 ----
 
+==== Operation Put Container Protection Configuration
+This operation puts container protection configuration for the bucket. The input consists of container information,
+default, minimum and maximum retention for the container. The time unit for the retention in days.
+
+----
+  "put_container_protection": {
+    "weight": 50.0,
+    "object": {
+      "prefix": "",
+      "min_suffix": 0,
+      "max_suffix": 9223372036854775807
+    },
+    "headers": {},
+    "parameters": {},
+    "body": "none",
+    "container": {
+      "prefix" : "pcontainer",
+      "selection": "roundrobin",
+      "min_suffix": 0,
+      "max_suffix": 4
+    },
+    "container_minimum_retention": {
+      "selection": "random",
+        "choices": [
+            {
+                "choice": {
+                    "expiry": 50,
+                    "time_unit": "days"
+                },
+                "weight": 1.0
+            },
+            {
+                "choice": {
+                    "expiry": 70,
+                    "time_unit": "days"
+                },
+                "weight": 1.0
+            },
+            {
+                "choice": {
+                    "expiry": 90,
+                    "time_unit": "days"
+                },
+                "weight": 1.0
+            }
+        ]
+   },
+    "container_default_retention": {
+      "selection": "random",
+        "choices": [
+            {
+                "choice": {
+                    "expiry": 200,
+                    "time_unit": "days"
+                },
+                "weight": 1.0
+            },
+            {
+                "choice": {
+                    "expiry": 250,
+                    "time_unit": "days"
+                },
+                "weight": 1.0
+            },
+            {
+                "choice": {
+                    "expiry": 245,
+                    "time_unit": "days"
+                },
+                "weight": 1.0
+            }
+        ]
+   },
+    "container_maximum_retention": {
+      "selection": "random",
+        "choices": [
+            {
+                "choice": {
+                    "expiry": 301,
+                    "time_unit": "days"
+                },
+                "weight": 1.0
+            },
+            {
+                "choice": {
+                    "expiry": 350,
+                    "time_unit": "days"
+                },
+                "weight": 1.0
+            },
+            {
+                "choice": {
+                    "expiry": 400,
+                    "time_unit": "days"
+                },
+                "weight": 1.0
+            }
+        ]
+   }
+  }
+----
+
+==== Operation Get Container Protection ====
+The Get Container Protection operation retrieves the container protection details on the bucket.
+
+----
+
+  "get_container_protection": {
+    "weight": 50.0,
+    "object": {
+      "prefix": "",
+      "min_suffix": 0,
+      "max_suffix": 9223372036854775807
+    },
+    "headers": {},
+    "parameters": {},
+    "body": "none",
+    "container": {
+      "prefix" : "pcontainer",
+      "selection": "random",
+      "min_suffix": 0,
+      "max_suffix": 4
+    }
+  },
+
+----
+
 ==== Operation List configuration ====
 This operation fetches the list of object names in the bucket. The general operation configuration
 properties weight, headers, parameters, container are applicable to this operation.
 
+*weighted_parameters* property is added in the list configuration. Now a weighted choice of
+values can be specified for a single parameter.
+
+----
+  "list": {
+    "weight": 0,
+    "parameters": {},
+    "weighted_parameters": {
+          "max-keys": {
+          "selection": "random",
+          "choices": [
+            {
+              "choice": "100",
+              "weight": 1.0
+            },
+            {
+              "choice": "1000",
+              "weight": 5.0
+            },
+          ]
+       }
+  }
+
+----
 list_max_keys has been added to supported weight choice of max_keys for the operation.
 Random and round robin selection configuration is supported.
 ----
@@ -1074,6 +1275,141 @@ Random and round robin selection configuration is supported.
           }
       ]
     }
+----
+
+*list_session_config* property defines the type of list operations. A list session
+is a set of related list requests. If this value is not specified, the default list_session_config
+is used. The default list_session_config has random selection of UNCHAINED list requests with random
+markers.
+
+There are 2 types of list_sessions. _UNCHAINED_ and _CHAINED_. The UNCHAINED session is
+a single list operation request. In CHAINED session each subsequent list request
+uses the next marker or continuation token from the previous request.
+
+When a CHAINED list is selected, if there is an existing list session for which there is no
+outstanding request (free session), that sessions is selected for the next request. If there is no
+free session, a new CHAINED list session with will be started with the specified config
+parameters.
+
+An UNCHAINED sessions will always have a single request and the session closed after the
+request is finished.
+
+The _max_chained_requests_ is the maximum number of list request sent with in a sessions or the
+session will end if the end of the bucket listing is reached.
+
+----
+  "list_session_config": {
+    "selection": "random",
+    "choices": [
+      {
+        "choice": {
+          "request_type": "UNCHAINED",
+          "start_from_beginning": false,
+          "max_chained_requests": 1
+        },
+        "weight": 1
+      },
+      {
+        "choice": {
+          "request_type": "CHAINED",
+          "start_from_beginning": true,
+          "max_chained_requests": 10
+        },
+        "weight": 3
+      }
+    ]
+  }
+----
+
+_minimum_list_sessions_ property can be specified to indicate the minimum number of active
+ list sessions. The default value is 1.
+
+list_prefix has been added to specify the a weighted choice of prefixes. The prefix
+can be a maximum of 16 characters.
+----
+  "prefix": {
+    "selection": "random",
+    "choices": [
+      {
+        "choice": {
+          "prefix_string": "012",
+          "num_chars": 3,
+          "use_marker": true
+        }
+      },
+      {
+        "choice": {
+          "prefix_string": "578",
+          "num_chars": 3,
+          "use_marker": true
+        }
+      }
+    ]
+  }
+----
+
+list_delimiter has been added to specify a weighted choice of delimiter characters.
+Currently only single character is supported. A special value of "-1" for the delimiter_character
+will skip the list_delimiter character in the request.
+----
+  "list_delimiter": {
+    "selection": "random",
+    "choices": [
+      {
+        "choice": {
+          "delimiter_character": "a"
+        },
+        "weight": 1
+      },
+      {
+        "choice": {
+          "delimiter_character": "b"
+        },
+        "weight": 3
+      }
+    ]
+  }
+----
+
+==== Operation WriteCopy Configuration ====
+
+WriteCopy operation is used for copying an existing object.  Here is a sample configuration.  The source_object and
+source_container properties are specific to this operation. The other properties are properties that belong to all
+operations.
+The source_container and source_object can be used to generate the names for the source object and the source container.
+This option can be used when the object manager is not used.
+
+----
+  "write_copy": {
+    "weight": 1.0,
+    "object": {
+      "prefix": "",
+      "min_suffix": 0,
+      "max_suffix": 9223372036854775807
+    },
+    "headers": {},
+    "parameters": {},
+    "body": "none",
+    "container": {
+      "selection": "random",
+      "min_suffix": -1,
+      "max_suffix": -1
+    },
+    "source_container": {
+      "prefix": "mycontainer",
+      "selection": "random",
+      "max_suffix": 5,
+      "min_suffix": 0
+    },
+    "source_object": {
+      "selection": "random",
+      "prefix": "myobject",
+      "max_suffix": 1000,
+      "min_suffix": 0
+    }
+    "sse_c_source": true,
+    "sse_c_destination": true
+  }
 ----
 
 === Filesize
@@ -1484,6 +1820,15 @@ OG dumps the stats periodically in the console as well as og log. The interval p
 
 The interval stats are logged on the console as well as og_interval.json file.
 
+==== Octal naming mode
+A new mode for generating object names only from the octal character set is introduced.
+This option is configured via the _octal_naming_mode_ key. The default value is false.
+When this property is true, the object names will have only characters from [0-7]. When
+it is false, the object names have the hex character set [0-f].
+This is introduced for flexibility to test listing with prefixes and delimiters. For example,
+the object names could be octal character set and delimiters can be be hex character set.
+
+
 ==== Client Behavior
 OG supports a large number of TCP and HTTP tuning parameters which affect
 client execution behavior. For a complete list, see <<Client Configuration>>.
@@ -1810,6 +2155,10 @@ mixed operation tests.
 |No
 |-1
 
+|octal_naming_mode
+|Boolean
+|No
+|true
 
 |===
 

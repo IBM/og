@@ -1,8 +1,34 @@
+Release 1.8.5:
+Changes:
+CSAFE-48868: fix aws list url breaking aws signature
+
+Release 1.8.4
+Changes:
+Add source_container and source_object properties in WriteCopy operation
+Support Indefinite retention (retention period -2)
+List operation changes:
+  Add prefix property - A weighted choice list of prefixes
+  Add delimiter property - A weighted choice list of delimiter character
+  See List configuration section in UserGuide
+Write, MultipartWrite, Overwrite operation changes:
+    Octal Object naming mode Option -  Generated object name contains characters in octal character set [0 -7]
+    Set Delimiter character in object name. See Operation Delimiter Character section in UserGuide
+
+Fix Overwrite operation sse-c property binding
+
+UserGuide updates
+
 Release 1.8.3
 Changes:
-Add max_keys attribute to list operation. Multiple weighted max_keys count can be specified for list operation
-Add interval logging to console and og log.
-Update userguide - list operation, stats_log_interval, corrected object file default location
+Add weighted_parameters to the list operation. Query Parameters with weighted choice of values can be specified. For example, multiple max_keys count can be specified for the list operation.
+
+Add interval logging to console and og log. stats_log_interval property can be added at the at the og configuration top level. The minimum value should be 10 seconds. By default, interval logging is disabled.
+
+Update Apache http client library to 4.5.6
+
+Fix apache client thread pool size increase without bounds
+
+Add PUT and GET container protection operations
 
 Release 1.8.2
 Changes:

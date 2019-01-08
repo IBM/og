@@ -19,6 +19,12 @@ import com.google.common.base.Function;
  */
 public class UUIDObjectNameFunction implements Function<Map<String, String>, String> {
 
+  private boolean octalNamingMode = false;
+
+  public UUIDObjectNameFunction(boolean octalNamingMode) {
+    this.octalNamingMode = octalNamingMode;
+  }
+
   /**
    * Creates and returns an object name. Additionally, inserts the following entries into the
    * context:
@@ -30,10 +36,24 @@ public class UUIDObjectNameFunction implements Function<Map<String, String>, Str
    */
   @Override
   public String apply(final Map<String, String> context) {
-    final String objectName = UUID.randomUUID().toString().replace("-", "") + "0000";
-    context.put(Context.X_OG_OBJECT_NAME, objectName);
+    if (!this.octalNamingMode) {
+      final String objectName = UUID.randomUUID().toString().replace("-", "") + "0000";
+      context.put(Context.X_OG_OBJECT_NAME, objectName);
 
-    return objectName;
+      return objectName;
+
+    } else {
+      UUID uuid = UUID.randomUUID();
+      long msl = uuid.getMostSignificantBits();
+      long lsl = uuid.getLeastSignificantBits();
+      msl = msl & 0x7777777777777777L;
+      lsl = lsl & 0x7777777777777777L;
+      UUID uuid2 = new UUID(msl, lsl);
+      final String objectName = uuid2.toString().replace("-", "") + "0000";
+      context.put(Context.X_OG_OBJECT_NAME, objectName);
+
+      return objectName;
+    }
   }
 
   @Override
