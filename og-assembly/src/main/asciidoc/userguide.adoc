@@ -1962,6 +1962,154 @@ The OG summary.json provides a high level summary of the results of a test run.
 }
 ----
 
+=== Interval Log
+The og_interval.json log file contains the stats for each interval. The interval stats is formatted
+as json object on each line.
+
+.Sample interval stats record
+----
+{
+  "timestamp_start": 1547048037538,
+  "timestamp_finish": 1547048048556,
+  "runtime": 11.018,
+  "operations": 90,
+  "write": {
+    "operations": 90,
+    "bytes": 274000,
+    "average_latency": 109.76,
+    "status_codes": {
+      "200": 90
+    }
+  },
+  "read": {
+    "operations": 0,
+    "bytes": 0,
+    "average_latency": 0,
+    "status_codes": {}
+  },
+  "delete": {
+    "operations": 0,
+    "bytes": 0,
+    "average_latency": 0,
+    "status_codes": {}
+  },
+  "metadata": {
+    "operations": 0,
+    "bytes": 0,
+    "average_latency": 0,
+    "status_codes": {}
+  },
+  "overwrite": {
+    "operations": 0,
+    "bytes": 0,
+    "average_latency": 0,
+    "status_codes": {}
+  },
+  "list": {
+    "operations": 0,
+    "bytes": 0,
+    "average_latency": 0,
+    "status_codes": {}
+  },
+  "container_list": {
+    "operations": 0,
+    "bytes": 0,
+    "average_latency": 0,
+    "status_codes": {}
+  },
+  "container_create": {
+    "operations": 0,
+    "bytes": 0,
+    "average_latency": 0,
+    "status_codes": {}
+  },
+  "multipart_write_initiate": {
+    "operations": 0,
+    "bytes": 0,
+    "average_latency": 0,
+    "status_codes": {}
+  },
+  "multipart_write_part": {
+    "operations": 0,
+    "bytes": 0,
+    "average_latency": 0,
+    "status_codes": {}
+  },
+  "multipart_write_complete": {
+    "operations": 0,
+    "bytes": 0,
+    "average_latency": 0,
+    "status_codes": {}
+  },
+  "multipart_write_abort": {
+    "operations": 0,
+    "bytes": 0,
+    "average_latency": 0,
+    "status_codes": {}
+  },
+  "write_copy": {
+    "operations": 0,
+    "bytes": 0,
+    "average_latency": 0,
+    "status_codes": {}
+  },
+  "write_legal_hold": {
+    "operations": 0,
+    "bytes": 0,
+    "average_latency": 0,
+    "status_codes": {}
+  },
+  "read_legal_hold": {
+    "operations": 0,
+    "bytes": 0,
+    "average_latency": 0,
+    "status_codes": {}
+  },
+  "delete_legal_hold": {
+    "operations": 0,
+    "bytes": 0,
+    "average_latency": 0,
+    "status_codes": {}
+  },
+  "extend_retention": {
+    "operations": 0,
+    "bytes": 0,
+    "average_latency": 0,
+    "status_codes": {}
+  },
+  "object_restore": {
+    "operations": 0,
+    "bytes": 0,
+    "average_latency": 0,
+    "status_codes": {}
+  },
+  "put_container_lifecycle": {
+    "operations": 0,
+    "bytes": 0,
+    "average_latency": 0,
+    "status_codes": {}
+  },
+  "get_container_lifecycle": {
+    "operations": 0,
+    "bytes": 0,
+    "average_latency": 0,
+    "status_codes": {}
+  },
+  "put_container_protection": {
+    "operations": 0,
+    "bytes": 0,
+    "average_latency": 0,
+    "status_codes": {}
+  },
+  "get_container_protection": {
+    "operations": 0,
+    "bytes": 0,
+    "average_latency": 0,
+    "status_codes": {}
+  }
+}
+----
+
 == Examples
 The following examples describe a test scenario and the resulting configuration
 needed to execute the test. Each example is fully functional, requiring minimal
