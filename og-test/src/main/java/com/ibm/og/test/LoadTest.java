@@ -53,9 +53,12 @@ public class LoadTest implements Callable<LoadTestResult> {
   private final AtomicBoolean running;
   private long timestampStart;
   private long timestampFinish;
-  private volatile boolean success;
+  private volatile int result;
   private final CountDownLatch completed;
   private ArrayList<String> messages;
+
+  public static final int RESULT_SUCCESS = 0;
+  public static final int RESULT_FAILURE = -1;
 
   /**
    * Creates an instance
@@ -83,7 +86,7 @@ public class LoadTest implements Callable<LoadTestResult> {
     this.shutdownImmediate = shutdownImmediate;
     this.shutdownTimeout = shutdownTimeout;
     this.running = new AtomicBoolean(true);
-    this.success = true;
+    this.result = RESULT_SUCCESS;
     this.completed = new CountDownLatch(1);
     this.messages =  new ArrayList<String>();
 
@@ -135,7 +138,7 @@ public class LoadTest implements Callable<LoadTestResult> {
     _logger.debug("Waiting for test complete");
     Uninterruptibles.awaitUninterruptibly(this.completed);
     this.timestampFinish = System.currentTimeMillis();
-    return new LoadTestResult(this.timestampStart, this.timestampFinish, this.success, ImmutableList.copyOf(this.messages));
+    return new LoadTestResult(this.timestampStart, this.timestampFinish, this.result, ImmutableList.copyOf(this.messages));
   }
 
   /**
@@ -161,8 +164,18 @@ public class LoadTest implements Callable<LoadTestResult> {
             LoadTest.this.eventBus.post(TestState.STOPPING);
 
             _logger.debug("Waiting on client shutdown future");
-            Uninterruptibles.getUninterruptibly(LoadTest.this.client.shutdown(LoadTest.this.shutdownImmediate,
-                                                                              LoadTest.this.shutdownTimeout));
+            Integer result = Uninterruptibles.getUninterruptibly(
+                    LoadTest.this.client.shutdown(LoadTest.this.shutdownImmediate, LoadTest.this.shutdownTimeout));
+            if (result > 0) {
+              _logger.warn("Terminated {} ongoing requests during shutdown", result);
+              if (!LoadTest.this.shutdownImmediate) {
+                LoadTest.this.result = result;
+                LoadTest.this.messages.add("Incomplete requests past shutdown timeout");
+              }
+            }
+            if (result < 0) {
+              _logger.error("Error encountered during client shutdown");
+            }
           } catch (final Exception e) {
             _logger.error("Exception while attempting to shutdown client", e);
           }
@@ -177,7 +190,7 @@ public class LoadTest implements Callable<LoadTestResult> {
    */
   public void abortTest(final String message) {
     _logger.debug("Entering abortTest");
-    this.success = false;
+    this.result = RESULT_FAILURE;
 
 
     // requestSupplierException unit test case was failing because guava library crashes because of NPE

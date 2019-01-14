@@ -27,8 +27,8 @@ public interface Client {
    * @param immediate if true, shuts down this client immediately, else wait for ongoing requests to complete
    * @param timeout amount of time in seconds to wait for requests if shutdown is not immediate
    * @return a future representing the eventual shutdown of this client. When the future has
-   *         completed, a value of true indicates a successful shutdown, while a value of false
-   *         indicates some error in the shutdown process
+   *         completed, a value of 0 indicates a successful shutdown, while a positive value
+   *         indicates the number of terminated requests
    */
-  ListenableFuture<Boolean> shutdown(boolean immediate, int timeout);
+  ListenableFuture<Integer> shutdown(boolean immediate, int timeout);
 }

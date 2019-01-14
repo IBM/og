@@ -40,12 +40,12 @@ public class Summary {
    *         less than timestampStart
    */
   public Summary(final Statistics stats, final long timestampStart, final long timestampFinish,
-                 final int exitCode, ImmutableList<String> messages) {
+                 final int exitCode, ImmutableList<String> messages, final int requestsAborted) {
     checkNotNull(stats);
     checkArgument(timestampStart >= 0, "timestampStart must be >= 0 [%s]", timestampStart);
     checkArgument(timestampStart <= timestampFinish,
         "timestampStart must be <= timestampFinish [%s, %s]", timestampStart, timestampFinish);
-    this.summaryStats = new SummaryStats(stats, timestampStart, timestampFinish, exitCode, messages);
+    this.summaryStats = new SummaryStats(stats, timestampStart, timestampFinish, exitCode, messages, requestsAborted);
   }
 
   static class SummaryOperationStats {
@@ -298,18 +298,22 @@ public class Summary {
 
     final int exitCode;
     final ImmutableList<String> exitMessages;
+    final int requestsAborted;
 
     SummaryStats(final Statistics stats, final long timestampStart,
-                 final long timestampFinish, final int exitCode, final ImmutableList<String> messages) {
+                 final long timestampFinish, final int exitCode, final ImmutableList<String> messages,
+                 final int requestsAborted) {
       super(stats, timestampStart, timestampFinish);
 
       this.exitCode = exitCode;
       this.exitMessages = messages;
+      this.requestsAborted = requestsAborted;
     }
 
     public String condensedSummary() {
 
       StringBuilder sb = new StringBuilder(condensedStats());
+      sb.append("RequestsAborted: ").append(this.requestsAborted).append("\n");
       sb.append("ExitCode: ").append(this.exitCode).append("\n");
       sb.append("ExitMessages:").append(prettyExitMessages());
 
@@ -331,14 +335,14 @@ public class Summary {
     @Override
     public String toString() {
       final String format = "Start: %s%nEnd: %s%nRuntime: %.2f "
-              + "Seconds%nOperations: %s%n%n%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%sExitCode: %s%nExitMessages:%s";
+              + "Seconds%nOperations: %s%n%n%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%sRequestsAborted: %s%nExitCode: %s%nExitMessages:%s";
       return String.format(Locale.US, format, FORMATTER.print(this.timestampStart),
               FORMATTER.print(this.timestampFinish), this.runtime, this.operations, this.write,
               this.read, this.delete, this.metadata, this.overwrite, this.list, this.containerList,
               this.containerCreate, this.multipartWriteInitiate, this.multipartWritePart, this.multipartWriteComplete,
               this.multipartWriteAbort,this.writeCopy, this.writeLegalHold, this.readLegalHold, this.deleteLegalHold,
               this.extendRetention, this.objectRestore, this.putContainerLifecycle, this.getContainerLifecycle, this.exitCode,
-              prettyExitMessages());
+              this.requestsAborted, prettyExitMessages());
     }
 
 

@@ -445,8 +445,8 @@ public class ApacheClient implements Client {
   }
 
   @Override
-  public ListenableFuture<Boolean> shutdown(final boolean immediate, final int timeout) {
-    final SettableFuture<Boolean> future = SettableFuture.create();
+  public ListenableFuture<Integer> shutdown(final boolean immediate, final int timeout) {
+    final SettableFuture<Integer> future = SettableFuture.create();
     final Thread t = new Thread(getShutdownRunnable(future, immediate, timeout));
     t.setName("client-shutdown");
     this.running = false;
@@ -454,17 +454,18 @@ public class ApacheClient implements Client {
     return future;
   }
 
-  private Runnable getShutdownRunnable(final SettableFuture<Boolean> future,
+  private Runnable getShutdownRunnable(final SettableFuture<Integer> future,
       final boolean immediate, final int timeout) {
     return new Runnable() {
       @Override
       public void run() {
         if (immediate) {
+          _logger.info("Immediate shutdown requested");
           closeSockets();
+          future.set(shutdownClient(1));
+        } else {
+          future.set(shutdownClient(timeout));
         }
-
-        shutdownClient(timeout);
-        future.set(true);
       }
 
       private void closeSockets() {
@@ -477,7 +478,7 @@ public class ApacheClient implements Client {
         }
       }
 
-      private void shutdownClient(final int timeout) {
+      private Integer shutdownClient(final int timeout) {
         try {
           _logger.info("Issuing client shutdown");
           ApacheClient.this.executorService.shutdown();
@@ -492,14 +493,18 @@ public class ApacheClient implements Client {
             if (tasks.size() > 0) {
               _logger.error("Cancelled {} scheduled client tasks", tasks.size());
             }
-            _logger.info("Client is gracefully terminated [{}]", ApacheClient.this.executorService.isTerminated());
+            _logger.info("Apache Client is gracefully terminated [{}]", ApacheClient.this.executorService.isTerminated());
+            return new Integer(ApacheClient.this.abortedRequestsAtShutdown.get());
           }
         } catch (final InterruptedException e) {
           _logger.error("Interrupted while waiting for client executor service termination", e);
+          return new Integer(-1);
+        } catch (final Exception e) {
+          _logger.error(e.getMessage());
+          return new Integer(-1);
         }
-        _logger.info("Client is shutdown");
-        _logger.info("Number of requests aborted at shutdown [{}]",
-            ApacheClient.this.abortedRequestsAtShutdown.get());
+        _logger.info("Client is shutdown, requests aborted [{}]", ApacheClient.this.abortedRequestsAtShutdown.get());
+        return new Integer(ApacheClient.this.abortedRequestsAtShutdown.get());
       }
     };
   }
@@ -1094,7 +1099,6 @@ public class ApacheClient implements Client {
      * @param consumerId the consumerId for which the provided consumer should be used
      * @param consumer a response body consumer
      * @return this builder
-     * @see Headers#X_OG_RESPONSE_BODY_CONSUMER
      */
     public Builder withResponseBodyConsumer(final String consumerId,
         final ResponseBodyConsumer consumer) {

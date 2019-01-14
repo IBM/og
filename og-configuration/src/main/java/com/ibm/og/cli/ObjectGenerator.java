@@ -147,8 +147,11 @@ public class ObjectGenerator {
 
       // slight race here; if shutdown hook completes prior to the exit line below
       // if the test completes whether it passes or fails, the summary is written in the test results callback
-      if (!result.success) {
+      if (result.result < 0) {
         Application.exit(Application.TEST_ERROR);
+      } else if (result.result > 0) {
+        _logger.error("Test shutdown unsuccessful, terminated {} requests", result.result);
+        Application.exit(Application.TEST_SHUTDOWN_ERROR);
       }
     } catch (final Exception e) {
       try {
@@ -215,7 +218,7 @@ public class ObjectGenerator {
 
     final LoadTestResult result = test.call();
 
-    if (result.success) {
+    if (result.result == 0) {
       _consoleLogger.info("Test Completed.");
     } else {
       _consoleLogger.error("Test ended unsuccessfully. See og.log or exception.log for details");
@@ -320,16 +323,17 @@ public class ObjectGenerator {
 
   private static Summary logSummary(final Statistics stats, final long timestampStart, final long timestampFinish,
                                        final LoadTestResult testResult) {
-    final Summary summary = new Summary(stats, timestampStart, timestampFinish,
-            testResult.success ? Application.TEST_SUCCESS : Application.TEST_ERROR,
-            testResult.success ? ImmutableList.of(Application.TEST_SUCCESS_MSG) : testResult.messages);
+    final int exitCode = testResult.result == 0 ? Application.TEST_SUCCESS : Application.TEST_ERROR;
+    final int requestsAborted = testResult.result > 0 ? testResult.result : 0;
+    final Summary summary = new Summary(stats, timestampStart, timestampFinish, exitCode,
+            testResult.result == 0 ? ImmutableList.of(Application.TEST_SUCCESS_MSG) : testResult.messages, requestsAborted);
     _summaryJsonLogger.info(gson.toJson(summary.getSummaryStats()));
     return summary;
   }
 
   private static Summary logSummary(final long timestampStart, final long timestampFinish,
                                     final int exitCode, ImmutableList<String> messages) {
-    final Summary summary = new Summary(new Statistics(), timestampStart, timestampFinish, exitCode, messages);
+    final Summary summary = new Summary(new Statistics(), timestampStart, timestampFinish, exitCode, messages, 0);
     _summaryJsonLogger.info(gson.toJson(summary.getSummaryStats()));
     return summary;
   }
