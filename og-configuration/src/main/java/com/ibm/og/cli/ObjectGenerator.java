@@ -321,10 +321,17 @@ public class ObjectGenerator {
     _consoleLogger.info(banner);
   }
 
-  private static Summary logSummary(final Statistics stats, final long timestampStart, final long timestampFinish,
-                                       final LoadTestResult testResult) {
-    final int exitCode = testResult.result == 0 ? Application.TEST_SUCCESS : Application.TEST_ERROR;
+  private static Summary logSummary(final Statistics stats, final long timestampStart,
+                                    final long timestampFinish, final LoadTestResult testResult)
+  {
+    int exitCode = Application.TEST_ERROR;
+    if (testResult.result == 0) {
+      exitCode = Application.TEST_SUCCESS;
+    } else if (testResult.result > 0) {
+      exitCode = Application.TEST_SHUTDOWN_ERROR;
+    }
     final int requestsAborted = testResult.result > 0 ? testResult.result : 0;
+
     final Summary summary = new Summary(stats, timestampStart, timestampFinish, exitCode,
             testResult.result == 0 ? ImmutableList.of(Application.TEST_SUCCESS_MSG) : testResult.messages, requestsAborted);
     _summaryJsonLogger.info(gson.toJson(summary.getSummaryStats()));
