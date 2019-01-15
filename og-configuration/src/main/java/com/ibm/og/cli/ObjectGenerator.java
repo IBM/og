@@ -148,8 +148,10 @@ public class ObjectGenerator {
       // slight race here; if shutdown hook completes prior to the exit line below
       // if the test completes whether it passes or fails, the summary is written in the test results callback
       if (result.result < 0) {
+        // Error while executing test
         Application.exit(Application.TEST_ERROR);
       } else if (result.result > 0) {
+        // Error while shutting down ApacheClient
         _logger.error("Test shutdown unsuccessful, terminated {} requests", result.result);
         Application.exit(Application.TEST_SHUTDOWN_ERROR);
       }
