@@ -1,8 +1,9 @@
 Release 1.8.5:
 Changes:
-CSAFE-48868: fix aws list url breaking aws signature
-CSAFE-48976: add sample interval log record in userguide
-
+Fix aws list url breaking aws signature
+Add sample interval log record in userguide
+Add shutdown timeout parameter. OG will wait after calling closing apache client. If the connections are open still
+  they will be force terminated.
 
 Release 1.8.4
 Changes:
