@@ -1,6 +1,8 @@
 Release 1.8.5:
 Changes:
 CSAFE-48868: fix aws list url breaking aws signature
+CSAFE-48976: add sample interval log record in userguide
+
 
 Release 1.8.4
 Changes:
