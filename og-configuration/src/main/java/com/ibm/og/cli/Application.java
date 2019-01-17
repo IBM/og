@@ -36,6 +36,7 @@ public class Application {
   public static final int TEST_SUCCESS = 0;
   public static final int TEST_ERROR = 1;
   public static final int TEST_CONFIG_ERROR = 2;
+  public static final int TEST_SHUTDOWN_ERROR = 3;
 
   public static final String TEST_SUCCESS_MSG = "Test exited normally";
 

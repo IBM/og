@@ -147,23 +147,31 @@ public class ObjectGenerator {
 
       // slight race here; if shutdown hook completes prior to the exit line below
       // if the test completes whether it passes or fails, the summary is written in the test results callback
-      if (!result.success) {
+      if (result.result < 0) {
+        // Error while executing test
         Application.exit(Application.TEST_ERROR);
+      } else if (result.result > 0) {
+        // Error while shutting down ApacheClient
+        _logger.error("Test shutdown unsuccessful, terminated {} requests", result.result);
+        Application.exit(Application.TEST_SHUTDOWN_ERROR);
       }
     } catch (final Exception e) {
-      _logger.error("Exception while configuring and running test", e);
-      _consoleLogger.error("Test Error. See og.log for details");
-      if (ogConfig.statsLogInterval > 0 && statsLogger.isAlive()) {
-        statsLogger.interrupt();
+      try {
+        _logger.error("Exception while configuring and running test", e);
+        _consoleLogger.error("Test Error. See og.log for details");
+        if (ogConfig.statsLogInterval > 0 && statsLogger.isAlive()) {
+          statsLogger.interrupt();
+        }
+        logConsoleException(e);
+        logExceptionToFile(e);
+        timestampStop = System.currentTimeMillis();
+        logSummary(timestampStart, timestampStop, Application.TEST_ERROR,
+                ImmutableList.of(String.format("Test error %s", e.getMessage())));
+        _logger.warn("countdown shutdown latch in exception block");
+      } finally {
+        shutdownLatch.countDown();
+        Application.exit(Application.TEST_ERROR);
       }
-      logConsoleException(e);
-      logExceptionToFile(e);
-      timestampStop = System.currentTimeMillis();
-      logSummary(timestampStart, timestampStop, Application.TEST_ERROR,
-              ImmutableList.of(String.format("Test error %s", e.getMessage())));
-      _logger.warn("countdown shutdown latch in exception block");
-      shutdownLatch.countDown();
-      Application.exit(Application.TEST_ERROR);
     }
 
     Application.exit(Application.TEST_SUCCESS);
@@ -212,7 +220,7 @@ public class ObjectGenerator {
 
     final LoadTestResult result = test.call();
 
-    if (result.success) {
+    if (result.result == 0) {
       _consoleLogger.info("Test Completed.");
     } else {
       _consoleLogger.error("Test ended unsuccessfully. See og.log or exception.log for details");
@@ -315,18 +323,26 @@ public class ObjectGenerator {
     _consoleLogger.info(banner);
   }
 
-  private static Summary logSummary(final Statistics stats, final long timestampStart, final long timestampFinish,
-                                       final LoadTestResult testResult) {
-    final Summary summary = new Summary(stats, timestampStart, timestampFinish,
-            testResult.success ? Application.TEST_SUCCESS : Application.TEST_ERROR,
-            testResult.success ? ImmutableList.of(Application.TEST_SUCCESS_MSG) : testResult.messages);
+  private static Summary logSummary(final Statistics stats, final long timestampStart,
+                                    final long timestampFinish, final LoadTestResult testResult)
+  {
+    int exitCode = Application.TEST_ERROR;
+    if (testResult.result == 0) {
+      exitCode = Application.TEST_SUCCESS;
+    } else if (testResult.result > 0) {
+      exitCode = Application.TEST_SHUTDOWN_ERROR;
+    }
+    final int requestsAborted = testResult.result > 0 ? testResult.result : 0;
+
+    final Summary summary = new Summary(stats, timestampStart, timestampFinish, exitCode,
+            testResult.result == 0 ? ImmutableList.of(Application.TEST_SUCCESS_MSG) : testResult.messages, requestsAborted);
     _summaryJsonLogger.info(gson.toJson(summary.getSummaryStats()));
     return summary;
   }
 
   private static Summary logSummary(final long timestampStart, final long timestampFinish,
                                     final int exitCode, ImmutableList<String> messages) {
-    final Summary summary = new Summary(new Statistics(), timestampStart, timestampFinish, exitCode, messages);
+    final Summary summary = new Summary(new Statistics(), timestampStart, timestampFinish, exitCode, messages, 0);
     _summaryJsonLogger.info(gson.toJson(summary.getSummaryStats()));
     return summary;
   }
