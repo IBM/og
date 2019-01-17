@@ -1806,11 +1806,22 @@ By default, when OG shuts down it aborts all in progress requests in order to
 ensure that the tool terminates in a reasonable time. For some use cases, it is
 valuable to configure the tool to allow in progress requests to complete prior
 to termination. This option is configured via the _shutdown_immediate_ key.
+If the option is set to false, OG waits for requests to complete until shutdown
+timeout is reached. If there are requests that are not complete by this point,
+OG will return an error code 3 and report/log the number of aborted requests.
+Shutdown timeout in seconds is set by _shutdown_timeout_ key with default of 3600.
+
+.Immediate Shutdown Example
+[source, json]
+----
+"shutdown_immediate": true
+----
 
 .Graceful Shutdown Example
 [source, json]
 ----
-"shutdown_immediate": false
+"shutdown_immediate": false,
+"shutdown_timeout": 30
 ----
 
 ==== Stats Logging Interval
@@ -1938,6 +1949,11 @@ The OG summary.json provides a high level summary of the results of a test run.
 [source, json]
 ----
 {
+  "exit_code": 0,
+  "exit_messages": [
+    "Test exited normally"
+  ],
+  "requests_aborted": 0,
   "timestamp_start": 1452558285641,
   "timestamp_finish": 1452558287184,
   "runtime": 1.543,
