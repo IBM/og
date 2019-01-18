@@ -64,6 +64,9 @@ public class HttpUtil {
         return Method.POST;
       case WRITE_COPY:
         return Method.PUT;
+      case MULTI_DELETE:
+        return Method.POST;
+
       default:
         throw new IllegalArgumentException(String.format("Unrecognized operation [%s]", operation));
     }

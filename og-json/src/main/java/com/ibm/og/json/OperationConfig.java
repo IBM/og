@@ -39,6 +39,8 @@ public class OperationConfig {
   public SelectionConfig<ListDelimiterConfig> listDelimiter;
   public SelectionConfig<ListSessionConfig> listSessionConfig;
   public Integer minimumListSessions;
+  public Integer multideleteCount;
+  public boolean multideleteQuiet;
 
   public OperationConfig(final double weight) {
     this();
@@ -74,6 +76,7 @@ public class OperationConfig {
     listSession.startFromBeginning = false;
     this.listSessionConfig.choices.add(0, new ChoiceConfig<ListSessionConfig>(listSession));
     this.minimumListSessions = 1;
-
+    this.multideleteCount = 1;
+    this.multideleteQuiet = true;
   }
 }
