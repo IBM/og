@@ -40,9 +40,18 @@ CLASS="com.ibm.og.cli.ObjectGenerator"
 
 mkdir -p ${TEST_PATH}
 
-if [ -d latest ];then
+# check if the symlink exists and remove it
+if [ -L latest ];then
    rm latest
 fi
+
+# check if instead of symlink a directory exist. exit with failure. consider it as
+# configuration error
+if [ -d latest ];then
+    echo "directory latest exists already. remove the directory and rerun"
+    exit 2
+fi
+
 ln -s ${TEST_PATH} latest
 
 # TODO analyze which jvm parameters should be set
