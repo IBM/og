@@ -79,5 +79,10 @@ public class Context {
   public static final String X_OG_NUM_LIST_CONTENTS = "x-og-list-num-contents";
   public static final String X_OG_NUM_LIST_COMMON_PREFIXES = "x-og-list-num-common-prefixes";
 
+  public static final String X_OG_MULTI_DELETE_REQUEST_OBJECTS_COUNT = "x-og-multi-delete-request-objects-count";
+  public static final String X_OG_MULTI_DELETE_REQUST_FAILED = "x-og-multi-delete-request-failed";
+  public static final String X_OG_MULTI_DELETE_SUCCESS_OBJECTS_COUNT = "x-og-multi-delete-success-objects-count";
+  public static final String X_OG_MULTI_DELETE_FAILED_OBJECTS_COUNT = "x-og-multi-delete-failed-objects-count";
+
   private Context() {}
 }
