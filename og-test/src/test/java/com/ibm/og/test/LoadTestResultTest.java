@@ -13,22 +13,22 @@ public class LoadTestResultTest {
 
   @Test(expected = IllegalArgumentException.class)
   public void negativeTimestampStart() {
-    new LoadTestResult(-1, 1, true, ImmutableList.of("Illegal start time stamp"));
+    new LoadTestResult(-1, 1, 0, ImmutableList.of("Illegal start time stamp"));
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void timestampStartGreaterThanTimestampFinish() {
-    new LoadTestResult(100, 50, true, ImmutableList.of("Illegal start time stamp"));
+    new LoadTestResult(100, 50, 0, ImmutableList.of("Illegal start time stamp"));
   }
 
   @Test
   public void timestampStartEqualTimestampFinish() {
-    new LoadTestResult(100, 100, true, ImmutableList.of("Start timestamp is equal to End timestamp"));
+    new LoadTestResult(100, 100, 0, ImmutableList.of("Start timestamp is equal to End timestamp"));
   }
 
   @Test
   public void timestampStartLessThanTimestampFinish() {
-    new LoadTestResult(100, 101, true, ImmutableList.of("Test Success"));
+    new LoadTestResult(100, 101, 0, ImmutableList.of("Test Success"));
   }
 }
 

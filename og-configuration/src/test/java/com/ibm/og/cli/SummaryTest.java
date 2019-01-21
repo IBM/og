@@ -52,7 +52,7 @@ public class SummaryTest {
   public void invalidSummary(final Statistics stats, final long timestampStart,
       final long timestampFinish, final Class<Exception> expectedException, final int exitCode, ImmutableList<String> messages) {
     this.thrown.expect(expectedException);
-    new Summary(stats, timestampStart, timestampFinish, exitCode, messages);
+    new Summary(stats, timestampStart, timestampFinish, exitCode, messages, 0);
   }
 
   @Test
@@ -71,7 +71,7 @@ public class SummaryTest {
     final long timestampFinish = timestampStart + 100;
     final double runtime =
         ((double) (timestampFinish - timestampStart)) / TimeUnit.SECONDS.toMillis(1);
-    final Summary summary = new Summary(stats, timestampStart, timestampFinish, 0, ImmutableList.of("Test Success"));
+    final Summary summary = new Summary(stats, timestampStart, timestampFinish, 0, ImmutableList.of("Test Success"), 0);
     // can't do much to validate toString correctness, but at least execute it
     summary.toString();
     final Summary.SummaryStats summaryStats = summary.getSummaryStats();

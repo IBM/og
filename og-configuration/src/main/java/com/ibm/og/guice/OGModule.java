@@ -282,8 +282,8 @@ public class OGModule extends AbstractModule {
     });
     bind(StoppingConditionsConfig.class).toInstance(this.config.stoppingConditions);
     bind(FailingConditionsConfig.class).toInstance(this.config.failingConditions);
-    bindConstant().annotatedWith(Names.named("shutdownImmediate"))
-        .to(this.config.shutdownImmediate);
+    bindConstant().annotatedWith(Names.named("shutdownImmediate")).to(this.config.shutdownImmediate);
+    bindConstant().annotatedWith(Names.named("shutdownTimeout")).to(this.config.shutdownTimeout);
     bindConstant().annotatedWith(Names.named("statsLogInterval"))
             .to(this.config.statsLogInterval);
     checkArgument((this.config.statsLogInterval == -1 || this.config.statsLogInterval >= 10),
