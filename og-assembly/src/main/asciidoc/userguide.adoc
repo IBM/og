@@ -2314,6 +2314,11 @@ mixed operation tests.
 |No
 |true
 
+|shutdown_timeout
+|Integer (seconds)
+|No
+|3600
+
 |stats_log_interval
 |Integer (seconds)
 |No
