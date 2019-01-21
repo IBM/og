@@ -445,26 +445,27 @@ public class ApacheClient implements Client {
   }
 
   @Override
-  public ListenableFuture<Boolean> shutdown(final boolean immediate) {
-    final SettableFuture<Boolean> future = SettableFuture.create();
-    final Thread t = new Thread(getShutdownRunnable(future, immediate));
+  public ListenableFuture<Integer> shutdown(final boolean immediate, final int timeout) {
+    final SettableFuture<Integer> future = SettableFuture.create();
+    final Thread t = new Thread(getShutdownRunnable(future, immediate, timeout));
     t.setName("client-shutdown");
     this.running = false;
     t.start();
     return future;
   }
 
-  private Runnable getShutdownRunnable(final SettableFuture<Boolean> future,
-      final boolean immediate) {
+  private Runnable getShutdownRunnable(final SettableFuture<Integer> future,
+      final boolean immediate, final int timeout) {
     return new Runnable() {
       @Override
       public void run() {
         if (immediate) {
+          _logger.info("Immediate shutdown requested");
           closeSockets();
+          future.set(shutdownClient(1));
+        } else {
+          future.set(shutdownClient(timeout));
         }
-
-        shutdownClient();
-        future.set(true);
       }
 
       private void closeSockets() {
@@ -477,26 +478,33 @@ public class ApacheClient implements Client {
         }
       }
 
-      private void shutdownClient() {
-        _logger.info("Issuing client shutdown");
-        ApacheClient.this.executorService.shutdown();
-        while (!ApacheClient.this.executorService.isTerminated()) {
-          awaitShutdown(1, TimeUnit.HOURS);
-        }
-        _logger.info("Client is shutdown");
-        _logger.info("Number of requests aborted at shutdown [{}]",
-            ApacheClient.this.abortedRequestsAtShutdown.get());
-      }
-
-      private void awaitShutdown(final long timeout, final TimeUnit unit) {
+      private Integer shutdownClient(final int timeout) {
         try {
-          _logger.info("Awaiting client executor service termination for {} {}", timeout, unit);
-          final boolean result = ApacheClient.this.executorService.awaitTermination(timeout, unit);
+          _logger.info("Issuing client shutdown");
+          ApacheClient.this.executorService.shutdown();
+          _logger.info("Awaiting client executor service termination for {} seconds", timeout);
+          final boolean result = ApacheClient.this.executorService.awaitTermination(timeout, TimeUnit.SECONDS);
           _logger.info("Client executor service termination result [{}]",
-              result ? "success" : "failure");
+                  result ? "success" : "failure");
+          if (result == false) {
+            _logger.warn("Forcing connections to close");
+            closeSockets();
+            List<Runnable> tasks = ApacheClient.this.executorService.shutdownNow();
+            if (tasks.size() > 0) {
+              _logger.error("Cancelled {} scheduled client tasks", tasks.size());
+            }
+            _logger.info("Apache Client is gracefully terminated [{}]", ApacheClient.this.executorService.isTerminated());
+            return new Integer(ApacheClient.this.abortedRequestsAtShutdown.get());
+          }
         } catch (final InterruptedException e) {
           _logger.error("Interrupted while waiting for client executor service termination", e);
+          return new Integer(-1);
+        } catch (final Exception e) {
+          _logger.error(e.getMessage());
+          return new Integer(-1);
         }
+        _logger.info("Client is shutdown, requests aborted [{}]", ApacheClient.this.abortedRequestsAtShutdown.get());
+        return new Integer(ApacheClient.this.abortedRequestsAtShutdown.get());
       }
     };
   }
@@ -1091,7 +1099,6 @@ public class ApacheClient implements Client {
      * @param consumerId the consumerId for which the provided consumer should be used
      * @param consumer a response body consumer
      * @return this builder
-     * @see Headers#X_OG_RESPONSE_BODY_CONSUMER
      */
     public Builder withResponseBodyConsumer(final String consumerId,
         final ResponseBodyConsumer consumer) {

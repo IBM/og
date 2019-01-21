@@ -240,7 +240,7 @@ public class ApacheClientTest {
   public void positiveMaxIdleTime() {
     // using 100 rather than 1ms and also shutting down client immediately to kill background
     // eviction thread that is created when using max idle time
-    new ApacheClient.Builder().withMaxIdleTime(100).build().shutdown(true);
+    new ApacheClient.Builder().withMaxIdleTime(100).build().shutdown(true, 0);
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -415,7 +415,7 @@ public class ApacheClientTest {
         new HttpRequest.Builder(Method.GET, this.delayUri, this.operation).build();
     this.client.execute(request);
     final long start = System.nanoTime();
-    this.client.shutdown(true).get();
+    this.client.shutdown(true, 0).get();
     final long duration = TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - start);
     // immediate shutdown takes less than 10 seconds
     assertThat(duration, lessThan(10L));
@@ -427,7 +427,7 @@ public class ApacheClientTest {
         new HttpRequest.Builder(Method.GET, this.delayUri, this.operation).build();
     this.client.execute(request);
     final long start = System.nanoTime();
-    this.client.shutdown(false).get();
+    this.client.shutdown(false, 60).get();
     final long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
     // graceful shutdown takes at least request time
     assertThat(duration, greaterThanOrEqualTo(1000L));

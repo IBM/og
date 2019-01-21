@@ -1,3 +1,11 @@
+Release 1.8.5:
+Changes:
+Fix aws list url breaking aws signature
+Add sample interval log record in userguide
+Add shutdown timeout parameter. OG will wait after calling closing apache client. If the connections are open still
+  they will be force terminated.
+Fix og script to check symlink to latest run log directory
+
 Release 1.8.4
 Changes:
 Add source_container and source_object properties in WriteCopy operation

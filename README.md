@@ -26,5 +26,5 @@ To build with a custom display version (useful for continuous integration):
 The resulting archive can be found in _og-assembly/target/_.
 
 ## Documentation
-For more information, build the tool and view _docs/userguide.html_ in the
-resulting archive.
+For more information, browse the [userguide](./og-assembly/src/main/asciidoc/userguide.adoc) or build the tool and
+view _docs/userguide.html_ in the resulting archive.
