@@ -79,9 +79,11 @@ public abstract class AbstractObjectNameConsumer {
       return;
     }
 
-    final String objectString = getObjectString(request, response);
-    if (objectString == null) {
-      throw new IllegalStateException("Unable to determine object");
+    if (this.operation != Operation.MULTI_DELETE) {
+      final String objectString = getObjectString(request, response);
+      if (objectString == null) {
+        throw new IllegalStateException("Unable to determine object");
+      }
     }
 
     updateObjectManager(request, response);

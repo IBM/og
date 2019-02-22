@@ -59,7 +59,9 @@ public class RequestLogEntry {
   public String listDelimiter;
   public String listContentSize;
   public String listCommonPrefixesSize;
-
+  public String multideleteReqObjects;
+  public String multideleteDeletedObjects;
+  public String multideleteFailedObjects;
 
   private static final DateTimeFormatter FORMATTER =
       DateTimeFormat.forPattern("dd/MMM/yyyy:HH:mm:ss Z").withLocale(Locale.US);
@@ -148,6 +150,22 @@ public class RequestLogEntry {
       this.listDelimiter = request.getContext().get(Context.X_OG_LIST_DELIMITER);
       this.listContentSize = response.getContext().get(Context.X_OG_NUM_LIST_CONTENTS);
       this.listCommonPrefixesSize = response.getContext().get(Context.X_OG_NUM_LIST_COMMON_PREFIXES);
+    }
+
+    if (request.getOperation() == Operation.MULTI_DELETE) {
+      this.multideleteReqObjects = request.getContext().get(Context.X_OG_MULTI_DELETE_REQUEST_OBJECTS_COUNT);
+      this.multideleteFailedObjects = response.getContext().get(Context.X_OG_MULTI_DELETE_FAILED_OBJECTS_COUNT);
+      this.multideleteDeletedObjects = response.getContext().get(Context.X_OG_MULTI_DELETE_SUCCESS_OBJECTS_COUNT);
+
+      int deletedObjects = 0;
+      if (this.multideleteDeletedObjects == null) {
+        if (this.multideleteFailedObjects != null) {
+          deletedObjects = Integer.parseInt(this.multideleteReqObjects) - Integer.parseInt(this.multideleteFailedObjects);
+        } else {
+          deletedObjects = Integer.parseInt(this.multideleteReqObjects);
+        }
+        this.multideleteDeletedObjects = String.valueOf(deletedObjects);
+      }
     }
 
     this.objectLength = objectSize;

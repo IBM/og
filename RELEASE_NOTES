@@ -1,3 +1,10 @@
+Release 1.8.6:
+Changes:
+Add MultiDelete Operation.
+Note: currently only this is supported for objects from single bucket. The input object file *SHOULD* only
+contain objects from single bucket. Otherwise, the objects could be inadverdently deleted from the local
+object file.
+
 Release 1.8.5:
 Changes:
 Fix aws list url breaking aws signature

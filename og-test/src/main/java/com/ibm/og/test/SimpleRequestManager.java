@@ -5,7 +5,6 @@
 
 package com.ibm.og.test;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import javax.inject.Inject;
@@ -19,8 +18,6 @@ import com.ibm.og.api.Request;
 import com.ibm.og.supplier.RandomSupplier;
 import com.ibm.og.supplier.Suppliers;
 import com.google.common.base.Supplier;
-import com.google.common.collect.Range;
-import com.google.common.math.DoubleMath;
 
 /**
  * A request manager which provides basic write/read/delete capability
@@ -87,8 +84,9 @@ public class SimpleRequestManager implements RequestManager {
       @Named("getContainerProtection") final Supplier<Request> getContainerProtection,
       @Named("getContainerProtection.weight") final double getContainerProtectionWeight,
       @Named("putContainerProtection") final Supplier<Request> putContainerProtection,
-      @Named("putContainerProtection.weight") final double putContainerProtectionWeight){
-
+      @Named("putContainerProtection.weight") final double putContainerProtectionWeight,
+      @Named("multiDelete") final Supplier<Request> multiDelete,
+      @Named("multiDelete.weight") final double multiDeleteWeight){
 
     checkNotNull(write);
     checkNotNull(overwrite);
@@ -167,6 +165,9 @@ public class SimpleRequestManager implements RequestManager {
     }
     if (getContainerProtectionWeight > 0.0) {
       wrc.withChoice(getContainerProtection, getContainerProtectionWeight);
+    }
+    if (multiDeleteWeight > 0.0) {
+      wrc.withChoice(multiDelete, multiDeleteWeight);
     }
 
     this.requestSupplier = wrc.build();
