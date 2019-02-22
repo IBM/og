@@ -12,11 +12,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.Nullable;
@@ -68,6 +70,7 @@ import com.ibm.og.guice.annotation.ListHost;
 import com.ibm.og.guice.annotation.MetadataHeaders;
 import com.ibm.og.guice.annotation.MetadataHost;
 import com.ibm.og.guice.annotation.MetadataObjectName;
+import com.ibm.og.guice.annotation.MultiDeleteBody;
 import com.ibm.og.guice.annotation.MultiPartWriteBody;
 import com.ibm.og.guice.annotation.MultipartWriteHeaders;
 import com.ibm.og.guice.annotation.MultipartWriteHost;
@@ -123,8 +126,10 @@ import com.ibm.og.object.DeleteObjectConsumer;
 import com.ibm.og.object.DeleteObjectLegalHoldConsumer;
 import com.ibm.og.object.ExtendRetentionObjectNameConsumer;
 import com.ibm.og.object.MetadataObjectNameConsumer;
+import com.ibm.og.object.MultiDeleteConsumer;
 import com.ibm.og.object.MultipartWriteObjectNameConsumer;
 import com.ibm.og.object.ObjectManager;
+import com.ibm.og.object.ObjectMetadata;
 import com.ibm.og.object.OverwriteObjectNameConsumer;
 import com.ibm.og.object.RandomObjectPopulator;
 import com.ibm.og.object.ReadObjectLegalHoldConsumer;
@@ -133,6 +138,7 @@ import com.ibm.og.object.WriteCopyObjectNameConsumer;
 import com.ibm.og.object.WriteLegalHoldObjectNameConsumer;
 import com.ibm.og.object.WriteObjectNameConsumer;
 import com.ibm.og.openstack.KeystoneAuth;
+import com.ibm.og.s3.MultiDeleteResponseBodyConsumer;
 import com.ibm.og.s3.MultipartRequestSupplier;
 import com.ibm.og.s3.S3ListResponseBodyConsumer;
 import com.ibm.og.s3.S3MultipartWriteResponseBodyConsumer;
@@ -184,6 +190,7 @@ public class OGModule extends AbstractModule {
   private static final String SOH_PUT_OBJECT = "soh.put_object";
   private static final String S3_MULTIPART = "s3.multipart";
   private static final String S3_LIST = "s3.list";
+  private static final String S3_MULTI_DELETE = "s3.multi_delete";
   private final LoadTestSubscriberExceptionHandler handler;
   private final EventBus eventBus;
   final byte[] aesKey = SSECustomerKey();
@@ -270,7 +277,7 @@ public class OGModule extends AbstractModule {
     bindConstant().annotatedWith(Names.named("getContainerLifecycle.weight")).to(this.config.getContainerLifecycle.weight);
     bindConstant().annotatedWith(Names.named("putContainerProtection.weight")).to(this.config.putContainerProtection.weight);
     bindConstant().annotatedWith(Names.named("getContainerProtection.weight")).to(this.config.getContainerProtection.weight);
-
+    bindConstant().annotatedWith(Names.named("multiDelete.weight")).to(this.config.multiDelete.weight);
 
     // FIXME create something like MoreProviders.notNull as a variant of Providers.of which does a
     // null check at creation time, with a custom error message; replace all uses of this pattern
@@ -303,6 +310,7 @@ public class OGModule extends AbstractModule {
     responseBodyConsumers.addBinding(SOH_PUT_OBJECT).to(SOHWriteResponseBodyConsumer.class);
     responseBodyConsumers.addBinding(S3_MULTIPART).to(S3MultipartWriteResponseBodyConsumer.class);
     responseBodyConsumers.addBinding(S3_LIST).to(S3ListResponseBodyConsumer.class);
+    responseBodyConsumers.addBinding(S3_MULTI_DELETE).to(MultiDeleteResponseBodyConsumer.class);
 
     bind(RequestManager.class).to(SimpleRequestManager.class);
     bind(LoadTest.class).in(Singleton.class);
@@ -1211,6 +1219,9 @@ public class OGModule extends AbstractModule {
     retentionExtensionSc.addAll(sc);
     retentionExtensionSc.addAll(ContiguousSet.create(Range.closed(400, 451), DiscreteDomain.integers()));
     consumers.add(new ExtendRetentionObjectNameConsumer(objectManager, legalHoldsSc));
+
+    consumers.add(new MultiDeleteConsumer(objectManager, sc));
+
     for (final AbstractObjectNameConsumer consumer : consumers) {
       eventBus.register(consumer);
     }
@@ -1659,6 +1670,44 @@ public class OGModule extends AbstractModule {
     final List<Function<Map<String, String>, String>> context = Lists.newArrayList();
 
     // return an empty context
+    return ImmutableList.copyOf(context);
+  }
+
+  @Provides
+  @Singleton
+  @Named("multiDelete.context")
+  public List<Function<Map<String, String>, String>> provideMultiDeleteContext(
+          final ObjectManager objectManager) {
+    final List<Function<Map<String, String>, String>> context = Lists.newArrayList();
+    final OperationConfig operationConfig = this.config.multiDelete;
+    final Supplier<List<String>> objectSupplier;
+    if (operationConfig.object.selection != null) {
+      objectSupplier = provideMultiDeleteObjectNames(operationConfig);
+    } else {
+      objectSupplier = provideMultiDeleteObjectNames(objectManager, operationConfig.multideleteCount);
+    }
+
+    Function<Map<String, String>, String> objectNames = new Function<Map<String, String>, String>() {
+
+      @Nullable
+      @Override
+      public String apply(@Nullable Map<String, String> requestContext) {
+        List<String>  objects = objectSupplier.get();
+        int count = 0;
+        for (String s: objects) {
+          String name = String.format("multidelete-object-%d", count);
+          requestContext.put(name, s);
+          count++;
+        }
+        requestContext.put(Context.X_OG_MULTI_DELETE_REQUEST_OBJECTS_COUNT, String.valueOf(count));
+        if (operationConfig.object.selection != null) {
+          requestContext.put(Context.X_OG_SEQUENTIAL_OBJECT_NAME, "true");
+        }
+        return "";
+
+      }
+    };
+    context.add(objectNames);
     return ImmutableList.copyOf(context);
   }
 
@@ -2426,6 +2475,94 @@ public class OGModule extends AbstractModule {
       return createBodySupplier(checkNotNull(this.config.filesize, "filesize must not be null"));
     }
   }
+
+  private Supplier<List<String>> provideMultiDeleteObjectNames(
+          final OperationConfig operationConfig) {
+    checkNotNull(operationConfig);
+    final ObjectConfig objectConfig = checkNotNull(operationConfig.object);
+    final String prefix = checkNotNull(objectConfig.prefix);
+    final Supplier<Long> suffixes = createObjectSuffixes(objectConfig);
+
+    return new Supplier<List<String>>() {
+      @Override
+      public List<String> get() {
+        final List<String> objectNames = new ArrayList<String>();
+        for (int i = 0; i < operationConfig.multideleteCount; i++) {
+          final String objectName = prefix + suffixes.get();
+          objectNames.add(objectName);
+        }
+        return objectNames;
+      }
+
+      @Override
+      public String toString() {
+        return String.format("");
+      }
+    };
+  }
+
+  private Supplier<List<String>> provideMultiDeleteObjectNames(
+          final ObjectManager objectManager,
+          final int numberOfMultiDeletePerRequest) {
+
+    return new Supplier<List<String>>() {
+      @Override
+      public List<String> get() {
+        final List<String> objectNames = new ArrayList<String>();
+        // NOTE: MultiDelete API can take object from single vault. Only objects from single bucket
+        // are expected to be there in the object manager to use this API.
+        // TODO: Filter objects from the same vault
+        for (int i = 0; i < numberOfMultiDeletePerRequest; i++) {
+          final ObjectMetadata objectMetadata = objectManager.removeForUpdate();
+          objectNames.add(objectMetadata.getName());
+        }
+        return objectNames;
+      }
+
+      @Override
+      public String toString() {
+        return String.format("");
+      }
+    };
+  }
+
+
+  @Provides
+  @Singleton
+  @MultiDeleteBody
+  public Function<Map<String, String>, Body> createMultiDeleteBody(final ObjectManager objectManager) {
+    final OperationConfig operationConfig = this.config.multiDelete;
+
+    Function<Map<String, String>, Body> f = new Function<Map<String, String>, Body>() {
+      @Nullable
+      @Override
+      public Body apply(@Nullable Map<String, String> requestContext) {
+        StringBuilder xmlBuilder = new StringBuilder("<Delete>");
+        if (operationConfig.multideleteQuiet) {
+          xmlBuilder.append("<Quiet>true</Quiet>");
+        }
+
+        int count = Integer.parseInt(requestContext.get(Context.X_OG_MULTI_DELETE_REQUEST_OBJECTS_COUNT));
+        if (count > 0) {
+          for (int i=0; i < count; i++) {
+            String k = String.format("multidelete-object-%d", i);
+            String v = requestContext.get(k); // object name
+            xmlBuilder
+                    .append("<Object><Key>")
+                    .append(v)
+                    .append("</Key></Object>");
+
+          }
+        }
+        xmlBuilder.append("</Delete>");
+
+        final String content = xmlBuilder.toString();
+        return Bodies.custom(content.length(), content);
+      }
+    };
+    return f;
+  }
+
 
   private static Distribution createSizeDistribution(final FilesizeConfig filesize) {
     final SizeUnit averageUnit = checkNotNull(filesize.averageUnit);
@@ -3223,6 +3360,30 @@ public class OGModule extends AbstractModule {
     return createRequestSupplier(Operation.DELETE, id, Method.DELETE, scheme, host, port, uriRoot,
         container, apiVersion, object, queryParameters, headers, context, null, body, credentials,
         virtualHost, null, null, false, null);
+  }
+
+  @Provides
+  @Singleton
+  @Named("multiDelete")
+  public Supplier<Request> provideMultiDelete(
+          @Named("request.id") final Function<Map<String, String>, String> id, final Scheme scheme,
+          @DeleteHost final Function<Map<String, String>, String> host,
+          @Nullable @Named("port") final Integer port,
+          @Nullable @Named("uri.root") final String uriRoot,
+          @Named("delete.container") final Function<Map<String, String>, String> container,
+          @Nullable @Named("api.version") final String apiVersion,
+          @DeleteHeaders final Map<String, Function<Map<String, String>, String>> headers,
+          @Named("multiDelete.context") final List<Function<Map<String, String>, String>> context,
+          @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
+          @Named("virtualhost") final boolean virtualHost,
+          @MultiDeleteBody final Function<Map<String, String>, Body> body) {
+
+    final Map<String, Function<Map<String, String>, String>> queryParameters
+            = ModuleUtils.provideQueryParameters(Collections.singletonMap("delete", (String) null));
+
+    return createRequestSupplier(Operation.MULTI_DELETE, id, Method.POST, scheme, host, port, uriRoot,
+            container, apiVersion, null, queryParameters, headers, context, null, body, credentials,
+            virtualHost, null, null, true, null);
   }
 
 
