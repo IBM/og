@@ -80,6 +80,20 @@ public interface ObjectManager {
   public void removeUpdatedObject(final ObjectMetadata id);
 
   /**
+   * Get the object from the currently updating cache
+   *
+   * @return ObjectMetadata
+   */
+  public ObjectMetadata getObjectFromUpdatingCache(final String id);
+
+  /**
+   * Remove the object from the currently updating cache by name
+   *
+   * @return void
+   */
+  public void removeUpdatedObjectByName(final String name);
+
+  /**
    * Returns the count of objects currently being updated or deleted
    *
    * @return int

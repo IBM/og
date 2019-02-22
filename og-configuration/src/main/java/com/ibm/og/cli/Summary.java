@@ -7,6 +7,7 @@ package com.ibm.og.cli;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import com.google.common.collect.ImmutableList;
 
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
@@ -17,7 +18,7 @@ import org.joda.time.format.DateTimeFormatter;
 import com.ibm.og.statistic.Counter;
 import com.ibm.og.statistic.Statistics;
 import com.ibm.og.api.Operation;
-import com.google.common.collect.ImmutableList;
+
 
 /**
  * A statistics summary block
@@ -48,6 +49,7 @@ public class Summary {
     this.summaryStats = new SummaryStats(stats, timestampStart, timestampFinish, exitCode, messages, requestsAborted);
   }
 
+
   static class SummaryOperationStats {
     long timestampStart;
     long timestampFinish;
@@ -75,6 +77,7 @@ public class Summary {
     OperationStats getContainerLifecycle;
     OperationStats putContainerProtection;
     OperationStats getContainerProtection;
+    OperationStats multidelete;
 
     protected SummaryOperationStats(final long timestampStart, final long timestampFinish) {
       this.timestampStart = timestampStart;
@@ -110,6 +113,7 @@ public class Summary {
       this.getContainerLifecycle = new OperationStats(stats, Operation.GET_CONTAINER_LIFECYCLE, timestampStart, timestampFinish);
       this.putContainerProtection = new OperationStats(stats, Operation.PUT_CONTAINER_PROTECTION, timestampStart, timestampFinish);
       this.getContainerProtection = new OperationStats(stats, Operation.GET_CONTAINER_PROTECTION, timestampStart, timestampFinish);
+      this.multidelete = new OperationStats(stats, Operation.MULTI_DELETE, timestampStart, timestampFinish);
     }
 
     public OperationStats getOperation(Operation operation) {
@@ -155,10 +159,12 @@ public class Summary {
         return this.getContainerLifecycle;
       } else if (operation == Operation.PUT_CONTAINER_PROTECTION) {
         return this.putContainerProtection;
-    } else if (operation == Operation.GET_CONTAINER_PROTECTION) {
+      } else if (operation == Operation.GET_CONTAINER_PROTECTION) {
         return this.getContainerProtection;
-    }
-        return null;
+      } else if (operation == Operation.MULTI_DELETE) {
+        return this.multidelete;
+      }
+      return null;
 
     }
 
@@ -209,6 +215,8 @@ public class Summary {
         this.putContainerProtection = operationStat;
       } else if (operation == Operation.GET_CONTAINER_PROTECTION) {
           this.getContainerProtection = operationStat;
+      } else if (operation == Operation.MULTI_DELETE) {
+        this.multidelete = operationStat;
       }
     }
 
@@ -284,6 +292,9 @@ public class Summary {
       if (this.getContainerProtection.operations > 0) {
         sb.append(this.getContainerProtection).append("\n");
       }
+      if (this.multidelete.operations > 0) {
+        sb.append(this.multidelete).append("\n");
+      }
       return sb.toString();
     }
 
@@ -335,14 +346,14 @@ public class Summary {
     @Override
     public String toString() {
       final String format = "Start: %s%nEnd: %s%nRuntime: %.2f "
-              + "Seconds%nOperations: %s%n%n%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%sRequestsAborted: %s%nExitCode: %s%nExitMessages:%s";
+              + "Seconds%nOperations: %s%n%n%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%sRequestsAborted: %s%nExitCode: %s%nExitMessages:%s";
       return String.format(Locale.US, format, FORMATTER.print(this.timestampStart),
               FORMATTER.print(this.timestampFinish), this.runtime, this.operations, this.write,
               this.read, this.delete, this.metadata, this.overwrite, this.list, this.containerList,
               this.containerCreate, this.multipartWriteInitiate, this.multipartWritePart, this.multipartWriteComplete,
               this.multipartWriteAbort,this.writeCopy, this.writeLegalHold, this.readLegalHold, this.deleteLegalHold,
-              this.extendRetention, this.objectRestore, this.putContainerLifecycle, this.getContainerLifecycle, this.exitCode,
-              this.requestsAborted, prettyExitMessages());
+              this.extendRetention, this.objectRestore, this.putContainerLifecycle, this.getContainerLifecycle,
+              this.multidelete, this.requestsAborted, this.exitCode, prettyExitMessages());
     }
 
 

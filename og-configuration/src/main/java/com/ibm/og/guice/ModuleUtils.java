@@ -9,6 +9,7 @@ package com.ibm.og.guice;
 import com.google.common.base.Function;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.ibm.og.json.ContainerConfig;
 import com.ibm.og.json.LegalHold;
 import com.ibm.og.json.ObjectConfig;
@@ -17,6 +18,7 @@ import com.ibm.og.json.SelectionType;
 import com.ibm.og.supplier.RandomSupplier;
 import com.ibm.og.supplier.Suppliers;
 import com.ibm.og.util.Context;
+import com.ibm.og.util.MoreFunctions;
 
 import java.util.List;
 import java.util.Map;
@@ -145,6 +147,27 @@ public class ModuleUtils {
       return cid.build();
     }
     return null;
+  }
+
+  public static Map<String, Function<Map<String, String>, String>> provideQueryParameters(
+          final Map<String, String> operationQueryParameters) {
+    final Map<String, Function<Map<String, String>, String>> queryParameters = Maps.newHashMap();
+
+    for (final Map.Entry<String, String> e : operationQueryParameters.entrySet()) {
+      final Supplier<String> queryParameterSupplier = new Supplier<String>() {
+        final private String queryParamValue = e.getValue();
+
+        @Override
+        public String get() {
+          return this.queryParamValue;
+        }
+      };
+      final Function<Map<String, String>, String> queryParameterFunction =
+              MoreFunctions.forSupplier(queryParameterSupplier);
+      queryParameters.put(e.getKey(), queryParameterFunction);
+    }
+
+    return queryParameters;
   }
 
 }

@@ -288,6 +288,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
       this.persistLock.readLock().unlock();
     }
   }
+
   @Override
   public ObjectMetadata removeObject(ObjectMetadata objectMetadata) {
     this.persistLock.readLock().lock();
@@ -439,11 +440,35 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
   }
 
   @Override
+  public ObjectMetadata getObjectFromUpdatingCache(final String id) {
+    _logger.debug("Getting object {} from currentUpdating cache", id);
+    ObjectMetadata objectId = null;
+    this.persistLock.readLock().lock();
+    try {
+      objectId = this.currentlyUpdating.get(id);
+    } finally {
+      this.persistLock.readLock().unlock();
+    }
+    return objectId;
+  }
+
+  @Override
   public void removeUpdatedObject(final ObjectMetadata id) {
     _logger.trace("Removing Updated object from currentlyUpdating cache: {}", id);
     this.persistLock.readLock().lock();
     try {
       this.currentlyUpdating.remove(id.getName());
+    } finally {
+      this.persistLock.readLock().unlock();
+    }
+  }
+
+  @Override
+  public void removeUpdatedObjectByName(final String name) {
+    _logger.trace("Removing Updated object from currentlyUpdating cache: {}", name);
+    this.persistLock.readLock().lock();
+    try {
+      this.currentlyUpdating.remove(name);
     } finally {
       this.persistLock.readLock().unlock();
     }
