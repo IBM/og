@@ -4,7 +4,7 @@
   <parent>
     <artifactId>og</artifactId>
     <groupId>com.ibm</groupId>
-    <version>1.8.6</version>
+    <version>1.8.7-SNAPSHOT</version>
   </parent>
   <artifactId>og-object</artifactId>
   <name>Object</name>
