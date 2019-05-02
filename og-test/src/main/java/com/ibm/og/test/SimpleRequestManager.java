@@ -81,6 +81,8 @@ public class SimpleRequestManager implements RequestManager {
       @Named("putContainerLifecycle.weight") final double putContainerLifecycleWeight,
       @Named("getContainerLifecycle") final Supplier<Request> getContainerLifecycle,
       @Named("getContainerLifecycle.weight") final double getContainerLifecycleWeight,
+      @Named("deleteContainerLifecycle") final Supplier<Request> deleteContainerLifecycle,
+      @Named("deleteContainerLifecycle.weight") final double deleteContainerLifecycleWeight,
       @Named("getContainerProtection") final Supplier<Request> getContainerProtection,
       @Named("getContainerProtection.weight") final double getContainerProtectionWeight,
       @Named("putContainerProtection") final Supplier<Request> putContainerProtection,
@@ -105,6 +107,7 @@ public class SimpleRequestManager implements RequestManager {
     checkNotNull(objectRestore);
     checkNotNull(putContainerLifecycle);
     checkNotNull(getContainerLifecycle);
+    checkNotNull(deleteContainerLifecycle);
     checkNotNull(putContainerProtection);
     checkNotNull(getContainerProtection);
 
@@ -159,6 +162,9 @@ public class SimpleRequestManager implements RequestManager {
     }
     if (getContainerLifecycleWeight > 0.0) {
       wrc.withChoice(getContainerLifecycle, getContainerLifecycleWeight);
+    }
+    if (deleteContainerLifecycleWeight > 0.0) {
+      wrc.withChoice(deleteContainerLifecycle, deleteContainerLifecycleWeight);
     }
     if (putContainerProtectionWeight > 0.0) {
       wrc.withChoice(putContainerProtection, putContainerProtectionWeight);

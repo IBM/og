@@ -64,6 +64,7 @@ import com.ibm.og.guice.annotation.DeleteHeaders;
 import com.ibm.og.guice.annotation.DeleteHost;
 import com.ibm.og.guice.annotation.DeleteObjectName;
 import com.ibm.og.guice.annotation.GetContainerLifecycleHeaders;
+import com.ibm.og.guice.annotation.DeleteContainerLifecycleHeaders;
 import com.ibm.og.guice.annotation.GetContainerProtectionHeaders;
 import com.ibm.og.guice.annotation.ListHeaders;
 import com.ibm.og.guice.annotation.ListHost;
@@ -275,6 +276,7 @@ public class OGModule extends AbstractModule {
     bindConstant().annotatedWith(Names.named("objectRestore.weight")).to(this.config.objectRestore.weight);
     bindConstant().annotatedWith(Names.named("putContainerLifecycle.weight")).to(this.config.putContainerLifecycle.weight);
     bindConstant().annotatedWith(Names.named("getContainerLifecycle.weight")).to(this.config.getContainerLifecycle.weight);
+    bindConstant().annotatedWith(Names.named("deleteContainerLifecycle.weight")).to(this.config.deleteContainerLifecycle.weight);
     bindConstant().annotatedWith(Names.named("putContainerProtection.weight")).to(this.config.putContainerProtection.weight);
     bindConstant().annotatedWith(Names.named("getContainerProtection.weight")).to(this.config.getContainerProtection.weight);
     bindConstant().annotatedWith(Names.named("multiDelete.weight")).to(this.config.multiDelete.weight);
@@ -779,6 +781,17 @@ public class OGModule extends AbstractModule {
   public Function<Map<String, String>, String> provideGetContainerLifecycleContainer() {
     if (this.config.getContainerLifecycle.container.prefix != null) {
       return provideContainer(this.config.getContainerLifecycle.container);
+    } else {
+      return provideContainer(this.config.container);
+    }
+  }
+
+  @Provides
+  @Singleton
+  @Named("deleteContainerLifecycle.container")
+  public Function<Map<String, String>, String> provideDeleteContainerLifecycleContainer() {
+    if (this.config.deleteContainerLifecycle.container.prefix != null) {
+      return provideContainer(this.config.deleteContainerLifecycle.container);
     } else {
       return provideContainer(this.config.container);
     }
@@ -1333,6 +1346,13 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
+  @DeleteContainerLifecycleHeaders
+  public Map<String, Function<Map<String, String>, String>> provideDeleteBucketLifecycleHeaders() {
+    return provideHeaders(this.config.deleteContainerLifecycle.headers);
+  }
+
+  @Provides
+  @Singleton
   @PutContainerProtectionHeaders
   public Map<String, Function<Map<String, String>, String>> providePutContainerProtectionHeaders() {
     return provideHeaders(this.config.putContainerProtection.headers);
@@ -1588,6 +1608,17 @@ public class OGModule extends AbstractModule {
   @Singleton
   @Named("getContainerLifecycle.context")
   public List<Function<Map<String, String>, String>> provideGetContainerLifecycleContext(
+          final ObjectManager objectManager) {
+    final List<Function<Map<String, String>, String>> context = Lists.newArrayList();
+
+    // return an empty context
+    return ImmutableList.copyOf(context);
+  }
+
+  @Provides
+  @Singleton
+  @Named("deleteContainerLifecycle.context")
+  public List<Function<Map<String, String>, String>> provideDeleteContainerLifecycleContext(
           final ObjectManager objectManager) {
     final List<Function<Map<String, String>, String>> context = Lists.newArrayList();
 
@@ -2982,6 +3013,36 @@ public class OGModule extends AbstractModule {
             });
 
     return createRequestSupplier(Operation.GET_CONTAINER_LIFECYCLE, id, Method.GET, scheme, host, port,
+            uriRoot, container, apiVersion, null, queryParameters, headers, context, null,
+            null, credentials, virtualHost, null, null, false, null);
+  }
+
+  @Provides
+  @Singleton
+  @Named("deleteContainerLifecycle")
+  public Supplier<Request> provideDeleteContainerLifecycle(
+          @Named("request.id") final Function<Map<String, String>, String> id, final Scheme scheme,
+          @ReadHost final Function<Map<String, String>, String> host,
+          @Nullable @Named("port") final Integer port,
+          @Nullable @Named("uri.root") final String uriRoot,
+          @Named("deleteContainerLifecycle.container") final Function<Map<String, String>, String> container,
+          @Nullable @Named("api.version") final String apiVersion,
+          @DeleteContainerLifecycleHeaders final Map<String, Function<Map<String, String>, String>> headers,
+          @Named("deleteContainerLifecycle.context") final List<Function<Map<String, String>, String>> context,
+          @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
+          @Named("virtualhost") final boolean virtualHost) {
+
+
+    final Map<String, Function<Map<String, String>, String>> queryParameters = Maps.newLinkedHashMap();
+    queryParameters.put(QueryParameters.BUCKET_LIFECYCLE_PARAMETER,
+            new Function<Map<String, String>, String>() {
+              @Override
+              public String apply(final Map<String, String> context) {
+                return null;
+              }
+            });
+
+    return createRequestSupplier(Operation.DELETE_CONTAINER_LIFECYCLE, id, Method.DELETE, scheme, host, port,
             uriRoot, container, apiVersion, null, queryParameters, headers, context, null,
             null, credentials, virtualHost, null, null, false, null);
   }
