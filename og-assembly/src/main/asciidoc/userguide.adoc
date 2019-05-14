@@ -1107,7 +1107,7 @@ This operation retrieves the configured lifecycle configuration on the bucket.
 ----
 
 ==== Operation Delete Container Lifecycle configuration ====
-This operation retrieves the configured lifecycle configuration on the bucket.
+This operation deletes the configured lifecycle configuration on the bucket.
 
 ----
     "delete_container_lifecycle": {
