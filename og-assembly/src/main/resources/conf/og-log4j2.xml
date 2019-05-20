@@ -12,7 +12,7 @@
   </Properties>
   <Appenders>
     <Console name="Console" target="SYSTEM_OUT">
-      <PatternLayout pattern="%m%n" />
+      <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%t] %l - %m%n" />
     </Console>
     <RollingRandomAccessFile name="OGLog"
     immediateFlush="false" append="true" fileName="${test_path}/${og.log}" filePattern="${test_path}/${og.log}-%i.gz">
