@@ -75,6 +75,7 @@ public class Summary {
     OperationStats objectRestore;
     OperationStats putContainerLifecycle;
     OperationStats getContainerLifecycle;
+    OperationStats deleteContainerLifecycle;
     OperationStats putContainerProtection;
     OperationStats getContainerProtection;
     OperationStats multidelete;
@@ -111,6 +112,7 @@ public class Summary {
       this.objectRestore = new OperationStats(stats, Operation.OBJECT_RESTORE, timestampStart, timestampFinish);
       this.putContainerLifecycle = new OperationStats(stats, Operation.PUT_CONTAINER_LIFECYCLE, timestampStart, timestampFinish);
       this.getContainerLifecycle = new OperationStats(stats, Operation.GET_CONTAINER_LIFECYCLE, timestampStart, timestampFinish);
+      this.deleteContainerLifecycle = new OperationStats(stats, Operation.DELETE_CONTAINER_LIFECYCLE, timestampStart, timestampFinish);
       this.putContainerProtection = new OperationStats(stats, Operation.PUT_CONTAINER_PROTECTION, timestampStart, timestampFinish);
       this.getContainerProtection = new OperationStats(stats, Operation.GET_CONTAINER_PROTECTION, timestampStart, timestampFinish);
       this.multidelete = new OperationStats(stats, Operation.MULTI_DELETE, timestampStart, timestampFinish);
@@ -157,6 +159,8 @@ public class Summary {
         return this.putContainerLifecycle;
       } else if (operation == Operation.GET_CONTAINER_LIFECYCLE) {
         return this.getContainerLifecycle;
+      } else if (operation == Operation.DELETE_CONTAINER_LIFECYCLE) {
+        return this.deleteContainerLifecycle;
       } else if (operation == Operation.PUT_CONTAINER_PROTECTION) {
         return this.putContainerProtection;
       } else if (operation == Operation.GET_CONTAINER_PROTECTION) {
@@ -211,6 +215,8 @@ public class Summary {
         this.putContainerLifecycle = operationStat;
       } else if (operation == Operation.GET_CONTAINER_LIFECYCLE) {
         this.getContainerLifecycle = operationStat;
+      } else if (operation == Operation.DELETE_CONTAINER_LIFECYCLE) {
+        this.deleteContainerLifecycle = operationStat;
       } else if (operation == Operation.PUT_CONTAINER_PROTECTION) {
         this.putContainerProtection = operationStat;
       } else if (operation == Operation.GET_CONTAINER_PROTECTION) {
@@ -286,6 +292,9 @@ public class Summary {
       if (this.getContainerLifecycle.operations > 0) {
         sb.append(this.getContainerLifecycle).append("\n");
       }
+      if (this.deleteContainerLifecycle.operations > 0) {
+        sb.append(this.deleteContainerLifecycle).append("\n");
+      }
       if (this.putContainerProtection.operations > 0) {
         sb.append(this.putContainerProtection).append("\n");
       }
@@ -353,7 +362,7 @@ public class Summary {
               this.containerCreate, this.multipartWriteInitiate, this.multipartWritePart, this.multipartWriteComplete,
               this.multipartWriteAbort,this.writeCopy, this.writeLegalHold, this.readLegalHold, this.deleteLegalHold,
               this.extendRetention, this.objectRestore, this.putContainerLifecycle, this.getContainerLifecycle,
-              this.multidelete, this.requestsAborted, this.exitCode, prettyExitMessages());
+              this.deleteContainerLifecycle, this.multidelete, this.requestsAborted, this.exitCode, prettyExitMessages());
     }
 
 

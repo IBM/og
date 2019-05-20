@@ -641,7 +641,8 @@ can be used to filter the objects for a specific vault.
 Operation mix is configured via _write_, _overwrite_, _read_, _metadata_, _delete_, _list_,
 _container_create_, _container_list_, _multipart_write_, _write_legalhold_, _read_legalhold_,
 _delete_legalhold_, _extend_retention_, _object_restore, _put_container_lifecycle_,
-_get_container_lifecycle_,  _put_container_protection_, _get_container_protection_, _multi_delete_ keys respectively.
+_get_container_lifecycle_, delete_container_lifecycle,  _put_container_protection_, _get_container_protection_, 
+_multi_delete_ keys respectively.
 
 Each operation type is configured via a configuration block. E.g. for write:
 
@@ -1101,6 +1102,15 @@ This operation retrieves the configured lifecycle configuration on the bucket.
 
 ----
     "get_container_lifecycle": {
+      "weight": 0
+    }
+----
+
+==== Operation Delete Container Lifecycle configuration ====
+This operation deletes the configured lifecycle configuration on the bucket.
+
+----
+    "delete_container_lifecycle": {
       "weight": 0
     }
 ----
@@ -2124,6 +2134,12 @@ as json object on each line.
     "status_codes": {}
   },
   "get_container_lifecycle": {
+    "operations": 0,
+    "bytes": 0,
+    "average_latency": 0,
+    "status_codes": {}
+  },
+  "delete_container_lifecycle": {
     "operations": 0,
     "bytes": 0,
     "average_latency": 0,
