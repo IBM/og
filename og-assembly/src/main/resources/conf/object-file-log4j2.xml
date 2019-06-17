@@ -1,14 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration shutdownHook="disable">
+  <Properties>
+    <Property name="test_path">${sys:TEST_PATH}</Property>
+  </Properties>
   <Appenders>
     <Console name="Console" target="SYSTEM_OUT">
       <PatternLayout pattern="%m%n" />
     </Console>
+    <File name="ObjectFileAppender" append="false" fileName="${test_path}/objectfile.log">
+      <PatternLayout pattern="%m%n" />
+    </File>
   </Appenders>
   <Loggers>
     <Logger name="com.ibm.og.cli.Application" level="warn" />
+    <Logger name="ObjectFileLogger" level="info" additivity="false">
+      <AppenderRef ref="ObjectFileAppender" />
+    </Logger>
     <Root level="info">
-      <AppenderRef ref="Console" />
+      <AppenderRef ref="ObjectFileAppender"/>
+      <AppenderRef ref="Console"/>
     </Root>
   </Loggers>
 </Configuration>

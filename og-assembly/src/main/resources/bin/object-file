@@ -4,6 +4,11 @@ BASE=`dirname ${0}`
 CP=${BASE}/lib/*:${BASE}/conf/log4j/object-file/:${BASE}/conf/
 CLASS="com.ibm.og.cli.ObjectFile"
 
+TEST_PATH=log/`date +%Y-%m-%d_%H.%M.%S`
+mkdir -p ${TEST_PATH}
+
+ln -s ${TEST_PATH} latest
+
 VMOPTS="-Xms64M -Xmx512M"
-SYSTEMOPTS="-Dlog4j.configurationFile=object-file-log4j2.xml"
+SYSTEMOPTS="-Dlog4j.configurationFile=object-file-log4j2.xml -DTEST_PATH=${TEST_PATH}"
 java -cp ${CP} ${VMOPTS} ${SYSTEMOPTS} ${CLASS} "$@"

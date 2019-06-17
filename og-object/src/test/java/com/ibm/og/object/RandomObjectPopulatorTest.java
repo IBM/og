@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.google.common.io.BaseEncoding;
 import com.google.common.io.Files;
+import com.ibm.og.util.ObjectManagerUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -45,41 +46,20 @@ public class RandomObjectPopulatorTest {
 
   final protected UUID vaultId = new UUID(0, 0);
 
-  static class IdFilter implements FilenameFilter {
-    @Override
-    public boolean accept(final File dir, final String name) {
-
-      if (!name.startsWith(prefix, 0)) {
-        return false;
-      }
-
-      try {
-        final String number = name.substring(prefix.length(), name.length() - suffix.length());
-        if (Integer.parseInt(number) < 0) {
-          return false;
-        }
-      } catch (final Exception e) {
-        return false;
-      }
-
-      return (name.endsWith(suffix));
-    }
-  }
-
   final static int OBJECT_SIZE = LegacyObjectMetadata.OBJECT_SIZE;
   protected final static int MAX_OBJECTS = 5;
 
   final Random rand = new Random();
 
-  protected File[] getIdFiles() {
+  protected File[] getIdFiles(String prefix, String suffix) {
     final File dir = new File(".");
-    final File[] files = dir.listFiles(new IdFilter());
+    final File[] files = dir.listFiles(new ObjectManagerUtils.IdFilter(prefix, suffix));
     return files;
   }
 
   @Before
   public void copyIdFiles() {
-    final File[] files = getIdFiles();
+    final File[] files = getIdFiles(this.prefix, this.suffix);
     final File directory = new File(this.dirName);
     if (!(directory.exists() && directory.isDirectory())) {
       directory.mkdir();
@@ -90,7 +70,7 @@ public class RandomObjectPopulatorTest {
   }
 
   private void deleteTempFiles() {
-    final File[] files = getIdFiles();
+    final File[] files = getIdFiles(this.prefix, suffix);
     for (final File id : files) {
       id.delete();
     }
@@ -184,11 +164,11 @@ public class RandomObjectPopulatorTest {
       rop.add(generateId());
     }
     rop.shutdown();
-    Assert.assertEquals(getIdFiles().length, 1);
+    Assert.assertEquals(getIdFiles(this.prefix, suffix).length, 1);
     rop = new RandomObjectPopulator(this.vaultId, RandomObjectPopulatorTest.MAX_OBJECTS);
     rop.add(generateId());
     rop.shutdown();
-    Assert.assertEquals(getIdFiles().length, 2);
+    Assert.assertEquals(getIdFiles(this.prefix, suffix).length, 2);
     Assert.assertEquals(new File(prefix + 0 + suffix).length(),
         ObjectFileVersion.VERSION_HEADER_LENGTH + RandomObjectPopulatorTest.MAX_OBJECTS * OBJECT_SIZE);
     Assert.assertEquals(new File(prefix + 1 + suffix).length(), ObjectFileVersion.VERSION_HEADER_LENGTH + OBJECT_SIZE);
@@ -202,13 +182,13 @@ public class RandomObjectPopulatorTest {
       rop.add(generateId());
     }
     rop.shutdown();
-    Assert.assertEquals(getIdFiles().length, 1);
+    Assert.assertEquals(getIdFiles(this.prefix, suffix).length, 1);
     rop = new RandomObjectPopulator(this.vaultId, RandomObjectPopulatorTest.MAX_OBJECTS);
     for (int i = 0; i < 1 + RandomObjectPopulatorTest.MAX_OBJECTS * 3; i++) {
       rop.add(generateId());
     }
     rop.shutdown();
-    Assert.assertEquals(getIdFiles().length, 5);
+    Assert.assertEquals(getIdFiles(this.prefix, suffix).length, 5);
     for (int i = 0; i < 4; i++) {
       Assert.assertEquals(new File(prefix + i + suffix).length(),
           ObjectFileVersion.VERSION_HEADER_LENGTH + RandomObjectPopulatorTest.MAX_OBJECTS * OBJECT_SIZE);
@@ -231,20 +211,20 @@ public class RandomObjectPopulatorTest {
     }
     rop.shutdown();
 
-    Assert.assertEquals(getIdFiles().length, 2);
+    Assert.assertEquals(getIdFiles(this.prefix, suffix).length, 2);
     Assert.assertEquals(rop.getSavedObjectCount(), RandomObjectPopulatorTest.MAX_OBJECTS + surplus);
     // Borrow one id
     rop = new RandomObjectPopulator(this.vaultId, RandomObjectPopulatorTest.MAX_OBJECTS);
     rop.remove();
     rop.shutdown();
-    Assert.assertEquals(getIdFiles().length, 2);
+    Assert.assertEquals(getIdFiles(this.prefix, suffix).length, 2);
     Assert.assertEquals(new File(prefix + 1 + suffix).length(),
             ObjectFileVersion.VERSION_HEADER_LENGTH + OBJECT_SIZE);
     // Borrow last id from surplus file, causing that file to be deleted
     rop = new RandomObjectPopulator(this.vaultId, RandomObjectPopulatorTest.MAX_OBJECTS);
     rop.remove();
     rop.shutdown();
-    Assert.assertEquals(getIdFiles().length, 1);
+    Assert.assertEquals(getIdFiles(this.prefix, suffix).length, 1);
     try {
       Files.copy(new File(prefix + 0 + suffix), new File("/tmp/copy.object"));
     } catch(Exception e) {
@@ -262,11 +242,11 @@ public class RandomObjectPopulatorTest {
     }
     rop.add(generateId());
     rop.shutdown();
-    Assert.assertEquals(getIdFiles().length, 5);
+    Assert.assertEquals(getIdFiles(this.prefix, suffix).length, 5);
     rop = new RandomObjectPopulator(this.vaultId, RandomObjectPopulatorTest.MAX_OBJECTS);
     rop.remove();
     rop.shutdown();
-    Assert.assertEquals(getIdFiles().length, 4);
+    Assert.assertEquals(getIdFiles(this.prefix, suffix).length, 4);
     Assert.assertEquals(new File(prefix + 0 + suffix).length(),
             ObjectFileVersion.VERSION_HEADER_LENGTH + RandomObjectPopulatorTest.MAX_OBJECTS * OBJECT_SIZE);
   }
@@ -283,7 +263,7 @@ public class RandomObjectPopulatorTest {
     }
 
     rop.shutdown();
-    Assert.assertEquals(getIdFiles().length, 1);
+    Assert.assertEquals(getIdFiles(this.prefix, suffix).length, 1);
     rop = new RandomObjectPopulator(this.vaultId, RandomObjectPopulatorTest.MAX_OBJECTS);
     final ObjectMetadata[] retrievedIds = new ObjectMetadata[RandomObjectPopulatorTest.MAX_OBJECTS];
 
@@ -297,7 +277,7 @@ public class RandomObjectPopulatorTest {
     Assert.assertArrayEquals(savedIds, retrievedIds);
 
     rop.shutdown();
-    Assert.assertEquals(getIdFiles().length, 1);
+    Assert.assertEquals(getIdFiles(this.prefix, suffix).length, 1);
     Assert.assertEquals(new File(prefix + 0 + suffix).length(), 0);
   }
 
@@ -411,7 +391,7 @@ public class RandomObjectPopulatorTest {
   @Test
   public void testIdFilter() {
     final RandomObjectPopulator r = new RandomObjectPopulator(UUID.randomUUID(), "test");
-    final FilenameFilter f = r.new IdFilter();
+    final FilenameFilter f = new ObjectManagerUtils.IdFilter("test", this.suffix);
     Assert.assertFalse(f.accept(null, "test" + suffix));
     Assert.assertTrue(f.accept(null, "test0" + suffix));
     Assert.assertFalse(f.accept(null, "test00" + suffix));

@@ -17,6 +17,7 @@ public class OperationConfig {
   public ObjectConfig object;
   public ObjectConfig sourceObject;
   public SelectionConfig<FilesizeConfig> filesize;
+  public SelectionConfig<FilesizeConfig> range;
   public Map<String, SelectionConfig<String>> headers;
   public Map<String, String> parameters;
   public Map<String, SelectionConfig<String>> weightedParameters;
