@@ -686,6 +686,15 @@ public class ListOperationsSupplier implements Supplier<Request>{
                 MoreFunctions.keyLookup(Context.X_OG_OBJECT_NAME));
       }
 
+      if (container != null) {
+        // container-name is populated in the context now if it is available
+        // populate container name in context because Credential needs that to lookup
+        // storage account
+        // todo: Fix me. need to refactor this and handle ordering in the context
+        container.apply(requestContext);
+        s.setContainer(requestContext.get(Context.X_OG_CONTAINER_NAME));
+      }
+
       if (credentials != null) {
         Credential credential = credentials.apply(requestContext);
         String username = credential.getUsername();
@@ -707,14 +716,6 @@ public class ListOperationsSupplier implements Supplier<Request>{
         }
       }
 
-      if (container != null) {
-        // container-name is populated in the context now if it is available
-        // populate container name in context because Credential needs that to lookup
-        // storage account
-        // todo: Fix me. need to refactor this and handle ordering in the context
-        container.apply(requestContext);
-        s.setContainer(requestContext.get(Context.X_OG_CONTAINER_NAME));
-      }
 
       return s;
     }
