@@ -60,7 +60,7 @@ public class Application {
    * @since 1.0
    */
   public static class Cli <T extends GetOpt> {
-    private static final Logger _consoleLogger = LoggerFactory.getLogger("ConsoleLogger");
+    private static final Logger _stdoutLogger = LoggerFactory.getLogger("StdoutLogger");
     private final String name;
     private T getopt;
     private JCommander jc;
@@ -148,21 +148,22 @@ public class Application {
       //_consoleLogger.info("Usage: {} {}", this.name, this.jsap.getUsage());
       StringBuilder sb = new StringBuilder();
       jc.usage(sb);
-      _consoleLogger.info(sb.toString());
+      _stdoutLogger.info(sb.toString());
+
     }
 
     /**
      * Generates and logs a suitable errors block to console
      */
     public void printErrors() {
-      _consoleLogger.error("{}", errorMsg);
+      _stdoutLogger.error("{}", errorMsg);
     }
 
     /**
      * Generates and logs a suitable version block to console
      */
     public void printVersion() {
-      _consoleLogger.info(Version.displayVersion());
+      _stdoutLogger.info(Version.displayVersion());
     }
   }
 
