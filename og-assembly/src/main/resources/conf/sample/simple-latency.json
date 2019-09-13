@@ -1,6 +1,7 @@
 {
   "host":"<dsnet accesser>",
   "api":"soh",
+  "uri_root": "/soh/",
   "container":"<dsnet vault>",
   "write":{
     "weight":1.0
