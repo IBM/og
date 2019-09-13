@@ -1,6 +1,7 @@
 {
   "host":"<hostname or ip address>",
   "api":"s3",
+  "uri_root": "/",
   "container":"<container name>",
   "write":{
     "weight":1.0
