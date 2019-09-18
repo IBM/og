@@ -39,12 +39,13 @@ public class ModuleUtils {
     checkNotNull(operationConfig);
     final ObjectConfig objectConfig = checkNotNull(operationConfig.object);
     final String prefix = checkNotNull(objectConfig.prefix);
+    final String nameSuffix = objectConfig.osuffix;
     final Supplier<Long> suffixes = createObjectSuffixes(objectConfig);
     final Supplier<Long> legalHoldSuffixes = createLegalHoldSuffixes(operationConfig.object);
     return new Function<Map<String, String>, String>() {
       @Override
       public String apply(final Map<String, String> context) {
-        final String objectName = prefix + suffixes.get();
+        final String objectName = prefix + suffixes.get() + nameSuffix;
         context.put(Context.X_OG_OBJECT_NAME, objectName);
         context.put(Context.X_OG_SEQUENTIAL_OBJECT_NAME, "true");
         if (operationConfig.legalHold != null) {
