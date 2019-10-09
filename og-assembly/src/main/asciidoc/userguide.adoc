@@ -690,13 +690,14 @@ point and then provide the default number of entries for the associated API.
 See <<Object Management>>.
 
 To override this behavior, the _object_ configuration block can be configured
-to include _selection_, _prefix_, _min_suffix_ and _max_suffix_ keys. Random
-and round robin selection configuration is supported. The resulting object name
-will be of the form:
+to include _selection_, _prefix_, _min_suffix_, _max_suffix_, and _osuffix_ keys. The _min_suffix_ and
+_max_suffix_ define the range of a numeric suffix. Random
+and round robin selection configuration is supported. The _osuffix_, if provided, is appended after
+the numeric suffix.  The resulting object name will be of the form:
 
 [source, bash]
 ----
-<prefix><suffix>
+<prefix><suffix><osuffix>
 ----
 
 WARNING: Using custom object name configuration bypasses object management.
@@ -727,6 +728,18 @@ configured in OG for use with the SOH API.
   "prefix": "my_object",
   "min_suffix": 0,
   "max_suffix": 100
+}
+----
+
+.Round Robin Object Name with osuffix Example
+[source, json]
+----
+"object": {
+  "selection": "roundrobin",
+  "prefix": "my_object",
+  "min_suffix": 0,
+  "max_suffix": 100,
+  "osuffix": "test001"
 }
 ----
 
