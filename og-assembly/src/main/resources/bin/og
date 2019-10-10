@@ -37,6 +37,7 @@ ulimit -n ${ULIMIT}
 BASE=`dirname ${0}`
 CP=${BASE}/lib/*:${BASE}/conf/log4j/og/:${BASE}/conf/
 CLASS="com.ibm.og.cli.ObjectGenerator"
+VERSIONCLASS="com.ibm.og.cli.JavaVersion"
 
 mkdir -p ${TEST_PATH}
 
@@ -54,7 +55,31 @@ fi
 
 ln -s ${TEST_PATH} latest
 
+# record java version used
+java -version 2> ${TEST_PATH}/java_version.txt
+
+java -cp ${CP} ${VERSIONCLASS}
+JAVA_VERSION=$?
+echo "JAVA_VERSION: ${JAVA_VERSION}"
+
+if [ $JAVA_VERSION -eq -1 ]
+ then
+  echo "Unsupported Java version"
+  # Test config error
+  exit 2
+fi
+
+if [ $JAVA_VERSION -eq 8 ] || [ $JAVA_VERSION -eq 7 ] || [ $JAVA_VERSION -eq 6 ]
+  then
+    VMOPTS="-XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:${TEST_PATH}/${GC_LOG} -XX:+UseParallelOldGC -XX:MaxGCPauseMillis=5000 -Xss${STACKSIZE}k -Xmx${MEMORY}m -Xms${MEMORY}m -XX:MaxDirectMemorySize=${MEMORY}m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=${TEST_PATH}/"
+fi
+
+if [ $JAVA_VERSION -ge 9 ]
+  then
+    VMOPTS="-Xlog:gc*:file=${TEST_PATH}/${GC_LOG} -XX:+UseParallelOldGC -XX:MaxGCPauseMillis=5000 -Xss${STACKSIZE}k -Xmx${MEMORY}m -Xms${MEMORY}m -XX:MaxDirectMemorySize=${MEMORY}m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=${TEST_PATH}/"
+fi
+
+
 # TODO analyze which jvm parameters should be set
-VMOPTS="-Xlog:gc*:file=${TEST_PATH}/${GC_LOG} -XX:+UseParallelOldGC -XX:MaxGCPauseMillis=5000 -Xss${STACKSIZE}k -Xmx${MEMORY}m -Xms${MEMORY}m -XX:MaxDirectMemorySize=${MEMORY}m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=${TEST_PATH}/"
 SYSTEMOPTS="-DLOG_LEVEL=${LOG_LEVEL} -DTEST_PATH=${TEST_PATH} -Dlog4j.configurationFile=og-log4j2.xml -DLog4jContextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector -Dlog4j.shutdownCallbackRegistry=com.ibm.og.cli.OGLog4jShutdownCallbackRegistry"
 exec java -cp ${CP} ${VMOPTS} ${SYSTEMOPTS} ${CLASS} "$@"
