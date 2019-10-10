@@ -1,3 +1,13 @@
+Release 1.8.7:
+Changes:
+Add support for Java 11
+ The VM options are adjusted for GC based on the java version
+fix incorrect credentials for container listing
+Added osuffix (additional static suffix) when using object names with configured prefix / suffix
+  The resulting object name will be of the form <prefix><suffix><osuffix>. See Userguide.
+Add delete_container_lifecycle operation
+Add timestamps to STDOUT console log
+
 Release 1.8.6:
 Changes:
 Add MultiDelete Operation.
