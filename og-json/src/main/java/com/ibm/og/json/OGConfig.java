@@ -38,6 +38,7 @@ public class OGConfig {
   public OperationConfig objectRestore;
   public OperationConfig putContainerLifecycle;
   public OperationConfig getContainerLifecycle;
+  public OperationConfig deleteContainerLifecycle;
   public OperationConfig putContainerProtection;
   public OperationConfig getContainerProtection;
   public SelectionConfig<FilesizeConfig> filesize;
@@ -80,6 +81,7 @@ public class OGConfig {
     this.objectRestore = new OperationConfig();
     this.putContainerLifecycle = new OperationConfig();
     this.getContainerLifecycle = new OperationConfig();
+    this.deleteContainerLifecycle = new OperationConfig();
     this.putContainerProtection = new OperationConfig();
     this.getContainerProtection = new OperationConfig();
     this.filesize = null;

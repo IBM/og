@@ -4,7 +4,7 @@
   <parent>
     <artifactId>og</artifactId>
     <groupId>com.ibm</groupId>
-    <version>1.8.6</version>
+    <version>1.8.7</version>
   </parent>
   <artifactId>og-assembly</artifactId>
   <packaging>pom</packaging>

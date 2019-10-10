@@ -12,6 +12,9 @@
   </Properties>
   <Appenders>
     <Console name="Console" target="SYSTEM_OUT">
+      <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%t] %l - %m%n" />
+    </Console>
+    <Console name="Stdout" target="SYSTEM_OUT">
       <PatternLayout pattern="%m%n" />
     </Console>
     <RollingRandomAccessFile name="OGLog"
@@ -42,6 +45,9 @@
   <Loggers>
     <Logger name="ConsoleLogger" level="info">
       <AppenderRef ref="Console" />
+    </Logger>
+    <Logger name="StdoutLogger" level="info">
+      <AppenderRef ref="Stdout" />
     </Logger>
     <Logger name="OGJsonLogger" level="info" additivity="false">
       <AppenderRef ref="OGJson" />
