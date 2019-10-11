@@ -7,7 +7,7 @@
   <packaging>pom</packaging>
   <name>OG</name>
   <description>Tool for load testing dsNet appliances</description>
-  <url>https://github.com/rveitchIBM/og/</url>
+  <url>https://github.com/IBM/og/</url>
   <organization>
     <name>IBM Corporation</name>
     <url>http://www.ibm.com</url>
@@ -36,7 +36,7 @@
     <module>og-json</module>
   </modules>
   <scm>
-    <connection>scm:git:git@github.com:rveitchIBM/og.git</connection>
+    <connection>scm:git:git@github.com:IBM/og.git</connection>
   </scm>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
