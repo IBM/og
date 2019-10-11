@@ -7,12 +7,14 @@ package com.ibm.og.json;
 
 public class ObjectConfig {
   public String prefix;
+  public String osuffix;
   public SelectionType selection;
   public long minSuffix;
   public long maxSuffix;
 
   public ObjectConfig() {
     this.prefix = "";
+    this.osuffix = "";
     // FIXME distinguish between default (uuid for writes, object manager for reads/deletes) and
     // custom implementations using a generic type argument; this should be done once guice
     // refactoring occurs to allow dynamic component implementations
