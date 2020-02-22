@@ -618,6 +618,30 @@ Writecopy is only suppported for s3.
 
 Overwrite is supported for S3 and OpenStack Swift.
 
+Read operation supports range reads. A choice of ranges can be specified. Here is a sample.
+----
+  "read": {
+    "weight": 0.5,
+    "range": {
+      "selection": "random",
+      "choices": [
+        {
+          "choice": {
+            "distribution": "uniform",
+            "average": 1000,
+            "average_unit": "bytes",
+            "spread": 0,
+            "spread_unit": "bytes"
+          },
+          "weight": 1
+        }
+      ]
+    }
+  }
+----
+If the range size is greater than the object size, the range is set to object size. Otherwise
+a random range in the object is selected.
+
 Write Legalhold operation will add a Legalhold to an existing object.
 
 Delete Legalhold operation will remove Legalhold on an object.
