@@ -1267,7 +1267,11 @@ public class OGModule extends AbstractModule {
   @Singleton
   @ReadHeaders
   public Map<String, Function<Map<String, String>, String>> provideReadHeaders() {
-    return provideHeaders(this.config.read.headers);
+    final Map<String, Function<Map<String, String>, String>> headersMap =  provideHeaders(this.config.read.headers);
+    if (config.read.range != null) {
+       headersMap.put("Range", createObjectRangeSelectionConfigSupplier(config.read.range));
+    }
+    return headersMap;
   }
 
   @Provides
@@ -1379,7 +1383,6 @@ public class OGModule extends AbstractModule {
     for (final Map.Entry<String, SelectionConfig<String>> e : configHeaders.entrySet()) {
       headers.put(e.getKey(), createSelectionConfigSupplier(e.getValue()));
     }
-
     return headers;
   }
 
@@ -2316,6 +2319,64 @@ public class OGModule extends AbstractModule {
     return MoreFunctions.forSupplier(configSupplier);
   }
 
+  private Function<Map<String, String>, String> createObjectRangeSelectionConfigSupplier(
+          final SelectionConfig<FilesizeConfig> rangeSizeConfig){
+
+    class RangeHeaderSupplier {
+
+      final Supplier<Long> supplier;
+      public RangeHeaderSupplier(SelectionConfig<FilesizeConfig> rangeSizeConfig) {
+        final SelectionType selectionType = checkNotNull(rangeSizeConfig.selection);
+        final List<ChoiceConfig<FilesizeConfig>> rangeSizes = checkNotNull(rangeSizeConfig.choices);
+        checkArgument(!rangeSizes.isEmpty(), "range sizes must not be empty");
+
+        if (SelectionType.ROUNDROBIN == selectionType) {
+          final List<Distribution> distributions = Lists.newArrayList();
+          for (final ChoiceConfig<FilesizeConfig> choice : rangeSizes) {
+            distributions.add(createSizeDistribution(choice.choice));
+          }
+          supplier = createRangeSupplier(Suppliers.cycle(distributions));
+        } else {
+          final RandomSupplier.Builder<Distribution> wrc = Suppliers.random();
+          for (final ChoiceConfig<FilesizeConfig> choice : rangeSizes) {
+            wrc.withChoice(createSizeDistribution(choice.choice), choice.weight);
+          }
+          supplier = createRangeSupplier(wrc.build());
+        }
+      }
+
+      public String get(Map<String, String> context) {
+        long range = supplier.get();
+        long lowerLimit = 0;
+        long upperLimit = range;
+        long objectSize = Long.parseLong(context.get(Context.X_OG_OBJECT_SIZE));
+        if (upperLimit - lowerLimit > objectSize) {
+          lowerLimit = 0;
+          upperLimit = objectSize - 1;
+        } else {
+            upperLimit = objectSize - (upperLimit - lowerLimit) - 1;
+            // pick a random number between 0 and lowerlimit and set the upperlimit according to that
+            double random = Math.random();
+            lowerLimit = (long) (upperLimit * random);
+            upperLimit = lowerLimit + range - 1;
+
+        }
+        String rangeValue = String.format("bytes=%d-%d", lowerLimit, upperLimit);
+        return rangeValue;
+      }
+
+    }
+
+    final RangeHeaderSupplier rangeHeaderSupplier = new RangeHeaderSupplier(rangeSizeConfig);
+    return new Function<Map<String, String>, String>() {
+      @Nullable
+      @Override
+      public String apply(@Nullable Map<String, String> context) {
+        return rangeHeaderSupplier.get(context);
+      }
+    };
+  }
+
   private Map<String, Function<Map<String, String>, String>> provideLegalHoldQueryParameters(
       final boolean remove) {
     final Map<String, Function<Map<String, String>, String>> queryParameters;
@@ -2638,6 +2699,19 @@ public class OGModule extends AbstractModule {
     };
 
     return MoreFunctions.forSupplier(bodySupplier);
+  }
+
+  private Supplier<Long> createRangeSupplier(
+          final Supplier<Distribution> distributionSupplier) {
+
+    final Supplier<Long> rangeSupplier = new Supplier<Long>() {
+      @Override
+      public Long get() {
+        final long sample = (long) distributionSupplier.get().nextSample();
+        return sample;
+      }
+    };
+    return rangeSupplier;
   }
 
   private Function<Map<String, String>, Body> createBodySupplier() {

@@ -7,6 +7,7 @@ package com.ibm.og.object;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.ibm.og.util.ObjectManagerUtils.getFileIndex;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -41,6 +42,7 @@ import javax.inject.Singleton;
 
 import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.Uninterruptibles;
+import com.ibm.og.util.ObjectManagerUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,17 +76,11 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
   private final ReadWriteLock persistLock = new ReentrantReadWriteLock(true);
   private final File saveFile;
   private volatile boolean testEnded = false;
+  private final int desiredFileIndex;
   private final int idFileIndex;
   private final Random rand = new Random();
   private final UUID vaultId;
   private final ScheduledExecutorService saver;
-
-  class IdFilter implements FilenameFilter {
-    @Override
-    public boolean accept(final File dir, final String name) {
-      return RandomObjectPopulator.this.filenamePattern.matcher(name).matches();
-    }
-  }
 
   public static int getObjectSize() {
     return OBJECT_SIZE;
@@ -135,9 +131,14 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
     this.maxObjects = maxObjectCount;
     this.persistFrequency = persistTime;
     this.objectFileIndex = objectFileIndex;
-    final File[] files = getIdFiles();
+    final File[] files = ObjectManagerUtils.getIdFiles(this.prefix, this.SUFFIX, this.directory);
     if (files != null && files.length > 1) {
-      this.idFileIndex = selectInitialObjectFile(files.length, objectFileIndex);
+      if (objectFileIndex != null) {
+        this.desiredFileIndex = objectFileIndex;
+      } else {
+        this.desiredFileIndex = selectInitialObjectFile(files.length, objectFileIndex, files);
+      }
+      this.idFileIndex = selectInitialObjectFile(files.length, objectFileIndex, files);
 
       _logger.info("Initial object files list");
       for (final File f : files) {
@@ -145,6 +146,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
       }
     } else {
       this.idFileIndex = 0;
+      this.desiredFileIndex = 0;
     }
     _logger.info("Initial object file index {}", this.idFileIndex);
     this.saveFile = createFile(this.idFileIndex);
@@ -168,12 +170,26 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
     }, persistTime, persistTime, TimeUnit.MILLISECONDS);
   }
 
-  private int selectInitialObjectFile(final int objectFileCount, final Integer objectFileIndex) {
+  private int selectInitialObjectFile(final int objectFileCount, final Integer objectFileIndex, final File[] files) {
     if (objectFileIndex != null) {
-      checkArgument(objectFileIndex >= 0, "index must be >= 0 [%s]", objectFileIndex);
-      return Math.min(objectFileCount - 1, objectFileIndex);
+      if (objectFileIndex == -1) {
+       // select the max index available
+        return getFileMaxIndex(files);
+      } else {
+        //checkArgument(objectFileIndex >= 0, "index must be >= 0 [%s]", objectFileIndex);
+        return Math.min(objectFileCount - 1, objectFileIndex);
+      }
     }
     return this.rand.nextInt(objectFileCount - 1);
+  }
+
+  private int getFileMaxIndex(final File[] files) {
+    ObjectManagerUtils.ObjectFileNameIndexComparator comparator = new ObjectManagerUtils.ObjectFileNameIndexComparator(prefix);
+    Collections.sort(Arrays.asList(files), comparator);
+    String fileWithMaxIndex = files[files.length-1].getName();
+    int maxIndex = getFileIndex(prefix, fileWithMaxIndex);
+    _logger.info("current max_index is {}", maxIndex);
+    return maxIndex;
   }
 
   private void loadObjects() {
@@ -218,14 +234,10 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
     }
   }
 
-  private File[] getIdFiles() {
-    final File dir = new File(this.directory);
-    return dir.listFiles(new IdFilter());
-  }
 
   public long getSavedObjectCount() {
     long count = 0;
-    final File[] idFiles = getIdFiles();
+    final File[] idFiles = ObjectManagerUtils.getIdFiles(this.prefix, this.SUFFIX, this.directory);
     for (final File file : idFiles) {
       count += file.length() / OBJECT_SIZE;
     }
@@ -494,11 +506,21 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
     _logger.info("toSave [{}] maxObjects [{}]", toSave, this.maxObjects);
     if (toSave > this.maxObjects) {
       for (int size = this.objects.size(); size > this.maxObjects; size = this.objects.size()) {
-        final int numFiles = getIdFiles().length;
-        File surplus = createFile(numFiles - 1);
+        // surplus file index should be looked based on the max index currently. This will change or gaps
+        // could be created because of the compaction / shuffling
+        int surplusIndex;
+        final File[] files = ObjectManagerUtils.getIdFiles(this.prefix, this.SUFFIX, this.directory);
+        final int numFiles = files.length;
+        if (desiredFileIndex == -1) {
+          surplusIndex = getFileMaxIndex(files);
+        } else {
+          surplusIndex = numFiles - 1;
+        }
+        File surplus = createFile(surplusIndex);
         if (surplus.equals(this.saveFile) || (surplus.length() / OBJECT_SIZE) >= this.maxObjects) {
           // Create a new file
-          surplus = createFile(numFiles);
+          surplusIndex = surplusIndex + 1;
+          surplus = createFile(surplusIndex);
         }
         _logger.info("surplus file [{}]", surplus.getName());
         final OutputStream dos = new BufferedOutputStream(new FileOutputStream(surplus, true));
@@ -524,8 +546,12 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
         // Try to borrow from last id file
         // When borrowing, add to this.objects
         // Count the number of objects to borrow and truncate file by that amount
-        final int numFiles = getIdFiles().length;
-        final File surplus = createFile(numFiles - 1);
+        if (this.desiredFileIndex == -1) {
+          // if shuffling / compaction enabled already one with object-file script, skip borrowing
+          break;
+        }
+        final int numFiles = ObjectManagerUtils.getIdFiles(this.prefix, this.SUFFIX, this.directory).length;
+        final File surplus = createFile(numFiles-1);
         // Need to ensure last file is not current file
         // If it is, don't borrow at all
         if (this.saveFile.equals(surplus)) {
