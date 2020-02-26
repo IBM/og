@@ -1,3 +1,8 @@
+Release 1.8.8:
+update userguide
+Add read range header support
+Add object file shuffle feature in object file
+
 Release 1.8.7:
 Changes:
 Add support for Java 11
