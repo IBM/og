@@ -33,6 +33,19 @@ public class ObjectFileGetOpt extends GetOpt {
     @Parameter(names = {"--read", "-r"}, description = "Read object source and output in plain text file format")
     private boolean read;
 
+    @Parameter(names = {"--shuffle"}, description = "Combine, Shuffle to create a new object file from the existing object files")
+    private boolean shuffle;
+
+    @Parameter(names = {"--shuffle-object-file-directory"}, description = "path where the object-files for shuffling are located")
+    private String objectFilesDir;
+
+    @Parameter(names = {"--shuffle-object-file-prefix"}, description = "vault prefix for selecting object files to be shuffled")
+    private String prefix;
+
+    @Parameter(names = {"--shuffle-object-file-max-size"}, description = "Desired Maximum size in bytes of the shuffled output file")
+    private int shuffleMaxObjectFileSize;
+
+
     @Parameter(names = {"--filter", "-f"}, description = "Filter an existing object file source and output in object file format")
     private boolean filter;
 
@@ -105,6 +118,16 @@ public class ObjectFileGetOpt extends GetOpt {
         return read;
     }
 
+    public boolean getShuffle() {
+        return shuffle;
+    }
+
+    public String getObjectFilesDir() { return objectFilesDir; }
+
+    public int getShuffleMaxObjectFileSize() { return shuffleMaxObjectFileSize; }
+
+    public String getPrefix() { return  prefix; }
+
     public boolean getFilter() {
         return filter;
     }
@@ -174,10 +197,12 @@ public class ObjectFileGetOpt extends GetOpt {
             // if command line contains help or version option, give priority to them
             return true;
         }
-        // if no input argument stdin is used so check for more than 1 argument
-        checkNotNull(input);
-        checkArgument(input.size() >= 1, "Invalid command line arguments. Atleast one input file is expected");
-        
+        if (!shuffle) {
+            // if no input argument stdin is used so check for more than 1 argument
+            checkNotNull(input);
+            checkArgument(input.size() >= 1, "Invalid command line arguments. Atleast one input file is expected");
+        }
+
         return true;
     }
 
