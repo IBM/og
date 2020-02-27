@@ -42,7 +42,7 @@ public class ObjectFileGetOpt extends GetOpt {
     @Parameter(names = {"--shuffle-object-file-prefix"}, description = "vault prefix for selecting object files to be shuffled")
     private String prefix;
 
-    @Parameter(names = {"--shuffle-object-file-max-size"}, description = "Desired number of maximum objects in the shuffle output file")
+    @Parameter(names = {"--shuffle-object-file-max-size"}, description = "Desired Maximum size in bytes of the shuffled output file")
     private int shuffleMaxObjectFileSize;
 
 
