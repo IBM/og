@@ -6,7 +6,7 @@ storage apis. Supported apis include:
 
 - SOH
 - S3
-- Openstack
+- OpenStack
 - WebDAV
 
 ## Build
