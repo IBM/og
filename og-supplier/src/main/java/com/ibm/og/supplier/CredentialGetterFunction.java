@@ -65,14 +65,16 @@ public class CredentialGetterFunction implements Function<Map<String, String>, C
             closer.register(bufferedReader);
             String line;
             while ((line = bufferedReader.readLine()) != null) {
-              Account account =  gson.fromJson(line, Account.class);
-              if (account.getApi() == api) {
-                  accountsMap.put(account.getAccountName(), account);
-              } else if (account.getApi() == null){
-                  // vault mode account is not tied to api. we expect the account
-                  // has access to the vault specified in the test input
-                  accountsMap.put(account.getAccountName(), account);
-              }
+                if (!line.isEmpty()) {
+                    Account account = gson.fromJson(line, Account.class);
+                    if (account.getApi() == api) {
+                        accountsMap.put(account.getAccountName(), account);
+                    } else if (account.getApi() == null) {
+                        // vault mode account is not tied to api. we expect the account
+                        // has access to the vault specified in the test input
+                        accountsMap.put(account.getAccountName(), account);
+                    }
+                }
             }
             if (accountsMap.size() == 0) {
                 throw new Exception("No credentials matched in the credential file");
