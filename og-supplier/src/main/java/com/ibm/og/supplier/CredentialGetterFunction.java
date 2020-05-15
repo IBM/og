@@ -85,6 +85,11 @@ public class CredentialGetterFunction implements Function<Map<String, String>, C
             Set<Map.Entry<String,Account>> entrySet = accountsMap.entrySet();
             cyclicAccountsIterator = Iterators.cycle(entrySet);
 
+        } catch (NullPointerException e) {
+            StringBuffer sb = new StringBuffer().
+                    append("Unexpected error occured parsing credential file").
+                    append("Please make sure each credential is in single line json format");
+            throw new IOException(sb.toString());
         } catch (Throwable e) {
             throw closer.rethrow(e);
         } finally {
