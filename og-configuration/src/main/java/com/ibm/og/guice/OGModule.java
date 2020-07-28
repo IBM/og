@@ -147,6 +147,7 @@ import com.ibm.og.s3.v2.AWSV2Auth;
 import com.ibm.og.s3.v4.AWSV4Auth;
 import com.ibm.og.scheduling.ConcurrentRequestScheduler;
 import com.ibm.og.scheduling.RequestRateScheduler;
+import com.ibm.og.scheduling.PoissonRequestRateScheduler;
 import com.ibm.og.scheduling.Scheduler;
 import com.ibm.og.soh.SOHWriteResponseBodyConsumer;
 import com.ibm.og.statistic.Counter;
@@ -2833,19 +2834,31 @@ public class OGModule extends AbstractModule {
 
   @Provides
   @Singleton
-  public Scheduler provideScheduler(final ConcurrencyConfig concurrency, final EventBus eventBus) {
+  public Scheduler provideScheduler(final ConcurrencyConfig concurrency, final EventBus eventBus) throws Exception {
     final ConcurrencyType type =
         checkNotNull(concurrency.type, "concurrency type must not be null");
     checkNotNull(concurrency.count, "concurrency count must not be null");
 
-    if (ConcurrencyType.THREADS == type) {
-      final Scheduler scheduler = new ConcurrentRequestScheduler(
-          (int) Math.round(concurrency.count), concurrency.rampup, concurrency.rampupUnit);
-      eventBus.register(scheduler);
-      return scheduler;
+    final Scheduler scheduler;
+    switch(type)
+    {
+      case THREADS:
+        scheduler = new ConcurrentRequestScheduler(
+                (int) Math.round(concurrency.count), concurrency.rampup, concurrency.rampupUnit);
+        eventBus.register(scheduler);
+        break;
+      case OPS:
+        scheduler = new RequestRateScheduler(concurrency.count, concurrency.unit, concurrency.rampup,
+                concurrency.rampupUnit);
+        break;
+      case POISSONOPS:
+        scheduler = new PoissonRequestRateScheduler(concurrency.count, concurrency.unit, concurrency.rampup,
+                concurrency.rampupUnit);
+        break;
+      default:
+        throw new Exception("Concurrancy type was {} must be threads, ops, or poissonops".format(String.valueOf(concurrency.type)));
     }
-    return new RequestRateScheduler(concurrency.count, concurrency.unit, concurrency.rampup,
-        concurrency.rampupUnit);
+    return scheduler;
   }
 
   @Provides
