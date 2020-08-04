@@ -43,11 +43,13 @@ import com.google.common.util.concurrent.Uninterruptibles;
 public class LoadTest implements Callable<LoadTestResult> {
   private static final Logger _logger = LoggerFactory.getLogger(LoadTest.class);
   private static final Logger _exceptionLogger = LoggerFactory.getLogger("ExceptionLogger");
+  private static final Logger _consoleLogger = LoggerFactory.getLogger("ConsoleLogger");
   private final RequestManager requestManager;
   private final Client client;
   private final Scheduler scheduler;
   private final Thread schedulerThread;
   private final EventBus eventBus;
+  private final boolean abortMpuWhenStopping;
   private final boolean shutdownImmediate;
   private final int shutdownTimeout;
   private final AtomicBoolean running;
@@ -55,6 +57,7 @@ public class LoadTest implements Callable<LoadTestResult> {
   private long timestampFinish;
   private volatile int result;
   private final CountDownLatch completed;
+  private final CountDownLatch abortRequestsLatch;
   private ArrayList<String> messages;
 
   public static final int RESULT_SUCCESS = 0;
@@ -76,19 +79,22 @@ public class LoadTest implements Callable<LoadTestResult> {
   public LoadTest(final RequestManager requestManager, final Client client,
       final Scheduler scheduler, final EventBus eventBus,
       @Named("shutdownImmediate") final boolean shutdownImmediate,
-      @Named("shutdownTimeout") final int shutdownTimeout) {
+      @Named("shutdownTimeout") final int shutdownTimeout,
+      @Named("abortMpuWhenStopping") final boolean abortMpuWhenStopping) {
     this.requestManager = checkNotNull(requestManager);
     this.client = checkNotNull(client);
     this.scheduler = checkNotNull(scheduler);
     this.schedulerThread = new Thread(new SchedulerRunnable(), "loadtest-scheduler");
     this.schedulerThread.setDaemon(true);
     this.eventBus = checkNotNull(eventBus);
+    this.abortMpuWhenStopping = abortMpuWhenStopping;
     this.shutdownImmediate = shutdownImmediate;
     this.shutdownTimeout = shutdownTimeout;
     this.running = new AtomicBoolean(true);
     this.result = RESULT_SUCCESS;
     this.completed = new CountDownLatch(1);
     this.messages =  new ArrayList<String>();
+    this.abortRequestsLatch = new CountDownLatch(1);
 
   }
 
@@ -99,15 +105,21 @@ public class LoadTest implements Callable<LoadTestResult> {
         while (LoadTest.this.running.get()) {
           LoadTest.this.scheduler.schedule();
           if (LoadTest.this.running.get()) {
-            final Request request = LoadTest.this.requestManager.get();
-            _logger.trace("Created request {}", request);
-            // RequestManager.get() could block (in case of Multipart supplier) and when it returns the test may be stopped and client could be shutdown.
-            // We cannot submit a new request if client is shutdown. So check again to make sure that the test is
-            // still running.
-            if (LoadTest.this.running.get()) {
-              final ListenableFuture<Response> future = LoadTest.this.client.execute(request);
-              LoadTest.this.eventBus.post(request);
-              addCallback(request, future);
+            try {
+              final Request request = LoadTest.this.requestManager.get();
+              _logger.trace("Created request {}", request);
+              // RequestManager.get() could block (in case of Multipart supplier) and when it returns the test may be stopped and client could be shutdown.
+              // We cannot submit a new request if client is shutdown. So check again to make sure that the test is
+              // still running.
+              if (LoadTest.this.running.get()) {
+                final ListenableFuture<Response> future = LoadTest.this.client.execute(request);
+                LoadTest.this.eventBus.post(request);
+                addCallback(request, future);
+              }
+            } catch(NoMoreRequestsException nre) {
+              _logger.info("NoMoreRequestsException thrown. All requests are cleanly aborted");
+              LoadTest.this.abortRequestsLatch.countDown();
+              // wait here to get interrupted.
             }
           }
         }
@@ -147,10 +159,17 @@ public class LoadTest implements Callable<LoadTestResult> {
   public void stopTest() {
     _logger.debug("Entering stopTest");
     // ensure this code is only run once
+    // abort multipart upload sessions in progress
+    if (this.abortMpuWhenStopping) {
+      _consoleLogger.info("aborting MPU uploads. Please wait ...");
+      this.requestManager.setAbort(true);
+      Uninterruptibles.awaitUninterruptibly(this.abortRequestsLatch);
+      _logger.info("done waiting for aborting multipart requests");
+    }
+
     if (this.running.getAndSet(false)) {
       _logger.debug("Interrupting scheduler thread");
       this.schedulerThread.interrupt();
-
       // currently a new thread is required here to run shutdown logic because stopTest can be
       // called via a client worker thread via client -> eventbus -> stopping condition -> stopTest,
       // which will introduce a deadlock since stopTest waits until all client threads are done. An

@@ -17,4 +17,5 @@ import com.google.common.base.Supplier;
  * @since 1.0
  */
 public interface RequestManager extends Supplier<Request> {
+  void setAbort(boolean abort);
 }

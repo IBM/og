@@ -1986,6 +1986,10 @@ development purposes.
 With release 1.4.0, the object-file is enhanced to support both pre-1.4.0 object files (1.0) and
 1.4.0 object files (v2.0).
 
+==== Abort Multipart Upload transfers when stopping
+The property _abort_mpu_when_stopping_ can be set to true for OG should send aborts for any Multipart uploads in progress
+before shutting down. When this property is true, OG will wait for the ongoing part transfers to complete. It is possible
+that the part transfers will fail if the corresponding Multipart upload transfer is aborted.
 
 == Results
 For each OG test that is run, a test results directory is created with the
@@ -2439,6 +2443,11 @@ mixed operation tests.
 |Boolean
 |No
 |true
+
+|abort_mpu_when_stopping
+|Boolean
+|No
+|false
 
 |===
 

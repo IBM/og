@@ -292,6 +292,7 @@ public class OGModule extends AbstractModule {
     });
     bind(StoppingConditionsConfig.class).toInstance(this.config.stoppingConditions);
     bind(FailingConditionsConfig.class).toInstance(this.config.failingConditions);
+    bindConstant().annotatedWith(Names.named("abortMpuWhenStopping")).to(this.config.abortMpuWhenStopping);
     bindConstant().annotatedWith(Names.named("shutdownImmediate")).to(this.config.shutdownImmediate);
     bindConstant().annotatedWith(Names.named("shutdownTimeout")).to(this.config.shutdownTimeout);
     bindConstant().annotatedWith(Names.named("statsLogInterval"))

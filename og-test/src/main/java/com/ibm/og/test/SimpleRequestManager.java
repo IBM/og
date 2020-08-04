@@ -11,6 +11,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import com.ibm.og.s3.MultipartRequestSupplier;
+import com.ibm.og.supplier.RequestSupplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +29,8 @@ import com.google.common.base.Supplier;
 public class SimpleRequestManager implements RequestManager {
   private static final Logger _logger = LoggerFactory.getLogger(SimpleRequestManager.class);
   private final Supplier<Supplier<Request>> requestSupplier;
+  private final MultipartRequestSupplier multipartWriteSupplier;
+  private boolean abort = false;
 
   /**
    * Creates an instance. This manager determines which type of request to generate based on the
@@ -111,6 +115,8 @@ public class SimpleRequestManager implements RequestManager {
     checkNotNull(putContainerProtection);
     checkNotNull(getContainerProtection);
 
+    this.multipartWriteSupplier = (MultipartRequestSupplier)writeMultipart;
+
     final RandomSupplier.Builder<Supplier<Request>> wrc = Suppliers.random();
     if (writeWeight > 0.0) {
       wrc.withChoice(write, writeWeight);
@@ -181,8 +187,23 @@ public class SimpleRequestManager implements RequestManager {
 
   @Override
   public Request get() {
-    final Request request = this.requestSupplier.get().get();
+    final Request request;
+    if (!abort) {
+      request = this.requestSupplier.get().get();
+    } else {
+      // currently only multipart uploads need to be aborted
+      request = this.multipartWriteSupplier.get();
+      if (request == null) {
+        // done aborting all multipart uploads
+        throw new NoMoreRequestsException();
+      }
+    }
     return request;
+  }
+
+  public void setAbort(boolean abort) {
+    this.abort = abort;
+    this.multipartWriteSupplier.abortSessions();
   }
 
   @Override
