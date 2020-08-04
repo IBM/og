@@ -47,7 +47,7 @@ public class RequestSupplierTest {
         new URI("http://" + this.vaultName + "." + this.hostName + ":8080/" + this.objectName);
 
     final RequestSupplier request =
-        createRequestSupplier(true, this.vaultName, this.hostName, null, this.objectName, null, false);
+        createRequestSupplier(true, this.vaultName, this.hostName, null, this.objectName, null, false, null);
 
     final Request req = request.get();
 
@@ -65,7 +65,7 @@ public class RequestSupplierTest {
     final URI uri =
         new URI("http://" + this.vaultName + "." + this.hostName + ":8080/" + objectName);
     final RequestSupplier request =
-        createRequestSupplier(true, this.vaultName, this.hostName, null, objectName, null, false);
+        createRequestSupplier(true, this.vaultName, this.hostName, null, objectName, null, false, null);
 
     final Request req = request.get();
 
@@ -81,7 +81,7 @@ public class RequestSupplierTest {
     final String objectName = null;
     final URI uri = new URI("http://" + this.vaultName + "." + this.hostName + ":8080/");
     final RequestSupplier request = createRequestSupplier(true, this.vaultName, this.hostName, null,
-        objectName, null, this.trailingSlash);
+        objectName, null, this.trailingSlash, null);
 
     final Request req = request.get();
 
@@ -98,7 +98,7 @@ public class RequestSupplierTest {
     final String objectName = null;
     final URI uri = new URI("http://" + this.vaultName + "." + this.hostName + ":8080");
     final RequestSupplier request =
-        createRequestSupplier(true, this.vaultName, this.hostName, null, objectName, null, false);
+        createRequestSupplier(true, this.vaultName, this.hostName, null, objectName, null, false, null);
 
     final Request req = request.get();
 
@@ -114,7 +114,7 @@ public class RequestSupplierTest {
     final String objectName = null;
     final URI uri = new URI("http://" + this.vaultName + "." + this.hostName + ":8080/");
     final RequestSupplier request = createRequestSupplier(true, this.vaultName, this.hostName, null,
-        objectName, this.uriRoot, this.trailingSlash);
+        objectName, this.uriRoot, this.trailingSlash, null);
 
     final Request req = request.get();
 
@@ -125,12 +125,37 @@ public class RequestSupplierTest {
   }
 
   @Test
+  public void createRequestSupplierWithStaticWebsiteRead() throws URISyntaxException {
+
+    final String objectName = "cafebeef0000";
+    final URI uri = new URI("http://" +  this.hostName + ":8080/"+ objectName);
+    Function<Map<String, String>, String> staticHostSuffix = new Function<Map<String, String>, String>() {
+      @Nullable
+      @Override
+      public String apply(@Nullable Map<String, String> input) {
+        final String suffix = "ibm.com";
+        input.put(Context.X_OG_STATIC_WEBSITE_VIRTUAL_HOST_SUFFIX,
+                suffix);
+        return suffix;
+      }
+    };
+    final RequestSupplier request = createRequestSupplier(false, this.vaultName, this.hostName, null,
+            objectName, null, false, staticHostSuffix);
+
+    final Request req = request.get();
+    Assert.assertNotNull(req);
+    Assert.assertEquals(Method.GET, req.getMethod());
+    Assert.assertEquals(uri, req.getUri());
+
+  }
+
+  @Test
   public void createRequestSupplierPathStyleTest() throws URISyntaxException {
 
     final URI uri =
         new URI("http://" + this.hostName + ":8080/" + this.vaultName + "/" + this.objectName);
     final RequestSupplier request =
-        createRequestSupplier(false, this.vaultName, this.hostName, null, this.objectName, null, false);
+        createRequestSupplier(false, this.vaultName, this.hostName, null, this.objectName, null, false, null);
 
     final Request req = request.get();
 
@@ -146,7 +171,7 @@ public class RequestSupplierTest {
     final URI uri = new URI("http://" + this.hostName + ":8080/" + this.uriRoot + "/"
         + this.vaultName + "/" + this.objectName);
     final RequestSupplier request = createRequestSupplier(false, this.vaultName, this.hostName, null,
-        this.objectName, this.uriRoot, false);
+        this.objectName, this.uriRoot, false, null);
 
     final Request req = request.get();
 
@@ -163,7 +188,7 @@ public class RequestSupplierTest {
     final URI uri =
         new URI("http://" + this.hostName + ":8080/" + this.uriRoot + "/" + this.vaultName + "/");
     final RequestSupplier request = createRequestSupplier(false, this.vaultName, this.hostName, null,
-        objectName, this.uriRoot, this.trailingSlash);
+        objectName, this.uriRoot, this.trailingSlash, null);
 
     final Request req = request.get();
 
@@ -180,8 +205,9 @@ public class RequestSupplierTest {
     final String objectName = null;
     final String uriRoot = null;
     final URI uri = new URI("http://" + this.hostName + ":8080/" + this.vaultName + "/");
+
     final RequestSupplier request = createRequestSupplier(false, this.vaultName, this.hostName, null,
-        objectName, uriRoot, this.trailingSlash);
+        objectName, uriRoot, this.trailingSlash, null);
 
     final Request req = request.get();
 
@@ -214,9 +240,16 @@ public class RequestSupplierTest {
 
   private RequestSupplier createRequestSupplier(final boolean virtualHost, final String vaultName,
       final String hostName, final String apiVersion, final String objectName, final String uriRoot,
-      final boolean trailingSlash) {
-    final Method method = Method.PUT;
-    final Operation operation = Operation.WRITE;
+      final boolean trailingSlash, final Function<Map<String, String>, String> staticWebsiteVirtualHostSuffix) {
+    final Method method;
+    final Operation operation;
+    if (staticWebsiteVirtualHostSuffix != null) {
+      method = Method.GET;
+      operation = Operation.READ;
+    } else {
+      method = Method.PUT;
+      operation = Operation.WRITE;
+    }
     final Scheme scheme = Scheme.HTTP;
     final Supplier<String> hostSupplier = Suppliers.of(hostName);
     final Supplier<String> apiVersionSupplier = Suppliers.of("v1");
@@ -259,6 +292,6 @@ public class RequestSupplierTest {
 
     return new RequestSupplier(operation, id, method, scheme, host, port, uriRoot, container, apiVersion,
             object, queryParameters, trailingSlash, headers, context, null, credentials, body,
-        virtualHost, null, null, false, null);
+        virtualHost, null, null, false, null, staticWebsiteVirtualHostSuffix);
   }
 }

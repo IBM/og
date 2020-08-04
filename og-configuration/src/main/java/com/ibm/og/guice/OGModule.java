@@ -230,6 +230,8 @@ public class OGModule extends AbstractModule {
     bindConstant().annotatedWith(Names.named("overwrite.contentMd5"))
         .to(this.config.overwrite.contentMd5);
     bindConstant().annotatedWith(Names.named("read.weight")).to(this.config.read.weight);
+//    bindConstant().annotatedWith(Names.named("read.staticWebsiteVirtualHostSuffix"))
+//            .to(this.config.read.staticWebsiteVirtualHostSuffix);
     bindConstant().annotatedWith(Names.named("read.sseCSource")).to(this.config.read.sseCSource);
     bindConstant().annotatedWith(Names.named("metadata.weight")).to(this.config.metadata.weight);
     bindConstant().annotatedWith(Names.named("metadata.sseCSource"))
@@ -705,6 +707,26 @@ public class OGModule extends AbstractModule {
       return provideContainer(this.config.container);
     }
   }
+
+
+  @Provides
+  @Singleton
+  @Named("read.staticWebsiteVirtualHostSuffix")
+  public Function<Map<String, String>, String> provideReadWebsiteContext() throws Exception {
+    final OperationConfig config = this.config.read;
+    return (new Function<Map<String, String>, String>() {
+
+      @Override
+      public String apply(final Map<String, String> input) {
+        if (config.staticWebsiteVirtualHostSuffix != null) {
+          input.put(Context.X_OG_STATIC_WEBSITE_VIRTUAL_HOST_SUFFIX,
+                  config.staticWebsiteVirtualHostSuffix);
+        }
+        return config.staticWebsiteVirtualHostSuffix;
+      }
+    });
+  }
+
 
   @Provides
   @Singleton
@@ -2949,7 +2971,7 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.WRITE, id, Method.PUT, scheme, host, port, uriRoot,
         container, apiVersion, object, queryParameters, headers, context, null, body, credentials,
-        virtualHost, retention, legalHold, contentMd5, delimiter);
+        virtualHost, retention, legalHold, contentMd5, delimiter, null);
   }
 
 
@@ -2978,7 +3000,7 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.EXTEND_RETENTION, id, Method.POST, scheme, host, port,
             uriRoot, container, apiVersion, object, queryParameters, headers, context, null, body,
-            credentials, virtualHost, retentionExtension, null, false, null);
+            credentials, virtualHost, retentionExtension, null, false, null, null);
   }
 
   @Provides
@@ -3010,7 +3032,7 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.OBJECT_RESTORE, id, Method.POST, scheme, host, port,
             uriRoot, container, apiVersion, object, queryParameters, headers, context, null, body,
-            credentials, virtualHost, null, null, false, null);
+            credentials, virtualHost, null, null, false, null, null);
   }
 
   @Provides
@@ -3041,7 +3063,7 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.PUT_CONTAINER_LIFECYCLE, id, Method.PUT, scheme, host, port,
             uriRoot, container, apiVersion, null, queryParameters, headers, context, null, body,
-            credentials, virtualHost, null, null, true, null);
+            credentials, virtualHost, null, null, true, null, null);
   }
 
   @Provides
@@ -3073,7 +3095,7 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.PUT_CONTAINER_PROTECTION, id, Method.PUT, scheme, host, port,
             uriRoot, container, apiVersion, null, queryParameters, headers, context, null, body,
-            credentials, virtualHost, null, null, true, null);
+            credentials, virtualHost, null, null, true, null, null);
   }
 
   @Provides
@@ -3103,7 +3125,8 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.GET_CONTAINER_LIFECYCLE, id, Method.GET, scheme, host, port,
             uriRoot, container, apiVersion, null, queryParameters, headers, context, null,
-            null, credentials, virtualHost, null, null, false, null);
+            null, credentials, virtualHost, null, null, false, null,
+            null);
   }
 
   @Provides
@@ -3133,7 +3156,8 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.DELETE_CONTAINER_LIFECYCLE, id, Method.DELETE, scheme, host, port,
             uriRoot, container, apiVersion, null, queryParameters, headers, context, null,
-            null, credentials, virtualHost, null, null, false, null);
+            null, credentials, virtualHost, null, null, false, null,
+            null);
   }
 
   @Provides
@@ -3164,7 +3188,7 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.GET_CONTAINER_PROTECTION, id, Method.GET, scheme, host, port,
             uriRoot, container, apiVersion, null, queryParameters, headers, context, null,
-            null, credentials, virtualHost, null, null, false, null);
+            null, credentials, virtualHost, null, null, false, null, null);
   }
   @Provides
   @Singleton
@@ -3253,7 +3277,7 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.WRITE_COPY, id, Method.PUT, scheme, host, port, uriRoot,
         container, apiVersion, writeObject, queryParameters, headers, context, sseReadContext, null,
-        credentials, virtualHost, null, null, false, delimiter);
+        credentials, virtualHost, null, null, false, delimiter, null);
   }
 
   @Provides
@@ -3310,7 +3334,7 @@ public class OGModule extends AbstractModule {
     }
     return createRequestSupplier(Operation.OVERWRITE, id, Method.PUT, scheme, host, port, uriRoot,
         container, apiVersion, object, queryParameters, headers, context, null, body, credentials,
-        virtualHost, retention, legalHold, contentMd5, null);
+        virtualHost, retention, legalHold, contentMd5, null, null);
   }
 
   @Provides
@@ -3328,7 +3352,8 @@ public class OGModule extends AbstractModule {
       @Named("read.context") final List<Function<Map<String, String>, String>> context,
       @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
       @Named("virtualhost") final boolean virtualHost,
-      @Named("read.sseCSource") final boolean encryptedSourceObject) {
+      @Named("read.sseCSource") final boolean encryptedSourceObject,
+      @Named("read.staticWebsiteVirtualHostSuffix") final Function<Map<String, String>, String> staticWebsiteVirtualHostSuffix) {
 
     final Map<String, Function<Map<String, String>, String>> queryParameters =
         Collections.emptyMap();
@@ -3351,7 +3376,7 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.READ, id, Method.GET, scheme, host, port, uriRoot,
         container, apiVersion, object, queryParameters, headers, context, null, body, credentials,
-        virtualHost, null, null, false, null);
+        virtualHost, null, null, false, null, staticWebsiteVirtualHostSuffix);
   }
 
   @Provides
@@ -3379,7 +3404,7 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.WRITE_LEGAL_HOLD, id, Method.POST, scheme, host, port,
             uriRoot, container, apiVersion, object, queryParameters, headers, context, null, body,
-            credentials, virtualHost, null, legalhold, false, null);
+            credentials, virtualHost, null, legalhold, false, null, null);
   }
 
 
@@ -3408,7 +3433,7 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.DELETE_LEGAL_HOLD, id, Method.POST, scheme, host, port,
         uriRoot, container, apiVersion, object, queryParameters, headers, context, null, body,
-        credentials, virtualHost, null, legalhold, false, null);
+        credentials, virtualHost, null, legalhold, false, null, null);
   }
 
   @Provides
@@ -3440,7 +3465,7 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.READ_LEGAL_HOLD, id, Method.GET, scheme, host, port,
         uriRoot, container, apiVersion, object, queryParameters, headers, context, null, body,
-        credentials, virtualHost, null, null, false, null);
+        credentials, virtualHost, null, null, false, null, null);
   }
 
 
@@ -3482,7 +3507,7 @@ public class OGModule extends AbstractModule {
     }
     return createRequestSupplier(Operation.METADATA, id, Method.HEAD, scheme, host, port, uriRoot,
         container, apiVersion, object, queryParameters, headers, context, null, body, credentials,
-        virtualHost, null, null, false, null);
+        virtualHost, null, null, false, null, null);
   }
 
   @Provides
@@ -3509,7 +3534,7 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.DELETE, id, Method.DELETE, scheme, host, port, uriRoot,
         container, apiVersion, object, queryParameters, headers, context, null, body, credentials,
-        virtualHost, null, null, false, null);
+        virtualHost, null, null, false, null, null);
   }
 
   @Provides
@@ -3533,7 +3558,7 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.MULTI_DELETE, id, Method.POST, scheme, host, port, uriRoot,
             container, apiVersion, null, queryParameters, headers, context, null, body, credentials,
-            virtualHost, null, null, true, null);
+            virtualHost, null, null, true, null, null);
   }
 
 
@@ -3560,7 +3585,7 @@ public class OGModule extends AbstractModule {
     // null container since request is on the service http://<accesser ip>/
     return createRequestSupplier(Operation.CONTAINER_LIST, id, Method.GET, scheme, host, port,
         uriRoot, null, apiVersion, null, queryParameters, headers, context, null, body, credentials,
-        virtualHost, null, null, false, null);
+        virtualHost, null, null, false, null, null);
   }
 
   @Provides
@@ -3591,7 +3616,7 @@ public class OGModule extends AbstractModule {
     // container mode
     return createRequestSupplier(Operation.CONTAINER_CREATE, id, Method.PUT, scheme, host, port,
         uriRoot, container, apiVersion, null, queryParameters, headers, context, null, body,
-        credentials, virtualHost, retention, null, false, null);
+        credentials, virtualHost, retention, null, false, null, null);
 
   }
 
@@ -3607,11 +3632,12 @@ public class OGModule extends AbstractModule {
       final Function<Map<String, String>, Body> body,
       final Function<Map<String, String>, Credential> credentials, final Boolean virtualHost,
       final Function<Map<String, String>, Long> retention, final Supplier<Function<Map<String, String>, String>> legalHold,
-      final boolean contentMd5, final Function<Map<String, String>, String> delimiter) {
+      final boolean contentMd5, final Function<Map<String, String>, String> delimiter,
+      final Function<Map<String, String>, String> staticWebsiteVirtualHostSuffix) {
 
     return new RequestSupplier(operation, id, method, scheme, host, port, uriRoot, container,
         apiVersion, object, queryParameters, false, headers, context, sseSourceContext, credentials,
-        body, virtualHost, retention, legalHold, contentMd5, delimiter);
+        body, virtualHost, retention, legalHold, contentMd5, delimiter, staticWebsiteVirtualHostSuffix);
   }
 
 

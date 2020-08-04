@@ -642,6 +642,10 @@ Read operation supports range reads. A choice of ranges can be specified. Here i
 If the range size is greater than the object size, the range is set to object size. Otherwise
 a random range in the object is selected.
 
+Read operation has a property static_website_virtual_host_suffix that can be used for specifying host suffix for reading
+objects with a website read operation. As long as the dsnet configuration allows it, an object can be read with website
+read operation.
+
 Write Legalhold operation will add a Legalhold to an existing object.
 
 Delete Legalhold operation will remove Legalhold on an object.
@@ -2500,6 +2504,12 @@ mixed operation tests.
 |boolean
 |No
 |false
+
+
+|static_website_virtual_host_suffix
+|String
+|No
+|None
 
 |===
 

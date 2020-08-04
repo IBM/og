@@ -3,7 +3,7 @@
  * This project is licensed under the Apache License 2.0, see LICENSE.
  */
 
-package com.ibm.og.s3.v4;
+package com.ibm.og.s3;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -12,6 +12,8 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
+import com.ibm.og.api.AuthType;
+import com.ibm.og.util.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,8 +36,9 @@ public class SignableRequestAdapter implements SignableRequest<Request> {
   private final String resourcePath;
   private final ReadLimitInfo readLimitInfo;
   private int timeOffset;
+  private final AuthType authType;
 
-  public SignableRequestAdapter(final AuthenticatedHttpRequest request) {
+  public SignableRequestAdapter(final AuthenticatedHttpRequest request, AuthType authType) {
     this.request = checkNotNull(request);
     this.endpoint =
         URI.create(request.getUri().getScheme() + "://" + request.getUri().getAuthority());
@@ -46,6 +49,7 @@ public class SignableRequestAdapter implements SignableRequest<Request> {
         return Integer.MAX_VALUE;
       }
     };
+    this.authType = authType;
   }
 
   @Override
@@ -60,7 +64,15 @@ public class SignableRequestAdapter implements SignableRequest<Request> {
 
   @Override
   public String getResourcePath() {
+    if (authType == AuthType.AWSV2 &&
+        request.getContext().containsKey(Context.X_OG_STATIC_WEBSITE_VIRTUAL_HOST_SUFFIX)) {
+      String host = request.headers().get("Host");
+      checkNotNull(host);
+      final String bucket = host.substring(0, host.indexOf("."));
+      return "/" + bucket + this.resourcePath;
+    }
     return this.resourcePath;
+
   }
 
   @Override
