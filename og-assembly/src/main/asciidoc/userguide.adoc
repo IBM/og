@@ -1920,6 +1920,8 @@ timeout is reached. If there are requests that are not complete by this point,
 OG will return an error code 3 and report/log the number of aborted requests.
 Shutdown timeout in seconds is set by _shutdown_timeout_ key with default of 3600.
 
+The _shutdown_immediate_ is affected by _abort_mpu_when_stopping_. See <<mpu_abort>>.
+
 .Immediate Shutdown Example
 [source, json]
 ----
@@ -1994,6 +1996,9 @@ With release 1.4.0, the object-file is enhanced to support both pre-1.4.0 object
 The property _abort_mpu_when_stopping_ can be set to true for OG should send aborts for any Multipart uploads in progress
 before shutting down. When this property is true, OG will wait for the ongoing part transfers to complete. It is possible
 that the part transfers will fail if the corresponding Multipart upload transfer is aborted.
+
+[[mpu_abort]] It should be noted that _abort_mpu_when_stopping_ and _shutdown_immediate_ properties cannot be true at the same time
+in the configuration. If they are set true simultaneously, OG will exit with configuration error.
 
 == Results
 For each OG test that is run, a test results directory is created with the

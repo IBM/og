@@ -10,6 +10,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.ArrayList;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
@@ -56,6 +57,7 @@ public class LoadTest implements Callable<LoadTestResult> {
   private long timestampStart;
   private long timestampFinish;
   private volatile int result;
+  private volatile boolean noMoreRequests;
   private final CountDownLatch completed;
   private final CountDownLatch abortRequestsLatch;
   private ArrayList<String> messages;
@@ -119,6 +121,7 @@ public class LoadTest implements Callable<LoadTestResult> {
             } catch(NoMoreRequestsException nre) {
               _logger.info("NoMoreRequestsException thrown. All requests are cleanly aborted");
               LoadTest.this.abortRequestsLatch.countDown();
+              LoadTest.this.noMoreRequests = true;
               // wait here to get interrupted.
             }
           }
@@ -163,7 +166,13 @@ public class LoadTest implements Callable<LoadTestResult> {
     if (this.abortMpuWhenStopping) {
       _consoleLogger.info("aborting MPU uploads. Please wait ...");
       this.requestManager.setAbort(true);
-      Uninterruptibles.awaitUninterruptibly(this.abortRequestsLatch);
+      while (!this.noMoreRequests) {
+        // wait for a sec and check if all multipart uploads are aborted. Any pending request that
+        // that get the completes response will allow the scheduler to get a new request and when
+        // the multipart supplier cannot provide anymore request, abortRequestLatch will be released
+        Uninterruptibles.awaitUninterruptibly(this.abortRequestsLatch, 1, TimeUnit.SECONDS);
+        _logger.info("waiting for MPUs to complete");
+      }
       _logger.info("done waiting for aborting multipart requests");
     }
 
