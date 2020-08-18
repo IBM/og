@@ -666,11 +666,14 @@ that the object file contains objects from only one container. Otherwise the obj
 from an _unintended bucket_ will be removed from the object management. object-file utility 
 can be used to filter the objects for a specific vault.
 
+Object Tagging operations have been added in release 1.11.0. PUT Object Tags, Get Object Tags and Delete Object Tags
+have been added. Object Tags can also be added with Write operation.
+
 Operation mix is configured via _write_, _overwrite_, _read_, _metadata_, _delete_, _list_,
 _container_create_, _container_list_, _multipart_write_, _write_legalhold_, _read_legalhold_,
 _delete_legalhold_, _extend_retention_, _object_restore, _put_container_lifecycle_,
 _get_container_lifecycle_, delete_container_lifecycle,  _put_container_protection_, _get_container_protection_, 
-_multi_delete_ keys respectively.
+_multi_delete_, _write_tags_, _get_tags_, _delete_tags_ keys respectively.
 
 Each operation type is configured via a configuration block. E.g. for write:
 
@@ -835,7 +838,7 @@ for the parameters values. For example, this can be used to specify multiple max
 OG supports the _container_ key at the operation level with some
 caveats as noted in the Container section.
 
-=== Operation Delimiter Character
+==== Operation Delimiter Character
 OG Supports the _delimiter_ key at the operation level with operations _write_,
 _multipart_write_ and _write_copy_ operations.
 It is a weighted choice of delimiter characters that can be used for at the specified
@@ -881,6 +884,42 @@ Each choice can have list of delimiter characters. The selection can be random o
         "weight": 30
       }
     ]
+  }
+----
+
+==== Operation Write with Object Tags
+Here is a sample write operation config with the tags.
+The Put Tags operation can be used to put tags on an existing object. See below for sample write_tags configuration.
+The tags_configuration can specify multiple tags. A tag consists of key value pairs. The Tag key is constructed from
+key_char and key_length which indicates the number of multiples of key_char to make the key. The Tag value is
+constructed from value_char and value_length which indicates the number of multiples of value_char to make the value.
+The key char and value char can be from allowed character set.
+
+----
+  "write": {
+    "tags_configuration": {
+      "tags": [
+        {
+          "key_char": "A",
+          "key_length": 3,
+          "value_char": "a",
+          "value_length": 5
+        },
+        {
+          "key_char": "B",
+          "key_length": 3,
+          "value_char": "b",
+          "value_length": 5
+        },
+        {
+          "key_char": "அ",
+          "key_length": 3,
+          "value_char": "ர",
+          "value_length": 5
+        },
+      ]
+    },
+    "weight": 1.0
   }
 ----
 
@@ -1480,6 +1519,46 @@ The default value for multidelete_quiet is true.
      "multidelete_quiet": true
   }
 ----
+==== Operation Put Tags Configuration ====
+The Put Tags operation can be used to put tags on an existing object. See below for sample write_tags configuration.
+The tags_configuration can specify multiple tags. A tag consists of key value pairs. The Tag key is constructed from
+key_char and key_length which indicates the number of multiples of key_char to make the key. The Tag value is
+constructed from value_char and value_length which indicates the number of multiples of value_char to make the value.
+The key char and value char can be from allowed character set.
+----
+  "write_tags": {
+    "tags_configuration": {
+       "tags": [
+        {
+          "key_char": "k",
+          "key_length": 5,
+          "value_char": "v",
+          "value_length": 5
+        }
+      ]
+    },
+    "weight":1.0
+  }
+
+----
+
+==== Operation Get Tags configuration ====
+The Get Tags operation fetches the tags on an existing object.
+----
+  "get_tags": {
+   "weight": 1.0
+  }
+----
+
+==== Operation Delete Tags configuration ====
+The Delete Tags operation deletes tags on an existing object.
+
+----
+  "delete_tags": {
+   "weight": 1.0
+  }
+----
+
 
 === Filesize
 OG supports one or more filesize distributions for describing desired body lengths of

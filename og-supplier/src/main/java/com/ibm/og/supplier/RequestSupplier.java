@@ -255,7 +255,8 @@ public class RequestSupplier implements Supplier<Request> {
           byte[] md5;
           if (this.operation == Operation.PUT_CONTAINER_LIFECYCLE ||
               this.operation == Operation.PUT_CONTAINER_PROTECTION ||
-              this.operation == Operation.MULTI_DELETE) {
+              this.operation == Operation.MULTI_DELETE ||
+              this.operation == Operation.PUT_TAGS) {
             builder.withHeader(Context.X_OG_CONTENT_MD5, BaseEncoding.base64().encode(Hashing.md5()
                             .newHasher()
                             .putString(body.getContent(), Charsets.UTF_8).hash().asBytes()));
