@@ -3114,8 +3114,8 @@ With this release of OG, it expects an updated format of the credential file. Th
 information (account name, list of containers), credential information like basic authentication username, password,
 aws access key and secret key, keystone token, container list.
 
-Each line in the new credential file has to be a json representation of the account information. The information depends on the API,
-type of authentication used. Multiline json blob is not accepted.
+The credential file contains available accounts information in json format. The information depends on the API,
+type of authentication used. Each json object can be in a single line or multiple lines.
 
 Based on the authentication type, relevant properties will be used - basic_auth_username, basic_auth_password for basic
 authentication, keystone for keystone token based authentication, s3 credentials for awsv2 and awsv4, IAM token for
