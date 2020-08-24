@@ -203,6 +203,11 @@ public class ObjectGenerator {
       throw new RuntimeException("OGConfig file not found");
     }
 
+    if (ogConfig.shutdownImmediate && ogConfig.abortMpuWhenStopping) {
+      _consoleLogger.error("Both shutdownImmediate and abortMpuWhenStopping cannot be true at the same time");
+      throw new RuntimeException("Both shutdownImmediate and abortMpuWhenStopping cannot be true at the same time");
+    }
+
     // dependency injection
     injector = createInjector(ogConfig);
     test = injector.getInstance(LoadTest.class);

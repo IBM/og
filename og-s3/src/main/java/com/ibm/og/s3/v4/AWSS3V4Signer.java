@@ -176,4 +176,12 @@ public class AWSS3V4Signer extends AWS4Signer {
     }
     return contentLength;
   }
+
+  protected void addHostHeader(SignableRequest<?> request) {
+    // override to avoid the aws sdk adding host adder if request
+    // contains a host header explicitly
+    if (!request.getHeaders().containsKey("Host")) {
+      super.addHostHeader(request);
+    }
+  }
 }

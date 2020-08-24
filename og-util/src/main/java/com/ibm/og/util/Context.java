@@ -83,6 +83,7 @@ public class Context {
   public static final String X_OG_MULTI_DELETE_REQUST_FAILED = "x-og-multi-delete-request-failed";
   public static final String X_OG_MULTI_DELETE_SUCCESS_OBJECTS_COUNT = "x-og-multi-delete-success-objects-count";
   public static final String X_OG_MULTI_DELETE_FAILED_OBJECTS_COUNT = "x-og-multi-delete-failed-objects-count";
+  public static final String X_OG_STATIC_WEBSITE_VIRTUAL_HOST_SUFFIX = "x-og-website-read";
 
   private Context() {}
 }

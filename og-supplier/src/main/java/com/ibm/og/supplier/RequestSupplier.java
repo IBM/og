@@ -68,6 +68,7 @@ public class RequestSupplier implements Supplier<Request> {
   private final Operation operation;
   private final boolean contentMd5;
   private final LoadingCache<Long, byte[]> md5ContentCache;
+  private final Function<Map<String, String>, String> staticWebsiteVirtualHostSuffix;
 
 
 
@@ -105,7 +106,8 @@ public class RequestSupplier implements Supplier<Request> {
       final Function<Map<String, String>, Body> body, final boolean virtualHost,
       final Function<Map<String, String>, Long> retention,
       final Supplier<Function<Map<String, String>, String>> legalHold,
-      final boolean contentMd5, final Function<Map<String, String>, String> delimiter) {
+      final boolean contentMd5, final Function<Map<String, String>, String> delimiter,
+      final Function<Map<String, String>, String> staticWebsiteVirtualHostSuffix) {
 
     this.id = id;
     this.method = checkNotNull(method);
@@ -129,6 +131,7 @@ public class RequestSupplier implements Supplier<Request> {
     this.retention = retention;
     this.legalHold = legalHold;
     this.contentMd5 = contentMd5;
+    this.staticWebsiteVirtualHostSuffix = staticWebsiteVirtualHostSuffix;
     this.md5ContentCache = CacheBuilder.newBuilder().maximumSize(100).build(new MD5DigestLoader());
 
     checkArgument(!(this.container == null && this.object != null));
@@ -195,13 +198,19 @@ public class RequestSupplier implements Supplier<Request> {
       }
     }
 
+    if (this.staticWebsiteVirtualHostSuffix != null) {
+      this.staticWebsiteVirtualHostSuffix.apply(requestContext);
+    }
+
     URI uri = getUrl(requestContext);
     final HttpRequest.Builder builder =
         new HttpRequest.Builder(this.method, uri, this.operation);
 
     for (final Map.Entry<String, Function<Map<String, String>, String>> header : this.headers
         .entrySet()) {
-      builder.withHeader(header.getKey(), header.getValue().apply(requestContext));
+      String key = header.getKey();
+      String value = header.getValue().apply(requestContext);
+      builder.withHeader(key, value);
     }
 
     if (this.retention != null) {
@@ -221,6 +230,11 @@ public class RequestSupplier implements Supplier<Request> {
 
     if (requestContext.get(Context.X_OG_LEGAL_HOLD) != null) {
       builder.withHeader(Context.X_OG_LEGAL_HOLD, requestContext.get(Context.X_OG_LEGAL_HOLD));
+    }
+
+    if (requestContext.get(Context.X_OG_STATIC_WEBSITE_VIRTUAL_HOST_SUFFIX) != null) {
+      builder.withHeader("Host", requestContext.get(Context.X_OG_CONTAINER_NAME).concat(".")
+                      .concat(requestContext.get(Context.X_OG_STATIC_WEBSITE_VIRTUAL_HOST_SUFFIX)));
     }
 
     if (this.id != null) {
@@ -335,14 +349,19 @@ public class RequestSupplier implements Supplier<Request> {
         s.append(getStorageAccountPath(context, apiVersion));
       }
 
-      String containerName = context.get(Context.X_OG_CONTAINER_NAME);
-      if (containerName != null) {
-        s.append(containerName);
+      if (context.get(Context.X_OG_STATIC_WEBSITE_VIRTUAL_HOST_SUFFIX) == null) {
+        String containerName = context.get(Context.X_OG_CONTAINER_NAME);
+        if (containerName != null) {
+          s.append(containerName);
+        }
       }
     }
 
     if (this.object != null) {
-      s.append("/").append(this.object.apply(context));
+      if (s.charAt(s.length()-1) != '/') {
+        s.append("/");
+      }
+      s.append(this.object.apply(context));
     }
   }
 

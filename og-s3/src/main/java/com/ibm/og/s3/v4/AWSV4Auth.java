@@ -11,8 +11,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import com.ibm.og.api.AuthType;
 import com.ibm.og.http.AuthenticatedHttpRequest;
 import com.ibm.og.http.HttpAuth;
+import com.ibm.og.s3.SignableRequestAdapter;
 import com.ibm.og.util.Context;
 import com.ibm.og.util.io.Streams;
 import org.slf4j.Logger;
@@ -90,7 +92,7 @@ public class AWSV4Auth implements HttpAuth {
 
     final AuthenticatedHttpRequest authenticatedRequest = new AuthenticatedHttpRequest(request);
     final SignableRequest<Request> signableRequest =
-        new SignableRequestAdapter(authenticatedRequest);
+        new SignableRequestAdapter(authenticatedRequest, AuthType.AWSV4);
 
     signer.sign(signableRequest, credentials);
 

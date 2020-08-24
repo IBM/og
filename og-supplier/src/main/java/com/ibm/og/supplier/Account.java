@@ -5,6 +5,7 @@ package com.ibm.og.supplier;
  */
 
 
+import com.google.common.collect.ImmutableList;
 import com.ibm.og.http.Api;
 
 import java.util.ArrayList;
@@ -18,8 +19,21 @@ public class Account {
     private String token;
     private String accessKey;
     private String secretKey;
-    private ArrayList<String> containers;
+    private ImmutableList<String> containers;
     private Api api;
+
+    public Account(String accountName, String basicAuthUsername, String basicAuthPassword, String domainName,
+                   String token, String accessKey, String secretKey, ArrayList<String> containers, Api api) {
+        this.accountName = accountName;
+        this.basicAuthUsername = basicAuthUsername;
+        this.basicAuthPassword = basicAuthPassword;
+        this.domainName = domainName;
+        this.token = token;
+        this.accessKey = accessKey;
+        this.secretKey = secretKey;
+        this.containers = ImmutableList.copyOf(containers);
+        this.api = api;
+    }
 
     public String getAccountName() {
         return accountName;
@@ -50,7 +64,7 @@ public class Account {
         return secretKey;
     }
 
-    public ArrayList<String> getContainers() {
+    public ImmutableList<String> getContainers() {
         return containers;
     }
 

@@ -1,3 +1,10 @@
+Release 1.10.0:
+Parse credentials file to handle multiline json
+Add static website read support
+Abort MPU sessions when stopping if configured
+Add Poisson process scheduler
+Fix credentials file parsing for empty line
+
 Release 1.9.0:
 update userguide
 Add read range header support
