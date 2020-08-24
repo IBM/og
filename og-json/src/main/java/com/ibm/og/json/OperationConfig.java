@@ -42,6 +42,7 @@ public class OperationConfig {
   public Integer minimumListSessions;
   public Integer multideleteCount;
   public boolean multideleteQuiet;
+  public String staticWebsiteVirtualHostSuffix;
 
   public OperationConfig(final double weight) {
     this();
@@ -79,5 +80,6 @@ public class OperationConfig {
     this.minimumListSessions = 1;
     this.multideleteCount = 1;
     this.multideleteQuiet = true;
+    this.staticWebsiteVirtualHostSuffix = null;
   }
 }

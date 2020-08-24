@@ -50,6 +50,7 @@ public class OGConfig {
   public FailingConditionsConfig failingConditions;
   public ObjectManagerConfig objectManager;
   public boolean shutdownImmediate;
+  public boolean abortMpuWhenStopping;
   public int shutdownTimeout;
   public boolean virtualHost;
   public Integer statsLogInterval;
@@ -92,6 +93,7 @@ public class OGConfig {
     this.stoppingConditions = new StoppingConditionsConfig();
     this.failingConditions = new FailingConditionsConfig();
     this.objectManager = new ObjectManagerConfig();
+    this.abortMpuWhenStopping = false;
     this.shutdownImmediate = true;
     this.shutdownTimeout = 3600;
     this.virtualHost = false;

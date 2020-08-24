@@ -7,9 +7,10 @@ package com.ibm.og.s3.v2;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.ibm.og.api.AuthType;
 import com.ibm.og.http.AuthenticatedHttpRequest;
 import com.ibm.og.http.HttpAuth;
-import com.ibm.og.s3.v4.SignableRequestAdapter;
+import com.ibm.og.s3.SignableRequestAdapter;
 import com.ibm.og.util.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +41,7 @@ public class AWSV2Auth implements HttpAuth {
 
     final AuthenticatedHttpRequest authenticatedRequest = new AuthenticatedHttpRequest(request);
     final SignableRequest<Request> signableRequest =
-        new SignableRequestAdapter(authenticatedRequest);
+        new SignableRequestAdapter(authenticatedRequest, AuthType.AWSV2);
 
     final S3Signer signer =
         new S3Signer(signableRequest.getHttpMethod().toString(), signableRequest.getResourcePath());

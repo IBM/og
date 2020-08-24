@@ -6,5 +6,5 @@
 package com.ibm.og.json;
 
 public enum ConcurrencyType {
-  OPS, THREADS;
+  OPS, THREADS, POISSONOPS;
 }
