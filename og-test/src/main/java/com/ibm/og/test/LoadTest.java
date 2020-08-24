@@ -57,9 +57,8 @@ public class LoadTest implements Callable<LoadTestResult> {
   private long timestampStart;
   private long timestampFinish;
   private volatile int result;
-  private volatile boolean noMoreRequests;
+  private final AtomicBoolean noMoreRequests;
   private final CountDownLatch completed;
-  private final CountDownLatch abortRequestsLatch;
   private ArrayList<String> messages;
 
   public static final int RESULT_SUCCESS = 0;
@@ -93,11 +92,10 @@ public class LoadTest implements Callable<LoadTestResult> {
     this.shutdownImmediate = shutdownImmediate;
     this.shutdownTimeout = shutdownTimeout;
     this.running = new AtomicBoolean(true);
+    this.noMoreRequests = new AtomicBoolean(false);
     this.result = RESULT_SUCCESS;
     this.completed = new CountDownLatch(1);
     this.messages =  new ArrayList<String>();
-    this.abortRequestsLatch = new CountDownLatch(1);
-
   }
 
   private class SchedulerRunnable implements Runnable {
@@ -106,7 +104,10 @@ public class LoadTest implements Callable<LoadTestResult> {
       try {
         while (LoadTest.this.running.get()) {
           LoadTest.this.scheduler.schedule();
-          if (LoadTest.this.running.get()) {
+          if (LoadTest.this.noMoreRequests.get()) {
+            stopScheduler();
+          }
+          if (LoadTest.this.running.get() && !LoadTest.this.noMoreRequests.get()) {
             try {
               final Request request = LoadTest.this.requestManager.get();
               _logger.trace("Created request {}", request);
@@ -120,9 +121,7 @@ public class LoadTest implements Callable<LoadTestResult> {
               }
             } catch(NoMoreRequestsException nre) {
               _logger.info("NoMoreRequestsException thrown. All requests are cleanly aborted");
-              LoadTest.this.abortRequestsLatch.countDown();
-              LoadTest.this.noMoreRequests = true;
-              // wait here to get interrupted.
+              LoadTest.this.noMoreRequests.set(true);
             }
           }
         }
@@ -130,6 +129,7 @@ public class LoadTest implements Callable<LoadTestResult> {
         _logger.error("Exception while producing request", e);
         _exceptionLogger.error("Exception while producing request", e);
         abortTest(e.getMessage());
+        stopScheduler();
       }
     }
   }
@@ -166,19 +166,16 @@ public class LoadTest implements Callable<LoadTestResult> {
     if (this.abortMpuWhenStopping) {
       _consoleLogger.info("aborting MPU uploads. Please wait ...");
       this.requestManager.setAbort(true);
-      while (!this.noMoreRequests) {
-        // wait for a sec and check if all multipart uploads are aborted. Any pending request that
-        // that get the completes response will allow the scheduler to get a new request and when
-        // the multipart supplier cannot provide anymore request, abortRequestLatch will be released
-        Uninterruptibles.awaitUninterruptibly(this.abortRequestsLatch, 1, TimeUnit.SECONDS);
-        _logger.info("waiting for MPUs to complete");
-      }
-      _logger.info("done waiting for aborting multipart requests");
+    } else {
+      // normal case - no mpu aborts when stopping
+      this.noMoreRequests.set(true);
     }
 
+  }
+
+  private void stopScheduler() {
     if (this.running.getAndSet(false)) {
-      _logger.debug("Interrupting scheduler thread");
-      this.schedulerThread.interrupt();
+      _logger.debug("set running flag to false to stop scheduler");
       // currently a new thread is required here to run shutdown logic because stopTest can be
       // called via a client worker thread via client -> eventbus -> stopping condition -> stopTest,
       // which will introduce a deadlock since stopTest waits until all client threads are done. An
@@ -249,8 +246,8 @@ public class LoadTest implements Callable<LoadTestResult> {
 
       private void postOperation(final Response response) {
         LoadTest.this.eventBus.post(response);
-        LoadTest.this.scheduler.complete();
         LoadTest.this.eventBus.post(Pair.of(request, response));
+        LoadTest.this.scheduler.complete();
       }
     });
   }
