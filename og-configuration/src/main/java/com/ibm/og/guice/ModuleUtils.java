@@ -10,10 +10,12 @@ import com.google.common.base.Function;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.ibm.og.json.ChoiceConfig;
 import com.ibm.og.json.ContainerConfig;
 import com.ibm.og.json.LegalHold;
 import com.ibm.og.json.ObjectConfig;
 import com.ibm.og.json.OperationConfig;
+import com.ibm.og.json.SelectionConfig;
 import com.ibm.og.json.SelectionType;
 import com.ibm.og.supplier.RandomSupplier;
 import com.ibm.og.supplier.Suppliers;
@@ -170,5 +172,94 @@ public class ModuleUtils {
 
     return queryParameters;
   }
+
+  public static void checkContainerObjectConfig(final OperationConfig operationConfig) throws Exception {
+    if ((operationConfig.container.maxSuffix != -1 || operationConfig.container.minSuffix != -1)
+            && operationConfig.object.prefix == "" && operationConfig.weight > 0.0) {
+      throw new Exception(
+              "Must specify ObjectConfig prefix if using min/max suffix in container config");
+    }
+  }
+
+  public static Map<String, Function<Map<String, String>, String>> provideHeaders(
+          final Map<String, SelectionConfig<String>> globalHeaders,
+          final Map<String, SelectionConfig<String>> operationHeaders) {
+    checkNotNull(operationHeaders);
+    Map<String, SelectionConfig<String>> configHeaders = globalHeaders;
+    if (operationHeaders.size() > 0) {
+      configHeaders = operationHeaders;
+    }
+
+    final Map<String, Function<Map<String, String>, String>> headers = Maps.newLinkedHashMap();
+    for (final Map.Entry<String, SelectionConfig<String>> e : configHeaders.entrySet()) {
+      headers.put(e.getKey(), createSelectionConfigSupplier(e.getValue()));
+    }
+    return headers;
+  }
+
+  private static Function<Map<String, String>, String> createSelectionConfigSupplier(
+          final SelectionConfig<String> selectionConfig) {
+
+    if (SelectionType.ROUNDROBIN == selectionConfig.selection) {
+      final List<String> choiceList = Lists.newArrayList();
+      for (final ChoiceConfig<String> choice : selectionConfig.choices) {
+        choiceList.add(choice.choice);
+      }
+      final Supplier<String> configSupplier = Suppliers.cycle(choiceList);
+      return MoreFunctions.forSupplier(configSupplier);
+    }
+
+    final RandomSupplier.Builder<String> wrc = Suppliers.random();
+    for (final ChoiceConfig<String> choice : selectionConfig.choices) {
+      wrc.withChoice(choice.choice, choice.weight);
+    }
+    final Supplier<String> configSupplier = wrc.build();
+    return MoreFunctions.forSupplier(configSupplier);
+  }
+
+  public static Function<Map<String, String>, String> provideHost(final OperationConfig operationConfig,
+                                                            final Function<Map<String, String>, String> testHost) {
+    checkNotNull(operationConfig);
+    checkNotNull(testHost);
+
+    final SelectionConfig<String> operationHost = operationConfig.host;
+    if (operationHost != null && !operationHost.choices.isEmpty()) {
+      return createHost(operationConfig.host);
+    }
+
+    return testHost;
+  }
+
+  private static Function<Map<String, String>, String> createHost(final SelectionConfig<String> host) {
+    checkNotNull(host);
+    checkNotNull(host.selection);
+    checkNotNull(host.choices);
+    checkArgument(!host.choices.isEmpty(), "must specify at least one host");
+    for (final ChoiceConfig<String> choice : host.choices) {
+      checkNotNull(choice);
+      checkNotNull(choice.choice);
+      checkArgument(choice.choice.length() > 0, "host must not be empty string");
+    }
+
+    if (SelectionType.ROUNDROBIN == host.selection) {
+      final List<String> hostList = Lists.newArrayList();
+      for (final ChoiceConfig<String> choice : host.choices) {
+        hostList.add(choice.choice);
+      }
+      final Supplier<String> hostSupplier = Suppliers.cycle(hostList);
+      return MoreFunctions.forSupplier(hostSupplier);
+    }
+
+    final RandomSupplier.Builder<String> wrc = Suppliers.random();
+    for (final ChoiceConfig<String> choice : host.choices) {
+      wrc.withChoice(choice.choice, choice.weight);
+    }
+    final Supplier<String> hostSupplier = wrc.build();
+    return MoreFunctions.forSupplier(hostSupplier);
+  }
+
+
+
+
 
 }

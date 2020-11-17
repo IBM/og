@@ -66,7 +66,12 @@ public class HttpUtil {
         return Method.PUT;
       case MULTI_DELETE:
         return Method.POST;
-
+      case PUT_TAGS:
+        return Method.PUT;
+      case DELETE_TAGS:
+        return Method.DELETE;
+      case GET_TAGS:
+        return Method.GET;
       default:
         throw new IllegalArgumentException(String.format("Unrecognized operation [%s]", operation));
     }

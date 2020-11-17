@@ -11,6 +11,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.util.Collections;
 import java.util.ArrayList;
 import java.util.List;
@@ -117,6 +118,7 @@ import com.ibm.og.json.LegalHold;
 import com.ibm.og.json.OGConfig;
 import com.ibm.og.json.ObjectConfig;
 import com.ibm.og.json.ObjectManagerConfig;
+import com.ibm.og.json.ObjectTagsConfig;
 import com.ibm.og.json.OperationConfig;
 import com.ibm.og.json.RetentionConfig;
 import com.ibm.og.json.SelectionConfig;
@@ -125,6 +127,7 @@ import com.ibm.og.json.StoppingConditionsConfig;
 import com.ibm.og.object.AbstractObjectNameConsumer;
 import com.ibm.og.object.DeleteObjectConsumer;
 import com.ibm.og.object.DeleteObjectLegalHoldConsumer;
+import com.ibm.og.object.DeleteObjectTagsConsumer;
 import com.ibm.og.object.ExtendRetentionObjectNameConsumer;
 import com.ibm.og.object.MetadataObjectNameConsumer;
 import com.ibm.og.object.MultiDeleteConsumer;
@@ -138,6 +141,7 @@ import com.ibm.og.object.ReadObjectNameConsumer;
 import com.ibm.og.object.WriteCopyObjectNameConsumer;
 import com.ibm.og.object.WriteLegalHoldObjectNameConsumer;
 import com.ibm.og.object.WriteObjectNameConsumer;
+import com.ibm.og.object.WriteObjectTagsConsumer;
 import com.ibm.og.openstack.KeystoneAuth;
 import com.ibm.og.s3.MultiDeleteResponseBodyConsumer;
 import com.ibm.og.s3.MultipartRequestSupplier;
@@ -283,6 +287,7 @@ public class OGModule extends AbstractModule {
     bindConstant().annotatedWith(Names.named("putContainerProtection.weight")).to(this.config.putContainerProtection.weight);
     bindConstant().annotatedWith(Names.named("getContainerProtection.weight")).to(this.config.getContainerProtection.weight);
     bindConstant().annotatedWith(Names.named("multiDelete.weight")).to(this.config.multiDelete.weight);
+
 
     // FIXME create something like MoreProviders.notNull as a variant of Providers.of which does a
     // null check at creation time, with a custom error message; replace all uses of this pattern
@@ -1259,6 +1264,8 @@ public class OGModule extends AbstractModule {
     consumers.add(new ExtendRetentionObjectNameConsumer(objectManager, legalHoldsSc));
 
     consumers.add(new MultiDeleteConsumer(objectManager, sc));
+    consumers.add(new WriteObjectTagsConsumer(objectManager, HttpUtil.VALID_STATUS_CODES));
+    consumers.add(new DeleteObjectTagsConsumer(objectManager, HttpUtil.VALID_STATUS_CODES));
 
     for (final AbstractObjectNameConsumer consumer : consumers) {
       eventBus.register(consumer);
@@ -1266,11 +1273,68 @@ public class OGModule extends AbstractModule {
     return consumers;
   }
 
+  private Function<Map<String, String>, String> provideObjectTagsHeader(final SelectionConfig<String> config) {
+    final Function<Map<String, String>, String> configSupplier = createSelectionConfigSupplier(config);
+    final Function<Map<String, String>, String> objectTags = new Function<Map<String, String>, String>() {
+      @Override
+      public String apply(@Nullable final Map<String, String> input) {
+        String header = configSupplier.apply(input);
+        String[] keyVal = header.split("=");
+        String s;
+        try {
+          String key  = URLEncoder.encode(keyVal[0], "UTF-8");
+          String val  = URLEncoder.encode(keyVal[1], "UTF-8");
+          s = key.concat("=").concat(val);
+        } catch (java.io.UnsupportedEncodingException ue) {
+          throw new RuntimeException(ue.getMessage());
+        }
+        return s;
+      }
+    };
+    return objectTags;
+  }
+
+  private Function<Map<String, String>, String> provideObjectTags() {
+    Function<Map<String, String>, String> objectTags;
+    final ObjectTagsConfig config = this.config.write.tagsConfiguration;
+    objectTags = new Function<Map<String, String>, String>() {
+      String  tagHeaderValue;
+      @Override
+      public String apply(@Nullable final Map<String, String> input) {
+        if (tagHeaderValue == null) {
+          StringBuilder sb = new StringBuilder();
+          for (ObjectTagsConfig.ObjectTag tag : config.tags) {
+            if (tag != null) {
+              try {
+                String key = URLEncoder.encode(tag.getKey(), "UTF-8");
+                String val = URLEncoder.encode(tag.getValue(), "UTF-8");
+                sb.append(key).append("=");
+                sb.append(val).append("&");
+              } catch (java.io.UnsupportedEncodingException ue) {
+                throw new RuntimeException(ue.getMessage());
+              }
+            }
+          }
+          // drop the last &
+          tagHeaderValue = sb.substring(0, sb.length()-1);
+          return tagHeaderValue;
+        } else {
+          return tagHeaderValue;
+        }
+      }
+    };
+    return objectTags;
+  }
+
   @Provides
   @Singleton
   @WriteHeaders
   public Map<String, Function<Map<String, String>, String>> provideWriteHeaders() {
-    return provideHeaders(this.config.write.headers);
+    Map<String, Function<Map<String, String>, String>> headers = provideHeaders(this.config.write.headers);
+    if (this.config.write.tagsConfiguration != null) {
+      headers.put("x-amz-tagging", provideObjectTags());
+    }
+    return headers;
   }
 
   @Provides
@@ -1398,14 +1462,20 @@ public class OGModule extends AbstractModule {
   private Map<String, Function<Map<String, String>, String>> provideHeaders(
       final Map<String, SelectionConfig<String>> operationHeaders) {
     checkNotNull(operationHeaders);
-    Map<String, SelectionConfig<String>> configHeaders = this.config.headers;
-    if (operationHeaders.size() > 0) {
-      configHeaders = operationHeaders;
-    }
-
     final Map<String, Function<Map<String, String>, String>> headers = Maps.newLinkedHashMap();
-    for (final Map.Entry<String, SelectionConfig<String>> e : configHeaders.entrySet()) {
-      headers.put(e.getKey(), createSelectionConfigSupplier(e.getValue()));
+    if (operationHeaders.size() > 0) {
+      for (final Map.Entry<String, SelectionConfig<String>> e : operationHeaders.entrySet()) {
+        String header = e.getKey();
+        if (!header.equals("x-amz-tagging")) {
+          headers.put(e.getKey(), createSelectionConfigSupplier(e.getValue()));
+        } else {
+          headers.put("x-amz-tagging", provideObjectTagsHeader(e.getValue()));
+        }
+      }
+    } else {
+      for (final Map.Entry<String, SelectionConfig<String>> e : this.config.headers.entrySet()) {
+        headers.put(e.getKey(), createSelectionConfigSupplier(e.getValue()));
+      }
     }
     return headers;
   }

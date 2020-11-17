@@ -4,7 +4,7 @@
   <parent>
     <artifactId>og</artifactId>
     <groupId>com.ibm</groupId>
-    <version>1.10.0</version>
+    <version>1.11.0</version>
   </parent>
   <artifactId>og-supplier</artifactId>
   <name>Supplier</name>
@@ -21,6 +21,10 @@
     <dependency>
       <groupId>com.ibm</groupId>
       <artifactId>og-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.ibm</groupId>
+      <artifactId>og-json</artifactId>
     </dependency>
   </dependencies>
 </project>

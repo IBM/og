@@ -92,7 +92,13 @@ public class SimpleRequestManager implements RequestManager {
       @Named("putContainerProtection") final Supplier<Request> putContainerProtection,
       @Named("putContainerProtection.weight") final double putContainerProtectionWeight,
       @Named("multiDelete") final Supplier<Request> multiDelete,
-      @Named("multiDelete.weight") final double multiDeleteWeight){
+      @Named("multiDelete.weight") final double multiDeleteWeight,
+      @Named("writeTags") final Supplier<Request> writeTags,
+      @Named("writeTags.weight") final double writeTagsWeight,
+      @Named("deleteTags") final Supplier<Request> deleteTags,
+      @Named("deleteTags.weight") final double deleteTagsWeight,
+      @Named("getTags") final Supplier<Request> getTags,
+      @Named("getTags.weight") final double getTagsWeight){
 
     checkNotNull(write);
     checkNotNull(overwrite);
@@ -114,6 +120,9 @@ public class SimpleRequestManager implements RequestManager {
     checkNotNull(deleteContainerLifecycle);
     checkNotNull(putContainerProtection);
     checkNotNull(getContainerProtection);
+    checkNotNull(writeTags);
+    checkNotNull(deleteTags);
+    checkNotNull(getTags);
 
     this.multipartWriteSupplier = (MultipartRequestSupplier)writeMultipart;
 
@@ -180,6 +189,15 @@ public class SimpleRequestManager implements RequestManager {
     }
     if (multiDeleteWeight > 0.0) {
       wrc.withChoice(multiDelete, multiDeleteWeight);
+    }
+    if (writeTagsWeight > 0.0) {
+      wrc.withChoice(writeTags, writeTagsWeight);
+    }
+    if (deleteTagsWeight > 0.0) {
+      wrc.withChoice(deleteTags, deleteTagsWeight);
+    }
+    if (getTagsWeight > 0.0) {
+      wrc.withChoice(getTags, getTagsWeight);
     }
 
     this.requestSupplier = wrc.build();
