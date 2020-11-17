@@ -46,5 +46,8 @@ public class QueryParameters {
     //Put and Get Bucket protection
     public static final String BUCKET_PROTECTION_PARAMETER = "protection";
 
+    //Put object tags
+    public static final String OBJECT_TAGGING_PARAMETER = "tagging";
+
     private QueryParameters() {}
 }
