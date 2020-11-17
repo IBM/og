@@ -79,6 +79,9 @@ public class Summary {
     OperationStats putContainerProtection;
     OperationStats getContainerProtection;
     OperationStats multidelete;
+    OperationStats writeObjectTags;
+    OperationStats deleteObjectTags;
+    OperationStats getObjectTags;
 
     protected SummaryOperationStats(final long timestampStart, final long timestampFinish) {
       this.timestampStart = timestampStart;
@@ -116,6 +119,9 @@ public class Summary {
       this.putContainerProtection = new OperationStats(stats, Operation.PUT_CONTAINER_PROTECTION, timestampStart, timestampFinish);
       this.getContainerProtection = new OperationStats(stats, Operation.GET_CONTAINER_PROTECTION, timestampStart, timestampFinish);
       this.multidelete = new OperationStats(stats, Operation.MULTI_DELETE, timestampStart, timestampFinish);
+      this.writeObjectTags = new OperationStats(stats, Operation.PUT_TAGS, timestampStart, timestampFinish);
+      this.deleteObjectTags = new OperationStats(stats, Operation.DELETE_TAGS, timestampStart, timestampFinish);
+      this.getObjectTags = new OperationStats(stats, Operation.GET_TAGS, timestampStart, timestampFinish);
     }
 
     public OperationStats getOperation(Operation operation) {
@@ -167,6 +173,12 @@ public class Summary {
         return this.getContainerProtection;
       } else if (operation == Operation.MULTI_DELETE) {
         return this.multidelete;
+      } else if (operation == Operation.PUT_TAGS) {
+        return this.writeObjectTags;
+      } else if (operation == Operation.DELETE_TAGS) {
+        return this.deleteObjectTags;
+      } else if (operation == Operation.GET_TAGS) {
+        return this.getObjectTags;
       }
       return null;
 
@@ -223,6 +235,12 @@ public class Summary {
           this.getContainerProtection = operationStat;
       } else if (operation == Operation.MULTI_DELETE) {
         this.multidelete = operationStat;
+      } else if (operation == Operation.PUT_TAGS) {
+        this.writeObjectTags = operationStat;
+      } else if (operation == Operation.DELETE_TAGS) {
+        this.deleteObjectTags = operationStat;
+      } else if (operation == Operation.GET_TAGS) {
+        this.getObjectTags = operationStat;
       }
     }
 
@@ -304,6 +322,15 @@ public class Summary {
       if (this.multidelete.operations > 0) {
         sb.append(this.multidelete).append("\n");
       }
+      if (this.writeObjectTags.operations > 0) {
+        sb.append(this.writeObjectTags).append("\n");
+      }
+      if (this.deleteObjectTags.operations > 0) {
+        sb.append(this.deleteObjectTags).append("\n");
+      }
+      if (this.getObjectTags.operations > 0) {
+        sb.append(this.getObjectTags).append("\n");
+      }
       return sb.toString();
     }
 
@@ -355,14 +382,15 @@ public class Summary {
     @Override
     public String toString() {
       final String format = "Start: %s%nEnd: %s%nRuntime: %.2f "
-              + "Seconds%nOperations: %s%n%n%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%sRequestsAborted: %s%nExitCode: %s%nExitMessages:%s";
+              + "Seconds%nOperations: %s%n%n%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%sRequestsAborted: %s%nExitCode: %s%nExitMessages:%s";
       return String.format(Locale.US, format, FORMATTER.print(this.timestampStart),
               FORMATTER.print(this.timestampFinish), this.runtime, this.operations, this.write,
               this.read, this.delete, this.metadata, this.overwrite, this.list, this.containerList,
               this.containerCreate, this.multipartWriteInitiate, this.multipartWritePart, this.multipartWriteComplete,
               this.multipartWriteAbort,this.writeCopy, this.writeLegalHold, this.readLegalHold, this.deleteLegalHold,
               this.extendRetention, this.objectRestore, this.putContainerLifecycle, this.getContainerLifecycle,
-              this.deleteContainerLifecycle, this.multidelete, this.requestsAborted, this.exitCode, prettyExitMessages());
+              this.deleteContainerLifecycle, this.multidelete, this.writeObjectTags,this.deleteObjectTags,
+              this.getObjectTags, this.requestsAborted, this.exitCode, prettyExitMessages());
     }
 
 
