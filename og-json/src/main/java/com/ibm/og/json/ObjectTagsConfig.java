@@ -7,6 +7,13 @@ package com.ibm.og.json;
 
 import com.google.common.base.Strings;
 
+
+/**
+ *  A class that represents object tag configuration
+ *
+ * @since 1.11.0
+ */
+
 public class ObjectTagsConfig {
 
   public ObjectTag[] tags;

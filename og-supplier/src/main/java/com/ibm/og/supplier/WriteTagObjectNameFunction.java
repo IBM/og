@@ -1,3 +1,8 @@
+/* Copyright (c) IBM Corporation 2020. All Rights Reserved.
+ * Project name: Object Generator
+ * This project is licensed under the Apache License 2.0, see LICENSE.
+ */
+
 package com.ibm.og.supplier;
 
 import com.google.common.base.Function;
@@ -10,6 +15,12 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+
+/**
+ * A function which generates object names for adding object tags from a provided {@code ObjectManager}
+ *
+ * @since 1.11.0
+ */
 
 public class WriteTagObjectNameFunction implements Function<Map<String, String>, String> {
   private final ObjectManager objectManager;

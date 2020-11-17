@@ -1,5 +1,5 @@
 /*
- * Copyright (c) IBM Corporation 2018. All Rights Reserved.
+ * Copyright (c) IBM Corporation 2020. All Rights Reserved.
  * Project name: Object Generator
  * This project is licensed under the Apache License 2.0, see LICENSE.
  */
@@ -54,6 +54,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.ibm.og.guice.ModuleUtils.provideContainer;
 import static com.ibm.og.guice.ModuleUtils.provideObject;
 
+/**
+ *  A guice configuration module for ObjectTags operations
+ *
+ * @since 1.11.0
+ */
 public class ObjectTagsModule extends AbstractModule {
 
   private final OGConfig config;

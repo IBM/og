@@ -15,9 +15,9 @@ import java.util.Map;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * A function which generates object names for deletion from a provided {@code ObjectManager}
- * 
- * @since 1.0
+ * A function which generates object names for deleting object tags from a provided {@code ObjectManager}
+ *
+ * @since 1.11.0
  */
 public class DeleteTagsObjectNameFunction implements Function<Map<String, String>, String> {
   private final ObjectManager objectManager;
@@ -40,7 +40,6 @@ public class DeleteTagsObjectNameFunction implements Function<Map<String, String
    * <li>Headers.X_OG_OBJECT_SIZE</li>
    * <li>Headers.X_OG_CONTAINER_SUFFIX</li>
    * </ul>
-   * 
    * @param context a request creation context for storing metadata to be used by other functions
    */
   @Override
