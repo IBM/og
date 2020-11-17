@@ -1030,7 +1030,7 @@ percentage must be 100.00.
     }
 ----
 
-==== Operation write_legalhold
+==== Operation Write Legalhold
 
 This operation is used to a legalhold to an existing object.
 
@@ -1061,8 +1061,8 @@ An example write_legalhold operation is listed below.
 ==== Operation Delete LegalHold
 This operation is used to delete a legalhold on the object.
 
- An example delete_legalhold operation is listed below.
- ----
+An example delete_legalhold operation is listed below.
+----
   "delete_legalhold": {
      "weight": 100.0,
      "object": {
@@ -1082,7 +1082,7 @@ This operation is used to delete a legalhold on the object.
           "percentage": 100.00
      }
    }
- ----
+----
 
 ==== Operation Read LegalHold
 This operation returns the list of legalholds on the object.
