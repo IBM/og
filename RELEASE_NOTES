@@ -1,3 +1,11 @@
+Release 1.11.0:
+Add Object Tag operations.
+ PUT object with tags
+ PUT tags
+ Get tags
+ Delete tags
+
+
 Release 1.10.0:
 Parse credentials file to handle multiline json
 Add static website read support
