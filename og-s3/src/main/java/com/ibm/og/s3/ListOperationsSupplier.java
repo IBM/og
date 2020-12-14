@@ -120,7 +120,7 @@ public class ListOperationsSupplier implements Supplier<Request>{
     this.container = container;
     this.apiVersion = apiVersion;
     this.object = object;
-    this.queryParameters = ImmutableMap.copyOf(queryParameters);
+    this.queryParameters = queryParameters;
     this.trailingSlash = trailingSlash;
     this.headers = ImmutableMap.copyOf(headers);
     this.context = ImmutableList.copyOf(context);
@@ -142,7 +142,7 @@ public class ListOperationsSupplier implements Supplier<Request>{
   public void update(final Pair<Request, Response> result) {
     Request request = result.getKey();
     Response response = result.getValue();
-    if (request.getOperation() != Operation.LIST) {
+    if (request.getOperation() != this.operation) {
       return;
     }
     Map<String, String> requestContext = request.getContext();
@@ -182,6 +182,16 @@ public class ListOperationsSupplier implements Supplier<Request>{
         String nextContToken = responseContext.get(Context.X_OG_LIST_NEXT_CONTINUATION_TOKEN);
         if (nextContToken != null) {
           s.setContinuationToken(nextContToken);
+        }
+
+        String nextVersionIdMarker = responseContext.get(Context.X_OG_LIST_OBJECT_VERSIONS_NEXT_VERSION_ID_MARKER);
+        if (nextVersionIdMarker != null) {
+          s.setNextVersionIdMarker(nextVersionIdMarker);
+        }
+
+        String nextVersionMarker = responseContext.get(Context.X_OG_LIST_OBJECT_VERSIONS_NEXT_KEY_MARKER);
+        if (nextVersionMarker != null) {
+          s.setNextKeyMarker(nextVersionMarker);
         }
 
       } else {
@@ -248,10 +258,37 @@ public class ListOperationsSupplier implements Supplier<Request>{
       queryParamsMap.put("delimiter", delimiter);
     }
 
-    String qpString = PARAM_JOINER.join(queryParamsMap);
-    if (qpString.length() > 0) {
-      s.append("?").append(qpString);
+    String keyMarker = context.get(Context.X_OG_LIST_OBJECT_VERSIONS_KEY_MARKER);
+    if (keyMarker != null) {
+      queryParamsMap.put("key-marker", keyMarker);
+      //queryParamsMap.put("prefix", keyMarker);
     }
+
+    String versionId = context.get(Context.X_OG_LIST_OBJECT_VERSIONS_VERSION_ID);
+    if (versionId != null) {
+      queryParamsMap.put("version-id-marker", versionId);
+    }
+
+    //String qpString = PARAM_JOINER.join(queryParamsMap);
+    StringBuilder sb = new StringBuilder();
+    sb.append("?");
+    for (final Map.Entry<String, String> e: queryParamsMap.entrySet()) {
+      String key = e.getKey();
+      String val = e.getValue();
+      if (key != null && !key.isEmpty()) {
+        sb.append(key);
+        if (val != null && !val.isEmpty()) {
+         sb.append("=").append(val);
+        }
+        sb.append("&");
+      }
+    }
+    //delete the & in the end
+    sb.deleteCharAt(sb.length()-1);
+//    if (qpString.length() > 0) {
+//      s.append("?").append(qpString);
+//    }
+    s.append(sb.toString());
   }
 
   @Override
@@ -390,12 +427,17 @@ public class ListOperationsSupplier implements Supplier<Request>{
     private String marker;
     private String continuationToken;
     private String startAfter;
+    private String nextVersionIdMarker;
+    private String nextKeyMarker;
     private int maxRequests;
     private int numRequestSent;
     private Map<String, String> parametersMap = new LinkedHashMap<String, String>();
     private String paramString;
     private Map<String, String> requestContext = new LinkedHashMap<String, String>();
     private boolean startFromBeginning = false;
+    // list object versions
+    private String keyMarker;
+    private String versionId;
 
 
 
@@ -449,12 +491,39 @@ public class ListOperationsSupplier implements Supplier<Request>{
       requestContext.put(Context.X_OG_OBJECT_NAME, marker);
     }
 
+    public void setKeyMarker(String keyMarker) {
+      checkNotNull(keyMarker);
+      this.keyMarker = keyMarker;
+      requestContext.put(Context.X_OG_LIST_OBJECT_VERSIONS_KEY_MARKER, keyMarker);
+      requestContext.put(Context.X_OG_OBJECT_NAME, keyMarker);
+    }
+
+    public void setVersionId(String versionId) {
+      checkNotNull(versionId);
+      this.versionId = versionId;
+      requestContext.put(Context.X_OG_LIST_OBJECT_VERSIONS_VERSION_ID, versionId);
+    }
+
 
     public void setContinuationToken(String continuationToken) {
       checkNotNull(continuationToken);
       this.continuationToken = continuationToken;
       requestContext.put(Context.X_OG_LIST_NEXT_CONTINUATION_TOKEN, continuationToken);
     }
+
+    public void setNextVersionIdMarker(String nextVersionIdMarker) {
+      checkNotNull(nextVersionIdMarker);
+      this.nextVersionIdMarker = nextVersionIdMarker;
+      requestContext.put(Context.X_OG_LIST_OBJECT_VERSIONS_VERSION_ID, nextVersionIdMarker);
+    }
+
+    public void setNextKeyMarker(String nextKeyMarker) {
+      checkNotNull(nextKeyMarker);
+      this.nextKeyMarker = nextKeyMarker;
+      requestContext.put(Context.X_OG_LIST_OBJECT_VERSIONS_KEY_MARKER, this.nextKeyMarker);
+      requestContext.put(Context.X_OG_OBJECT_NAME, nextKeyMarker);
+    }
+
 
     public void setStartAfter(String startAfter) {
       checkNotNull(startAfter);
@@ -651,6 +720,11 @@ public class ListOperationsSupplier implements Supplier<Request>{
               String marker = requestContext.get(Context.X_OG_OBJECT_NAME);
               s.setMarker(marker);
             }
+          } else if (operation == Operation.LIST_OBJECT_VERSIONS) {
+            if (!s.isStartFromBeginning()) {
+              String marker = requestContext.get(Context.X_OG_OBJECT_NAME);
+              s.setMarker(marker);
+            }
           } else {
             throw new IllegalArgumentException(
                     String.format("unacceptable listing api version [%s]", version));
@@ -667,13 +741,29 @@ public class ListOperationsSupplier implements Supplier<Request>{
           } else if (version.equals("1")) {
             if (!s.isStartFromBeginning()) {
               String marker = requestContext.get(Context.X_OG_OBJECT_NAME);
-              s.setMarker(marker);
+              s.setKeyMarker(marker);
             }
           } else {
             throw new IllegalArgumentException(
                     String.format("unacceptable listing api version [%s]", version));
           }
-        }else {
+        } else if (operation == Operation.LIST_OBJECT_VERSIONS) {
+            queryParameters.put("versions",
+                    new Function<Map<String, String>, String>() {
+                      @Override
+                      public String apply(final Map<String, String> context) {
+                        return null;
+                      }
+                    });
+            if (!s.isStartFromBeginning()) {
+              String keyMarker = requestContext.get(Context.X_OG_OBJECT_NAME);
+              String versionId = requestContext.get(Context.X_OG_OBJECT_VERSION);
+              s.setKeyMarker(keyMarker);
+              if (versionId != null) {
+                s.setVersionId(versionId);
+              }
+            }
+        } else {
           //assume v1
           if (!s.isStartFromBeginning()) {
             String marker = requestContext.get(Context.X_OG_OBJECT_NAME);

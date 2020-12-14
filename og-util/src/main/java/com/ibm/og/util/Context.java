@@ -70,6 +70,10 @@ public class Context {
   public static final String X_OG_LIST_NEXT_CONTINUATION_TOKEN = "x-og-list-next-continuation-token";
   public static final String X_OG_LIST_PREFIX = "x-og-list-prefix";
   public static final String X_OG_LIST_DELIMITER = "x-og-list-delimiter";
+  public static final String X_OG_LIST_OBJECT_VERSIONS_KEY_MARKER = "x-og-list-object-versions-key-marker";
+  public static final String X_OG_LIST_OBJECT_VERSIONS_VERSION_ID = "x-og-list-object-versions-version-id";
+  public static final String X_OG_LIST_OBJECT_VERSIONS_NEXT_KEY_MARKER = "x-og-list-object-versions-next-key-marker";
+  public static final String X_OG_LIST_OBJECT_VERSIONS_NEXT_VERSION_ID_MARKER = "x-og-list-object-versions-next-version-id-marker";
 
   public static final String X_OG_LIST_REQ_NUM = "x-og-list-req-num";
   public static final String X_OG_LIST_MAX_REQS = "x-og-list-max-reqs";
@@ -84,6 +88,9 @@ public class Context {
   public static final String X_OG_MULTI_DELETE_SUCCESS_OBJECTS_COUNT = "x-og-multi-delete-success-objects-count";
   public static final String X_OG_MULTI_DELETE_FAILED_OBJECTS_COUNT = "x-og-multi-delete-failed-objects-count";
   public static final String X_OG_STATIC_WEBSITE_VIRTUAL_HOST_SUFFIX = "x-og-website-read";
+
+  public static final String X_OG_OBJECT_VERSION = "x-og-object-version";
+  public static final String X_OG_OBJECT_VERSION_SELECTION = "x-og-object-version-selection";
 
   private Context() {}
 }

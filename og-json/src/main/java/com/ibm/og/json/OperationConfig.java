@@ -44,6 +44,7 @@ public class OperationConfig {
   public boolean multideleteQuiet;
   public String staticWebsiteVirtualHostSuffix;
   public ObjectTagsConfig tagsConfiguration;
+  public ObjectVersionSelection objectVersionSelection;
 
   public OperationConfig(final double weight) {
     this();
@@ -83,5 +84,6 @@ public class OperationConfig {
     this.multideleteQuiet = true;
     this.staticWebsiteVirtualHostSuffix = null;
     this.tagsConfiguration = null;
+    this.objectVersionSelection = null;
   }
 }

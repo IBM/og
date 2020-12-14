@@ -119,6 +119,7 @@ import com.ibm.og.json.OGConfig;
 import com.ibm.og.json.ObjectConfig;
 import com.ibm.og.json.ObjectManagerConfig;
 import com.ibm.og.json.ObjectTagsConfig;
+import com.ibm.og.json.ObjectVersionSelection;
 import com.ibm.og.json.OperationConfig;
 import com.ibm.og.json.RetentionConfig;
 import com.ibm.og.json.SelectionConfig;
@@ -242,6 +243,7 @@ public class OGModule extends AbstractModule {
         .to(this.config.metadata.sseCSource);
     bindConstant().annotatedWith(Names.named("delete.weight")).to(this.config.delete.weight);
     bindConstant().annotatedWith(Names.named("list.weight")).to(this.config.list.weight);
+    bindConstant().annotatedWith(Names.named("listObjectVersions.weight")).to(this.config.listObjectVersions.weight);
     bindConstant().annotatedWith(Names.named("containerList.weight"))
         .to(this.config.containerList.weight);
     bindConstant().annotatedWith(Names.named("containerCreate.weight"))
@@ -306,7 +308,6 @@ public class OGModule extends AbstractModule {
             .to(this.config.statsLogInterval);
     checkArgument((this.config.statsLogInterval == -1 || this.config.statsLogInterval >= 10),
             "Stats Log Interval must be greater than or equal to 10 seconds");
-
     final MapBinder<AuthType, HttpAuth> httpAuthBinder =
         MapBinder.newMapBinder(binder(), AuthType.class, HttpAuth.class);
     httpAuthBinder.addBinding(AuthType.NONE).to(NoneAuth.class);
@@ -1600,7 +1601,70 @@ public class OGModule extends AbstractModule {
       function = new ReadObjectNameFunction(objectManager);
     }
 
-    return ImmutableList.of(function);
+    // use object version or not for this request
+    Function<Map<String, String>, String> function2 = objectVersionSelectionFunction(this.config.read);
+    if (function2 != null) {
+      return ImmutableList.of(function, function2);
+    } else {
+      return ImmutableList.of(function);
+    }
+  }
+
+  private Supplier<ObjectVersionSelection.ObjectVersionSelectionChoices> provideObjectVersionSelectionSupplier(
+          OperationConfig operationConfig) {
+    checkNotNull(operationConfig);
+    if (operationConfig.objectVersionSelection != null) {
+      // create weighted choice
+      SelectionConfig<ObjectVersionSelection.ObjectVersionSelectionChoices> selectionConfig = new SelectionConfig();
+      selectionConfig.selection = SelectionType.RANDOM;
+      ChoiceConfig<ObjectVersionSelection.ObjectVersionSelectionChoices> choice1 = new ChoiceConfig<ObjectVersionSelection.ObjectVersionSelectionChoices>
+              (ObjectVersionSelection.ObjectVersionSelectionChoices.VERSIONED);
+      choice1.weight = operationConfig.objectVersionSelection.versioned;
+      if (choice1.weight > 0.0) {
+        selectionConfig.choices.add(choice1);
+      }
+      ChoiceConfig<ObjectVersionSelection.ObjectVersionSelectionChoices> choice2 = new ChoiceConfig<ObjectVersionSelection.ObjectVersionSelectionChoices>
+              (ObjectVersionSelection.ObjectVersionSelectionChoices.NON_VERSIONED);
+      choice2.weight = operationConfig.objectVersionSelection.nonVersioned;
+      if (choice2.weight > 0.0) {
+        selectionConfig.choices.add(choice2);
+      }
+      RandomSupplier.Builder<ObjectVersionSelection.ObjectVersionSelectionChoices> wrc =
+              Suppliers.random();
+      for (final ChoiceConfig<ObjectVersionSelection.ObjectVersionSelectionChoices> choice : selectionConfig.choices) {
+        wrc.withChoice(choice.choice, choice.weight);
+      }
+      final Supplier<ObjectVersionSelection.ObjectVersionSelectionChoices> versionSelectionChoicesSupplier;
+      versionSelectionChoicesSupplier = wrc.build();
+      return versionSelectionChoicesSupplier;
+    }
+    return null;
+  }
+
+  private Function<Map<String, String>, String> objectVersionSelectionFunction(final OperationConfig operationConfig) {
+    checkNotNull(operationConfig);
+    final Supplier<ObjectVersionSelection.ObjectVersionSelectionChoices> supplier =
+            provideObjectVersionSelectionSupplier(operationConfig);
+    if (supplier != null) {
+      Function<Map<String, String>, String> newFunction = new Function<Map<String, String>, String>() {
+        @Override
+        public String apply(Map<String, String> context) {
+          ObjectVersionSelection.ObjectVersionSelectionChoices vs = supplier.get();
+          if (vs == ObjectVersionSelection.ObjectVersionSelectionChoices.VERSIONED) {
+            context.put(Context.X_OG_OBJECT_VERSION_SELECTION, "true");
+            return "true";
+
+          } else {
+            // remove object version from the context
+            context.remove(Context.X_OG_OBJECT_VERSION);
+            return "false";
+          }
+        }
+      };
+      return newFunction;
+    } else {
+      return null;
+    }
   }
 
   @Provides
@@ -1769,7 +1833,13 @@ public class OGModule extends AbstractModule {
       function = new MetadataObjectNameFunction(objectManager);
     }
 
-    return ImmutableList.of(function);
+    // use object version or not for this request
+    Function<Map<String, String>, String> function2 = objectVersionSelectionFunction(this.config.metadata);
+    if (function2 != null) {
+      return ImmutableList.of(function, function2);
+    } else {
+      return ImmutableList.of(function);
+    }
   }
 
   @Provides
@@ -1786,7 +1856,13 @@ public class OGModule extends AbstractModule {
       function = new DeleteObjectNameFunction(objectManager);
     }
 
-    return ImmutableList.of(function);
+    // use object version or not for this request
+    Function<Map<String, String>, String> function2 = objectVersionSelectionFunction(this.config.delete);
+    if (function2 != null) {
+      return ImmutableList.of(function, function2);
+    } else {
+      return ImmutableList.of(function);
+    }
   }
 
 
@@ -2882,6 +2958,7 @@ public class OGModule extends AbstractModule {
     return checkNotNull(this.config.objectManager).objectFileIndex;
   }
 
+
   private byte[] SSECustomerKey() {
     final byte[] aesKey = new byte[32];
     for (int i = 0; i < 16; i++) {
@@ -3350,6 +3427,13 @@ public class OGModule extends AbstractModule {
         credentials, virtualHost, null, null, false, delimiter, null);
   }
 
+  Map<String, Function<Map<String, String>, String>> provideOverwriteOperationQueryParameters() {
+
+    final Map<String, Function<Map<String, String>, String>> queryParameters;
+    queryParameters = Maps.newLinkedHashMap();
+    return queryParameters;
+  }
+
   @Provides
   @Singleton
   @Named("overwrite")
@@ -3388,7 +3472,7 @@ public class OGModule extends AbstractModule {
     }
 
     final Map<String, Function<Map<String, String>, String>> queryParameters =
-        Collections.emptyMap();
+            provideOverwriteOperationQueryParameters();
 
     if (encryptDestinationObject) {
       if (!headers.containsKey("x-amz-server-side-encryption-customer-algorithm")) {
@@ -3406,6 +3490,12 @@ public class OGModule extends AbstractModule {
         container, apiVersion, object, queryParameters, headers, context, null, body, credentials,
         virtualHost, retention, legalHold, contentMd5, null, null);
   }
+
+  Map<String, Function<Map<String, String>, String>> provideReadOperationQueryParameters() {
+    final Map<String, Function<Map<String, String>, String>> queryParameters = Maps.newLinkedHashMap();
+    return queryParameters;
+  }
+
 
   @Provides
   @Singleton
@@ -3426,7 +3516,7 @@ public class OGModule extends AbstractModule {
       @Named("read.staticWebsiteVirtualHostSuffix") final Function<Map<String, String>, String> staticWebsiteVirtualHostSuffix) {
 
     final Map<String, Function<Map<String, String>, String>> queryParameters =
-        Collections.emptyMap();
+        provideReadOperationQueryParameters();
 
     if (encryptedSourceObject) {
       if (!headers.containsKey("x-amz-server-side-encryption-customer-algorithm")) {
@@ -3580,6 +3670,7 @@ public class OGModule extends AbstractModule {
         virtualHost, null, null, false, null, null);
   }
 
+
   @Provides
   @Singleton
   @Named("delete")
@@ -3596,8 +3687,7 @@ public class OGModule extends AbstractModule {
       @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
       @Named("virtualhost") final boolean virtualHost) {
 
-    final Map<String, Function<Map<String, String>, String>> queryParameters =
-        Collections.emptyMap();
+    final Map<String, Function<Map<String, String>, String>> queryParameters = Collections.emptyMap();
 
     final Supplier<Body> bodySupplier = Suppliers.of(Bodies.none());
     final Function<Map<String, String>, Body> body = MoreFunctions.forSupplier(bodySupplier);

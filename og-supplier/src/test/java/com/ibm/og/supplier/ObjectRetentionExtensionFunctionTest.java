@@ -39,7 +39,7 @@ public class ObjectRetentionExtensionFunctionTest {
     public void ObjectRetentionExtentsionTest() {
         final String objectName = UUID.randomUUID().toString().replace("-", "") + "0000";
         final LegacyObjectMetadata objectMetadata = LegacyObjectMetadata.fromMetadata(
-                objectName, 1024, -1, (byte)0, 1000);
+                objectName, 1024, -1, (byte)0, 1000, null);
         final ObjectMetadata object = mock(ObjectMetadata.class);
         when(object.getName()).thenReturn(objectName);
         when(this.objectManager.removeForUpdate()).thenReturn(objectMetadata);

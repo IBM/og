@@ -8,11 +8,13 @@ package com.ibm.og.object;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Map;
 import java.util.Set;
 
 import com.ibm.og.api.Operation;
 import com.ibm.og.api.Request;
 import com.ibm.og.api.Response;
+import com.ibm.og.http.HttpResponse;
 import com.ibm.og.http.HttpUtil;
 import com.ibm.og.util.Context;
 import com.ibm.og.util.Pair;
@@ -85,20 +87,34 @@ public abstract class AbstractObjectNameConsumer {
         throw new IllegalStateException("Unable to determine object");
       }
     }
-
     updateObjectManager(request, response);
 
   }
 
   protected ObjectMetadata getObjectName(final Request request, final Response response) {
     final String objectString = getObjectString(request, response);
+    final String objectVersionString = getObjectVersionString(request, response);
     final long objectSize = getObjectSize(request);
     final int containerSuffix = getContainerSuffix(request);
     final byte numLegalHolds = getNumberOfLegalHolds(request, response);
     final int retention = getObjectRetention(request, response);
-    return LegacyObjectMetadata.fromMetadata(objectString, objectSize, containerSuffix, numLegalHolds, retention);
+    return LegacyObjectMetadata.fromMetadata(objectString, objectSize, containerSuffix, numLegalHolds, retention,
+            objectVersionString);
   }
 
+  protected ObjectMetadata getSourceObjectName(final Request request, final Response response) {
+    final String objectString = getObjectString(request, response);
+    String objectVersionString = null;
+    if (request.getContext().get(Context.X_OG_OBJECT_VERSION) != null) {
+      objectVersionString = request.getContext().get(Context.X_OG_OBJECT_VERSION).replace("-", "");
+    }
+    final long objectSize = getObjectSize(request);
+    final int containerSuffix = getContainerSuffix(request);
+    final byte numLegalHolds = getNumberOfLegalHolds(request, response);
+    final int retention = getObjectRetention(request, response);
+    return LegacyObjectMetadata.fromMetadata(objectString, objectSize, containerSuffix, numLegalHolds, retention,
+            objectVersionString);
+  }
 
 
   protected String getObjectString(final Request request, final Response response) {
@@ -110,6 +126,37 @@ public abstract class AbstractObjectNameConsumer {
 
     return objectString;
   }
+
+  protected String getObjectVersionString(final Request request, final Response response) {
+    if (this.operation == Operation.WRITE || this.operation == Operation.OVERWRITE ||
+            this.operation == Operation.MULTIPART_WRITE_COMPLETE) {
+      Map<String, String> responseHeaders = response.headers();
+      if (responseHeaders.get("x-amz-version-id") != null) {
+        return responseHeaders.get("x-amz-version-id").replace("-", "");
+      } else {
+        return null;
+      }
+
+    } else {
+      return null;
+    }
+  }
+
+  protected String getRequestObjectVersionString(final Request request) {
+    if (this.operation == Operation.WRITE || this.operation == Operation.OVERWRITE ||
+            this.operation == Operation.MULTIPART_WRITE_COMPLETE) {
+      Map<String, String> requestHeaders = request.headers();
+      if (requestHeaders.get("x-amz-version-id") != null) {
+        return requestHeaders.get("x-amz-version-id").replace("-", "");
+      } else {
+        return null;
+      }
+
+    } else {
+      return null;
+    }
+  }
+
 
   private long getObjectSize(final Request request) {
     if (this.operation == Operation.WRITE) {
@@ -150,6 +197,10 @@ public abstract class AbstractObjectNameConsumer {
 
   protected void updateObjectManager(final Request request, final Response response) {
     final ObjectMetadata objectName = getObjectName(request, response);
+    if (this.operation == Operation.OVERWRITE) {
+      final ObjectMetadata srcObject = getSourceObjectName(request, response);
+      this.objectManager.add(srcObject);
+    }
     updateObjectManager(objectName);
   }
 

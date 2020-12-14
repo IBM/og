@@ -24,16 +24,21 @@ public class LegacyObjectMetadata implements ObjectMetadata {
   public static final int OBJECT_SUFFIX_SIZE = 4;
   public static final int OBJECT_LEGAL_HOLDS_SIZE = 1;
   public static final int OBJECT_RETENTION_SIZE = 4;
-  public static final int OBJECT_SIZE = OBJECT_NAME_SIZE + OBJECT_SIZE_SIZE + OBJECT_SUFFIX_SIZE +
+  public int objectVersionSize;
+  public static int OBJECT_VERSION_MIN_SIZE = 0;
+  public static int OBJECT_VERSION_MAX_SIZE = 16;
+  public static final int OBJECT_SIZE = OBJECT_NAME_SIZE + OBJECT_VERSION_MIN_SIZE + OBJECT_SIZE_SIZE + OBJECT_SUFFIX_SIZE +
           OBJECT_LEGAL_HOLDS_SIZE + OBJECT_RETENTION_SIZE;
   private static final BaseEncoding ENCODING = BaseEncoding.base16().lowerCase();
   protected final ByteBuffer objectBuffer;
-  public static final byte MAJOR_VERSION = (byte)2;
+  public static final byte MAJOR_VERSION = (byte)3;
   public static final byte MINOR_VERSION = (byte)0;
+  private boolean objectVersionPresent = false;
 
 
-  protected LegacyObjectMetadata(final ByteBuffer objectBuffer) {
+  protected LegacyObjectMetadata(final ByteBuffer objectBuffer, int objectVersionSize) {
     this.objectBuffer = objectBuffer;
+    this.objectVersionSize = objectVersionSize;
   }
 
   /**
@@ -43,13 +48,26 @@ public class LegacyObjectMetadata implements ObjectMetadata {
    * @return a {@code LegacyObjectMetadata} instance
    * @throws IllegalArgumentException if the length of objectBytes is invalid
    */
-  public static LegacyObjectMetadata fromBytes(final byte[] objectBytes) {
+  public static LegacyObjectMetadata fromBytes(final byte[] objectBytes, boolean objectVersionPresent) {
     checkNotNull(objectBytes);
-    checkArgument(objectBytes.length == OBJECT_SIZE,
+    int objectVersionSize;
+    if (objectVersionPresent) {
+        objectVersionSize = LegacyObjectMetadata.OBJECT_VERSION_MAX_SIZE;
+    } else {
+        objectVersionSize = 0;
+    }
+    checkArgument(objectBytes.length == OBJECT_SIZE + objectVersionSize,
         String.format("objectName length must be == %s", OBJECT_SIZE) + " [%s]",
         objectBytes.length);
 
-    return new LegacyObjectMetadata(ByteBuffer.allocate(OBJECT_SIZE).put(objectBytes));
+    return new LegacyObjectMetadata(ByteBuffer.allocate(objectBytes.length).put(objectBytes), objectVersionSize);
+  }
+
+
+  public static int getObjectRecordSize(ObjectFileHeader objectFileHeader) {
+    return objectFileHeader.getObjectNameLen() + objectFileHeader.getObjectVersionLen() +
+            objectFileHeader.getObjectSizeLen() + objectFileHeader.getObjectSuffixLen() +
+            objectFileHeader.getObjectLegalHoldsLen() + objectFileHeader.getObjectRetentionLen();
   }
 
   /**
@@ -62,7 +80,7 @@ public class LegacyObjectMetadata implements ObjectMetadata {
    * @throws IllegalArgumentException if objectSize is negative
    */
   public static LegacyObjectMetadata fromMetadata(final String objectName, final long objectSize,
-      final int containerSuffix, final byte numLegalHolds, final int retentionPeriod) {
+      final int containerSuffix, final byte numLegalHolds, final int retentionPeriod, final String objectVersion) {
     checkNotNull(objectName);
     // HACK; assume 1 char == 2 bytes for object name string length checking
     final int stringLength = 2 * OBJECT_NAME_SIZE;
@@ -73,14 +91,25 @@ public class LegacyObjectMetadata implements ObjectMetadata {
     checkArgument(containerSuffix >= -1, "containerSuffix must be >= -1 [%s]", containerSuffix);
     checkArgument(numLegalHolds >= -1, "numLegalHolds must be >= -1 [%s]", numLegalHolds);
     checkArgument(retentionPeriod >= -2, "retentionPeriod must be >= -2 [%s]", retentionPeriod);
-
-    final ByteBuffer objectBuffer = ByteBuffer.allocate(OBJECT_SIZE);
+    int objectVersionSize = 0;
+    if (objectVersion != null) {
+      objectVersionSize = OBJECT_VERSION_MAX_SIZE;
+    }
+    final ByteBuffer objectBuffer = ByteBuffer.allocate(OBJECT_SIZE + objectVersionSize);
     objectBuffer.put(ENCODING.decode(objectName), 0, OBJECT_NAME_SIZE);
+    if (objectVersion != null) {
+      objectBuffer.put(ENCODING.decode(objectVersion), 0, objectVersionSize);
+    }
     objectBuffer.putLong(objectSize);
     objectBuffer.putInt(containerSuffix);
     objectBuffer.put(numLegalHolds);
     objectBuffer.putInt(retentionPeriod);
-    return new LegacyObjectMetadata(objectBuffer);
+    return new LegacyObjectMetadata(objectBuffer, objectVersionSize);
+  }
+
+  @Override
+  public boolean hasVersion() {
+    return this.objectVersionSize > 0;
   }
 
   @Override
@@ -89,25 +118,35 @@ public class LegacyObjectMetadata implements ObjectMetadata {
   }
 
   @Override
+  public String getVersion() {
+    if (this.objectVersionSize > 0) {
+      return ENCODING.encode(this.objectBuffer.array(), OBJECT_NAME_SIZE, OBJECT_VERSION_MAX_SIZE);
+    } else {
+      return null;
+    }
+  }
+
+  @Override
   public long getSize() {
-    return this.objectBuffer.getLong(OBJECT_NAME_SIZE);
+    return this.objectBuffer.getLong(OBJECT_NAME_SIZE + objectVersionSize);
   }
 
   @Override
   public int getContainerSuffix() {
-    return this.objectBuffer.getInt(OBJECT_NAME_SIZE + OBJECT_SIZE_SIZE);
+    return this.objectBuffer.getInt(OBJECT_NAME_SIZE + objectVersionSize + OBJECT_SIZE_SIZE);
   }
 
   @Override
   public int getNumberOfLegalHolds() {
-    return this.objectBuffer.get(OBJECT_NAME_SIZE + OBJECT_SIZE_SIZE + OBJECT_SUFFIX_SIZE);
+    return this.objectBuffer.get(OBJECT_NAME_SIZE + objectVersionSize + OBJECT_SIZE_SIZE + OBJECT_SUFFIX_SIZE);
   }
 
   @Override
   public int getRetention() {
-    int retention = this.objectBuffer.getInt(OBJECT_NAME_SIZE + OBJECT_SIZE_SIZE + OBJECT_SUFFIX_SIZE + OBJECT_LEGAL_HOLDS_SIZE);
+    int retention = this.objectBuffer.getInt(OBJECT_NAME_SIZE + objectVersionSize + OBJECT_SIZE_SIZE + OBJECT_SUFFIX_SIZE + OBJECT_LEGAL_HOLDS_SIZE);
     return retention;
   }
+
 
   @Override
   public boolean equals(final Object obj) {
@@ -121,14 +160,14 @@ public class LegacyObjectMetadata implements ObjectMetadata {
     }
 
     final ObjectMetadata other = (ObjectMetadata) obj;
-    byte[] a1 = Arrays.copyOf(toBytes(), OBJECT_NAME_SIZE + OBJECT_SIZE_SIZE + OBJECT_SUFFIX_SIZE);
-    byte[] a2 = Arrays.copyOf(other.toBytes(), OBJECT_NAME_SIZE + OBJECT_SIZE_SIZE + OBJECT_SUFFIX_SIZE);
+    byte[] a1 = Arrays.copyOf(toBytes(false), OBJECT_NAME_SIZE + objectVersionSize + OBJECT_SIZE_SIZE + OBJECT_SUFFIX_SIZE);
+    byte[] a2 = Arrays.copyOf(other.toBytes(false), OBJECT_NAME_SIZE + objectVersionSize + OBJECT_SIZE_SIZE + OBJECT_SUFFIX_SIZE);
     return  Arrays.equals(a1, a2);
   }
 
   @Override
   public int hashCode() {
-    byte[] b = Arrays.copyOf(toBytes(), OBJECT_NAME_SIZE + OBJECT_SIZE_SIZE + OBJECT_SUFFIX_SIZE);
+    byte[] b = Arrays.copyOf(toBytes(false), OBJECT_NAME_SIZE + objectVersionSize + OBJECT_SIZE_SIZE + OBJECT_SUFFIX_SIZE);
     int hashcode = Arrays.hashCode(b);
     return hashcode;
   }
@@ -138,8 +177,8 @@ public class LegacyObjectMetadata implements ObjectMetadata {
     // TODO this compareTo implementation is heavily borrowed from String.toString. It is
     // ignorant of character encoding issues, but in our case we are storing hex digits so it
     // should be sufficient
-    final byte[] b1 = toBytes();
-    final byte[] b2 = o.toBytes();
+    final byte[] b1 = toBytes(false);
+    final byte[] b2 = o.toBytes(false);
     final int len1 = b1.length;
     final int len2 = b2.length;
     final int lim = Math.min(len1, len2);
@@ -157,14 +196,39 @@ public class LegacyObjectMetadata implements ObjectMetadata {
   }
 
   @Override
-  public byte[] toBytes() {
-    return this.objectBuffer.array();
+  public byte[] toBytes(boolean withVersionId) {
+    if (withVersionId) {
+      if (this.objectVersionSize > 0) {
+        return this.objectBuffer.array();
+      } else {
+        int size = OBJECT_NAME_SIZE + OBJECT_VERSION_MAX_SIZE + OBJECT_SIZE_SIZE + OBJECT_SUFFIX_SIZE +
+                OBJECT_LEGAL_HOLDS_SIZE + OBJECT_RETENTION_SIZE;
+        ByteBuffer byteBuffer = ByteBuffer.allocate(size);
+        byteBuffer.put(this.objectBuffer.array(), 0, OBJECT_NAME_SIZE);
+        // set UUID to 0 if no version
+        byteBuffer.putLong(0);
+        byteBuffer.putLong(0);
+        byteBuffer.putLong(this.getSize());
+        byteBuffer.putInt(this.getContainerSuffix());
+        byteBuffer.put((byte) this.getNumberOfLegalHolds());
+        byteBuffer.putInt(this.getRetention());
+        return byteBuffer.array();
+
+      }
+    } else {
+      return this.objectBuffer.array();
+    }
     //return Arrays.copyOf(this.objectBuffer.array(), OBJECT_NAME_SIZE + OBJECT_SIZE_SIZE + OBJECT_SUFFIX_SIZE);
   }
 
   @Override
   public String toString() {
-    return String.format("LegacyObjectMetadata [name=%s, size=%s legalholds=%s retention=%s]", getName(), getSize(),
-            getNumberOfLegalHolds(), getRetention());
+    if (objectVersionSize > 0) {
+      return String.format("LegacyObjectMetadata [name=%s, version=%s, size=%s, legalholds=%s, retention=%s]", getName(),
+              getSize(), getVersion(), getNumberOfLegalHolds(), getRetention());
+    } else {
+      return String.format("LegacyObjectMetadata [name=%s, size=%s, legalholds=%s, retention=%s]", getName(),
+              getSize(), getVersion(), getNumberOfLegalHolds(), getRetention());
+    }
   }
 }

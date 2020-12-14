@@ -13,6 +13,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -52,10 +53,12 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 public class RandomObjectPopulator extends Thread implements ObjectManager {
   private static final Logger _logger = LoggerFactory.getLogger(RandomObjectPopulator.class);
   public static final int OBJECT_SIZE_V1 = 30;
+  public static final int OBJECT_SIZE_V2 = 35;
   public static final int OBJECT_SIZE = LegacyObjectMetadata.OBJECT_SIZE;
-  private static final int MAX_PERSIST_ARG = 30 * 1000 * 60;
+  public static final int MAX_PERSIST_ARG = 30 * 1000 * 60;
   public static final int MAX_OBJECT_ARG = 100 * (1048576 / OBJECT_SIZE);
-  private final int maxObjects;
+  private int maxObjects;
+  private long maxSize = -1;
   private final String directory;
   private final String prefix;
   private final long persistFrequency;
@@ -81,13 +84,14 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
   private final Random rand = new Random();
   private final UUID vaultId;
   private final ScheduledExecutorService saver;
+  private boolean objectVersionOn;
 
   public static int getObjectSize() {
     return OBJECT_SIZE;
   }
 
-  public RandomObjectPopulator(final UUID vaultId) {
-    this(vaultId, "");
+  public RandomObjectPopulator(final UUID vaultId, boolean objectVersionOn) {
+    this(vaultId, "", objectVersionOn);
   }
 
   @Inject
@@ -96,28 +100,28 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
       @Named("objectfile.maxsize") final long maxSize,
       @Named("objectfile.persistfrequency") final long persistFrequency,
       @Named("objectfile.index") @Nullable final Integer objectFileIndex) {
-    this(UUID.randomUUID(), directory, prefix, (int) (maxSize / OBJECT_SIZE),
+    this(UUID.randomUUID(), directory, prefix, maxSize, (int) (maxSize / OBJECT_SIZE),
         persistFrequency * 1000, objectFileIndex);
   }
 
   public RandomObjectPopulator(final UUID vaultId, final String directory, final String prefix) {
-    this(vaultId, directory, prefix, MAX_OBJECT_ARG, MAX_PERSIST_ARG, null);
+    this(vaultId, directory, prefix, -1, MAX_OBJECT_ARG, MAX_PERSIST_ARG, null);
   }
 
-  public RandomObjectPopulator(final UUID vaultId, final String prefix) {
-    this(vaultId, ".", prefix, MAX_OBJECT_ARG, MAX_PERSIST_ARG, null);
+  public RandomObjectPopulator(final UUID vaultId, final String prefix, final boolean objectVersionOn) {
+    this(vaultId, ".", prefix, -1, MAX_OBJECT_ARG, MAX_PERSIST_ARG, null);
   }
 
   public RandomObjectPopulator(final UUID vaultId, final int maxObjects) {
-    this(vaultId, ".", "", maxObjects, MAX_PERSIST_ARG, null);
+    this(vaultId, ".", "", -1, maxObjects, MAX_PERSIST_ARG, null);
   }
 
   public RandomObjectPopulator(final UUID vaultId, final String prefix, final int maxObjects) {
-    this(vaultId, ".", prefix, maxObjects, MAX_PERSIST_ARG, null);
+    this(vaultId, ".", prefix, -1, maxObjects, MAX_PERSIST_ARG, null);
   }
 
   public RandomObjectPopulator(final UUID vaultId, final String directory, final String prefix,
-      final int maxObjectCount, final long persistTime, final Integer objectFileIndex) {
+      final long maxSize, final int maxObjectCount, final long persistTime, final Integer objectFileIndex) {
     this.vaultId = checkNotNull(vaultId);
     this.directory = checkNotNull(directory);
     if (prefix != null && !prefix.isEmpty()) {
@@ -129,6 +133,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
         .compile(String.format("%s(\\d|[1-9]\\d*)%s", this.prefix, RandomObjectPopulator.SUFFIX));
     checkArgument(maxObjectCount > 0, "maxObjectCount must be > 0 [%s]", maxObjectCount);
     this.maxObjects = maxObjectCount;
+    this.maxSize = maxSize;
     this.persistFrequency = persistTime;
     this.objectFileIndex = objectFileIndex;
     final File[] files = ObjectManagerUtils.getIdFiles(this.prefix, this.SUFFIX, this.directory);
@@ -201,28 +206,44 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
         final InputStream input = new BufferedInputStream(new FileInputStream(this.saveFile));
 
         int versionHeaderLength = 0;
+        int objectFileHeaderLength = 0;
+        ObjectFileHeader header = null;
         ObjectFileVersion version = ObjectFileUtil.readObjectFileVersion(input);
         if (version.getMajorVersion() == LegacyObjectMetadata.MAJOR_VERSION &&
                 version.getMinorVersion() == LegacyObjectMetadata.MINOR_VERSION) {
-          actualObjectSize = OBJECT_SIZE;
+          header = ObjectFileUtil.readObjectFileHeader(input);
+          actualObjectSize = LegacyObjectMetadata.getObjectRecordSize(header);
           versionHeaderLength = ObjectFileVersion.VERSION_HEADER_LENGTH;
+          objectFileHeaderLength = ObjectFileHeader.HEADER_LENGTH;
+        } else if (version.getMajorVersion() == 2 && version.getMinorVersion() == 0) {
+          versionHeaderLength = ObjectFileVersion.VERSION_HEADER_LENGTH;
+          actualObjectSize = OBJECT_SIZE_V2;
         } else if (version.getMajorVersion() == 1 && version.getMinorVersion() == 0) {
           actualObjectSize = OBJECT_SIZE_V1;
         } else {
           throw new IllegalArgumentException("Unsupported Object File version [%sd].[%s]".
                   format(Byte.toString(version.getMajorVersion()), Byte.toString(version.getMinorVersion())));
         }
-
-        input.skip(versionHeaderLength);
-
-        final byte[] objectBytes = new byte[OBJECT_SIZE];
+        input.reset();
+        input.skip(versionHeaderLength + objectFileHeaderLength);
+        final byte[] objectBytes;
+        if (header != null) {
+          // use the size calculated based on the whether the object version is present or not
+          objectBytes = new byte[actualObjectSize];
+          if (header.getObjectVersionLen() > 0) {
+            this.objectVersionOn = true;
+          }
+        } else {
+          //TODO: refactor this
+          objectBytes = new byte[OBJECT_SIZE_V2];
+        }
         final byte[] inputBytes = new byte[actualObjectSize];
-        ByteBuffer b2 = ByteBuffer.wrap(objectBytes);
+        //ByteBuffer b2 = ByteBuffer.wrap(objectBytes);
 
         ObjectMetadata id;
         while (input.read(inputBytes) == actualObjectSize) {
           id = ObjectFileUtil.getObjectFromInputBuffer(version.getMajorVersion(), version.getMinorVersion(),
-                  inputBytes, objectBytes);
+                  inputBytes, objectBytes, (header != null && header.getObjectVersionLen()>0));
           this.objects.put(id);
         }
         _logger.info("No. of objects loaded {}", this.objects.size());
@@ -239,7 +260,14 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
     long count = 0;
     final File[] idFiles = ObjectManagerUtils.getIdFiles(this.prefix, this.SUFFIX, this.directory);
     for (final File file : idFiles) {
-      count += file.length() / OBJECT_SIZE;
+      try {
+        int objectSize = ObjectFileUtil.getObjectSize(file);
+        count += file.length() / objectSize;
+      } catch (FileNotFoundException fne) {
+        _logger.warn("getSavedObjectCount: FileNotFoundException {}", file.getName());
+      } catch (IOException ioe) {
+        _logger.warn("getSavedObjectCount: IOException {}", file.getName());
+      }
     }
     return count;
   }
@@ -433,6 +461,9 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
     _logger.debug("Adding object: {}", id);
     this.persistLock.readLock().lock();
     try {
+      if (id.hasVersion()) {
+        this.objectVersionOn = true;
+      }
       this.objects.put(id);
     } finally {
       this.persistLock.readLock().unlock();
@@ -498,10 +529,20 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
     this.persistLock.writeLock().lock();
     final int toSave = this.objects.size();
     _logger.info("number of objects to persist [{}]", toSave);
-    final OutputStream out = new BufferedOutputStream(new FileOutputStream(this.saveFile));
+    OutputStream out = new BufferedOutputStream(new FileOutputStream(this.saveFile));
+    boolean flipVersionInfoInHeader = false;
     if (toSave > 0) {
       _logger.info("writing version to file {}", this.saveFile);
       ObjectFileUtil.writeObjectFileVersion(out);
+      if (this.objectVersionOn) {
+        ObjectFileUtil.writeObjectFileHeader(out, LegacyObjectMetadata.OBJECT_VERSION_MAX_SIZE);
+        //recalculate maxObjects accordingly
+        if (this.maxSize != -1) {
+          this.maxObjects = (int)(this.maxSize / (LegacyObjectMetadata.OBJECT_SIZE + LegacyObjectMetadata.OBJECT_VERSION_MAX_SIZE));
+        }
+      } else {
+        ObjectFileUtil.writeObjectFileHeader(out, 0);
+      }
     }
     _logger.info("toSave [{}] maxObjects [{}]", toSave, this.maxObjects);
     if (toSave > this.maxObjects) {
@@ -517,18 +558,30 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
           surplusIndex = numFiles - 1;
         }
         File surplus = createFile(surplusIndex);
+        //TODO: we have to dynamically calculate object size
         if (surplus.equals(this.saveFile) || (surplus.length() / OBJECT_SIZE) >= this.maxObjects) {
           // Create a new file
           surplusIndex = surplusIndex + 1;
           surplus = createFile(surplusIndex);
         }
         _logger.info("surplus file [{}]", surplus.getName());
-        final OutputStream dos = new BufferedOutputStream(new FileOutputStream(surplus, true));
+
+
+        OutputStream dos = new BufferedOutputStream(new FileOutputStream(surplus, true));
         // write header if only if it is a new file
         if (surplus.length() == 0) {
           _logger.info("writing version in surplus file [{}]", surplus.getName());
           ObjectFileUtil.writeObjectFileVersion(dos);
+          if (this.objectVersionOn) {
+            ObjectFileUtil.writeObjectFileHeader(dos, LegacyObjectMetadata.OBJECT_VERSION_MAX_SIZE);
+          } else {
+            ObjectFileUtil.writeObjectFileHeader(dos, 0);
+          }
         }
+        dos.close(); // close stream and open again after upgrade
+        // check if the surplus file needs upgrade, versioning field
+        ObjectFileUtil.upgrade(surplus, this.objectVersionOn);
+        dos = new BufferedOutputStream(new FileOutputStream(surplus, true));
         final int remaining = getRemaining(size, surplus);
         _logger.info("remaining objects [{}] to write in surplus ", remaining);
         // While writing surplus, remove them from this.objects, to keep consistent with
@@ -536,7 +589,12 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
         final Iterator<ObjectMetadata> iterator = this.objects.iterator();
         for (int i = 0; i < remaining; i++) {
           final ObjectMetadata sid = iterator.next();
-          dos.write(sid.toBytes());
+          if (this.objectVersionOn) {
+            byte[] bytes = sid.toBytes(true);
+            dos.write(sid.toBytes(true));
+          } else {
+            dos.write(sid.toBytes(false));
+          }
           iterator.remove();
         }
         dos.close();
@@ -567,13 +625,29 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
         int actualObjectSize = 0;
         in.mark(ObjectFileVersion.VERSION_HEADER_LENGTH);
         ObjectFileVersion version = ObjectFileUtil.readObjectFileVersion(in);
-
-        if (version.getMajorVersion() == 2 && version.getMinorVersion() == 0) {
+        boolean objectVersionPresent = false;
+        byte[] objectBuf = new byte[actualObjectSize]; // correct size will be allocated based on the borrowed object
+        if (version.getMajorVersion() == 3 && version.getMinorVersion() == 0) {
+          _logger.info("borrowing from object file {} of length {} version 3.0 ", surplus.getName(),
+                  surplus.length());
+          //skip = surplus.length() - (toTransfer * OBJECT_SIZE);
+          // calculate object size by reading file header
+          ObjectFileHeader header = ObjectFileUtil.readObjectFileHeader(in);
+          int objectSize = LegacyObjectMetadata.getObjectRecordSize(header);
+          if (header.getObjectVersionLen() > 0) {
+            objectVersionPresent = true;
+          }
+          skip = surplus.length() - (toTransfer * objectSize);
+          readBuf = new byte[objectSize];
+          actualObjectSize = objectSize;
+          objectBuf = new byte[actualObjectSize];
+        } else if (version.getMajorVersion() == 2 && version.getMinorVersion() == 0) {
           _logger.info("borrowing from object file {} of length {} version 2.0 ", surplus.getName(),
                   surplus.length());
-          skip = surplus.length() - (toTransfer * OBJECT_SIZE);
-          readBuf = new byte[OBJECT_SIZE];
-          actualObjectSize = OBJECT_SIZE;
+          skip = surplus.length() - (toTransfer * OBJECT_SIZE_V2);
+          readBuf = new byte[OBJECT_SIZE_V2];
+          actualObjectSize = OBJECT_SIZE_V2;
+          objectBuf = new byte[actualObjectSize];
         } else if (version.getMajorVersion() == 1 && version.getMinorVersion() == 0) {
           _logger.info("borrowing from object file {} of length {} version 1.0 ", surplus.getName(),
                   surplus.length());
@@ -581,6 +655,9 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
             _logger.warn("Missing version in object file [%s].", surplus.getName());
             readBuf = new byte[OBJECT_SIZE_V1];
             actualObjectSize = OBJECT_SIZE_V1;
+            objectBuf = new byte[OBJECT_SIZE_V2];
+            // allocate objectBuf size to include the retention, legalholds.
+            // ObjectFileUtil.getObjectFromInputBuffer fills in default values for retention and legalholds.
           }
           skip = surplus.length() - (toTransfer * OBJECT_SIZE_V1);
         } else {
@@ -594,22 +671,51 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
           skippedBytes += in.skip(skip - skippedBytes);
         }
         _logger.info("skippedBytes [{}]", skippedBytes);
-        final byte[] buf = new byte[OBJECT_SIZE];
+        final byte[] buf = new byte[actualObjectSize];
         ObjectMetadata sid;
+
         for (int i = 0; i < toTransfer; i++) {
           int readBytes = in.read(readBuf, 0, actualObjectSize);
           if (readBytes == actualObjectSize) {
             sid = ObjectFileUtil.getObjectFromInputBuffer(version.getMajorVersion(), version.getMinorVersion(),
-                    readBuf, buf);
+                    readBuf, objectBuf, objectVersionPresent);
             _logger.trace("borrowed object [{}]", sid);
+            //TODO: check if there read object has version or not
+            // if the read object has a version but the current object file does not have the version
+            // update the header, update all objects with 0 bytes versionid. this happens when writing the
+            // object to the file
+            // if the current object file has version Id, the read object does not add the 0 bytes versionId
+            // and then save it.
+            if (!this.objectVersionOn && objectVersionPresent) {
+              // if this objectfile does not have version Ids and the borrowed object has version Id
+              flipVersionInfoInHeader = true;
+              this.objectVersionOn = true;
+            }
+            if (this.objectVersionOn && !objectVersionPresent) {
+              // if this object file has version Ids but the borrowed object does not then set the version id
+              // of the borrowed object as 0 bytes
+              byte[] newBytes = sid.toBytes(true);
+              sid = LegacyObjectMetadata.fromBytes(newBytes, true);
+            }
+
             this.objects.put(sid);
+
           } else {
             _logger.error("borrow object readBytes [{}] not equal to object length [{}]", readBytes, actualObjectSize);
           }
         }
         in.close();
         // If surplus is out of objects, delete it
-        if (skip == ObjectFileVersion.VERSION_HEADER_LENGTH) {
+        // skip may be VERSION_HEADER_LENGTH or VERSION_HEADER_LENGTH + OBJECT_FILE_HEADER_LEN based on the
+        // object file version
+        int checkLength = 0;
+        if (version.getMajorVersion() == LegacyObjectMetadata.MAJOR_VERSION &&
+                version.getMinorVersion() == LegacyObjectMetadata.MINOR_VERSION) {
+          checkLength = ObjectFileVersion.VERSION_HEADER_LENGTH + ObjectFileHeader.HEADER_LENGTH;
+        } else {
+          checkLength = ObjectFileVersion.VERSION_HEADER_LENGTH;
+        }
+        if (skip == checkLength) {
           _logger.info("deleting surplus file [{}]", surplus.getName());
           surplus.delete();
         } else {
@@ -631,8 +737,28 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
     // savefile
     _logger.info(
         String.format("Writing state file: %d objects into ", this.objects.size()) + this.saveFile);
+
+    if (flipVersionInfoInHeader) {
+      // if the versioning header was changed in the saveFile because of the borrowed object
+      // rewrite the objectFile header
+      out.close();
+      out = new BufferedOutputStream(new FileOutputStream(this.saveFile));
+        _logger.info("writing version to file {}", this.saveFile);
+        ObjectFileUtil.writeObjectFileVersion(out);
+        if (this.objectVersionOn) {
+          ObjectFileUtil.writeObjectFileHeader(out, LegacyObjectMetadata.OBJECT_VERSION_MAX_SIZE);
+          //recalculate maxObjects accordingly
+          this.maxObjects = (this.maxObjects * LegacyObjectMetadata.OBJECT_SIZE) /
+                  (LegacyObjectMetadata.OBJECT_SIZE + LegacyObjectMetadata.OBJECT_VERSION_MAX_SIZE);
+        }
+    }
+
     for (final Iterator<ObjectMetadata> iterator = this.objects.iterator(); iterator.hasNext();) {
-      out.write(iterator.next().toBytes());
+      if (this.objectVersionOn) {
+        out.write(iterator.next().toBytes(true));
+      } else {
+        out.write(iterator.next().toBytes(false));
+      }
     }
     out.close();
     this.persistLock.writeLock().unlock();
@@ -640,14 +766,34 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
 
   private int getRemaining(final int size, final File surplus) {
     final int objectsAvailable = size - this.maxObjects;
-    final int spaceAvailable = this.maxObjects - ((int) (surplus.length() / OBJECT_SIZE));
+    int objectSize;
+    try {
+      objectSize = ObjectFileUtil.getObjectSize(surplus);
+    } catch (FileNotFoundException fne) {
+      _logger.warn("getRemaining: FileNotFoundException for file {}", surplus.getName());
+      return 0;
+    } catch (IOException ioe) {
+      _logger.warn("getRemaining: IOException for file {}", surplus.getName());
+      return 0;
+    }
+    final int spaceAvailable = this.maxObjects - ((int) (surplus.length() / objectSize));
     final int remaining = Math.min(objectsAvailable, spaceAvailable);
     return remaining;
   }
 
   private int getTransferrable(final int size, final File surplus) {
     final int slotsAvailable = this.maxObjects - size;
-    final int surplusAvailable = (int) (surplus.length() / OBJECT_SIZE);
+    int objectSize;
+    try {
+      objectSize = ObjectFileUtil.getObjectSize(surplus);
+    } catch (FileNotFoundException fne) {
+      _logger.warn("getRemaining: FileNotFoundException for file {}", surplus.getName());
+      return 0;
+    } catch (IOException ioe) {
+      _logger.warn("getRemaining: IOException for file {}", surplus.getName());
+      return 0;
+    }
+    final int surplusAvailable = (int) (surplus.length() / objectSize);
     final int transferrable = Math.min(slotsAvailable, surplusAvailable);
     return transferrable;
   }
@@ -690,6 +836,7 @@ public class RandomObjectPopulator extends Thread implements ObjectManager {
       }
     }
   }
+
 
   @Override
   public String toString() {
