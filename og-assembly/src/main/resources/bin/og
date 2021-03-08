@@ -75,7 +75,7 @@ fi
 
 if [ $JAVA_VERSION -ge 9 ]
   then
-    VMOPTS="-Xlog:gc*:file=${TEST_PATH}/${GC_LOG} -XX:+UseParallelOldGC -XX:MaxGCPauseMillis=5000 -Xss${STACKSIZE}k -Xmx${MEMORY}m -Xms${MEMORY}m -XX:MaxDirectMemorySize=${MEMORY}m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=${TEST_PATH}/"
+    VMOPTS="-Xlog:gc*:file=${TEST_PATH}/${GC_LOG} -XX:+UseParallelOldGC -XX:MaxGCPauseMillis=5000 -Xss${STACKSIZE}k -Xmx${MEMORY}m -Xms${MEMORY}m -XX:MaxDirectMemorySize=${MEMORY}m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=${TEST_PATH}/ --add-opens=java.base/java.lang=ALL-UNNAMED"
 fi
 
 # TODO analyze which jvm parameters should be set
