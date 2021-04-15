@@ -73,7 +73,7 @@ public class WriteCopyObjectNameConsumer extends AbstractObjectNameConsumer {
     if (objectString == null) {
       return null;
     } else {
-      return LegacyObjectMetadata.fromMetadata(objectString, objectSize, containerSuffix, numLegalHolds, retention);
+      return LegacyObjectMetadata.fromMetadata(objectString, objectSize, containerSuffix, numLegalHolds, retention, null);
     }
   }
 

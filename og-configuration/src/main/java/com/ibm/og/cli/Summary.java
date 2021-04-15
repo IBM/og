@@ -82,6 +82,7 @@ public class Summary {
     OperationStats writeObjectTags;
     OperationStats deleteObjectTags;
     OperationStats getObjectTags;
+    OperationStats listObjectVersions;
 
     protected SummaryOperationStats(final long timestampStart, final long timestampFinish) {
       this.timestampStart = timestampStart;
@@ -122,6 +123,7 @@ public class Summary {
       this.writeObjectTags = new OperationStats(stats, Operation.PUT_TAGS, timestampStart, timestampFinish);
       this.deleteObjectTags = new OperationStats(stats, Operation.DELETE_TAGS, timestampStart, timestampFinish);
       this.getObjectTags = new OperationStats(stats, Operation.GET_TAGS, timestampStart, timestampFinish);
+      this.listObjectVersions = new OperationStats(stats, Operation.LIST_OBJECT_VERSIONS, timestampStart, timestampFinish);
     }
 
     public OperationStats getOperation(Operation operation) {
@@ -137,6 +139,8 @@ public class Summary {
         return this.overwrite;
       } else if (operation == Operation.LIST) {
         return this.list;
+      } else if (operation == Operation.LIST_OBJECT_VERSIONS) {
+        return this.listObjectVersions;
       } else if (operation == Operation.CONTAINER_LIST) {
         return this.containerList;
       } else if (operation == Operation.CONTAINER_CREATE) {
@@ -199,6 +203,8 @@ public class Summary {
         this.overwrite = operationStat;
       } else if (operation == Operation.LIST) {
         this.list = operationStat;
+      } else if (operation == Operation.LIST_OBJECT_VERSIONS) {
+        this.listObjectVersions = operationStat;
       } else if (operation == Operation.CONTAINER_LIST) {
         this.containerList = operationStat;
       } else if (operation == Operation.CONTAINER_CREATE) {
@@ -268,6 +274,11 @@ public class Summary {
       if (this.list.operations > 0) {
         sb.append(this.list).append("\n");
       }
+
+      if (this.listObjectVersions.operations > 0) {
+        sb.append(this.listObjectVersions).append("\n");
+      }
+
       if (this.containerList.operations > 0) {
         sb.append(this.containerList).append("\n");
       }
@@ -382,7 +393,7 @@ public class Summary {
     @Override
     public String toString() {
       final String format = "Start: %s%nEnd: %s%nRuntime: %.2f "
-              + "Seconds%nOperations: %s%n%n%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%sRequestsAborted: %s%nExitCode: %s%nExitMessages:%s";
+              + "Seconds%nOperations: %s%n%n%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%sRequestsAborted: %s%nExitCode: %s%nExitMessages:%s";
       return String.format(Locale.US, format, FORMATTER.print(this.timestampStart),
               FORMATTER.print(this.timestampFinish), this.runtime, this.operations, this.write,
               this.read, this.delete, this.metadata, this.overwrite, this.list, this.containerList,
@@ -390,7 +401,7 @@ public class Summary {
               this.multipartWriteAbort,this.writeCopy, this.writeLegalHold, this.readLegalHold, this.deleteLegalHold,
               this.extendRetention, this.objectRestore, this.putContainerLifecycle, this.getContainerLifecycle,
               this.deleteContainerLifecycle, this.multidelete, this.writeObjectTags,this.deleteObjectTags,
-              this.getObjectTags, this.requestsAborted, this.exitCode, prettyExitMessages());
+              this.getObjectTags, this.listObjectVersions, this.requestsAborted, this.exitCode, prettyExitMessages());
     }
 
 

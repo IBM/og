@@ -85,6 +85,21 @@ public class S3ListResponseBodyConsumer implements ResponseBodyConsumer {
                 context.put(Context.X_OG_LIST_NEXT_CONTINUATION_TOKEN, nextContinuationToken);
               }
             }
+
+            NodeList nextKeyMarkerNode = document.getElementsByTagName("NextKeyMarker");
+            if (nextKeyMarkerNode != null) {
+              if(nextKeyMarkerNode.getLength() > 0) {
+                String nextKeyMarker = nextKeyMarkerNode.item(0).getTextContent();
+                context.put(Context.X_OG_LIST_OBJECT_VERSIONS_NEXT_KEY_MARKER, nextKeyMarker);
+              }
+            }
+            NodeList nextVersionIdNode = document.getElementsByTagName("NextVersionIdMarker");
+            if (nextVersionIdNode != null) {
+              if(nextVersionIdNode.getLength() > 0) {
+                String nextVersionIdMarker = nextVersionIdNode.item(0).getTextContent();
+                context.put(Context.X_OG_LIST_OBJECT_VERSIONS_NEXT_VERSION_ID_MARKER, nextVersionIdMarker);
+              }
+            }
           }
         }
       }

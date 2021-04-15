@@ -669,6 +669,11 @@ can be used to filter the objects for a specific vault.
 Object Tagging operations have been added in release 1.11.0. PUT Object Tags, Get Object Tags and Delete Object Tags
 have been added. Object Tags can also be added with Write operation.
 
+Object Version support has been added in release 1.12.0. _read_, _metadata_, _delete_ support object versioning.
+_object_version_selection_ property is added to control the proportions of versioned and non versioned read.
+
+_list_object_versions_ operation has been added in release 1.12.0. See <<Operation ListObjectVersions>>
+
 Operation mix is configured via _write_, _overwrite_, _read_, _metadata_, _delete_, _list_,
 _container_create_, _container_list_, _multipart_write_, _write_legalhold_, _read_legalhold_,
 _delete_legalhold_, _extend_retention_, _object_restore, _put_container_lifecycle_,
@@ -884,6 +889,25 @@ Each choice can have list of delimiter characters. The selection can be random o
         "weight": 30
       }
     ]
+  }
+----
+
+==== Operation Object Version Selector ====
+If the storage end point returns x-amz-version-id object version header, ObjectGenerator will track this in the object
+file. Optionally, the tracked version can be used for _read_, _metadata_ and _delete_ operation.
+Please note that object generator does not know the latest version. So, using delete operation without version may or may
+not delete the correct object in the Object Generator object store. It is provided for convenience and using this will
+cause inconsistencies in the local object management.
+
+Example read operation with the object version:
+----
+  "read": {
+    "weight": 100,
+    "sse_c_source": false,
+    "object_version_selection": {
+      "versioned": 0.0,
+      "non_versioned": 1.0
+    }
   }
 ----
 
@@ -1466,6 +1490,21 @@ will skip the list_delimiter character in the request.
   }
 ----
 
+==== Operation ListObjectVersions ====
+Returns metadata about all versions of the objects in a bucket.
+----
+  "list_object_versions": {
+    "weight": 100.0
+  }
+----
+
+_list_object_versions_ operation will use randomly selected object from object file as prefix and key-marker queryparameters
+ and if there is a version it will use that as version-id-marker query parameter.
+
+All other properties can be configured as in _list_ operation. See <<Operation List configuration>>
+
+
+
 ==== Operation WriteCopy Configuration ====
 
 WriteCopy operation is used for copying an existing object.  Here is a sample configuration.  The source_object and
@@ -1558,7 +1597,6 @@ The Delete Tags operation deletes tags on an existing object.
    "weight": 1.0
   }
 ----
-
 
 === Filesize
 OG supports one or more filesize distributions for describing desired body lengths of
@@ -2592,6 +2630,11 @@ mixed operation tests.
 
 |static_website_virtual_host_suffix
 |String
+|No
+|None
+
+|object_version_selection
+|Object
 |No
 |None
 
