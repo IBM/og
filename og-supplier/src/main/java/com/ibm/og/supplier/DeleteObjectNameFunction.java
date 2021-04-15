@@ -51,7 +51,7 @@ public class DeleteObjectNameFunction implements Function<Map<String, String>, S
   public String apply(final Map<String, String> context) {
     final ObjectMetadata objectMetadata = this.objectManager.removeForUpdate();
     context.put(Context.X_OG_OBJECT_NAME, objectMetadata.getName());
-    String objectVersion = objectMetadata.getVersion();
+    final String objectVersion = objectMetadata.getVersion();
     if (objectVersion != null) {
       byte[] buffer = new byte[16];
       ByteBuffer byteBuffer = ByteBuffer.wrap(buffer);

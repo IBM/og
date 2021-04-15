@@ -91,11 +91,11 @@ public class RandomObjectPopulatorTest {
   @Test
   public void writeSingleIdTest() throws ObjectManagerException {
     final ObjectMetadata sid = generateId();
-    RandomObjectPopulator rop = new RandomObjectPopulator(this.vaultId, false);
+    RandomObjectPopulator rop = new RandomObjectPopulator(this.vaultId);
     rop.add(sid);
     Assert.assertEquals(sid, rop.get());
     rop.shutdown();
-    rop = new RandomObjectPopulator(this.vaultId, false);
+    rop = new RandomObjectPopulator(this.vaultId);
     Assert.assertEquals(sid.toString(), rop.remove().toString());
     rop.shutdown();
   }
@@ -107,7 +107,7 @@ public class RandomObjectPopulatorTest {
     while (secondId.equals(firstId)) {
       secondId = generateId();
     }
-    RandomObjectPopulator rop = new RandomObjectPopulator(this.vaultId, false);
+    RandomObjectPopulator rop = new RandomObjectPopulator(this.vaultId);
     rop.add(firstId);
     rop.add(secondId);
     final ObjectMetadata readId = rop.get();
@@ -116,7 +116,7 @@ public class RandomObjectPopulatorTest {
     Assert.assertTrue((deleteId.equals(firstId) || deleteId.equals(secondId)));
     Assert.assertFalse(readId.equals(deleteId));
     rop.shutdown();
-    rop = new RandomObjectPopulator(this.vaultId, false);
+    rop = new RandomObjectPopulator(this.vaultId);
     Assert.assertFalse(deleteId.toString().equals(rop.get().toString()));
     rop.shutdown();
   }
@@ -125,7 +125,7 @@ public class RandomObjectPopulatorTest {
   public void simultaneousReadDeleteTest()
       throws ObjectManagerException, InterruptedException, ExecutionException {
     final ObjectMetadata sid = generateId();
-    final RandomObjectPopulator rop = new RandomObjectPopulator(this.vaultId, false);
+    final RandomObjectPopulator rop = new RandomObjectPopulator(this.vaultId);
     rop.add(sid);
     Assert.assertEquals(sid, rop.get());
     // Try again for simultaneous reads
@@ -450,7 +450,7 @@ public class RandomObjectPopulatorTest {
 
   @Test
   public void testIdFilter() {
-    final RandomObjectPopulator r = new RandomObjectPopulator(UUID.randomUUID(), "test", false);
+    final RandomObjectPopulator r = new RandomObjectPopulator(UUID.randomUUID(), "test" );
     final FilenameFilter f = new ObjectManagerUtils.IdFilter("test", this.suffix);
     Assert.assertFalse(f.accept(null, "test" + suffix));
     Assert.assertTrue(f.accept(null, "test0" + suffix));
@@ -466,7 +466,7 @@ public class RandomObjectPopulatorTest {
   @Test
   public void testWriteHeader() throws IOException {
 
-    final RandomObjectPopulator r = new RandomObjectPopulator(UUID.randomUUID(), "test", false);
+    final RandomObjectPopulator r = new RandomObjectPopulator(UUID.randomUUID(), "test");
     ByteArrayOutputStream bos = new ByteArrayOutputStream(1000);
     ObjectFileUtil.writeObjectFileVersion(bos);
     ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());

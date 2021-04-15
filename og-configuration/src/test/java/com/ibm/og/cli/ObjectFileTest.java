@@ -160,8 +160,6 @@ public class ObjectFileTest {
     inputByteBuffer.put(fileHeaderString.getBytes());
     inputByteBuffer.put(objectMetadata.getBytes());
     final InputStream in = new ByteArrayInputStream(inputByteBuffer.array());
-//    final ByteArrayOutputStream out = new ByteArrayOutputStream(ObjectFileVersion.VERSION_HEADER_LENGTH +
-//            LegacyObjectMetadata.OBJECT_SIZE);
     final ObjectFile.ObjectFileOutputStream out = new ObjectFile.ObjectFileOutputStream(this.prefix, RandomObjectPopulator.MAX_OBJECT_ARG, this.suffix, false, true);
     ObjectFile.write(in, out);
     out.close();
@@ -193,8 +191,6 @@ public class ObjectFileTest {
     inputByteBuffer.put(fileHeaderString.getBytes());
     inputByteBuffer.put(objectMetadata.getBytes());
     final InputStream in = new ByteArrayInputStream(inputByteBuffer.array());
-//    final ByteArrayOutputStream out = new ByteArrayOutputStream(ObjectFileVersion.VERSION_HEADER_LENGTH +
-//            LegacyObjectMetadata.OBJECT_SIZE);
     final ObjectFile.ObjectFileOutputStream out = new ObjectFile.ObjectFileOutputStream(this.prefix, RandomObjectPopulator.MAX_OBJECT_ARG, this.suffix, false, true);
     ObjectFile.write(in, out);
     out.close();
@@ -246,12 +242,9 @@ public class ObjectFileTest {
   public void writeV1() throws IOException {
     final String objectName = UUID.randomUUID().toString().replace("-", "") + "0000";
     final String objectMetadata = objectName + ",0,0";
-    //String versionHeaderString = "VERSION:2.0\n";
     final ByteBuffer inputByteBuffer = ByteBuffer.allocate(objectMetadata.getBytes().length);
     inputByteBuffer.put(objectMetadata.getBytes());
     final InputStream in = new ByteArrayInputStream(inputByteBuffer.array());
-//    final ByteArrayOutputStream out = new ByteArrayOutputStream(ObjectFileVersion.VERSION_HEADER_LENGTH +
-//            LegacyObjectMetadata.OBJECT_SIZE);
     final ObjectFile.ObjectFileOutputStream out = new ObjectFile.ObjectFileOutputStream(this.prefix, RandomObjectPopulator.MAX_OBJECT_ARG, this.suffix, false, true);
     ObjectFile.write(in, out);
     out.close();
@@ -762,8 +755,6 @@ public class ObjectFileTest {
     source.write(o3.toBytes(false));
 
     final ByteArrayInputStream in = new ByteArrayInputStream(source.toByteArray());
-    //final ByteArrayOutputStream out = new ByteArrayOutputStream();
-    //final String out = "filtered";
     final String outputFile = new String("id_");
     ObjectFile.ObjectFileOutputStream out = (ObjectFile.ObjectFileOutputStream)ObjectFile.getOutputStream(false, RandomObjectPopulator.MAX_OBJECT_ARG, false, true, outputFile);
 

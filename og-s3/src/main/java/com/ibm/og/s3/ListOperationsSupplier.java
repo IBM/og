@@ -521,7 +521,7 @@ public class ListOperationsSupplier implements Supplier<Request>{
       checkNotNull(nextKeyMarker);
       this.nextKeyMarker = nextKeyMarker;
       requestContext.put(Context.X_OG_LIST_OBJECT_VERSIONS_KEY_MARKER, this.nextKeyMarker);
-      requestContext.put(Context.X_OG_OBJECT_NAME, nextKeyMarker);
+      requestContext.put(Context.X_OG_OBJECT_NAME, this.nextKeyMarker);
     }
 
 
