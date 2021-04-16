@@ -46,9 +46,23 @@ public interface ObjectMetadata extends Comparable<ObjectMetadata> {
   int getRetention();
 
   /**
+   * Gets the object version
+   *
+   * @return the version of the object
+   */
+  String getVersion();
+
+  /**
+   * returns whether the object has a version or not
+   *
+   * @return boolean that indicates whether the object has version or not
+   */
+  boolean hasVersion();
+
+  /**
    * Convert this instance's internal representation into bytes
    * 
    * @return this object name as bytes
    */
-  byte[] toBytes();
+  byte[] toBytes(boolean withVersionId);
 }

@@ -49,5 +49,8 @@ public class QueryParameters {
     //Put object tags
     public static final String OBJECT_TAGGING_PARAMETER = "tagging";
 
+    // Read version id
+    public static final String OBJECT_VERSION_ID = "versionId";
+
     private QueryParameters() {}
 }

@@ -7,8 +7,11 @@ package com.ibm.og.supplier;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.nio.ByteBuffer;
 import java.util.Map;
+import java.util.UUID;
 
+import com.google.common.io.BaseEncoding;
 import com.ibm.og.object.ObjectManager;
 import com.ibm.og.object.ObjectMetadata;
 import com.ibm.og.util.Context;
@@ -21,6 +24,7 @@ import com.google.common.base.Function;
  */
 public class MetadataObjectNameFunction implements Function<Map<String, String>, String> {
   private final ObjectManager objectManager;
+  private static final BaseEncoding ENCODING = BaseEncoding.base16().lowerCase();
 
   /**
    * Creates an instance
@@ -46,6 +50,16 @@ public class MetadataObjectNameFunction implements Function<Map<String, String>,
   @Override
   public String apply(final Map<String, String> context) {
     final ObjectMetadata objectMetadata = this.objectManager.get();
+    String objectVersion = objectMetadata.getVersion();
+    if (objectVersion != null) {
+      byte[] buffer = new byte[16];
+      ByteBuffer byteBuffer = ByteBuffer.wrap(buffer);
+      byteBuffer.put(ENCODING.decode(objectVersion), 0, 16);
+      UUID uuid = new UUID(byteBuffer.getLong(0), byteBuffer.getLong(8));
+      if (uuid.getMostSignificantBits() != 0 && uuid.getLeastSignificantBits() != 0) {
+        context.put(Context.X_OG_OBJECT_VERSION, uuid.toString());
+      }
+    }
     context.put(Context.X_OG_OBJECT_NAME, objectMetadata.getName());
     context.put(Context.X_OG_OBJECT_SIZE, String.valueOf(objectMetadata.getSize()));
     context.put(Context.X_OG_CONTAINER_SUFFIX, String.valueOf(objectMetadata.getContainerSuffix()));

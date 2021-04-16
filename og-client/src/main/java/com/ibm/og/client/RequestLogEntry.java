@@ -62,6 +62,8 @@ public class RequestLogEntry {
   public String multideleteReqObjects;
   public String multideleteDeletedObjects;
   public String multideleteFailedObjects;
+  public String objectVersionId;
+  public String newObjectVersionId;
 
   private static final DateTimeFormatter FORMATTER =
       DateTimeFormat.forPattern("dd/MMM/yyyy:HH:mm:ss Z").withLocale(Locale.US);
@@ -141,7 +143,7 @@ public class RequestLogEntry {
       this.originalObjectLength = null;
     }
 
-    if (request.getOperation() == Operation.LIST) {
+    if (request.getOperation() == Operation.LIST || request.getOperation() == Operation.LIST_OBJECT_VERSIONS) {
       this.maxKeys = request.getContext().get(Context.X_OG_LIST_MAX_KEYS);
       this.listSessionId = request.getContext().get(Context.X_OG_LIST_SESSION_ID);
       this.listRequestNum = request.getContext().get(Context.X_OG_LIST_REQ_NUM);
@@ -174,6 +176,10 @@ public class RequestLogEntry {
     this.sourceUri = request.getContext().get(Context.X_OG_SSE_SOURCE_URI);
     this.retention = request.getContext().get(Context.X_OG_OBJECT_RETENTION);
     this.legalHold = request.getContext().get(Context.X_OG_LEGAL_HOLD);
+    if (request.getOperation() == Operation.WRITE || request.getOperation() == Operation.OVERWRITE) {
+      this.newObjectVersionId = response.headers().get("x-amz-version-id");
+    }
+    this.objectVersionId = request.getContext().get(Context.X_OG_OBJECT_VERSION);
 
   }
 
