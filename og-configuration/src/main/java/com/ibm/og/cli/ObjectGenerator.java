@@ -16,6 +16,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import com.ibm.og.guice.ListModule;
+import com.ibm.og.guice.ListObjectVersionsModule;
 import com.ibm.og.guice.ObjectTagsModule;
 import com.ibm.og.json.OGConfig;
 import com.ibm.og.json.type.FilesizeConfigTypeAdapterFactory;
@@ -297,7 +298,7 @@ public class ObjectGenerator {
 
   public static Injector createInjector(final OGConfig ogConfig) {
     return Guice.createInjector(Stage.PRODUCTION, new OGModule(ogConfig), new ListModule(ogConfig),
-            new ObjectTagsModule(ogConfig));
+            new ObjectTagsModule(ogConfig), new ListObjectVersionsModule(ogConfig));
   }
 
   public static void shutdownObjectManager(final ObjectManager objectManager) {

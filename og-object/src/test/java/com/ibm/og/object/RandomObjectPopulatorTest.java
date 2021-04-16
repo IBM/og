@@ -170,8 +170,9 @@ public class RandomObjectPopulatorTest {
     rop.shutdown();
     Assert.assertEquals(getIdFiles(this.prefix, suffix).length, 2);
     Assert.assertEquals(new File(prefix + 0 + suffix).length(),
-        ObjectFileVersion.VERSION_HEADER_LENGTH + RandomObjectPopulatorTest.MAX_OBJECTS * OBJECT_SIZE);
-    Assert.assertEquals(new File(prefix + 1 + suffix).length(), ObjectFileVersion.VERSION_HEADER_LENGTH + OBJECT_SIZE);
+        ObjectFileVersion.VERSION_HEADER_LENGTH + ObjectFileHeader.HEADER_LENGTH + RandomObjectPopulatorTest.MAX_OBJECTS * OBJECT_SIZE);
+    Assert.assertEquals(new File(prefix + 1 + suffix).length(),
+            ObjectFileVersion.VERSION_HEADER_LENGTH + ObjectFileHeader.HEADER_LENGTH + OBJECT_SIZE);
   }
 
   @Test
@@ -191,10 +192,10 @@ public class RandomObjectPopulatorTest {
     Assert.assertEquals(getIdFiles(this.prefix, suffix).length, 5);
     for (int i = 0; i < 4; i++) {
       Assert.assertEquals(new File(prefix + i + suffix).length(),
-          ObjectFileVersion.VERSION_HEADER_LENGTH + RandomObjectPopulatorTest.MAX_OBJECTS * OBJECT_SIZE);
+          ObjectFileVersion.VERSION_HEADER_LENGTH + ObjectFileHeader.HEADER_LENGTH + RandomObjectPopulatorTest.MAX_OBJECTS * OBJECT_SIZE);
     }
     Assert.assertEquals(new File(prefix + 4 + suffix).length(),
-            ObjectFileVersion.VERSION_HEADER_LENGTH + OBJECT_SIZE);
+            ObjectFileVersion.VERSION_HEADER_LENGTH + ObjectFileHeader.HEADER_LENGTH + OBJECT_SIZE);
   }
 
   @Test
@@ -219,7 +220,7 @@ public class RandomObjectPopulatorTest {
     rop.shutdown();
     Assert.assertEquals(getIdFiles(this.prefix, suffix).length, 2);
     Assert.assertEquals(new File(prefix + 1 + suffix).length(),
-            ObjectFileVersion.VERSION_HEADER_LENGTH + OBJECT_SIZE);
+            ObjectFileVersion.VERSION_HEADER_LENGTH + OBJECT_SIZE + ObjectFileHeader.HEADER_LENGTH);
     // Borrow last id from surplus file, causing that file to be deleted
     rop = new RandomObjectPopulator(this.vaultId, RandomObjectPopulatorTest.MAX_OBJECTS);
     rop.remove();
@@ -230,7 +231,7 @@ public class RandomObjectPopulatorTest {
     } catch(Exception e) {
     }
     Assert.assertEquals(new File(prefix + 0 + suffix).length(),
-        ObjectFileVersion.VERSION_HEADER_LENGTH + RandomObjectPopulatorTest.MAX_OBJECTS * OBJECT_SIZE);
+        ObjectFileVersion.VERSION_HEADER_LENGTH + ObjectFileHeader.HEADER_LENGTH + RandomObjectPopulatorTest.MAX_OBJECTS * OBJECT_SIZE);
   }
 
   @Test
@@ -248,7 +249,49 @@ public class RandomObjectPopulatorTest {
     rop.shutdown();
     Assert.assertEquals(getIdFiles(this.prefix, suffix).length, 4);
     Assert.assertEquals(new File(prefix + 0 + suffix).length(),
-            ObjectFileVersion.VERSION_HEADER_LENGTH + RandomObjectPopulatorTest.MAX_OBJECTS * OBJECT_SIZE);
+            ObjectFileVersion.VERSION_HEADER_LENGTH + ObjectFileHeader.HEADER_LENGTH + RandomObjectPopulatorTest.MAX_OBJECTS * OBJECT_SIZE);
+  }
+
+
+  @Test
+  public void testSurplusWriteWithUpgradeForVersion3() throws IOException {
+
+    // test version3.0 object file with version writing surplus to version 3.0 object file without version
+    final OutputStream out = new BufferedOutputStream(new FileOutputStream( "id_1.object"));
+    ObjectFileVersion fileVersion = ObjectFileVersion.fromMetadata((byte)3, (byte)0);
+    out.write(fileVersion.getBytes());
+    ObjectFileHeader fileHeader = ObjectFileHeader.fromMetadata(18,
+             0, 8, 4,1,4);
+    out.write(fileHeader.getBytes());
+    final BaseEncoding ENCODING = BaseEncoding.base16().lowerCase();
+    for (int i = 0; i < 4; i++) {
+      ByteBuffer objectBuffer = ByteBuffer.allocate(35);
+      String objectId = UUID.randomUUID().toString().replace("-", "") + "0000";
+      objectBuffer.put(ENCODING.decode(objectId));
+      objectBuffer.putLong(99L);
+      objectBuffer.putInt(5000);
+      objectBuffer.put((byte)0);
+      objectBuffer.putInt(-1);
+      out.write(objectBuffer.array());
+    }
+    out.close();
+    Assert.assertTrue(new File("id_1.object").length() ==
+            ObjectFileVersion.VERSION_HEADER_LENGTH + ObjectFileHeader.HEADER_LENGTH +
+                    RandomObjectPopulator.OBJECT_SIZE_V2*4);
+
+    RandomObjectPopulator rop =
+            new RandomObjectPopulator(this.vaultId, ".", "", -1, RandomObjectPopulatorTest.MAX_OBJECTS, RandomObjectPopulator.MAX_PERSIST_ARG, 0);
+    for (int i=0; i<RandomObjectPopulatorTest.MAX_OBJECTS; i++) {
+      rop.add(generateIdV3WithVersion());
+    }
+    rop.add(generateIdV3WithVersion());
+    rop.shutdown();
+
+    Assert.assertTrue(rop.getSavedObjectCount() == 10);
+    Assert.assertTrue(new File("id_1.object").length() ==
+            ObjectFileVersion.VERSION_HEADER_LENGTH + ObjectFileHeader.HEADER_LENGTH +
+                    (RandomObjectPopulator.OBJECT_SIZE_V2 + LegacyObjectMetadata.OBJECT_VERSION_MAX_SIZE)*5);
+
   }
 
   @Test
@@ -283,7 +326,24 @@ public class RandomObjectPopulatorTest {
 
   protected ObjectMetadata generateId() {
     return LegacyObjectMetadata.fromMetadata(UUID.randomUUID().toString().replace("-", "") + "0000",
-        0, -1, (byte)0, -1);
+            0, -1, (byte) 0, -1, null);
+  }
+
+  protected ObjectMetadata generateIdV2NoVersion() {
+    return LegacyObjectMetadata.fromMetadata(UUID.randomUUID().toString().replace("-", "") + "0000",
+            0, -1, (byte)0, -1, "00000178-4ae8-33c9-91de-1eac9b869048");
+  }
+
+
+  protected ObjectMetadata generateIdV3WithVersion() {
+    return LegacyObjectMetadata.fromMetadata(UUID.randomUUID().toString().replace("-", "") + "0000",
+            0, -1, (byte)0, -1,
+            UUID.randomUUID().toString().replace("-", ""));
+  }
+
+  protected ObjectMetadata generateIdV3WithoutVersion() {
+    return LegacyObjectMetadata.fromMetadata(UUID.randomUUID().toString().replace("-", "") + "0000",
+            0, -1, (byte)0, -1, null);
   }
 
   @Ignore
@@ -291,7 +351,7 @@ public class RandomObjectPopulatorTest {
   public void testConcurrency()
       throws InterruptedException, ExecutionException, ObjectManagerException {
     final RandomObjectPopulator rop =
-        new RandomObjectPopulator(this.vaultId, ".", "", 100000, 5 * 1000, null);
+        new RandomObjectPopulator(this.vaultId, ".", "", -1,100000, 5 * 1000, null);
     final ConcurrentHashMap<ObjectMetadata, ObjectMetadata> ids =
         new ConcurrentHashMap<ObjectMetadata, ObjectMetadata>();
 
@@ -372,7 +432,7 @@ public class RandomObjectPopulatorTest {
 
     RandomObjectPopulator verify;
     do {
-      verify = new RandomObjectPopulator(this.vaultId, ".", "", 100000, 5 * 1000, null);
+      verify = new RandomObjectPopulator(this.vaultId, ".", "", -1, 100000, 5 * 1000, null);
       final long objectCount = verify.getSavedObjectCount();
       Assert.assertEquals(ids.size(), objectCount);
       while (true) {
@@ -390,7 +450,7 @@ public class RandomObjectPopulatorTest {
 
   @Test
   public void testIdFilter() {
-    final RandomObjectPopulator r = new RandomObjectPopulator(UUID.randomUUID(), "test");
+    final RandomObjectPopulator r = new RandomObjectPopulator(UUID.randomUUID(), "test" );
     final FilenameFilter f = new ObjectManagerUtils.IdFilter("test", this.suffix);
     Assert.assertFalse(f.accept(null, "test" + suffix));
     Assert.assertTrue(f.accept(null, "test0" + suffix));
@@ -411,7 +471,7 @@ public class RandomObjectPopulatorTest {
     ObjectFileUtil.writeObjectFileVersion(bos);
     ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
     ObjectFileVersion version = ObjectFileUtil.readObjectFileVersion(bis);
-    Assert.assertTrue(version.getMajorVersion() == (byte)0x2);
+    Assert.assertTrue(version.getMajorVersion() == (byte)0x3);
     Assert.assertTrue(version.getMinorVersion() == (byte)0x0);
 
   }
@@ -466,7 +526,7 @@ public class RandomObjectPopulatorTest {
             new RandomObjectPopulator(this.vaultId, RandomObjectPopulatorTest.MAX_OBJECTS);
     rop.remove();
     rop.shutdown();
-    Assert.assertTrue(rop.getSavedObjectCount() == 6);
+    Assert.assertTrue(rop.getSavedObjectCount() == 7);
 
   }
 

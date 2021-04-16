@@ -12,12 +12,10 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -36,10 +34,10 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import com.google.common.io.Files;
 import com.ibm.og.object.LegacyObjectMetadata;
+import com.ibm.og.object.ObjectFileHeader;
 import com.ibm.og.object.ObjectFileUtil;
 import com.ibm.og.object.ObjectFileVersion;
 import com.ibm.og.object.RandomObjectPopulator;
@@ -109,39 +107,42 @@ public class ObjectFile {
     try {
       final OutputStream out;
       boolean writeVersionHeader = true;
+      int objectVersionSize = 0;
 
       if (shuffle) {
         checkArgument(shuffleMaxObjectFileSize > 0, "Shuffle output object file maximum size should be greater than 0");
         int shuffleMaxObjects = Math.max(shuffleMaxObjectFileSize / LegacyObjectMetadata.OBJECT_SIZE, 1);
         _consoleLogger.info("Target MaxObjects [{}]", shuffleMaxObjects);
-        shuffle(prefix, objectFilesDir, shuffleMaxObjects);
+        shuffle(prefix, objectFilesDir, shuffleMaxObjects, shuffleMaxObjectFileSize);
         return;
       }
-
-      if (read) {
-        out = getOutputStream(output);
-      } else if (write || filter || upgrade || split) {
-        out = getOutputStream(split, splitSize, output);
-        if (split) {
-          // for split, version header is written when ObjectFileOutputStream is created
-          writeVersionHeader = false;
-        }
+      if (write)  {
+        out = getOutputStream(false, RandomObjectPopulator.MAX_OBJECT_ARG, write, false, output);
+      } else if (filter) {
+        // get split aware ObjectFileOutputStream
+        out = getOutputStream(split, RandomObjectPopulator.MAX_OBJECT_ARG, false, true, output);
+      } else if (upgrade) {
+        out = getOutputStream(false, RandomObjectPopulator.MAX_OBJECT_ARG, false, false, output);
+      } else if (split) {
+        out = getOutputStream(split, splitSize, write, false, output);
       } else {
         out = getOutputStream(output);
       }
+
       for (File f : inputFiles) {
+        _consoleLogger.info("processing input file {}", f.getName());
         InputStream in = getInputStream(f);
         if (write) {
-          write(in, out,writeVersionHeader);
+          write(in, out);
         } else if (read) {
-          read(in, out, writeVersionHeader);
+          read(in, output, writeVersionHeader);
         } else if (filter) {
-          filter(in, out, minFilesize, maxFilesize, minContainerSuffix, maxContainerSuffix, containerSuffixes,
+          filter(in, (ObjectFileOutputStream)out, minFilesize, maxFilesize, minContainerSuffix, maxContainerSuffix, containerSuffixes,
                   minLegalHolds, maxLegalHolds, minRetention, maxRetention, writeVersionHeader);
         } else if (upgrade) {
           upgrade(in, out);
         } else if (split) { // Order matters here - write, filter, upgrade must be above
-          split(in, out);
+          split(in, out, splitSize);
         } else { // Default case - just output the same file
           ByteStreams.copy(in, out);
         }
@@ -167,16 +168,21 @@ public class ObjectFile {
     return new BufferedInputStream(in);
   }
 
-  public static OutputStream getOutputStream(final boolean split, final int splitSize,
-      final String output) throws FileNotFoundException, IOException {
+  public static OutputStream getOutputStream(final boolean split, final int splitSize, final boolean write,
+      final boolean filter, final String output) throws FileNotFoundException, IOException {
     if (split) {
       int maxObjects;
       if (splitSize > 0)
         maxObjects = splitSize/ RandomObjectPopulator.OBJECT_SIZE;
       else
         maxObjects = RandomObjectPopulator.MAX_OBJECT_ARG;
-      return new ObjectFileOutputStream(output, maxObjects, RandomObjectPopulator.SUFFIX);
-    } else {
+      return new ObjectFileOutputStream(output, maxObjects, RandomObjectPopulator.SUFFIX, true, true);
+    } else if (write) {
+      return new ObjectFileOutputStream(output, RandomObjectPopulator.MAX_OBJECT_ARG, RandomObjectPopulator.SUFFIX, false, true);
+    } else if (filter) {
+      return new ObjectFileOutputStream(output, RandomObjectPopulator.MAX_OBJECT_ARG, RandomObjectPopulator.SUFFIX, true, true);
+    }
+    else  {
       return new BufferedOutputStream(getOutputStream(output));
     }
   }
@@ -188,37 +194,91 @@ public class ObjectFile {
     return System.out;
   }
 
-  public static void write(final InputStream in, final OutputStream out, boolean writeVersionHeader) throws IOException {
+  public static void write(final InputStream in, final OutputStream out)
+          throws IOException {
     checkNotNull(in);
     checkNotNull(out);
 
     final BufferedReader reader = new BufferedReader(new InputStreamReader(in, Charsets.UTF_8));
     String line;
-    if (writeVersionHeader) {
-      ObjectFileUtil.writeObjectFileVersion(out);
-    }
-
     line = reader.readLine();
     ObjectFileVersion version = null;
     if (line != null) {
       version = ObjectFileVersion.fromCharString(line);
-      if (version.getMajorVersion() == 1 && version.getMinorVersion() == 0) {
-        LegacyObjectMetadata objectName = getObjectFromCharString(version.getMajorVersion(), version.getMinorVersion(),
-                line);
-        out.write(objectName.toBytes());
+    }
+
+    boolean objectVersionPresent = false;
+    ObjectFileHeader header = null;
+    if (version != null) {
+      int objectVersionSize = 0;
+      // read header if available
+      if (version.getMajorVersion() >= 3 && version.getMinorVersion() >= 0) {
+        line = reader.readLine();
+        header = ObjectFileHeader.fromCharString(line);
+      }
+      if (header != null) {
+        objectVersionSize = header.getObjectVersionLen();
+        if (objectVersionSize > 0) {
+          objectVersionPresent = true;
+        }
       }
     }
 
-    ObjectMetadata objectName = null;
+    // check if the output file needs upgrade. if the output file does not have versioning enabled, but inputfile
+    // has object versions upgrade it to receive objects with versions
+    _consoleLogger.info("objectfile split objectVersionPresent {}", objectVersionPresent);
+    ((ObjectFileOutputStream)out).upgrade(objectVersionPresent);
+
+    // if it is a version 1.0, first line is the object itself. So first write it to the file
+    if (version.getMajorVersion() == 1 && version.getMinorVersion() == 0) {
+      LegacyObjectMetadata objectName = getObjectFromCharString(version.getMajorVersion(), version.getMinorVersion(),
+              line, false);
+      out.write(objectName.toBytes(objectVersionPresent));
+    }
+
     while ((line = reader.readLine()) != null) {
-      objectName = getObjectFromCharString(version.getMajorVersion(), version.getMinorVersion(), line);
-      out.write(objectName.toBytes());
+      // read object with or without version based on the input file header
+      LegacyObjectMetadata objectName = getObjectFromCharString(version.getMajorVersion(), version.getMinorVersion(),
+              line, objectVersionPresent);
+      // write object with or without version based on the output file header
+      out.write(objectName.toBytes(((ObjectFileOutputStream)out).getObjectVersionSize()>0));
     }
   }
 
-  private static LegacyObjectMetadata getObjectFromCharString(int majorVersion, int minorVersion, String inputLine) {
+  private static LegacyObjectMetadata getObjectFromCharString(int majorVersion, int minorVersion,
+                                                              String inputLine, boolean objectVersionPresent) {
     LegacyObjectMetadata objectName = null;
     if (majorVersion == LegacyObjectMetadata.MAJOR_VERSION && minorVersion == LegacyObjectMetadata.MINOR_VERSION) {
+      final String[] components = inputLine.split(",");
+      if (objectVersionPresent) {
+        checkArgument(components.length == 6, "Invalid record - %s", inputLine);
+      } else {
+        checkArgument(components.length == 5, "Invalid record - %s", inputLine);
+      }
+      final String objectString = components[0].trim();
+      String objectVersion=null;
+      long objectSize;
+      int containerSuffix;
+      byte numLegalHolds;
+      int retention;
+      if (objectVersionPresent) {
+        objectVersion = components[1].trim();
+        objectSize = Long.parseLong(components[2].trim());
+        containerSuffix = Integer.parseInt(components[3].trim());
+        numLegalHolds = Byte.parseByte(components[4].trim());
+        retention = Integer.parseInt(components[5].trim());
+      } else {
+        objectSize = Long.parseLong(components[1].trim());
+        containerSuffix = Integer.parseInt(components[2].trim());
+        numLegalHolds = Byte.parseByte(components[3].trim());
+        retention = Integer.parseInt(components[4].trim());
+      }
+      if (objectVersionPresent) {
+        objectName = LegacyObjectMetadata.fromMetadata(objectString, objectSize, containerSuffix, numLegalHolds, retention, objectVersion);
+      } else {
+        objectName = LegacyObjectMetadata.fromMetadata(objectString, objectSize, containerSuffix, numLegalHolds, retention, null);
+      }
+    } else  if (majorVersion == 2 && minorVersion == 0) {
       final String[] components = inputLine.split(",");
       checkArgument(components.length == 5, "Invalid record - %s", inputLine);
       final String objectString = components[0].trim();
@@ -226,7 +286,7 @@ public class ObjectFile {
       final int containerSuffix = Integer.parseInt(components[2].trim());
       final byte numLegalHolds = Byte.parseByte(components[3].trim());
       final int retention = Integer.parseInt(components[4].trim());
-      objectName = LegacyObjectMetadata.fromMetadata(objectString, objectSize, containerSuffix, numLegalHolds, retention);
+      objectName = LegacyObjectMetadata.fromMetadata(objectString, objectSize, containerSuffix, numLegalHolds, retention, null);
     } else if (majorVersion < LegacyObjectMetadata.MAJOR_VERSION && minorVersion <= LegacyObjectMetadata.MINOR_VERSION){
       final String[] components = inputLine.split(",");
       checkArgument(components.length == 3, "Invalid record - %s", inputLine);
@@ -235,51 +295,151 @@ public class ObjectFile {
       final int containerSuffix = Integer.parseInt(components[2].trim());
       final byte numLegalHolds = 0;
       final int retention = -1;
-      objectName = LegacyObjectMetadata.fromMetadata(objectString, objectSize, containerSuffix, numLegalHolds, retention);
+      objectName = LegacyObjectMetadata.fromMetadata(objectString, objectSize, containerSuffix, numLegalHolds,
+              retention, null);
     }
     return objectName;
   }
 
 
-  public static void read(final InputStream in, final OutputStream out, boolean writeVersionHeader) throws IOException {
+  public static void read(final InputStream in, String outputFileName, boolean writeVersionHeader)
+          throws IOException, IllegalArgumentException {
     checkNotNull(in);
-    checkNotNull(out);
+
+    ObjectFileVersion currentOutputFileVersion = null;
+    ObjectFileHeader currentOutputFileHeader = null;
+
+    if (outputFileName != null) {
+      final File outputFile = new File(outputFileName);
+
+      if (outputFile.length() > 0) {
+        final BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(outputFileName),
+                Charsets.UTF_8));
+        String line;
+        line = reader.readLine();
+        if (line != null) {
+          currentOutputFileVersion = ObjectFileVersion.fromCharString(line);
+        }
+        if (currentOutputFileVersion.getMajorVersion() >= 3 && currentOutputFileVersion.getMinorVersion() >= 0) {
+          line = reader.readLine();
+          currentOutputFileHeader = ObjectFileHeader.fromCharString(line);
+        }
+        reader.close();
+
+      }
+    }
 
     BufferedWriter writer = null;
+    OutputStream out;
+    if (outputFileName != null) {
+      out = new FileOutputStream(outputFileName, true);
+    } else {
+      out = System.out;
+    }
+
     try {
+
       writer = new BufferedWriter(new OutputStreamWriter(out, Charsets.UTF_8));
-      final ByteBuffer objectBuffer = ByteBuffer.allocate(LegacyObjectMetadata.OBJECT_SIZE);
       ObjectFileVersion version = ObjectFileUtil.readObjectFileVersion(in);
-      final byte[] readBytes = ObjectFileUtil.allocateObjectBuffer(version.getMajorVersion(), version.getMinorVersion(),
-              in);
       // skip header
+      int headerLength = 0;
+      ObjectFileHeader header = null;
       int skipLength = ObjectFileUtil.getVersionHeaderLength(version.getMajorVersion(), version.getMinorVersion());
+      if (version.getMajorVersion() >= 3 && version.getMinorVersion() >= 0) {
+        header = ObjectFileUtil.readObjectFileHeader(in);
+        headerLength = ObjectFileHeader.HEADER_LENGTH;
+      }
       in.skip(skipLength);
-      if (writeVersionHeader) {
-        writer.write("VERSION:" + LegacyObjectMetadata.MAJOR_VERSION + "." + LegacyObjectMetadata.MINOR_VERSION);
+
+      //_consoleLogger.info("VERSION:" + version.getMajorVersion() + "." + version.getMinorVersion());
+
+      if (writeVersionHeader || outputFileName == null) {
+        // writeVersionHeader if it is requested or if writing to the console that way version header will be written
+        // for subsequent input files
+        writer.write("VERSION:" + version.getMajorVersion() + "." + version.getMinorVersion());
         writer.newLine();
       }
-      while (readFully(in, readBytes)) {
-        //final ObjectMetadata objectName = LegacyObjectMetadata.fromBytes(buf);
+      if (!writeVersionHeader) {
+        // processing second or subsequent input file. If the output is not going to standard out,
+        // check the input fileheader. if it is different a different version i.e < 3 or if the input file has
+        // object versions and the output does not have versions bail out. otherwise the combine output file
+        // will have object records with and without version. It will not be usable.
+        // in such as case, if the files have to be combined they have individually convert to text format and then
+        // use -w option
+        if (out != System.out) {
+
+          if ((currentOutputFileVersion.getMajorVersion() >= 3 &&  version.getMajorVersion() >= 3) &&
+                  (currentOutputFileHeader.getObjectVersionLen() != header.getObjectVersionLen())) {
+            // same version but one file contains object version and other does not
+            out.close();
+            in.close();
+            throw new IllegalArgumentException("When reading multiple object files and redirecting to plain text outputfile, " +
+                    "object files with and without object versions encountered");
+          }
+          else if (currentOutputFileVersion.getMajorVersion() != version.getMajorVersion()) {
+            // outputfile has version > 3 and input file has major version < 3
+            _consoleLogger.error("Cannot combine object files with different versions. " +
+                            "Inputfile has version {}.{} and ouputfile has version {}.{}",
+                    version.getMajorVersion(), version.getMinorVersion(),
+                    currentOutputFileVersion.getMajorVersion(), currentOutputFileVersion.getMinorVersion());
+            out.close();
+            in.close();
+            throw new IllegalArgumentException("When reading multiple object files and redirecting to plain text outputfile," +
+                    " different versions object file encountered");
+          }
+        }
+      }
+
+      if ((writeVersionHeader && header != null) || (header != null && outputFileName == null)) {
+        // writeFileHeader if it is requested or if writing to the console that way file header will be written
+        // for subsequent input files
+        writer.write(header.getObjectFileHeaderLen() + "," + header.getObjectNameLen() + "," +
+                header.getObjectVersionLen() + "," +
+                header.getObjectSizeLen() + ","  + header.getObjectSuffixLen() + "," +
+                header.getObjectLegalHoldsLen() + "," + header.getObjectRetentionLen());
+        writer.newLine();
+      }
+      in.skip(headerLength);
+      final ByteBuffer objectBuffer;
+      if (header != null) {
+        objectBuffer = ByteBuffer.allocate(LegacyObjectMetadata.getObjectRecordSize(header));
+      } else {
+        objectBuffer = ByteBuffer.allocate(LegacyObjectMetadata.OBJECT_SIZE);
+      }
+      final byte[] readBytes = ObjectFileUtil.allocateObjectBuffer(version.getMajorVersion(), version.getMinorVersion(),
+              header);
+      while (ObjectFileUtil.readFully(in, readBytes)) {
+        final int objectVersionSize;
+        if (header != null) {
+          objectVersionSize = header.getObjectVersionLen();
+        } else {
+          objectVersionSize = 0;
+        }
         final ObjectMetadata objectName = ObjectFileUtil.getObjectFromInputBuffer(version.getMajorVersion(),
-                version.getMinorVersion(), readBytes, objectBuffer.array());
-        writer.write(String.format("%s,%s,%s,%s,%s", objectName.getName(), objectName.getSize(),
-            objectName.getContainerSuffix(), objectName.getNumberOfLegalHolds(), objectName.getRetention()));
+                version.getMinorVersion(), readBytes, objectBuffer.array(), objectVersionSize>0);
+        if (objectVersionSize > 0) {
+          writer.write(String.format("%s,%s,%s,%s,%s,%s", objectName.getName(), objectName.getVersion(), objectName.getSize(),
+                  objectName.getContainerSuffix(), objectName.getNumberOfLegalHolds(), objectName.getRetention()));
+        } else {
+          writer.write(String.format("%s,%s,%s,%s,%s", objectName.getName(), objectName.getSize(),
+                  objectName.getContainerSuffix(), objectName.getNumberOfLegalHolds(), objectName.getRetention()));
+        }
         writer.newLine();
       }
     } finally {
       if (writer != null) {
         writer.flush();
+        writer.close();
       }
     }
   }
 
-  public static void filter(final InputStream in, final OutputStream out, final long minFilesize,
+  public static void filter(final InputStream in, ObjectFileOutputStream output, final long minFilesize,
       final long maxFilesize, final int minContainerSuffix, final int maxContainerSuffix,
       final Set<Integer> containerSuffixes, final int minLegalholds, final int maxLegalHolds,
       final long minRetention, final long maxRetention, boolean writeVersionHeader) throws IOException {
     checkNotNull(in);
-    checkNotNull(out);
+    checkNotNull(output);
     checkArgument(minFilesize >= 0, "minFilesize must be >= 0 [%s]", minFilesize);
     checkArgument(minFilesize <= maxFilesize, "minFilesize must be <= maxFilesize [%s, %s]",
         minFilesize, maxFilesize);
@@ -297,68 +457,114 @@ public class ObjectFile {
     checkArgument(minLegalholds <= maxLegalHolds, "minLegalHolds must be <= maxLegalHolds [%s, %s]",
             minLegalholds, maxLegalHolds);
 
-    final MutableObjectMetadata object = new MutableObjectMetadata();
-    final ByteBuffer objectBuffer = ByteBuffer.allocate(LegacyObjectMetadata.OBJECT_SIZE);
     ObjectFileVersion version = ObjectFileUtil.readObjectFileVersion(in);
-    final byte[] readBytes = ObjectFileUtil.allocateObjectBuffer(version.getMajorVersion(), version.getMinorVersion(), in);
+    ObjectFileHeader header = null;
+    boolean objectVersionPresent = false;
+    int objectVersionSize = 0;
+    int skipLength = 0;
+    if (version.getMajorVersion() >= 3 && version.getMinorVersion() >= 0) {
+        header = ObjectFileUtil.readObjectFileHeader(in);
+    }
+    if (version.getMajorVersion() == LegacyObjectMetadata.MAJOR_VERSION &&
+            version.getMinorVersion() == LegacyObjectMetadata.MINOR_VERSION) {
+      skipLength = ObjectFileVersion.VERSION_HEADER_LENGTH + ObjectFileHeader.HEADER_LENGTH;
+    } else if (version.getMajorVersion() == 2 &&
+            version.getMinorVersion() == 0) {
+      skipLength = ObjectFileVersion.VERSION_HEADER_LENGTH;
+    } else {
+      skipLength = 0;
+    }
+    if (header != null) {
+      objectVersionSize = header.getObjectVersionLen();
+      if (objectVersionSize > 0) {
+        objectVersionPresent = true;
+      }
+    }
+    final byte[] readBytes = ObjectFileUtil.allocateObjectBuffer(version.getMajorVersion(), version.getMinorVersion(),
+            header);
+    final ByteBuffer objectBuffer = ByteBuffer.wrap(readBytes);
+
+    in.skip(skipLength);
+
+    // convert the file if the object versions are present in the input file
+    output.upgrade(objectVersionPresent);
+
+    while (ObjectFileUtil.readFully(in, readBytes)) {
+      final ObjectMetadata objectName = ObjectFileUtil.getObjectFromInputBuffer(version.getMajorVersion(),
+              version.getMinorVersion(), readBytes, objectBuffer.array(), objectVersionPresent);
+      //object.setBytes(objectName.toBytes(objectVersionPresent));
+      if (objectName.getSize() < minFilesize || objectName.getSize() > maxFilesize) {
+        continue;
+      }
+      if (objectName.getContainerSuffix() < minContainerSuffix || objectName.getContainerSuffix() > maxContainerSuffix) {
+        continue;
+      }
+      if (!containerSuffixes.isEmpty() && !containerSuffixes.contains(objectName.getContainerSuffix())) {
+        continue;
+      }
+      if (objectName.getRetention() < minRetention || objectName.getRetention() > maxRetention) {
+        continue;
+      }
+      if (objectName.getNumberOfLegalHolds() < minLegalholds || objectName.getNumberOfLegalHolds() > maxLegalHolds) {
+        continue;
+      }
+      output.write(objectName.toBytes(objectVersionPresent));
+    }
+  }
+
+  public static void split(final InputStream in, final OutputStream out, int splitSize)
+      throws IOException {
+    checkNotNull(in);
+    checkNotNull(out);
+
+    ObjectFileVersion version = ObjectFileUtil.readObjectFileVersion(in);
+    ObjectFileHeader header = null;
+    boolean objectVersionPresent = false;
+    int objectVersionSize = 0;
+    if (version.getMajorVersion() == LegacyObjectMetadata.MAJOR_VERSION && version.getMinorVersion() == 0) {
+      header = ObjectFileUtil.readObjectFileHeader(in);
+    }
+    final byte[] readBytes = ObjectFileUtil.allocateObjectBuffer(version.getMajorVersion(), version.getMinorVersion(),
+            header);
     // skip header
+    if (header != null) {
+      objectVersionSize = header.getObjectVersionLen();
+      if (objectVersionSize > 0) {
+        objectVersionPresent = true;
+        int maxObjects = Math.max((splitSize - ObjectFileVersion.VERSION_HEADER_LENGTH - ObjectFileHeader.HEADER_LENGTH) /
+                (LegacyObjectMetadata.OBJECT_SIZE + LegacyObjectMetadata.OBJECT_VERSION_MAX_SIZE), 1);
+        ((ObjectFileOutputStream)out).setMaxObjects(maxObjects);
+      }
+    }
+    final ByteBuffer objectBuffer = ByteBuffer.wrap(readBytes);
+
     int skipLength = 0;
     if (version.getMajorVersion() == LegacyObjectMetadata.MAJOR_VERSION &&
             version.getMinorVersion() == LegacyObjectMetadata.MINOR_VERSION) {
+      skipLength = ObjectFileVersion.VERSION_HEADER_LENGTH + ObjectFileHeader.HEADER_LENGTH;
+    } else if (version.getMajorVersion() == 2 &&
+            version.getMinorVersion() == 0) {
       skipLength = ObjectFileVersion.VERSION_HEADER_LENGTH;
     } else {
       skipLength = 0;
     }
     in.skip(skipLength);
-    if (writeVersionHeader) {
-      ObjectFileUtil.writeObjectFileVersion(out);
-    }
-    while (readFully(in, readBytes)) {
-      final ObjectMetadata objectName = ObjectFileUtil.getObjectFromInputBuffer(version.getMajorVersion(),
-              version.getMinorVersion(), readBytes, objectBuffer.array());
-      object.setBytes(objectName.toBytes());
-      if (object.getSize() < minFilesize || object.getSize() > maxFilesize) {
-        continue;
-      }
-      if (object.getContainerSuffix() < minContainerSuffix || object.getContainerSuffix() > maxContainerSuffix) {
-        continue;
-      }
-      if (!containerSuffixes.isEmpty() && !containerSuffixes.contains(object.getContainerSuffix())) {
-        continue;
-      }
-      if (object.getRetention() < minRetention || object.getRetention() > maxRetention) {
-        continue;
-      }
-      if (object.getNumberOfLegalHolds() < minLegalholds || object.getNumberOfLegalHolds() > maxLegalHolds) {
-        continue;
-      }
-      out.write(object.toBytes());
-    }
-  }
 
-  public static void split(final InputStream in, final OutputStream out)
-      throws IOException {
-    checkNotNull(in);
-    checkNotNull(out);
+    // check if the output file needs upgrade. if the output file does not have versioning enabled, but inputfile
+    // has object versions upgrade it to receive objects with versions
+    _consoleLogger.info("objectfile split objectVersionPresent {}", objectVersionPresent);
+    ((ObjectFileOutputStream)out).upgrade(objectVersionPresent);
 
-    final MutableObjectMetadata object = new MutableObjectMetadata();
-    final ByteBuffer objectBuffer = ByteBuffer.allocate(LegacyObjectMetadata.OBJECT_SIZE);
-    ObjectFileVersion version = ObjectFileUtil.readObjectFileVersion(in);
-    final byte[] readBytes = ObjectFileUtil.allocateObjectBuffer(version.getMajorVersion(), version.getMinorVersion(),
-            in);
-    int skipLength = ObjectFileUtil.getVersionHeaderLength(version.getMajorVersion(), version.getMinorVersion());
-    in.skip(skipLength);
-    while (readFully(in, readBytes)) {
+    while (ObjectFileUtil.readFully(in, readBytes)) {
       final ObjectMetadata objectName = ObjectFileUtil.getObjectFromInputBuffer(version.getMajorVersion(),
-              version.getMinorVersion(), readBytes, objectBuffer.array());
-      object.setBytes(objectName.toBytes());
-      out.write(object.toBytes());
+              version.getMinorVersion(), readBytes, objectBuffer.array(), objectVersionPresent);
+      out.write(objectName.toBytes( ((ObjectFileOutputStream)out).getObjectVersionSize()>0));
     }
   }
 
   public static class MutableObjectMetadata extends LegacyObjectMetadata {
-    public MutableObjectMetadata() {
-      super(ByteBuffer.allocate(OBJECT_SIZE));
+    public MutableObjectMetadata(int bufSize, int objectVersionSize) {
+      super(ByteBuffer.allocate(bufSize), objectVersionSize);
     }
 
     public void setBytes(final byte[] bytes) {
@@ -377,29 +583,22 @@ public class ObjectFile {
     }
   }
 
+  // TODO: fix this to version 3.0
   public static void upgrade(final InputStream in, final OutputStream out) throws IOException {
     // oom size
     final int legacySize = 18;
     final byte[] buf = new byte[legacySize];
-    final MutableObjectMetadata object = new MutableObjectMetadata();
+    //TODO: fix this
+    final MutableObjectMetadata object = new MutableObjectMetadata(51, 16);
     object.setSize(0);
     object.setContainerSuffix(-1);
-    while (readFully(in, buf)) {
+    while (ObjectFileUtil.readFully(in, buf)) {
       object.setBytes(buf);
-      out.write(object.toBytes());
+      out.write(object.toBytes(false));
     }
   }
 
-  // adapt Bytestreams.readFully to return a boolean rather than throwing an exception
-  public static boolean readFully(final InputStream in, final byte[] b) throws IOException {
-    try {
-      ByteStreams.readFully(in, b);
-    } catch (final EOFException e) {
-      // FIXME deal with the case where bytes not divisible by b.size, rather than regular EOF
-      return false;
-    }
-    return true;
-  }
+
 
 
 
@@ -408,18 +607,19 @@ public class ObjectFile {
     try {
       InputStream in = getInputStream(objectFile);
       ObjectFileVersion version = ObjectFileUtil.readObjectFileVersion(in);
-      final byte[] readBytes = ObjectFileUtil.allocateObjectBuffer(version.getMajorVersion(), version.getMinorVersion(),
-              in);
-      // calculate object size based on version
-      int objectSize = 30;
-      if (version.getMajorVersion() == 1) {
-        objectSize = RandomObjectPopulator.OBJECT_SIZE_V1;
-      } else if (version.getMajorVersion() == 2) {
-        objectSize = RandomObjectPopulator.OBJECT_SIZE;
+      ObjectFileHeader objectFileHeader = null;
+      if (version.getMajorVersion() >= 3 && version.getMinorVersion() >= 0) {
+        objectFileHeader = ObjectFileUtil.readObjectFileHeader(in);
       }
-      int headerLength = ObjectFileUtil.getVersionHeaderLength(version.getMajorVersion(), version.getMinorVersion());
+      final byte[] objectBytes = ObjectFileUtil.allocateObjectBuffer(version.getMajorVersion(), version.getMinorVersion(),
+              objectFileHeader);
+      int versionHeaderLength = ObjectFileUtil.getVersionHeaderLength(version.getMajorVersion(), version.getMinorVersion());
+      int fileHeaderLength = 0;
+      if (objectFileHeader !=  null) {
+        fileHeaderLength = objectFileHeader.getObjectFileHeaderLen();
+      }
       long fileSize = objectFile.length();
-      int nObjects = (int) (fileSize - headerLength) / objectSize;
+      int nObjects = (int) (fileSize - (versionHeaderLength + fileHeaderLength)) / objectBytes.length;
       return nObjects;
 
     } catch (FileNotFoundException fne) {
@@ -514,13 +714,22 @@ public class ObjectFile {
       long length = fp1.length();
       fp1.seek(length);
 
-      //TODO check the files have different object versions
       InputStream in = getInputStream(f2);
       ObjectFileVersion version = ObjectFileUtil.readObjectFileVersion(in);
-      final byte[] readBytes = ObjectFileUtil.allocateObjectBuffer(version.getMajorVersion(), version.getMinorVersion(),
-              in);
-      // skip header
-      int skipLength = ObjectFileUtil.getVersionHeaderLength(version.getMajorVersion(), version.getMinorVersion());
+      ObjectFileHeader objectFileHeader = null;
+      if (version.getMajorVersion() >= 3 && version.getMinorVersion() >= 0) {
+        objectFileHeader = ObjectFileUtil.readObjectFileHeader(in);
+      }
+      final byte[] objectBytes = ObjectFileUtil.allocateObjectBuffer(version.getMajorVersion(), version.getMinorVersion(),
+              objectFileHeader);
+
+      int versionHeaderLength = ObjectFileUtil.getVersionHeaderLength(version.getMajorVersion(), version.getMinorVersion());
+      int fileHeaderLength = 0;
+      if (objectFileHeader !=  null) {
+        fileHeaderLength = objectFileHeader.getObjectFileHeaderLen();
+      }
+      int skipLength = versionHeaderLength + fileHeaderLength;
+
       in.close();
       RandomAccessFile fp2 = new RandomAccessFile(f2, "rw");
       fp2.seek(skipLength);
@@ -549,28 +758,45 @@ public class ObjectFile {
     ArrayList<ObjectMetadata> slist = new ArrayList<ObjectMetadata>();
     long timestampStart = System.currentTimeMillis();
     _consoleLogger.info("random shuffle of output object file start time [{}]", FORMATTER.print(timestampStart));
+    boolean objectVersionPresent = false;
     try {
-      final ByteBuffer objectBuffer = ByteBuffer.allocate(LegacyObjectMetadata.OBJECT_SIZE);
       ObjectFileVersion version = ObjectFileUtil.readObjectFileVersion(in);
-      final byte[] readBytes = ObjectFileUtil.allocateObjectBuffer(version.getMajorVersion(), version.getMinorVersion(),
-              in);
-      // skip header
-      int skipLength = ObjectFileUtil.getVersionHeaderLength(version.getMajorVersion(), version.getMinorVersion());
+      ObjectFileHeader objectFileHeader = null;
+      if (version.getMajorVersion() >= 3 && version.getMinorVersion() >= 0) {
+        objectFileHeader = ObjectFileUtil.readObjectFileHeader(in);
+      }
+      final byte[] objectBytes = ObjectFileUtil.allocateObjectBuffer(version.getMajorVersion(), version.getMinorVersion(),
+              objectFileHeader);
+
+      int versionHeaderLength = ObjectFileUtil.getVersionHeaderLength(version.getMajorVersion(), version.getMinorVersion());
+      int fileHeaderLength = 0;
+
+      if (objectFileHeader !=  null) {
+        fileHeaderLength = objectFileHeader.getObjectFileHeaderLen();
+        objectVersionPresent = objectFileHeader.getObjectVersionLen() > 0 ? true: false;
+      }
+      int skipLength = versionHeaderLength + fileHeaderLength;
+
+
+
       in.skip(skipLength);
-      while (readFully(in, readBytes)) {
+      final ByteBuffer objectBuffer = ByteBuffer.wrap(objectBytes);
+      while (ObjectFileUtil.readFully(in, objectBytes)) {
         //final ObjectMetadata objectName = LegacyObjectMetadata.fromBytes(buf);
         final ObjectMetadata objectName = ObjectFileUtil.getObjectFromInputBuffer(version.getMajorVersion(),
-                version.getMinorVersion(), readBytes, objectBuffer.array());
+                version.getMinorVersion(), objectBytes, objectBuffer.array(), objectVersionPresent);
         slist.add(objectName);
       }
       // shuffle
       Random r = new Random();
       ObjectFileUtil.writeObjectFileVersion(out);
+      int objectVersionSize = objectVersionPresent == true ? 16: 0;
+      ObjectFileUtil.writeObjectFileHeader(out, objectVersionSize);
       int nObects = slist.size();
       while (nObects > 0) {
         int i = r.nextInt(nObects);
         ObjectMetadata e = slist.remove(i);
-        out.write(e.toBytes());
+        out.write(e.toBytes(objectVersionPresent));
         //dlist.add(e);
         nObects = slist.size();
       }
@@ -611,7 +837,7 @@ public class ObjectFile {
   }
 
 
-  public static void shuffle(String prefix, String directory, int maxObjects) {
+  public static void shuffle(String prefix, String directory, int maxObjects, int shuffleMaxObjectFileSize) {
     _consoleLogger.info("object-file shuffling ...");
     long tsStartShuffleProcess = System.currentTimeMillis();
     File[] files = ObjectManagerUtils.getIdFiles(prefix, RandomObjectPopulator.SUFFIX, directory);
@@ -621,12 +847,31 @@ public class ObjectFile {
     }
 
     Integer nTotalObjects = 0;
+    int objectVersionSize = 0;
     HashMap<File, Integer> fileObjectsMap = new LinkedHashMap<File, Integer>();
+    // adjust maxObjects based on if an object file contains object version
+    try {
+      //FileInputStream fis = new FileInputStream(files[0].getPath());
+      InputStream is = getInputStream(files[0]);
+      ObjectFileVersion version = ObjectFileUtil.readObjectFileVersion(is);
+      if (version.getMajorVersion() >= 3 && version.getMinorVersion() >= 0) {
+        ObjectFileHeader header = ObjectFileUtil.readObjectFileHeader(is);
+        objectVersionSize = header.getObjectVersionLen();
+        if (objectVersionSize > 0) {
+          if (shuffleMaxObjectFileSize > 0) {
+            maxObjects =
+                    Math.max((shuffleMaxObjectFileSize /
+                            (LegacyObjectMetadata.OBJECT_SIZE + LegacyObjectMetadata.OBJECT_VERSION_MAX_SIZE)), 1);
+          }
+        }
+      }
+    } catch (FileNotFoundException fne) {
+      _consoleLogger.error("shuffle: {} not found while checking file header", files[0].getPath());
+    } catch (IOException ioe) {
+      _consoleLogger.error("shuffle: {} IOException while checking file header", files[0].getPath());
+    }
     for (File f: files) {
-      //_consoleLogger.info(f.getPath());
-
       int nObjects = getNumberOfObjects(f);
-      //_consoleLogger.info("Number of objects in file {} is {}", f.getPath(), nObjects);
       fileObjectsMap.put(f, nObjects);
       nTotalObjects += nObjects;
     }
@@ -680,6 +925,7 @@ public class ObjectFile {
       _consoleLogger.info("Shuffle output file [{}]", directory + "/" + prefix + maxIndex + ".object");
       try {
         ObjectFileUtil.writeObjectFileVersion(fos);
+        ObjectFileUtil.writeObjectFileHeader(fos, objectVersionSize);
       } catch(IOException ioe) {
           _consoleLogger.error("IOException: Failed to created new Object file");
           return;
@@ -689,6 +935,7 @@ public class ObjectFile {
       return;
     }
     long borrowedObjects = 0;
+    int newObjectVersionSize = 0;
     for (File f: files) {
       long nObjects = fileObjectsMap.get(f);
       long toBorrow = (long)Math.floor((double)(nObjects * maxObjects) / nTotalObjects);
@@ -696,14 +943,50 @@ public class ObjectFile {
       _consoleLogger.info("file [{}] has total [{}] objects to borrow [{}]", f.getPath(), nObjects, toBorrow);
       // borrow no. of objects from the end and truncate the file
       try {
-        FileInputStream fis = new FileInputStream(f);
+        BufferedInputStream fis = new BufferedInputStream(new FileInputStream(f));
         // TODO: handle version based object size
+        ObjectFileVersion version = ObjectFileUtil.readObjectFileVersion(fis);
+        ObjectFileHeader objectFileHeader = null;
+        if (version.getMajorVersion() >= 3 && version.getMinorVersion() >= 0) {
+          objectFileHeader = ObjectFileUtil.readObjectFileHeader(fis);
+          newObjectVersionSize = objectFileHeader.getObjectVersionLen();
+        }
+        final byte[] objectBytes = ObjectFileUtil.allocateObjectBuffer(version.getMajorVersion(), version.getMinorVersion(),
+                objectFileHeader);
+        int objectSize = objectBytes.length;
+        byte[] outputBytes = new byte[objectSize];
+        ByteBuffer objectBuffer = ByteBuffer.wrap(outputBytes);
         try {
-          long skip = f.length() - toBorrow * LegacyObjectMetadata.OBJECT_SIZE;
+
+          long skip = f.length() - toBorrow * objectSize;
           _consoleLogger.info("Input file [{}] size [{}] skipping [{}] bytes from beginning", f.getPath(), f.length(),
                   skip);
-          fis.skip(skip);
-          ByteStreams.copy(fis, fos);
+          int countSkipped = 0;
+          while (countSkipped < skip) {
+            countSkipped += fis.skip(skip-countSkipped);
+          }
+          if (newObjectVersionSize > objectVersionSize) {
+            // new file from which objects are borrowed has object versions but the shuffle output file
+            // does not
+            objectVersionSize = newObjectVersionSize;
+            fos.close();
+            ObjectFileUtil.upgrade(new File(directory , prefix + maxIndex + ".object"), true);
+            fos = new FileOutputStream(new File(directory , prefix + maxIndex + ".object"), true);
+            ByteStreams.copy(fis, fos);
+
+          } else if (newObjectVersionSize < objectVersionSize) {
+            // new file from which objects are borrowed does not have object versions but the shuffle output file
+            //does. read object by object and add with zero version id
+            while (ObjectFileUtil.readFully(fis, objectBytes)) {
+              final ObjectMetadata objectName = ObjectFileUtil.getObjectFromInputBuffer(version.getMajorVersion(),
+                      version.getMinorVersion(), objectBytes, objectBuffer.array(), false);
+              //object.setBytes(objectName.toBytes(objectVersionPresent));
+              fos.write(objectName.toBytes(true));
+            }
+
+          } else {
+            ByteStreams.copy(fis, fos);
+          }
           borrowedObjects += toBorrow;
 
           fis.close();
@@ -721,8 +1004,8 @@ public class ObjectFile {
         } catch(IOException ioe) {
           _consoleLogger.warn("IOException skipping on File {} not found. skipping file", f.getPath());
         }
-      } catch (FileNotFoundException fne) {
-        _consoleLogger.warn("File {} not found. skipping file", f.getPath());
+      } catch(IOException ioe) {
+        _consoleLogger.warn("IOException skipping on File {} not found. skipping file", f.getPath());
       }
     }
     _consoleLogger.info("Shuffle output file [{}] objects [{}]", directory + "/" + prefix + maxIndex + ".object",
@@ -734,7 +1017,6 @@ public class ObjectFile {
       fos.close();
     } catch (IOException ioe) {
       _consoleLogger.error("Failed to close new object file stream");
-      //TODO: return error
     }
 
     _consoleLogger.info("start randomizing objects in the output object file ...");
@@ -768,11 +1050,12 @@ public class ObjectFile {
     private final String prefix;
     private int index;
     private int written;
-    private final int maxObjects;
+    private int maxObjects;
     private final String suffix;
     private OutputStream out;
-
-    public ObjectFileOutputStream(final String prefix, final int maxObjects, final String suffix)
+    private int objectVersionSize = 0;
+    private final boolean autoCreate;
+    public ObjectFileOutputStream(final String prefix, final int maxObjects, final String suffix, boolean autoCreate, boolean writeVersion)
         throws FileNotFoundException, IOException {
       this.prefix = checkNotNull(prefix);
       this.index = 0;
@@ -780,27 +1063,77 @@ public class ObjectFile {
       checkArgument(maxObjects > 0, "maxObjects must be > 0 [%s]", maxObjects);
       this.maxObjects = maxObjects;
       this.suffix = checkNotNull(suffix);
-      this.out = create();
+      this.autoCreate = autoCreate;
+      this.out = create(writeVersion);
     }
 
-    private OutputStream create() throws FileNotFoundException, IOException {
-      BufferedOutputStream bos = new BufferedOutputStream(
-          new FileOutputStream(String.format("%s%d%s", this.prefix, this.index, this.suffix)));
-      ObjectFileUtil.writeObjectFileVersion(bos);
-      return bos;
+    private OutputStream create(boolean createHeaders) throws IOException {
+      if (createHeaders) {
+        BufferedOutputStream bos = new BufferedOutputStream(
+                new FileOutputStream(String.format("%s%d%s", this.prefix, this.index, this.suffix)));
+        ObjectFileUtil.writeObjectFileVersion(bos);
+        ObjectFileUtil.writeObjectFileHeader(bos, this.objectVersionSize);
+        return bos;
+      } else {
+        //skip to the end of file
+        BufferedOutputStream bos = new BufferedOutputStream(
+                new FileOutputStream(String.format("%s%d%s", this.prefix, this.index, this.suffix),true));
+        return bos;
+      }
+
     }
+
+    public String outputFile() {
+      return String.format("%s%d%s", this.prefix, this.index, this.suffix);
+    }
+
+    public void setMaxObjects(int maxObjects) {
+      this.maxObjects = maxObjects;
+    }
+
+    public void setObjectVersionSize(int objectVersionSize) throws IOException {
+      this.objectVersionSize =  objectVersionSize;
+    }
+
+    public void writeFileHeader() throws IOException {
+      ObjectFileUtil.writeObjectFileHeader(this.out, this.objectVersionSize);
+    }
+
+    public int getObjectVersionSize() {
+      return this.objectVersionSize;
+    }
+
+    public void upgrade(boolean objectVersionPresent) throws IOException {
+      // close the stream, upgrade and reopen the stream
+
+      if (objectVersionPresent && this.objectVersionSize <= 0) {
+        this.out.close();
+        File file = new File(String.format("%s%d%s", this.prefix, this.index, this.suffix));
+        ObjectFileUtil.upgrade(file, objectVersionPresent);
+        this.out = create(false);
+        this.objectVersionSize = LegacyObjectMetadata.OBJECT_VERSION_MAX_SIZE;
+      }
+    }
+
 
     @Override
     public void write(final byte[] b) throws IOException {
-      if (this.written >= this.maxObjects) {
-        this.index++;
-        this.out.close();
-        this.out = create();
-        this.written = 0;
+      if (this.autoCreate) {
+        if (this.written >= this.maxObjects) {
+          this.index++;
+          this.out.close();
+          this.out = create(true);
+
+          this.written = 0;
+        }
       }
 
       this.out.write(b);
       this.written++;
+    }
+
+    public void write(final byte[] b, int objectVersionSize) {
+
     }
 
     @Override
