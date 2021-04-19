@@ -26,6 +26,7 @@ public class OGConfig {
   public OperationConfig read;
   public OperationConfig delete;
   public OperationConfig list;
+  public OperationConfig listObjectVersions;
   public OperationConfig containerList;
   public OperationConfig containerCreate;
   public OperationConfig multipartWrite;
@@ -73,6 +74,7 @@ public class OGConfig {
     this.metadata = new OperationConfig();
     this.delete = new OperationConfig();
     this.list = new OperationConfig();
+    this.listObjectVersions = new OperationConfig();
     this.containerList = new OperationConfig();
     this.containerCreate = new OperationConfig();
     this.multipartWrite = new OperationConfig();

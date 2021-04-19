@@ -296,7 +296,6 @@ public class RequestSupplier implements Supplier<Request> {
       if (this.operation == Operation.MULTI_DELETE) {
         builder.withContext(Context.X_OG_RESPONSE_BODY_CONSUMER, "s3.multi_delete");
       }
-
     return builder.build();
   }
 
@@ -389,6 +388,13 @@ public class RequestSupplier implements Supplier<Request> {
       }
       if (counter < mapSize) {
         sb.append("&");
+      }
+    }
+    if ((this.operation == Operation.READ || this.operation == Operation.DELETE ||
+            this.operation == this.operation.METADATA) &&
+            context.get(Context.X_OG_OBJECT_VERSION_SELECTION) != null) {
+      if (context.get(Context.X_OG_OBJECT_VERSION) != null) {
+        sb.append(QueryParameters.OBJECT_VERSION_ID).append("=").append(context.get(Context.X_OG_OBJECT_VERSION));
       }
     }
 

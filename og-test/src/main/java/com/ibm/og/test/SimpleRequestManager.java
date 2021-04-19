@@ -98,7 +98,9 @@ public class SimpleRequestManager implements RequestManager {
       @Named("deleteTags") final Supplier<Request> deleteTags,
       @Named("deleteTags.weight") final double deleteTagsWeight,
       @Named("getTags") final Supplier<Request> getTags,
-      @Named("getTags.weight") final double getTagsWeight){
+      @Named("getTags.weight") final double getTagsWeight,
+      @Named("listObjectVersions") final Supplier<Request> listObjectVersions,
+      @Named("listObjectVersions.weight") final double listObjectVersionsWeight){
 
     checkNotNull(write);
     checkNotNull(overwrite);
@@ -123,6 +125,7 @@ public class SimpleRequestManager implements RequestManager {
     checkNotNull(writeTags);
     checkNotNull(deleteTags);
     checkNotNull(getTags);
+    checkNotNull(listObjectVersions);
 
     this.multipartWriteSupplier = (MultipartRequestSupplier)writeMultipart;
 
@@ -198,6 +201,9 @@ public class SimpleRequestManager implements RequestManager {
     }
     if (getTagsWeight > 0.0) {
       wrc.withChoice(getTags, getTagsWeight);
+    }
+    if (listObjectVersionsWeight > 0.0) {
+      wrc.withChoice(listObjectVersions, listObjectVersionsWeight);
     }
 
     this.requestSupplier = wrc.build();

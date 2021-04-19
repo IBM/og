@@ -68,6 +68,8 @@ public class ObjectFileVersion {
         return new ObjectFileVersion(b);
     }
 
+
+
     public static ObjectFileVersion fromCharString(String line) {
         if (!line.startsWith(ObjectFileVersion.VERSION_HEADER_PREFIX)) {
             // pre-worm. VERSION:1.0
