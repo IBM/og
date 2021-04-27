@@ -120,7 +120,11 @@ public class ObjectFile {
         out = getOutputStream(false, RandomObjectPopulator.MAX_OBJECT_ARG, write, false, output);
       } else if (filter) {
         // get split aware ObjectFileOutputStream
-        out = getOutputStream(split, RandomObjectPopulator.MAX_OBJECT_ARG, false, true, output);
+        if (split) {
+          out = getOutputStream(split, splitSize, false, true, output);
+        } else {
+          out = getOutputStream(split, RandomObjectPopulator.MAX_OBJECT_ARG, false, true, output);
+        }
       } else if (upgrade) {
         out = getOutputStream(false, RandomObjectPopulator.MAX_OBJECT_ARG, false, false, output);
       } else if (split) {
