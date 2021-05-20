@@ -1122,6 +1122,60 @@ public class OGModule extends AbstractModule {
     return MoreFunctions.forSupplier(partSizeSupplier);
   }
 
+
+  @Provides
+  @Singleton
+  @Named("multipartWrite.partsPecentagePerSession")
+  public Function<Map<String, String>, Double> provideMultipartWritePartsPercentagePerSession() {
+    return providePartsPercentagePerSession(this.config.multipartWrite);
+  }
+
+  private Function<Map<String, String>, Double> providePartsPercentagePerSession(
+          final OperationConfig operationConfig) {
+    checkNotNull(operationConfig);
+
+    final SelectionConfig<Double> operationPartsPercentagePerSession =
+            operationConfig.upload.partialUploadConfig;
+    if (operationPartsPercentagePerSession != null && !operationPartsPercentagePerSession.choices.isEmpty()) {
+      return createPartsPercentagePerSession(operationConfig.upload.partialUploadConfig);
+    }
+
+    // default to Integer.MAX_VALUE parts per session
+    final List<Double> partsPercentagePerSessionList = Lists.newArrayList();
+    partsPercentagePerSessionList.add(100.0);
+    final Supplier<Double> partSizeSupplier = Suppliers.cycle(partsPercentagePerSessionList);
+    return MoreFunctions.forSupplier(partSizeSupplier);
+  }
+
+  private Function<Map<String, String>, Double> createPartsPercentagePerSession(
+          final SelectionConfig<Double> partialUploadSelection) {
+    checkNotNull(partialUploadSelection);
+    checkNotNull(partialUploadSelection.selection);
+    checkNotNull(partialUploadSelection.choices);
+    checkArgument(!partialUploadSelection.choices.isEmpty(), "must specify at least one part per session");
+    for (final ChoiceConfig<Double> choice : partialUploadSelection.choices) {
+      checkNotNull(choice);
+      checkNotNull(choice.choice);
+      checkArgument(choice.choice >= 1, "Percentage of parts in MPU must be greater than or equal to 1");
+    }
+
+    if (SelectionType.ROUNDROBIN == partialUploadSelection.selection) {
+      final List<Double> partsPercentagePerSessionList = Lists.newArrayList();
+      for (final ChoiceConfig<Double> choice : partialUploadSelection.choices) {
+        partsPercentagePerSessionList.add(choice.choice);
+      }
+      final Supplier<Double> partsPercentageSupplier = Suppliers.cycle(partsPercentagePerSessionList);
+      return MoreFunctions.forSupplier(partsPercentageSupplier);
+    }
+
+    final RandomSupplier.Builder<Double> wrc = Suppliers.random();
+    for (final ChoiceConfig<Double> choice : partialUploadSelection.choices) {
+      wrc.withChoice(choice.choice, choice.weight);
+    }
+    final Supplier<Double> partsPercentageSupplier = wrc.build();
+    return MoreFunctions.forSupplier(partsPercentageSupplier);
+  }
+
   @Provides
   @Singleton
   @WriteObjectName
@@ -3817,6 +3871,7 @@ public class OGModule extends AbstractModule {
       @Nullable @MultipartWriteObjectName final Function<Map<String, String>, String> object,
       @Named("multipartWrite.partSize") final Function<Map<String, String>, Long> partSize,
       @Named("multipartWrite.partsPerSession") final Function<Map<String, String>, Integer> partsPerSession,
+      @Named("multipartWrite.partsPecentagePerSession") final Function<Map<String, String>, Double> partsPercentagePerSession,
       @Named("multipartWrite.targetSessions") final int targetSessions,
       @MultipartWriteHeaders final Map<String, Function<Map<String, String>, String>> headers,
       @Named("multipartWrite.context") final List<Function<Map<String, String>, String>> context,
@@ -3859,8 +3914,8 @@ public class OGModule extends AbstractModule {
     // AWS s3 API guide they are not required for complete request.
 
     return createMultipartRequestSupplier(id, scheme, host, port, uriRoot, container, apiVersion,
-        object, partSize, partsPerSession, targetSessions, queryParameters, headers, context, body,
-        retention, legalHold, credentials, virtualHost, contentMd5, delimiter);
+        object, partSize, partsPerSession, partsPercentagePerSession, targetSessions, queryParameters, headers, context,
+        body, retention, legalHold, credentials, virtualHost, contentMd5, delimiter);
   }
 
   private Supplier<Request> createMultipartRequestSupplier(
@@ -3869,7 +3924,9 @@ public class OGModule extends AbstractModule {
       final Function<Map<String, String>, String> container, final String apiVersion,
       final Function<Map<String, String>, String> object,
       final Function<Map<String, String>, Long> partSize,
-      final Function<Map<String, String>, Integer> partsPerSession, final int targetSessions,
+      final Function<Map<String, String>, Integer> partsPerSession,
+      final Function<Map<String, String>, Double> providePartsPercentagePerSession,
+      final int targetSessions,
       final Map<String, Function<Map<String, String>, String>> queryParameters,
       final Map<String, Function<Map<String, String>, String>> headers,
       final List<Function<Map<String, String>, String>> context,
@@ -3881,6 +3938,6 @@ public class OGModule extends AbstractModule {
 
     return new MultipartRequestSupplier(id, scheme, host, port, uriRoot, container, object,
         partSize, partsPerSession, targetSessions, queryParameters, false, headers, context,
-        credentials, body, virtualHost, retention, legalHold, contentMd5, delimiter);
+        credentials, body, virtualHost, retention, legalHold, contentMd5, delimiter, providePartsPercentagePerSession);
   }
 }
