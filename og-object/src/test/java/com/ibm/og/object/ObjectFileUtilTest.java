@@ -272,18 +272,11 @@ public class ObjectFileUtilTest {
     // filesize before upgrading
     File beforeUpgradeFile =  new File("id_0.object");
     long size1 = beforeUpgradeFile.length();
-
-    long lastModified1 =  beforeUpgradeFile.lastModified();
-
     ObjectFileUtil.upgrade(new File("id_0.object"), false);
     long size2 = new File("id_0.object").length();
-
-    long lastModified2 =  beforeUpgradeFile.lastModified();
-
     Assert.assertTrue(size2 == size1 + ( ObjectFileVersion.VERSION_HEADER_LENGTH +
             ObjectFileHeader.HEADER_LENGTH +4*(1+4)));
 
-    Assert.assertTrue(lastModified1 == lastModified2);
   }
 
 
@@ -305,17 +298,12 @@ public class ObjectFileUtilTest {
     File beforeUpgradeFile =  new File("id_0.object");
     long size1 = beforeUpgradeFile.length();
 
-    long lastModified1 =  beforeUpgradeFile.lastModified();
-
     ObjectFileUtil.upgrade(new File("id_0.object"), false);
     long size2 = new File("id_0.object").length();
-
-    long lastModified2 =  beforeUpgradeFile.lastModified();
 
     Assert.assertTrue(size2 == size1 + ( ObjectFileVersion.VERSION_HEADER_LENGTH +
             ObjectFileHeader.HEADER_LENGTH +4*(1+4)));
 
-    Assert.assertTrue(lastModified1 == lastModified2);
   }
 
   private String objectVersionString(final UUID objectVersion) {

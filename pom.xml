@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.ibm</groupId>
   <artifactId>og</artifactId>
-  <version>1.12.1</version>
+  <version>partial-mpu-1.13.0.0</version>
   <packaging>pom</packaging>
   <name>OG</name>
   <description>Tool for load testing dsNet appliances</description>
