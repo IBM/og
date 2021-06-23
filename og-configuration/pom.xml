@@ -4,7 +4,7 @@
   <parent>
     <artifactId>og</artifactId>
     <groupId>com.ibm</groupId>
-    <version>partial-mpu-1.13.0.0</version>
+    <version>1.13.0.0-partial-mpu</version>
   </parent>
   <artifactId>og-configuration</artifactId>
   <name>Configuration</name>
