@@ -64,6 +64,7 @@ public class RequestLogEntry {
   public String multideleteFailedObjects;
   public String objectVersionId;
   public String newObjectVersionId;
+  public String partialMpuLastPart;
 
   private static final DateTimeFormatter FORMATTER =
       DateTimeFormat.forPattern("dd/MMM/yyyy:HH:mm:ss Z").withLocale(Locale.US);
@@ -180,6 +181,10 @@ public class RequestLogEntry {
       this.newObjectVersionId = response.headers().get("x-amz-version-id");
     }
     this.objectVersionId = request.getContext().get(Context.X_OG_OBJECT_VERSION);
+
+    if (request.getContext().containsKey(Context.X_OG_MPU_PARTIAL_LAST_PART)) {
+      this.partialMpuLastPart = request.getContext().get(Context.X_OG_MPU_PARTIAL_LAST_PART);
+    }
 
   }
 
