@@ -1631,10 +1631,17 @@ public class OGModule extends AbstractModule {
   @Provides
   @Singleton
   @Named("overwrite.context")
-  public List<Function<Map<String, String>, String>> provideOverwriteContext(
-      final ObjectManager objectManager) {
-    // FIXME add check if user has configured random/roundrobin here, it is a logical error
+  public List<Function<Map<String, String>, String>> provideOverwriteContext(final ObjectManager objectManager) {
+
     // Delete the object so we know no other threads will be using it
+    final List<Function<Map<String, String>, String>> context = Lists.newArrayList();
+
+    final OperationConfig operationConfig = checkNotNull(this.config.overwrite);
+    if (operationConfig.object.selection != null) {
+        context.add(provideObject(operationConfig));
+        return ImmutableList.copyOf(context);
+    }
+
     final Function<Map<String, String>, String> function =
         new DeleteObjectNameFunction(objectManager);
     return ImmutableList.of(function);
