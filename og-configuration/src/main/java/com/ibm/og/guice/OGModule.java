@@ -3061,7 +3061,8 @@ public class OGModule extends AbstractModule {
         .withAuthentication(authentication.get(authType))
         .withUserAgent(String.format("og-%s", Version.displayVersion()))
         .withWriteThroughput(clientConfig.writeThroughput)
-        .withReadThroughput(clientConfig.readThroughput);
+        .withReadThroughput(clientConfig.readThroughput)
+        .withProxy(clientConfig.proxy, clientConfig.proxyPort, clientConfig.proxyUser, clientConfig.proxyPassword);
 
     for (final Entry<String, ResponseBodyConsumer> consumer : responseBodyConsumers.entrySet()) {
       b.withResponseBodyConsumer(consumer.getKey(), consumer.getValue());

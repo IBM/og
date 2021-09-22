@@ -35,8 +35,10 @@ import org.apache.http.HeaderIterator;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpException;
+import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpRequestInterceptor;
+import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -59,7 +61,10 @@ import org.apache.http.impl.client.DefaultConnectionKeepAliveStrategy;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.auth.AuthScope;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpRequestExecutor;
@@ -143,6 +148,10 @@ public class ApacheClient implements Client {
   private final CloseableHttpClient client;
   private final ListeningExecutorService executorService;
   private final Gson gson;
+  private final String proxy;
+  private final int proxyPort;
+  private final String proxyUser;
+  private final String proxyPassword;
 
   private ApacheClient(final Builder builder) {
     this.connectTimeout = builder.connectTimeout;
@@ -161,6 +170,10 @@ public class ApacheClient implements Client {
     this.waitForContinue = builder.waitForContinue;
     this.retryCount = builder.retryCount;
     this.requestSentRetry = builder.requestSentRetry;
+    this.proxy = builder.proxy;
+    this.proxyPort = builder.proxyPort;
+    this.proxyUser = builder.proxyUser;
+    this.proxyPassword = builder.proxyPassword;
 
     // TODO validate protocol values
     final List<String> protocols = builder.protocols;
@@ -271,6 +284,17 @@ public class ApacheClient implements Client {
       builder.setUserAgent(this.userAgent);
     }
 
+    if (this.proxy != null) {
+      builder.setProxy(new HttpHost(this.proxy, this.proxyPort, "http"));
+      if (this.proxyUser != null) {
+        CredentialsProvider credsProvider = new BasicCredentialsProvider();
+        credsProvider.setCredentials(
+                new AuthScope(this.proxy, this.proxyPort),
+                new UsernamePasswordCredentials(this.proxyUser, this.proxyPassword));
+        builder.setDefaultCredentialsProvider(credsProvider);
+      }
+    }
+
     // Some authentication implementations add Content-Length or Transfer-Encoding headers as a part
     // of their authentication algorithm; remove them here so that the default interceptors do not
     // throw a ProtocolException
@@ -284,7 +308,9 @@ public class ApacheClient implements Client {
       }
     });
 
+
     return builder.setRequestExecutor(new HttpRequestExecutor(this.waitForContinue))
+        //.setProxy(new HttpHost("10.129.122.19", 3128, "http"))
         .setConnectionManager(createConnectionManager())
         // TODO investigate ConnectionConfig, particularly bufferSize and fragmentSizeHint
         // TODO defaultCredentialsProvider and defaultAuthSchemeRegistry for pre/passive auth?
@@ -716,6 +742,10 @@ public class ApacheClient implements Client {
     private long writeThroughput;
     private long readThroughput;
     private final Map<String, ResponseBodyConsumer> responseBodyConsumers;
+    private String proxy;
+    private int proxyPort;
+    private String proxyUser;
+    private String proxyPassword;
 
     /**
      * Constructs a new builder
@@ -751,6 +781,7 @@ public class ApacheClient implements Client {
       this.writeThroughput = 0;
       this.readThroughput = 0;
       this.responseBodyConsumers = Maps.newHashMap();
+
     }
 
     /**
@@ -1103,6 +1134,16 @@ public class ApacheClient implements Client {
     public Builder withResponseBodyConsumer(final String consumerId,
         final ResponseBodyConsumer consumer) {
       this.responseBodyConsumers.put(consumerId, consumer);
+      return this;
+    }
+
+
+    public Builder withProxy(final String proxy, final int proxyPort, final String proxyUser,
+                             final String proxyPassword) {
+      this.proxy = proxy;
+      this.proxyPort = proxyPort;
+      this.proxyUser = proxyUser;
+      this.proxyPassword = proxyPassword;
       return this;
     }
 
