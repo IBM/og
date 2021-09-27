@@ -61,7 +61,7 @@ java -version 2> ${TEST_PATH}/java_version.txt
 java -cp ${CP} ${VERSIONCLASS}
 JAVA_VERSION=$?
 
-if [ $JAVA_VERSION -eq -1 ]
+if [ $JAVA_VERSION -eq 255 ]
  then
   echo "Unsupported Java version"
   # Test config error
@@ -76,6 +76,11 @@ fi
 if [ $JAVA_VERSION -ge 9 ]
   then
     VMOPTS="-Xlog:gc*:file=${TEST_PATH}/${GC_LOG} -XX:+UseParallelOldGC -XX:MaxGCPauseMillis=5000 -Xss${STACKSIZE}k -Xmx${MEMORY}m -Xms${MEMORY}m -XX:MaxDirectMemorySize=${MEMORY}m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=${TEST_PATH}/ --add-opens=java.base/java.lang=ALL-UNNAMED"
+fi
+
+if [ $JAVA_VERSION -ge 14 ]
+  then
+    VMOPTS="-Xlog:gc*:file=${TEST_PATH}/${GC_LOG} -XX:+UseParallelGC -XX:MaxGCPauseMillis=5000 -Xss${STACKSIZE}k -Xmx${MEMORY}m -Xms${MEMORY}m -XX:MaxDirectMemorySize=${MEMORY}m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=${TEST_PATH}/ --add-opens=java.base/java.lang=ALL-UNNAMED"
 fi
 
 # TODO analyze which jvm parameters should be set

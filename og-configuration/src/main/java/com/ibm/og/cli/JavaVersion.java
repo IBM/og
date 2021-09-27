@@ -34,6 +34,18 @@ public class JavaVersion {
     if (version.startsWith("13")) {
       System.exit(13);
     }
+    if (version.startsWith("14")) {
+      System.exit(14);
+    }
+    if (version.startsWith("15")) {
+      System.exit(15);
+    }
+    if (version.startsWith("16")) {
+      System.exit(16);
+    }
+    if (version.startsWith("17")) {
+      System.exit(17);
+    }
     System.exit(-1);
   }
 }
