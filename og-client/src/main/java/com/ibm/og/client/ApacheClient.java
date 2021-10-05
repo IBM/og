@@ -152,6 +152,7 @@ public class ApacheClient implements Client {
   private final int proxyPort;
   private final String proxyUser;
   private final String proxyPassword;
+  private final String proxyScheme;
 
   private ApacheClient(final Builder builder) {
     this.connectTimeout = builder.connectTimeout;
@@ -174,6 +175,7 @@ public class ApacheClient implements Client {
     this.proxyPort = builder.proxyPort;
     this.proxyUser = builder.proxyUser;
     this.proxyPassword = builder.proxyPassword;
+    this.proxyScheme = builder.proxyScheme;
 
     // TODO validate protocol values
     final List<String> protocols = builder.protocols;
@@ -285,7 +287,7 @@ public class ApacheClient implements Client {
     }
 
     if (this.proxy != null) {
-      builder.setProxy(new HttpHost(this.proxy, this.proxyPort, "http"));
+      builder.setProxy(new HttpHost(this.proxy, this.proxyPort, this.proxyScheme));
       if (this.proxyUser != null) {
         CredentialsProvider credsProvider = new BasicCredentialsProvider();
         credsProvider.setCredentials(
@@ -746,6 +748,7 @@ public class ApacheClient implements Client {
     private int proxyPort;
     private String proxyUser;
     private String proxyPassword;
+    private String proxyScheme;
 
     /**
      * Constructs a new builder
@@ -1139,11 +1142,12 @@ public class ApacheClient implements Client {
 
 
     public Builder withProxy(final String proxy, final int proxyPort, final String proxyUser,
-                             final String proxyPassword) {
+                             final String proxyPassword, final String proxyScheme) {
       this.proxy = proxy;
       this.proxyPort = proxyPort;
       this.proxyUser = proxyUser;
       this.proxyPassword = proxyPassword;
+      this.proxyScheme = proxyScheme;
       return this;
     }
 

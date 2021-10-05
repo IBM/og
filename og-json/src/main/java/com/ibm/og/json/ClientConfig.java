@@ -38,6 +38,7 @@ public class ClientConfig {
   public int readThroughput;
   public String proxy;
   public int proxyPort;
+  public String proxyScheme;
   public String proxyUser;
   public String proxyPassword;
 
@@ -71,5 +72,6 @@ public class ClientConfig {
     this.writeThroughput = 0;
     this.readThroughput = 0;
     this.proxyPort = 3128;
+    this.proxyScheme = "https";
   }
 }
