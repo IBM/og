@@ -34,6 +34,8 @@ public class Context {
   public static final String X_OG_MULTIPART_CONTAINER = "x-og-multipart-container";
   public static final String X_OG_MULTIPART_BODY_DATA_TYPE = "x-og-multipart-body-data-type";
   public static final String X_OG_MULTIPART_MAX_PARTS = "x-og-multipart-max-parts";
+  public static final String X_OG_MPU_PARTIAL_LAST_PART = "x-og-mpu-partial-last-part";
+
   // Put Copy Keys
   public static final String X_OG_SSE_SOURCE_OBJECT_NAME = "x_og_sse_source_object_name";
   public static final String X_OG_SSE_SOURCE_OBJECT_CONTAINER_SUFFIX =
@@ -91,6 +93,7 @@ public class Context {
 
   public static final String X_OG_OBJECT_VERSION = "x-og-object-version";
   public static final String X_OG_OBJECT_VERSION_SELECTION = "x-og-object-version-selection";
+
 
   private Context() {}
 }
