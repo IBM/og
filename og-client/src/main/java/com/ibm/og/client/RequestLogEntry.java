@@ -45,7 +45,7 @@ public class RequestLogEntry {
   public final String clientRequestId;
   public final String requestId;
   public final RequestStats stat;
-  public final Long originalObjectLength;
+  public Long originalObjectLength;
   public final Long objectLength;
   public final String objectName;
   public final String retention;
@@ -64,6 +64,7 @@ public class RequestLogEntry {
   public String multideleteFailedObjects;
   public String objectVersionId;
   public String newObjectVersionId;
+  public String partialMpuLastPart;
 
   private static final DateTimeFormatter FORMATTER =
       DateTimeFormat.forPattern("dd/MMM/yyyy:HH:mm:ss Z").withLocale(Locale.US);
@@ -137,10 +138,11 @@ public class RequestLogEntry {
     this.requestId = response.headers().get(X_CLV_REQUEST_ID);
     this.stat = new RequestStats(timestamps);
     // On overwrite, log the original size of the object before overwrite
+    this.originalObjectLength = null;
     if(request.getOperation() == Operation.OVERWRITE) {
-      this.originalObjectLength = Long.parseLong(request.getContext().get(Context.X_OG_OBJECT_SIZE));
-    } else {
-      this.originalObjectLength = null;
+      if (request.getContext().get(Context.X_OG_OBJECT_SIZE) != null) {
+        this.originalObjectLength = Long.parseLong(request.getContext().get(Context.X_OG_OBJECT_SIZE));
+      }
     }
 
     if (request.getOperation() == Operation.LIST || request.getOperation() == Operation.LIST_OBJECT_VERSIONS) {
@@ -180,6 +182,10 @@ public class RequestLogEntry {
       this.newObjectVersionId = response.headers().get("x-amz-version-id");
     }
     this.objectVersionId = request.getContext().get(Context.X_OG_OBJECT_VERSION);
+
+    if (request.getContext().containsKey(Context.X_OG_MPU_PARTIAL_LAST_PART)) {
+      this.partialMpuLastPart = request.getContext().get(Context.X_OG_MPU_PARTIAL_LAST_PART);
+    }
 
   }
 

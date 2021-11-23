@@ -16,6 +16,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import com.ibm.og.api.RequestTimestamps;
+import com.ibm.og.util.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -123,7 +124,13 @@ public class Statistics {
       List<Operation> invalidCountOps = new ArrayList<Operation>();
       invalidCountOps.add(Operation.MULTIPART_WRITE);
       invalidCountOps.add(Operation.MULTIPART_WRITE_INITIATE);
-      invalidCountOps.add(Operation.MULTIPART_WRITE_PART);
+      if (operation == Operation.MULTIPART_WRITE_PART) {
+        if (!request.getContext().containsKey(Context.X_OG_MPU_PARTIAL_LAST_PART)) {
+          // if this is not a last part of the partial MPU upload
+          invalidCountOps.add(Operation.MULTIPART_WRITE_PART);
+        }
+      }
+
       if (!invalidCountOps.contains(operation)) {
         updateCounter(Operation.ALL, Counter.OPERATIONS, 1);
       }

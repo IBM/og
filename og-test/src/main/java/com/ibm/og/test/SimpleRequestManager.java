@@ -230,6 +230,11 @@ public class SimpleRequestManager implements RequestManager {
     this.multipartWriteSupplier.abortSessions();
   }
 
+  public void setShutdownImmediate(boolean shutdown) {
+    //this.abort = abort;
+    this.multipartWriteSupplier.shutdownImmediate(shutdown);
+  }
+
   @Override
   public String toString() {
     return String.format("SimpleRequestManager [%n" + "requestSupplier=%s%n" + "]",
