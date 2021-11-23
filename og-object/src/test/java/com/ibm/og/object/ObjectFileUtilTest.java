@@ -272,10 +272,8 @@ public class ObjectFileUtilTest {
     // filesize before upgrading
     File beforeUpgradeFile =  new File("id_0.object");
     long size1 = beforeUpgradeFile.length();
-
     ObjectFileUtil.upgrade(new File("id_0.object"), false);
     long size2 = new File("id_0.object").length();
-
     Assert.assertTrue(size2 == size1 + ( ObjectFileVersion.VERSION_HEADER_LENGTH +
             ObjectFileHeader.HEADER_LENGTH +4*(1+4)));
 

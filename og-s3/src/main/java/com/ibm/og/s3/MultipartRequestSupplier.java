@@ -23,6 +23,8 @@ import com.ibm.og.http.Credential;
 import com.ibm.og.http.HttpRequest;
 import com.ibm.og.http.MD5DigestLoader;
 import com.ibm.og.http.Scheme;
+import com.ibm.og.supplier.RandomSupplier;
+import com.ibm.og.supplier.Suppliers;
 import com.ibm.og.util.Context;
 import com.ibm.og.util.Pair;
 
@@ -75,6 +77,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
   private final Function<Map<String, String>, String> object;
   private final Function<Map<String, String>, Long> partSize;
   private final Function<Map<String, String>, Integer> partsPerSession;
+  private final Function<Map<String, String>, Double> partsPercentagePerSession;
   private final int targetSessions;
   private final Map<String, Function<Map<String, String>, String>> queryParameters;
   private final boolean trailingSlash;
@@ -89,6 +92,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
   private final boolean contentMd5;
   private final LoadingCache<Long, byte[]> md5ContentCache;
 
+  private AtomicBoolean shutdownImmediate = new AtomicBoolean(false);
 
   // constants
   private final int NO_PART = -1;
@@ -100,6 +104,13 @@ public class MultipartRequestSupplier implements Supplier<Request> {
   // request lists and HashMap
   private final Map<String, MultipartInfo> multipartRequestMap;
   private final List<MultipartInfo> actionableMultipartSessions;
+
+  // Supplier that supplies the session whether it is a partial upload or complete upload
+  public enum MPUSessionUploadType{FULL_UPLOAD,  PARTIAL_UPLOAD};
+
+//  final RandomSupplier<MPUSessionUploadType> mpuSessionUploadTypeSupplier;// = Suppliers.random();
+//  final RandomSupplier<Double> mpuSessionPartsPercentageSupplier;// = Suppliers.random();
+
 
   private final MPSessionManager sessionManager;
   /**
@@ -137,7 +148,8 @@ public class MultipartRequestSupplier implements Supplier<Request> {
       final Function<Map<String, String>, Body> body, final boolean virtualHost,
       final Function<Map<String, String>, Long> retention,
       final Supplier<Function<Map<String, String>, String>> legalHold,
-      final boolean contentMd5, final Function<Map<String, String>, String> delimiter) {
+      final boolean contentMd5, final Function<Map<String, String>, String> delimiter,
+      final Function<Map<String, String>, Double> partsPercentagePerSession) {
 
     this.id = id;
     this.scheme = checkNotNull(scheme);
@@ -148,6 +160,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     this.object = object;
     this.partSize = partSize;
     this.partsPerSession = partsPerSession;
+    this.partsPercentagePerSession = partsPercentagePerSession;
     this.targetSessions = targetSessions;
     this.queryParameters = ImmutableMap.copyOf(queryParameters);
     this.trailingSlash = trailingSlash;
@@ -165,6 +178,16 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     this.multipartRequestMap = new ConcurrentHashMap<String, MultipartInfo>();
     this.sessionManager = new MPSessionManager();
     this.md5ContentCache = CacheBuilder.newBuilder().maximumSize(100).build(new MD5DigestLoader());
+
+//    RandomSupplier.Builder<MPUSessionUploadType> mpuSessionUploadTypeSupplier = Suppliers.random();
+//    mpuSessionUploadTypeSupplier.withChoice(MPUSessionUploadType.FULL_UPLOAD, 0.5);
+//    mpuSessionUploadTypeSupplier.withChoice(MPUSessionUploadType.PARTIAL_UPLOAD, 0.5);
+//    this.mpuSessionUploadTypeSupplier = mpuSessionUploadTypeSupplier.build();
+//
+//    RandomSupplier.Builder<Double> mpuSessionPartsPercentageSupplier = Suppliers.random();
+//    mpuSessionPartsPercentageSupplier.withChoice(50.0, 1.0);
+//    //mpuSessionPartsPercentageSupplier.withChoice(75.0, 1.0);
+//    this.mpuSessionPartsPercentageSupplier = mpuSessionPartsPercentageSupplier.build();
 
   }
 
@@ -193,6 +216,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     Lock sessionsLock = new ReentrantLock();
     Condition sessionAvailable = sessionsLock.newCondition();
 
+
     public MultipartInfo getNextSession() {
       boolean done = false;
       MultipartInfo session = null;
@@ -200,7 +224,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
 
         try {
           while (!done) {
-            _logger.trace("inProgess sessions [{}]", this.inProgressSessions.get());
+            _logger.debug("inProgess sessions [{}]", this.inProgressSessions.get());
             if (this.inProgressSessions.get() < targetSessions && !this.abortSessionsTriggered.get()) {
               // return null to start a new session
               session = null;
@@ -212,19 +236,20 @@ public class MultipartRequestSupplier implements Supplier<Request> {
                       session.getNextMultipartRequest() == MultipartRequest.INTERNAL_ERROR) {
                 actionableMultipartSessions.remove(session);
                 session.setInActionableSessions(false);
-                _logger.trace("Removed active Multipart session. count now is [{}]", actionableMultipartSessions.size());
+                _logger.debug("Removed active Multipart session. count now is [{}]", actionableMultipartSessions.size());
                 continue;
               }
               if (session.getNextMultipartRequest() == MultipartRequest.COMPLETE) {
                 // if it is a complete request remove the session from the actionable list
                 actionableMultipartSessions.remove(session);
                 session.setInActionableSessions(false);
-                _logger.trace("Removed active Multipart session. count now is [{}]", actionableMultipartSessions.size());
+                _logger.debug("Removed active Multipart session. count now is [{}]", actionableMultipartSessions.size());
               }
               done = true;
             } else {
               try {
-                if (actionableMultipartSessions.size() > 0 || multipartRequestMap.size() > 0) {
+                if (!shutdownImmediate.get() &&
+                    (actionableMultipartSessions.size() > 0 || multipartRequestMap.size() > 0)) {
                   _logger.debug("actionable sessions count [{}] multipartRequestMap count [{}]",
                           actionableMultipartSessions.size(), multipartRequestMap.size());
                   sessionAvailable.await(1, TimeUnit.SECONDS);
@@ -264,12 +289,22 @@ public class MultipartRequestSupplier implements Supplier<Request> {
           MultipartRequest multipartRequest = session.getNextMultipartRequest();
           switch (multipartRequest) {
             case PART:
+              // check if we need to end the session with partial upload
+              // if the no. of parts exceed the expected number simply end this session but wait for all other parts
+              // in progess to get the response
               int partNumber = session.startPartRequest();
               builder = createPartRequest(requestContext, partNumber, session.uploadId, session.getNextPartSize(),
                       session.bodyDataType, session.context);
               builder.withQueryParameter(PART_NUMBER, String.valueOf(partNumber));
               builder.withQueryParameter(UPLOAD_ID, session.uploadId);
               session.allinProgressPartRequestsCompleted = false;
+              if (session.sessionUploadType == MPUSessionUploadType.PARTIAL_UPLOAD &&
+                  partNumber >= session.maxPartsRequestsToSend) {
+                // if this is the last part for the request in case of partial upload session
+                // remove session from actionable list
+                builder.withContext(Context.X_OG_MPU_PARTIAL_LAST_PART, "true");
+                actionableMultipartSessions.remove(session);
+              }
               break;
             case COMPLETE:
               builder = createCompleteRequest(requestContext, session.uploadId,
@@ -313,6 +348,8 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     final String uploadId;
     final Queue<PartInfo> partsInfo;
     final int partRequestsToSend; //Part Requests
+    int maxPartsRequestsToSend; //Part Requests
+    //final intmaxPartsLimit;
     int nextPartNumber;
     int inProgressPartRequests;
     int finishedPartRequests;
@@ -322,6 +359,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     boolean abortRequestDespatched;
     boolean allinProgressPartRequestsCompleted;
     boolean inActionableSessions = false;
+    MPUSessionUploadType sessionUploadType;
     final Map<String, String> context;
     final String id = UUID.randomUUID().toString();
 
@@ -359,15 +397,31 @@ public class MultipartRequestSupplier implements Supplier<Request> {
 
       int parts = (int)(this.objectSize/this.partSize);
 
-      // not all parts are the same size
       if(0 != (this.objectSize % this.partSize)) {
+        // not all parts are the same size
         this.partRequestsToSend = parts + 1;
+        //this.maxPartsRequestsToSend = 3;
         this.lastPartSize = this.objectSize % this.partSize;
-        // parts are all the same size
       } else {
+        // parts are all the same size
         this.partRequestsToSend = parts;
+        //this.maxPartsRequestsToSend = 3;
         this.lastPartSize = partSize;
       }
+
+      double partsPercentage = partsPercentagePerSession.apply(context);
+      if (partsPercentage < 100.0) {
+        this.sessionUploadType = MPUSessionUploadType.PARTIAL_UPLOAD;
+        this.maxPartsRequestsToSend = (int) ((this.partRequestsToSend * partsPercentage) / 100.0);
+        if (this.maxPartsRequestsToSend < 0) {
+          this.maxPartsRequestsToSend = 1;
+        }
+      } else {
+        this.sessionUploadType = MPUSessionUploadType.FULL_UPLOAD;
+        this.maxPartsRequestsToSend = this.partRequestsToSend;
+      }
+      _logger.debug("sessionUploadType [{}]", this.sessionUploadType);
+
     }
 
     public MultipartRequest getNextMultipartRequest() {
@@ -375,8 +429,8 @@ public class MultipartRequestSupplier implements Supplier<Request> {
       MultipartRequest retVal;
       stateLock.lock();
       try {
-        _logger.debug("session [{}] uploadId [{}] pts [{}] ipr [{}] fpr [{}] fcR [{}] ipCR [{}] ", this.id,
-                this.uploadId, this.partRequestsToSend,
+        _logger.debug("session [{}] uploadId [{}] pts [{}] mpts [{}] ipr [{}] fpr [{}] fcR [{}] ipCR [{}] ", this.id,
+                this.uploadId, this.partRequestsToSend, this.maxPartsRequestsToSend,
                 this.inProgressPartRequests, this.finishedPartRequests, this.finishedCompleteRequest,
                 this.inProgressCompleteRequest);
         if (this.abortSession && !this.allinProgressPartRequestsCompleted) {
@@ -596,13 +650,14 @@ public class MultipartRequestSupplier implements Supplier<Request> {
       }
       multipartInfo = new MultipartInfo(requestContainerName, requestObjectName, responseUploadId,
           Long.parseLong(requestObjectSize), Long.parseLong(requestPartSize), Integer.parseInt(requestMaxParts),
-              requestContainerSuffix, requestBodyDataType, requestContext);
+          requestContainerSuffix, requestBodyDataType, requestContext);
       this.multipartRequestMap.put(responseUploadId, multipartInfo);
         // add MultipartInfo only if not added already to actionable multipart sessions list.
         if (!multipartInfo.getInActionableSessions() && !multipartInfo.abortRequestDespatched()) {
           this.actionableMultipartSessions.add(multipartInfo);
           multipartInfo.setInActionableSessions(true);
-          _logger.debug("Added active Multipart session. count is [{}]", this.actionableMultipartSessions.size());
+          _logger.debug("Added active Multipart session [{}]. count is [{}]", multipartInfo.uploadId,
+                  this.actionableMultipartSessions.size());
         }
     } else if (multipartrequestOperation.equals(MultipartRequest.PART.toString())) {
         multipartInfo = multipartRequestMap.get(requestUploadId);
@@ -613,17 +668,31 @@ public class MultipartRequestSupplier implements Supplier<Request> {
             multipartInfo.setAbortSession();
           }
           multipartInfo.finishPartRequest(new PartInfo(requestPartNumber, responsePartId));
-          // multipart info only gets put on blocked when INTERNAL_PENDING is
-          // observed on the get() call. Put it back in active when all parts are in
-          // or if active part uploads is now less than maxParts
-          MultipartRequest multipartRequest = multipartInfo.getNextMultipartRequest();
-          if (multipartRequest == MultipartRequest.COMPLETE || multipartRequest == MultipartRequest.PART ||
-                  multipartRequest == MultipartRequest.ABORT ||
-                  multipartRequest == MultipartRequest.INTERNAL_PENDING) {
-            if (!multipartInfo.getInActionableSessions() && !multipartInfo.abortRequestDespatched()) {
-              this.actionableMultipartSessions.add(multipartInfo);
-              multipartInfo.setInActionableSessions(true);
-              _logger.debug("Added active Multipart session. count is [{}]", this.actionableMultipartSessions.size());
+
+          // if there are no more parts to be sent because of the partial MPU upload and this is the last
+          // response for the last part outstanding then remove the multipart session
+          _logger.debug("PART response uploadId [{}] sessionUploadType [{}]", multipartInfo.uploadId,
+                  multipartInfo.sessionUploadType);
+          if (multipartInfo.sessionUploadType == MPUSessionUploadType.PARTIAL_UPLOAD &&
+                  multipartInfo.finishedPartRequests >= multipartInfo.maxPartsRequestsToSend &&
+                  multipartInfo.allinProgressPartRequestsCompleted) {
+            _logger.debug("Remove partial upload multipart session {}", multipartInfo.uploadId);
+            this.multipartRequestMap.remove(multipartInfo.uploadId);
+            this.sessionManager.inProgressSessions.getAndDecrement();
+          } else {
+            // multipart info only gets put on blocked when INTERNAL_PENDING is
+            // observed on the get() call. Put it back in active when all parts are in
+            // or if active part uploads is now less than maxParts
+            MultipartRequest multipartRequest = multipartInfo.getNextMultipartRequest();
+            if (multipartRequest == MultipartRequest.COMPLETE || multipartRequest == MultipartRequest.PART ||
+                    multipartRequest == MultipartRequest.ABORT ||
+                    multipartRequest == MultipartRequest.INTERNAL_PENDING) {
+              if (!multipartInfo.getInActionableSessions() && !multipartInfo.abortRequestDespatched()) {
+                this.actionableMultipartSessions.add(multipartInfo);
+                multipartInfo.setInActionableSessions(true);
+                _logger.debug("Added active Multipart session [{}]. count is [{}]", multipartInfo.uploadId,
+                        this.actionableMultipartSessions.size());
+              }
             }
           }
         }
@@ -931,6 +1000,14 @@ public class MultipartRequestSupplier implements Supplier<Request> {
       session.setAbortSession();
     }
   }
+
+
+  public void shutdownImmediate(boolean shutdown) {
+    _logger.info("set immediate shutdown");
+    this.shutdownImmediate.getAndSet(shutdown);
+  }
+
+
   @Override
   public String toString() {
     return String.format(
