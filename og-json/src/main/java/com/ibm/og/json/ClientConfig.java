@@ -36,6 +36,11 @@ public class ClientConfig {
   public int dnsCacheNegativeTtl;
   public int writeThroughput;
   public int readThroughput;
+  public String proxy;
+  public int proxyPort;
+  public String proxyScheme;
+  public String proxyUser;
+  public String proxyPassword;
 
   public ClientConfig() {
     this.connectTimeout = 0;
@@ -66,5 +71,7 @@ public class ClientConfig {
     this.dnsCacheNegativeTtl = 10;
     this.writeThroughput = 0;
     this.readThroughput = 0;
+    this.proxyPort = 3128;
+    this.proxyScheme = "https";
   }
 }

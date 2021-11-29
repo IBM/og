@@ -18,4 +18,6 @@ import com.google.common.base.Supplier;
  */
 public interface RequestManager extends Supplier<Request> {
   void setAbort(boolean abort);
+  void setShutdownImmediate(boolean shutdownImmediate);
+
 }

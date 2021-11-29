@@ -168,9 +168,10 @@ public class LoadTest implements Callable<LoadTestResult> {
       this.requestManager.setAbort(true);
     } else {
       // normal case - no mpu aborts when stopping
+      this.requestManager.setShutdownImmediate(true);
       this.noMoreRequests.set(true);
-    }
 
+    }
   }
 
   private void stopScheduler() {
