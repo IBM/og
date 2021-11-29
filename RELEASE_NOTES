@@ -1,3 +1,10 @@
+Release 1.13.0:
+Support for partial MPU support
+Support for Squid proxy
+
+Release 1.12.1:
+Fix split with filter option
+
 Release 1.12.0:
 Add object versioning support
 Suppress IllegalReflectiveAccess warnings in OG for JDK9+

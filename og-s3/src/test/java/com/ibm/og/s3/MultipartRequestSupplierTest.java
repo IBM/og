@@ -240,11 +240,17 @@ public class MultipartRequestSupplierTest {
     final Function<Map<String, String>, Integer> partsPerSessionFunc =
         MoreFunctions.forSupplier(partsPerSessionSupplier);
 
+    final Double partsPercentagePerSession = 100.0;
+    final Supplier<Double> partsPercentagePerSessionSupplier = Suppliers.of(partsPercentagePerSession);
+    final Function<Map<String, String>, Double> partsPercentagePerSessionFunc =
+            MoreFunctions.forSupplier(partsPercentagePerSessionSupplier);
+
     final List<Function<Map<String, String>, String>> context = Collections.emptyList();
 
     return new MultipartRequestSupplier(id, scheme, host, port, uriRoot, container,
         object, partSizes, partsPerSessionFunc, targetSessions, queryParameters, trailingSlash, headers, context,
-        credentials, body, virtualHost, null, null, false, null);
+        credentials, body, virtualHost, null, null, false, null,
+        partsPercentagePerSessionFunc);
   }
 
   private void genericMultipleSessions(final int targetSessions, final long objectSize,
