@@ -4,7 +4,7 @@
   <parent>
     <artifactId>og</artifactId>
     <groupId>com.ibm</groupId>
-    <version>1.13.1</version>
+    <version>1.13.2</version>
   </parent>
   <artifactId>og-scheduling</artifactId>
   <name>Scheduling</name>
