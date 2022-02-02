@@ -4,7 +4,7 @@
     <parent>
         <artifactId>og</artifactId>
         <groupId>com.ibm</groupId>
-        <version>1.13.2</version>
+        <version>1.13.3</version>
     </parent>
     <artifactId>og-json</artifactId>
     <name>Json</name>

@@ -19,6 +19,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -52,9 +53,22 @@ public class S3MultipartWriteResponseBodyConsumer implements ResponseBodyConsume
     } catch (ParserConfigurationException e) {
       throw new RuntimeException(e);
     }
+
     try {
       if(response.available() > 0) {
         document = documentBuilder.parse(response);
+      } else {
+        // handle chunked transfer-encoding
+        byte[] buf = new byte[4096];
+        int bytesRead;
+        int offset = 0;
+        while((bytesRead = response.read(buf, offset, 4096)) > 0) {
+          offset += bytesRead;
+        }
+        if (offset > 0) {
+          ByteArrayInputStream bis = new ByteArrayInputStream(buf, 0, offset);
+          document = documentBuilder.parse(bis);
+        }
       }
     } catch (SAXException e) {
         _logger.error(e.getMessage());
