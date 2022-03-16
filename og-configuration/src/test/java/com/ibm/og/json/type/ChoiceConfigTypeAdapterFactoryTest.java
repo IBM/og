@@ -14,6 +14,7 @@ import org.junit.Test;
 
 import com.ibm.og.json.ChoiceConfig;
 import com.google.gson.Gson;
+import com.google.gson.JsonParser;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
@@ -94,6 +95,7 @@ public class ChoiceConfigTypeAdapterFactoryTest {
   @Test
   public void serialization() {
     final ChoiceConfig<Double> config = new ChoiceConfig<Double>(15.0);
-    assertThat(this.gson.toJson(config), is(new GsonBuilder().create().toJson(config)));
+    JsonParser parser = new JsonParser();
+    assertThat(parser.parse(this.gson.toJson(config)), is(parser.parse(new GsonBuilder().create().toJson(config))));
   }
 }
