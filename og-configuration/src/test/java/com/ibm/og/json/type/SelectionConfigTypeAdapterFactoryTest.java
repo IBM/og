@@ -10,6 +10,7 @@ import static org.hamcrest.Matchers.equalToIgnoringCase;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 
+import com.google.gson.JsonParser;
 import com.ibm.og.json.ChoiceConfig;
 import com.ibm.og.json.SelectionConfig;
 import com.ibm.og.json.SelectionType;
@@ -119,7 +120,8 @@ public class SelectionConfigTypeAdapterFactoryTest {
     final SelectionConfig<Double> config = new SelectionConfig<Double>();
     config.choices.add(new ChoiceConfig<Double>(15.0));
     // currently gson serializes enums in ALL CAPS, so we do a case insensitive compare here
-    assertThat(this.gson.toJson(config),
-        equalToIgnoringCase(new GsonBuilder().create().toJson(config)));
+    JsonParser parser = new JsonParser();
+    assertThat(parser.parse(this.gson.toJson(config).toUpperCase()),
+        is(parser.parse((new GsonBuilder().create().toJson(config).toUpperCase()))));
   }
 }
