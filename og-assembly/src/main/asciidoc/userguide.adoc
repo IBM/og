@@ -674,11 +674,15 @@ _object_version_selection_ property is added to control the proportions of versi
 
 _list_object_versions_ operation has been added in release 1.12.0. See <<Operation ListObjectVersions>>
 
+_put_object_lock_retention_, _get_object_lock_retention_, _put_object_lock_legal_hold_, _get_object_lock_legal_hold_
+are added in version 1.14.0.
+
 Operation mix is configured via _write_, _overwrite_, _read_, _metadata_, _delete_, _list_,
 _container_create_, _container_list_, _multipart_write_, _write_legalhold_, _read_legalhold_,
 _delete_legalhold_, _extend_retention_, _object_restore, _put_container_lifecycle_,
 _get_container_lifecycle_, delete_container_lifecycle,  _put_container_protection_, _get_container_protection_, 
-_multi_delete_, _write_tags_, _get_tags_, _delete_tags_ keys respectively.
+_multi_delete_, _write_tags_, _get_tags_, _delete_tags_,_put_object_lock_retention_, _get_object_lock_retention_,
+_put_object_lock_legal_hold_, _get_object_lock_legal_hold_ keys respectively.
 
 Each operation type is configured via a configuration block. E.g. for write:
 
@@ -1596,6 +1600,84 @@ The Delete Tags operation deletes tags on an existing object.
   "delete_tags": {
    "weight": 1.0
   }
+----
+
+==== Operation put object retention ====
+The put object operation adds a retention configuration to the object.
+retention property is required. If object_version_selection property is specified, version id will not be used in the
+request.
+Example:
+----
+  "put_object_lock_retention": {
+    "weight": 1.0,
+    "retention_mode": "COMPLIANCE",
+    "content_md5":  true,
+    "object_version_selection": {
+      "versioned": 0.5,
+      "non_versioned": 0.5
+    },
+    "retention": {
+      "selection": "random",
+        "choices": [
+        {
+          "choice": {
+            "expiry": 123,
+            "time_unit": "days"
+         }
+        }
+      ]
+    }
+  },
+
+----
+
+==== Operation get object retention ====
+The get object retention operation gets the retention configuration of the object.
+Example:
+----
+  "get_object_lock_retention": {
+    "weight": 1.0,
+     "object_version_selection": {
+      "versioned": 0.5,
+      "non_versioned": 0.5
+     },
+  }
+
+----
+
+==== Operation put object legal hold ====
+The put object legal hold adds the legal status to the objects. The legal hold status (ON/OFF) can be specified with
+ respective weights. The default value is {on: 1.0, off: 0}
+The put object legal hold adds the legal status to the objects.
+Example:
+----
+  "put_object_lock_legal_hold": {
+    "weight": 1.0,
+     "object_version_selection": {
+      "versioned": 0.5,
+      "non_versioned": 0.5
+     },
+     "object_legal_hold_status_selection": {
+      "on": 1.0,
+      "off": 1.0
+    },
+    "content_md5": true
+  }
+
+----
+
+==== Operation get object legal hold ====
+The get object legal hold operation retrieves the legal hold status of the object.
+Example:
+----
+  "get_object_lock_legal_hold": {
+    "weight": 1.0,
+    "object_version_selection": {
+      "versioned": 0.5,
+      "non_versioned": 0.5
+     }
+  }
+
 ----
 
 === Filesize
@@ -2637,6 +2719,11 @@ mixed operation tests.
 |Object
 |No
 |None
+
+|object_legal_hold_status_selection
+|Object
+|yes
+|{"on": 1.0, "off": 0.0}
 
 |===
 
