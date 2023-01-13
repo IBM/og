@@ -256,7 +256,9 @@ public class RequestSupplier implements Supplier<Request> {
           if (this.operation == Operation.PUT_CONTAINER_LIFECYCLE ||
               this.operation == Operation.PUT_CONTAINER_PROTECTION ||
               this.operation == Operation.MULTI_DELETE ||
-              this.operation == Operation.PUT_TAGS) {
+              this.operation == Operation.PUT_TAGS ||
+              this.operation == Operation.PUT_OBJECT_LOCK_RETENTION ||
+              this.operation == Operation.PUT_OBJECT_LOCK_LEGAL_HOLD) {
             builder.withHeader(Context.X_OG_CONTENT_MD5, BaseEncoding.base64().encode(Hashing.md5()
                             .newHasher()
                             .putString(body.getContent(), Charsets.UTF_8).hash().asBytes()));
@@ -391,15 +393,20 @@ public class RequestSupplier implements Supplier<Request> {
       }
     }
     if ((this.operation == Operation.READ || this.operation == Operation.DELETE ||
-            this.operation == this.operation.METADATA) &&
+            this.operation == Operation.METADATA || this.operation == Operation.PUT_OBJECT_LOCK_RETENTION ||
+            this.operation == Operation.GET_OBJECT_LOCK_RETENTION || this.operation == Operation.PUT_OBJECT_LOCK_LEGAL_HOLD ||
+            this.operation == Operation.GET_OBJECT_LOCK_LEGAL_HOLD) &&
             context.get(Context.X_OG_OBJECT_VERSION_SELECTION) != null) {
       if (context.get(Context.X_OG_OBJECT_VERSION) != null) {
+        if (sb.length() > 0) {
+          sb.append("&");
+        }
         sb.append(QueryParameters.OBJECT_VERSION_ID).append("=").append(context.get(Context.X_OG_OBJECT_VERSION));
       }
     }
 
     if (sb.toString().length() != 0) {
-      s.append("?").append(sb.toString());
+      s.append("?").append(sb);
     }
   }
 
