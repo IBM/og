@@ -8,9 +8,7 @@ package com.ibm.og.test;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
@@ -18,6 +16,15 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import com.google.common.collect.ImmutableList;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.common.util.concurrent.Uninterruptibles;
 import com.ibm.og.http.HttpResponse;
 import com.ibm.og.scheduling.Scheduler;
 import com.ibm.og.test.condition.LoadTestResult;
@@ -30,10 +37,6 @@ import com.ibm.og.api.Response;
 import com.ibm.og.util.Pair;
 import com.ibm.og.util.TestState;
 import com.google.common.eventbus.EventBus;
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.Uninterruptibles;
 
 /**
  * a callable test execution
@@ -231,6 +234,8 @@ public class   LoadTest implements Callable<LoadTestResult> {
   }
 
   private void addCallback(final Request request, final ListenableFuture<Response> future) {
+    final ThreadFactory fac = new ThreadFactoryBuilder().setNameFormat("clientCallback-%d").build();
+    ListeningExecutorService executorService = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool(fac));
     Futures.addCallback(future, new FutureCallback<Response>() {
       @Override
       public void onSuccess(final Response response) {
@@ -250,7 +255,7 @@ public class   LoadTest implements Callable<LoadTestResult> {
         LoadTest.this.eventBus.post(Pair.of(request, response));
         LoadTest.this.scheduler.complete();
       }
-    });
+    }, executorService);
   }
 
   @Override

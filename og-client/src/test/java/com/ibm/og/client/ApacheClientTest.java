@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder;
 import com.ibm.og.http.BasicAuth;
 import com.ibm.og.http.Bodies;
 import com.ibm.og.http.ResponseBodyConsumer;
@@ -47,7 +48,6 @@ import com.ibm.og.api.Operation;
 import com.ibm.og.api.Request;
 import com.ibm.og.api.Response;
 import com.ibm.og.http.HttpRequest;
-import com.github.tomakehurst.wiremock.client.RequestPatternBuilder;
 import com.github.tomakehurst.wiremock.http.RequestMethod;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import com.google.common.collect.ImmutableMap;
@@ -302,7 +302,11 @@ public class ApacheClientTest {
     assertThat(response.getBody().getDataType(), is(responseBody.getDataType()));
     assertThat(response.getBody().getSize(), is(responseBody.getSize()));
 
-    verify(requestedFor(method, this.objectUri.getPath()).withRequestBody(equalTo(requestData)));
+    if (!requestData.isEmpty()) {
+      verify(requestedFor(method, this.objectUri.getPath()).withRequestBody(equalTo(requestData)));
+    } else {
+      verify(requestedFor(method, this.objectUri.getPath()));
+    }
   }
 
   @Test
@@ -498,13 +502,18 @@ public class ApacheClientTest {
     assertThat(response.getBody().getDataType(), is(responseBody.getDataType()));
     assertThat(response.getBody().getSize(), is(responseBody.getSize()));
 
-    verify(requestedFor(method, uri.getPath()).withRequestBody(equalTo(requestData)));
-
-    verify(requestedFor(method, "/container/").withRequestBody(equalTo(requestData)));
+    if (!requestData.isEmpty()) {
+      verify(requestedFor(method, uri.getPath()).withRequestBody(equalTo(requestData)));
+      verify(requestedFor(method, "/container/").withRequestBody(equalTo(requestData)));
+    } else {
+      verify(requestedFor(method, uri.getPath()));
+      verify(requestedFor(method, "/container/"));
+    }
   }
 
   private RequestPatternBuilder requestedFor(final Method method, final String uri) {
-    return new RequestPatternBuilder(RequestMethod.fromString(method.toString()), urlEqualTo(uri));
+    RequestPatternBuilder r = new RequestPatternBuilder(RequestMethod.fromString(method.toString()), urlEqualTo(uri));
+    return r;
   }
 
   @Test
