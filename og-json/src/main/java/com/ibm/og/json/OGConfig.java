@@ -49,6 +49,9 @@ public class OGConfig {
   public OperationConfig writeTags;
   public OperationConfig deleteTags;
   public OperationConfig getTags;
+
+  public OperationConfig writeSelectObject;
+
   public SelectionConfig<FilesizeConfig> filesize;
   public DataType data;
   public ConcurrencyConfig concurrency;
@@ -101,6 +104,7 @@ public class OGConfig {
     this.writeTags = new OperationConfig();
     this.deleteTags = new OperationConfig();
     this.getTags = new OperationConfig();
+    this.writeSelectObject = new OperationConfig();
     this.filesize = null;
     this.data = DataType.RANDOM;
     this.concurrency = null;

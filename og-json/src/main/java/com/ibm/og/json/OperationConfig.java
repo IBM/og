@@ -40,6 +40,7 @@ public class OperationConfig {
   public SelectionConfig<ObjectDelimiterConfig> delimiter; // for write operations
   public SelectionConfig<ListDelimiterConfig> listDelimiter;
   public SelectionConfig<ListSessionConfig> listSessionConfig;
+  public SelectionConfig<WriteSelectBodyConfig> writeSelectBodyConfig;
   public Integer minimumListSessions;
   public Integer multideleteCount;
   public boolean multideleteQuiet;

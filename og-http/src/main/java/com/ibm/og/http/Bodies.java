@@ -11,6 +11,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.ibm.og.api.Body;
 import com.ibm.og.api.DataType;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+
 /**
  * A utility class for creating body instances
  * 
@@ -39,6 +45,9 @@ public class Bodies {
    */
   public static Body random(final long size) {
     return create(DataType.RANDOM, size);
+  }
+  public static Body file(final String filepath) {
+    return createFileBody(filepath);
   }
 
   /**
@@ -75,6 +84,11 @@ public class Bodies {
     checkArgument(size >= 0, "size must be >= 0 [%s]", size);
 
     return new BodyImpl(System.nanoTime(), size, data, content);
+  }
+
+  private static Body createFileBody(String filepath) {
+    checkNotNull(filepath);
+    return new FileBodyImpl(DataType.FILE, filepath);
   }
 
   private static class BodyImpl implements Body {
@@ -150,5 +164,56 @@ public class Bodies {
       return true;
     }
 
+  }
+
+  private static class FileBodyImpl implements Body {
+    private final long seed = 0;
+    private long size;
+    private final DataType dataType;
+    private String content;
+
+    public FileBodyImpl(final DataType dataType, String filepath) {
+      this.dataType = dataType;
+      File file = new File(filepath);
+      try {
+        if (file.exists()) {
+          this.size = (int) file.length();
+          if (size > 0) {
+            final FileInputStream fis = new FileInputStream(file);
+            ByteBuffer bs = ByteBuffer.allocate((int) this.size);
+            int readBytes = 0;
+            int remainingBytes = (int) this.size;
+            while ((readBytes = fis.read(bs.array(), readBytes, remainingBytes)) < 0) {
+              remainingBytes -= readBytes;
+            }
+            this.content = new String(bs.array());
+          }
+        }
+      } catch (FileNotFoundException fne) {
+        throw new IllegalArgumentException("File %s does not exists".format(filepath));
+      } catch (IOException ioe) {
+        throw new IllegalArgumentException(ioe.getMessage());
+      }
+    }
+
+    @Override
+    public DataType getDataType() {
+      return this.dataType;
+    }
+
+    @Override
+    public long getRandomSeed() {
+      return 0;
+    }
+
+    @Override
+    public long getSize() {
+      return this.size;
+    }
+
+    @Override
+    public String getContent() {
+      return this.content;
+    }
   }
 }

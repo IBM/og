@@ -55,6 +55,7 @@ public class Streams {
       case ZEROES:
         return create(ZERO_BUF, body.getSize());
       case CUSTOM:
+      case FILE:
         return create(body.getContent().getBytes(Charsets.UTF_8), body.getSize());
       default:
         return create(createRandomBuffer(body.getRandomSeed()), body.getSize());

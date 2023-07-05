@@ -11,5 +11,5 @@ package com.ibm.og.api;
  * @since 1.0
  */
 public enum DataType {
-  NONE, RANDOM, ZEROES, CUSTOM;
+  NONE, RANDOM, ZEROES, CUSTOM, FILE;
 }

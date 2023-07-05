@@ -15,9 +15,7 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import com.ibm.og.guice.ListModule;
-import com.ibm.og.guice.ListObjectVersionsModule;
-import com.ibm.og.guice.ObjectTagsModule;
+import com.ibm.og.guice.*;
 import com.ibm.og.json.OGConfig;
 import com.ibm.og.json.type.FilesizeConfigTypeAdapterFactory;
 import com.ibm.og.test.condition.LoadTestResult;
@@ -25,7 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ibm.og.cli.Application.Cli;
-import com.ibm.og.guice.OGModule;
 import com.ibm.og.json.type.ChoiceConfigTypeAdapterFactory;
 import com.ibm.og.json.type.ContainerConfigTypeAdapterFactory;
 import com.ibm.og.json.type.OperationConfigTypeAdapterFactory;
@@ -298,7 +295,8 @@ public class ObjectGenerator {
 
   public static Injector createInjector(final OGConfig ogConfig) {
     return Guice.createInjector(Stage.PRODUCTION, new OGModule(ogConfig), new ListModule(ogConfig),
-            new ObjectTagsModule(ogConfig), new ListObjectVersionsModule(ogConfig));
+            new ObjectTagsModule(ogConfig), new ListObjectVersionsModule(ogConfig),
+            new PutSelectObjectModule(ogConfig));
   }
 
   public static void shutdownObjectManager(final ObjectManager objectManager) {
