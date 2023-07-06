@@ -16,6 +16,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 /**
  * A utility class for creating body instances
@@ -172,8 +174,16 @@ public class Bodies {
     private final DataType dataType;
     private String content;
 
+
+    private static HashMap<String, String> bodies = new LinkedHashMap<String, String>();
+
     public FileBodyImpl(final DataType dataType, String filepath) {
       this.dataType = dataType;
+      if (this.bodies.containsKey(filepath)) {
+        this.content = this.bodies.get(filepath);
+        this.size = this.content.length();
+        return;
+      }
       File file = new File(filepath);
       try {
         if (file.exists()) {
@@ -187,6 +197,7 @@ public class Bodies {
               remainingBytes -= readBytes;
             }
             this.content = new String(bs.array());
+            bodies.put(filepath, this.content);
           }
         }
       } catch (FileNotFoundException fne) {
