@@ -110,6 +110,7 @@ public class PutSelectObjectModule extends AbstractModule {
             if (file.exists()) {
                 file.delete();
             }
+            file = new File("/var/log/og/selectObjectSuffix.json");
             FileOutputStream fos = new FileOutputStream(file);
             fos.write(gson.toJson(selectObjectSuffixMap, LinkedHashMap.class).getBytes());
         } catch (FileNotFoundException fne) {
