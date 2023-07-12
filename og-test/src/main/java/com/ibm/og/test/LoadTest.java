@@ -41,7 +41,7 @@ import com.google.common.util.concurrent.Uninterruptibles;
  * @since 1.0
  */
 @Singleton
-public class LoadTest implements Callable<LoadTestResult> {
+public class   LoadTest implements Callable<LoadTestResult> {
   private static final Logger _logger = LoggerFactory.getLogger(LoadTest.class);
   private static final Logger _exceptionLogger = LoggerFactory.getLogger("ExceptionLogger");
   private static final Logger _consoleLogger = LoggerFactory.getLogger("ConsoleLogger");

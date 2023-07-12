@@ -10,11 +10,20 @@ import static java.lang.Thread.interrupted;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.base.Function;
+import com.google.inject.name.Named;
 import com.ibm.og.guice.*;
 import com.ibm.og.json.OGConfig;
 import com.ibm.og.json.type.FilesizeConfigTypeAdapterFactory;
@@ -81,6 +90,8 @@ public class ObjectGenerator {
   private static long timestampStop;
   private static long timestampIntervalStart;
 
+  private static PutSelectObjectModule putSelectObjectModule;
+
 
   private ObjectGenerator() {}
 
@@ -133,6 +144,7 @@ public class ObjectGenerator {
         statsLogger = new Thread(new StatsLogger(), "stats-logger");
         statsLogger.start();
       }
+      putSelectObjectModule.initMap();
       final LoadTestResult result = run(test, objectManager, statistics, gson);
 
       shutdownLatch.countDown();
@@ -209,11 +221,13 @@ public class ObjectGenerator {
     test = injector.getInstance(LoadTest.class);
     objectManager = injector.getInstance(ObjectManager.class);
     statistics = injector.getInstance(Statistics.class);
+    //putSelectObjectModule = injector.getInstance(PutSelectObjectModule.class);
 
   }
 
+
   public static LoadTestResult run(final LoadTest test, final ObjectManager objectManager,
-      final Statistics statistics, final Gson gson) {
+                                   final Statistics statistics, final Gson gson) {
     _logger.info("{}", test);
     _logger.info("{}", objectManager);
     _consoleLogger.info("Configured.");
@@ -226,7 +240,7 @@ public class ObjectGenerator {
     } else {
       _consoleLogger.error("Test ended unsuccessfully. See og.log or exception.log for details");
     }
-
+    putSelectObjectModule.persistMap();
     shutdownObjectManager(objectManager);
 
     final Summary summary = logSummary(statistics, result.timestampStart, result.timestampFinish, result);
@@ -294,9 +308,10 @@ public class ObjectGenerator {
   }
 
   public static Injector createInjector(final OGConfig ogConfig) {
+    putSelectObjectModule = new PutSelectObjectModule(ogConfig);
     return Guice.createInjector(Stage.PRODUCTION, new OGModule(ogConfig), new ListModule(ogConfig),
             new ObjectTagsModule(ogConfig), new ListObjectVersionsModule(ogConfig),
-            new PutSelectObjectModule(ogConfig));
+            putSelectObjectModule);
   }
 
   public static void shutdownObjectManager(final ObjectManager objectManager) {

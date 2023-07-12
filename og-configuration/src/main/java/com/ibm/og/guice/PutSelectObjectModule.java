@@ -5,7 +5,10 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.inject.AbstractModule;
+import com.google.inject.Inject;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
@@ -27,7 +30,12 @@ import com.ibm.og.util.MoreFunctions;
 
 import javax.annotation.Nullable;
 import javax.inject.Named;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -43,14 +51,88 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class PutSelectObjectModule extends AbstractModule {
 
     private final OGConfig config;
+    private Gson gson;
+
+    private LinkedHashMap<String, Double> selectObjectSuffixMap;
 
     private final LoadTestSubscriberExceptionHandler handler;
     private final EventBus eventBus;
 
+    @Provides
+    @Singleton
+    @Named("selectOperationObjectSuffixMapper")
+    public Function<Map<String, String>, String> createSelectObjectSuffixMapper() {
+        Function<Map<String, String>, String> selectOperationObjectSuffixMapper = new Function<Map<String, String>, String>() {
+            @Nullable
+            @Override
+            public String apply(@Nullable Map<String, String> input) {
+                int suffix;
+                final String filepath = input.get(Context.X_OG_SELECT_OBJECT_FILENAME);
+                if (selectObjectSuffixMap.containsKey(filepath)) {
+                    suffix = selectObjectSuffixMap.get(filepath).intValue();
+                } else {
+                    suffix = (int) selectObjectSuffixMap.size() + 1;
+                    selectObjectSuffixMap.put(filepath, (double) suffix);
+                }
+                return String.valueOf(suffix);
+
+            }
+        };
+        return selectOperationObjectSuffixMapper;
+    }
+
+    public void initMap() {
+        if (this.selectObjectSuffixMap == null) {
+            this.selectObjectSuffixMap = new LinkedHashMap<String, Double>();
+            File file = new File("/var/log/og/selectObjectSuffix.json");
+            if (file.exists()) {
+                int sz = (int) file.length();
+                byte[] buffer = new byte[sz];
+                try {
+                    FileInputStream fis = new FileInputStream(file);
+                    fis.read(buffer);
+                    this.selectObjectSuffixMap = gson.fromJson(new String(buffer), this.selectObjectSuffixMap.getClass());
+                } catch (FileNotFoundException fne) {
+
+                } catch (IOException ioe) {
+
+                } catch (SecurityException se) {
+
+                }
+            }
+        }
+    }
+
+    public void persistMap() {
+        // write the map the filesystem
+        File file = new File("/var/log/og/selectObjectSuffix.json");
+        try {
+            if (file.exists()) {
+                file.delete();
+            }
+            FileOutputStream fos = new FileOutputStream(file);
+            fos.write(gson.toJson(selectObjectSuffixMap, LinkedHashMap.class).getBytes());
+        } catch (FileNotFoundException fne) {
+
+        } catch (IOException ioe) {
+
+        } catch (SecurityException se) {
+
+        }
+    }
+
+
+
+
+
+
+    @Inject
     public PutSelectObjectModule(final OGConfig config) {
-        this.config = checkNotNull(config);
+        checkNotNull(config);
+        this.config = config;
         this.handler = new LoadTestSubscriberExceptionHandler();
         this.eventBus = new EventBus(this.handler);
+        this.gson = new GsonBuilder().create();
     }
 
     @Override
@@ -59,16 +141,15 @@ public class PutSelectObjectModule extends AbstractModule {
         bindConstant().annotatedWith(Names.named("writeSelectObject.weight")).to(this.config.writeSelectObject.weight);
     }
 
-    private static Supplier<WriteSelectBodyConfig> createSelectionConfigSupplier(
-            final SelectionConfig<WriteSelectBodyConfig> selectionConfig) {
-
+    private Function<Map<String, String>, WriteSelectBodyConfig> createSelectionConfigSupplier() {
+        final SelectionConfig<WriteSelectBodyConfig> selectionConfig = this.config.writeSelectObject.writeSelectBodyConfig;
         if (SelectionType.ROUNDROBIN == selectionConfig.selection) {
             final List<WriteSelectBodyConfig> choiceList = Lists.newArrayList();
             for (final ChoiceConfig<WriteSelectBodyConfig> choice : selectionConfig.choices) {
                 choiceList.add(choice.choice);
             }
             final Supplier<WriteSelectBodyConfig> configSupplier = Suppliers.cycle(choiceList);
-            return configSupplier;
+            return MoreFunctions.forSupplier(configSupplier);
         }
 
         final RandomSupplier.Builder<WriteSelectBodyConfig> wrc = Suppliers.random();
@@ -76,30 +157,45 @@ public class PutSelectObjectModule extends AbstractModule {
             wrc.withChoice(choice.choice, choice.weight);
         }
         final Supplier<WriteSelectBodyConfig> configSupplier = wrc.build();
-        return configSupplier;
+        return MoreFunctions.forSupplier(configSupplier);
     }
 
-    private Function<Map<String, String>, Body> createFileBodySupplier(
-            final Supplier<WriteSelectBodyConfig> fileSupplier) {
-
-
-        final Supplier<Body> bodySupplier = new Supplier<Body>() {
+    @Provides
+    @Singleton
+    @Named("writeSelectObjectFilename")
+    private Function<Map<String, String>, String> filenameProvider() {
+        final Function<Map<String, String>, WriteSelectBodyConfig> fileSupplier = createSelectionConfigSupplier();
+        Function<Map<String, String>, String> f = new Function<Map<String, String>, String>() {
+            @Nullable
             @Override
-            public Body get() {
-                final WriteSelectBodyConfig bodyConfig = fileSupplier.get();
+            public String apply(@Nullable Map<String, String> input) {
+                final WriteSelectBodyConfig bodyConfig = fileSupplier.apply(input);
                 final String filename = bodyConfig.filepath;
-                return Bodies.file(filename);
-            };
+                input.put(Context.X_OG_SELECT_OBJECT_FILENAME, filename);
+                return filename;
+            }
         };
-        return MoreFunctions.forSupplier(bodySupplier);
+        return f;
+    }
+
+    private Function<Map<String, String>, Body> createFileBodySupplier() {
+
+        Function<Map<String, String>, Body> f = new Function<Map<String, String>, Body>() {
+            @Nullable
+            @Override
+            public Body apply(@Nullable Map<String, String> input) {
+                final String filename = input.get(Context.X_OG_SELECT_OBJECT_FILENAME);
+                return Bodies.file(filename);
+            }
+        };
+        return f;
     }
 
     @Provides
     @Singleton
     @WriteSelectBody
     public Function<Map<String, String>, Body> provideWriteBody() {
-        final SelectionConfig<WriteSelectBodyConfig> filebody = this.config.writeSelectObject.writeSelectBodyConfig;
-        return createFileBodySupplier(createSelectionConfigSupplier(filebody));
+        return createFileBodySupplier();
     }
 
 //    @Provides
@@ -133,30 +229,49 @@ public class PutSelectObjectModule extends AbstractModule {
     @Provides
     @Singleton
     @Named("writeSelect.context")
-    public List<Function<Map<String, String>, String>> provideWriteContext(final Api api) {
+    public List<Function<Map<String, String>, String>> provideWriteContext(
+            final Api api,
+            @Named("writeSelectObjectFilename") final Function<Map<String, String>, String> filenameProvider,
+            @Named("writeSelectObjectSuffixMap") final Function<Map<String, String>, String> suffixProvider) {
+
         final List<Function<Map<String, String>, String>> context = Lists.newArrayList();
 
         final OperationConfig operationConfig = checkNotNull(this.config.writeSelectObject);
-//        checkArgument(Api.SOH != api);
         if (operationConfig.object.selection != null) {
             context.add(ModuleUtils.provideObject(operationConfig));
         } else {
             // default for writes
             //TODO: track the type of object / filename / query
-            context.add(new UUIDObjectNameFunction(this.config.octalNamingMode));
+            // call filenameprovider.apply
+            // call suffixprovider.apply
+            // create uuid object name with suffix
+            context.add(filenameProvider);
+            context.add(suffixProvider);
+            context.add(new UUIDObjectNameFunction(config.octalNamingMode, -1));
         }
         return ImmutableList.copyOf(context);
     }
 
-//    @Provides
-//    @Singleton
-//    @WriteObjectName
-//    public Function<Map<String, String>, String> provideWriteObjectName(final Api api) {
-//        if (Api.SOH == api) {
-//            return null;
-//        }
-//        return MoreFunctions.keyLookup(Context.X_OG_OBJECT_NAME);
-//    }
+    @Provides
+    @Singleton
+    @Named("writeSelectObjectSuffixMap")
+    public final Function<Map<String, String>, String> provideSelectObjectSuffixMap(final String filepath,
+                                    @Named("selectOperationObjectSuffixMapper") final Function<Map<String, String>, String> mapper) {
+        // load the mappings from selectobjectsuffix.json if present
+
+        Function<Map<String, String>, String> f = new Function<Map<String, String>, String>() {
+            @Nullable
+            @Override
+            public String apply(@Nullable Map<String, String> input) {
+                final String suffix = mapper.apply(input);
+                input.put(Context.X_OG_SELECT_OBJECT_SUFFIX, String.valueOf(suffix));
+                return String.valueOf(suffix);
+            }
+        };
+
+        return f;
+    }
+
 
     @Provides
     @Singleton
