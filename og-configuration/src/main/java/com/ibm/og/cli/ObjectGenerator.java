@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 import com.google.common.base.Function;
 import com.google.inject.name.Named;
 import com.ibm.og.guice.*;
+import com.ibm.og.guice.annotation.SelectSuffixMap;
 import com.ibm.og.json.OGConfig;
 import com.ibm.og.json.type.FilesizeConfigTypeAdapterFactory;
 import com.ibm.og.test.condition.LoadTestResult;
@@ -82,6 +83,7 @@ public class ObjectGenerator {
   private static Injector injector;
   private static LoadTest test;
   private static ObjectManager objectManager;
+  private static SelectOperationSharedDataModule selectOperationSharedDataModule;
   private static Statistics statistics;
   private static OGConfig ogConfig;
   private static Thread statsLogger;
@@ -144,7 +146,7 @@ public class ObjectGenerator {
         statsLogger = new Thread(new StatsLogger(), "stats-logger");
         statsLogger.start();
       }
-      putSelectObjectModule.initMap();
+
       final LoadTestResult result = run(test, objectManager, statistics, gson);
 
       shutdownLatch.countDown();
@@ -222,6 +224,11 @@ public class ObjectGenerator {
     objectManager = injector.getInstance(ObjectManager.class);
     statistics = injector.getInstance(Statistics.class);
     //putSelectObjectModule = injector.getInstance(PutSelectObjectModule.class);
+    //selectOperationSharedDataModule = injector.getInstance(SelectOperationSharedDataModule.class);
+    SelectObjectContentModule scm = injector.getInstance(SelectObjectContentModule.class);
+    //scm.loadSuffixes();
+    SelectOperationSharedDataModule.SuffixManager sm = injector.getInstance(SelectOperationSharedDataModule.SuffixManager.class);
+    sm.initMap();
 
   }
 
@@ -240,7 +247,9 @@ public class ObjectGenerator {
     } else {
       _consoleLogger.error("Test ended unsuccessfully. See og.log or exception.log for details");
     }
-    putSelectObjectModule.persistMap();
+    //SelectObjectContentModule scm = injector.getInstance(SelectObjectContentModule.class);
+    SelectOperationSharedDataModule.SuffixManager sm = injector.getInstance(SelectOperationSharedDataModule.SuffixManager.class);
+    sm.persistMap();
     shutdownObjectManager(objectManager);
 
     final Summary summary = logSummary(statistics, result.timestampStart, result.timestampFinish, result);
@@ -311,7 +320,9 @@ public class ObjectGenerator {
     putSelectObjectModule = new PutSelectObjectModule(ogConfig);
     return Guice.createInjector(Stage.PRODUCTION, new OGModule(ogConfig), new ListModule(ogConfig),
             new ObjectTagsModule(ogConfig), new ListObjectVersionsModule(ogConfig),
+            new SelectOperationSharedDataModule(),
             putSelectObjectModule);
+
   }
 
   public static void shutdownObjectManager(final ObjectManager objectManager) {

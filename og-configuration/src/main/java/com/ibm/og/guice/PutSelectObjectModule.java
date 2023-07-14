@@ -1,3 +1,8 @@
+/* Copyright (c) IBM Corporation 2023. All Rights Reserved.
+ * Project name: Object Generator
+ * This project is licensed under the Apache License 2.0, see LICENSE.
+ */
+
 package com.ibm.og.guice;
 
 import com.google.common.base.Function;
@@ -38,9 +43,11 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * A guice configuration module for wiring up list operation components
@@ -48,31 +55,43 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @since 1.15.0
  */
 
+
 public class PutSelectObjectModule extends AbstractModule {
 
     private final OGConfig config;
     private Gson gson;
 
-    private LinkedHashMap<String, Double> selectObjectSuffixMap;
+    //private LinkedHashMap<String, Double> selectObjectSuffixMap = new LinkedHashMap<>();
 
     private final LoadTestSubscriberExceptionHandler handler;
     private final EventBus eventBus;
 
+//    @Provides
+//    @SelectSuffixMap
+//    public LinkedHashMap<String, Double> provideSuffixMap() {
+//        return this.selectObjectSuffixMap;
+//    }
+
+
     @Provides
     @Singleton
     @Named("selectOperationObjectSuffixMapper")
-    public Function<Map<String, String>, String> createSelectObjectSuffixMapper() {
+    public Function<Map<String, String>, String> createSelectObjectSuffixMapper(@SelectSuffixMap SelectOperationSharedDataModule.SuffixManager manager) {
+        final SelectOperationSharedDataModule.SuffixManager suffixManager = manager;
+
         Function<Map<String, String>, String> selectOperationObjectSuffixMapper = new Function<Map<String, String>, String>() {
             @Nullable
             @Override
             public String apply(@Nullable Map<String, String> input) {
                 int suffix;
+                final ConcurrentHashMap<String, Integer> selectObjectSuffixMap = suffixManager.selectObjectSuffixMap;
                 final String filepath = input.get(Context.X_OG_SELECT_OBJECT_FILENAME);
                 if (selectObjectSuffixMap.containsKey(filepath)) {
-                    suffix = selectObjectSuffixMap.get(filepath).intValue();
+                    suffix = selectObjectSuffixMap.get(filepath);
                 } else {
-                    suffix = (int) selectObjectSuffixMap.size() + 1;
-                    selectObjectSuffixMap.put(filepath, (double) suffix);
+                    suffix = selectObjectSuffixMap.size() + 1;
+                    selectObjectSuffixMap.put(filepath, suffix);
+
                 }
                 return String.valueOf(suffix);
 
@@ -81,53 +100,11 @@ public class PutSelectObjectModule extends AbstractModule {
         return selectOperationObjectSuffixMapper;
     }
 
-    public void initMap() {
-        if (this.selectObjectSuffixMap == null) {
-            this.selectObjectSuffixMap = new LinkedHashMap<String, Double>();
-            File file = new File("/var/log/og/selectObjectSuffix.json");
-            if (file.exists()) {
-                int sz = (int) file.length();
-                byte[] buffer = new byte[sz];
-                try {
-                    FileInputStream fis = new FileInputStream(file);
-                    fis.read(buffer);
-                    this.selectObjectSuffixMap = gson.fromJson(new String(buffer), this.selectObjectSuffixMap.getClass());
-                } catch (FileNotFoundException fne) {
-
-                } catch (IOException ioe) {
-
-                } catch (SecurityException se) {
-
-                }
-            }
-        }
-    }
-
-    public void persistMap() {
-        // write the map the filesystem
-        File file = new File("/var/log/og/selectObjectSuffix.json");
-        try {
-            if (file.exists()) {
-                file.delete();
-            }
-            file = new File("/var/log/og/selectObjectSuffix.json");
-            FileOutputStream fos = new FileOutputStream(file);
-            fos.write(gson.toJson(selectObjectSuffixMap, LinkedHashMap.class).getBytes());
-        } catch (FileNotFoundException fne) {
-
-        } catch (IOException ioe) {
-
-        } catch (SecurityException se) {
-
-        }
-    }
 
 
 
 
 
-
-    @Inject
     public PutSelectObjectModule(final OGConfig config) {
         checkNotNull(config);
         this.config = config;
@@ -140,6 +117,8 @@ public class PutSelectObjectModule extends AbstractModule {
     protected void configure() {
         // nothing to bind here
         bindConstant().annotatedWith(Names.named("writeSelectObject.weight")).to(this.config.writeSelectObject.weight);
+//        bind(LinkedHashMap.class)
+//                .annotatedWith(Names.named("xyz")).toProvider()
     }
 
     private Function<Map<String, String>, WriteSelectBodyConfig> createSelectionConfigSupplier() {
