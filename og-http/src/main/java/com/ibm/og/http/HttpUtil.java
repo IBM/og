@@ -47,6 +47,7 @@ public class HttpUtil {
       case PUT_TAGS:
       case PUT_OBJECT_LOCK_RETENTION:
       case PUT_OBJECT_LOCK_LEGAL_HOLD:
+      case WRITE_SELECT_OBJECT:
         return Method.PUT;
       case READ:
       case LIST:
