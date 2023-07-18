@@ -110,7 +110,9 @@ public class SimpleRequestManager implements RequestManager {
       @Named("getObjectLegalHold") final Supplier<Request> getObjectLegalHold,
       @Named("getObjectLegalHold.weight") final double getObjectLegalHoldWeight,
       @Named("writeSelectObject") final Supplier<Request> writeSelectObject,
-      @Named("writeSelectObject.weight") final double writeSelectObjectWeight) {
+      @Named("writeSelectObject.weight") final double writeSelectObjectWeight,
+      @Named("querySelectObject") final Supplier<Request> querySelectObject,
+      @Named("querySelectObject.weight") final double querySelectObjectWeight) {
 
     checkNotNull(write);
     checkNotNull(overwrite);
@@ -141,6 +143,7 @@ public class SimpleRequestManager implements RequestManager {
     checkNotNull(putObjectLegalHold);
     checkNotNull(getObjectLegalHold);
     checkNotNull(writeSelectObject);
+    checkNotNull(querySelectObject);
 
     this.multipartWriteSupplier = (MultipartRequestSupplier)writeMultipart;
 
@@ -239,6 +242,9 @@ public class SimpleRequestManager implements RequestManager {
 
     if (writeSelectObjectWeight > 0.0) {
       wrc.withChoice(writeSelectObject, writeSelectObjectWeight);
+    }
+    if (querySelectObjectWeight > 0.0) {
+      wrc.withChoice(querySelectObject, querySelectObjectWeight);
     }
     try {
       this.requestSupplier = wrc.build();

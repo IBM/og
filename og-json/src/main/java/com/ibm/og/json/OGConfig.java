@@ -51,6 +51,7 @@ public class OGConfig {
   public OperationConfig getTags;
 
   public OperationConfig writeSelectObject;
+  public OperationConfig querySelectObject;
 
   public SelectionConfig<FilesizeConfig> filesize;
   public DataType data;

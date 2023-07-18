@@ -223,12 +223,9 @@ public class ObjectGenerator {
     test = injector.getInstance(LoadTest.class);
     objectManager = injector.getInstance(ObjectManager.class);
     statistics = injector.getInstance(Statistics.class);
-    //putSelectObjectModule = injector.getInstance(PutSelectObjectModule.class);
-    //selectOperationSharedDataModule = injector.getInstance(SelectOperationSharedDataModule.class);
-    SelectObjectContentModule scm = injector.getInstance(SelectObjectContentModule.class);
-    //scm.loadSuffixes();
     SelectOperationSharedDataModule.SuffixManager sm = injector.getInstance(SelectOperationSharedDataModule.SuffixManager.class);
     sm.initMap();
+    sm.initSelectBodyContent();
 
   }
 
@@ -247,7 +244,6 @@ public class ObjectGenerator {
     } else {
       _consoleLogger.error("Test ended unsuccessfully. See og.log or exception.log for details");
     }
-    //SelectObjectContentModule scm = injector.getInstance(SelectObjectContentModule.class);
     SelectOperationSharedDataModule.SuffixManager sm = injector.getInstance(SelectOperationSharedDataModule.SuffixManager.class);
     sm.persistMap();
     shutdownObjectManager(objectManager);
@@ -321,7 +317,7 @@ public class ObjectGenerator {
     return Guice.createInjector(Stage.PRODUCTION, new OGModule(ogConfig), new ListModule(ogConfig),
             new ObjectTagsModule(ogConfig), new ListObjectVersionsModule(ogConfig),
             new SelectOperationSharedDataModule(),
-            putSelectObjectModule);
+            putSelectObjectModule, new SelectObjectContentModule(ogConfig));
 
   }
 
