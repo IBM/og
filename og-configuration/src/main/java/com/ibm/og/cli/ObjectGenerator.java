@@ -226,7 +226,8 @@ public class ObjectGenerator {
     SelectOperationSharedDataModule.SuffixManager sm = injector.getInstance(SelectOperationSharedDataModule.SuffixManager.class);
     sm.initMap();
     sm.initSelectBodyContent();
-
+    SelectOperationSharedDataModule.FileBodies fileBodies = injector.getInstance(SelectOperationSharedDataModule.FileBodies.class);
+    fileBodies.createFileBodies(ogConfig.writeSelectObject);
   }
 
 

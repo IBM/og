@@ -10,8 +10,15 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
+import com.ibm.og.guice.annotation.SelectFileBodies;
 import com.ibm.og.guice.annotation.SelectSuffixMap;
+import com.ibm.og.http.Bodies;
+import com.ibm.og.json.ChoiceConfig;
+import com.ibm.og.json.OperationConfig;
+import com.ibm.og.json.SelectionConfig;
+import com.ibm.og.json.WriteSelectBodyConfig;
 
+import java.awt.*;
 import java.io.*;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -29,6 +36,7 @@ public class SelectOperationSharedDataModule extends AbstractModule {
     private static TypeToken<List<LinkedHashMap<String, String>>> queryMapType = new TypeToken<List<LinkedHashMap<String, String>>>(){};
 
     public SuffixManager manager;
+    public FileBodies fileBodies;
     @Singleton
     static public class SuffixManager {
 
@@ -123,19 +131,26 @@ public class SelectOperationSharedDataModule extends AbstractModule {
     public SelectOperationSharedDataModule() {
         System.out.println("SelectObjectContentModule constructor...");
         this.gson = new GsonBuilder().create();
-        //this.manager = new SuffixManager();
     }
 
-//    @Provides
-//    @Singleton
-//    @SelectSuffixMap
-//    public SuffixManager provideSuffixManager() {
-//        return new SuffixManager();
-//    }
+
+    @Singleton
+    static public class FileBodies {
+        public void createFileBodies(final OperationConfig querySelectConfig) {
+            final SelectionConfig<WriteSelectBodyConfig> selectionConfig = querySelectConfig.writeSelectBodyConfig;
+            final List<ChoiceConfig<WriteSelectBodyConfig>> choices = selectionConfig.choices;
+            for (ChoiceConfig<WriteSelectBodyConfig> choice: choices) {
+                String filepath = choice.choice.filepath;
+                Bodies.file(filepath);
+            }
+        }
+    }
 
     @Override
     protected void configure() {
         bind(SuffixManager.class)
                 .annotatedWith(SelectSuffixMap.class).to(SuffixManager.class).in(Singleton.class);
+        bind(FileBodies.class)
+                .annotatedWith(SelectFileBodies.class).to(FileBodies.class).in(Singleton.class);
     }
 }
