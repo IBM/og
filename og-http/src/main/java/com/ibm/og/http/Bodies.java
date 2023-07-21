@@ -90,6 +90,9 @@ public class Bodies {
 
   private static Body createFileBody(String filepath) {
     checkNotNull(filepath);
+    if (FileBodyImpl.bodies.containsKey(filepath)) {
+      return FileBodyImpl.bodies.get(filepath);
+    }
     return new FileBodyImpl(DataType.FILE, filepath);
   }
 
@@ -125,6 +128,11 @@ public class Bodies {
 
     @Override
     public String getContent() { return this.content; }
+
+    @Override
+    public byte[] getData() {
+      return this.content.getBytes();
+    }
 
     @Override
     public String toString() {
@@ -168,22 +176,19 @@ public class Bodies {
 
   }
 
-  private static class FileBodyImpl implements Body {
+  public static class FileBodyImpl implements Body {
     private final long seed = 0;
     private long size;
     private final DataType dataType;
     private String content;
 
+    private byte[] data;
 
-    private static HashMap<String, String> bodies = new LinkedHashMap<String, String>();
+
+    private static HashMap<String, FileBodyImpl> bodies = new LinkedHashMap<String, FileBodyImpl>();
 
     public FileBodyImpl(final DataType dataType, String filepath) {
       this.dataType = dataType;
-      if (this.bodies.containsKey(filepath)) {
-        this.content = this.bodies.get(filepath);
-        this.size = this.content.length();
-        return;
-      }
       File file = new File(filepath);
       try {
         if (file.exists()) {
@@ -196,8 +201,9 @@ public class Bodies {
             while ((readBytes = fis.read(bs.array(), readBytes, remainingBytes)) < 0) {
               remainingBytes -= readBytes;
             }
+            data = bs.array();
             this.content = new String(bs.array());
-            bodies.put(filepath, this.content);
+            bodies.put(filepath, this);
           }
         }
       } catch (FileNotFoundException fne) {
@@ -225,6 +231,10 @@ public class Bodies {
     @Override
     public String getContent() {
       return this.content;
+    }
+
+    public byte[] getData() {
+      return this.data;
     }
   }
 }
