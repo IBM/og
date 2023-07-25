@@ -106,6 +106,7 @@ public class OGConfig {
     this.deleteTags = new OperationConfig();
     this.getTags = new OperationConfig();
     this.writeSelectObject = new OperationConfig();
+    this.querySelectObject = new OperationConfig();
     this.filesize = null;
     this.data = DataType.RANDOM;
     this.concurrency = null;

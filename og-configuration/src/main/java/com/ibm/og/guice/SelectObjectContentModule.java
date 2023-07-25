@@ -73,9 +73,6 @@ public class SelectObjectContentModule extends AbstractModule {
     @Override
     protected void configure() {
         bindConstant().annotatedWith(Names.named("querySelectObject.weight")).to(this.config.querySelectObject.weight);
-
-        int i = 0;
-        System.out.println("test" + i);
     }
 
     @Provides
