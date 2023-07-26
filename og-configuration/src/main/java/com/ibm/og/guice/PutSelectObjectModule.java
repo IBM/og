@@ -144,18 +144,22 @@ public class PutSelectObjectModule extends AbstractModule {
     @Singleton
     @Named("writeSelectObjectFilename")
     private Function<Map<String, String>, String> filenameProvider() {
-        final Function<Map<String, String>, WriteSelectBodyConfig> fileSupplier = createSelectionConfigSupplier();
-        Function<Map<String, String>, String> f = new Function<Map<String, String>, String>() {
-            @Nullable
-            @Override
-            public String apply(@Nullable Map<String, String> input) {
-                final WriteSelectBodyConfig bodyConfig = fileSupplier.apply(input);
-                final String filename = bodyConfig.filepath;
-                input.put(Context.X_OG_SELECT_OBJECT_FILENAME, filename);
-                return filename;
-            }
-        };
-        return f;
+        if (!this.config.writeSelectObject.writeSelectBodyConfig.choices.isEmpty()) {
+            final Function<Map<String, String>, WriteSelectBodyConfig> fileSupplier = createSelectionConfigSupplier();
+            Function<Map<String, String>, String> f = new Function<Map<String, String>, String>() {
+                @Nullable
+                @Override
+                public String apply(@Nullable Map<String, String> input) {
+                    final WriteSelectBodyConfig bodyConfig = fileSupplier.apply(input);
+                    final String filename = bodyConfig.filepath;
+                    input.put(Context.X_OG_SELECT_OBJECT_FILENAME, filename);
+                    return filename;
+                }
+            };
+            return f;
+        } else {
+            return null;
+        }
     }
 
     private Function<Map<String, String>, Body> createFileBodySupplier() {
@@ -211,7 +215,7 @@ public class PutSelectObjectModule extends AbstractModule {
     @Named("writeSelect.context")
     public List<Function<Map<String, String>, String>> provideWriteContext(
             final Api api,
-            @Named("writeSelectObjectFilename") final Function<Map<String, String>, String> filenameProvider,
+            @Nullable @Named("writeSelectObjectFilename") final Function<Map<String, String>, String> filenameProvider,
             @Named("writeSelectObjectSuffixMap") final Function<Map<String, String>, String> suffixProvider) {
 
         final List<Function<Map<String, String>, String>> context = Lists.newArrayList();
@@ -225,7 +229,9 @@ public class PutSelectObjectModule extends AbstractModule {
             // call filenameprovider.apply
             // call suffixprovider.apply
             // create uuid object name with suffix
-            context.add(filenameProvider);
+            if (filenameProvider != null) {
+                context.add(filenameProvider);
+            }
             context.add(suffixProvider);
             context.add(new UUIDObjectNameFunction(config.octalNamingMode, -1));
         }

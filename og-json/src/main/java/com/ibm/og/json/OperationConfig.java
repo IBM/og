@@ -83,6 +83,7 @@ public class OperationConfig {
     listSession.requestType = "UNCHAINED";
     listSession.startFromBeginning = false;
     this.listSessionConfig.choices.add(0, new ChoiceConfig<ListSessionConfig>(listSession));
+    this.writeSelectBodyConfig = new SelectionConfig<>();
     this.minimumListSessions = 1;
     this.multideleteCount = 1;
     this.multideleteQuiet = true;
