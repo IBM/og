@@ -1,15 +1,16 @@
-package com.ibm.og.guice;
+/* Copyright (c) IBM Corporation 2023. All Rights Reserved.
+ * Project name: Object Generator
+ * This project is licensed under the Apache License 2.0, see LICENSE.
+ */
 
+package com.ibm.og.guice;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
-import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-import com.google.inject.name.Names;
 import com.ibm.og.guice.annotation.SelectFileBodies;
 import com.ibm.og.guice.annotation.SelectSuffixMap;
 import com.ibm.og.http.Bodies;
@@ -17,9 +18,15 @@ import com.ibm.og.json.ChoiceConfig;
 import com.ibm.og.json.OperationConfig;
 import com.ibm.og.json.SelectionConfig;
 import com.ibm.og.json.WriteSelectBodyConfig;
+import com.ibm.og.object.ListObjectNameConsumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.awt.*;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -35,6 +42,9 @@ public class SelectOperationSharedDataModule extends AbstractModule {
     private static TypeToken<ConcurrentHashMap<String, Integer>> mapType = new TypeToken<ConcurrentHashMap<String, Integer>>(){};
     private static TypeToken<List<LinkedHashMap<String, String>>> queryMapType = new TypeToken<List<LinkedHashMap<String, String>>>(){};
 
+    private static final Logger _logger = LoggerFactory.getLogger(SelectOperationSharedDataModule.class);
+    private static final Logger _consoleLogger = LoggerFactory.getLogger("ConsoleLogger");
+
     public SuffixManager manager;
     public FileBodies fileBodies;
     @Singleton
@@ -45,7 +55,6 @@ public class SelectOperationSharedDataModule extends AbstractModule {
         public ArrayList<LinkedHashMap<String, String>> selectQueryMap;
 
         public SuffixManager() {
-            //selectObjectSuffixMap = new ConcurrentHashMap<>();
         }
 
         public void initMap() {
@@ -60,11 +69,12 @@ public class SelectOperationSharedDataModule extends AbstractModule {
                         fis.read(buffer);
                         this.selectObjectSuffixMap = gson.fromJson(new String(buffer), mapType.getType());
                     } catch (FileNotFoundException fne) {
-
+                        _logger.warn("File /var/log/og/selectObjectSuffix.json Not found");
+                        _consoleLogger.warn("File /var/log/og/selectObjectSuffix.json Not found");
                     } catch (IOException ioe) {
-
+                        _logger.warn("File /var/log/og/selectObjectSuffix.json Not found");
                     } catch (SecurityException se) {
-
+                        throw new RuntimeException("Security Exception occurred when reading /var/log/og/selectObjectSuffix.json");
                     }
                 }
             }
@@ -72,28 +82,29 @@ public class SelectOperationSharedDataModule extends AbstractModule {
 
         public void persistMap() {
 
-             // write the map the filesystem
-             File file = new File("/var/log/og/selectObjectSuffix.json");
-             try {
-             if (file.exists()) {
-             file.delete();
-             }
-             file = new File("/var/log/og/selectObjectSuffix.json");
-             FileOutputStream fos = new FileOutputStream(file);
-             fos.write(gson.toJson(selectObjectSuffixMap, LinkedHashMap.class).getBytes());
-             } catch (FileNotFoundException fne) {
+            // write the map the filesystem
+            final String filename = "/var/log/og/selectObjectSuffix.json";
+            File file = new File(filename);
+            try {
+                if (file.exists()) {
+                    file.delete();
+                }
+                file = new File(filename);
+                FileOutputStream fos = new FileOutputStream(file);
+                fos.write(gson.toJson(selectObjectSuffixMap, LinkedHashMap.class).getBytes());
+            }  catch (IOException ioe) {
+                throw new RuntimeException(String.format("IOException writing to file '%s'", filename));
 
-             } catch (IOException ioe) {
+            }  catch (SecurityException se) {
 
-             } catch (SecurityException se) {
-
-             }
+            }
 
         }
         public void initSelectBodyContent() {
+            final String filename = "/var/log/og/selectContent.json";
             try {
                 if (this.selectQueryMap == null) {
-                    Path path = FileSystems.getDefault().getPath("/var/log/og/selectContent.json");
+                    Path path = FileSystems.getDefault().getPath(filename);
                     if (Files.exists(path)) {
                         byte[] bytes = Files.readAllBytes(path);
                         this.selectQueryMap = gson.fromJson(new String(bytes), queryMapType.getType());
@@ -104,7 +115,7 @@ public class SelectOperationSharedDataModule extends AbstractModule {
                         this.selectQueryMap = new ArrayList<>();
                 }
             } catch (IOException ioe) {
-
+                throw new RuntimeException(String.format("IOException writing to file '%s'", filename));
             }
         }
 
@@ -123,13 +134,12 @@ public class SelectOperationSharedDataModule extends AbstractModule {
                     return elem.get("selectbody");
                 }
             }
-            return "";
+            throw new RuntimeException(String.format("Could not find the Select Expression for file '%s'", fp));
         }
     }
 
     @Inject
     public SelectOperationSharedDataModule() {
-        System.out.println("SelectObjectContentModule constructor...");
         this.gson = new GsonBuilder().create();
     }
 

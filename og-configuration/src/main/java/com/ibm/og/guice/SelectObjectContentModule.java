@@ -7,13 +7,11 @@ package com.ibm.og.guice;
 
 import com.google.common.base.Function;
 import com.google.common.base.Supplier;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.EventBus;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
@@ -31,11 +29,6 @@ import com.ibm.og.util.Context;
 
 import javax.annotation.Nullable;
 import javax.inject.Named;
-import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,25 +42,11 @@ import static com.google.gson.internal.$Gson$Preconditions.checkNotNull;
  */
 public class SelectObjectContentModule extends AbstractModule {
 
-
     private final OGConfig config;
-    private Gson gson;
-
-    private LinkedHashMap<String, String> selectQueryMap;
-    //@SelectSuffixMap
-    //SelectOperationSharedDataModule.SuffixManager sharedData;
-
-
-    private final LoadTestSubscriberExceptionHandler handler;
-    private final EventBus eventBus;
-
 
     public SelectObjectContentModule(final OGConfig config) {
         checkNotNull(config);
         this.config = config;
-        this.handler = new LoadTestSubscriberExceptionHandler();
-        this.eventBus = new EventBus(this.handler);
-        this.gson = new GsonBuilder().create();
     }
 
     @Override
@@ -110,6 +89,9 @@ public class SelectObjectContentModule extends AbstractModule {
                 String suffix = objectName.substring(objectName.length()-4);
                 int i = Integer.parseInt(suffix);
                 String fp = sharedData.getFileNameForSuffix(i);
+                if (fp.isEmpty()) {
+                    throw new RuntimeException(String.format("Could not find a Select Experssion for Object %s",objectName));
+                }
                 String body = sharedData.getBody(fp);
                 return Bodies.custom(body.length(), body);
 
@@ -137,7 +119,7 @@ public class SelectObjectContentModule extends AbstractModule {
             @QuerySelectBody final Function<Map<String, String>, Body> body,
             @Nullable @javax.inject.Named("credentials") final Function<Map<String, String>, Credential> credentials,
             @javax.inject.Named("virtualhost") final boolean virtualHost,
-            final ObjectManager objectManager) throws Exception {
+            final ObjectManager objectManager) {
 
         Map<String, Function<Map<String, String>, String>> queryParameters = Maps.newLinkedHashMap();
         queryParameters.put(QueryParameters.SELECT_OPERATION_PARAMETER,

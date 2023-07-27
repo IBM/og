@@ -9,11 +9,9 @@ import com.google.common.base.Function;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.eventbus.EventBus;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
@@ -35,19 +33,12 @@ import com.ibm.og.util.MoreFunctions;
 
 import javax.annotation.Nullable;
 import javax.inject.Named;
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * A guice configuration module for wiring up list operation components
@@ -60,18 +51,7 @@ public class PutSelectObjectModule extends AbstractModule {
 
     private final OGConfig config;
     private Gson gson;
-
-    //private LinkedHashMap<String, Double> selectObjectSuffixMap = new LinkedHashMap<>();
-
     private final LoadTestSubscriberExceptionHandler handler;
-    private final EventBus eventBus;
-
-//    @Provides
-//    @SelectSuffixMap
-//    public LinkedHashMap<String, Double> provideSuffixMap() {
-//        return this.selectObjectSuffixMap;
-//    }
-
 
     @Provides
     @Singleton
@@ -100,25 +80,16 @@ public class PutSelectObjectModule extends AbstractModule {
         return selectOperationObjectSuffixMapper;
     }
 
-
-
-
-
-
     public PutSelectObjectModule(final OGConfig config) {
         checkNotNull(config);
         this.config = config;
         this.handler = new LoadTestSubscriberExceptionHandler();
-        this.eventBus = new EventBus(this.handler);
         this.gson = new GsonBuilder().create();
     }
 
     @Override
     protected void configure() {
-        // nothing to bind here
         bindConstant().annotatedWith(Names.named("writeSelectObject.weight")).to(this.config.writeSelectObject.weight);
-//        bind(LinkedHashMap.class)
-//                .annotatedWith(Names.named("xyz")).toProvider()
     }
 
     private Function<Map<String, String>, WriteSelectBodyConfig> createSelectionConfigSupplier() {
@@ -163,8 +134,7 @@ public class PutSelectObjectModule extends AbstractModule {
     }
 
     private Function<Map<String, String>, Body> createFileBodySupplier() {
-
-        Function<Map<String, String>, Body> f = new Function<Map<String, String>, Body>() {
+        Function<Map<String, String>, Body> fileBodySupplier = new Function<Map<String, String>, Body>() {
             @Nullable
             @Override
             public Body apply(@Nullable Map<String, String> input) {
@@ -172,7 +142,7 @@ public class PutSelectObjectModule extends AbstractModule {
                 return Bodies.file(filename);
             }
         };
-        return f;
+        return fileBodySupplier;
     }
 
     @Provides
@@ -181,14 +151,6 @@ public class PutSelectObjectModule extends AbstractModule {
     public Function<Map<String, String>, Body> provideWriteBody() {
         return createFileBodySupplier();
     }
-
-//    @Provides
-//    @Singleton
-//    @WriteHost
-//    public Function<Map<String, String>, String> provideWriteHost(
-//            @Named("host") final Function<Map<String, String>, String> host) {
-//        return ModuleUtils.provideHost(this.config.writeSelectObject, host);
-//    }
 
     @Provides
     @Singleton
@@ -224,11 +186,6 @@ public class PutSelectObjectModule extends AbstractModule {
         if (operationConfig.object.selection != null) {
             context.add(ModuleUtils.provideObject(operationConfig));
         } else {
-            // default for writes
-            //TODO: track the type of object / filename / query
-            // call filenameprovider.apply
-            // call suffixprovider.apply
-            // create uuid object name with suffix
             if (filenameProvider != null) {
                 context.add(filenameProvider);
             }
@@ -244,7 +201,6 @@ public class PutSelectObjectModule extends AbstractModule {
     public final Function<Map<String, String>, String> provideSelectObjectSuffixMap(final String filepath,
                                     @Named("selectOperationObjectSuffixMapper") final Function<Map<String, String>, String> mapper) {
         // load the mappings from selectobjectsuffix.json if present
-
         Function<Map<String, String>, String> f = new Function<Map<String, String>, String>() {
             @Nullable
             @Override
@@ -275,7 +231,7 @@ public class PutSelectObjectModule extends AbstractModule {
             @WriteSelectBody final Function<Map<String, String>, Body> body,
             @Nullable @Named("credentials") final Function<Map<String, String>, Credential> credentials,
             @Named("virtualhost") final boolean virtualHost,
-            final ObjectManager objectManager) throws Exception {
+            final ObjectManager objectManager) {
 
         final Map<String, Function<Map<String, String>, String>> queryParameters = Collections.emptyMap();
 
@@ -303,7 +259,5 @@ public class PutSelectObjectModule extends AbstractModule {
                 apiVersion, object, queryParameters, false, headers, context, sseSourceContext, credentials,
                 body, virtualHost, retention, legalHold, contentMd5, delimiter, staticWebsiteVirtualHostSuffix);
     }
-
-
 
 }
