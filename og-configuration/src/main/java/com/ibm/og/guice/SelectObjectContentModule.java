@@ -87,7 +87,7 @@ public class SelectObjectContentModule extends AbstractModule {
                 String objectName = input.get(Context.X_OG_OBJECT_NAME);
                 // get suffix from object name
                 String suffix = objectName.substring(objectName.length()-4);
-                int i = Integer.parseInt(suffix);
+                int i = Integer.parseInt(suffix, 16);
                 String fp = sharedData.getFileNameForSuffix(i);
                 if (fp.isEmpty()) {
                     throw new RuntimeException(String.format("Could not find a Select Experssion for Object %s",objectName));
