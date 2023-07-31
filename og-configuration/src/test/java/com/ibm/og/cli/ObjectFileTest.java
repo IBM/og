@@ -507,7 +507,7 @@ public class ObjectFileTest {
                             final int minLegalHolds, final int maxLegalHolds, final long minRetention, final long maxRetention, final Class<Exception> expectedException) throws IOException {
     this.thrown.expect(expectedException);
     ObjectFile.filter(in, out, minFilesize, maxFilesize, minContainerSuffix, maxContainerSuffix, containerSuffixes,
-            minLegalHolds, maxLegalHolds, minRetention, maxRetention, true);
+            minLegalHolds, maxLegalHolds, minRetention, maxRetention, true, false);
   }
 
   @Test
@@ -532,7 +532,7 @@ public class ObjectFileTest {
     final Set<Integer> pointSuffixList = new HashSet<Integer>();
     ObjectFile.filter(in, out, 1, 2, 2, 3,
             new HashSet<Integer>(), 0, 100, -1L,
-            -1L, true);
+            -1L, true, false);
     out.close();
     long size = new File("id_0.object").length();
     assertThat((int)size, is(ObjectFileVersion.VERSION_HEADER_LENGTH +
@@ -575,7 +575,7 @@ public class ObjectFileTest {
     final Set<Integer> pointSuffixList = new HashSet<Integer>();
     ObjectFile.filter(in, out, 1, 2, 2, 3,
             new HashSet<Integer>(), 0, 100, -1L,
-            -1L, true);
+            -1L, true, false);
     out.close();
     long size = new File("id_0.object").length();
     assertThat((int)size, is(ObjectFileVersion.VERSION_HEADER_LENGTH + ObjectFileHeader.HEADER_LENGTH + LegacyObjectMetadata.OBJECT_SIZE + LegacyObjectMetadata.OBJECT_VERSION_MAX_SIZE));
@@ -618,7 +618,7 @@ public class ObjectFileTest {
     final Set<Integer> pointSuffixList = new HashSet<Integer>();
     ObjectFile.filter(in, out, 1, 2, 2, 3,
             new HashSet<Integer>(), 0, 100, -1L,
-            -1L, true);
+            -1L, true, false);
     out.close();
     long size = new File("id_0.object").length();
     assertThat((int)size, is(ObjectFileVersion.VERSION_HEADER_LENGTH +
@@ -675,11 +675,11 @@ public class ObjectFileTest {
 
     ObjectFile.filter(in, out, 1, 2, 2, 3,
             new HashSet<Integer>(), 0, 100, -1L,
-            -1L, true);
+            -1L, true, false);
 
     ObjectFile.filter(in2, out, 1, 2, 2, 3,
             new HashSet<Integer>(), 0, 100, -1L,
-            -1L, false);
+            -1L, false, false);
 
     out.close();
     long size = new File("id_0.object").length();
@@ -722,7 +722,7 @@ public class ObjectFileTest {
     final Set<Integer> pointSuffixList = new HashSet<Integer>();
     ObjectFile.filter(in, out, 1, 3, 1, 3,
             new HashSet<Integer>(), 0, 100, 3601L, retention,
-            true);
+            true, false);
     out.close();
     long size = new File("id_0.object").length();
     assertThat((int)size, is(ObjectFileVersion.VERSION_HEADER_LENGTH + ObjectFileHeader.HEADER_LENGTH + LegacyObjectMetadata.OBJECT_SIZE));
@@ -761,7 +761,7 @@ public class ObjectFileTest {
     final Set<Integer> pointSuffixList = new HashSet<Integer>();
     ObjectFile.filter(in, out, 1, 3, 1, 3,
             new HashSet<Integer>(), 0, 100, -1L, -1L,
-            true);
+            true, false);
     out.close();
     long size = new File("id_0.object").length();
     assertThat((int)size, is(ObjectFileVersion.VERSION_HEADER_LENGTH + ObjectFileHeader.HEADER_LENGTH + LegacyObjectMetadata.OBJECT_SIZE));

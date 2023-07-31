@@ -102,6 +102,7 @@ public class ObjectFile {
     final String objectFilesDir = getopt.getObjectFilesDir();
     final String prefix = getopt.getPrefix();
     final int shuffleMaxObjectFileSize = getopt.getShuffleMaxObjectFileSize();
+    final boolean selectableOnly = getopt.getSelectable();
 
     final Set<Integer> containerSuffixes = getopt.getContainerSuffixes();
     try {
@@ -142,7 +143,7 @@ public class ObjectFile {
           read(in, output, writeVersionHeader);
         } else if (filter) {
           filter(in, (ObjectFileOutputStream)out, minFilesize, maxFilesize, minContainerSuffix, maxContainerSuffix, containerSuffixes,
-                  minLegalHolds, maxLegalHolds, minRetention, maxRetention, writeVersionHeader);
+                  minLegalHolds, maxLegalHolds, minRetention, maxRetention, writeVersionHeader,selectableOnly);
         } else if (upgrade) {
           upgrade(in, out);
         } else if (split) { // Order matters here - write, filter, upgrade must be above
@@ -441,7 +442,8 @@ public class ObjectFile {
   public static void filter(final InputStream in, ObjectFileOutputStream output, final long minFilesize,
       final long maxFilesize, final int minContainerSuffix, final int maxContainerSuffix,
       final Set<Integer> containerSuffixes, final int minLegalholds, final int maxLegalHolds,
-      final long minRetention, final long maxRetention, boolean writeVersionHeader) throws IOException {
+      final long minRetention, final long maxRetention, final boolean writeVersionHeader,
+      final boolean selectObjects) throws IOException {
     checkNotNull(in);
     checkNotNull(output);
     checkArgument(minFilesize >= 0, "minFilesize must be >= 0 [%s]", minFilesize);
@@ -512,10 +514,20 @@ public class ObjectFile {
       if (objectName.getNumberOfLegalHolds() < minLegalholds || objectName.getNumberOfLegalHolds() > maxLegalHolds) {
         continue;
       }
+      if (selectObjects && getObjectNameSuffix(objectName) <= 0) {
+           continue;
+      }
       output.write(objectName.toBytes(objectVersionPresent));
     }
   }
 
+  public static int getObjectNameSuffix(final ObjectMetadata object) {
+    final String objectName = object.getName();
+    // get suffix from object name
+    String suffix = objectName.substring(objectName.length()-4);
+    final int objectSuffix = Integer.parseInt(suffix, 16);
+    return objectSuffix;
+  }
   public static void split(final InputStream in, final OutputStream out, int splitSize)
       throws IOException {
     checkNotNull(in);
