@@ -53,6 +53,8 @@ public class OGConfig {
   public OperationConfig writeSelectObject;
   public OperationConfig querySelectObject;
 
+  public String selectOperationsConfigLocation;
+
   public SelectionConfig<FilesizeConfig> filesize;
   public DataType data;
   public ConcurrencyConfig concurrency;
@@ -121,6 +123,7 @@ public class OGConfig {
     this.virtualHost = false;
     this.statsLogInterval = -1; //seconds
     this.octalNamingMode = false;
+    this.selectOperationsConfigLocation = "/var/log/og/";
 
   }
 }

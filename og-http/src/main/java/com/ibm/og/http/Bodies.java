@@ -205,9 +205,13 @@ public class Bodies {
             this.content = new String(bs.array());
             bodies.put(filepath, this);
           }
+        } else {
+          final String message = String.format("File %s does not exists", filepath);
+          throw new IllegalArgumentException(message);
         }
       } catch (FileNotFoundException fne) {
-        throw new IllegalArgumentException("File %s does not exists".format(filepath));
+        final String message = String.format("File %s does not exists", filepath);
+        throw new IllegalArgumentException(message);
       } catch (IOException ioe) {
         throw new IllegalArgumentException(ioe.getMessage());
       }

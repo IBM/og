@@ -11,6 +11,7 @@ import com.google.gson.reflect.TypeToken;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.ibm.og.guice.annotation.SelectFileBodies;
 import com.ibm.og.guice.annotation.SelectSuffixMap;
 import com.ibm.og.http.Bodies;
@@ -18,7 +19,6 @@ import com.ibm.og.json.ChoiceConfig;
 import com.ibm.og.json.OperationConfig;
 import com.ibm.og.json.SelectionConfig;
 import com.ibm.og.json.WriteSelectBodyConfig;
-import com.ibm.og.object.ListObjectNameConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,13 +54,21 @@ public class SelectOperationSharedDataModule extends AbstractModule {
 
         public ArrayList<LinkedHashMap<String, String>> selectQueryMap;
 
-        public SuffixManager() {
+        final String selectOperationsConfigDir;
+        String selectContentQueriesFile;
+        String selectObjectSuffixFile;
+
+       @Inject
+        public SuffixManager(@Named("selectOperationsConfigLocation") final String selectOperationsConfigDir) {
+            this.selectOperationsConfigDir = selectOperationsConfigDir;
+            this.selectContentQueriesFile = String.format("%s/selectContent.json", this.selectOperationsConfigDir);
+            this.selectObjectSuffixFile = String.format("%s/selectObjectSuffix.json", this.selectOperationsConfigDir);
         }
 
         public void initMap() {
             if (this.selectObjectSuffixMap == null) {
                 this.selectObjectSuffixMap = new ConcurrentHashMap<String, Integer>();
-                File file = new File("/var/log/og/selectObjectSuffix.json");
+                File file = new File(this.selectObjectSuffixFile);
                 if (file.exists()) {
                     int sz = (int) file.length();
                     byte[] buffer = new byte[sz];
@@ -69,12 +77,13 @@ public class SelectOperationSharedDataModule extends AbstractModule {
                         fis.read(buffer);
                         this.selectObjectSuffixMap = gson.fromJson(new String(buffer), mapType.getType());
                     } catch (FileNotFoundException fne) {
-                        _logger.warn("File /var/log/og/selectObjectSuffix.json Not found");
-                        _consoleLogger.warn("File /var/log/og/selectObjectSuffix.json Not found");
+                        String message = String.format("File %s Not found", this.selectObjectSuffixFile);
+                        _logger.warn(message);
+                        _consoleLogger.warn(message);
                     } catch (IOException ioe) {
-                        _logger.warn("File /var/log/og/selectObjectSuffix.json Not found");
+                        _logger.warn(ioe.getMessage());
                     } catch (SecurityException se) {
-                        throw new RuntimeException("Security Exception occurred when reading /var/log/og/selectObjectSuffix.json");
+                        throw new RuntimeException(String.format("Security Exception occurred when reading %s", this.selectObjectSuffixFile));
                     }
                 }
             }
@@ -83,17 +92,16 @@ public class SelectOperationSharedDataModule extends AbstractModule {
         public void persistMap() {
 
             // write the map the filesystem
-            final String filename = "/var/log/og/selectObjectSuffix.json";
-            File file = new File(filename);
+            File file = new File(this.selectObjectSuffixFile);
             try {
                 if (file.exists()) {
                     file.delete();
                 }
-                file = new File(filename);
+                file = new File(this.selectObjectSuffixFile);
                 FileOutputStream fos = new FileOutputStream(file);
                 fos.write(gson.toJson(selectObjectSuffixMap, LinkedHashMap.class).getBytes());
             }  catch (IOException ioe) {
-                throw new RuntimeException(String.format("IOException writing to file '%s'", filename));
+                throw new RuntimeException(String.format("IOException writing to file '%s'", this.selectObjectSuffixFile));
 
             }  catch (SecurityException se) {
 
@@ -101,10 +109,9 @@ public class SelectOperationSharedDataModule extends AbstractModule {
 
         }
         public void initSelectBodyContent() {
-            final String filename = "/var/log/og/selectContent.json";
             try {
                 if (this.selectQueryMap == null) {
-                    Path path = FileSystems.getDefault().getPath(filename);
+                    Path path = FileSystems.getDefault().getPath(this.selectContentQueriesFile);
                     if (Files.exists(path)) {
                         byte[] bytes = Files.readAllBytes(path);
                         this.selectQueryMap = gson.fromJson(new String(bytes), queryMapType.getType());
@@ -115,7 +122,7 @@ public class SelectOperationSharedDataModule extends AbstractModule {
                         this.selectQueryMap = new ArrayList<>();
                 }
             } catch (IOException ioe) {
-                throw new RuntimeException(String.format("IOException writing to file '%s'", filename));
+                throw new RuntimeException(String.format("IOException writing to file '%s'", this.selectContentQueriesFile));
             }
         }
 

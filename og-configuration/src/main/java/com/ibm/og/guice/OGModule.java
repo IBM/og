@@ -211,6 +211,8 @@ public class OGModule extends AbstractModule {
     bindConstant().annotatedWith(Names.named("getContainerProtection.weight")).to(this.config.getContainerProtection.weight);
     bindConstant().annotatedWith(Names.named("multiDelete.weight")).to(this.config.multiDelete.weight);
 
+    bindConstant().annotatedWith(Names.named("selectOperationsConfigLocation")).to(this.config.selectOperationsConfigLocation);
+
 
     // FIXME create something like MoreProviders.notNull as a variant of Providers.of which does a
     // null check at creation time, with a custom error message; replace all uses of this pattern
