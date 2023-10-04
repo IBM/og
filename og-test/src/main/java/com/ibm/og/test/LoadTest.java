@@ -62,6 +62,7 @@ public class   LoadTest implements Callable<LoadTestResult> {
   private volatile int result;
   private final AtomicBoolean noMoreRequests;
   private final CountDownLatch completed;
+  private final ListeningExecutorService executorService;
   private ArrayList<String> messages;
 
   public static final int RESULT_SUCCESS = 0;
@@ -99,6 +100,8 @@ public class   LoadTest implements Callable<LoadTestResult> {
     this.result = RESULT_SUCCESS;
     this.completed = new CountDownLatch(1);
     this.messages =  new ArrayList<String>();
+    final ThreadFactory fac = new ThreadFactoryBuilder().setNameFormat("clientCallback-%d").build();
+    this.executorService = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool(fac));
   }
 
   private class SchedulerRunnable implements Runnable {
@@ -212,6 +215,14 @@ public class   LoadTest implements Callable<LoadTestResult> {
         }
       }.start();
     }
+    // After terminating ApacheClient, start shutting down the executor service for handling http response callbacks
+    this.executorService.shutdown();
+    try {
+      // 5 seconds should be enough for any callback events processing to finish
+      this.executorService.awaitTermination(5, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+      _logger.warn("loadtest-shutdown Thread interrupted while waiting termination of callbacks executor service");
+    }
   }
 
   /**
@@ -234,8 +245,6 @@ public class   LoadTest implements Callable<LoadTestResult> {
   }
 
   private void addCallback(final Request request, final ListenableFuture<Response> future) {
-    final ThreadFactory fac = new ThreadFactoryBuilder().setNameFormat("clientCallback-%d").build();
-    ListeningExecutorService executorService = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool(fac));
     Futures.addCallback(future, new FutureCallback<Response>() {
       @Override
       public void onSuccess(final Response response) {
