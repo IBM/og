@@ -4,7 +4,7 @@
   <parent>
     <artifactId>og</artifactId>
     <groupId>com.ibm</groupId>
-    <version>1.15.0-select-content</version>
+    <version>1.15.0</version>
   </parent>
   <artifactId>og-openstack</artifactId>
   <name>OpenStack</name>
