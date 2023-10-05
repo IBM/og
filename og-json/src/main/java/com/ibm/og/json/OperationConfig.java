@@ -29,6 +29,7 @@ public class OperationConfig {
   public boolean sseCDestination;
   public LegalHold legalHold;
   public SelectionConfig<RetentionConfig> retention;
+  public String retentionMode;
   public boolean contentMd5;
   public Integer objectRestorePeriod;
   public Integer archiveTransitionPeriod;
@@ -45,6 +46,8 @@ public class OperationConfig {
   public String staticWebsiteVirtualHostSuffix;
   public ObjectTagsConfig tagsConfiguration;
   public ObjectVersionSelection objectVersionSelection;
+
+  public LegalHoldStatusSelection objectLegalHoldStatusSelection;
 
   public OperationConfig(final double weight) {
     this();
@@ -85,5 +88,6 @@ public class OperationConfig {
     this.staticWebsiteVirtualHostSuffix = null;
     this.tagsConfiguration = null;
     this.objectVersionSelection = null;
+    this.objectLegalHoldStatusSelection = null;
   }
 }

@@ -10,11 +10,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import com.ibm.og.api.Operation;
 import com.ibm.og.api.Request;
 import com.ibm.og.api.Response;
-import com.ibm.og.http.HttpResponse;
 import com.ibm.og.http.HttpUtil;
 import com.ibm.og.util.Context;
 import com.ibm.og.util.Pair;
@@ -129,11 +129,18 @@ public abstract class AbstractObjectNameConsumer {
 
   protected String getObjectVersionString(final Request request, final Response response) {
     if (this.operation == Operation.WRITE || this.operation == Operation.OVERWRITE ||
-            this.operation == Operation.MULTIPART_WRITE_COMPLETE) {
+            this.operation == Operation.MULTIPART_WRITE_COMPLETE || this.operation == Operation.PUT_OBJECT_LOCK_RETENTION ||
+            this.operation == Operation.PUT_OBJECT_LOCK_LEGAL_HOLD){
       Map<String, String> responseHeaders = response.headers();
       if (responseHeaders.get("x-amz-version-id") != null) {
-        return responseHeaders.get("x-amz-version-id").replace("-", "");
-      } else {
+        if (responseHeaders.get("x-amz-version-id").equals("null")) {
+          UUID uuid = new UUID(0L, 0L);
+          return uuid.toString().replace("-", "");
+        } else{
+          return responseHeaders.get("x-amz-version-id").replace("-", "");
+        }
+      }
+      else {
         return null;
       }
 

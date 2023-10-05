@@ -100,7 +100,15 @@ public class SimpleRequestManager implements RequestManager {
       @Named("getTags") final Supplier<Request> getTags,
       @Named("getTags.weight") final double getTagsWeight,
       @Named("listObjectVersions") final Supplier<Request> listObjectVersions,
-      @Named("listObjectVersions.weight") final double listObjectVersionsWeight){
+      @Named("listObjectVersions.weight") final double listObjectVersionsWeight,
+      @Named("putObjectRetention") final Supplier<Request> putObjectRetention,
+      @Named("putObjectRetention.weight") final double putObjectRetentionWeight,
+      @Named("getObjectRetention") final Supplier<Request> getObjectRetention,
+      @Named("getObjectRetention.weight") final double getObjectRetentionWeight,
+      @Named("putObjectLegalHold") final Supplier<Request> putObjectLegalHold,
+      @Named("putObjectLegalHold.weight") final double putObjectLegalHoldWeight,
+      @Named("getObjectLegalHold") final Supplier<Request> getObjectLegalHold,
+      @Named("getObjectLegalHold.weight") final double getObjectLegalHoldWeight){
 
     checkNotNull(write);
     checkNotNull(overwrite);
@@ -126,6 +134,10 @@ public class SimpleRequestManager implements RequestManager {
     checkNotNull(deleteTags);
     checkNotNull(getTags);
     checkNotNull(listObjectVersions);
+    checkNotNull(putObjectRetention);
+    checkNotNull(getObjectRetention);
+    checkNotNull(putObjectLegalHold);
+    checkNotNull(getObjectLegalHold);
 
     this.multipartWriteSupplier = (MultipartRequestSupplier)writeMultipart;
 
@@ -206,7 +218,26 @@ public class SimpleRequestManager implements RequestManager {
       wrc.withChoice(listObjectVersions, listObjectVersionsWeight);
     }
 
-    this.requestSupplier = wrc.build();
+    if (putObjectRetentionWeight > 0.0) {
+      wrc.withChoice(putObjectRetention, putObjectRetentionWeight);
+    }
+
+    if (getObjectRetentionWeight > 0.0) {
+      wrc.withChoice(getObjectRetention, getObjectRetentionWeight);
+    }
+
+    if (putObjectLegalHoldWeight > 0.0) {
+      wrc.withChoice(putObjectLegalHold, putObjectLegalHoldWeight);
+    }
+
+    if (getObjectLegalHoldWeight > 0.0) {
+      wrc.withChoice(getObjectLegalHold, getObjectLegalHoldWeight);
+    }
+    try {
+      this.requestSupplier = wrc.build();
+    } catch (java.lang.IllegalArgumentException e) {
+      throw (new IllegalArgumentException("At least one operation weight must be greater than 0."));
+    }
   }
 
   @Override

@@ -76,18 +76,17 @@ public class OGModuleTest {
     final Map<Integer, Integer> statusCodes = ImmutableMap.of();
     RetentionConfig rc = new RetentionConfig(RetentionConfig.MAX_RETENTION_EXPIRY-1000, TimeUnit.SECONDS);
     return new Object[][] {
-            {86400L, rc}
+            {86400L, rc},
+            // 15 years from now
+            {200000L, new RetentionConfig(473040000L, TimeUnit.SECONDS)}
     };
   }
 
   @DataProvider
   public static Object[][] providevalidRetentionExtensionConfig() {
     final Map<Integer, Integer> statusCodes = ImmutableMap.of();
-    RetentionConfig rc = new RetentionConfig(86400L, TimeUnit.SECONDS);
     return new Object[][] {
             {86400L, new RetentionConfig(86400L, TimeUnit.SECONDS)},
-            // 15 years from now
-            {200000L, new RetentionConfig(473040000L, TimeUnit.SECONDS)}
     };
   }
 
