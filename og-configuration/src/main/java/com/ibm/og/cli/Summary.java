@@ -88,6 +88,8 @@ public class Summary {
     OperationStats getObjectRetention;
     OperationStats putObjectLegalHold;
     OperationStats getObjectLegalHold;
+    OperationStats writeSelectObject;
+    OperationStats querySelectObject;
 
     protected SummaryOperationStats(final long timestampStart, final long timestampFinish) {
       this.timestampStart = timestampStart;
@@ -133,6 +135,8 @@ public class Summary {
       this.getObjectRetention = new OperationStats(stats, Operation.GET_OBJECT_LOCK_RETENTION, timestampStart, timestampFinish);
       this.putObjectLegalHold = new OperationStats(stats, Operation.PUT_OBJECT_LOCK_LEGAL_HOLD, timestampStart, timestampFinish);
       this.getObjectLegalHold = new OperationStats(stats, Operation.GET_OBJECT_LOCK_LEGAL_HOLD, timestampStart, timestampFinish);
+      this.writeSelectObject = new OperationStats(stats, Operation.WRITE_SELECT_OBJECT, timestampStart, timestampFinish);
+      this.querySelectObject = new OperationStats(stats, Operation.QUERY_SELECT_OBJECT, timestampStart, timestampFinish);
 
     }
 
@@ -201,6 +205,10 @@ public class Summary {
         return this.putObjectLegalHold;
       } else if (operation == Operation.GET_OBJECT_LOCK_LEGAL_HOLD) {
         return this.getObjectLegalHold;
+      } else if (operation == Operation.WRITE_SELECT_OBJECT) {
+        return this.writeSelectObject;
+      } else if (operation == Operation.QUERY_SELECT_OBJECT) {
+        return this.querySelectObject;
       }
       return null;
 
@@ -273,6 +281,10 @@ public class Summary {
         this.putObjectLegalHold = operationStat;
       } else if (operation == Operation.GET_OBJECT_LOCK_LEGAL_HOLD) {
         this.getObjectLegalHold = operationStat;
+      } else if (operation == Operation.WRITE_SELECT_OBJECT) {
+        this.writeSelectObject = operationStat;
+      } else if (operation == Operation.QUERY_SELECT_OBJECT) {
+        this.querySelectObject = operationStat;
       }
     }
 
@@ -379,6 +391,12 @@ public class Summary {
       }
       if (this.getObjectLegalHold.operations > 0) {
         sb.append(this.getObjectLegalHold).append("\n");
+      }
+      if (this.writeSelectObject.operations > 0) {
+        sb.append(this.writeSelectObject).append("\n");
+      }
+      if (this.querySelectObject.operations > 0) {
+        sb.append(this.querySelectObject).append("\n");
       }
       return sb.toString();
     }

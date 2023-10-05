@@ -40,6 +40,7 @@ public class OperationConfig {
   public SelectionConfig<ObjectDelimiterConfig> delimiter; // for write operations
   public SelectionConfig<ListDelimiterConfig> listDelimiter;
   public SelectionConfig<ListSessionConfig> listSessionConfig;
+  public SelectionConfig<WriteSelectBodyConfig> writeSelectBodyConfig;
   public Integer minimumListSessions;
   public Integer multideleteCount;
   public boolean multideleteQuiet;
@@ -82,6 +83,7 @@ public class OperationConfig {
     listSession.requestType = "UNCHAINED";
     listSession.startFromBeginning = false;
     this.listSessionConfig.choices.add(0, new ChoiceConfig<ListSessionConfig>(listSession));
+    this.writeSelectBodyConfig = new SelectionConfig<>();
     this.minimumListSessions = 1;
     this.multideleteCount = 1;
     this.multideleteQuiet = true;

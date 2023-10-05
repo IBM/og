@@ -151,9 +151,9 @@ public class Statistics {
   }
 
   private long getBytes(final Operation operation, final Request request, final Response response) {
-    if (Operation.WRITE == operation) {
+    if (Operation.WRITE == operation || Operation.WRITE_SELECT_OBJECT == operation) {
       return request.getBody().getSize();
-    } else if (Operation.READ == operation) {
+    } else if (Operation.READ == operation || Operation.QUERY_SELECT_OBJECT == operation) {
       return response.getBody().getSize();
     } else if (Operation.MULTIPART_WRITE_PART == operation) {
       return request.getBody().getSize();

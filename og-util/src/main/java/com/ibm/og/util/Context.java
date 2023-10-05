@@ -101,5 +101,8 @@ public class Context {
   public static final String X_OG_OBJECT_RETENTION_MODE = "x-og-object-retention";
   public static final String X_OG_OBJECT_RETENTION_TIMESTAMP = "x-og-object-retention-timestamp";
 
+  // select object
+  public static final String X_OG_SELECT_OBJECT_FILENAME = "x-og-select-object-filename";
+  public static final String X_OG_SELECT_OBJECT_SUFFIX = "x-og-select-object-suffix";
   private Context() {}
 }

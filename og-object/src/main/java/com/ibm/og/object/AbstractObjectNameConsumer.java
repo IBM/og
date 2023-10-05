@@ -166,7 +166,7 @@ public abstract class AbstractObjectNameConsumer {
 
 
   private long getObjectSize(final Request request) {
-    if (this.operation == Operation.WRITE) {
+    if (this.operation == Operation.WRITE || this.operation == Operation.WRITE_SELECT_OBJECT) {
       return request.getBody().getSize();
     }
     return Long.parseLong(request.getContext().get(Context.X_OG_OBJECT_SIZE));
