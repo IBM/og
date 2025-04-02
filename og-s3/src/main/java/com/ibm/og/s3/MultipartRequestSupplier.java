@@ -13,18 +13,19 @@ import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
 import com.ibm.og.api.Body;
+import com.ibm.og.api.ChecksumType;
 import com.ibm.og.api.DataType;
 import com.ibm.og.api.Method;
 import com.ibm.og.api.Operation;
 import com.ibm.og.api.Request;
 import com.ibm.og.api.Response;
 import com.ibm.og.http.Bodies;
+import com.ibm.og.http.BodyDigest;
 import com.ibm.og.http.Credential;
+import com.ibm.og.http.DigestLoader;
 import com.ibm.og.http.HttpRequest;
 import com.ibm.og.http.MD5DigestLoader;
 import com.ibm.og.http.Scheme;
-import com.ibm.og.supplier.RandomSupplier;
-import com.ibm.og.supplier.Suppliers;
 import com.ibm.og.util.Context;
 import com.ibm.og.util.Pair;
 
@@ -57,6 +58,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -92,6 +94,14 @@ public class MultipartRequestSupplier implements Supplier<Request> {
   private final boolean contentMd5;
   private final LoadingCache<Long, byte[]> md5ContentCache;
 
+  private final ChecksumType checksumType;
+  private final MPUChecksumType mpuChecksumType = MPUChecksumType.COMPOSITE;
+  private final LoadingCache<Long, byte[]> sha1ContentCache;
+  private final LoadingCache<Long, byte[]> sha256ContentCache;
+  private final LoadingCache<Long, byte[]> crc32ContentCache;
+  private final LoadingCache<Long, byte[]> crc32CContentCache;
+  private final LoadingCache<Long, byte[]> crc64NvmeContentCache;
+
   private AtomicBoolean shutdownImmediate = new AtomicBoolean(false);
 
   // constants
@@ -107,6 +117,8 @@ public class MultipartRequestSupplier implements Supplier<Request> {
 
   // Supplier that supplies the session whether it is a partial upload or complete upload
   public enum MPUSessionUploadType{FULL_UPLOAD,  PARTIAL_UPLOAD};
+
+  public enum MPUChecksumType { COMPOSITE, FULL_OBJECT };
 
 //  final RandomSupplier<MPUSessionUploadType> mpuSessionUploadTypeSupplier;// = Suppliers.random();
 //  final RandomSupplier<Double> mpuSessionPartsPercentageSupplier;// = Suppliers.random();
@@ -149,7 +161,8 @@ public class MultipartRequestSupplier implements Supplier<Request> {
       final Function<Map<String, String>, Long> retention,
       final Supplier<Function<Map<String, String>, String>> legalHold,
       final boolean contentMd5, final Function<Map<String, String>, String> delimiter,
-      final Function<Map<String, String>, Double> partsPercentagePerSession) {
+      final Function<Map<String, String>, Double> partsPercentagePerSession,
+                                  final ChecksumType checksumType) {
 
     this.id = id;
     this.scheme = checkNotNull(scheme);
@@ -178,16 +191,14 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     this.multipartRequestMap = new ConcurrentHashMap<String, MultipartInfo>();
     this.sessionManager = new MPSessionManager();
     this.md5ContentCache = CacheBuilder.newBuilder().maximumSize(100).build(new MD5DigestLoader());
-
-//    RandomSupplier.Builder<MPUSessionUploadType> mpuSessionUploadTypeSupplier = Suppliers.random();
-//    mpuSessionUploadTypeSupplier.withChoice(MPUSessionUploadType.FULL_UPLOAD, 0.5);
-//    mpuSessionUploadTypeSupplier.withChoice(MPUSessionUploadType.PARTIAL_UPLOAD, 0.5);
-//    this.mpuSessionUploadTypeSupplier = mpuSessionUploadTypeSupplier.build();
-//
-//    RandomSupplier.Builder<Double> mpuSessionPartsPercentageSupplier = Suppliers.random();
-//    mpuSessionPartsPercentageSupplier.withChoice(50.0, 1.0);
-//    //mpuSessionPartsPercentageSupplier.withChoice(75.0, 1.0);
-//    this.mpuSessionPartsPercentageSupplier = mpuSessionPartsPercentageSupplier.build();
+    this.sha1ContentCache = CacheBuilder.newBuilder().maximumSize(100).build(new DigestLoader(ChecksumType.SHA1));
+    this.sha256ContentCache = CacheBuilder.newBuilder().maximumSize(100).build(new DigestLoader(ChecksumType.SHA256));
+    this.crc32ContentCache = CacheBuilder.newBuilder().maximumSize(100).build(new DigestLoader(ChecksumType.CRC32));
+    this.crc32CContentCache = CacheBuilder.newBuilder().maximumSize(100).build(new DigestLoader(ChecksumType.CRC32C));
+    this.crc64NvmeContentCache = CacheBuilder.newBuilder().maximumSize(100).build(new DigestLoader(ChecksumType.CRC64NVME));
+    this.checksumType = checksumType;
+    checkArgument(checksumType != ChecksumType.CRC64NVME,
+            "CRC64NVME is not supported with Composite Checksum type MPU");
 
   }
 
@@ -199,9 +210,12 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     final String partNumber;
     final String partId;
 
-    public PartInfo(String partNumber, String partId) {
+    final String checksum;
+
+    public PartInfo(final String partNumber, final String partId, final String checksum) {
       this.partNumber = partNumber;
       this.partId = partId;
+      this.checksum = checksum;
     }
   }
 
@@ -345,6 +359,7 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     final long partSize;
     final int maxParts;
     final long lastPartSize;
+
     final String uploadId;
     final Queue<PartInfo> partsInfo;
     final int partRequestsToSend; //Part Requests
@@ -590,15 +605,22 @@ public class MultipartRequestSupplier implements Supplier<Request> {
       String partNumberEndElement = "</PartNumber>";
       String etagBeginElement = "<ETag>";
       String etagEndElement = "</ETag>";
-
       PartInfo part;
       StringBuilder sb = new StringBuilder();
       sb.append(completeMultipartUploadBeginElement);
 
       while(!partsInfo.isEmpty()) {
         part = partsInfo.poll();
-        sb.append(partBeginElement).append(partNumberBeginElement).append(part.partNumber).append(partNumberEndElement).append(etagBeginElement)
-            .append(part.partId).append(etagEndElement).append(partEndElement);
+        if (checksumType !=  ChecksumType.NONE) {
+          sb.append(partBeginElement).append(partNumberBeginElement).append(part.partNumber).append(partNumberEndElement)
+                  .append(etagBeginElement).append(part.partId).append(etagEndElement)
+                  .append(checksumType.beginTag()).append(part.checksum).append(checksumType.endTag())
+                  .append(partEndElement);
+        } else {
+          sb.append(partBeginElement).append(partNumberBeginElement).append(part.partNumber).append(partNumberEndElement)
+                  .append(etagBeginElement).append(part.partId).append(etagEndElement)
+                  .append(partEndElement);
+        }
       }
 
       sb.append(completeMultipartUploadEndElement);
@@ -667,7 +689,8 @@ public class MultipartRequestSupplier implements Supplier<Request> {
             // set abort session
             multipartInfo.setAbortSession();
           }
-          multipartInfo.finishPartRequest(new PartInfo(requestPartNumber, responsePartId));
+          multipartInfo.finishPartRequest(new PartInfo(requestPartNumber, responsePartId,
+                  requestContext.get(Context.X_OG_AMZ_CHECKSUM_VALUE)));
 
           // if there are no more parts to be sent because of the partial MPU upload and this is the last
           // response for the last part outstanding then remove the multipart session
@@ -801,6 +824,10 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     builder.withContext(Context.X_OG_MULTIPART_CONTAINER, containerName);
     builder.withContext(Context.X_OG_MULTIPART_PART_SIZE, partSize.toString());
     builder.withContext(Context.X_OG_MULTIPART_MAX_PARTS, maxParts.toString());
+    if (this.checksumType != ChecksumType.NONE) {
+      builder.withHeader(Context.X_OG_AMZ_CHECKSUM_ALGORITHM, this.checksumType.toString());
+      builder.withHeader(Context.X_OG_AMZ_CHECKSUM_TYPE, MPUChecksumType.COMPOSITE.toString());
+    }
     return builder;
   }
 
@@ -828,6 +855,34 @@ public class MultipartRequestSupplier implements Supplier<Request> {
         Long size = body.getSize();
         byte[] md5 = md5ContentCache.get(size);
         builder.withHeader(Context.X_OG_CONTENT_MD5, BaseEncoding.base64().encode(md5));
+      } catch (Exception e) {
+        _logger.error(e.getMessage());
+      }
+    }
+    if (this.checksumType != ChecksumType.NONE) {
+      try {
+        Long size = body.getSize();
+        if (this.checksumType == ChecksumType.SHA1) {
+          context.put(Context.X_OG_AMZ_CHECKSUM_VALUE, BaseEncoding.base64().encode(
+                          sha1ContentCache.get(size)));
+          builder.withHeader(Context.X_OG_AMZ_CHECKSUM_SHA1, context.get(Context.X_OG_AMZ_CHECKSUM_VALUE));
+        } else if (this.checksumType == ChecksumType.SHA256) {
+          context.put(Context.X_OG_AMZ_CHECKSUM_VALUE, BaseEncoding.base64().encode(
+                  sha256ContentCache.get(size)));
+          builder.withHeader(Context.X_OG_AMZ_CHECKSUM_SHA256, context.get(Context.X_OG_AMZ_CHECKSUM_VALUE));
+        } else if (this.checksumType == ChecksumType.CRC32) {
+          context.put(Context.X_OG_AMZ_CHECKSUM_VALUE, BaseEncoding.base64().encode(
+                  crc32ContentCache.get(size)));
+          builder.withHeader(Context.X_OG_AMZ_CHECKSUM_CRC32, context.get(Context.X_OG_AMZ_CHECKSUM_VALUE));
+        } else if (this.checksumType == ChecksumType.CRC32C) {
+          context.put(Context.X_OG_AMZ_CHECKSUM_VALUE, BaseEncoding.base64().encode(
+                  crc32CContentCache.get(size)));
+          builder.withHeader(Context.X_OG_AMZ_CHECKSUM_CRC32C, context.get(Context.X_OG_AMZ_CHECKSUM_VALUE));
+        } else if (this.checksumType == ChecksumType.CRC64NVME) {
+          context.put(Context.X_OG_AMZ_CHECKSUM_VALUE, BaseEncoding.base64().encode(
+                  crc64NvmeContentCache.get(size)));
+          builder.withHeader(Context.X_OG_AMZ_CHECKSUM_CRC64NVME, context.get(Context.X_OG_AMZ_CHECKSUM_VALUE));
+        }
       } catch (Exception e) {
         _logger.error(e.getMessage());
       }
@@ -875,6 +930,29 @@ public class MultipartRequestSupplier implements Supplier<Request> {
     builder.withBody(Bodies.custom(body.length(), body));
     byte[] md5 = hc.asBytes();
     builder.withHeader(Context.X_OG_CONTENT_MD5, BaseEncoding.base64().encode(md5));
+
+    if ( false ) {//this.checksumType != checksumType.NONE) {
+      try {
+        if (this.checksumType == ChecksumType.SHA1) {
+          builder.withHeader(Context.X_OG_AMZ_CHECKSUM_SHA1, BaseEncoding.base64().encode(
+                  BodyDigest.get(ChecksumType.SHA1, body)));
+        } else if (this.checksumType == ChecksumType.SHA256) {
+          builder.withHeader(Context.X_OG_AMZ_CHECKSUM_SHA256, BaseEncoding.base64().encode(
+                  BodyDigest.get(ChecksumType.SHA256, body)));
+        } else if (this.checksumType == ChecksumType.CRC32) {
+          builder.withHeader(Context.X_OG_AMZ_CHECKSUM_CRC32, BaseEncoding.base64().encode(
+                  BodyDigest.get(ChecksumType.CRC32, body)));
+        } else if (this.checksumType == ChecksumType.CRC32C) {
+          builder.withHeader(Context.X_OG_AMZ_CHECKSUM_CRC32C, BaseEncoding.base64().encode(
+                  BodyDigest.get(ChecksumType.CRC32C, body)));
+        } else if (this.checksumType == ChecksumType.CRC64NVME) {
+          builder.withHeader(Context.X_OG_AMZ_CHECKSUM_CRC64NVME, BaseEncoding.base64().encode(
+                  BodyDigest.get(ChecksumType.CRC64NVME, body)));
+        }
+      } catch (Exception e) {
+        _logger.error(e.getMessage());
+      }
+    }
     // populate request context
     for (final Map.Entry<String, String> entry : multipartContext.entrySet()) {
       context.put(entry.getKey(), entry.getValue());

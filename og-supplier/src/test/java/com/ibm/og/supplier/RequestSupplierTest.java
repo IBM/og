@@ -15,6 +15,7 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import com.ibm.og.api.ChecksumType;
 import com.ibm.og.http.Credential;
 import com.ibm.og.util.Context;
 import org.junit.Assert;
@@ -292,6 +293,7 @@ public class RequestSupplierTest {
 
     return new RequestSupplier(operation, id, method, scheme, host, port, uriRoot, container, apiVersion,
             object, queryParameters, trailingSlash, headers, context, null, credentials, body,
-        virtualHost, null, null, false, null, staticWebsiteVirtualHostSuffix);
+        virtualHost, null, null, false, null, staticWebsiteVirtualHostSuffix,
+            ChecksumType.NONE);
   }
 }

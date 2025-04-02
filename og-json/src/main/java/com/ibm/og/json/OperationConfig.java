@@ -10,6 +10,7 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.ibm.og.api.BodySource;
+import com.ibm.og.api.ChecksumType;
 
 public class OperationConfig {
   public double weight;
@@ -31,6 +32,8 @@ public class OperationConfig {
   public SelectionConfig<RetentionConfig> retention;
   public String retentionMode;
   public boolean contentMd5;
+
+  public ChecksumType checksumType;
   public Integer objectRestorePeriod;
   public Integer archiveTransitionPeriod;
   public SelectionConfig<RetentionConfig> containerMinimumRetention;
@@ -91,5 +94,6 @@ public class OperationConfig {
     this.tagsConfiguration = null;
     this.objectVersionSelection = null;
     this.objectLegalHoldStatusSelection = null;
+    this.checksumType = ChecksumType.NONE;
   }
 }

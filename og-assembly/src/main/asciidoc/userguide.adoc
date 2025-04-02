@@ -667,6 +667,11 @@ that the object file contains objects from only one container. Otherwise the obj
 from an _unintended bucket_ will be removed from the object management. object-file utility 
 can be used to filter the objects for a specific vault.
 
+Support for Checksum algorithm and Checksum have been added in OG 2.0.0.
+checksum_type property can be used to specify the checksum algorithm to use for the content integrity check.
+checksum_type is supported for operations write, overwrite, write_copy, multipart_upload. checksum type can be one of sha1, sha256, crc32, crc32c, crc64nvme.
+For multipart upload operation, only composite checksum type is supported. Each part will carry the specificied checksum header.
+
 Object Tagging operations have been added in release 1.11.0. PUT Object Tags, Get Object Tags and Delete Object Tags
 have been added. Object Tags can also be added with Write operation.
 
