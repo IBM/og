@@ -43,35 +43,32 @@ public class HttpUtil {
       case WRITE:
       case OVERWRITE:
       case MULTIPART_WRITE_PART:
+      case WRITE_COPY:
+      case PUT_TAGS:
+      case PUT_OBJECT_LOCK_RETENTION:
+      case PUT_OBJECT_LOCK_LEGAL_HOLD:
+      case WRITE_SELECT_OBJECT:
         return Method.PUT;
       case READ:
+      case LIST:
+      case READ_LEGAL_HOLD:
+      case GET_TAGS:
+      case GET_OBJECT_LOCK_RETENTION:
+      case GET_OBJECT_LOCK_LEGAL_HOLD:
         return Method.GET;
       case METADATA:
         return Method.HEAD;
       case DELETE:
       case MULTIPART_WRITE_ABORT:
+      case DELETE_TAGS:
         return Method.DELETE;
-      case LIST:
-        return Method.GET;
       case MULTIPART_WRITE_INITIATE:
       case MULTIPART_WRITE_COMPLETE:
       case WRITE_LEGAL_HOLD:
       case EXTEND_RETENTION:
-        return Method.POST;
-      case READ_LEGAL_HOLD:
-        return Method.GET;
       case DELETE_LEGAL_HOLD:
-        return Method.POST;
-      case WRITE_COPY:
-        return Method.PUT;
       case MULTI_DELETE:
         return Method.POST;
-      case PUT_TAGS:
-        return Method.PUT;
-      case DELETE_TAGS:
-        return Method.DELETE;
-      case GET_TAGS:
-        return Method.GET;
       default:
         throw new IllegalArgumentException(String.format("Unrecognized operation [%s]", operation));
     }

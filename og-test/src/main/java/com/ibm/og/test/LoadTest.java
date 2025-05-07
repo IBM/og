@@ -8,9 +8,7 @@ package com.ibm.og.test;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
@@ -18,6 +16,15 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import com.google.common.collect.ImmutableList;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.common.util.concurrent.Uninterruptibles;
 import com.ibm.og.http.HttpResponse;
 import com.ibm.og.scheduling.Scheduler;
 import com.ibm.og.test.condition.LoadTestResult;
@@ -30,10 +37,6 @@ import com.ibm.og.api.Response;
 import com.ibm.og.util.Pair;
 import com.ibm.og.util.TestState;
 import com.google.common.eventbus.EventBus;
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.Uninterruptibles;
 
 /**
  * a callable test execution
@@ -41,7 +44,7 @@ import com.google.common.util.concurrent.Uninterruptibles;
  * @since 1.0
  */
 @Singleton
-public class LoadTest implements Callable<LoadTestResult> {
+public class   LoadTest implements Callable<LoadTestResult> {
   private static final Logger _logger = LoggerFactory.getLogger(LoadTest.class);
   private static final Logger _exceptionLogger = LoggerFactory.getLogger("ExceptionLogger");
   private static final Logger _consoleLogger = LoggerFactory.getLogger("ConsoleLogger");
@@ -59,6 +62,7 @@ public class LoadTest implements Callable<LoadTestResult> {
   private volatile int result;
   private final AtomicBoolean noMoreRequests;
   private final CountDownLatch completed;
+  private final ListeningExecutorService executorService;
   private ArrayList<String> messages;
 
   public static final int RESULT_SUCCESS = 0;
@@ -96,6 +100,8 @@ public class LoadTest implements Callable<LoadTestResult> {
     this.result = RESULT_SUCCESS;
     this.completed = new CountDownLatch(1);
     this.messages =  new ArrayList<String>();
+    final ThreadFactory fac = new ThreadFactoryBuilder().setNameFormat("clientCallback-%d").build();
+    this.executorService = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool(fac));
   }
 
   private class SchedulerRunnable implements Runnable {
@@ -209,6 +215,14 @@ public class LoadTest implements Callable<LoadTestResult> {
         }
       }.start();
     }
+    // After terminating ApacheClient, start shutting down the executor service for handling http response callbacks
+    this.executorService.shutdown();
+    try {
+      // 5 seconds should be enough for any callback events processing to finish
+      this.executorService.awaitTermination(5, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+      _logger.warn("loadtest-shutdown Thread interrupted while waiting termination of callbacks executor service");
+    }
   }
 
   /**
@@ -250,7 +264,7 @@ public class LoadTest implements Callable<LoadTestResult> {
         LoadTest.this.eventBus.post(Pair.of(request, response));
         LoadTest.this.scheduler.complete();
       }
-    });
+    }, executorService);
   }
 
   @Override

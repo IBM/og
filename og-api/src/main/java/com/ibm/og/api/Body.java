@@ -41,4 +41,6 @@ public interface Body {
    * @return the content of this body
    */
   String getContent();
+
+  byte[] getData();
 }

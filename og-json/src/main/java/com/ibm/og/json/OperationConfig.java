@@ -29,6 +29,7 @@ public class OperationConfig {
   public boolean sseCDestination;
   public LegalHold legalHold;
   public SelectionConfig<RetentionConfig> retention;
+  public String retentionMode;
   public boolean contentMd5;
   public Integer objectRestorePeriod;
   public Integer archiveTransitionPeriod;
@@ -39,12 +40,15 @@ public class OperationConfig {
   public SelectionConfig<ObjectDelimiterConfig> delimiter; // for write operations
   public SelectionConfig<ListDelimiterConfig> listDelimiter;
   public SelectionConfig<ListSessionConfig> listSessionConfig;
+  public SelectionConfig<WriteSelectBodyConfig> writeSelectBodyConfig;
   public Integer minimumListSessions;
   public Integer multideleteCount;
   public boolean multideleteQuiet;
   public String staticWebsiteVirtualHostSuffix;
   public ObjectTagsConfig tagsConfiguration;
   public ObjectVersionSelection objectVersionSelection;
+
+  public LegalHoldStatusSelection objectLegalHoldStatusSelection;
 
   public OperationConfig(final double weight) {
     this();
@@ -79,11 +83,13 @@ public class OperationConfig {
     listSession.requestType = "UNCHAINED";
     listSession.startFromBeginning = false;
     this.listSessionConfig.choices.add(0, new ChoiceConfig<ListSessionConfig>(listSession));
+    this.writeSelectBodyConfig = new SelectionConfig<>();
     this.minimumListSessions = 1;
     this.multideleteCount = 1;
     this.multideleteQuiet = true;
     this.staticWebsiteVirtualHostSuffix = null;
     this.tagsConfiguration = null;
     this.objectVersionSelection = null;
+    this.objectLegalHoldStatusSelection = null;
   }
 }

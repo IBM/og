@@ -20,9 +20,15 @@ import com.google.common.base.Function;
 public class UUIDObjectNameFunction implements Function<Map<String, String>, String> {
 
   private boolean octalNamingMode = false;
+  private int suffix = -1;
 
   public UUIDObjectNameFunction(boolean octalNamingMode) {
     this.octalNamingMode = octalNamingMode;
+  }
+
+  public UUIDObjectNameFunction(boolean octalNamingMode, int suffix) {
+    this.octalNamingMode = octalNamingMode;
+    this.suffix = suffix;
   }
 
   /**
@@ -37,7 +43,11 @@ public class UUIDObjectNameFunction implements Function<Map<String, String>, Str
   @Override
   public String apply(final Map<String, String> context) {
     if (!this.octalNamingMode) {
-      final String objectName = UUID.randomUUID().toString().replace("-", "") + "0000";
+      String suffix = "0000";
+      if (context.containsKey(Context.X_OG_SELECT_OBJECT_SUFFIX)) {
+        suffix = String.format("%04x", Integer.parseInt(context.get(Context.X_OG_SELECT_OBJECT_SUFFIX)));
+      }
+      final String objectName = UUID.randomUUID().toString().replace("-", "") + suffix;
       context.put(Context.X_OG_OBJECT_NAME, objectName);
 
       return objectName;
