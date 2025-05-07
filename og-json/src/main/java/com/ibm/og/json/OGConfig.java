@@ -36,6 +36,10 @@ public class OGConfig {
   public OperationConfig deleteLegalhold;
   public OperationConfig readLegalhold;
   public OperationConfig extendRetention;
+  public OperationConfig putObjectLockRetention;
+  public OperationConfig getObjectLockRetention;
+  public OperationConfig putObjectLockLegalHold;
+  public OperationConfig getObjectLockLegalHold;
   public OperationConfig objectRestore;
   public OperationConfig putContainerLifecycle;
   public OperationConfig getContainerLifecycle;
@@ -45,6 +49,12 @@ public class OGConfig {
   public OperationConfig writeTags;
   public OperationConfig deleteTags;
   public OperationConfig getTags;
+
+  public OperationConfig writeSelectObject;
+  public OperationConfig querySelectObject;
+
+  public String selectOperationsConfigLocation;
+
   public SelectionConfig<FilesizeConfig> filesize;
   public DataType data;
   public ConcurrencyConfig concurrency;
@@ -90,9 +100,15 @@ public class OGConfig {
     this.deleteContainerLifecycle = new OperationConfig();
     this.putContainerProtection = new OperationConfig();
     this.getContainerProtection = new OperationConfig();
+    this.putObjectLockLegalHold = new OperationConfig();
+    this.getObjectLockLegalHold = new OperationConfig();
+    this.putObjectLockRetention = new OperationConfig();
+    this.getObjectLockRetention = new OperationConfig();
     this.writeTags = new OperationConfig();
     this.deleteTags = new OperationConfig();
     this.getTags = new OperationConfig();
+    this.writeSelectObject = new OperationConfig();
+    this.querySelectObject = new OperationConfig();
     this.filesize = null;
     this.data = DataType.RANDOM;
     this.concurrency = null;
@@ -107,6 +123,7 @@ public class OGConfig {
     this.virtualHost = false;
     this.statsLogInterval = -1; //seconds
     this.octalNamingMode = false;
+    this.selectOperationsConfigLocation = "/var/log/og/";
 
   }
 }

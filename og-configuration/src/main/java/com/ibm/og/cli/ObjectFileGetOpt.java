@@ -49,6 +49,9 @@ public class ObjectFileGetOpt extends GetOpt {
     @Parameter(names = {"--filter", "-f"}, description = "Filter an existing object file source and output in object file format")
     private boolean filter;
 
+    @Parameter(names= {"--selectable-only"}, description = "Only filter objects meant for select operation\n" +
+            "(default: false)")
+    private boolean selectable = false;
     @Parameter(names = {"--min-filesize"}, description = "Minimum file size to include an object in the output when using\n" +
             "        --filter, in bytes (default: 0)", converter = LongConverter.class)
     private long minSize = 0;
@@ -170,6 +173,9 @@ public class ObjectFileGetOpt extends GetOpt {
 
     public int getSplitSize() {
         return splitSize;
+    }
+
+    public boolean getSelectable() { return selectable;
     }
 
     public String getOutput() {

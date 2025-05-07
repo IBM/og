@@ -146,9 +146,7 @@ public class Application {
      */
     public void printUsage() {
       //_consoleLogger.info("Usage: {} {}", this.name, this.jsap.getUsage());
-      StringBuilder sb = new StringBuilder();
-      jc.usage(sb);
-      _stdoutLogger.info(sb.toString());
+      jc.usage();
 
     }
 

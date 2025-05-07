@@ -225,10 +225,10 @@ public class LegacyObjectMetadata implements ObjectMetadata {
   public String toString() {
     if (objectVersionSize > 0) {
       return String.format("LegacyObjectMetadata [name=%s, version=%s, size=%s, legalholds=%s, retention=%s]", getName(),
-              getSize(), getVersion(), getNumberOfLegalHolds(), getRetention());
+              getVersion(), getSize(), getNumberOfLegalHolds(), getRetention());
     } else {
       return String.format("LegacyObjectMetadata [name=%s, size=%s, legalholds=%s, retention=%s]", getName(),
-              getSize(), getVersion(), getNumberOfLegalHolds(), getRetention());
+               getSize(), getNumberOfLegalHolds(), getRetention());
     }
   }
 }

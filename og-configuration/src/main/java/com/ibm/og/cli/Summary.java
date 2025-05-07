@@ -84,6 +84,13 @@ public class Summary {
     OperationStats getObjectTags;
     OperationStats listObjectVersions;
 
+    OperationStats putObjectRetention;
+    OperationStats getObjectRetention;
+    OperationStats putObjectLegalHold;
+    OperationStats getObjectLegalHold;
+    OperationStats writeSelectObject;
+    OperationStats querySelectObject;
+
     protected SummaryOperationStats(final long timestampStart, final long timestampFinish) {
       this.timestampStart = timestampStart;
       this.timestampFinish = timestampFinish;
@@ -124,6 +131,13 @@ public class Summary {
       this.deleteObjectTags = new OperationStats(stats, Operation.DELETE_TAGS, timestampStart, timestampFinish);
       this.getObjectTags = new OperationStats(stats, Operation.GET_TAGS, timestampStart, timestampFinish);
       this.listObjectVersions = new OperationStats(stats, Operation.LIST_OBJECT_VERSIONS, timestampStart, timestampFinish);
+      this.putObjectRetention = new OperationStats(stats, Operation.PUT_OBJECT_LOCK_RETENTION, timestampStart, timestampFinish);
+      this.getObjectRetention = new OperationStats(stats, Operation.GET_OBJECT_LOCK_RETENTION, timestampStart, timestampFinish);
+      this.putObjectLegalHold = new OperationStats(stats, Operation.PUT_OBJECT_LOCK_LEGAL_HOLD, timestampStart, timestampFinish);
+      this.getObjectLegalHold = new OperationStats(stats, Operation.GET_OBJECT_LOCK_LEGAL_HOLD, timestampStart, timestampFinish);
+      this.writeSelectObject = new OperationStats(stats, Operation.WRITE_SELECT_OBJECT, timestampStart, timestampFinish);
+      this.querySelectObject = new OperationStats(stats, Operation.QUERY_SELECT_OBJECT, timestampStart, timestampFinish);
+
     }
 
     public OperationStats getOperation(Operation operation) {
@@ -183,6 +197,18 @@ public class Summary {
         return this.deleteObjectTags;
       } else if (operation == Operation.GET_TAGS) {
         return this.getObjectTags;
+      } else if (operation == Operation.PUT_OBJECT_LOCK_RETENTION) {
+        return this.putObjectRetention;
+      } else if (operation == Operation.GET_OBJECT_LOCK_RETENTION) {
+        return this.getObjectRetention;
+      } else if (operation == Operation.PUT_OBJECT_LOCK_LEGAL_HOLD) {
+        return this.putObjectLegalHold;
+      } else if (operation == Operation.GET_OBJECT_LOCK_LEGAL_HOLD) {
+        return this.getObjectLegalHold;
+      } else if (operation == Operation.WRITE_SELECT_OBJECT) {
+        return this.writeSelectObject;
+      } else if (operation == Operation.QUERY_SELECT_OBJECT) {
+        return this.querySelectObject;
       }
       return null;
 
@@ -247,6 +273,18 @@ public class Summary {
         this.deleteObjectTags = operationStat;
       } else if (operation == Operation.GET_TAGS) {
         this.getObjectTags = operationStat;
+      } else if (operation == Operation.PUT_OBJECT_LOCK_RETENTION) {
+        this.putObjectRetention = operationStat;
+      } else if (operation == Operation.GET_OBJECT_LOCK_RETENTION) {
+        this.getObjectRetention = operationStat;
+      } else if (operation == Operation.PUT_OBJECT_LOCK_LEGAL_HOLD) {
+        this.putObjectLegalHold = operationStat;
+      } else if (operation == Operation.GET_OBJECT_LOCK_LEGAL_HOLD) {
+        this.getObjectLegalHold = operationStat;
+      } else if (operation == Operation.WRITE_SELECT_OBJECT) {
+        this.writeSelectObject = operationStat;
+      } else if (operation == Operation.QUERY_SELECT_OBJECT) {
+        this.querySelectObject = operationStat;
       }
     }
 
@@ -342,6 +380,24 @@ public class Summary {
       if (this.getObjectTags.operations > 0) {
         sb.append(this.getObjectTags).append("\n");
       }
+      if (this.putObjectRetention.operations > 0) {
+        sb.append(this.putObjectRetention).append("\n");
+      }
+      if (this.getObjectRetention.operations > 0) {
+        sb.append(this.getObjectRetention).append("\n");
+      }
+      if (this.putObjectLegalHold.operations > 0) {
+        sb.append(this.putObjectLegalHold).append("\n");
+      }
+      if (this.getObjectLegalHold.operations > 0) {
+        sb.append(this.getObjectLegalHold).append("\n");
+      }
+      if (this.writeSelectObject.operations > 0) {
+        sb.append(this.writeSelectObject).append("\n");
+      }
+      if (this.querySelectObject.operations > 0) {
+        sb.append(this.querySelectObject).append("\n");
+      }
       return sb.toString();
     }
 
@@ -401,7 +457,9 @@ public class Summary {
               this.multipartWriteAbort,this.writeCopy, this.writeLegalHold, this.readLegalHold, this.deleteLegalHold,
               this.extendRetention, this.objectRestore, this.putContainerLifecycle, this.getContainerLifecycle,
               this.deleteContainerLifecycle, this.multidelete, this.writeObjectTags,this.deleteObjectTags,
-              this.getObjectTags, this.listObjectVersions, this.requestsAborted, this.exitCode, prettyExitMessages());
+              this.getObjectTags, this.listObjectVersions, this.putObjectRetention,
+              this.getObjectRetention, this.putObjectLegalHold, this.getObjectLegalHold,
+              this.requestsAborted, this.exitCode, prettyExitMessages());
     }
 
 

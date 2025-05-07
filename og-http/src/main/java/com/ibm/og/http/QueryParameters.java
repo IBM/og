@@ -28,6 +28,8 @@ public class QueryParameters {
 
     // Object retention extension
     public static final String OBJECT_RETENTION_EXTENSION_PARAMETER = "extendRetention";
+    public static final String OBJECT_RETENTION_PARAMETER = "retention";
+    public static final String OBJECT_LEGAL_HOLD_PARAMETER = "legal-hold";
 
     // S3 bucket list api v2
     public static final String S3_START_AFTER = "start-after";
@@ -48,6 +50,8 @@ public class QueryParameters {
 
     //Put object tags
     public static final String OBJECT_TAGGING_PARAMETER = "tagging";
+    public static final String SELECT_OPERATION_PARAMETER = "select";
+    public static final String SELECT_OPERATION_TYPE_PARAMETER = "select-type";
 
     // Read version id
     public static final String OBJECT_VERSION_ID = "versionId";
