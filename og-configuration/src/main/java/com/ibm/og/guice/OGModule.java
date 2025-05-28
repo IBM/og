@@ -212,6 +212,8 @@ public class OGModule extends AbstractModule {
     bindConstant().annotatedWith(Names.named("multiDelete.weight")).to(this.config.multiDelete.weight);
 
     bindConstant().annotatedWith(Names.named("selectOperationsConfigLocation")).to(this.config.selectOperationsConfigLocation);
+    bindConstant().annotatedWith(Names.named("selectContentQueryFile")).to(this.config.selectContentQueryFile);
+    bindConstant().annotatedWith(Names.named("selectObjectSuffixFile")).to(this.config.selectObjectSuffixFile);
 
 
     // FIXME create something like MoreProviders.notNull as a variant of Providers.of which does a
