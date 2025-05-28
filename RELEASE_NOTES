@@ -1,3 +1,7 @@
+Release 1.15.1
+Add select_content_query_file and select_object_suffix_file properties to override select operation
+object query filename and select object suffix json file
+
 Release 1.15.0
 Select Object Content feature
 Mend scan changes
