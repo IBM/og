@@ -54,6 +54,9 @@ public class OGConfig {
   public OperationConfig querySelectObject;
 
   public String selectOperationsConfigLocation;
+  public String selectContentQueryFile;
+  public String selectObjectSuffixFile;
+
 
   public SelectionConfig<FilesizeConfig> filesize;
   public DataType data;
@@ -124,6 +127,8 @@ public class OGConfig {
     this.statsLogInterval = -1; //seconds
     this.octalNamingMode = false;
     this.selectOperationsConfigLocation = "/var/log/og/";
+    this.selectContentQueryFile = "selectContent.json";
+    this.selectObjectSuffixFile = "selectObjectSuffix.json";
 
   }
 }
