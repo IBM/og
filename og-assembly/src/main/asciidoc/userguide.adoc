@@ -33,7 +33,7 @@ object storage APIs including S3 and OpenStack Swift.
 |Modern Linux OS*
 
 |Java Version
-|Java 7
+|Java 11
 |===
 
 NOTE: *OG has been tested on Ubuntu 14.04, but any modern linux OS should work.
@@ -1684,7 +1684,9 @@ Example:
 ==== Operation write select object ====
 This operation can be used to upload an object from file so that the object can be queried with query select
 object later.
-The object name for this operation has a numeric suffix that is used to track the actual file that was used to upload the object. This mapping is persisted in selectObjectSuffix.json file. This file is stored by default at /var/log/og. The directory where this file is located can be configured with select_operations_config_location property in OG configuration. Here is a sample configuration for this operation. The files can be specified with a selection configuration object.
+The object name for this operation has a numeric suffix that is used to track the actual file that was used to upload the object. This mapping is persisted in selectObjectSuffix.json file. This filename can be overridden with select_object_suffix_file property in OG configuration file. The select object suffix file is stored by default at /var/log/og. The directory where this file is located can be configured with select_operations_config_location property in OG configuration.
+
+Here is a sample configuration for this operation. The files can be specified with a selection configuration object.
 ----
   "write_select_object": {
     "weight": 1.0,
@@ -1710,7 +1712,7 @@ The object name for this operation has a numeric suffix that is used to track th
 ----
 
 ==== Operation query select object ====
-This operation can be used to execute SelectObjectContent s3 API. The SQL query to be used in SelectObjectContent request body has to be stored in selectContent.json file. This file is stored by default at /var/log/og. The directory where this file is located can be configured with select_operations_config_location property in OG configuration.
+This operation can be used to execute SelectObjectContent s3 API. The SQL query to be used in SelectObjectContent request body has to be stored in selectContent.json file. This filename can be overridden with select_content_query_file property in OG configuration file. This file is stored by default at /var/log/og. The directory where this file is located can be configured with select_operations_config_location property in OG configuration.
 
 Here is a sample content of selectContent.json file.
 ----
@@ -2722,6 +2724,17 @@ mixed operation tests.
 |String
 |No
 |/var/log/og/
+
+|select_content_query_file
+|String
+|No
+|selectContent.json
+
+|select_object_suffix_file
+|String
+|No
+|selectObjectSuffix.json
+
 
 |===
 
