@@ -1,5 +1,7 @@
 # Object Generator
 
+## Preface
+
 ## Introduction
 __Object Generator (OG)__ is an http load tool designed for load testing object
 storage apis. Supported apis include:
