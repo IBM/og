@@ -55,14 +55,18 @@ public class SelectOperationSharedDataModule extends AbstractModule {
         public ArrayList<LinkedHashMap<String, String>> selectQueryMap;
 
         final String selectOperationsConfigDir;
-        String selectContentQueriesFile;
-        String selectObjectSuffixFile;
+        final String selectContentQueriesFile;
+        final String selectObjectSuffixFile;
 
        @Inject
-        public SuffixManager(@Named("selectOperationsConfigLocation") final String selectOperationsConfigDir) {
+        public SuffixManager(@Named("selectOperationsConfigLocation") final String selectOperationsConfigDir,
+                             @Named("selectContentQueryFile") final String selectContentQueriesFile,
+                             @Named("selectObjectSuffixFile") final String selectObjectSuffixFile) {
             this.selectOperationsConfigDir = selectOperationsConfigDir;
-            this.selectContentQueriesFile = String.format("%s/selectContent.json", this.selectOperationsConfigDir);
-            this.selectObjectSuffixFile = String.format("%s/selectObjectSuffix.json", this.selectOperationsConfigDir);
+            this.selectContentQueriesFile = String.format("%s/%s", this.selectOperationsConfigDir,
+                    selectContentQueriesFile);
+            this.selectObjectSuffixFile = String.format("%s/%s", this.selectOperationsConfigDir,
+                    selectObjectSuffixFile);
         }
 
         public void initMap() {
