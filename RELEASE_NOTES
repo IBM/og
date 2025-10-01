@@ -1,4 +1,8 @@
+Release 2.0.0
+Checksum Algorithm support for write, overwrite, writecopy and multipart upload operations.
+
 Release 1.15.1
+Java 11 runtime required
 Add select_content_query_file and select_object_suffix_file properties to override select operation
 object query filename and select object suffix json file
 

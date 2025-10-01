@@ -10,18 +10,22 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Charsets;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.LoadingCache;
+import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
 import com.ibm.og.api.Body;
+import com.ibm.og.api.ChecksumType;
 import com.ibm.og.api.Method;
 import com.ibm.og.api.Operation;
 import com.ibm.og.api.Request;
+import com.ibm.og.http.DigestLoader;
 import com.ibm.og.http.MD5DigestLoader;
 import com.ibm.og.http.Credential;
 import com.ibm.og.http.HttpRequest;
@@ -34,6 +38,7 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import software.amazon.awssdk.crt.checksums.CRC64NVME;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,7 +72,14 @@ public class RequestSupplier implements Supplier<Request> {
   private final Supplier<Function<Map<String, String>, String>> legalHold;
   private final Operation operation;
   private final boolean contentMd5;
+
+  private final ChecksumType checksumType;
   private final LoadingCache<Long, byte[]> md5ContentCache;
+  private final LoadingCache<Long, byte[]> sha1ContentCache;
+  private final LoadingCache<Long, byte[]> sha256ContentCache;
+  private final LoadingCache<Long, byte[]> crc32ContentCache;
+  private final LoadingCache<Long, byte[]> crc32CContentCache;
+  private final LoadingCache<Long, byte[]> crc64NvmeContentCache;
   private final Function<Map<String, String>, String> staticWebsiteVirtualHostSuffix;
 
 
@@ -107,7 +119,8 @@ public class RequestSupplier implements Supplier<Request> {
       final Function<Map<String, String>, Long> retention,
       final Supplier<Function<Map<String, String>, String>> legalHold,
       final boolean contentMd5, final Function<Map<String, String>, String> delimiter,
-      final Function<Map<String, String>, String> staticWebsiteVirtualHostSuffix) {
+      final Function<Map<String, String>, String> staticWebsiteVirtualHostSuffix,
+                         final ChecksumType checksumType) {
 
     this.id = id;
     this.method = checkNotNull(method);
@@ -131,8 +144,14 @@ public class RequestSupplier implements Supplier<Request> {
     this.retention = retention;
     this.legalHold = legalHold;
     this.contentMd5 = contentMd5;
+    this.checksumType = checksumType;
     this.staticWebsiteVirtualHostSuffix = staticWebsiteVirtualHostSuffix;
     this.md5ContentCache = CacheBuilder.newBuilder().maximumSize(100).build(new MD5DigestLoader());
+    this.sha1ContentCache = CacheBuilder.newBuilder().maximumSize(100).build(new DigestLoader(ChecksumType.SHA1));
+    this.sha256ContentCache = CacheBuilder.newBuilder().maximumSize(100).build(new DigestLoader(ChecksumType.SHA256));
+    this.crc32ContentCache = CacheBuilder.newBuilder().maximumSize(100).build(new DigestLoader(ChecksumType.CRC32));
+    this.crc32CContentCache = CacheBuilder.newBuilder().maximumSize(100).build(new DigestLoader(ChecksumType.CRC32C));
+    this.crc64NvmeContentCache = CacheBuilder.newBuilder().maximumSize(100).build(new DigestLoader(ChecksumType.CRC64NVME));
 
     checkArgument(!(this.container == null && this.object != null));
   }
@@ -270,6 +289,33 @@ public class RequestSupplier implements Supplier<Request> {
 
         } catch (Exception e) {
             _logger.error(e.getMessage());
+        }
+      }
+      if (this.checksumType != checksumType.NONE) {
+        if (this.operation == Operation.WRITE ||
+            this.operation == Operation.OVERWRITE ||
+            this.operation == Operation.WRITE_COPY) {
+          try {
+            Long size = body.getSize();
+            if (this.checksumType == checksumType.SHA1) {
+              builder.withHeader(Context.X_OG_AMZ_CHECKSUM_SHA1, BaseEncoding.base64().encode(
+                      sha1ContentCache.get(size)));
+            } else if (this.checksumType == checksumType.SHA256) {
+              builder.withHeader(Context.X_OG_AMZ_CHECKSUM_SHA256, BaseEncoding.base64().encode(
+                      sha256ContentCache.get(size)));
+            } else if (this.checksumType == checksumType.CRC32) {
+              builder.withHeader(Context.X_OG_AMZ_CHECKSUM_CRC32, BaseEncoding.base64().encode(
+                      crc32ContentCache.get(size)));
+            } else if (this.checksumType == checksumType.CRC32C) {
+              builder.withHeader(Context.X_OG_AMZ_CHECKSUM_CRC32C, BaseEncoding.base64().encode(
+                      crc32CContentCache.get(size)));
+            } else if (this.checksumType == checksumType.CRC64NVME) {
+              builder.withHeader(Context.X_OG_AMZ_CHECKSUM_CRC64NVME, BaseEncoding.base64().encode(
+                      crc64NvmeContentCache.get(size)));
+            }
+          } catch (Exception e) {
+            _logger.error(e.getMessage());
+          }
         }
       }
     }

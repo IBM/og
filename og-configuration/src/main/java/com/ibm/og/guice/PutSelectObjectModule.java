@@ -257,7 +257,8 @@ public class PutSelectObjectModule extends AbstractModule {
 
         return new RequestSupplier(operation, id, method, scheme, host, port, uriRoot, container,
                 apiVersion, object, queryParameters, false, headers, context, sseSourceContext, credentials,
-                body, virtualHost, retention, legalHold, contentMd5, delimiter, staticWebsiteVirtualHostSuffix);
+                body, virtualHost, retention, legalHold, contentMd5, delimiter, staticWebsiteVirtualHostSuffix,
+                ChecksumType.NONE);
     }
 
 }
