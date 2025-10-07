@@ -1,0 +1,12 @@
+{
+  "service": "cloud-object-storage",
+  "production_code": "yes",
+  "production_branches": [
+    "development"
+  ],
+  "bypass_allowed": {
+    "C-LJEF897": "Functional ID used for automation"
+  },
+  "security_sensitive": "no",
+  "ip_sensitive": "no"
+}
