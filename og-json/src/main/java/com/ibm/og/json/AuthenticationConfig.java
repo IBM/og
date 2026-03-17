@@ -18,6 +18,7 @@ public class AuthenticationConfig {
   public String account;
   public boolean awsChunked;
   public int awsCacheSize;
+  public String sessionToken;
 
   public AuthenticationConfig() {
     this.type = AuthType.NONE;
@@ -30,5 +31,6 @@ public class AuthenticationConfig {
     this.account = null;
     this.awsChunked = false;
     this.awsCacheSize = 0;
+    this.sessionToken = null;
   }
 }

@@ -118,7 +118,7 @@ public class OGModule extends AbstractModule {
 
   /**
    * Creates an instance
-   * 
+   *
    * @param config json source configuration
    * @throws NullPointerException if config is null
    */
@@ -2676,7 +2676,7 @@ public class OGModule extends AbstractModule {
         final Credential credential =
             new Credential(this.config.authentication.username, this.config.authentication.password,
                 this.config.authentication.keystoneToken, this.config.authentication.iamToken,
-                this.config.authentication.account);
+                this.config.authentication.account, this.config.authentication.sessionToken);
         credentialList.add(credential);
 
         if (credentialList.size() == 0) {

@@ -42,13 +42,13 @@ public class CredentialGetterFunctionTest {
     containers.add("container1");
     this.account0 = new Account("account0", "user1", "password",null,
             null,  "gS2nuzatdztkeRhOm8kl", "ikGuemK3Q3HpeyAh72Ny47dH6ygGf3BhaMRwPZRx",
-            containers, Api.S3);
+            containers, Api.S3, null);
     containers.clear();
     containers.add("container2");
     containers.add("container3");
     this.account1 = new Account("account1", null, null,null,
             null,  "gS2nuzatdztkeRhOm8kk", "ikGuemK3Q3HpeyAh72Ny47dH6ygGf3BhaMRwPZRy",
-            containers, Api.S3);
+            containers, Api.S3, null);
 
     File file = new File(credentialsFilePath);
     if (file.exists()) {

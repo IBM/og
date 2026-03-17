@@ -7,7 +7,7 @@ package com.ibm.og.util;
 
 /**
  * Custom Object Generator Context keys
- * 
+ *
  * @since 1.0
  */
 public class Context {
@@ -25,6 +25,7 @@ public class Context {
   // FIXME refactor this into separate openstack guice module
   public static final String X_OG_KEYSTONE_TOKEN = "x-og-keystone-token";
   public static final String X_OG_IAM_TOKEN = "x-og-iam-token";
+  public static final String X_OG_SESSION_TOKEN = "x-og-session-token";
   public static final String X_OG_RESPONSE_BODY_CONSUMER = "x-og-response-body-consumer";
   // Multipart Context Keys
   public static final String X_OG_MULTIPART_REQUEST = "x-og-multipart-request";

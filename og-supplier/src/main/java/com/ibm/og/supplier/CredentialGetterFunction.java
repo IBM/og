@@ -130,18 +130,18 @@ public class CredentialGetterFunction implements Function<Map<String, String>, C
 
         Credential credential = null;
         if (AuthType.KEYSTONE == authType) {
-            credential = new Credential(null, null, account.getToken(), null, accountName);
+            credential = new Credential(null, null, account.getToken(), null, accountName, null);
         } else if (AuthType.IAM == authType) {
             // TODO with full iam_token available, parse the structure
-            credential = new Credential(null, null, null, account.getToken(), null);
+            credential = new Credential(null, null, null, account.getToken(), null, null);
         } else if (AuthType.AWSV2 == authType || AuthType.AWSV4 == authType) {
             if (api == Api.OPENSTACK) {
-                credential = new Credential(account.getAccessKey(), account.getSecretKey(), null, null, accountName);
+                credential = new Credential(account.getAccessKey(), account.getSecretKey(), null, null, accountName, null);
             } else {
-                credential = new Credential(account.getAccessKey(), account.getSecretKey(), null, null, null);
+                credential = new Credential(account.getAccessKey(), account.getSecretKey(), null, null, null, account.getSessionToken());
             }
         } else if (AuthType.BASIC == authType) {
-            credential = new Credential(account.getBasicAuthUsername(), account.getBasicAuthPassword(), null, null, accountName);
+            credential = new Credential(account.getBasicAuthUsername(), account.getBasicAuthPassword(), null, null, accountName, null);
         }
         return credential;
    }
@@ -164,6 +164,7 @@ public class CredentialGetterFunction implements Function<Map<String, String>, C
         String secretKey = null;
         ArrayList<String> containers = new ArrayList<String>();
         Api api = null;
+        String sessionToken = null;
         reader.beginObject();
         while (reader.hasNext()) {
             String name = reader.nextName();
@@ -192,13 +193,15 @@ public class CredentialGetterFunction implements Function<Map<String, String>, C
                 reader.endArray();
             } else if (name.equals("api")) {
                 api = Api.valueOf(reader.nextString().toUpperCase());
-            } else {
+            } else if (name.equals("session_token")) {
+                sessionToken = reader.nextString();
+            }else {
                 reader.skipValue();
             }
         }
         reader.endObject();
         Account account = new Account(accountName, basicAuthUsername, basicAuthPassword, domainName, token, accessKey, secretKey,
-                containers, api);
+                containers, api, sessionToken);
         return account;
     }
 

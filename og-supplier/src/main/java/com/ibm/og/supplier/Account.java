@@ -21,9 +21,10 @@ public class Account {
     private String secretKey;
     private ImmutableList<String> containers;
     private Api api;
+    private String sessionToken;
 
     public Account(String accountName, String basicAuthUsername, String basicAuthPassword, String domainName,
-                   String token, String accessKey, String secretKey, ArrayList<String> containers, Api api) {
+                   String token, String accessKey, String secretKey, ArrayList<String> containers, Api api, String sessionToken) {
         this.accountName = accountName;
         this.basicAuthUsername = basicAuthUsername;
         this.basicAuthPassword = basicAuthPassword;
@@ -33,6 +34,7 @@ public class Account {
         this.secretKey = secretKey;
         this.containers = ImmutableList.copyOf(containers);
         this.api = api;
+        this.sessionToken = sessionToken;
     }
 
     public String getAccountName() {
@@ -66,6 +68,10 @@ public class Account {
 
     public ImmutableList<String> getContainers() {
         return containers;
+    }
+
+    public String getSessionToken() {
+        return sessionToken;
     }
 
 }
