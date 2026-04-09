@@ -199,7 +199,7 @@ public class RequestSupplier implements Supplier<Request> {
         requestContext.put(Context.X_OG_STORAGE_ACCOUNT_NAME, storageAccountName);
       }
       if (sessionToken != null) {
-        requestContext.put(Context.X_OG_IAM_TOKEN, sessionToken);
+        requestContext.put(Context.X_OG_SESSION_TOKEN, sessionToken);
       }
 
     }
