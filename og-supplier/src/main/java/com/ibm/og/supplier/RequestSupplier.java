@@ -251,10 +251,6 @@ public class RequestSupplier implements Supplier<Request> {
 
     }
 
-    if (requestContext.get(Context.X_OG_SESSION_TOKEN) != null) {
-      builder.withHeader("x-amz-security-token", requestContext.get(Context.X_OG_SESSION_TOKEN));
-    }
-
     if (requestContext.get(Context.X_OG_LEGAL_HOLD) != null) {
       builder.withHeader(Context.X_OG_LEGAL_HOLD, requestContext.get(Context.X_OG_LEGAL_HOLD));
     }

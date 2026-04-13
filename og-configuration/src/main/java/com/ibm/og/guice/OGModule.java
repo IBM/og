@@ -75,6 +75,7 @@ import com.ibm.og.s3.S3ListResponseBodyConsumer;
 import com.ibm.og.s3.S3MultipartWriteResponseBodyConsumer;
 import com.ibm.og.s3.v2.AWSV2Auth;
 import com.ibm.og.s3.v4.AWSV4Auth;
+import com.ibm.og.s3.v4.AWSV4SessionAuth;
 import com.ibm.og.scheduling.ConcurrentRequestScheduler;
 import com.ibm.og.scheduling.RequestRateScheduler;
 import com.ibm.og.scheduling.PoissonRequestRateScheduler;
@@ -247,6 +248,7 @@ public class OGModule extends AbstractModule {
     httpAuthBinder.addBinding(AuthType.AWSV4).to(AWSV4Auth.class);
     httpAuthBinder.addBinding(AuthType.KEYSTONE).to(KeystoneAuth.class);
     httpAuthBinder.addBinding(AuthType.IAM).to(IAMTokenAuth.class);
+    httpAuthBinder.addBinding(AuthType.AWSV4SESSION).to(AWSV4SessionAuth.class);
 
     final MapBinder<String, ResponseBodyConsumer> responseBodyConsumers =
         MapBinder.newMapBinder(binder(), String.class, ResponseBodyConsumer.class);
