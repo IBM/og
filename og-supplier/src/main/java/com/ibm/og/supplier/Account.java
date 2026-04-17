@@ -10,7 +10,27 @@ import com.ibm.og.http.Api;
 
 import java.util.ArrayList;
 
+
 public class Account {
+
+    public static class Container {
+        final public String name;
+        final public String accessKey;
+        final public String secretKey;
+        final public String sessionToken;
+
+        public Container(String name, String accessKey, String secretKey, String sessionToken) {
+            this.name = name;
+            this.accessKey = accessKey;
+            this.secretKey = secretKey;
+            this.sessionToken = sessionToken;
+        }
+
+        public Container(String name) {
+            this(name, null, null, null);
+        }
+
+    };
 
     private String accountName;
     private String basicAuthUsername;
@@ -19,12 +39,12 @@ public class Account {
     private String token;
     private String accessKey;
     private String secretKey;
-    private ImmutableList<String> containers;
+    private ImmutableList<Container> containers;
     private Api api;
     private String sessionToken;
 
     public Account(String accountName, String basicAuthUsername, String basicAuthPassword, String domainName,
-                   String token, String accessKey, String secretKey, ArrayList<String> containers, Api api, String sessionToken) {
+                   String token, String accessKey, String secretKey, ArrayList<Container> containers, Api api, String sessionToken) {
         this.accountName = accountName;
         this.basicAuthUsername = basicAuthUsername;
         this.basicAuthPassword = basicAuthPassword;
@@ -66,7 +86,7 @@ public class Account {
         return secretKey;
     }
 
-    public ImmutableList<String> getContainers() {
+    public ImmutableList<Account.Container> getContainers() {
         return containers;
     }
 

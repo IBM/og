@@ -37,15 +37,15 @@ public class CredentialGetterFunctionTest {
   @Before
   public void before() throws IOException {
 
-    ArrayList<String> containers = new ArrayList<String>();
-    containers.add("container0");
-    containers.add("container1");
+    ArrayList<Account.Container> containers = new ArrayList<>();
+    containers.add(new Account.Container("container0"));
+    containers.add(new Account.Container("container1"));
     this.account0 = new Account("account0", "user1", "password",null,
             null,  "gS2nuzatdztkeRhOm8kl", "ikGuemK3Q3HpeyAh72Ny47dH6ygGf3BhaMRwPZRx",
             containers, Api.S3, null);
     containers.clear();
-    containers.add("container2");
-    containers.add("container3");
+    containers.add(new Account.Container("container2"));
+    containers.add(new Account.Container("container3"));
     this.account1 = new Account("account1", null, null,null,
             null,  "gS2nuzatdztkeRhOm8kk", "ikGuemK3Q3HpeyAh72Ny47dH6ygGf3BhaMRwPZRy",
             containers, Api.S3, null);
@@ -112,6 +112,7 @@ public class CredentialGetterFunctionTest {
     HashMap<String, String> hashMap = new LinkedHashMap<String, String>();
     hashMap.put(Context.X_OG_CONTAINER_NAME, "container0");
     Credential credential = cgf.apply(hashMap);
+    System.out.println(credential.getUsername());
     assertThat(credential.getUsername(), is("gS2nuzatdztkeRhOm8kl"));
     assertThat(credential.getPassword(), is("ikGuemK3Q3HpeyAh72Ny47dH6ygGf3BhaMRwPZRx"));
 

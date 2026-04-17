@@ -107,10 +107,10 @@ public class CredentialGetterFunction implements Function<Map<String, String>, C
     private void populateContainerAccountMap() throws Exception {
         for (String accountName : accountsMap.keySet()){
             Account account = accountsMap.get(accountName);
-            ImmutableList<String> containers = account.getContainers();
+            ImmutableList<Account.Container> containers = account.getContainers();
             if (containers != null) {
-                for (String containerName : containers) {
-                    containerAccountMap.put(containerName, accountName);
+                for (Account.Container container : containers) {
+                    containerAccountMap.put(container.name, accountName);
                 }
             }
        }
@@ -134,11 +134,19 @@ public class CredentialGetterFunction implements Function<Map<String, String>, C
         } else if (AuthType.IAM == authType) {
             // TODO with full iam_token available, parse the structure
             credential = new Credential(null, null, null, account.getToken(), null, null);
-        } else if (AuthType.AWSV2 == authType || AuthType.AWSV4 == authType || AuthType.AWSV4SESSION == authType) {
+        } else if (AuthType.AWSV2 == authType || AuthType.AWSV4 == authType) {
             if (api == Api.OPENSTACK) {
                 credential = new Credential(account.getAccessKey(), account.getSecretKey(), null, null, accountName, null);
             } else {
-                credential = new Credential(account.getAccessKey(), account.getSecretKey(), null, null, null, account.getSessionToken());
+                credential = new Credential(account.getAccessKey(), account.getSecretKey(), null, null, null, null);
+            }
+        } else if (AuthType.AWSV4SESSION == authType) {
+            // get container specific temp acccess key / secret key / session token
+            for (Account.Container container: account.getContainers()) {
+                if (container.name.equals(containerName)) {
+                     credential = new Credential(container.accessKey, container.secretKey, null, null, null,
+                                                    container.sessionToken);
+                }
             }
         } else if (AuthType.BASIC == authType) {
             credential = new Credential(account.getBasicAuthUsername(), account.getBasicAuthPassword(), null, null, accountName, null);
@@ -162,7 +170,7 @@ public class CredentialGetterFunction implements Function<Map<String, String>, C
         String token = null;
         String accessKey = null;
         String secretKey = null;
-        ArrayList<String> containers = new ArrayList<String>();
+        ArrayList<Account.Container> containers = new ArrayList<Account.Container>();
         Api api = null;
         String sessionToken = null;
         reader.beginObject();
@@ -188,7 +196,33 @@ public class CredentialGetterFunction implements Function<Map<String, String>, C
             } else if (name.equals("containers")) {
                 reader.beginArray();
                 while (reader.hasNext()) {
-                    containers.add(reader.nextString());
+                    // check if the next token is a string or dict
+                    if (reader.peek() == JsonToken.STRING) {
+                        containers.add(new Account.Container(reader.nextString()));
+                    } else if (reader.peek() == JsonToken.BEGIN_OBJECT) {
+                        // if json object read the json object
+
+                        String cname = "";
+                        String delegatedAccessKey = null;
+                        String delegatedSecretKey = null;
+                        String delegatedSessionToken = null;
+                        reader.beginObject();
+                        while(reader.hasNext()) {
+                            String property = reader.nextName();
+                            if (property.equals("name")) {
+                                cname = reader.nextString();
+                            } else if(property.endsWith("access_key")) {
+                                delegatedAccessKey = reader.nextString();
+                            } else if(property.endsWith("secret_key")) {
+                                delegatedSecretKey = reader.nextString();
+                            } else if(property.endsWith("session_token")) {
+                                delegatedSessionToken = reader.nextString();
+                            }
+
+                        }
+                        reader.endObject();
+                        containers.add(new Account.Container(cname, delegatedAccessKey, delegatedSecretKey, delegatedSessionToken));
+                    }
                 }
                 reader.endArray();
             } else if (name.equals("api")) {
