@@ -54,6 +54,15 @@ public class Context {
   public static final String X_OG_OBJECT_RETENTION = "Retention-Period";
   public static final String X_OG_OBJECT_RETENTION_EXT = "Additional-Retention-Period";
   public static final String X_OG_CONTENT_MD5 = "Content-MD5";
+  public static final String X_OG_AMZ_CHECKSUM_SHA1 = "x-amz-checksum-sha1";
+  public static final String X_OG_AMZ_CHECKSUM_SHA256 = "x-amz-checksum-sha256";
+  public static final String X_OG_AMZ_CHECKSUM_CRC32 = "x-amz-checksum-crc32";
+  public static final String X_OG_AMZ_CHECKSUM_CRC32C = "x-amz-checksum-crc32c";
+  public static final String X_OG_AMZ_CHECKSUM_CRC64NVME = "x-amz-checksum-crc64nvme";
+  public static final String X_OG_AMZ_CHECKSUM_ALGORITHM = "x-amz-checksum-algorithm";
+  public static final String X_OG_AMZ_CHECKSUM_TYPE = "x-amz-checksum-type";
+  public static final String X_OG_AMZ_CHECKSUM_VALUE = "x-amz-checksum-value";
+
 
   public static final String X_OG_OBJECT_RESTORE_PERIOD = "x-og-object-restore-period";
   public static final String X_OG_ARCHIVE_TRANSITION_PERIOD = "x-og-archive-transition-period";

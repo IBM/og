@@ -15,6 +15,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 import com.ibm.og.api.Body;
+import com.ibm.og.api.ChecksumType;
 import com.ibm.og.api.Method;
 import com.ibm.og.api.Operation;
 import com.ibm.og.api.Request;
@@ -293,7 +294,7 @@ public class ObjectTagsModule extends AbstractModule {
     return new RequestSupplier(Operation.PUT_TAGS, id, Method.PUT, scheme, host, port, uriRoot,
             container, apiVersion,  object, queryParameters, false, headers, context,
             null, credentials, body, virtualHost, null, null,
-            contentMd5, null, null);
+            contentMd5, null, null, ChecksumType.NONE);
   }
 
 
@@ -320,7 +321,7 @@ public class ObjectTagsModule extends AbstractModule {
     return new RequestSupplier(Operation.DELETE_TAGS, id, Method.DELETE, scheme, host, port, uriRoot,
             container, apiVersion,  object, queryParameters, false, headers, context,
             null, credentials, null, virtualHost, null, null,
-            false, null, null);
+            false, null, null, ChecksumType.NONE);
   }
 
   @Provides
@@ -345,7 +346,7 @@ public class ObjectTagsModule extends AbstractModule {
     return new RequestSupplier(Operation.GET_TAGS, id, Method.GET, scheme, host, port, uriRoot,
             container, apiVersion,  object, queryParameters, false, headers, context,
             null, credentials, null, virtualHost, null, null,
-            false, null, null);
+            false, null, null, ChecksumType.NONE);
   }
 
 }

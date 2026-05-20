@@ -46,6 +46,7 @@ import com.google.inject.util.Providers;
 import com.ibm.og.api.AuthType;
 import com.ibm.og.api.Body;
 import com.ibm.og.api.BodySource;
+import com.ibm.og.api.ChecksumType;
 import com.ibm.og.api.Client;
 import com.ibm.og.api.DataType;
 import com.ibm.og.api.Method;
@@ -142,14 +143,15 @@ public class OGModule extends AbstractModule {
     bindConstant().annotatedWith(Names.named("write.sseCDestination"))
         .to(this.config.write.sseCDestination);
     bindConstant().annotatedWith(Names.named("write.contentMd5")).to(this.config.write.contentMd5);
+    bind(ChecksumType.class).annotatedWith(Names.named("write.checksumType")).toInstance(this.config.write.checksumType);
     bindConstant().annotatedWith(Names.named("overwrite.weight")).to(this.config.overwrite.weight);
     bindConstant().annotatedWith(Names.named("overwrite.sseCDestination"))
         .to(this.config.overwrite.sseCDestination);
     bindConstant().annotatedWith(Names.named("overwrite.contentMd5"))
         .to(this.config.overwrite.contentMd5);
+    bind(ChecksumType.class).annotatedWith(Names.named("overwrite.checksumType"))
+            .toInstance(this.config.overwrite.checksumType);
     bindConstant().annotatedWith(Names.named("read.weight")).to(this.config.read.weight);
-//    bindConstant().annotatedWith(Names.named("read.staticWebsiteVirtualHostSuffix"))
-//            .to(this.config.read.staticWebsiteVirtualHostSuffix);
     bindConstant().annotatedWith(Names.named("read.sseCSource")).to(this.config.read.sseCSource);
     bindConstant().annotatedWith(Names.named("metadata.weight")).to(this.config.metadata.weight);
     bindConstant().annotatedWith(Names.named("metadata.sseCSource"))
@@ -166,11 +168,15 @@ public class OGModule extends AbstractModule {
     bindConstant().annotatedWith(Names.named("multipartWrite.sseCDestination"))
         .to(this.config.multipartWrite.sseCDestination);
     bindConstant().annotatedWith(Names.named("multipartWrite.contentMd5")).to(this.config.multipartWrite.contentMd5);
+    bind(ChecksumType.class).annotatedWith(Names.named("multipartWrite.checksumType")).toInstance(
+            this.config.multipartWrite.checksumType);
     bindConstant().annotatedWith(Names.named("writeCopy.weight")).to(this.config.writeCopy.weight);
     bindConstant().annotatedWith(Names.named("writeCopy.sseCSource"))
         .to(this.config.writeCopy.sseCSource);
     bindConstant().annotatedWith(Names.named("writeCopy.sseCDestination"))
         .to(this.config.writeCopy.sseCDestination);
+    bind(ChecksumType.class).annotatedWith(Names.named("writeCopy.checksumType"))
+            .toInstance(this.config.writeCopy.checksumType);
     bindConstant().annotatedWith(Names.named("write_legalhold.weight"))
         .to(this.config.writeLegalhold.weight);
     bindConstant().annotatedWith(Names.named("read_legalhold.weight"))
@@ -3279,6 +3285,18 @@ public class OGModule extends AbstractModule {
     return encryptionKey;
   }
 
+  private Function<Map<String, String>, String> provideChecksumAlgorithm(ChecksumType checksumType) {
+    Function<Map<String, String>, String> checksumAlgorithm;
+    checksumAlgorithm = new Function<Map<String, String>, String>() {
+      @Override
+      public String apply(@Nullable final Map<String, String> input) {
+        input.put(Context.X_OG_AMZ_CHECKSUM_ALGORITHM, checksumType.toString());
+        return checksumType.toString();
+      }
+    };
+    return checksumAlgorithm;
+  }
+
   private Function<Map<String, String>, String> provideSSEKeyMD5() {
     final Function<Map<String, String>, String> customerKeyHash =
         new Function<Map<String, String>, String>() {
@@ -3381,7 +3399,8 @@ public class OGModule extends AbstractModule {
       @Nullable @Named("write.retention") final Function<Map<String, String>, Long> retention,
       @Nullable @Named("write.legalHold") final Supplier<Function<Map<String, String>, String>> legalHold,
       @Nullable @Named("write.contentMd5") final boolean contentMd5,
-      @Nullable @Named("write.delimiter") final Function<Map<String, String>, String> delimiter) {
+      @Nullable @Named("write.delimiter") final Function<Map<String, String>, String> delimiter,
+      @Named("write.checksumType") final ChecksumType checksumType) {
 
     if (encryptDestinationObject) {
       checkArgument(this.config.data == DataType.ZEROES,
@@ -3391,6 +3410,11 @@ public class OGModule extends AbstractModule {
     if (contentMd5) {
       checkArgument(this.config.data == DataType.ZEROES,
           "If contentMD5 is set, data must be ZEROES [%s]", this.config.data);
+    }
+
+    if (checksumType != ChecksumType.NONE) {
+      checkArgument(this.config.data == DataType.ZEROES,
+              "If checksum is set, data must be ZEROES [%s]", this.config.data);
     }
     final Map<String, Function<Map<String, String>, String>> queryParameters = Collections.emptyMap();
 
@@ -3409,7 +3433,7 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.WRITE, id, Method.PUT, scheme, host, port, uriRoot,
         container, apiVersion, object, queryParameters, headers, context, null, body, credentials,
-        virtualHost, retention, legalHold, contentMd5, delimiter, null);
+        virtualHost, retention, legalHold, contentMd5, delimiter, null, checksumType);
   }
 
 
@@ -3438,7 +3462,8 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.EXTEND_RETENTION, id, Method.POST, scheme, host, port,
             uriRoot, container, apiVersion, object, queryParameters, headers, context, null, body,
-            credentials, virtualHost, retentionExtension, null, false, null, null);
+            credentials, virtualHost, retentionExtension, null, false, null, null,
+            ChecksumType.NONE);
   }
 
 
@@ -3471,7 +3496,8 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.OBJECT_RESTORE, id, Method.POST, scheme, host, port,
             uriRoot, container, apiVersion, object, queryParameters, headers, context, null, body,
-            credentials, virtualHost, null, null, false, null, null);
+            credentials, virtualHost, null, null, false, null, null,
+            ChecksumType.NONE);
   }
 
   @Provides
@@ -3502,7 +3528,8 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.PUT_CONTAINER_LIFECYCLE, id, Method.PUT, scheme, host, port,
             uriRoot, container, apiVersion, null, queryParameters, headers, context, null, body,
-            credentials, virtualHost, null, null, true, null, null);
+            credentials, virtualHost, null, null, true, null, null,
+            ChecksumType.NONE);
   }
 
   @Provides
@@ -3527,7 +3554,8 @@ public class OGModule extends AbstractModule {
     final Function<Map<String, String>, Body> body = createObjectRetentionBodySupplier();
     return createRequestSupplier(Operation.PUT_OBJECT_LOCK_RETENTION, id, Method.PUT, scheme, host, port,
             uriRoot, container, apiVersion, object, queryParameters, headers, context, null, body,
-            credentials, virtualHost, null, null, true, null, null);
+            credentials, virtualHost, null, null, true, null, null,
+            ChecksumType.NONE);
   }
 
   @Provides
@@ -3551,7 +3579,7 @@ public class OGModule extends AbstractModule {
     return createRequestSupplier(Operation.GET_OBJECT_LOCK_RETENTION, id, Method.GET, scheme, host, port,
             uriRoot, container, apiVersion, object, queryParameters, headers, context, null, null,
             credentials, virtualHost, null, null, true, null,
-            null);
+            null, ChecksumType.NONE);
   }
 
   @Provides
@@ -3574,7 +3602,8 @@ public class OGModule extends AbstractModule {
     final Map<String, Function<Map<String, String>, String>> queryParameters = provideObjectLegalHoldQueryParameters();
     return createRequestSupplier(Operation.PUT_OBJECT_LOCK_LEGAL_HOLD, id, Method.PUT, scheme, host, port,
             uriRoot, container, apiVersion, object, queryParameters, headers, context, null, body,
-            credentials, virtualHost, null, null, true, null, null);
+            credentials, virtualHost, null, null, true, null, null,
+            ChecksumType.NONE);
   }
 
   @Provides
@@ -3596,7 +3625,7 @@ public class OGModule extends AbstractModule {
     return createRequestSupplier(Operation.GET_OBJECT_LOCK_LEGAL_HOLD, id, Method.GET, scheme, host, port,
             uriRoot, container, apiVersion, object, queryParameters, headers, context, null, null,
             credentials, virtualHost, null, null, true, null,
-            null);
+            null, ChecksumType.NONE);
   }
 
 
@@ -3629,7 +3658,8 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.PUT_CONTAINER_PROTECTION, id, Method.PUT, scheme, host, port,
             uriRoot, container, apiVersion, null, queryParameters, headers, context, null, body,
-            credentials, virtualHost, null, null, true, null, null);
+            credentials, virtualHost, null, null, true, null, null,
+            ChecksumType.NONE);
   }
 
   @Provides
@@ -3660,7 +3690,7 @@ public class OGModule extends AbstractModule {
     return createRequestSupplier(Operation.GET_CONTAINER_LIFECYCLE, id, Method.GET, scheme, host, port,
             uriRoot, container, apiVersion, null, queryParameters, headers, context, null,
             null, credentials, virtualHost, null, null, false, null,
-            null);
+            null, ChecksumType.NONE);
   }
 
   @Provides
@@ -3691,7 +3721,7 @@ public class OGModule extends AbstractModule {
     return createRequestSupplier(Operation.DELETE_CONTAINER_LIFECYCLE, id, Method.DELETE, scheme, host, port,
             uriRoot, container, apiVersion, null, queryParameters, headers, context, null,
             null, credentials, virtualHost, null, null, false, null,
-            null);
+            null, ChecksumType.NONE);
   }
 
   @Provides
@@ -3722,7 +3752,8 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.GET_CONTAINER_PROTECTION, id, Method.GET, scheme, host, port,
             uriRoot, container, apiVersion, null, queryParameters, headers, context, null,
-            null, credentials, virtualHost, null, null, false, null, null);
+            null, credentials, virtualHost, null, null, false, null, null,
+            ChecksumType.NONE);
   }
   @Provides
   @Singleton
@@ -3744,10 +3775,15 @@ public class OGModule extends AbstractModule {
       @Named("virtualhost") final boolean virtualHost,
       @Named("writeCopy.sseCSource") final boolean encryptedSourceObject,
       @Named("writeCopy.sseCDestination") final boolean encryptDestinationObject,
-      @Nullable @Named("writeCopy.delimiter") final Function<Map<String, String>, String> delimiter) {
+      @Nullable @Named("writeCopy.delimiter") final Function<Map<String, String>, String> delimiter,
+      @Named("writeCopy.checksumType") final ChecksumType checksumType) {
     if (encryptedSourceObject || encryptDestinationObject) {
       checkArgument(this.config.data == DataType.ZEROES,
           "If SSE-C is enabled, data must be ZEROES [%s]", this.config.data);
+    }
+    if (checksumType != ChecksumType.NONE) {
+      checkArgument(this.config.data == DataType.ZEROES,
+              "If checksum is set, data must be ZEROES [%s]", this.config.data);
     }
 
     final Map<String, Function<Map<String, String>, String>> queryParameters =
@@ -3808,10 +3844,14 @@ public class OGModule extends AbstractModule {
       }
     }
     headers.put("x-amz-copy-source", copySource);
+    if (checksumType != ChecksumType.NONE) {
+      headers.put(Context.X_OG_AMZ_CHECKSUM_ALGORITHM,  provideChecksumAlgorithm(checksumType));
+    }
 
     return createRequestSupplier(Operation.WRITE_COPY, id, Method.PUT, scheme, host, port, uriRoot,
         container, apiVersion, writeObject, queryParameters, headers, context, sseReadContext, null,
-        credentials, virtualHost, null, null, false, delimiter, null);
+        credentials, virtualHost, null, null, false, delimiter, null,
+            ChecksumType.NONE);
   }
 
   Map<String, Function<Map<String, String>, String>> provideOverwriteOperationQueryParameters() {
@@ -3841,7 +3881,8 @@ public class OGModule extends AbstractModule {
       @Named("overwrite.sseCDestination") final boolean encryptDestinationObject,
       @Nullable @Named("overwrite.retention") final Function<Map<String, String>, Long> retention,
       @Nullable @Named("overwrite.legalHold") final Supplier<Function<Map<String, String>, String>> legalHold,
-      @Nullable @Named("overwrite.contentMd5") final boolean contentMd5) throws Exception {
+      @Nullable @Named("overwrite.contentMd5") final boolean contentMd5,
+      @Named("overwrite.checksumType") final ChecksumType checksumType) throws Exception {
 
     if (encryptDestinationObject) {
       checkArgument(this.config.data == DataType.ZEROES,
@@ -3856,6 +3897,11 @@ public class OGModule extends AbstractModule {
     if (contentMd5) {
       checkArgument(this.config.data == DataType.ZEROES,
           "If contentMD5 is set, data must be ZEROES [%s]", this.config.data);
+    }
+
+    if (checksumType != ChecksumType.NONE) {
+      checkArgument(this.config.data == DataType.ZEROES,
+              "If checksum is set, data must be ZEROES [%s]", this.config.data);
     }
 
     final Map<String, Function<Map<String, String>, String>> queryParameters =
@@ -3875,7 +3921,8 @@ public class OGModule extends AbstractModule {
     }
     return createRequestSupplier(Operation.OVERWRITE, id, Method.PUT, scheme, host, port, uriRoot,
         container, apiVersion, object, queryParameters, headers, context, null, body, credentials,
-        virtualHost, retention, legalHold, contentMd5, null, null);
+        virtualHost, retention, legalHold, contentMd5, null, null,
+            ChecksumType.NONE);
   }
 
   Map<String, Function<Map<String, String>, String>> provideReadOperationQueryParameters() {
@@ -3923,7 +3970,8 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.READ, id, Method.GET, scheme, host, port, uriRoot,
         container, apiVersion, object, queryParameters, headers, context, null, body, credentials,
-        virtualHost, null, null, false, null, staticWebsiteVirtualHostSuffix);
+        virtualHost, null, null, false, null, staticWebsiteVirtualHostSuffix,
+        ChecksumType.NONE);
   }
 
   @Provides
@@ -3951,7 +3999,8 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.WRITE_LEGAL_HOLD, id, Method.POST, scheme, host, port,
             uriRoot, container, apiVersion, object, queryParameters, headers, context, null, body,
-            credentials, virtualHost, null, legalhold, false, null, null);
+            credentials, virtualHost, null, legalhold, false, null, null,
+            ChecksumType.NONE);
   }
 
 
@@ -3980,7 +4029,8 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.DELETE_LEGAL_HOLD, id, Method.POST, scheme, host, port,
         uriRoot, container, apiVersion, object, queryParameters, headers, context, null, body,
-        credentials, virtualHost, null, legalhold, false, null, null);
+        credentials, virtualHost, null, legalhold, false, null, null,
+        ChecksumType.NONE);
   }
 
   @Provides
@@ -4012,7 +4062,8 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.READ_LEGAL_HOLD, id, Method.GET, scheme, host, port,
         uriRoot, container, apiVersion, object, queryParameters, headers, context, null, body,
-        credentials, virtualHost, null, null, false, null, null);
+        credentials, virtualHost, null, null, false, null, null,
+        ChecksumType.NONE);
   }
 
 
@@ -4054,7 +4105,8 @@ public class OGModule extends AbstractModule {
     }
     return createRequestSupplier(Operation.METADATA, id, Method.HEAD, scheme, host, port, uriRoot,
         container, apiVersion, object, queryParameters, headers, context, null, body, credentials,
-        virtualHost, null, null, false, null, null);
+        virtualHost, null, null, false, null, null,
+        ChecksumType.NONE);
   }
 
 
@@ -4081,7 +4133,8 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.DELETE, id, Method.DELETE, scheme, host, port, uriRoot,
         container, apiVersion, object, queryParameters, headers, context, null, body, credentials,
-        virtualHost, null, null, false, null, null);
+        virtualHost, null, null, false, null, null,
+        ChecksumType.NONE);
   }
 
   @Provides
@@ -4105,7 +4158,8 @@ public class OGModule extends AbstractModule {
 
     return createRequestSupplier(Operation.MULTI_DELETE, id, Method.POST, scheme, host, port, uriRoot,
             container, apiVersion, null, queryParameters, headers, context, null, body, credentials,
-            virtualHost, null, null, true, null, null);
+            virtualHost, null, null, true, null, null,
+            ChecksumType.NONE);
   }
 
 
@@ -4132,7 +4186,7 @@ public class OGModule extends AbstractModule {
     // null container since request is on the service http://<accesser ip>/
     return createRequestSupplier(Operation.CONTAINER_LIST, id, Method.GET, scheme, host, port,
         uriRoot, null, apiVersion, null, queryParameters, headers, context, null, body, credentials,
-        virtualHost, null, null, false, null, null);
+        virtualHost, null, null, false, null, null, ChecksumType.NONE);
   }
 
   @Provides
@@ -4163,7 +4217,8 @@ public class OGModule extends AbstractModule {
     // container mode
     return createRequestSupplier(Operation.CONTAINER_CREATE, id, Method.PUT, scheme, host, port,
         uriRoot, container, apiVersion, null, queryParameters, headers, context, null, body,
-        credentials, virtualHost, retention, null, false, null, null);
+        credentials, virtualHost, retention, null, false, null, null,
+        ChecksumType.NONE);
 
   }
 
@@ -4180,15 +4235,13 @@ public class OGModule extends AbstractModule {
       final Function<Map<String, String>, Credential> credentials, final Boolean virtualHost,
       final Function<Map<String, String>, Long> retention, final Supplier<Function<Map<String, String>, String>> legalHold,
       final boolean contentMd5, final Function<Map<String, String>, String> delimiter,
-      final Function<Map<String, String>, String> staticWebsiteVirtualHostSuffix) {
+      final Function<Map<String, String>, String> staticWebsiteVirtualHostSuffix,
+                                                  final ChecksumType checksumType) {
 
     return new RequestSupplier(operation, id, method, scheme, host, port, uriRoot, container,
         apiVersion, object, queryParameters, false, headers, context, sseSourceContext, credentials,
-        body, virtualHost, retention, legalHold, contentMd5, delimiter, staticWebsiteVirtualHostSuffix);
+        body, virtualHost, retention, legalHold, contentMd5, delimiter, staticWebsiteVirtualHostSuffix, checksumType);
   }
-
-
-
 
 
   @Provides
@@ -4215,7 +4268,8 @@ public class OGModule extends AbstractModule {
       @Nullable @Named("multipartWrite.legalHold") final Supplier<Function<Map<String, String>, String>> legalHold,
       @Named("multipartWrite.sseCDestination") final boolean encryptDestinationObject,
       @Nullable @Named("multipartWrite.contentMd5") final boolean contentMd5,
-      @Nullable @Named("multipartWrite.delimiter") final Function<Map<String, String>, String> delimiter) {
+      @Nullable @Named("multipartWrite.delimiter") final Function<Map<String, String>, String> delimiter,
+      @Named("multipartWrite.checksumType") final ChecksumType checksumType) {
 
     if (encryptDestinationObject) {
       checkArgument(this.config.data == DataType.ZEROES,
@@ -4248,7 +4302,7 @@ public class OGModule extends AbstractModule {
 
     return createMultipartRequestSupplier(id, scheme, host, port, uriRoot, container, apiVersion,
         object, partSize, partsPerSession, partsPercentagePerSession, targetSessions, queryParameters, headers, context,
-        body, retention, legalHold, credentials, virtualHost, contentMd5, delimiter);
+        body, retention, legalHold, credentials, virtualHost, contentMd5, delimiter, checksumType);
   }
 
   private Supplier<Request> createMultipartRequestSupplier(
@@ -4267,10 +4321,12 @@ public class OGModule extends AbstractModule {
       @Nullable @Named("write.retention") final Function<Map<String, String>, Long> retention,
       @Nullable @Named("write.legalHold") final Supplier<Function<Map<String, String>, String>> legalHold,
       final Function<Map<String, String>, Credential> credentials, final boolean virtualHost,
-      final boolean contentMd5, final Function<Map<String, String>, String> delimiter) {
+      final boolean contentMd5, final Function<Map<String, String>, String> delimiter, final ChecksumType checksumType
+      ) {
 
     return new MultipartRequestSupplier(id, scheme, host, port, uriRoot, container, object,
         partSize, partsPerSession, targetSessions, queryParameters, false, headers, context,
-        credentials, body, virtualHost, retention, legalHold, contentMd5, delimiter, providePartsPercentagePerSession);
+        credentials, body, virtualHost, retention, legalHold, contentMd5, delimiter, providePartsPercentagePerSession,
+            checksumType);
   }
 }

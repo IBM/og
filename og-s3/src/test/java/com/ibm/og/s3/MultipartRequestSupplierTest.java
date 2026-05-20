@@ -18,6 +18,7 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import com.ibm.og.api.ChecksumType;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -250,7 +251,7 @@ public class MultipartRequestSupplierTest {
     return new MultipartRequestSupplier(id, scheme, host, port, uriRoot, container,
         object, partSizes, partsPerSessionFunc, targetSessions, queryParameters, trailingSlash, headers, context,
         credentials, body, virtualHost, null, null, false, null,
-        partsPercentagePerSessionFunc);
+        partsPercentagePerSessionFunc, ChecksumType.NONE);
   }
 
   private void genericMultipleSessions(final int targetSessions, final long objectSize,
