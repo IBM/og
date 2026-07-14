@@ -327,8 +327,8 @@ NOTE: For more information about AWS V4 signing, see: http://docs.aws.amazon.com
 ----
 "authentication": {
   "type": "awsv4",
-  "username": "AKIAIOSFODNN74SFNMK",
-  "password": "nJalrUUFklNEMI/K7MDENG/gPwRfiCYXY73DER",
+  "username": "",
+  "password": "",
   "aws_chunked": true
 }
 ----
@@ -357,8 +357,8 @@ cache, configure the cache size via _aws_cache_size_.
 ----
 "authentication": {
   "type": "awsv4",
-  "username": "AKIAIOSFODNN74SFNMK",
-  "password": "nJalrUUFklNEMI/K7MDENG/gPwRfiCYXY73DER",
+  "username": "access_key",
+  "password": "secret_access_key",
   "aws_cache_size": 10000
 }
 ----
@@ -389,7 +389,7 @@ The given account is used in openstack swift API url.
 ----
 "authentication": {
   "type": "keystone",
-  "keystone_token": "7fe2cd9ee6384a1894a43878d3e52daf"
+  "keystone_token": ""
 }
 ----
 
@@ -398,7 +398,7 @@ The given account is used in openstack swift API url.
 ----
 "authentication": {
   "type": "keystone",
-  "keystone_token": "7fe2cd9ee6384a1894a43878d3e52daf",
+  "keystone_token": "",
   "account": "swiftaccountX"
 }
 ----
@@ -426,7 +426,7 @@ provisioned access tokens that will remain valid during a test.
 ----
 "authentication": {
   "type": "IAM",
-  "iam_token": "Bearer eyJraWQiOiIxODQ5MjY4NjQ4IiwiYWxnIjoiUlMyNTYifQ==.eyJpZCI6IjY2M2IzYjRmNDk5ZS0yZTI5LTc0YTQtMTEwZC1hOTNjMDYyNyIsImlhbV9pZCI6IjY2M2IzYjRmNDk5ZS0yZTI5LTc0YTQtMTEwZC1hOTNjMDYyNyIsImlkZW50aWZpZXIiOiI2NjNiM2I0ZjQ5OWUtMmUyOS03NGE0LTExMGQtYTkzYzA2MjciLCJzdWIiOiI2NjNiM2I0ZjQ5OWUtMmUyOS03NGE0LTExMGQtYTkzYzA2MjdAdXMuaWJtLmNvbSIsImFjY291bnQiOnsiYnNzIjoiOTk5OTkiLCJpbXMiOiI5OTk5OSJ9LCJtZmEiOnsiaW1zIjp0cnVlLCJic3MiOmZhbHNlfSwiaXNzIjoiaHR0cHM6Ly90ZXN0bGFidG9rZW5pc3N1ZXIuY2xldmVyc2FmZS5jb20vb2lkYy90b2tlbiIsImdyYW50X3R5cGUiOiJhcGlrZXkiLCJzY29wZSI6Im9wZW5pZCIsImNsaWVudF9pZCI6IjY2M2IzYjRmNDk5ZS0yZTI5LTc0YTQtMTEwZC1hOTNjMDYyN0B1cy5pYm0uY29tIiwiaWF0IjoxNTAyNDAxNjgzLCJleHAiOjE1MDI0MDUyODN9.eC4m6NWQmVKCe_Tfc_zpwOZyidyWQrV7SGLv3FYCo0hgRLlU1eO75_eslEt5DSU14Qju9imTKYmgrxYfdFVioEQWQMbbVxeG9evXytwnDNmCVaYTBNobyZvOZR1Yz4UwCoj4WXmXrpbPcq_Dt-MKn-EUQKH2GdpHTRGiMSoAuuL6NExgl9PeAFKCw3e0KF0TvOMJ5kLbPuli2q3FxF4z71E81357UoSPMPY9safrdb4PIvrrHJ021TG7KqTwd61x_l9uUocHUOWqgmV9hWKvtabkUhpkjFJ-ruH16esXhfNLFFflwi3yyl1aYwUD1NUVMTqTNdAGmo4LgBsR7mS_DQJhO2GpfDC2Ia9Mpo2QhNVwPk3k7cv3XABuM5CnnjTks_qEkavnL_wVtvuydECf_4r52RsK01goXAAru6RDeuyRAG6uK4s1w_Z6KuK74CG4R97dqi5hGyzRJfFOD3USqQnjbIJlK5tCwox1HqH4GBa4QuU5Sy7ZaacQYHerIArGmnD96lKfhgNLyRVv5jIN6GmdM4FYBRuprSbdWLqKsG0rrdCioXImAJ3v6HY4Xtr5BLUyyVOCxEhrGKgmPZEQ_YYT9s1js3i2grdTEpgiaVaPlYpY0WXj1PqODK_drDDrcn16tJzp2Q7l1wIQG-ESRV98ZPpfVwJygio5MhrwKCk="
+  "iam_token": ""
 }
 ----
 
@@ -3421,13 +3421,13 @@ with account "dummyaccount" for vault mode.
 Sample credentials for OpenStack API:
 [source, json]
 ----
-{"api": "openstack", "account_name": "osaccount101","basic_auth_password": "password", "project_name": "osaccount101", "basic_auth_username": "sos_user", "keystone_username": "keystone-user", "domain_name": "test-domain", "token": "9063fce56ff745d1b50ffbb46abbcbb6", "keystone_password": "password", "manager_username": "keystone-manager-user", "manager_password": "password", "containers": ["osc201", "osc202", "osc203"]}
+{"api": "openstack", "account_name": "osaccount101","basic_auth_password": "password", "project_name": "osaccount101", "basic_auth_username": "sos_user", "keystone_username": "keystone-user", "domain_name": "test-domain", "token": "", "keystone_password": "", "manager_username": "keystone-manager-user", "manager_password": "", "containers": ["osc201", "osc202", "osc203"]}
 ----
 
 Sample credentials for S3 API with AWS authentication:
 [source, json]
 ----
-{ "api": "s3", "account_name": "s3account1", "access_key": "jey3MxWQUE9YIaBUtXD1", "secret_key": "GDzvc103T8kM8bvZ5B8UYpFWB9QSJEoasaHfEuot", "containers": ["s3c7", "s3c8", "s3c9"]}
+{ "api": "s3", "account_name": "s3account1", "access_key": "", "secret_key": "", "containers": ["s3c7", "s3c8", "s3c9"]}
 ----
 
 Sample credentials for S3 API with IAM authentication:
