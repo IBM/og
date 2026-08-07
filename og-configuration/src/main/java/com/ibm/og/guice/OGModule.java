@@ -1239,11 +1239,15 @@ public class OGModule extends AbstractModule {
     final Set<Integer> sc = HttpUtil.SUCCESS_STATUS_CODES;
     final List<AbstractObjectNameConsumer> consumers = Lists.newArrayList();
     consumers.add(new WriteObjectNameConsumer(objectManager, sc));
-    consumers.add(new ReadObjectNameConsumer(objectManager, sc));
-    consumers.add(new MetadataObjectNameConsumer(objectManager, sc));
+    final Set<Integer> readSc = Sets.newHashSet();
+    readSc.addAll(sc);
+    readSc.add(404);
+    readSc.add(403);
+    consumers.add(new ReadObjectNameConsumer(objectManager, readSc));
+    consumers.add(new MetadataObjectNameConsumer(objectManager, readSc));
     consumers.add(new OverwriteObjectNameConsumer(objectManager, sc));
     consumers.add(new MultipartWriteObjectNameConsumer(objectManager, sc));
-    consumers.add(new WriteCopyObjectNameConsumer(objectManager, sc));
+    consumers.add(new WriteCopyObjectNameConsumer(objectManager, readSc));
     Set<Integer> deleteStatusCodes = HttpUtil.DELETE_HANDLING_STATUS_CODES;
     consumers.add(new DeleteObjectConsumer(objectManager, deleteStatusCodes));
     // add status code range (400, 451) for legalhold operations.
