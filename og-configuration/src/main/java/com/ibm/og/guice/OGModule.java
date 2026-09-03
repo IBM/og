@@ -75,6 +75,7 @@ import com.ibm.og.s3.S3ListResponseBodyConsumer;
 import com.ibm.og.s3.S3MultipartWriteResponseBodyConsumer;
 import com.ibm.og.s3.v2.AWSV2Auth;
 import com.ibm.og.s3.v4.AWSV4Auth;
+import com.ibm.og.s3.v4.AWSV4SessionAuth;
 import com.ibm.og.scheduling.ConcurrentRequestScheduler;
 import com.ibm.og.scheduling.RequestRateScheduler;
 import com.ibm.og.scheduling.PoissonRequestRateScheduler;
@@ -118,7 +119,7 @@ public class OGModule extends AbstractModule {
 
   /**
    * Creates an instance
-   * 
+   *
    * @param config json source configuration
    * @throws NullPointerException if config is null
    */
@@ -247,6 +248,7 @@ public class OGModule extends AbstractModule {
     httpAuthBinder.addBinding(AuthType.AWSV4).to(AWSV4Auth.class);
     httpAuthBinder.addBinding(AuthType.KEYSTONE).to(KeystoneAuth.class);
     httpAuthBinder.addBinding(AuthType.IAM).to(IAMTokenAuth.class);
+    httpAuthBinder.addBinding(AuthType.AWSV4SESSION).to(AWSV4SessionAuth.class);
 
     final MapBinder<String, ResponseBodyConsumer> responseBodyConsumers =
         MapBinder.newMapBinder(binder(), String.class, ResponseBodyConsumer.class);
@@ -1237,11 +1239,15 @@ public class OGModule extends AbstractModule {
     final Set<Integer> sc = HttpUtil.SUCCESS_STATUS_CODES;
     final List<AbstractObjectNameConsumer> consumers = Lists.newArrayList();
     consumers.add(new WriteObjectNameConsumer(objectManager, sc));
-    consumers.add(new ReadObjectNameConsumer(objectManager, sc));
-    consumers.add(new MetadataObjectNameConsumer(objectManager, sc));
+    final Set<Integer> readSc = Sets.newHashSet();
+    readSc.addAll(sc);
+    readSc.add(404);
+    readSc.add(403);
+    consumers.add(new ReadObjectNameConsumer(objectManager, readSc));
+    consumers.add(new MetadataObjectNameConsumer(objectManager, readSc));
     consumers.add(new OverwriteObjectNameConsumer(objectManager, sc));
     consumers.add(new MultipartWriteObjectNameConsumer(objectManager, sc));
-    consumers.add(new WriteCopyObjectNameConsumer(objectManager, sc));
+    consumers.add(new WriteCopyObjectNameConsumer(objectManager, readSc));
     Set<Integer> deleteStatusCodes = HttpUtil.DELETE_HANDLING_STATUS_CODES;
     consumers.add(new DeleteObjectConsumer(objectManager, deleteStatusCodes));
     // add status code range (400, 451) for legalhold operations.
@@ -2676,7 +2682,7 @@ public class OGModule extends AbstractModule {
         final Credential credential =
             new Credential(this.config.authentication.username, this.config.authentication.password,
                 this.config.authentication.keystoneToken, this.config.authentication.iamToken,
-                this.config.authentication.account);
+                this.config.authentication.account, this.config.authentication.sessionToken);
         credentialList.add(credential);
 
         if (credentialList.size() == 0) {
