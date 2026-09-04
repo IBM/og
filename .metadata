@@ -2,12 +2,9 @@
   "service": "cloud-object-storage",
   "production_code": "yes",
   "production_branches": [
-    "development"
+    "master"
   ],
-  "bypass_allowed": {
-    "C-LJEF897": "Functional ID used for COS ClevOS CI/CD pipeline",
-    "cossdk": "Functional ID used for COS SDK CI/CD pipeline"
-  },
   "security_sensitive": "no",
-  "ip_sensitive": "no"
+  "ip_sensitive": "no",
+  "include": "github-configuration/metadata/include.json"
 }
