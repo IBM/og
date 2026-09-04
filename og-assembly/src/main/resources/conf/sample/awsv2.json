@@ -28,8 +28,8 @@
   },
   "authentication":{
     "type":"awsv2",
-    "username":"AKIAIOSFODNN74SFNMK",
-    "password":"nJalrUUFklNEMI/K7MDENG/gPwRfiCYXY73DER"
+    "username":"",
+    "password":""
   },
   "stopping_conditions":{
     "status_codes":{
