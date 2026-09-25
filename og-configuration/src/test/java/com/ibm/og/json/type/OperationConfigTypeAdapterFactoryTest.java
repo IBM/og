@@ -9,6 +9,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 
+import com.google.gson.JsonParser;
 import com.ibm.og.json.OperationConfig;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,6 +53,7 @@ public class OperationConfigTypeAdapterFactoryTest {
   public void serialization() {
     final OperationConfig config = new OperationConfig(75.0);
 
-    assertThat(this.gson.toJson(config), is(new GsonBuilder().create().toJson(config)));
+    JsonParser parser = new JsonParser();
+    assertThat(parser.parse(this.gson.toJson(config)), is(parser.parse(new GsonBuilder().create().toJson(config))));
   }
 }
