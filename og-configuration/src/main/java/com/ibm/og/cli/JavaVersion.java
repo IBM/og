@@ -46,6 +46,33 @@ public class JavaVersion {
     if (version.startsWith("17")) {
       System.exit(17);
     }
+    if (version.startsWith("18")) {
+      System.exit(18);
+    }
+    if (version.startsWith("19")) {
+      System.exit(19);
+    }
+    if (version.startsWith("20")) {
+      System.exit(20);
+    }
+    if (version.startsWith("21")) {
+      System.exit(21);
+    }
+    if (version.startsWith("22")) {
+      System.exit(22);
+    }
+    if (version.startsWith("23")) {
+      System.exit(23);
+    }
+    if (version.startsWith("24")) {
+      System.exit(24);
+    }
+    if (version.startsWith("25")) {
+      System.exit(25);
+    }
+
+
+
     System.exit(-1);
   }
 }
