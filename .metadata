@@ -1,0 +1,10 @@
+{
+  "service": "cloud-object-storage",
+  "production_code": "yes",
+  "production_branches": [
+    "master"
+  ],
+  "security_sensitive": "no",
+  "ip_sensitive": "no",
+  "include": "github-configuration/metadata/include.json"
+}
