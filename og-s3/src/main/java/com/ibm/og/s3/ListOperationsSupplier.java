@@ -792,6 +792,7 @@ public class ListOperationsSupplier implements Supplier<Request>{
         String keystoneToken = credential.getKeystoneToken();
         String IAMToken = credential.getIAMToken();
         String storageAccountName = credential.getStorageAccountName();
+        String sessionToken = credential.getSessionToken();
 
         if(username != null)
           requestContext.put(Context.X_OG_USERNAME, username);
@@ -804,6 +805,10 @@ public class ListOperationsSupplier implements Supplier<Request>{
         if(storageAccountName != null) {
           requestContext.put(Context.X_OG_STORAGE_ACCOUNT_NAME, storageAccountName);
         }
+        if (sessionToken != null) {
+          requestContext.put(Context.X_OG_SESSION_TOKEN, sessionToken);
+        }
+
       }
 
 

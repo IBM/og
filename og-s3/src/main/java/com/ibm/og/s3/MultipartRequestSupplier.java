@@ -63,7 +63,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * A supplier of multipart requests
- * 
+ *
  * @since 1.0
  */
 public class MultipartRequestSupplier implements Supplier<Request> {
@@ -766,15 +766,23 @@ public class MultipartRequestSupplier implements Supplier<Request> {
         String password = credential.getPassword();
         String keystoneToken = credential.getKeystoneToken();
         String IAMToken = credential.getIAMToken();
+        String sessionToken = credential.getSessionToken();
 
-        if (username != null)
+        if (username != null) {
           builder.withContext(Context.X_OG_USERNAME, username);
-        if (password != null)
+        }
+        if (password != null) {
           builder.withContext(Context.X_OG_PASSWORD, password);
-        if (keystoneToken != null)
+        }
+        if (keystoneToken != null) {
           builder.withContext(Context.X_OG_KEYSTONE_TOKEN, keystoneToken);
-        if (IAMToken != null)
+        }
+        if (IAMToken != null) {
           builder.withContext(Context.X_OG_IAM_TOKEN, IAMToken);
+        }
+        if (sessionToken != null) {
+          requestContext.put(Context.X_OG_SESSION_TOKEN, sessionToken);
+        }
       }
 
       for (final Map.Entry<String, String> entry : requestContext.entrySet()) {

@@ -83,6 +83,11 @@ if [ $JAVA_VERSION -ge 14 ]
     VMOPTS="-Xlog:gc*:file=${TEST_PATH}/${GC_LOG} -XX:+UseParallelGC -XX:MaxGCPauseMillis=5000 -Xss${STACKSIZE}k -Xmx${MEMORY}m -Xms${MEMORY}m -XX:MaxDirectMemorySize=${MEMORY}m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=${TEST_PATH}/ --add-opens=java.base/java.lang=ALL-UNNAMED"
 fi
 
+if [ $JAVA_VERSION -ge 23 ]
+  then
+    VMOPTS="${VMOPTS} --sun-misc-unsafe-memory-access=allow --enable-native-access=ALL-UNNAMED"
+fi
+
 # TODO analyze which jvm parameters should be set
 SYSTEMOPTS="-DLOG_LEVEL=${LOG_LEVEL} -DTEST_PATH=${TEST_PATH} -Dlog4j.configurationFile=og-log4j2.xml -DLog4jContextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector -Dlog4j.shutdownCallbackRegistry=com.ibm.og.cli.OGLog4jShutdownCallbackRegistry"
 exec java -cp ${CP} ${VMOPTS} ${SYSTEMOPTS} ${CLASS} "$@"

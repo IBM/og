@@ -11,6 +11,7 @@ public class Credential {
     private String keystoneToken;
     private String IAMToken;
     private String storageAccountName;
+    private String sessionToken;
 
     public Credential() {
         this.username = null;
@@ -18,16 +19,19 @@ public class Credential {
         this.keystoneToken = null;
         this.IAMToken = null;
         this.storageAccountName = null;
+        this.sessionToken = null;
     }
 
 
 
-    public Credential(String username, String password, String keystoneToken, String IAMToken, String storageAccountName) {
+    public Credential(String username, String password, String keystoneToken, String IAMToken, String storageAccountName,
+        String sessionToken) {
         this.username = username;
         this.password = password;
         this.keystoneToken = keystoneToken;
         this.IAMToken = IAMToken;
         this.storageAccountName = storageAccountName;
+        this.sessionToken = sessionToken;
     }
 
     public String getUsername() {
@@ -48,6 +52,11 @@ public class Credential {
 
     public String getStorageAccountName() {
         return this.storageAccountName;
+    }
+
+
+    public String getSessionToken() {
+        return this.sessionToken;
     }
 
 
